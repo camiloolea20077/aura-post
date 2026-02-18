@@ -340,6 +340,26 @@ CREATE TABLE movimiento_inventario (
     referencia_origen VARCHAR(100), -- "Venta #123"
     created_at TIMESTAMP DEFAULT NOW()
 );
+CREATE TABLE traslado (
+    id SERIAL PRIMARY KEY,
+    empresa_id INT REFERENCES empresa(id),
+    sucursal_origen_id INT REFERENCES sucursal(id),
+    sucursal_destino_id INT REFERENCES sucursal(id),
+    usuario_id INT REFERENCES usuario(id),
+    fecha TIMESTAMP DEFAULT NOW(),
+    observacion TEXT,
+    estado VARCHAR(20) DEFAULT 'PENDIENTE', -- PENDIENTE, COMPLETADO, ANULADO
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE traslado_detalle (
+    id SERIAL PRIMARY KEY,
+    traslado_id INT REFERENCES traslado(id),
+    producto_id INT REFERENCES producto(id),
+    lote_id INT REFERENCES lote(id),
+    cantidad DECIMAL(14,4) NOT NULL,
+    costo_unitario DECIMAL(14,2)
+);
 
 -- ==================================================================
 -- 5. VENTAS (POS Y FACTURACIÓN ELECTRÓNICA)
