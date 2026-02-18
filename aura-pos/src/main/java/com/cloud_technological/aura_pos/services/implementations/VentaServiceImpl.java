@@ -1,0 +1,380 @@
+package com.cloud_technological.aura_pos.services.implementations;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+
+import com.cloud_technological.aura_pos.dto.ventas.CreateVentaDetalleDto;
+import com.cloud_technological.aura_pos.dto.ventas.CreateVentaDto;
+import com.cloud_technological.aura_pos.dto.ventas.CreateVentaPagoDto;
+import com.cloud_technological.aura_pos.dto.ventas.VentaDto;
+import com.cloud_technological.aura_pos.dto.ventas.VentaTableDto;
+import com.cloud_technological.aura_pos.entity.EmpresaEntity;
+import com.cloud_technological.aura_pos.entity.InventarioEntity;
+import com.cloud_technological.aura_pos.entity.LoteEntity;
+import com.cloud_technological.aura_pos.entity.MovimientoInventarioEntity;
+import com.cloud_technological.aura_pos.entity.ProductoEntity;
+import com.cloud_technological.aura_pos.entity.SerialProductoEntity;
+import com.cloud_technological.aura_pos.entity.SucursalEntity;
+import com.cloud_technological.aura_pos.entity.TerceroEntity;
+import com.cloud_technological.aura_pos.entity.TurnoCajaEntity;
+import com.cloud_technological.aura_pos.entity.UsuarioEntity;
+import com.cloud_technological.aura_pos.entity.VentaDetalleEntity;
+import com.cloud_technological.aura_pos.entity.VentaDetalleSerialEntity;
+import com.cloud_technological.aura_pos.entity.VentaEntity;
+import com.cloud_technological.aura_pos.entity.VentaPagoEntity;
+import com.cloud_technological.aura_pos.mappers.VentaDetalleMapper;
+import com.cloud_technological.aura_pos.mappers.VentaMapper;
+import com.cloud_technological.aura_pos.mappers.VentaPagoMapper;
+import com.cloud_technological.aura_pos.repositories.empresas.EmpresaJPARepository;
+import com.cloud_technological.aura_pos.repositories.inventario.InventarioJPARepository;
+import com.cloud_technological.aura_pos.repositories.inventario.LoteJPARepository;
+import com.cloud_technological.aura_pos.repositories.inventario.SerialProductoJPARepository;
+import com.cloud_technological.aura_pos.repositories.movimiento_inventario.MovimientoInventarioJPARepository;
+import com.cloud_technological.aura_pos.repositories.productos.ProductoJPARepository;
+import com.cloud_technological.aura_pos.repositories.sucursales.SucursalJPARepository;
+import com.cloud_technological.aura_pos.repositories.terceros.TerceroJPARepository;
+import com.cloud_technological.aura_pos.repositories.turno_caja.TurnoCajaJPARepository;
+import com.cloud_technological.aura_pos.repositories.users.UsuarioJPARepository;
+import com.cloud_technological.aura_pos.repositories.venta_detalle.VentaDetalleJPARepository;
+import com.cloud_technological.aura_pos.repositories.venta_detalle_serial.VentaDetalleSerialJPARepository;
+import com.cloud_technological.aura_pos.repositories.venta_pago.VentaPagoJPARepository;
+import com.cloud_technological.aura_pos.repositories.ventas.VentaJPARepository;
+import com.cloud_technological.aura_pos.repositories.ventas.VentaQueryRepository;
+import com.cloud_technological.aura_pos.services.VentaService;
+import com.cloud_technological.aura_pos.utils.GlobalException;
+import com.cloud_technological.aura_pos.utils.PageableDto;
+
+import jakarta.transaction.Transactional;
+
+@Service
+public class VentaServiceImpl implements VentaService{
+    private final VentaQueryRepository ventaRepository;
+    private final VentaJPARepository ventaJPARepository;
+    private final VentaDetalleJPARepository detalleJPARepository;
+    private final VentaPagoJPARepository pagoJPARepository;
+    private final VentaDetalleSerialJPARepository serialVentaJPARepository;
+    private final TurnoCajaJPARepository turnoJPARepository;
+    private final ProductoJPARepository productoJPARepository;
+    private final InventarioJPARepository inventarioJPARepository;
+    private final LoteJPARepository loteJPARepository;
+    private final SerialProductoJPARepository serialJPARepository;
+    private final TerceroJPARepository terceroJPARepository;
+    private final UsuarioJPARepository usuarioJPARepository;
+    private final EmpresaJPARepository empresaRepository;
+    private final SucursalJPARepository sucursalJPARepository;
+    private final MovimientoInventarioJPARepository movimientoJPARepository;
+    private final VentaMapper ventaMapper;
+    private final VentaDetalleMapper detalleMapper;
+    private final VentaPagoMapper pagoMapper;
+
+    @Autowired
+    public VentaServiceImpl(VentaQueryRepository ventaRepository,
+            VentaJPARepository ventaJPARepository,
+            VentaDetalleJPARepository detalleJPARepository,
+            VentaPagoJPARepository pagoJPARepository,
+            VentaDetalleSerialJPARepository serialVentaJPARepository,
+            TurnoCajaJPARepository turnoJPARepository,
+            ProductoJPARepository productoJPARepository,
+            InventarioJPARepository inventarioJPARepository,
+            LoteJPARepository loteJPARepository,
+            SerialProductoJPARepository serialJPARepository,
+            TerceroJPARepository terceroJPARepository,
+            UsuarioJPARepository usuarioJPARepository,
+            EmpresaJPARepository empresaRepository,
+            SucursalJPARepository sucursalJPARepository,
+            MovimientoInventarioJPARepository movimientoJPARepository,
+            VentaMapper ventaMapper,
+            VentaDetalleMapper detalleMapper,
+            VentaPagoMapper pagoMapper) {
+        this.ventaRepository = ventaRepository;
+        this.ventaJPARepository = ventaJPARepository;
+        this.detalleJPARepository = detalleJPARepository;
+        this.pagoJPARepository = pagoJPARepository;
+        this.serialVentaJPARepository = serialVentaJPARepository;
+        this.turnoJPARepository = turnoJPARepository;
+        this.productoJPARepository = productoJPARepository;
+        this.inventarioJPARepository = inventarioJPARepository;
+        this.loteJPARepository = loteJPARepository;
+        this.serialJPARepository = serialJPARepository;
+        this.terceroJPARepository = terceroJPARepository;
+        this.usuarioJPARepository = usuarioJPARepository;
+        this.empresaRepository = empresaRepository;
+        this.sucursalJPARepository = sucursalJPARepository;
+        this.movimientoJPARepository = movimientoJPARepository;
+        this.ventaMapper = ventaMapper;
+        this.detalleMapper = detalleMapper;
+        this.pagoMapper = pagoMapper;
+    }
+
+    @Override
+    public PageImpl<VentaTableDto> listar(PageableDto<Object> pageable, Integer empresaId) {
+        return ventaRepository.listar(pageable, empresaId);
+    }
+
+    @Override
+    public VentaDto obtenerPorId(Long id, Integer empresaId) {
+        VentaEntity entity = ventaJPARepository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Venta no encontrada"));
+
+        VentaDto dto = ventaMapper.toDto(entity);
+        dto.setDetalles(ventaRepository.obtenerDetalles(entity.getId()));
+        dto.setPagos(ventaRepository.obtenerPagos(entity.getId()));
+        return dto;
+    }
+
+    @Override
+    @Transactional
+    public VentaDto crear(CreateVentaDto dto, Integer empresaId, Long usuarioId) {
+
+        // 1. Validar turno abierto
+        TurnoCajaEntity turno = turnoJPARepository.findByIdAndCajaSucursalEmpresaId(dto.getTurnoCajaId(), empresaId)
+                .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST, "Turno no encontrado"));
+
+        if (!turno.getEstado().equals("ABIERTA"))
+            throw new GlobalException(HttpStatus.BAD_REQUEST, "El turno de caja no está abierto");
+
+        SucursalEntity sucursal = turno.getCaja().getSucursal();
+
+        EmpresaEntity empresa = empresaRepository.findById(empresaId)
+                .orElseThrow(() -> new GlobalException(HttpStatus.INTERNAL_SERVER_ERROR, "Empresa no encontrada"));
+
+        UsuarioEntity usuario = usuarioJPARepository.findById(usuarioId.intValue())
+                .orElseThrow(() -> new GlobalException(HttpStatus.INTERNAL_SERVER_ERROR, "Usuario no encontrado"));
+
+        // 2. Validar que el total pagado cubra el total de la venta
+        BigDecimal totalPagado = dto.getPagos().stream()
+                .map(CreateVentaPagoDto::getMonto)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // 3. Crear cabecera
+        VentaEntity venta = new VentaEntity();
+        venta.setEmpresa(empresa);
+        venta.setSucursal(sucursal);
+        venta.setUsuario(usuario);
+        venta.setTurnoCaja(turno);
+        venta.setTipoDocumento(dto.getTipoDocumento());
+        venta.setPrefijo(sucursal.getPrefijoFacturacion());
+        venta.setConsecutivo(ventaRepository.obtenerSiguienteConsecutivo(Long.valueOf(sucursal.getId())));
+        venta.setFechaEmision(LocalDateTime.now());
+        venta.setObservaciones(dto.getObservaciones());
+        venta.setEstadoVenta("COMPLETADA");
+
+        // Cliente opcional
+        if (dto.getClienteId() != null) {
+            TerceroEntity cliente = terceroJPARepository.findByIdAndEmpresaId(dto.getClienteId(), empresaId)
+                    .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST, "Cliente no encontrado"));
+            venta.setCliente(cliente);
+        }
+
+        venta = ventaJPARepository.save(venta);
+
+        BigDecimal subtotal = BigDecimal.ZERO;
+        BigDecimal descuentoTotal = BigDecimal.ZERO;
+        BigDecimal impuestosTotal = BigDecimal.ZERO;
+
+        // 4. Procesar cada detalle
+        for (CreateVentaDetalleDto item : dto.getDetalles()) {
+            ProductoEntity producto = productoJPARepository.findByIdAndEmpresaId(item.getProductoId(), empresaId)
+                    .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST,
+                            "Producto no encontrado: " + item.getProductoId()));
+
+            // 4.1 Validar stock
+            if (Boolean.TRUE.equals(producto.getManejaInventario())) {
+                InventarioEntity inventario = inventarioJPARepository
+                        .findBySucursalIdAndProductoId(Long.valueOf(sucursal.getId()), producto.getId())
+                        .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST,
+                                "El producto " + producto.getNombre() + " no tiene inventario en esta sucursal"));
+
+                if (inventario.getStockActual().compareTo(item.getCantidad()) < 0)
+                    throw new GlobalException(HttpStatus.BAD_REQUEST,
+                            "Stock insuficiente para: " + producto.getNombre()
+                            + ". Disponible: " + inventario.getStockActual());
+            }
+
+            // 4.2 Calcular impuesto
+            BigDecimal impuestoLinea = item.getPrecioUnitario()
+                    .multiply(item.getCantidad())
+                    .multiply(producto.getIvaPorcentaje()
+                    .divide(new BigDecimal("100")));
+
+            // 4.3 Calcular subtotal linea
+            BigDecimal subtotalLinea = item.getPrecioUnitario()
+                    .multiply(item.getCantidad())
+                    .subtract(item.getMontoDescuento());
+
+            // 4.4 Crear detalle
+            VentaDetalleEntity detalle = detalleMapper.toEntity(item);
+            detalle.setVenta(venta);
+            detalle.setProducto(producto);
+            detalle.setImpuestoValor(impuestoLinea);
+            detalle.setSubtotalLinea(subtotalLinea);
+
+            // Presentación opcional
+            // if (item.getProductoPresentacionId() != null) {
+            //     detalle.setProductoPresentacion(
+            //         productoJPARepository.findById(item.getProductoPresentacionId())
+            //             .map(p -> null)
+            //             .orElse(null));
+            // }
+
+            // Lote opcional
+            if (item.getLoteId() != null) {
+                LoteEntity lote = loteJPARepository.findById(item.getLoteId())
+                        .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST, "Lote no encontrado"));
+                detalle.setLote(lote);
+
+                // Descontar del lote
+                lote.setStockActual(lote.getStockActual().subtract(item.getCantidad()));
+                loteJPARepository.save(lote);
+            }
+
+            detalleJPARepository.save(detalle);
+
+            // 4.5 Manejar seriales
+            if (Boolean.TRUE.equals(producto.getManejaSerial()) && item.getSerialIds() != null) {
+                for (Long serialId : item.getSerialIds()) {
+                    SerialProductoEntity serial = serialJPARepository.findById(serialId)
+                            .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST,
+                                    "Serial no encontrado: " + serialId));
+
+                    if (!serial.getEstado().equals("DISPONIBLE"))
+                        throw new GlobalException(HttpStatus.BAD_REQUEST,
+                                "El serial " + serial.getSerial() + " no está disponible");
+
+                    serial.setEstado("VENDIDO");
+                    serialJPARepository.save(serial);
+
+                    VentaDetalleSerialEntity ds = new VentaDetalleSerialEntity();
+                    ds.setVentaDetalle(detalle);
+                    ds.setSerialProducto(serial);
+                    serialVentaJPARepository.save(ds);
+                }
+            }
+
+            // 4.6 Actualizar inventario
+            if (Boolean.TRUE.equals(producto.getManejaInventario())) {
+                InventarioEntity inventario = inventarioJPARepository
+                        .findBySucursalIdAndProductoId(Long.valueOf(sucursal.getId()), producto.getId()).get();
+
+                BigDecimal saldoAnterior = inventario.getStockActual();
+                BigDecimal saldoNuevo = saldoAnterior.subtract(item.getCantidad());
+
+                inventario.setStockActual(saldoNuevo);
+                inventario.setUpdatedAt(LocalDateTime.now());
+                inventarioJPARepository.save(inventario);
+
+                // 4.7 Kardex
+                registrarMovimiento(sucursal, producto, detalle.getLote(),
+                        item.getCantidad().negate(), saldoAnterior, saldoNuevo,
+                        item.getPrecioUnitario(), "VENTA", "Venta #" + venta.getId());
+            }
+
+            subtotal = subtotal.add(subtotalLinea);
+            descuentoTotal = descuentoTotal.add(item.getMontoDescuento());
+            impuestosTotal = impuestosTotal.add(impuestoLinea);
+        }
+
+        // 5. Validar que el pago cubra el total
+        BigDecimal totalFinal = subtotal.add(impuestosTotal);
+        if (totalPagado.compareTo(totalFinal) < 0)
+            throw new GlobalException(HttpStatus.BAD_REQUEST,
+                    "El pago recibido (" + totalPagado + ") es menor al total (" + totalFinal + ")");
+
+        // 6. Guardar pagos
+        for (CreateVentaPagoDto pago : dto.getPagos()) {
+            VentaPagoEntity pagoEntity = pagoMapper.toEntity(pago);
+            pagoEntity.setVenta(venta);
+            pagoJPARepository.save(pagoEntity);
+        }
+
+        // 7. Actualizar totales
+        venta.setSubtotal(subtotal);
+        venta.setDescuentoTotal(descuentoTotal);
+        venta.setImpuestosTotal(impuestosTotal);
+        venta.setTotalPagar(totalFinal);
+        ventaJPARepository.save(venta);
+
+        return obtenerPorId(venta.getId(), empresaId);
+    }
+
+    @Override
+    @Transactional
+    public void anular(Long id, Integer empresaId) {
+        VentaEntity venta = ventaJPARepository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Venta no encontrada"));
+
+        if (venta.getEstadoVenta().equals("ANULADA"))
+            throw new GlobalException(HttpStatus.BAD_REQUEST, "La venta ya está anulada");
+
+        List<VentaDetalleEntity> detalles = detalleJPARepository.findByVentaId(id);
+
+        for (VentaDetalleEntity detalle : detalles) {
+            ProductoEntity producto = detalle.getProducto();
+
+            if (Boolean.TRUE.equals(producto.getManejaInventario())) {
+                InventarioEntity inventario = inventarioJPARepository
+                        .findBySucursalIdAndProductoId(Long.valueOf(venta.getSucursal().getId()), producto.getId())
+                        .orElseThrow(() -> new GlobalException(HttpStatus.INTERNAL_SERVER_ERROR,
+                                "Inventario no encontrado para: " + producto.getNombre()));
+
+                BigDecimal saldoAnterior = inventario.getStockActual();
+                BigDecimal saldoNuevo = saldoAnterior.add(detalle.getCantidad());
+
+                inventario.setStockActual(saldoNuevo);
+                inventario.setUpdatedAt(LocalDateTime.now());
+                inventarioJPARepository.save(inventario);
+
+                // Devolver al lote si aplica
+                if (detalle.getLote() != null) {
+                    LoteEntity lote = detalle.getLote();
+                    lote.setStockActual(lote.getStockActual().add(detalle.getCantidad()));
+                    loteJPARepository.save(lote);
+                }
+
+                // Kardex anulación
+                registrarMovimiento(venta.getSucursal(), producto, detalle.getLote(),
+                        detalle.getCantidad(), saldoAnterior, saldoNuevo,
+                        detalle.getPrecioUnitario(), "ANULACION_VENTA",
+                        "Anulación Venta #" + venta.getId());
+            }
+
+            // Devolver seriales a DISPONIBLE
+            if (Boolean.TRUE.equals(producto.getManejaSerial())) {
+                serialJPARepository.findAll().stream()
+                        .filter(s -> s.getEstado().equals("VENDIDO"))
+                        .forEach(s -> {
+                            s.setEstado("DISPONIBLE");
+                            serialJPARepository.save(s);
+                        });
+            }
+        }
+
+        venta.setEstadoVenta("ANULADA");
+        ventaJPARepository.save(venta);
+    }
+
+    // ─── Métodos privados ────────────────────────────────────────────────────
+
+    private void registrarMovimiento(SucursalEntity sucursal, ProductoEntity producto,
+            LoteEntity lote, BigDecimal cantidad, BigDecimal saldoAnterior,
+            BigDecimal saldoNuevo, BigDecimal costo, String tipo, String referencia) {
+        MovimientoInventarioEntity movimiento = new MovimientoInventarioEntity();
+        movimiento.setSucursal(sucursal);
+        movimiento.setProducto(producto);
+        movimiento.setLote(lote);
+        movimiento.setTipoMovimiento(tipo);
+        movimiento.setCantidad(cantidad);
+        movimiento.setSaldoAnterior(saldoAnterior);
+        movimiento.setSaldoNuevo(saldoNuevo);
+        movimiento.setCostoHistorico(costo);
+        movimiento.setReferenciaOrigen(referencia);
+        movimiento.setCreatedAt(LocalDateTime.now());
+        movimientoJPARepository.save(movimiento);
+    }
+}

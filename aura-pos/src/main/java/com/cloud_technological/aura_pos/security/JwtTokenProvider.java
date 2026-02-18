@@ -39,7 +39,6 @@ public class JwtTokenProvider {
         claims.put("sucursalId", sucursalId); // ID de la sede donde está trabajando
         claims.put("rol", rol);
         claims.put("usuarioId", usuarioId);
-
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(username)
@@ -94,8 +93,13 @@ public class JwtTokenProvider {
     // Validar Token
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(key()).build().parse(token);
+            Jwts.parserBuilder()
+                .setSigningKey(key())
+                .build()
+                .parseClaimsJws(token); // 👈 CAMBIO AQUÍ
+
             return true;
+
         } catch (MalformedJwtException e) {
             throw new GlobalException(HttpStatus.BAD_REQUEST, "Token JWT inválido");
         } catch (ExpiredJwtException e) {

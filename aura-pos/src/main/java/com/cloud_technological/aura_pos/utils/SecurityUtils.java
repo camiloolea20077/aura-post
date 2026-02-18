@@ -55,9 +55,15 @@ public class SecurityUtils {
 
     private Long extractUsuarioId(String token) {
         Claims claims = extractAllClaims(token);
-        return claims.get("usuarioId", Long.class);
+        Object value = claims.get("usuarioId");
+        return toLong(value);
     }
-
+    private Long toLong(Object value) {
+        if (value == null) return null;
+        if (value instanceof Long) return (Long) value;
+        if (value instanceof Integer) return ((Integer) value).longValue();
+        return Long.valueOf(value.toString());
+    }
     private String extractRol(String token) {
         Claims claims = extractAllClaims(token);
         return claims.get("rol", String.class);

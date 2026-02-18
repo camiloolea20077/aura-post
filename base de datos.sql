@@ -325,7 +325,7 @@ CREATE TABLE merma_detalle (
     cantidad DECIMAL(14,4),
     costo_unitario DECIMAL(14,2)
 );
-
+select * from movimiento_inventario
 -- Kardex (Historial inmutable)
 CREATE TABLE movimiento_inventario (
     id SERIAL PRIMARY KEY,
@@ -416,8 +416,10 @@ CREATE TABLE venta_detalle (
 );
 
 CREATE TABLE venta_detalle_serial (
+	id BIGSERIAL PRIMARY KEY;
     venta_detalle_id INT REFERENCES venta_detalle(id),
-    serial_producto_id INT REFERENCES serial_producto(id)
+    serial_pro
+	ducto_id INT REFERENCES serial_producto(id)
 );
 
 CREATE TABLE venta_pago (
