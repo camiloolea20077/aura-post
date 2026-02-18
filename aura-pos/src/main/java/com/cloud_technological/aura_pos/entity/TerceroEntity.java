@@ -29,7 +29,7 @@ import lombok.Setter;
 public class TerceroEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "empresa_id")
@@ -38,22 +38,25 @@ public class TerceroEntity {
     @Column(name = "tipo_documento")
     private String tipoDocumento;
 
-    @Column(name = "numero_documento", nullable = false)
+    @Column(name = "numero_documento")
     private String numeroDocumento;
 
     private String dv;
-    private String nombres;
-    private String apellidos;
-    
+
     @Column(name = "razon_social")
     private String razonSocial;
 
+    private String nombres;
+    private String apellidos;
     private String direccion;
     private String telefono;
     private String email;
-    
+
     @Column(name = "email_fe")
-    private String emailFe; // Facturación electrónica
+    private String emailFe;
+
+    @Column(name = "responsabilidad_fiscal")
+    private String responsabilidadFiscal;
 
     @Column(name = "es_cliente")
     private Boolean esCliente;
@@ -64,7 +67,7 @@ public class TerceroEntity {
     @Column(name = "es_empleado")
     private Boolean esEmpleado;
 
-    private Boolean activo = true;
+    private Boolean activo;
 
     @Column(name = "created_at", nullable = false, updatable = false)
 	private LocalDateTime created_at;

@@ -1,10 +1,10 @@
-# AGENTS.MD - ERP Backend Architecture & Roadmap
+# AGENTS.MD - AURA POS Backend Architecture & Roadmap
 
 # ============================================================
 # 1. ARQUITECTURA DEL SISTEMA
 # ============================================================
 
-Este proyecto utiliza **Spring Boot 3** con arquitectura modular y patrón **CQRS Ligero** (Command Query Responsibility Segregation).
+Este proyecto utiliza **Spring Boot 3** con arquitectura modular y patrón **CQRS Ligero**.
 
 ## Estructura de Capas
 
@@ -13,37 +13,33 @@ Este proyecto utiliza **Spring Boot 3** con arquitectura modular y patrón **CQR
    - Valida DTOs (@Valid)  
    - Retorna ApiResponse  
    - NO contiene lógica de negocio  
+   - empresaId siempre se extrae del token via SecurityUtils
 
 2. Service (Interface + Impl)  
    - Contiene lógica de negocio  
    - Maneja transacciones (@Transactional)  
    - Orquesta repositorios  
+   - Usa MapStruct, NO hace set/get manual masivo
 
 3. Mapper (MapStruct)  
    - Convierte DTO <-> Entity  
-   - El Service NO debe hacer set/get manual masivo  
+   - Relaciones (empresa, sucursal, etc.) se ignoran en el mapper  
+   - Se asignan manualmente en el Service
 
 4. Repository (Separación estricta)
 
    a) ...JPARepository  
       - Extiende JpaRepository  
-      - Usado para:
-        - Create
-        - Update
-        - Delete
-        - Validaciones simples (existsBy...)
-      - SOLO para comandos
+      - Métodos simples: findByIdAndEmpresaId, existsBy...  
+      - SIN métodos con nombres largos tipo findByIdAndEmpresaIdAndDeletedAtIsNull  
+      - Validaciones complejas van al QueryRepository  
 
    b) ...QueryRepository  
-      - @Repository
-      - Usa NamedParameterJdbcTemplate
-      - Solo consultas complejas
-      - Retorna DTOs directos
-      - Usado para:
-        - Listados
-        - Reportes
-        - Tablas paginadas
-        - Dashboard
+      - @Repository  
+      - Usa NamedParameterJdbcTemplate  
+      - Listados paginados, reportes, validaciones complejas  
+      - Métodos de existencia: existeNombre(), existeNombreExcluyendo()  
+      - Retorna DTOs directos con BeanPropertyRowMapper
 
 --------------------------------------------------------------
 
@@ -53,20 +49,21 @@ Este proyecto utiliza **Spring Boot 3** con arquitectura modular y patrón **CQR
 
 - Autenticación Stateless con JWT
 - Password con BCrypt
-- Custom Claims incluidos en el token:
+- Custom Claims en el token:
 
 {
   "empresaId": 1,
   "sucursalId": 3,
+  "usuarioId": 1,
   "rol": "ADMIN"
 }
 
 Componentes:
-
 - SecurityConfig
 - JwtTokenProvider
 - JwtAuthenticationFilter
 - CustomUserDetailsService
+- SecurityUtils → extrae claims del token en cada request
 
 --------------------------------------------------------------
 
@@ -93,7 +90,6 @@ El sistema soporta:
 # 3.1 ESTRUCTURA EMPRESARIAL
 
 TABLAS:
-
 - empresa
 - sucursal
 - tercero
@@ -102,94 +98,102 @@ TABLAS:
 - historial_sesion
 
 Características clave:
-
-• UNIQUE(empresa_id, numero_documento) en tercero  
-• Usuario puede pertenecer a múltiples sucursales  
-• Una sucursal default por usuario  
-• Auditoría completa de sesiones  
+- UNIQUE(empresa_id, numero_documento) en tercero  
+- Usuario puede pertenecer a múltiples sucursales  
+- Una sucursal default por usuario  
+- Auditoría completa de sesiones  
 
 --------------------------------------------------------------
 
 # 3.2 CATÁLOGO DE PRODUCTOS
 
 TABLAS:
-
-- categoria (jerárquica)
+- categoria (jerárquica con padre_id)
 - marca
-- unidad_medida
+- unidad_medida (sin empresa_id, es global)
 - producto
 - producto_presentacion
 - producto_composicion
 
 Características avanzadas del producto:
-
 - tipo_producto: ESTANDAR | SERVICIO | KIT | PESABLE
 - maneja_inventario
-- maneja_lotes
+- maneja_lotes → si true, compras crean/actualizan lotes
 - maneja_serial
 - atributos JSONB dinámicos
-
-Esto permite soportar:
-
-- Ferreterías
-- Carnicerías
-- Restaurantes
-- Tecnología
-- Verdulerías
-- Minimercados
 
 --------------------------------------------------------------
 
 # 3.3 PRECIOS Y MOTOR DE DESCUENTOS
 
 TABLAS:
-
 - lista_precios
 - producto_precio
-- regla_descuento
+- regla_descuento (JSONB para dias_semana)
 
-Permite:
-
-- Precios por lista
-- Precios por presentación
-- Descuentos por:
-  - Fecha
-  - Día de semana
-  - Hora
-  - Producto
-  - Categoría
-- Tipo:
-  - PORCENTAJE
-  - MONTO
+Motor de descuentos:
+- Por fecha, día de semana, hora
+- Por producto o categoría (no ambos)
+- Tipo: PORCENTAJE | MONTO
+- buscarReglasAplicables() en QueryRepository para motor de ventas
 
 --------------------------------------------------------------
 
 # 3.4 INVENTARIO (KARDEX PROFESIONAL)
 
 TABLAS:
-
-- inventario
-- lote
-- serial_producto
+- inventario (stock actual por sucursal/producto)
+- lote (FEFO - First Expired First Out)
+- serial_producto (estado: DISPONIBLE | VENDIDO | GARANTIA)
 - motivo_merma
-- merma
-- merma_detalle
-- movimiento_inventario
+- merma + merma_detalle
+- movimiento_inventario (INMUTABLE)
 
-Reglas importantes:
-
-1. movimiento_inventario es INMUTABLE  
-2. Nunca se actualiza stock manualmente  
-3. Cada venta genera movimiento  
-4. Cada merma genera movimiento  
-5. Cada compra genera movimiento  
+Reglas críticas:
+1. movimiento_inventario NUNCA se edita ni elimina
+2. Stock SOLO se mueve via: COMPRA | VENTA | MERMA | TRASLADO | ANULACION_COMPRA
+3. Cada operación registra saldo_anterior y saldo_nuevo
+4. Si producto.maneja_lotes = true → compra crea/actualiza lote automáticamente
+5. Stock nunca queda negativo → validación en anulaciones
 
 --------------------------------------------------------------
 
-# 3.5 VENTAS (POS + FACTURACIÓN ELECTRÓNICA)
+# 3.5 COMPRAS
 
 TABLAS:
+- compra (cabecera)
+- compra_detalle
 
+Flujo de una compra:
+1. Crear cabecera
+2. Por cada detalle:
+   a. Crear compra_detalle
+   b. resolverLote() → crea o actualiza lote si maneja_lotes = true
+   c. resolverInventario() → crea o actualiza stock en inventario
+   d. registrarMovimiento() → Kardex tipo COMPRA
+3. Actualizar totales en cabecera
+
+Estados: RECIBIDA | ANULADA
+Anulación revierte stock, lotes y genera movimiento ANULACION_COMPRA
+
+--------------------------------------------------------------
+
+# 3.6 TERCEROS
+
+TABLAS:
+- tercero
+
+Características:
+- Un tercero puede ser cliente, proveedor y empleado simultáneamente
+- nombre_completo = COALESCE(razon_social, nombres + apellidos)
+- listarClientes() y listarProveedores() para selectores en POS y compras
+- Soft delete con deleted_at
+
+--------------------------------------------------------------
+
+# 3.7 VENTAS (POS + FACTURACIÓN ELECTRÓNICA)
+
+TABLAS:
 - caja
 - turno_caja
 - venta
@@ -198,92 +202,101 @@ TABLAS:
 - venta_pago
 
 Incluye:
-
-- Prefijo
-- Consecutivo por sucursal
-- CUFE
-- Estado DIAN
+- Prefijo + Consecutivo por sucursal
+- CUFE + Estado DIAN
 - Múltiples métodos de pago
-- Descuentos aplicados
+- Descuentos automáticos via motor de reglas
 - Impuestos grabados
 
 --------------------------------------------------------------
 
 # ============================================================
-# 4. ROADMAP DEL PROYECTO
+# 4. PATRONES Y CONVENCIONES
 # ============================================================
 
-## FASE 1 - CORE Y SEGURIDAD (COMPLETADO)
+## DTOs
+- XxxDto → detalle completo (formulario/obtenerPorId)
+- XxxTableDto → tabla paginada (incluye totalRows)
+- CreateXxxDto → creación
+- UpdateXxxDto → actualización
 
-- Configuración Spring Boot
-- PostgreSQL
-- JWT
-- Login
-- Register transaccional
-- Separación JPA / QueryRepository
-- Multi-sede operativa
+## Paginación
+- Siempre via POST /page con PageableDto
+- COUNT(*) OVER() AS total_rows en queries
+- BeanPropertyRowMapper para mapeo automático
+- PageImpl como respuesta
 
---------------------------------------------------------------
+## Soft Delete
+- Entidades con deleted_at: categoria, marca, producto, tercero, compra
+- Entidades sin deleted_at (solo activo): unidad_medida, lista_precios, lote, regla_descuento
+- Serial: hard delete
 
-## FASE 2 - GESTIÓN DE TERCEROS
+## Seguridad
+- empresaId siempre del token: securityUtils.getEmpresaId()
+- sucursalId del token: securityUtils.getSucursalId()
+- usuarioId del token: securityUtils.getUsuarioId()
+- NUNCA recibir empresaId por header o body
 
-- CRUD Terceros
-- Validación documento duplicado
-- Listado paginado con JDBC
-- Soft delete
-
---------------------------------------------------------------
-
-## FASE 3 - INVENTARIO Y PRODUCTOS
-
-- CRUD Producto
-- Kardex automático
-- Manejo de lotes
-- Manejo de seriales
-- Mermas
-- Traslados
-
---------------------------------------------------------------
-
-## FASE 4 - VENTAS
-
-- POS completo
-- Descuentos automáticos
-- Integración DIAN
-- Cierre de caja
-- Reportes
+## Validaciones
+- Duplicados → QueryRepository (existeNombre, existeDocumento, etc.)
+- Existencia por id → JPARepository (findByIdAndEmpresaId)
+- Lógica de negocio → Service
 
 --------------------------------------------------------------
 
 # ============================================================
-# 5. GUÍA PARA CREAR UN NUEVO MÓDULO
+# 5. ROADMAP DEL PROYECTO
 # ============================================================
 
-Ejemplo: Productos
+## ✅ COMPLETADO
 
-1. Entity -> domain/models
-2. DTOs -> dto/products
-3. JPARepository -> comandos
-4. QueryRepository -> listados
-5. Mapper -> MapStruct
-6. Service (Interface + Impl)
-7. Controller
+- Configuración Spring Boot + PostgreSQL + JWT
+- Login + Register transaccional multi-sede
+- SecurityUtils con claims del token
+- Categorías (jerárquico)
+- Marcas
+- Unidades de Medida (global)
+- Productos
+- Producto Presentaciones
+- Producto Composición (Kits y Recetas)
+- Listas de Precios
+- Precios por Producto
+- Reglas de Descuento
+- Inventario
+- Lotes
+- Seriales
+- Terceros (clientes y proveedores)
+- Compras + Kardex automático
+
+## 🔨 POR CONSTRUIR
+
+1. Caja
+2. Turno de Caja
+3. Ventas / POS (core)
+4. Mermas
+5. Traslados entre sucursales
+6. Reportes y Dashboard
+
+--------------------------------------------------------------
+
+# ============================================================
+# 6. GUÍA PARA CREAR UN NUEVO MÓDULO
+# ============================================================
+
+Orden estricto:
+1. SQL migration (si es tabla nueva)
+2. Entity → domain/models
+3. DTOs → dto/modulo (Dto, TableDto, CreateDto, UpdateDto)
+4. JPARepository → comandos simples
+5. QueryRepository → listados + validaciones complejas
+6. Mapper → MapStruct
+7. Service Interface + ServiceImpl
+8. Controller
 
 --------------------------------------------------------------
 
 # REGLA DE ORO
 
 Consultas de lectura masiva SIEMPRE van al QueryRepository con JDBC.
-
-NO usar Hibernate para listar 1000 registros.
-
---------------------------------------------------------------
-
-# PRINCIPIOS DEL SISTEMA
-
-✔ Escalable  
-✔ Multi-negocio  
-✔ Adaptable  
-✔ Trazable  
-✔ Auditable  
-✔ Preparado para crecimiento  
+NO usar Hibernate para listar registros.
+El stock NUNCA se modifica directamente, siempre via movimiento_inventario.

@@ -267,6 +267,34 @@ CREATE TABLE inventario (
     UNIQUE(sucursal_id, producto_id)
 );
 
+CREATE TABLE compra (
+    id SERIAL PRIMARY KEY,
+    empresa_id INT REFERENCES empresa(id),
+    sucursal_id INT REFERENCES sucursal(id),
+    proveedor_id INT REFERENCES tercero(id),
+    usuario_id INT REFERENCES usuario(id),
+    numero_compra VARCHAR(50),
+    fecha TIMESTAMP DEFAULT NOW(),
+    subtotal DECIMAL(14,2),
+    descuento_total DECIMAL(14,2) DEFAULT 0,
+    impuestos_total DECIMAL(14,2) DEFAULT 0,
+    total DECIMAL(14,2),
+    observaciones TEXT,
+    estado VARCHAR(20) DEFAULT 'RECIBIDA', -- RECIBIDA, ANULADA
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE compra_detalle (
+    id SERIAL PRIMARY KEY,
+    compra_id INT REFERENCES compra(id),
+    producto_id INT REFERENCES producto(id),
+    lote_id INT REFERENCES lote(id),
+    cantidad DECIMAL(14,4) NOT NULL,
+    costo_unitario DECIMAL(14,2) NOT NULL,
+    impuesto_valor DECIMAL(14,2) DEFAULT 0,
+    subtotal_linea DECIMAL(14,2)
+);
+SELECT id, nombre, maneja_lotes FROM producto WHERE id = 1;
 -- Motivos de Merma
 CREATE TABLE motivo_merma (
     id SERIAL PRIMARY KEY,

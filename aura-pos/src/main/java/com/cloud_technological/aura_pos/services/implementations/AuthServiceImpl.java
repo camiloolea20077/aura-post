@@ -169,7 +169,8 @@ public class AuthServiceImpl implements AuthService{
                 authentication, 
                 usuario.getEmpresa().getId(), 
                 sucursalActualId,
-                usuario.getRol()
+                usuario.getRol(),
+                Long.valueOf(usuario.getId())
             );
 
             // 6. Construir Respuesta

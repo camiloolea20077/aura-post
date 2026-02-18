@@ -1,7 +1,5 @@
 package com.cloud_technological.aura_pos.dto.terceros;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,17 +7,14 @@ import lombok.Setter;
 @Setter
 public class TerceroTableDto {
     private Long id;
-    private String nombreCompleto; // Ya viene concatenado de la base de datos
     private String tipoDocumento;
     private String numeroDocumento;
-    private String email;
+    private String nombreCompleto; // razon_social o nombres + apellidos
     private String telefono;
-    private String ciudad;
-    
-    // Para mostrar visualmente qué es (ej: "Cliente, Proveedor")
-    private String rolesString; 
-    
+    private String email;
+    private Boolean esCliente;
+    private Boolean esProveedor;
+    private Boolean esEmpleado;
     private Boolean activo;
-    @JsonIgnore
-    private Long totalRows; // Para la paginación
+    private long totalRows;
 }

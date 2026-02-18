@@ -1,5 +1,7 @@
 package com.cloud_technological.aura_pos.controllers;
 
+import java.util.List;
+
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cloud_technological.aura_pos.dto.terceros.CreateTerceroDto;
@@ -21,6 +24,7 @@ import com.cloud_technological.aura_pos.dto.terceros.TerceroTableDto;
 import com.cloud_technological.aura_pos.dto.terceros.UpdateTerceroDto;
 import com.cloud_technological.aura_pos.services.ITerceroService;
 import com.cloud_technological.aura_pos.utils.ApiResponse;
+import com.cloud_technological.aura_pos.utils.GlobalException;
 import com.cloud_technological.aura_pos.utils.PageableDto;
 import com.cloud_technological.aura_pos.utils.SecurityUtils;
 
@@ -30,60 +34,67 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/terceros")
 @RequiredArgsConstructor
 public class TerceroController {
-        @Autowired
-        private ITerceroService terceroService;
+ 
+    @Autowired
+    private ITerceroService terceroService;
 
-        @Autowired
-        private SecurityUtils securityUtils; // Inyectamos la utility
+    @Autowired
+    private SecurityUtils securityUtils;
 
-        @PostMapping("/list")
-        public ResponseEntity<ApiResponse<PageImpl<TerceroTableDto>>> listar(
-                        @RequestBody PageableDto<Object> pageable) {
-                Integer empresaId = securityUtils.getEmpresaId();
-                PageImpl<TerceroTableDto> result = terceroService.listar(pageable, empresaId);
-                return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "Listado exitoso", false, result),
-                                HttpStatus.OK);
-        }
+    @PostMapping("/page")
+    public ResponseEntity<ApiResponse<PageImpl<TerceroTableDto>>> listar(
+            @RequestBody PageableDto<Object> pageable) {
+        Integer empresaId = securityUtils.getEmpresaId();
+        PageImpl<TerceroTableDto> result = terceroService.listar(pageable, empresaId);
+        if (result.isEmpty())
+            throw new GlobalException(HttpStatus.PARTIAL_CONTENT, "No se encontraron registros");
+        return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "Listado exitoso", false, result), HttpStatus.OK);
+    }
 
-        @PostMapping
-        public ResponseEntity<ApiResponse<TerceroDto>> crear(@Valid @RequestBody CreateTerceroDto dto) {
-                Integer empresaId = securityUtils.getEmpresaId();
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<TerceroDto>> obtenerPorId(@PathVariable Long id) {
+        Integer empresaId = securityUtils.getEmpresaId();
+        TerceroDto result = terceroService.obtenerPorId(id, empresaId);
+        return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "Tercero encontrado", false, result), HttpStatus.OK);
+    }
 
-                TerceroDto result = terceroService.crear(dto, empresaId);
+    @GetMapping("/clientes")
+    public ResponseEntity<ApiResponse<List<TerceroTableDto>>> listarClientes(
+            @RequestParam(defaultValue = "") String search) {
+        Integer empresaId = securityUtils.getEmpresaId();
+        List<TerceroTableDto> result = terceroService.listarClientes(search, empresaId);
+        return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "", false, result), HttpStatus.OK);
+    }
 
-                return new ResponseEntity<>(new ApiResponse<>(HttpStatus.CREATED.value(), "Tercero creado exitosamente",
-                                false, result), HttpStatus.CREATED);
-        }
+    @GetMapping("/proveedores")
+    public ResponseEntity<ApiResponse<List<TerceroTableDto>>> listarProveedores(
+            @RequestParam(defaultValue = "") String search) {
+        Integer empresaId = securityUtils.getEmpresaId();
+        List<TerceroTableDto> result = terceroService.listarProveedores(search, empresaId);
+        return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "", false, result), HttpStatus.OK);
+    }
 
-        @PutMapping("/{id}")
-        public ResponseEntity<ApiResponse<Boolean>> actualizar(@PathVariable Long id, @Valid @RequestBody UpdateTerceroDto dto) {
-                Integer empresaId = securityUtils.getEmpresaId();
-                
-                // Aseguramos consistencia
-                dto.setId(id);
-                
-                boolean result = terceroService.actualizar(dto, empresaId);
-                return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "Tercero actualizado", false, result), HttpStatus.OK);
-        }
+    @PostMapping("/create")
+    public ResponseEntity<ApiResponse<TerceroDto>> crear(@Valid @RequestBody CreateTerceroDto dto) {
+        Integer empresaId = securityUtils.getEmpresaId();
+        TerceroDto result = terceroService.crear(dto, empresaId);
+        return new ResponseEntity<>(new ApiResponse<>(HttpStatus.CREATED.value(), "Tercero creado exitosamente", false, result), HttpStatus.CREATED);
+    }
 
-        @DeleteMapping("/{id}")
-        public ResponseEntity<ApiResponse<Boolean>> eliminar(@PathVariable Long id) {
-                Integer empresaId = securityUtils.getEmpresaId();
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<TerceroDto>> actualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateTerceroDto dto) {
+        Integer empresaId = securityUtils.getEmpresaId();
+        dto.setId(id);
+        TerceroDto result = terceroService.actualizar(id, dto, empresaId);
+        return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "Tercero actualizado correctamente", false, result), HttpStatus.OK);
+    }
 
-                boolean result = terceroService.eliminar(id, empresaId);
-
-                return new ResponseEntity<>(
-                                new ApiResponse<>(HttpStatus.OK.value(), "Tercero eliminado", false, result),
-                                HttpStatus.OK);
-        }
-
-        @GetMapping("/{id}")
-        public ResponseEntity<ApiResponse<TerceroDto>> obtener(@PathVariable Long id) {
-                Integer empresaId = securityUtils.getEmpresaId();
-
-                TerceroDto result = terceroService.obtenerPorId(id, empresaId);
-
-                return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "Detalle obtenido", false, result),
-                                HttpStatus.OK);
-        }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Boolean>> eliminar(@PathVariable Long id) {
+        Integer empresaId = securityUtils.getEmpresaId();
+        terceroService.eliminar(id, empresaId);
+        return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "Tercero eliminado correctamente", false, true), HttpStatus.OK);
+    }
 }

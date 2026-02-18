@@ -29,7 +29,7 @@ public class JwtTokenProvider {
     private long jwtExpirationDate;
 
     // Generar Token con Claims personalizados (Empresa y Sucursal)
-    public String generateToken(Authentication authentication, Integer empresaId, Long sucursalId, String rol) {
+    public String generateToken(Authentication authentication, Integer empresaId, Long sucursalId, String rol, Long usuarioId) {
         String username = authentication.getName();
         Date currentDate = new Date();
         Date expireDate = new Date(currentDate.getTime() + jwtExpirationDate);
@@ -38,6 +38,7 @@ public class JwtTokenProvider {
         claims.put("empresaId", empresaId);
         claims.put("sucursalId", sucursalId); // ID de la sede donde está trabajando
         claims.put("rol", rol);
+        claims.put("usuarioId", usuarioId);
 
         return Jwts.builder()
                 .setClaims(claims)

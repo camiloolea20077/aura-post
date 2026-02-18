@@ -12,31 +12,27 @@ import io.jsonwebtoken.security.Keys;
 
 @Component
 public class SecurityUtils {
+    
     @Value("${app.jwt.secret}")
     private String jwtSecret;
 
     public Integer getEmpresaId() {
         String token = getTokenFromSecurityContext();
-        if (token != null) {
-            return extractEmpresaId(token);
-        }
-        return null;
+        return token != null ? extractEmpresaId(token) : null;
     }
 
     public Long getSucursalId() {
         String token = getTokenFromSecurityContext();
-        if (token != null) {
-            return extractSucursalId(token);
-        }
-        return null;
+        return token != null ? extractSucursalId(token) : null;
     }
 
+    public Long getUsuarioId() {
+        String token = getTokenFromSecurityContext();
+        return token != null ? extractUsuarioId(token) : null;
+    }
     public String getRol() {
         String token = getTokenFromSecurityContext();
-        if (token != null) {
-            return extractRol(token);
-        }
-        return null;
+        return token != null ? extractRol(token) : null;
     }
 
     private String getTokenFromSecurityContext() {
@@ -55,6 +51,11 @@ public class SecurityUtils {
     private Long extractSucursalId(String token) {
         Claims claims = extractAllClaims(token);
         return claims.get("sucursalId", Long.class);
+    }
+
+    private Long extractUsuarioId(String token) {
+        Claims claims = extractAllClaims(token);
+        return claims.get("usuarioId", Long.class);
     }
 
     private String extractRol(String token) {
