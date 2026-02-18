@@ -1,0 +1,20 @@
+/* PrimeIcons */
+@import "primeicons/primeicons.css";
+
+/* PrimeFlex */
+@import "primeflex/primeflex.css";
+
+/* ─── Global Reset & Base ─────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  color: #1e1e2e;
+  -webkit-font-smoothing: antialiased;
+}

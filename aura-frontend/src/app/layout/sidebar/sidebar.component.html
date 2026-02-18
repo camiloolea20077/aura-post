@@ -1,0 +1,45 @@
+<aside class="sidebar">
+  <!-- Logo -->
+  <div class="sidebar-header">
+    <div class="sidebar-logo">
+      <i class="pi pi-shopping-bag"></i>
+      <span class="sidebar-logo-text">Aura <strong>POS</strong></span>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="sidebar-nav">
+    @for (group of navGroups; track $index) {
+      @if (group.title) {
+        <p class="nav-group-label">{{ group.title }}</p>
+      }
+      @for (item of group.items; track item.route) {
+        <a
+          class="nav-item"
+          [routerLink]="item.route"
+          routerLinkActive="active"
+        >
+          <i [class]="item.icon"></i>
+          <span>{{ item.label }}</span>
+        </a>
+      }
+    }
+  </nav>
+
+  <!-- Footer -->
+  <div class="sidebar-footer">
+    <a class="nav-item" routerLink="/settings" routerLinkActive="active">
+      <i class="pi pi-cog"></i>
+      <span>Configuración</span>
+    </a>
+    <div class="user-info">
+      <div class="user-avatar">
+        <i class="pi pi-user"></i>
+      </div>
+      <div class="user-details">
+        <span class="user-name">Administrador</span>
+        <span class="user-role">Super Admin</span>
+      </div>
+    </div>
+  </div>
+</aside>
