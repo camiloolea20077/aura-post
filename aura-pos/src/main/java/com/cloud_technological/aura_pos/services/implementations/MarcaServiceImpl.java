@@ -7,7 +7,10 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 import com.cloud_technological.aura_pos.dto.marcas.CreateMarcaDto;
+import com.cloud_technological.aura_pos.dto.marcas.MarcaDto;
 import com.cloud_technological.aura_pos.dto.marcas.MarcaTableDto;
 import com.cloud_technological.aura_pos.dto.marcas.UpdateMarcaDto;
 import com.cloud_technological.aura_pos.entity.EmpresaEntity;
@@ -91,5 +94,9 @@ public class MarcaServiceImpl implements MarcaService {
         entity.setDeletedAt(LocalDateTime.now());
         entity.setActivo(false);
         marcaJPARepository.save(entity);
+    }
+    @Override
+    public List<MarcaDto> list(Integer empresaId) {
+        return marcaRepository.list(empresaId);
     }
 }

@@ -9,7 +9,7 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-
+import com.cloud_technological.aura_pos.dto.marcas.MarcaDto;
 import com.cloud_technological.aura_pos.dto.marcas.MarcaTableDto;
 import com.cloud_technological.aura_pos.utils.PageableDto;
 
@@ -81,5 +81,17 @@ public class MarcaQueryRepository {
         params.addValue("id", id);
         Long count = jdbcTemplate.queryForObject(sql, params, Long.class);
         return count != null && count > 0;
+    }
+    public List<MarcaDto> list(Integer empresaId) {
+        String sql = """
+            SELECT id, nombre
+            FROM marca
+            WHERE empresa_id = :empresaId
+            AND activo = true
+            AND deleted_at IS NULL
+            ORDER BY nombre ASC
+        """;
+        MapSqlParameterSource params = new MapSqlParameterSource("empresaId", empresaId);
+        return jdbcTemplate.query(sql, params, new BeanPropertyRowMapper<>(MarcaDto.class));
     }
 }

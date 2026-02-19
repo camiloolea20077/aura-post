@@ -1,6 +1,25 @@
-<div class="layout-wrapper">
-  <app-sidebar />
-  <main class="layout-content">
-    <router-outlet />
-  </main>
+<div class="aura-layout" [class.sidebar-collapsed]="sidebarCollapsed">
+
+  <!-- Sidebar -->
+  <app-sidebar
+    [collapsed]="sidebarCollapsed"
+    (toggleCollapse)="toggleSidebar()"
+  />
+
+  <!-- Main area -->
+  <div class="aura-main">
+
+    <!-- Topbar -->
+    <app-topbar
+      [sidebarCollapsed]="sidebarCollapsed"
+      (toggleSidebar)="toggleSidebar()"
+    />
+
+    <!-- Page content -->
+    <main class="aura-content">
+      <router-outlet />
+    </main>
+
+  </div>
+
 </div>

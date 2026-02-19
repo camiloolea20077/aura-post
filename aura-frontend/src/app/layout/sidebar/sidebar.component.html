@@ -1,45 +1,88 @@
-<aside class="sidebar">
-  <!-- Logo -->
-  <div class="sidebar-header">
-    <div class="sidebar-logo">
-      <i class="pi pi-shopping-bag"></i>
-      <span class="sidebar-logo-text">Aura <strong>POS</strong></span>
+<aside class="aura-sidebar" [class.collapsed]="collapsed">
+
+  <!-- ─── Logo ─────────────────────────────────── -->
+  <div class="sidebar-logo">
+    <div class="logo-brand" *ngIf="!collapsed">
+      <div class="logo-icon-box">A</div>
+      <div class="logo-texts">
+        <span class="logo-name">AURA <span>POS</span></span>
+        <span class="logo-empresa" *ngIf="empresaNombre">{{ empresaNombre }}</span>
+      </div>
     </div>
+    <div class="logo-brand centered" *ngIf="collapsed">
+      <div class="logo-icon-box">A</div>
+    </div>
+
+    <button
+      class="collapse-btn"
+      (click)="toggleCollapse.emit()"
+      [pTooltip]="collapsed ? 'Expandir' : 'Colapsar'"
+      tooltipPosition="right">
+      <i [class]="collapsed ? 'pi pi-chevron-right' : 'pi pi-chevron-left'"></i>
+    </button>
   </div>
 
-  <!-- Navigation -->
+  <!-- ─── Navigation ───────────────────────────── -->
   <nav class="sidebar-nav">
-    @for (group of navGroups; track $index) {
-      @if (group.title) {
-        <p class="nav-group-label">{{ group.title }}</p>
-      }
-      @for (item of group.items; track item.route) {
+    <ng-container *ngFor="let group of menuGroups">
+
+      <div class="nav-group">
+        <span class="nav-group-label" *ngIf="!collapsed">{{ group.label }}</span>
+
         <a
-          class="nav-item"
+          *ngFor="let item of group.items"
           [routerLink]="item.route"
           routerLinkActive="active"
-        >
-          <i [class]="item.icon"></i>
-          <span>{{ item.label }}</span>
+          class="nav-item"
+          [class.highlight]="item.highlight"
+          [pTooltip]="collapsed ? item.label : ''"
+          tooltipPosition="right">
+
+          <i [class]="item.icon + ' nav-icon'"></i>
+
+          <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
+
+          <span class="nav-badge" *ngIf="item.badge && !collapsed">
+            {{ item.badge }}
+          </span>
+
+          <!-- Badge colapsado: solo punto -->
+          <span class="nav-badge-dot" *ngIf="item.badge && collapsed"></span>
+
         </a>
-      }
-    }
+      </div>
+
+    </ng-container>
   </nav>
 
-  <!-- Footer -->
+  <!-- ─── Footer ───────────────────────────────── -->
   <div class="sidebar-footer">
-    <a class="nav-item" routerLink="/settings" routerLinkActive="active">
-      <i class="pi pi-cog"></i>
-      <span>Configuración</span>
-    </a>
-    <div class="user-info">
-      <div class="user-avatar">
-        <i class="pi pi-user"></i>
+    <ng-container *ngIf="!collapsed">
+      <div class="user-info">
+        <div class="user-avatar">{{ userInitials }}</div>
+        <div class="user-details">
+          <span class="user-name">{{ userName }}</span>
+          <span class="user-role">{{ userRole }}</span>
+        </div>
       </div>
-      <div class="user-details">
-        <span class="user-name">Administrador</span>
-        <span class="user-role">Super Admin</span>
-      </div>
-    </div>
+      <button
+        class="logout-btn"
+        (click)="logout()"
+        pTooltip="Cerrar sesión"
+        tooltipPosition="top">
+        <i class="pi pi-sign-out"></i>
+      </button>
+    </ng-container>
+
+    <ng-container *ngIf="collapsed">
+      <button
+        class="logout-btn centered"
+        (click)="logout()"
+        pTooltip="Cerrar sesión"
+        tooltipPosition="right">
+        <i class="pi pi-sign-out"></i>
+      </button>
+    </ng-container>
   </div>
+
 </aside>

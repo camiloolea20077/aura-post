@@ -1,0 +1,545 @@
+<p-dialog
+  [(visible)]="displayModal"
+  [header]="isEditMode ? 'Editar producto' : 'Nuevo producto'"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '720px' }"
+  styleClass="aura-dialog aura-dialog-lg"
+  (onHide)="closeModal()"
+>
+  <!-- Loading -->
+  <div class="dialog-loading" *ngIf="isLoading">
+    <i class="pi pi-spin pi-spinner"></i>
+    <span>Cargando producto...</span>
+  </div>
+
+  <!-- Formulario -->
+  <form [formGroup]="frmProducto" *ngIf="!isLoading">
+    <p-tabView [(activeIndex)]="activeTab" styleClass="aura-tabs">
+      <!-- ─── Tab 1: Info básica ──────────────────────────── -->
+      <p-tabPanel header="Información básica">
+        <ng-template pTemplate="header">
+          <span class="tab-label">
+            <i class="pi pi-info-circle"></i> Básico
+          </span>
+        </ng-template>
+
+        <div class="tab1-layout">
+          <!-- ── Columna izquierda: imagen ──────────────────── -->
+          <div class="imagen-col">
+            <label class="imagen-label">Imagen del producto</label>
+
+            <div class="imagen-box">
+              <img
+                *ngIf="frmProducto.get('imagenUrl')?.value && imageValid"
+                [src]="frmProducto.get('imagenUrl')?.value"
+                alt="Imagen producto"
+                (error)="onImageError($event)"
+                (load)="onImageLoad($event)"
+                class="imagen-img"
+              />
+
+              <div
+                class="imagen-empty"
+                *ngIf="!frmProducto.get('imagenUrl')?.value || !imageValid"
+              >
+                <i class="pi pi-image"></i>
+                <span>Sin imagen</span>
+              </div>
+            </div>
+
+            <div class="field mt-2">
+              <input
+                id="imagenUrl"
+                type="text"
+                pInputText
+                formControlName="imagenUrl"
+                placeholder="https://ejemplo.com/img.jpg"
+                maxlength="500"
+                autocomplete="off"
+                (input)="onImageUrlChange()"
+              />
+              <small class="field-hint">
+                <i class="pi pi-info-circle"></i> URL pública de la imagen
+              </small>
+            </div>
+
+            <!-- Estado aquí, debajo de la imagen -->
+            <div class="field-inline mt-2">
+              <div class="switch-label">
+                <span class="label-text">Estado</span>
+                <span class="label-sub">
+                  {{ frmProducto.get("activo")?.value ? "Activo" : "Inactivo" }}
+                </span>
+              </div>
+              <p-inputSwitch formControlName="activo" />
+            </div>
+          </div>
+
+          <!-- ── Columna derecha: campos ─────────────────────── -->
+          <div class="campos-col">
+            <!-- Nombre -->
+            <div class="field">
+              <label for="nombre"
+                >Nombre del producto <span class="required">*</span></label
+              >
+              <input
+                id="nombre"
+                type="text"
+                pInputText
+                formControlName="nombre"
+                placeholder="Ej: Coca-Cola 500ml, Arroz Diana 1kg..."
+                [class.ng-invalid]="isInvalid('nombre')"
+                [class.ng-dirty]="frmProducto.get('nombre')?.touched"
+                maxlength="255"
+                autocomplete="off"
+              />
+              <small class="p-error" *ngIf="isInvalid('nombre')">
+                <ng-container
+                  *ngIf="frmProducto.get('nombre')?.hasError('required')"
+                  >El nombre es obligatorio.</ng-container
+                >
+                <ng-container
+                  *ngIf="frmProducto.get('nombre')?.hasError('minlength')"
+                  >Mínimo 2 caracteres.</ng-container
+                >
+              </small>
+            </div>
+
+            <!-- SKU + Código de barras -->
+            <div class="field-row">
+              <div class="field">
+                <label for="sku"
+                  >SKU <span class="optional">(opcional)</span></label
+                >
+                <input
+                  id="sku"
+                  type="text"
+                  pInputText
+                  formControlName="sku"
+                  placeholder="Ej: BEB-001"
+                  maxlength="50"
+                  autocomplete="off"
+                  style="
+                    font-family: &quot;JetBrains Mono&quot;, monospace;
+                    text-transform: uppercase;
+                  "
+                />
+              </div>
+              <div class="field">
+                <label for="codigoBarras"
+                  >Código de barras
+                  <span class="optional">(opcional)</span></label
+                >
+                <input
+                  id="codigoBarras"
+                  type="text"
+                  pInputText
+                  formControlName="codigoBarras"
+                  placeholder="Ej: 7750955051042"
+                  maxlength="50"
+                  autocomplete="off"
+                  style="font-family: &quot;JetBrains Mono&quot;, monospace"
+                />
+              </div>
+            </div>
+
+            <!-- Categoría + Marca -->
+            <div class="field-row">
+              <div class="field">
+                <label for="categoriaId">Categoría</label>
+                <p-dropdown
+                  inputId="categoriaId"
+                  formControlName="categoriaId"
+                  [options]="categoriasOpts"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Seleccionar..."
+                  [filter]="true"
+                  filterPlaceholder="Buscar..."
+                  [showClear]="true"
+                  styleClass="w-full"
+                />
+              </div>
+              <div class="field">
+                <label for="marcaId">Marca</label>
+                <p-dropdown
+                  inputId="marcaId"
+                  formControlName="marcaId"
+                  [options]="marcasOpts"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Seleccionar..."
+                  [filter]="true"
+                  filterPlaceholder="Buscar..."
+                  [showClear]="true"
+                  styleClass="w-full"
+                />
+              </div>
+            </div>
+
+            <!-- Unidad de medida + Tipo -->
+            <div class="field-row">
+              <div class="field">
+                <label for="unidadMedidaBaseId"
+                  >Unidad de medida <span class="required">*</span></label
+                >
+                <p-dropdown
+                  inputId="unidadMedidaBaseId"
+                  formControlName="unidadMedidaBaseId"
+                  [options]="unidadesOpts"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Seleccionar unidad..."
+                  [class.ng-invalid]="isInvalid('unidadMedidaBaseId')"
+                  [filter]="true"
+                  filterPlaceholder="Buscar..."
+                  styleClass="w-full"
+                />
+                <small class="p-error" *ngIf="isInvalid('unidadMedidaBaseId')">
+                  La unidad de medida es obligatoria.
+                </small>
+              </div>
+              <div class="field">
+                <label for="tipoProducto"
+                  >Tipo de producto <span class="required">*</span></label
+                >
+                <p-dropdown
+                  inputId="tipoProducto"
+                  formControlName="tipoProducto"
+                  [options]="tipoOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="w-full"
+                />
+              </div>
+            </div>
+
+            <!-- Descripción -->
+            <div class="field">
+              <label for="descripcion"
+                >Descripción <span class="optional">(opcional)</span></label
+              >
+              <textarea
+                id="descripcion"
+                pTextarea
+                formControlName="descripcion"
+                placeholder="Descripción del producto..."
+                rows="3"
+                maxlength="500"
+              ></textarea>
+
+              <small class="char-count">
+                {{ frmProducto.get("descripcion")?.value?.length ?? 0 }}/500
+              </small>
+            </div>
+          </div>
+        </div>
+      </p-tabPanel>
+
+      <!-- ─── Tab 2: Precios e impuestos ─────────────────── -->
+      <p-tabPanel>
+        <ng-template pTemplate="header">
+          <span class="tab-label"> <i class="pi pi-dollar"></i> Precios </span>
+        </ng-template>
+
+        <div class="form-container">
+          <!-- Precio + Costo -->
+          <div class="field-row">
+            <div class="field">
+              <label for="precio"
+                >Precio de venta <span class="required">*</span></label
+              >
+              <p-inputNumber
+                inputId="precio"
+                formControlName="precio"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [minFractionDigits]="0"
+                [maxFractionDigits]="0"
+                [min]="0"
+                styleClass="w-full"
+                [class.ng-invalid]="isInvalid('precio')"
+                [class.ng-dirty]="frmProducto.get('precio')?.touched"
+              />
+            </div>
+            <div class="field">
+              <label for="costo">Costo <span class="required">*</span></label>
+              <p-inputNumber
+                inputId="costo"
+                formControlName="costo"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [minFractionDigits]="0"
+                [maxFractionDigits]="0"
+                [min]="0"
+                styleClass="w-full"
+              />
+            </div>
+          </div>
+
+          <!-- Indicador de margen -->
+          <div class="margen-card" *ngIf="frmProducto.get('precio')?.value > 0">
+            <div class="margen-info">
+              <i class="pi pi-percentage"></i>
+              <span>Margen de utilidad estimado</span>
+            </div>
+            <span
+              class="margen-value"
+              [class.margen-ok]="margenUtilidad >= 20"
+              [class.margen-warn]="margenUtilidad > 0 && margenUtilidad < 20"
+              [class.margen-neg]="margenUtilidad <= 0"
+            >
+              {{ margenUtilidad }}%
+            </span>
+          </div>
+
+          <p-divider align="left">
+            <span class="divider-label">Impuestos</span>
+          </p-divider>
+
+          <!-- IVA + Impoconsumo -->
+          <div class="field-row">
+            <div class="field">
+              <label for="ivaPorcentaje"
+                >IVA (%) <span class="required">*</span></label
+              >
+              <p-inputNumber
+                inputId="ivaPorcentaje"
+                formControlName="ivaPorcentaje"
+                [min]="0"
+                [max]="100"
+                [maxFractionDigits]="2"
+                suffix="%"
+                styleClass="w-full"
+                placeholder="0"
+              />
+              <small class="field-hint">
+                <i class="pi pi-info-circle"></i>
+                Valores comunes: 0%, 5%, 19%
+              </small>
+            </div>
+            <div class="field">
+              <label for="impoconsumo"
+                >Impoconsumo ($) <span class="required">*</span></label
+              >
+              <p-inputNumber
+                inputId="impoconsumo"
+                formControlName="impoconsumo"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [minFractionDigits]="0"
+                [min]="0"
+                styleClass="w-full"
+              />
+              <small class="field-hint">
+                <i class="pi pi-info-circle"></i>
+                Aplica a bebidas azucaradas, licores, etc.
+              </small>
+            </div>
+          </div>
+
+          <!-- Resumen de precio final -->
+          <div
+            class="precio-resumen"
+            *ngIf="frmProducto.get('precio')?.value > 0"
+          >
+            <div class="pr-row">
+              <span>Precio base</span>
+              <span class="numeric">{{
+                frmProducto.get("precio")?.value
+                  | currency: "COP" : "symbol-narrow" : "1.0-0"
+              }}</span>
+            </div>
+            <div
+              class="pr-row"
+              *ngIf="frmProducto.get('ivaPorcentaje')?.value > 0"
+            >
+              <span>IVA ({{ frmProducto.get("ivaPorcentaje")?.value }}%)</span>
+              <span class="numeric">
+                {{
+                  (frmProducto.get("precio")?.value *
+                    frmProducto.get("ivaPorcentaje")?.value) /
+                    100 | currency: "COP" : "symbol-narrow" : "1.0-0"
+                }}
+              </span>
+            </div>
+            <div
+              class="pr-row"
+              *ngIf="frmProducto.get('impoconsumo')?.value > 0"
+            >
+              <span>Impoconsumo</span>
+              <span class="numeric">{{
+                frmProducto.get("impoconsumo")?.value
+                  | currency: "COP" : "symbol-narrow" : "1.0-0"
+              }}</span>
+            </div>
+            <div class="pr-row pr-total">
+              <span>Precio final al cliente</span>
+              <span class="numeric">
+                {{
+                  frmProducto.get("precio")?.value +
+                    (frmProducto.get("precio")?.value *
+                      frmProducto.get("ivaPorcentaje")?.value) /
+                      100 +
+                    frmProducto.get("impoconsumo")?.value
+                    | currency: "COP" : "symbol-narrow" : "1.0-0"
+                }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </p-tabPanel>
+
+      <!-- ─── Tab 3: Control de inventario ───────────────── -->
+      <p-tabPanel>
+        <ng-template pTemplate="header">
+          <span class="tab-label"> <i class="pi pi-box"></i> Inventario </span>
+        </ng-template>
+
+        <div class="form-container">
+          <div class="inv-info-card">
+            <i class="pi pi-info-circle"></i>
+            <p>
+              La configuración de inventario define cómo se rastrea el stock de
+              este producto.
+              <strong
+                >No puedes cambiarla una vez que el producto tenga movimientos
+                registrados.</strong
+              >
+            </p>
+          </div>
+
+          <!-- Maneja inventario -->
+          <div class="field-inline inv-switch">
+            <div class="switch-label">
+              <span class="label-text">
+                <i class="pi pi-warehouse"></i>
+                Maneja inventario
+              </span>
+              <span class="label-sub">
+                Controla el stock disponible. Desactivar en servicios o
+                productos digitales.
+              </span>
+            </div>
+            <p-inputSwitch formControlName="manejaInventario" />
+          </div>
+
+          <div class="inv-sublevel" [class.disabled]="!manejaInventarioValue">
+            <!-- Maneja lotes -->
+            <div class="field-inline inv-switch">
+              <div class="switch-label">
+                <span class="label-text">
+                  <i class="pi pi-calendar"></i>
+                  Maneja lotes
+                </span>
+                <span class="label-sub">
+                  Rastrea lotes con número y fecha de vencimiento. Ideal para
+                  alimentos y medicamentos.
+                </span>
+              </div>
+              <p-inputSwitch
+                formControlName="manejaLotes"
+                [disabled]="!manejaInventarioValue"
+              />
+            </div>
+
+            <!-- Maneja serial -->
+            <div class="field-inline inv-switch">
+              <div class="switch-label">
+                <span class="label-text">
+                  <i class="pi pi-barcode"></i>
+                  Maneja serial
+                </span>
+                <span class="label-sub">
+                  Rastrea cada unidad por número de serie. Ideal para
+                  electrónicos y maquinaria.
+                </span>
+              </div>
+              <p-inputSwitch
+                formControlName="manejaSerial"
+                [disabled]="!manejaInventarioValue"
+              />
+            </div>
+          </div>
+
+          <!-- Resumen configuración -->
+          <div class="inv-summary">
+            <div
+              class="inv-sum-item"
+              [class.active]="frmProducto.get('manejaInventario')?.value"
+            >
+              <i
+                class="pi"
+                [class]="
+                  frmProducto.get('manejaInventario')?.value
+                    ? 'pi-check-circle'
+                    : 'pi-times-circle'
+                "
+              ></i>
+              <span>Control de stock</span>
+            </div>
+            <div
+              class="inv-sum-item"
+              [class.active]="frmProducto.get('manejaLotes')?.value"
+            >
+              <i
+                class="pi"
+                [class]="
+                  frmProducto.get('manejaLotes')?.value
+                    ? 'pi-check-circle'
+                    : 'pi-times-circle'
+                "
+              ></i>
+              <span>Trazabilidad por lote</span>
+            </div>
+            <div
+              class="inv-sum-item"
+              [class.active]="frmProducto.get('manejaSerial')?.value"
+            >
+              <i
+                class="pi"
+                [class]="
+                  frmProducto.get('manejaSerial')?.value
+                    ? 'pi-check-circle'
+                    : 'pi-times-circle'
+                "
+              ></i>
+              <span>Trazabilidad por serial</span>
+            </div>
+          </div>
+        </div>
+      </p-tabPanel>
+    </p-tabView>
+  </form>
+
+  <!-- Footer -->
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button
+        pButton
+        type="button"
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-outlined p-button-secondary"
+        [disabled]="isSubmitting"
+        (click)="closeModal()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        [label]="isEditMode ? 'Actualizar producto' : 'Guardar producto'"
+        [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+        class="btn-aura"
+        [disabled]="isSubmitting || isLoading"
+        (click)="saveProducto()"
+      ></button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-toast />

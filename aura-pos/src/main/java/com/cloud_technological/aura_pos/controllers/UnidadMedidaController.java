@@ -14,8 +14,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
 
 import com.cloud_technological.aura_pos.dto.unidad_medida.CreateUnidadMedidaDto;
+import com.cloud_technological.aura_pos.dto.unidad_medida.UnidadMedida;
 import com.cloud_technological.aura_pos.dto.unidad_medida.UnidadMedidaDto;
 import com.cloud_technological.aura_pos.dto.unidad_medida.UnidadMedidaTableDto;
 import com.cloud_technological.aura_pos.dto.unidad_medida.UpdateUnidadMedidaDto;
@@ -64,5 +66,10 @@ public class UnidadMedidaController {
     public ResponseEntity<ApiResponse<Boolean>> eliminar(@PathVariable Long id) {
         unidadMedidaService.eliminar(id);
         return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "Unidad de medida eliminada correctamente", false, true), HttpStatus.OK);
+    }
+    @GetMapping("/list")
+    public ResponseEntity<ApiResponse<List<UnidadMedida>>> list() {
+        return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "", false, 
+            unidadMedidaService.list()), HttpStatus.OK);
     }
 }

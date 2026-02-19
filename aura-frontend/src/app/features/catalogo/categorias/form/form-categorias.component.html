@@ -1,0 +1,137 @@
+<p-dialog
+  [(visible)]="displayModal"
+  [header]="isEditMode ? 'Editar categoría' : 'Nueva categoría'"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '500px' }"
+  styleClass="aura-dialog"
+  (onHide)="closeModal()"
+>
+  <!-- Loading -->
+  <div class="dialog-loading" *ngIf="isLoading">
+    <i class="pi pi-spin pi-spinner"></i>
+    <span>Cargando datos...</span>
+  </div>
+
+  <!-- Form -->
+  <form
+    [formGroup]="frmCategoria"
+    (ngSubmit)="saveCategoria()"
+    class="form-container"
+    *ngIf="!isLoading"
+  >
+    <!-- Nombre -->
+    <div class="field">
+      <label for="nombre">Nombre <span class="required">*</span></label>
+      <input
+        id="nombre"
+        type="text"
+        pInputText
+        formControlName="nombre"
+        placeholder="Ej: Bebidas, Lácteos, Panadería..."
+        [class.ng-invalid]="isInvalid('nombre')"
+        [class.ng-dirty]="frmCategoria.get('nombre')?.touched"
+        maxlength="150"
+        autocomplete="off"
+      />
+      <small class="p-error" *ngIf="isInvalid('nombre')">
+        <ng-container *ngIf="frmCategoria.get('nombre')?.hasError('required')"
+          >El nombre es obligatorio.</ng-container
+        >
+        <ng-container *ngIf="frmCategoria.get('nombre')?.hasError('minlength')"
+          >Mínimo 2 caracteres.</ng-container
+        >
+      </small>
+    </div>
+
+    <!-- Categoría padre -->
+    <div class="field">
+      <label for="padreId">
+        Categoría padre <span class="optional">(opcional)</span>
+      </label>
+      <p-dropdown
+        inputId="padreId"
+        formControlName="padreId"
+        [options]="categoriasPadre"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona categoría padre..."
+        [filter]="true"
+        filterPlaceholder="Buscar categoría..."
+        [showClear]="true"
+        styleClass="w-full"
+      />
+      <small class="field-hint">
+        <i class="pi pi-info-circle"></i>
+        Deja vacío para crear una categoría principal
+      </small>
+    </div>
+
+    <!-- Impuesto por defecto -->
+    <div class="field">
+      <label for="impuestoDefecto">
+        Impuesto por defecto (%) <span class="required">*</span>
+      </label>
+      <p-inputNumber
+        inputId="impuestoDefecto"
+        formControlName="impuestoDefecto"
+        [min]="0"
+        [max]="100"
+        [maxFractionDigits]="2"
+        suffix="%"
+        placeholder="0.00"
+        styleClass="w-full"
+        [class.ng-invalid]="isInvalid('impuestoDefecto')"
+        [class.ng-dirty]="frmCategoria.get('impuestoDefecto')?.touched"
+      />
+      <small class="p-error" *ngIf="isInvalid('impuestoDefecto')">
+        El impuesto debe estar entre 0% y 100%.
+      </small>
+      <small class="field-hint">
+        <i class="pi pi-info-circle"></i>
+        Los productos de esta categoría heredarán este impuesto por defecto
+      </small>
+    </div>
+
+    <!-- Activo -->
+    <div class="field-inline">
+      <div class="switch-label">
+        <span class="label-text">Estado</span>
+        <span class="label-sub">
+          {{
+            frmCategoria.get("activo")?.value
+              ? "Activo — visible en el sistema"
+              : "Inactivo — oculto del catálogo"
+          }}
+        </span>
+      </div>
+      <p-inputSwitch formControlName="activo" />
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button
+        pButton
+        type="button"
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-outlined p-button-secondary"
+        [disabled]="isSubmitting"
+        (click)="closeModal()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        [label]="isEditMode ? 'Actualizar' : 'Guardar'"
+        [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+        class="btn-aura"
+        [disabled]="isSubmitting || isLoading"
+        (click)="saveCategoria()"
+      ></button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-toast />

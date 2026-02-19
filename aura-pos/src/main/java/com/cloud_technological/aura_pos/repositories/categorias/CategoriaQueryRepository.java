@@ -9,7 +9,7 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-
+import com.cloud_technological.aura_pos.dto.categorias.CategoriaDto;
 import com.cloud_technological.aura_pos.dto.categorias.CategoriaTableDto;
 import com.cloud_technological.aura_pos.utils.PageableDto;
 
@@ -85,4 +85,16 @@ public class CategoriaQueryRepository {
         Long count = jdbcTemplate.queryForObject(sql, params, Long.class);
         return count != null && count > 0;
     }
+    public List<CategoriaDto> list(Integer empresaId) {
+    String sql = """
+        SELECT id, nombre
+        FROM categoria
+        WHERE empresa_id = :empresaId
+        AND activo = true
+        AND deleted_at IS NULL
+        ORDER BY nombre ASC
+    """;
+    MapSqlParameterSource params = new MapSqlParameterSource("empresaId", empresaId);
+    return jdbcTemplate.query(sql, params, new BeanPropertyRowMapper<>(CategoriaDto.class));
+}
 }

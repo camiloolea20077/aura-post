@@ -1,0 +1,165 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="page-title-area">
+      <div class="page-icon purple">
+        <i class="pi pi-tag"></i>
+      </div>
+      <div>
+        <h3 class="page-title">Marcas</h3>
+        <p class="page-sub">Administra las marcas de tus productos</p>
+      </div>
+    </div>
+    <button
+      pButton
+      type="button"
+      label="Nueva marca"
+      icon="pi pi-plus"
+      class="btn-aura"
+      (click)="openCreate()"
+    ></button>
+  </div>
+
+  <div class="card">
+    <div class="table-toolbar">
+      <div class="toolbar-left">
+        <span class="p-input-icon-left search-wrap">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            pInputText
+            class="search-input"
+            placeholder="Buscar marca..."
+            [(ngModel)]="filterGlobal"
+            (input)="filterGlobal($event)"
+          />
+          <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">
+            <i class="pi pi-times"></i>
+          </button>
+        </span>
+        <span class="total-badge" *ngIf="!loadingTable">
+          {{ totalRecords }} {{ totalRecords === 1 ? "marca" : "marcas" }}
+        </span>
+      </div>
+    </div>
+
+    <p-table
+      [value]="items"
+      [columns]="cols"
+      [lazy]="true"
+      (onLazyLoad)="loadTable($event)"
+      [paginator]="true"
+      [rows]="rowSize"
+      [totalRecords]="totalRecords"
+      [loading]="loadingTable"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords} registros"
+      styleClass="aura-table"
+      [tableStyle]="{ 'min-width': '400px' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="nombre" style="min-width: 200px">
+            Nombre <p-sortIcon field="nombre" />
+          </th>
+          <th pSortableColumn="activo" style="width: 110px" class="text-center">
+            Estado <p-sortIcon field="activo" />
+          </th>
+          <th style="width: 110px" class="text-center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item>
+        <tr>
+          <td>
+            <div class="cell-nombre">
+              <div class="marca-avatar">
+                {{ item.nombre.charAt(0).toUpperCase() }}
+              </div>
+              <span class="nombre-text">{{ item.nombre }}</span>
+            </div>
+          </td>
+          <td class="text-center">
+            <p-tag
+              [value]="item.activo ? 'Activo' : 'Inactivo'"
+              [severity]="item.activo ? 'success' : 'danger'"
+              [rounded]="true"
+            />
+          </td>
+          <td class="text-center">
+            <div class="action-buttons">
+              <button
+                pButton
+                type="button"
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm action-edit"
+                pTooltip="Editar"
+                tooltipPosition="top"
+                (click)="openEdit(item)"
+              ></button>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-trash"
+                class="p-button-text p-button-danger p-button-sm action-delete"
+                pTooltip="Eliminar"
+                tooltipPosition="top"
+                (click)="confirmDelete(item)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="3">
+            <div class="empty-state">
+              <i class="pi pi-tag"></i>
+              <p>
+                {{
+                  searchQuery
+                    ? 'Sin resultados para "' + searchQuery + '"'
+                    : "No hay marcas registradas"
+                }}
+              </p>
+              <button
+                *ngIf="!searchQuery"
+                pButton
+                type="button"
+                label="Crear primera marca"
+                icon="pi pi-plus"
+                class="btn-aura p-button-sm"
+                (click)="openCreate()"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr *ngFor="let s of [1, 2, 3, 4, 5]">
+          <td><p-skeleton /></td>
+          <td class="text-center">
+            <p-skeleton width="70px" styleClass="mx-auto" />
+          </td>
+          <td class="text-center">
+            <p-skeleton width="80px" styleClass="mx-auto" />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<app-form-marcas
+  [displayModal]="showModal"
+  [marcaId]="selectedId"
+  [slug]="modalSlug"
+  (modalClosed)="onModalClosed()"
+  (marcaSaved)="onItemSaved()"
+>
+</app-form-marcas>
+
+<p-toast />
+<p-confirmDialog />

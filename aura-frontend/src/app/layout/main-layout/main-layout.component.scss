@@ -1,23 +1,56 @@
-.layout-wrapper {
+.aura-layout {
   display: flex;
   height: 100vh;
+  background: #F4F6FA;
   overflow: hidden;
+  font-family: 'Outfit', sans-serif;
 }
 
-.layout-content {
+.aura-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-left: 260px;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  min-width: 0;
+}
+
+.aura-layout.sidebar-collapsed .aura-main {
+  margin-left: 72px;
+}
+
+.aura-content {
   flex: 1;
   overflow-y: auto;
-  background: #f5f6fa;
-  padding: 1.75rem;
+  padding: 1.5rem;
 
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
+  &::-webkit-scrollbar { width: 6px; }
+  &::-webkit-scrollbar-track { background: transparent; }
   &::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.12);
-    border-radius: 4px;
+    background: #E0E3EB;
+    border-radius: 3px;
+    &:hover { background: #CBD5E1; }
   }
+}
+
+// ─── Tablet ──────────────────────────────────────────────────
+@media (max-width: 1024px) {
+  .aura-main         { margin-left: 72px; }
+  .aura-content      { padding: 1rem; }
+
+  // En tablet el sidebar siempre colapsa automáticamente
+  .aura-layout:not(.sidebar-collapsed) .aura-main {
+    margin-left: 72px;
+  }
+}
+
+// ─── Móvil ───────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .aura-main,
+  .aura-layout.sidebar-collapsed .aura-main {
+    margin-left: 0;
+  }
+
+  .aura-content { padding: 0.75rem; }
 }

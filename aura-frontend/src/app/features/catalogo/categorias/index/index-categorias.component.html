@@ -1,0 +1,212 @@
+<div class="page-container">
+  <!-- ─── Page header ──────────────────────────────────────── -->
+  <div class="page-header">
+    <div class="page-title-area">
+      <div class="page-icon">
+        <i class="pi pi-th-large"></i>
+      </div>
+      <div>
+        <h3 class="page-title">Categorías</h3>
+        <p class="page-sub">Organiza tus productos en grupos lógicos</p>
+      </div>
+    </div>
+
+    <button
+      pButton
+      type="button"
+      label="Nueva categoría"
+      icon="pi pi-plus"
+      class="btn-aura"
+      (click)="openCreate()"
+    ></button>
+  </div>
+
+  <!-- ─── Card tabla ───────────────────────────────────────── -->
+  <div class="card">
+    <!-- Toolbar -->
+    <div class="table-toolbar">
+      <div class="toolbar-left">
+        <span class="p-input-icon-left search-wrap">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            pInputText
+            class="search-input"
+            placeholder="Buscar categoría..."
+            [(ngModel)]="filterGlobal"
+            (input)="filterGlobal($event)"
+          />
+          <button
+            *ngIf="searchQuery"
+            class="clear-btn"
+            (click)="clearSearch()"
+            pTooltip="Limpiar búsqueda"
+          >
+            <i class="pi pi-times"></i>
+          </button>
+        </span>
+        <span class="total-badge" *ngIf="!loadingTable">
+          {{ totalRecords }}
+          {{ totalRecords === 1 ? "categoría" : "categorías" }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Tabla -->
+    <p-table
+      [value]="items"
+      [columns]="cols"
+      [lazy]="true"
+      (onLazyLoad)="loadTable($event)"
+      [paginator]="true"
+      [rows]="rowSize"
+      [totalRecords]="totalRecords"
+      [loading]="loadingTable"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [sortMode]="'single'"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords} registros"
+      styleClass="aura-table"
+      [tableStyle]="{ 'min-width': '600px' }"
+    >
+      <!-- Header -->
+      <ng-template pTemplate="header" let-columns>
+        <tr>
+          <th
+            *ngFor="let col of columns"
+            [pSortableColumn]="col.sortable ? col.field : null"
+            [style.width]="col.width"
+            [style.min-width]="col.minWidth"
+            [class]="col.nameClass"
+          >
+            {{ col.header }}
+            <p-sortIcon *ngIf="col.sortable" [field]="col.field" />
+          </th>
+          <th style="width: 110px" class="text-center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <!-- Body -->
+      <ng-template pTemplate="body" let-item let-columns="columns">
+        <tr>
+          <!-- Nombre -->
+          <td>
+            <div class="cell-nombre">
+              <div class="categoria-avatar">
+                {{ item.nombre.charAt(0).toUpperCase() }}
+              </div>
+              <span class="nombre-text">{{ item.nombre }}</span>
+            </div>
+          </td>
+
+          <!-- Categoría padre -->
+          <td>
+            <span *ngIf="item.padrNombre" class="chip-padre">
+              <i class="pi pi-sitemap"></i> {{ item.padrNombre }}
+            </span>
+            <span *ngIf="!item.padrNombre" class="text-muted">—</span>
+          </td>
+
+          <!-- Impuesto -->
+          <td class="text-right numeric">
+            <span
+              class="impuesto-badge"
+              [class.zero]="item.impuestoDefecto === 0"
+            >
+              {{ item.impuestoDefecto | number: "1.0-2" }}%
+            </span>
+          </td>
+
+          <!-- Estado -->
+          <td class="text-center">
+            <p-tag
+              [value]="item.activo ? 'Activo' : 'Inactivo'"
+              [severity]="item.activo ? 'success' : 'danger'"
+              [rounded]="true"
+            />
+          </td>
+
+          <!-- Acciones -->
+          <td class="text-center">
+            <div class="action-buttons">
+              <button
+                pButton
+                type="button"
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm action-edit"
+                pTooltip="Editar"
+                tooltipPosition="top"
+                (click)="openEdit(item)"
+              ></button>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-trash"
+                class="p-button-text p-button-danger p-button-sm action-delete"
+                pTooltip="Eliminar"
+                tooltipPosition="top"
+                (click)="confirmDelete(item)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Empty state -->
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5">
+            <div class="empty-state">
+              <i class="pi pi-inbox"></i>
+              <p>
+                {{
+                  searchQuery
+                    ? 'No se encontraron resultados para "' + searchQuery + '"'
+                    : "No hay categorías registradas"
+                }}
+              </p>
+              <button
+                *ngIf="!searchQuery"
+                pButton
+                type="button"
+                label="Crear primera categoría"
+                icon="pi pi-plus"
+                class="btn-aura p-button-sm"
+                (click)="openCreate()"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Loading skeleton -->
+      <ng-template pTemplate="loadingbody">
+        <tr *ngFor="let s of [1, 2, 3, 4, 5, 6]">
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton width="60px" styleClass="ml-auto" /></td>
+          <td class="text-center">
+            <p-skeleton width="70px" styleClass="mx-auto" />
+          </td>
+          <td class="text-center">
+            <p-skeleton width="80px" styleClass="mx-auto" />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+  <!-- /card -->
+</div>
+
+<!-- ─── Modal ─────────────────────────────────────────────── -->
+<app-form-categorias
+  [displayModal]="showModal"
+  [categoriaId]="selectedId"
+  [slug]="modalSlug"
+  (modalClosed)="onModalClosed()"
+  (categoriaSaved)="onItemSaved()"
+>
+</app-form-categorias>
+
+<p-toast />
+<p-confirmDialog />

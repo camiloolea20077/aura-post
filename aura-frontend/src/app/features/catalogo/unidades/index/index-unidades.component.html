@@ -1,0 +1,201 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="page-title-area">
+      <div class="page-icon green">
+        <i class="pi pi-chart-bar"></i>
+      </div>
+      <div>
+        <h3 class="page-title">Unidades de medida</h3>
+        <p class="page-sub">
+          Define las unidades con las que mides tus productos
+        </p>
+      </div>
+    </div>
+    <button
+      pButton
+      type="button"
+      label="Nueva unidad"
+      icon="pi pi-plus"
+      class="btn-aura"
+      (click)="openCreate()"
+    ></button>
+  </div>
+
+  <div class="card">
+    <div class="table-toolbar">
+      <div class="toolbar-left">
+        <span class="p-input-icon-left search-wrap">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            pInputText
+            class="search-input"
+            placeholder="Buscar unidad..."
+            [(ngModel)]="filterGlobal"
+            (input)="filterGlobal($event)"
+            (keydown.escape)="clearSearch()"
+          />
+          <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">
+            <i class="pi pi-times"></i>
+          </button>
+        </span>
+        <span class="total-badge" *ngIf="!loadingTable">
+          {{ totalRecords }} {{ totalRecords === 1 ? "unidad" : "unidades" }}
+        </span>
+      </div>
+    </div>
+
+    <p-table
+      [value]="items"
+      [columns]="cols"
+      [lazy]="true"
+      (onLazyLoad)="loadTable($event)"
+      [paginator]="true"
+      [rows]="rowSize"
+      [totalRecords]="totalRecords"
+      [loading]="loadingTable"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords} registros"
+      styleClass="aura-table"
+      [tableStyle]="{ 'min-width': '500px' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="nombre" style="min-width: 180px">
+            Nombre <p-sortIcon field="nombre" />
+          </th>
+          <th
+            pSortableColumn="abreviatura"
+            style="width: 130px"
+            class="text-center"
+          >
+            Abreviatura <p-sortIcon field="abreviatura" />
+          </th>
+          <th
+            pSortableColumn="permiteDecimales"
+            style="width: 130px"
+            class="text-center"
+          >
+            Decimales <p-sortIcon field="permiteDecimales" />
+          </th>
+          <th pSortableColumn="activo" style="width: 110px" class="text-center">
+            Estado <p-sortIcon field="activo" />
+          </th>
+          <th style="width: 110px" class="text-center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item>
+        <tr>
+          <td>
+            <div class="cell-nombre">
+              <div class="unidad-avatar">{{ item.abreviatura.charAt(0) }}</div>
+              <span class="nombre-text">{{ item.nombre }}</span>
+            </div>
+          </td>
+          <td class="text-center">
+            <span class="abreviatura-badge">{{ item.abreviatura }}</span>
+          </td>
+          <td class="text-center">
+            <span class="decimales-icon" [class.si]="item.permiteDecimales">
+              <i
+                [class]="
+                  item.permiteDecimales
+                    ? 'pi pi-check-circle'
+                    : 'pi pi-times-circle'
+                "
+              ></i>
+              {{ item.permiteDecimales ? "Sí" : "No" }}
+            </span>
+          </td>
+          <td class="text-center">
+            <p-tag
+              [value]="item.activo ? 'Activo' : 'Inactivo'"
+              [severity]="item.activo ? 'success' : 'danger'"
+              [rounded]="true"
+            />
+          </td>
+          <td class="text-center">
+            <div class="action-buttons">
+              <button
+                pButton
+                type="button"
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm action-edit"
+                pTooltip="Editar"
+                tooltipPosition="top"
+                (click)="openEdit(item)"
+              ></button>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-trash"
+                class="p-button-text p-button-danger p-button-sm action-delete"
+                pTooltip="Eliminar"
+                tooltipPosition="top"
+                (click)="confirmDelete(item)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5">
+            <div class="empty-state">
+              <i class="pi pi-inbox"></i>
+              <p>
+                {{
+                  searchQuery
+                    ? 'Sin resultados para "' + searchQuery + '"'
+                    : "No hay unidades de medida registradas"
+                }}
+              </p>
+              <button
+                *ngIf="!searchQuery"
+                pButton
+                type="button"
+                label="Crear primera unidad"
+                icon="pi pi-plus"
+                class="btn-aura p-button-sm"
+                (click)="openCreate()"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr *ngFor="let s of [1, 2, 3, 4, 5]">
+          <td><p-skeleton /></td>
+          <td class="text-center">
+            <p-skeleton width="60px" styleClass="mx-auto" />
+          </td>
+          <td class="text-center">
+            <p-skeleton width="50px" styleClass="mx-auto" />
+          </td>
+          <td class="text-center">
+            <p-skeleton width="70px" styleClass="mx-auto" />
+          </td>
+          <td class="text-center">
+            <p-skeleton width="80px" styleClass="mx-auto" />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<app-form-unidades
+  [displayModal]="showModal"
+  [unidadId]="selectedId"
+  [slug]="modalSlug"
+  (modalClosed)="onModalClosed()"
+  (unidadSaved)="onItemSaved()"
+>
+</app-form-unidades>
+
+<p-toast />
+<p-confirmDialog />

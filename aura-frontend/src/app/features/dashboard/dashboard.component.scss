@@ -1,0 +1,688 @@
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  font-family: 'Outfit', sans-serif;
+  max-width: 1600px;
+}
+
+// ─── Header ──────────────────────────────────────────────────
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  h1 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #2D2D2D;
+    margin: 0 0 0.25rem;
+    letter-spacing: -0.02em;
+  }
+
+  .dashboard-date {
+    font-size: 0.82rem;
+    color: #9CA3AF;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    text-transform: capitalize;
+
+    i { font-size: 0.75rem; }
+  }
+}
+
+.btn-ir-pos {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #2E6CF6 0%, #7B4DFF 100%);
+  color: white;
+  text-decoration: none;
+  padding: 0.6rem 1.25rem;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(46, 108, 246, 0.3);
+  transition: all 0.2s;
+  white-space: nowrap;
+
+  i { font-size: 0.9rem; }
+
+  &:hover {
+    background: linear-gradient(135deg, #1a5ae8 0%, #6a3df0 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(46, 108, 246, 0.4);
+  }
+}
+
+// ─── KPIs ────────────────────────────────────────────────────
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.kpi-card {
+  background: white;
+  border-radius: 16px;
+  padding: 1.25rem;
+  border: 1px solid #E0E3EB;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 16px 16px 0 0;
+  }
+
+  &.kpi-primary::before  { background: linear-gradient(90deg, #2E6CF6, #7B4DFF); }
+  &.kpi-purple::before   { background: linear-gradient(90deg, #7B4DFF, #2E6CF6); }
+  &.kpi-green::before    { background: #10B981; }
+  &.kpi-warning::before  { background: #F59E0B; }
+
+  &.kpi-alert {
+    border-color: #FED7AA;
+    background: #FFFBF5;
+  }
+
+  &:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
+}
+
+.skeleton-card {
+  padding: 1.25rem;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E0E3EB;
+}
+
+.kpi-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.kpi-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.kpi-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  i { font-size: 0.95rem; }
+
+  &.kpi-icon-blue   { background: rgba(46,108,246,0.1);  i { color: #2E6CF6; } }
+  &.kpi-icon-purple { background: rgba(123,77,255,0.1); i { color: #7B4DFF; } }
+  &.kpi-icon-green  { background: rgba(16,185,129,0.1); i { color: #10B981; } }
+  &.kpi-icon-orange { background: rgba(245,158,11,0.1); i { color: #F59E0B; } }
+}
+
+.kpi-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #2D2D2D;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.5rem;
+  line-height: 1.1;
+
+  &.kpi-value-sm { font-size: 2rem; }
+}
+
+.kpi-sub {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.kpi-count {
+  font-size: 0.75rem;
+  color: #6B7280;
+}
+
+.kpi-avg {
+  font-size: 0.7rem;
+  color: #9CA3AF;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.kpi-alert-text { color: #D97706; font-weight: 600; }
+
+// ─── Charts ──────────────────────────────────────────────────
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 1rem;
+}
+
+.chart-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E0E3EB;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  padding: 1.25rem;
+
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+  }
+}
+
+.chart-wrapper {
+  height: 220px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chart-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: #9CA3AF;
+
+  i    { font-size: 2rem; opacity: 0.3; }
+  span { font-size: 0.8rem; }
+}
+
+// ─── Shared card ─────────────────────────────────────────────
+.card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E0E3EB;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  overflow: hidden;
+}
+
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #F3F4F6;
+  background: #FAFBFC;
+
+  h4 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #2D2D2D;
+    margin: 0 0 0.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .card-subtitle {
+    font-size: 0.75rem;
+    color: #9CA3AF;
+    margin: 0;
+  }
+}
+
+.card-content {
+  padding: 1rem 1.25rem;
+
+  &.no-padding { padding: 0; }
+}
+
+.link-ver-todas {
+  font-size: 0.75rem;
+  color: #2E6CF6;
+  text-decoration: none;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: color 0.15s;
+
+  &:hover { color: #7B4DFF; }
+}
+
+.text-orange { color: #F59E0B; }
+
+// ─── Mid row ─────────────────────────────────────────────────
+.mid-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+// Top productos
+.top-list { display: flex; flex-direction: column; gap: 0.6rem; }
+
+.top-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 10px;
+  transition: background 0.15s;
+
+  &:hover { background: #F9FAFB; }
+}
+
+.top-rank {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+
+  &.rank-gold   { background: #FEF3C7; color: #D97706; }
+  &.rank-silver { background: #F3F4F6; color: #6B7280; }
+  &.rank-bronze { background: #FEF2EC; color: #C05621; }
+  &.rank-default { background: #F9FAFB; color: #9CA3AF; }
+}
+
+.top-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  overflow: hidden;
+
+  .top-nombre {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #2D2D2D;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .top-sku {
+    font-size: 0.7rem;
+    color: #9CA3AF;
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+.top-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+
+  .top-ingresos {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #2E6CF6;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .top-cantidad {
+    font-size: 0.7rem;
+    color: #9CA3AF;
+  }
+}
+
+// Últimas ventas
+.ventas-list { display: flex; flex-direction: column; }
+
+.venta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 1.25rem;
+  border-bottom: 1px solid #F3F4F6;
+  transition: background 0.15s;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: #F9FAFB; }
+}
+
+.venta-icon {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  background: rgba(46,108,246,0.08);
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  i { font-size: 0.85rem; color: #2E6CF6; }
+}
+
+.venta-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+
+  .venta-numero {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #2D2D2D;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .venta-cliente {
+    font-size: 0.72rem;
+    color: #9CA3AF;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.venta-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+
+  .venta-total {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #2D2D2D;
+    font-family: 'JetBrains Mono', monospace;
+    white-space: nowrap;
+  }
+}
+
+// ─── Bottom row ───────────────────────────────────────────────
+.bottom-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+// Stock bajo
+.stock-list { display: flex; flex-direction: column; gap: 0.85rem; }
+
+.stock-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.stock-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+
+  .stock-nombre {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #2D2D2D;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .stock-detalle {
+    font-size: 0.68rem;
+    color: #9CA3AF;
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+.stock-bar-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 90px;
+}
+
+.stock-numbers {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  justify-content: flex-end;
+  font-size: 0.72rem;
+  font-family: 'JetBrains Mono', monospace;
+
+  .stock-slash  { color: #D1D5DB; }
+  .stock-minimo { color: #9CA3AF; }
+
+  .stock-actual {
+    font-weight: 700;
+    &.danger  { color: #EF4444; }
+    &.warning { color: #F59E0B; }
+    &.success { color: #10B981; }
+  }
+}
+
+.stock-bar {
+  width: 90px;
+  height: 5px;
+  background: #F3F4F6;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.stock-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+
+  &.fill-danger  { background: #EF4444; }
+  &.fill-warning { background: #F59E0B; }
+  &.fill-success { background: #10B981; }
+}
+
+// Lotes vencimiento
+.lote-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 1.25rem;
+  border-bottom: 1px solid #F3F4F6;
+  transition: background 0.15s;
+
+  &:last-child { border-bottom: none; }
+  &:hover      { background: #F9FAFB; }
+}
+
+.lote-dias {
+  width: 46px;
+  min-width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  &.urgencia-danger  { background: #FEE2E2; }
+  &.urgencia-warning { background: #FEF3C7; }
+  &.urgencia-info    { background: #EFF6FF; }
+
+  .lote-dias-num {
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .lote-dias-label {
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  &.urgencia-danger  .lote-dias-num,
+  &.urgencia-danger  .lote-dias-label  { color: #EF4444; }
+  &.urgencia-warning .lote-dias-num,
+  &.urgencia-warning .lote-dias-label  { color: #D97706; }
+  &.urgencia-info    .lote-dias-num,
+  &.urgencia-info    .lote-dias-label  { color: #3B82F6; }
+}
+
+.lote-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+
+  .lote-producto {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #2D2D2D;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .lote-codigo {
+    font-size: 0.68rem;
+    color: #9CA3AF;
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+.lote-stock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+
+  .lote-fecha { font-size: 0.68rem; color: #9CA3AF; font-family: 'JetBrains Mono', monospace; }
+}
+
+// Movimientos Kardex
+.mov-list { display: flex; flex-direction: column; }
+
+.mov-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 1.25rem;
+  border-bottom: 1px solid #F3F4F6;
+  transition: background 0.15s;
+
+  &:last-child { border-bottom: none; }
+  &:hover      { background: #F9FAFB; }
+}
+
+.mov-icon-wrap {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  i { font-size: 0.8rem; }
+
+  .mov-entrada &  { background: rgba(16,185,129,0.1);  i { color: #10B981; } }
+  .mov-salida &   { background: rgba(239,68,68,0.08);  i { color: #EF4444; } }
+  .mov-anulacion & { background: rgba(156,163,175,0.12); i { color: #9CA3AF; } }
+}
+
+.mov-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+
+  .mov-tipo {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .mov-producto {
+    font-size: 0.75rem;
+    color: #6B7280;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mov-entrada & .mov-tipo  { color: #10B981; }
+  .mov-salida  & .mov-tipo  { color: #EF4444; }
+  .mov-anulacion & .mov-tipo { color: #9CA3AF; }
+}
+
+.mov-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.05rem;
+
+  .mov-cantidad {
+    font-size: 0.8rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    color: #2D2D2D;
+  }
+
+  .mov-saldo {
+    font-size: 0.68rem;
+    color: #9CA3AF;
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+// Empty state
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem 1rem;
+  color: #D1D5DB;
+
+  i { font-size: 2.5rem; }
+  p { font-size: 0.82rem; font-weight: 600; margin: 0; }
+}
+
+// ─── Responsive ──────────────────────────────────────────────
+@media (max-width: 1280px) {
+  .kpi-grid    { grid-template-columns: repeat(2, 1fr); }
+  .charts-row  { grid-template-columns: 1fr; }
+  .chart-small { order: -1; }
+  .bottom-row  { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 1024px) {
+  .mid-row     { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .kpi-grid    { grid-template-columns: 1fr 1fr; }
+  .bottom-row  { grid-template-columns: 1fr; }
+  .dashboard-header { flex-direction: column; align-items: flex-start; }
+}
+
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+}

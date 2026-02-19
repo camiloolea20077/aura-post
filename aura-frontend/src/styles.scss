@@ -1,20 +1,441 @@
-/* PrimeIcons */
-@import "primeicons/primeicons.css";
+// ─── Fuentes ───────────────────────────────────────────────────────────────
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
 
-/* PrimeFlex */
-@import "primeflex/primeflex.css";
+// ─── PrimeNG ───────────────────────────────────────────────────────────────
+@import 'primeicons/primeicons.css';
+@import 'primeflex/primeflex.css';
 
-/* ─── Global Reset & Base ─────────────────────────────────────── */
-*, *::before, *::after {
+// ─── Variables AURA POS ────────────────────────────────────────────────────
+:root {
+  --aura-blue:            #2E6CF6;
+  --aura-blue-light:      #4DA3FF;
+  --aura-purple:          #7B4DFF;
+  --aura-gradient:        linear-gradient(135deg, #2E6CF6 0%, #7B4DFF 100%);
+  --aura-gradient-hover:  linear-gradient(135deg, #1a5ae8 0%, #6a3df0 100%);
+  --aura-gradient-soft:   linear-gradient(135deg, rgba(46,108,246,0.1) 0%, rgba(123,77,255,0.1) 100%);
+  --aura-bg:              #F4F6FA;
+  --aura-surface:         #FFFFFF;
+  --aura-text:            #2D2D2D;
+  --aura-text-muted:      #6B7280;
+  --aura-border:          #E0E3EB;
+  --aura-success:         #10B981;
+  --aura-warning:         #F59E0B;
+  --aura-danger:          #EF4444;
+  --aura-info:            #3B82F6;
+  --sidebar-width:        260px;
+  --sidebar-collapsed:    72px;
+  --shadow-sm:            0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md:            0 4px 16px rgba(46,108,246,0.12);
+  --shadow-lg:            0 8px 32px rgba(46,108,246,0.18);
+  --shadow-card:          0 2px 8px rgba(0,0,0,0.07);
+}
+
+// ─── Reset global ──────────────────────────────────────────────────────────
+* {
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 html, body {
-  margin: 0;
-  padding: 0;
   height: 100%;
-  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 14px;
-  color: #1e1e2e;
+  color: var(--aura-text);
+  background: var(--aura-bg);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// ─── PrimeNG overrides globales ────────────────────────────────────────────
+.p-button {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.p-inputtext {
+  font-family: 'Outfit', sans-serif;
+  border-radius: 10px;
+  border: 1.5px solid var(--aura-border);
+  transition: all 0.2s;
+
+  &:focus {
+    border-color: var(--aura-blue);
+    box-shadow: 0 0 0 3px rgba(46, 108, 246, 0.12);
+  }
+
+  &.ng-invalid.ng-dirty {
+    border-color: var(--aura-danger);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  }
+}
+
+.p-dropdown {
+  font-family: 'Outfit', sans-serif;
+  border-radius: 10px;
+  border: 1.5px solid var(--aura-border);
+  transition: all 0.2s;
+
+  &:not(.p-disabled):hover { border-color: var(--aura-blue); }
+  &.p-focus {
+    border-color: var(--aura-blue);
+    box-shadow: 0 0 0 3px rgba(46, 108, 246, 0.12);
+  }
+
+  &.ng-invalid.ng-dirty { border-color: var(--aura-danger); }
+
+  .p-dropdown-label { font-family: 'Outfit', sans-serif; }
+}
+
+// Datatable
+.p-datatable {
+  font-family: 'Outfit', sans-serif;
+
+  .p-datatable-thead > tr > th {
+    background: var(--aura-bg);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--aura-text-muted);
+    border-bottom: 2px solid var(--aura-border);
+    padding: 0.85rem 1rem;
+  }
+
+  .p-datatable-tbody > tr {
+    transition: background 0.15s;
+
+    > td {
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
+      border-bottom: 1px solid #F3F4F6;
+    }
+
+    &:hover > td { background: rgba(46, 108, 246, 0.04); }
+  }
+
+  .p-paginator {
+    border-top: 1px solid var(--aura-border);
+    background: transparent;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.82rem;
+
+    .p-paginator-current {
+      font-size: 0.78rem;
+      color: var(--aura-text-muted);
+    }
+  }
+}
+
+// Dialog
+.p-dialog {
+  font-family: 'Outfit', sans-serif;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+
+  .p-dialog-header {
+    background: var(--aura-gradient);
+    color: white;
+    padding: 1.1rem 1.5rem;
+    border-radius: 0;
+
+    .p-dialog-title {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .p-dialog-header-icon {
+      color: rgba(255, 255, 255, 0.8);
+      &:hover { background: rgba(255, 255, 255, 0.15) !important; }
+    }
+  }
+
+  .p-dialog-content { padding: 1.5rem; }
+
+  .p-dialog-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--aura-border);
+    background: var(--aura-bg);
+  }
+}
+
+// Tag
+.p-tag {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 0.72rem;
+  border-radius: 6px;
+  padding: 0.2rem 0.55rem;
+}
+
+// OverlayPanel
+.p-overlaypanel {
+  border-radius: 14px;
+  border: 1px solid var(--aura-border);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  font-family: 'Outfit', sans-serif;
+  overflow: hidden;
+}
+
+// Toast
+.p-toast {
+  .p-toast-message {
+    border-radius: 12px;
+    font-family: 'Outfit', sans-serif;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  }
+}
+
+// ConfirmDialog
+.p-confirmdialog {
+  border-radius: 20px;
+  overflow: hidden;
+
+  .p-dialog-header {
+    background: var(--aura-gradient);
+    color: white;
+
+    .p-dialog-header-icon { color: rgba(255,255,255,0.8); }
+  }
+}
+
+// Calendar
+.p-calendar {
+  width: 100%;
+
+  .p-inputtext {
+    border-radius: 10px;
+  }
+}
+
+// InputNumber
+.p-inputnumber {
+  width: 100%;
+}
+
+// Password
+.p-password {
+  width: 100%;
+
+  input { border-radius: 10px; }
+}
+
+// ─── Clases utilitarias globales ───────────────────────────────────────────
+
+// Cards
+.aura-card {
+  background: var(--aura-surface);
+  border-radius: 16px;
+  border: 1px solid var(--aura-border);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s;
+
+  &:hover { box-shadow: var(--shadow-md); }
+}
+
+// Botón principal con degradado
+.btn-aura {
+  background: var(--aura-gradient) !important;
+  border: none !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  font-family: 'Outfit', sans-serif !important;
+  box-shadow: 0 4px 14px rgba(46, 108, 246, 0.3) !important;
+  transition: all 0.2s !important;
+
+  &:hover:not(:disabled) {
+    background: var(--aura-gradient-hover) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 18px rgba(46, 108, 246, 0.4) !important;
+  }
+
+  &:disabled { opacity: 0.55 !important; box-shadow: none !important; }
+}
+
+// Números y precios
+.numeric, .price, .code {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+// Layout de formulario
+.form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+
+  label {
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+
+    .required { color: var(--aura-danger); }
+    .optional  { font-weight: 400; color: var(--aura-text-muted); font-size: 0.75rem; }
+  }
+
+  .p-error {
+    font-size: 0.75rem;
+    color: var(--aura-danger);
+  }
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  label {
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: #374151;
+  }
+}
+
+// Dialog footer
+.dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+// Contenedor principal de página
+.main-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+// Card con header y content
+.card {
+  background: var(--aura-surface);
+  border-radius: 16px;
+  border: 1px solid var(--aura-border);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--aura-border);
+    background: var(--aura-bg);
+
+    h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--aura-text);
+      margin: 0;
+    }
+  }
+
+  .card-content { padding: 1.25rem; }
+}
+
+// Toolbar de tabla
+.p-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: transparent;
+  border: none;
+  padding: 0;
+
+  .toolbar-left, .toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+// Search input en tabla
+.table-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.5rem 0;
+
+  .p-input-icon-left {
+    .search-input {
+      width: 280px;
+      height: 38px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      padding-left: 2.25rem;
+
+      @media (max-width: 600px) { width: 100%; }
+    }
+  }
+}
+
+// Action buttons en tabla
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  justify-content: center;
+
+  .p-button.p-button-sm {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+
+    .p-button-icon { font-size: 0.8rem; }
+  }
+}
+
+// Empty state
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 3rem 1rem;
+  color: var(--aura-text-muted);
+
+  i { font-size: 3rem; opacity: 0.2; }
+  p { font-weight: 600; font-size: 0.9rem; margin: 0; }
+}
+
+// ─── Dark mode ────────────────────────────────────────────────────────────
+.dark-mode {
+  --aura-bg:      #0F1117;
+  --aura-surface: #1A1D2E;
+  --aura-text:    #F1F5F9;
+  --aura-text-muted: #94A3B8;
+  --aura-border:  #2D3148;
+
+  body { background: var(--aura-bg); color: var(--aura-text); }
+
+  .aura-sidebar,
+  .aura-topbar,
+  .card,
+  .aura-card {
+    background: var(--aura-surface);
+    border-color: var(--aura-border);
+  }
 }

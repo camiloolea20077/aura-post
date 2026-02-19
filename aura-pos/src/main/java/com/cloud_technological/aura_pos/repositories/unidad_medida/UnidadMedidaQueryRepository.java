@@ -10,6 +10,8 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import com.cloud_technological.aura_pos.dto.unidad_medida.UnidadMedida;
+import com.cloud_technological.aura_pos.dto.unidad_medida.UnidadMedidaDto;
 import com.cloud_technological.aura_pos.dto.unidad_medida.UnidadMedidaTableDto;
 import com.cloud_technological.aura_pos.utils.PageableDto;
 
@@ -78,5 +80,16 @@ public class UnidadMedidaQueryRepository {
         params.addValue("id", id);
         Long count = jdbcTemplate.queryForObject(sql, params, Long.class);
         return count != null && count > 0;
+    }
+    public List<UnidadMedida> list() {
+        String sql = """
+            SELECT id, nombre, abreviatura
+            FROM unidad_medida
+            WHERE activo = true
+            AND deleted_at IS NULL
+            ORDER BY nombre ASC
+        """;
+        return jdbcTemplate.query(sql, new MapSqlParameterSource(), 
+            new BeanPropertyRowMapper<>(UnidadMedida.class));
     }
 }

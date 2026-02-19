@@ -14,7 +14,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
+import java.util.List;
+import com.cloud_technological.aura_pos.dto.categorias.CategoriaDto;
 import com.cloud_technological.aura_pos.dto.categorias.CategoriaTableDto;
 import com.cloud_technological.aura_pos.dto.categorias.CreateCategoriaDto;
 import com.cloud_technological.aura_pos.dto.categorias.UpdateCategoriaDto;
@@ -73,5 +74,11 @@ public class CategoriaController {
         Integer empresaId = securityUtils.getEmpresaId();
         categoriaService.eliminar(id, empresaId);
         return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "Categoría eliminada correctamente", false, true), HttpStatus.OK);
+    }
+    @GetMapping("/list")
+    public ResponseEntity<ApiResponse<List<CategoriaDto>>> list() {
+        Integer empresaId = securityUtils.getEmpresaId();
+        List<CategoriaDto> result = categoriaService.list(empresaId);
+        return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "", false, result), HttpStatus.OK);
     }
 }

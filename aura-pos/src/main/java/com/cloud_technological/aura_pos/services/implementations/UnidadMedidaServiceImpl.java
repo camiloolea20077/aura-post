@@ -4,8 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import java.util.List;
 
 import com.cloud_technological.aura_pos.dto.unidad_medida.CreateUnidadMedidaDto;
+import com.cloud_technological.aura_pos.dto.unidad_medida.UnidadMedida;
 import com.cloud_technological.aura_pos.dto.unidad_medida.UnidadMedidaDto;
 import com.cloud_technological.aura_pos.dto.unidad_medida.UnidadMedidaTableDto;
 import com.cloud_technological.aura_pos.dto.unidad_medida.UpdateUnidadMedidaDto;
@@ -79,5 +81,9 @@ public class UnidadMedidaServiceImpl implements UnidadMedidaService {
 
         entity.setActivo(false);
         unidadMedidaJPARepository.save(entity);
+    }
+    @Override
+    public List<UnidadMedida> list() {
+        return unidadMedidaRepository.list();
     }
 }

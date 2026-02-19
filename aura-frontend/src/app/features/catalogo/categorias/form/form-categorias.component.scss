@@ -1,0 +1,122 @@
+.form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 0.25rem 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+
+  label {
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+
+    .required { color: #EF4444; }
+    .optional  { font-size: 0.72rem; font-weight: 400; color: #9CA3AF; }
+  }
+
+  input.p-inputtext,
+  textarea.p-inputtextarea {
+    width: 100%;
+    border-radius: 10px;
+    border: 1.5px solid #E0E3EB;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.875rem;
+    color: #1E293B;
+    transition: all 0.2s;
+
+    &::placeholder { color: #9CA3AF; }
+
+    &:focus {
+      border-color: #2E6CF6;
+      box-shadow: 0 0 0 3px rgba(46, 108, 246, 0.1);
+      outline: none;
+    }
+
+    &.ng-invalid.ng-dirty {
+      border-color: #EF4444;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
+    }
+  }
+
+  input.p-inputtext { height: 42px; padding: 0 0.9rem; }
+
+  textarea.p-inputtextarea { padding: 0.6rem 0.9rem; resize: none; }
+}
+
+.field-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .char-count {
+    font-size: 0.72rem;
+    color: #9CA3AF;
+    margin-left: auto;
+  }
+}
+
+.field-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  background: #F8FAFC;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+
+  .switch-label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+
+    .label-text {
+      font-size: 0.83rem;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .label-sub {
+      font-size: 0.72rem;
+      color: #94A3B8;
+    }
+  }
+}
+
+.dialog-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  color: #64748B;
+
+  i { font-size: 1.25rem; color: #2E6CF6; }
+  span { font-size: 0.875rem; }
+}
+
+.dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+// Override p-inputSwitch colores
+::ng-deep {
+  .p-inputswitch.p-inputswitch-checked .p-inputswitch-slider {
+    background: linear-gradient(135deg, #2E6CF6, #7B4DFF);
+  }
+
+  .p-inputswitch:not(.p-disabled):hover .p-inputswitch-slider {
+    background: #CBD5E1;
+  }
+}

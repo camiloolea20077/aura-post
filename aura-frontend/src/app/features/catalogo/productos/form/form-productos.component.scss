@@ -1,0 +1,409 @@
+.form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 0.25rem 0;
+}
+
+// ─── Fields (reutilizando patrón base) ───────────────────────
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+
+  label {
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+
+    .required {
+      color: #ef4444;
+    }
+    .optional {
+      font-size: 0.72rem;
+      font-weight: 400;
+      color: #9ca3af;
+    }
+  }
+
+  input.p-inputtext {
+    height: 42px;
+    border-radius: 10px;
+    border: 1.5px solid #e0e3eb;
+    padding: 0 0.9rem;
+    font-family: "Outfit", sans-serif;
+    font-size: 0.875rem;
+    width: 100%;
+    transition: all 0.2s;
+
+    &::placeholder {
+      color: #9ca3af;
+    }
+    &:focus {
+      border-color: #2e6cf6;
+      box-shadow: 0 0 0 3px rgba(46, 108, 246, 0.1);
+      outline: none;
+    }
+    &.ng-invalid.ng-dirty {
+      border-color: #ef4444;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
+    }
+  }
+
+  textarea.p-inputtextarea {
+    border-radius: 10px;
+    border: 1.5px solid #e0e3eb;
+    padding: 0.6rem 0.9rem;
+    font-family: "Outfit", sans-serif;
+    font-size: 0.875rem;
+    width: 100%;
+    resize: none;
+    transition: all 0.2s;
+
+    &:focus {
+      border-color: #2e6cf6;
+      box-shadow: 0 0 0 3px rgba(46, 108, 246, 0.1);
+      outline: none;
+    }
+  }
+
+  .char-count {
+    font-size: 0.72rem;
+    color: #9ca3af;
+    text-align: right;
+  }
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem;
+
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+
+  .switch-label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    flex: 1;
+
+    .label-text {
+      font-size: 0.83rem;
+      font-weight: 600;
+      color: #374151;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      i {
+        font-size: 0.85rem;
+        color: #64748b;
+      }
+    }
+    .label-sub {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      line-height: 1.4;
+    }
+  }
+}
+
+.field-hint {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  i {
+    font-size: 0.7rem;
+  }
+}
+
+// ─── Tabs ────────────────────────────────────────────────────
+.tab-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  i {
+    font-size: 0.82rem;
+  }
+}
+
+::ng-deep .aura-tabs {
+  .p-tabview-nav {
+    border-bottom: 2px solid #e2e8f0;
+    padding: 0 0 0 0.25rem;
+
+    li .p-tabview-nav-link {
+      font-family: "Outfit", sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #64748b;
+      border: none;
+      border-bottom: 2px solid transparent;
+      padding: 0.7rem 1.1rem;
+      margin-bottom: -2px;
+      background: transparent;
+
+      &:hover {
+        color: #2e6cf6;
+        background: transparent;
+      }
+    }
+
+    li.p-highlight .p-tabview-nav-link {
+      color: #2e6cf6;
+      border-bottom-color: #2e6cf6;
+      background: transparent;
+    }
+  }
+
+  .p-tabview-panels {
+    padding: 1.25rem 0.25rem 0.25rem;
+  }
+}
+
+// ─── Margen card ─────────────────────────────────────────────
+.margen-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+
+  .margen-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    color: #374151;
+    i {
+      color: #10b981;
+    }
+  }
+
+  .margen-value {
+    font-size: 1rem;
+    font-weight: 700;
+    font-family: "JetBrains Mono", monospace;
+    &.margen-ok {
+      color: #10b981;
+    }
+    &.margen-warn {
+      color: #d97706;
+    }
+    &.margen-neg {
+      color: #ef4444;
+    }
+  }
+}
+
+// ─── Precio resumen ───────────────────────────────────────────
+.precio-resumen {
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+
+  .pr-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 1rem;
+    font-size: 0.83rem;
+    color: #374151;
+    border-bottom: 1px solid #f1f5f9;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .numeric {
+      font-family: "JetBrains Mono", monospace;
+      font-weight: 600;
+    }
+
+    &.pr-total {
+      background: linear-gradient(
+        135deg,
+        rgba(46, 108, 246, 0.05),
+        rgba(123, 77, 255, 0.05)
+      );
+      font-weight: 700;
+      color: #1e293b;
+
+      .numeric {
+        color: #2e6cf6;
+        font-size: 0.95rem;
+      }
+    }
+  }
+}
+
+.divider-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+// ─── Inventario ──────────────────────────────────────────────
+.inv-info-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 10px;
+
+  i {
+    color: #d97706;
+    font-size: 0.95rem;
+    margin-top: 0.1rem;
+  }
+  p {
+    font-size: 0.8rem;
+    color: #374151;
+    margin: 0;
+    line-height: 1.5;
+    strong {
+      color: #d97706;
+    }
+  }
+}
+
+.inv-sublevel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding-left: 1.25rem;
+  border-left: 2px solid #e2e8f0;
+  transition: opacity 0.2s;
+
+  &.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+}
+
+.inv-summary {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+
+  .inv-sum-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: #f1f5f9;
+    color: #94a3b8;
+    border: 1px solid #e2e8f0;
+
+    i {
+      font-size: 0.8rem;
+    }
+
+    &.active {
+      background: #f0fdf4;
+      color: #10b981;
+      border-color: #bbf7d0;
+    }
+  }
+}
+
+// ─── Imagen URL ───────────────────────────────────────────────
+.imagen-field-wrap {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+
+  input.p-inputtext {
+    flex: 1;
+  }
+}
+
+.imagen-preview,
+.imagen-placeholder {
+  width: 72px;
+  height: 72px;
+  min-width: 72px;
+  border-radius: 10px;
+  border: 1.5px solid #e0e3eb;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+}
+
+.imagen-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.imagen-placeholder {
+  flex-direction: column;
+  gap: 0.2rem;
+  i {
+    font-size: 1.25rem;
+    color: #cbd5e1;
+  }
+  span {
+    font-size: 0.62rem;
+    color: #9ca3af;
+    text-align: center;
+  }
+}
+
+.dialog-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem;
+  color: #64748b;
+  i {
+    font-size: 1.5rem;
+    color: #2e6cf6;
+  }
+}
+
+.dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+// Override PrimeNG switches
+::ng-deep {
+  .p-inputswitch.p-inputswitch-checked .p-inputswitch-slider {
+    background: linear-gradient(135deg, #2e6cf6, #7b4dff);
+  }
+}

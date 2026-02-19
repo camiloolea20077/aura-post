@@ -14,8 +14,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
+import java.util.List;
 import com.cloud_technological.aura_pos.dto.marcas.CreateMarcaDto;
+import com.cloud_technological.aura_pos.dto.marcas.MarcaDto;
 import com.cloud_technological.aura_pos.dto.marcas.MarcaTableDto;
 import com.cloud_technological.aura_pos.dto.marcas.UpdateMarcaDto;
 import com.cloud_technological.aura_pos.services.MarcaService;
@@ -72,5 +73,10 @@ public class MarcaController {
         Integer empresaId = securityUtils.getEmpresaId();
         marcaService.eliminar(id, empresaId);
         return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "Marca eliminada correctamente", false, true), HttpStatus.OK);
+    }
+    @GetMapping("/list")
+    public ResponseEntity<ApiResponse<List<MarcaDto>>> list() {
+        Integer empresaId = securityUtils.getEmpresaId();
+        return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "", false, marcaService.list(empresaId)), HttpStatus.OK);
     }
 }

@@ -1,0 +1,291 @@
+<div class="page-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="page-title-area">
+      <div class="page-icon">
+        <i class="pi pi-shopping-bag"></i>
+      </div>
+      <div>
+        <h3 class="page-title">Productos</h3>
+        <p class="page-sub">
+          Gestiona el catálogo completo de productos y servicios
+        </p>
+      </div>
+    </div>
+    <button
+      pButton
+      type="button"
+      label="Nuevo producto"
+      icon="pi pi-plus"
+      class="btn-aura"
+      (click)="openCreate()"
+    ></button>
+  </div>
+
+  <!-- Card tabla -->
+  <div class="card">
+    <!-- Toolbar -->
+    <div class="table-toolbar">
+      <div class="toolbar-left">
+        <!-- Búsqueda -->
+        <span class="p-input-icon-left search-wrap">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            pInputText
+            class="search-input"
+            placeholder="Buscar por nombre, SKU, código de barras..."
+            [(ngModel)]="searchQuery"
+            (input)="onSearch()"
+            (keydown.escape)="clearSearch()"
+          />
+          <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">
+            <i class="pi pi-times"></i>
+          </button>
+        </span>
+
+        <!-- Filtro tipo -->
+        <p-dropdown
+          [options]="tipoFiltroOpts"
+          [(ngModel)]="tipoFiltro"
+          optionLabel="label"
+          optionValue="value"
+          (onChange)="onTipoFiltroChange()"
+          styleClass="tipo-filter"
+        />
+
+        <!-- Total -->
+        <span class="total-badge" *ngIf="!loadingTable">
+          {{ totalRecords | number }}
+          {{ totalRecords === 1 ? "producto" : "productos" }}
+        </span>
+      </div>
+
+      <div class="toolbar-right">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-refresh"
+          class="p-button-outlined p-button-secondary p-button-sm"
+          pTooltip="Recargar"
+          (click)="loadTable(lastLazyEvent ?? { first: 0, rows: rowSize })"
+        ></button>
+      </div>
+    </div>
+
+    <!-- Tabla -->
+    <p-table
+      [value]="items"
+      [lazy]="true"
+      (onLazyLoad)="loadTable($event)"
+      [paginator]="true"
+      [rows]="rowSize"
+      [totalRecords]="totalRecords"
+      [loading]="loadingTable"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [sortMode]="'single'"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords} registros"
+      styleClass="aura-table"
+      [tableStyle]="{ 'min-width': '800px' }"
+    >
+      <!-- Header -->
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="p.nombre" style="min-width: 220px">
+            Producto <p-sortIcon field="p.nombre" />
+          </th>
+          <th style="width: 100px">SKU</th>
+          <th pSortableColumn="c.nombre" style="min-width: 130px">
+            Categoría <p-sortIcon field="c.nombre" />
+          </th>
+          <th pSortableColumn="m.nombre" style="min-width: 120px">
+            Marca <p-sortIcon field="m.nombre" />
+          </th>
+          <th style="width: 110px">Tipo</th>
+          <th
+            pSortableColumn="p.precio"
+            style="width: 130px"
+            class="text-right"
+          >
+            Precio <p-sortIcon field="p.precio" />
+          </th>
+          <th pSortableColumn="p.costo" style="width: 120px" class="text-right">
+            Costo <p-sortIcon field="p.costo" />
+          </th>
+          <th
+            pSortableColumn="p.activo"
+            style="width: 100px"
+            class="text-center"
+          >
+            Estado <p-sortIcon field="p.activo" />
+          </th>
+          <th style="width: 100px" class="text-center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <!-- Body -->
+      <ng-template pTemplate="body" let-item>
+        <tr>
+          <!-- Nombre + código barras -->
+          <td>
+            <div class="cell-producto">
+              <div class="prod-avatar">
+                {{ item.nombre.charAt(0).toUpperCase() }}
+              </div>
+              <div class="prod-info">
+                <span class="prod-nombre">{{ item.nombre }}</span>
+                <span class="prod-barras" *ngIf="item.codigoBarras">
+                  <i class="pi pi-barcode"></i> {{ item.codigoBarras }}
+                </span>
+              </div>
+            </div>
+          </td>
+
+          <!-- SKU -->
+          <td>
+            <span class="sku-badge" *ngIf="item.sku">{{ item.sku }}</span>
+            <span class="text-muted" *ngIf="!item.sku">—</span>
+          </td>
+
+          <!-- Categoría -->
+          <td>
+            <span class="chip-cat" *ngIf="item.categoriaNombre">{{
+              item.categoriaNombre
+            }}</span>
+            <span class="text-muted" *ngIf="!item.categoriaNombre">—</span>
+          </td>
+
+          <!-- Marca -->
+          <td>
+            <span class="chip-marca" *ngIf="item.marcaNombre">{{
+              item.marcaNombre
+            }}</span>
+            <span class="text-muted" *ngIf="!item.marcaNombre">—</span>
+          </td>
+
+          <!-- Tipo -->
+          <td>
+            <p-tag
+              [value]="getTipoLabel(item.tipoProducto)"
+              [severity]="getTipoSeverity(item.tipoProducto)"
+              [rounded]="true"
+            />
+          </td>
+
+          <!-- Precio -->
+          <td class="text-right">
+            <span class="price-value">
+              {{ item.precio | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+            </span>
+          </td>
+
+          <!-- Costo -->
+          <td class="text-right">
+            <span class="cost-value">
+              {{ item.costo | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+            </span>
+          </td>
+
+          <!-- Estado -->
+          <td class="text-center">
+            <p-tag
+              [value]="item.activo ? 'Activo' : 'Inactivo'"
+              [severity]="item.activo ? 'success' : 'danger'"
+              [rounded]="true"
+            />
+          </td>
+
+          <!-- Acciones -->
+          <td class="text-center">
+            <div class="action-buttons">
+              <button
+                pButton
+                type="button"
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm action-edit"
+                pTooltip="Editar"
+                tooltipPosition="top"
+                (click)="openEdit(item)"
+              ></button>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-trash"
+                class="p-button-text p-button-danger p-button-sm action-delete"
+                pTooltip="Eliminar"
+                tooltipPosition="top"
+                (click)="confirmDelete(item)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Empty -->
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9">
+            <div class="empty-state">
+              <i class="pi pi-shopping-bag"></i>
+              <p>
+                {{
+                  searchQuery
+                    ? 'No se encontraron productos para "' + searchQuery + '"'
+                    : "No hay productos registrados"
+                }}
+              </p>
+              <button
+                *ngIf="!searchQuery"
+                pButton
+                type="button"
+                label="Crear primer producto"
+                icon="pi pi-plus"
+                class="btn-aura p-button-sm"
+                (click)="openCreate()"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Loading skeletons -->
+      <ng-template pTemplate="loadingbody">
+        <tr *ngFor="let s of [1, 2, 3, 4, 5, 6, 7]">
+          <td><p-skeleton /></td>
+          <td><p-skeleton width="70px" /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td class="text-center">
+            <p-skeleton width="70px" styleClass="mx-auto" />
+          </td>
+          <td class="text-right">
+            <p-skeleton width="90px" styleClass="ml-auto" />
+          </td>
+          <td class="text-right">
+            <p-skeleton width="80px" styleClass="ml-auto" />
+          </td>
+          <td class="text-center">
+            <p-skeleton width="70px" styleClass="mx-auto" />
+          </td>
+          <td class="text-center">
+            <p-skeleton width="80px" styleClass="mx-auto" />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- Modal -->
+<app-form-productos
+  [displayModal]="showModal"
+  [productoId]="selectedId"
+  [slug]="modalSlug"
+  (modalClosed)="onModalClosed()"
+  (productoSaved)="onItemSaved()"
+>
+</app-form-productos>
+
+<p-toast />
+<p-confirmDialog />
