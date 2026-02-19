@@ -1,5 +1,7 @@
 package com.cloud_technological.aura_pos.controllers;
 
+import java.util.List;
+
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,5 +75,10 @@ public class ListaPreciosController {
         Integer empresaId = securityUtils.getEmpresaId();
         listaPreciosService.eliminar(id, empresaId);
         return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "Lista eliminada correctamente", false, true), HttpStatus.OK);
+    }
+    @GetMapping("/list")
+    public ResponseEntity<ApiResponse<List<ListaPreciosDto>>> list() {
+        Integer empresaId = securityUtils.getEmpresaId();
+        return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "", false, listaPreciosService.list(empresaId)), HttpStatus.OK);
     }
 }

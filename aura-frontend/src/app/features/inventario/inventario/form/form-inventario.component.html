@@ -1,0 +1,135 @@
+<p-dialog
+  [(visible)]="displayModal"
+  [header]="
+    isEditMode
+      ? 'Editar registro de inventario'
+      : 'Registrar producto en inventario'
+  "
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '460px' }"
+  styleClass="aura-dialog"
+  (onHide)="closeModal()"
+>
+  <div class="dialog-loading" *ngIf="isLoading">
+    <i class="pi pi-spin pi-spinner"></i><span>Cargando...</span>
+  </div>
+
+  <form [formGroup]="frmInv" class="form-container" *ngIf="!isLoading">
+    <!-- Info solo edición -->
+    <div class="info-banner" *ngIf="isEditMode">
+      <i class="pi pi-info-circle"></i>
+      <span
+        >El producto y la sucursal no se pueden cambiar. El stock real se mueve
+        mediante compras y ventas.</span
+      >
+    </div>
+
+    <div class="field">
+      <label
+        >Producto <span class="required">*</span>
+        <span class="badge-edit" *ngIf="isEditMode">No modificable</span>
+      </label>
+      <p-dropdown
+        formControlName="productoId"
+        [options]="productosOpts"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona el producto..."
+        [filter]="true"
+        filterPlaceholder="Buscar..."
+        styleClass="w-full"
+        [class.ng-invalid]="isInvalid('productoId')"
+      />
+      <small class="p-error" *ngIf="isInvalid('productoId')"
+        >El producto es obligatorio.</small
+      >
+    </div>
+
+    <div class="field">
+      <label
+        >Sucursal <span class="required">*</span>
+        <span class="badge-edit" *ngIf="isEditMode">No modificable</span>
+      </label>
+      <p-dropdown
+        formControlName="sucursalId"
+        [options]="sucursalesOpts"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona la sucursal..."
+        styleClass="w-full"
+        [class.ng-invalid]="isInvalid('sucursalId')"
+      />
+      <small class="p-error" *ngIf="isInvalid('sucursalId')"
+        >La sucursal es obligatoria.</small
+      >
+    </div>
+
+    <p-divider align="left"
+      ><span class="divider-label">Control de stock</span></p-divider
+    >
+
+    <div class="field">
+      <label>Stock mínimo <span class="required">*</span></label>
+      <p-inputNumber
+        formControlName="stockMinimo"
+        [min]="0"
+        [maxFractionDigits]="4"
+        styleClass="w-full"
+        placeholder="0"
+      />
+      <small class="field-hint">
+        <i class="pi pi-info-circle"></i>
+        Al llegar a este nivel el sistema alertará stock bajo
+      </small>
+    </div>
+
+    <div class="field">
+      <label>Ubicación física <span class="optional">(opcional)</span></label>
+      <input
+        type="text"
+        pInputText
+        formControlName="ubicacion"
+        placeholder="Ej: Estante A-3, Bodega 2, Refrigerador..."
+        maxlength="100"
+        autocomplete="off"
+      />
+      <small class="p-error" *ngIf="isInvalid('ubicacion')"
+        >Máximo 100 caracteres.</small
+      >
+    </div>
+
+    <div class="stock-note">
+      <i class="pi pi-chart-bar"></i>
+      <span
+        >El <strong>stock actual</strong> inicia en 0 y solo se actualiza a
+        través de compras, ventas, mermas y traslados.</span
+      >
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button
+        pButton
+        type="button"
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-outlined p-button-secondary"
+        [disabled]="isSubmitting"
+        (click)="closeModal()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        [label]="isEditMode ? 'Guardar cambios' : 'Registrar'"
+        [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+        class="btn-aura"
+        [disabled]="isSubmitting || isLoading"
+        (click)="saveItem()"
+      ></button>
+    </div>
+  </ng-template>
+</p-dialog>
+<p-toast />

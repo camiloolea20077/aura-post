@@ -120,11 +120,16 @@ export class FormUnidadesComponent implements OnInit, OnChanges {
       );
       if (response?.status === 200 && response?.data) {
         const d = response.data;
-        this.frmUnidad.patchValue({
-          nombre: d.nombre,
-          abreviatura: d.abreviatura,
-          permiteDecimales: d.permiteDecimales,
-          activo: d.activo,
+        setTimeout(() => {
+          this.frmUnidad.patchValue(
+            {
+              nombre: d.nombre,
+              abreviatura: d.abreviatura,
+              permiteDecimales: d.permiteDecimales,
+              activo: d.activo,
+            },
+            { emitEvent: false },
+          );
         });
       }
     } catch {

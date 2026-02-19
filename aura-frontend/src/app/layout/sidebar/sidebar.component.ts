@@ -14,18 +14,18 @@ import { IndexDBService } from '../../core/services/index-db.service';
   styleUrls: ['./sidebar.component.scss'],
 })
 export class SidebarComponent implements OnInit {
-  @Input()  collapsed = false;
+  @Input() collapsed = false;
   @Output() toggleCollapse = new EventEmitter<void>();
 
   public menuGroups: SidebarMenuGroup[] = SIDEBAR_MENU;
-  public userName    = '';
-  public userRole    = '';
+  public userName = '';
+  public userRole = '';
   public userInitials = '';
   public empresaNombre = '';
 
   constructor(
     private readonly indexDBService: IndexDBService,
-    private readonly router: Router
+    private readonly router: Router,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -34,18 +34,18 @@ export class SidebarComponent implements OnInit {
 
   private async loadUserInfo(): Promise<void> {
     const auth = await this.indexDBService.loadDataAuthDB();
-    if (auth?.user) {
-      this.userName      = auth.user.nombre;
-      this.userRole      = auth.user.rol;
-      this.empresaNombre = auth.user.empresaNombre;
-      this.userInitials  = this.getInitials(auth.user.nombre);
+    if (auth) {
+      this.userName = auth.nombreCompleto;
+      this.userRole = auth.rol;
+      this.empresaNombre = auth.username;
+      this.userInitials = this.getInitials(auth.nombreCompleto);
     }
   }
 
   private getInitials(name: string): string {
     return name
       .split(' ')
-      .map(n => n[0])
+      .map((n) => n[0])
       .slice(0, 2)
       .join('')
       .toUpperCase();

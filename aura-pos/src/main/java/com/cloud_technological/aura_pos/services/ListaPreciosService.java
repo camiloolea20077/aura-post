@@ -1,5 +1,9 @@
 package com.cloud_technological.aura_pos.services;
 
+
+
+import java.util.List;
+
 import org.springframework.data.domain.PageImpl;
 
 import com.cloud_technological.aura_pos.dto.lista_precios.CreateListaPreciosDto;
@@ -14,4 +18,5 @@ public interface ListaPreciosService {
     ListaPreciosDto crear(CreateListaPreciosDto dto, Integer empresaId);
     ListaPreciosDto actualizar(Long id, UpdateListaPreciosDto dto, Integer empresaId);
     void eliminar(Long id, Integer empresaId);
+    List<ListaPreciosDto> list(Integer empresaId);
 }

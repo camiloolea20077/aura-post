@@ -1,0 +1,172 @@
+<p-dialog
+  [(visible)]="displayModal"
+  [header]="isEditMode ? 'Editar presentación' : 'Nueva presentación'"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '500px' }"
+  styleClass="aura-dialog"
+  (onHide)="closeModal()"
+>
+  <div class="dialog-loading" *ngIf="isLoading">
+    <i class="pi pi-spin pi-spinner"></i>
+    <span>Cargando datos...</span>
+  </div>
+
+  <form
+    [formGroup]="frmPresentacion"
+    (ngSubmit)="savePresentacion()"
+    class="form-container"
+    *ngIf="!isLoading"
+  >
+    <!-- Producto -->
+    <div class="field">
+      <label for="productoId">
+        Producto <span class="required">*</span>
+        <span class="badge-edit" *ngIf="isEditMode">No modificable</span>
+      </label>
+      <p-dropdown
+        inputId="productoId"
+        formControlName="productoId"
+        [options]="productosOpts"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona el producto..."
+        [filter]="true"
+        filterPlaceholder="Buscar producto..."
+        styleClass="w-full"
+        [class.ng-invalid]="isInvalid('productoId')"
+      />
+      <small class="p-error" *ngIf="isInvalid('productoId')"
+        >El producto es obligatorio.</small
+      >
+    </div>
+
+    <!-- Nombre de la presentación -->
+    <div class="field">
+      <label for="nombre">Nombre <span class="required">*</span></label>
+      <input
+        id="nombre"
+        type="text"
+        pInputText
+        formControlName="nombre"
+        placeholder="Ej: Caja x 12, SixPack, Unidad, Litro..."
+        [class.ng-invalid]="isInvalid('nombre')"
+        [class.ng-dirty]="frmPresentacion.get('nombre')?.touched"
+        maxlength="100"
+        autocomplete="off"
+      />
+      <small class="p-error" *ngIf="isInvalid('nombre')">
+        <ng-container
+          *ngIf="frmPresentacion.get('nombre')?.hasError('required')"
+          >El nombre es obligatorio.</ng-container
+        >
+        <ng-container
+          *ngIf="frmPresentacion.get('nombre')?.hasError('minlength')"
+          >Mínimo 2 caracteres.</ng-container
+        >
+      </small>
+    </div>
+
+    <!-- Código de barras -->
+    <div class="field">
+      <label for="codigoBarras">
+        Código de barras <span class="optional">(opcional)</span>
+      </label>
+      <input
+        id="codigoBarras"
+        type="text"
+        pInputText
+        formControlName="codigoBarras"
+        placeholder="Ej: 7503010014153"
+        maxlength="50"
+        autocomplete="off"
+        style="font-family: &quot;JetBrains Mono&quot;, monospace"
+      />
+      <small class="field-hint">
+        <i class="pi pi-info-circle"></i>
+        Cada presentación puede tener su propio código de barras único
+      </small>
+    </div>
+
+    <!-- Factor de conversión -->
+    <div class="field">
+      <label for="factorConversion">
+        Factor de conversión <span class="required">*</span>
+      </label>
+      <p-inputNumber
+        inputId="factorConversion"
+        formControlName="factorConversion"
+        [min]="0.0001"
+        [maxFractionDigits]="4"
+        placeholder="Ej: 12, 6, 1, 0.5..."
+        styleClass="w-full"
+        [class.ng-invalid]="isInvalid('factorConversion')"
+        [class.ng-dirty]="frmPresentacion.get('factorConversion')?.touched"
+      />
+      <small class="p-error" *ngIf="isInvalid('factorConversion')">
+        El factor debe ser mayor a 0.
+      </small>
+      <small class="field-hint">
+        <i class="pi pi-info-circle"></i>
+        Unidades base que contiene esta presentación. Ej:
+        <strong>Caja x 12 = 12</strong>, <strong>SixPack = 6</strong>,
+        <strong>Unidad = 1</strong>
+      </small>
+    </div>
+
+    <!-- Factor visual -->
+    <div
+      class="factor-card"
+      *ngIf="
+        frmPresentacion.get('factorConversion')?.value > 0 &&
+        frmPresentacion.get('nombre')?.value
+      "
+    >
+      <i class="pi pi-box"></i>
+      <span>
+        <strong>{{ frmPresentacion.get("nombre")?.value }}</strong>
+        equivale a
+        <strong>{{
+          frmPresentacion.get("factorConversion")?.value | number: "1.0-4"
+        }}</strong>
+        unidad(es) base
+      </span>
+    </div>
+
+    <!-- Activo -->
+    <div class="field-inline">
+      <div class="switch-label">
+        <span class="label-text">Estado</span>
+        <span class="label-sub">
+          {{ frmPresentacion.get("activo")?.value ? "Activo" : "Inactivo" }}
+        </span>
+      </div>
+      <p-inputSwitch formControlName="activo" />
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button
+        pButton
+        type="button"
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-outlined p-button-secondary"
+        [disabled]="isSubmitting"
+        (click)="closeModal()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        [label]="isEditMode ? 'Actualizar' : 'Guardar'"
+        [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+        class="btn-aura"
+        [disabled]="isSubmitting || isLoading"
+        (click)="savePresentacion()"
+      ></button>
+    </div>
+  </ng-template>
+</p-dialog>
+<p-toast />

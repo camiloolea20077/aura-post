@@ -1,0 +1,387 @@
+<p-dialog
+  [(visible)]="displayModal"
+  [header]="
+    isEditMode ? 'Editar regla de descuento' : 'Nueva regla de descuento'
+  "
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '580px' }"
+  styleClass="aura-dialog"
+  (onHide)="closeModal()"
+>
+  <div class="dialog-loading" *ngIf="isLoading">
+    <i class="pi pi-spin pi-spinner"></i><span>Cargando...</span>
+  </div>
+
+  <form [formGroup]="frmRegla" class="form-container" *ngIf="!isLoading">
+    <!-- ══ TIPO DE DESCUENTO ════════════════════════════════ -->
+    <div class="tipo-selector">
+      <div
+        class="tipo-card"
+        [class.selected]="frmRegla.get('tipoDescuento')?.value === 'PORCENTAJE'"
+        (click)="setTipo('PORCENTAJE')"
+      >
+        <i class="pi pi-percentage tipo-icon"></i>
+        <div class="tipo-info">
+          <span class="tipo-label">Porcentaje</span>
+          <span class="tipo-desc">Ej: 10% de descuento</span>
+        </div>
+        <i
+          class="pi pi-check-circle check-icon"
+          *ngIf="frmRegla.get('tipoDescuento')?.value === 'PORCENTAJE'"
+        ></i>
+      </div>
+      <div
+        class="tipo-card"
+        [class.selected]="frmRegla.get('tipoDescuento')?.value === 'MONTO'"
+        (click)="setTipo('MONTO')"
+      >
+        <i class="pi pi-dollar tipo-icon"></i>
+        <div class="tipo-info">
+          <span class="tipo-label">Monto fijo</span>
+          <span class="tipo-desc">Ej: $5.000 de descuento</span>
+        </div>
+        <i
+          class="pi pi-check-circle check-icon"
+          *ngIf="frmRegla.get('tipoDescuento')?.value === 'MONTO'"
+        ></i>
+      </div>
+    </div>
+
+    <!-- ══ NOMBRE + VALOR ═══════════════════════════════════ -->
+    <div class="field-row">
+      <div class="field flex-2">
+        <label for="nombre"
+          >Nombre de la regla <span class="required">*</span></label
+        >
+        <input
+          id="nombre"
+          type="text"
+          pInputText
+          formControlName="nombre"
+          placeholder="Ej: Happy Hour, Descuento Viernes..."
+          [class.ng-invalid]="isInvalid('nombre')"
+          [class.ng-dirty]="frmRegla.get('nombre')?.touched"
+          maxlength="100"
+          autocomplete="off"
+        />
+        <small class="p-error" *ngIf="isInvalid('nombre')">
+          <ng-container *ngIf="frmRegla.get('nombre')?.hasError('required')"
+            >El nombre es obligatorio.</ng-container
+          >
+          <ng-container *ngIf="frmRegla.get('nombre')?.hasError('minlength')"
+            >Mínimo 2 caracteres.</ng-container
+          >
+        </small>
+      </div>
+
+      <div class="field">
+        <label for="valor">
+          Valor
+          <span class="type-hint">
+            {{
+              frmRegla.get("tipoDescuento")?.value === "PORCENTAJE"
+                ? "(%)"
+                : "($)"
+            }}
+          </span>
+          <span class="required">*</span>
+        </label>
+        <p-inputNumber
+          inputId="valor"
+          formControlName="valor"
+          [min]="0.01"
+          [max]="porcentajeMaxValidator"
+          [maxFractionDigits]="2"
+          [suffix]="
+            frmRegla.get('tipoDescuento')?.value === 'PORCENTAJE' ? '%' : ''
+          "
+          [mode]="
+            frmRegla.get('tipoDescuento')?.value === 'MONTO'
+              ? 'currency'
+              : 'decimal'
+          "
+          [currency]="
+            frmRegla.get('tipoDescuento')?.value === 'MONTO' ? 'COP' : undefined
+          "
+          [locale]="
+            frmRegla.get('tipoDescuento')?.value === 'MONTO'
+              ? 'es-CO'
+              : undefined
+          "
+          styleClass="w-full"
+          [class.ng-invalid]="isInvalid('valor')"
+          placeholder="0"
+        />
+        <small class="p-error" *ngIf="isInvalid('valor')"
+          >El valor es obligatorio y debe ser mayor a 0.</small
+        >
+      </div>
+    </div>
+
+    <p-divider align="left"
+      ><span class="divider-label">¿A qué aplica?</span></p-divider
+    >
+
+    <!-- ══ APLICA A ══════════════════════════════════════════ -->
+    <div class="aplica-selector">
+      <div
+        class="aplica-chip"
+        [class.selected]="aplicaA === 'TODO'"
+        (click)="setAplicaA('TODO')"
+      >
+        <i class="pi pi-globe"></i> Todo el catálogo
+      </div>
+      <div
+        class="aplica-chip"
+        [class.selected]="aplicaA === 'CATEGORIA'"
+        (click)="setAplicaA('CATEGORIA')"
+      >
+        <i class="pi pi-folder"></i> Una categoría
+      </div>
+      <div
+        class="aplica-chip"
+        [class.selected]="aplicaA === 'PRODUCTO'"
+        (click)="setAplicaA('PRODUCTO')"
+      >
+        <i class="pi pi-box"></i> Un producto
+      </div>
+    </div>
+
+    <!-- Dropdown categoría -->
+    <div class="field" *ngIf="aplicaA === 'CATEGORIA'">
+      <label for="categoriaId">Categoría <span class="required">*</span></label>
+      <p-dropdown
+        inputId="categoriaId"
+        formControlName="categoriaId"
+        [options]="categoriasOpts"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona la categoría..."
+        [filter]="true"
+        styleClass="w-full"
+      />
+    </div>
+
+    <!-- Dropdown producto -->
+    <div class="field" *ngIf="aplicaA === 'PRODUCTO'">
+      <label for="productoId">Producto <span class="required">*</span></label>
+      <p-dropdown
+        inputId="productoId"
+        formControlName="productoId"
+        [options]="productosOpts"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona el producto..."
+        [filter]="true"
+        filterPlaceholder="Buscar..."
+        styleClass="w-full"
+      />
+    </div>
+
+    <p-divider align="left"
+      ><span class="divider-label">Vigencia (opcional)</span></p-divider
+    >
+
+    <!-- ══ FECHAS ═══════════════════════════════════════════ -->
+    <div class="field-row">
+      <div class="field">
+        <label>Fecha inicio</label>
+        <p-calendar
+          formControlName="fechaInicio"
+          [showTime]="true"
+          hourFormat="12"
+          placeholder="dd/mm/aaaa hh:mm"
+          dateFormat="dd/mm/yy"
+          [showButtonBar]="true"
+          styleClass="w-full"
+          [class.ng-invalid]="
+            frmRegla.hasError('fechaInvalida') && frmRegla.touched
+          "
+        />
+      </div>
+      <div class="field">
+        <label>Fecha fin</label>
+        <p-calendar
+          formControlName="fechaFin"
+          [showTime]="true"
+          hourFormat="12"
+          placeholder="dd/mm/aaaa hh:mm"
+          dateFormat="dd/mm/yy"
+          [showButtonBar]="true"
+          styleClass="w-full"
+          [class.ng-invalid]="
+            frmRegla.hasError('fechaInvalida') && frmRegla.touched
+          "
+        />
+      </div>
+    </div>
+    <small
+      class="error-hint"
+      *ngIf="frmRegla.hasError('fechaInvalida') && frmRegla.touched"
+    >
+      <i class="pi pi-exclamation-circle"></i> La fecha inicio debe ser anterior
+      a la fecha fin.
+    </small>
+
+    <p-divider align="left"
+      ><span class="divider-label">Horario (opcional)</span></p-divider
+    >
+
+    <!-- ══ DÍAS DE SEMANA ════════════════════════════════════ -->
+    <div class="dias-section">
+      <div class="dias-header">
+        <span class="dias-label">Días de aplicación</span>
+        <button
+          type="button"
+          class="semana-btn"
+          (click)="seleccionarSemanaCompleta()"
+        >
+          Todos los días
+        </button>
+      </div>
+      <div class="dias-grid">
+        <div
+          *ngFor="let dia of diasSemana"
+          class="dia-chip"
+          [class.selected]="isDiaSeleccionado(dia.value)"
+          (click)="toggleDia(dia.value)"
+        >
+          {{ dia.label }}
+        </div>
+      </div>
+      <small class="field-hint" *ngIf="diasSeleccionados.length === 0">
+        <i class="pi pi-info-circle"></i> Sin restricción de día — aplica
+        cualquier día
+      </small>
+    </div>
+
+    <!-- ══ HORAS ════════════════════════════════════════════ -->
+    <div class="field-row">
+      <div class="field">
+        <label>Hora inicio</label>
+        <p-calendar
+          formControlName="horaInicio"
+          [timeOnly]="true"
+          hourFormat="12"
+          placeholder="hh:mm"
+          styleClass="w-full"
+          [class.ng-invalid]="
+            frmRegla.hasError('horaInvalida') && frmRegla.touched
+          "
+        />
+      </div>
+      <div class="field">
+        <label>Hora fin</label>
+        <p-calendar
+          formControlName="horaFin"
+          [timeOnly]="true"
+          hourFormat="12"
+          placeholder="hh:mm"
+          styleClass="w-full"
+          [class.ng-invalid]="
+            frmRegla.hasError('horaInvalida') && frmRegla.touched
+          "
+        />
+      </div>
+    </div>
+    <small
+      class="error-hint"
+      *ngIf="frmRegla.hasError('horaInvalida') && frmRegla.touched"
+    >
+      <i class="pi pi-exclamation-circle"></i> La hora inicio debe ser anterior
+      a la hora fin.
+    </small>
+    <small
+      class="field-hint"
+      *ngIf="
+        !frmRegla.get('horaInicio')?.value && !frmRegla.get('horaFin')?.value
+      "
+    >
+      <i class="pi pi-info-circle"></i> Sin restricción de hora — aplica todo el
+      día
+    </small>
+
+    <p-divider />
+
+    <!-- ══ ESTADO ════════════════════════════════════════════ -->
+    <div class="field-inline">
+      <div class="switch-label">
+        <span class="label-text">Estado</span>
+        <span class="label-sub">
+          {{
+            frmRegla.get("activo")?.value
+              ? "Activa — se aplicará en ventas"
+              : "Inactiva"
+          }}
+        </span>
+      </div>
+      <p-inputSwitch formControlName="activo" />
+    </div>
+
+    <!-- Resumen visual -->
+    <div
+      class="resumen-card"
+      *ngIf="frmRegla.get('nombre')?.value && frmRegla.get('valor')?.value"
+    >
+      <i class="pi pi-tag"></i>
+      <span>
+        <strong>{{ frmRegla.get("nombre")?.value }}</strong> — descuento de
+        <strong>
+          {{
+            frmRegla.get("tipoDescuento")?.value === "PORCENTAJE"
+              ? frmRegla.get("valor")?.value + "%"
+              : "$" + (frmRegla.get("valor")?.value | number: "1.0-0")
+          }}
+        </strong>
+        <ng-container *ngIf="aplicaA !== 'TODO'">
+          en
+          <strong>
+            {{
+              aplicaA === "CATEGORIA"
+                ? frmRegla.get("categoriaId")?.value
+                  ? (categoriasOpts
+                    | filterById: frmRegla.get("categoriaId")?.value)
+                  : "la categoría seleccionada"
+                : frmRegla.get("productoId")?.value
+                  ? (productosOpts
+                    | filterById: frmRegla.get("productoId")?.value)
+                  : "el producto seleccionado"
+            }}
+          </strong>
+        </ng-container>
+        <ng-container *ngIf="diasSeleccionados.length">
+          · días:
+          <strong>{{
+            diasSeleccionados.length === 7 ? "todos" : diasSeleccionados.length
+          }}</strong>
+        </ng-container>
+      </span>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button
+        pButton
+        type="button"
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-outlined p-button-secondary"
+        [disabled]="isSubmitting"
+        (click)="closeModal()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        [label]="isEditMode ? 'Actualizar' : 'Guardar regla'"
+        [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+        class="btn-aura"
+        [disabled]="isSubmitting || isLoading"
+        (click)="saveRegla()"
+      ></button>
+    </div>
+  </ng-template>
+</p-dialog>
+<p-toast />

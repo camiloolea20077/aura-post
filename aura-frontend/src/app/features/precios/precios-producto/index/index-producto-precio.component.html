@@ -1,0 +1,223 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="page-title-area">
+      <div class="page-icon">
+        <i class="pi pi-dollar"></i>
+      </div>
+      <div>
+        <h3 class="page-title">Precios por presentación</h3>
+        <p class="page-sub">
+          Precios asignados a cada presentación en las distintas listas
+        </p>
+      </div>
+    </div>
+    <button
+      pButton
+      type="button"
+      label="Asignar precio"
+      icon="pi pi-plus"
+      class="btn-aura"
+      (click)="openCreate()"
+    ></button>
+  </div>
+
+  <div class="card">
+    <div class="table-toolbar">
+      <div class="toolbar-left">
+        <span class="p-input-icon-left search-wrap">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            pInputText
+            class="search-input"
+            placeholder="Buscar por producto, presentación, lista..."
+            [(ngModel)]="searchQuery"
+            (input)="onSearch()"
+            (keydown.escape)="clearSearch()"
+          />
+          <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">
+            <i class="pi pi-times"></i>
+          </button>
+        </span>
+
+        <p-dropdown
+          [options]="listasOpts"
+          [(ngModel)]="listaFiltro"
+          optionLabel="label"
+          optionValue="value"
+          (onChange)="onListaChange()"
+          styleClass="lista-filter"
+        />
+
+        <span class="total-badge" *ngIf="!loadingTable">
+          {{ totalRecords }} {{ totalRecords === 1 ? "precio" : "precios" }}
+        </span>
+      </div>
+    </div>
+
+    <p-table
+      [value]="items"
+      [lazy]="true"
+      (onLazyLoad)="loadTable($event)"
+      [paginator]="true"
+      [rows]="rowSize"
+      [totalRecords]="totalRecords"
+      [loading]="loadingTable"
+      [rowsPerPageOptions]="[10, 15, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords} registros"
+      styleClass="aura-table"
+      [tableStyle]="{ 'min-width': '700px' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="p.nombre" style="min-width: 180px">
+            Producto <p-sortIcon field="p.nombre" />
+          </th>
+          <th style="min-width: 140px">Presentación</th>
+          <th pSortableColumn="lp.nombre" style="min-width: 140px">
+            Lista <p-sortIcon field="lp.nombre" />
+          </th>
+          <th
+            pSortableColumn="pp.precio"
+            style="width: 140px"
+            class="text-right"
+          >
+            Precio <p-sortIcon field="pp.precio" />
+          </th>
+          <th style="width: 110px" class="text-center">Utilidad</th>
+          <th style="width: 100px" class="text-center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item>
+        <tr>
+          <!-- Producto -->
+          <td>
+            <div class="cell-producto">
+              <div class="prod-avatar">
+                {{ item.productoNombre.charAt(0).toUpperCase() }}
+              </div>
+              <span class="prod-nombre">{{ item.productoNombre }}</span>
+            </div>
+          </td>
+
+          <!-- Presentación -->
+          <td>
+            <div class="cell-pres">
+              <i class="pi pi-box pres-icon"></i>
+              <span>{{ item.productoPresentacionNombre }}</span>
+            </div>
+          </td>
+
+          <!-- Lista -->
+          <td>
+            <span class="lista-chip">
+              <i class="pi pi-tag"></i> {{ item.listaPrecioNombre }}
+            </span>
+          </td>
+
+          <!-- Precio -->
+          <td class="text-right">
+            <span class="precio-value">
+              {{ item.precio | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+            </span>
+          </td>
+
+          <!-- Utilidad esperada -->
+          <td class="text-center">
+            <span
+              *ngIf="item.utilidadEsperada !== null"
+              class="utilidad-badge"
+              [ngClass]="getUtilidadClass(item.utilidadEsperada)"
+            >
+              {{ item.utilidadEsperada }}%
+            </span>
+            <span *ngIf="item.utilidadEsperada === null" class="text-muted"
+              >—</span
+            >
+          </td>
+
+          <!-- Acciones -->
+          <td class="text-center">
+            <div class="action-buttons">
+              <button
+                pButton
+                type="button"
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm action-edit"
+                pTooltip="Editar precio"
+                tooltipPosition="top"
+                (click)="openEdit(item)"
+              ></button>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-trash"
+                class="p-button-text p-button-danger p-button-sm action-delete"
+                pTooltip="Eliminar"
+                tooltipPosition="top"
+                (click)="confirmDelete(item)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6">
+            <div class="empty-state">
+              <i class="pi pi-dollar"></i>
+              <p>
+                {{
+                  searchQuery
+                    ? 'Sin resultados para "' + searchQuery + '"'
+                    : "No hay precios registrados"
+                }}
+              </p>
+              <button
+                *ngIf="!searchQuery"
+                pButton
+                type="button"
+                label="Asignar primer precio"
+                icon="pi pi-plus"
+                class="btn-aura p-button-sm"
+                (click)="openCreate()"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr *ngFor="let s of [1, 2, 3, 4, 5, 6]">
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td class="text-right">
+            <p-skeleton width="100px" styleClass="ml-auto" />
+          </td>
+          <td class="text-center">
+            <p-skeleton width="65px" styleClass="mx-auto" />
+          </td>
+          <td class="text-center">
+            <p-skeleton width="80px" styleClass="mx-auto" />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<app-form-producto-precio
+  [displayModal]="showModal"
+  [precioId]="selectedId"
+  [slug]="modalSlug"
+  (modalClosed)="onModalClosed()"
+  (precioSaved)="onItemSaved()"
+>
+</app-form-producto-precio>
+
+<p-toast />
+<p-confirmDialog />

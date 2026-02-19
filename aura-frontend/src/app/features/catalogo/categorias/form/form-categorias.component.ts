@@ -161,11 +161,16 @@ export class FormCategoriasComponent implements OnInit, OnChanges {
   }
 
   private patchForm(data: CategoriaModel): void {
-    this.frmCategoria.patchValue({
-      nombre: data.nombre,
-      padreId: data.padreId,
-      impuestoDefecto: data.impuestoDefecto,
-      activo: data.activo,
+    setTimeout(() => {
+      this.frmCategoria.patchValue(
+        {
+          nombre: data.nombre,
+          padreId: data.padreId,
+          impuestoDefecto: data.impuestoDefecto,
+          activo: data.activo,
+        },
+        { emitEvent: false },
+      );
     });
   }
 

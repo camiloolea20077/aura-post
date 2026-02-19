@@ -56,28 +56,30 @@ export class IndexDBService {
     return data?.token ?? null;
   }
 
-  async getEmpresaId(): Promise<number | null> {
-    const data = await this.loadDataAuthDB();
-    return data?.user?.empresaId ?? null;
-  }
-
-  async getSucursalId(): Promise<number | null> {
-    const data = await this.loadDataAuthDB();
-    return data?.user?.sucursalId ?? null;
-  }
-
   async getUsuarioId(): Promise<number | null> {
     const data = await this.loadDataAuthDB();
-    return data?.user?.id ?? null;
+    return data?.usuarioId ?? null;
   }
 
   async getUserNombre(): Promise<string | null> {
     const data = await this.loadDataAuthDB();
-    return data?.user?.nombre ?? null;
+    return data?.nombreCompleto ?? null;
   }
 
   async getRol(): Promise<string | null> {
     const data = await this.loadDataAuthDB();
-    return data?.user?.rol ?? null;
+    return data?.rol ?? null;
+  }
+
+  async getSucursalDefault(): Promise<number | null> {
+    const data = await this.loadDataAuthDB();
+    const def =
+      data?.sucursales?.find((s) => s.esDefault) ?? data?.sucursales?.[0];
+    return def?.id ?? null;
+  }
+
+  async getSucursales() {
+    const data = await this.loadDataAuthDB();
+    return data?.sucursales ?? [];
   }
 }

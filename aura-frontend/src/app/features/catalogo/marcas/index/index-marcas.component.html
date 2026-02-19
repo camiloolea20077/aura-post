@@ -29,7 +29,7 @@
             pInputText
             class="search-input"
             placeholder="Buscar marca..."
-            [(ngModel)]="filterGlobal"
+            [(ngModel)]="searchQuery"
             (input)="filterGlobal($event)"
           />
           <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">

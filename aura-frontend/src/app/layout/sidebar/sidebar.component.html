@@ -1,12 +1,19 @@
 <aside class="aura-sidebar" [class.collapsed]="collapsed">
-
   <!-- ─── Logo ─────────────────────────────────── -->
   <div class="sidebar-logo">
     <div class="logo-brand" *ngIf="!collapsed">
-      <div class="logo-icon-box">A</div>
+      <div class="logo-icon-box">
+        <img
+          src="assets/icons/icono.jpeg"
+          alt="Logo AURA POS"
+          class="logo-img"
+        />
+      </div>
       <div class="logo-texts">
         <span class="logo-name">AURA <span>POS</span></span>
-        <span class="logo-empresa" *ngIf="empresaNombre">{{ empresaNombre }}</span>
+        <span class="logo-empresa" *ngIf="empresaNombre">{{
+          empresaNombre
+        }}</span>
       </div>
     </div>
     <div class="logo-brand centered" *ngIf="collapsed">
@@ -17,7 +24,8 @@
       class="collapse-btn"
       (click)="toggleCollapse.emit()"
       [pTooltip]="collapsed ? 'Expandir' : 'Colapsar'"
-      tooltipPosition="right">
+      tooltipPosition="right"
+    >
       <i [class]="collapsed ? 'pi pi-chevron-right' : 'pi pi-chevron-left'"></i>
     </button>
   </div>
@@ -25,9 +33,10 @@
   <!-- ─── Navigation ───────────────────────────── -->
   <nav class="sidebar-nav">
     <ng-container *ngFor="let group of menuGroups">
-
       <div class="nav-group">
-        <span class="nav-group-label" *ngIf="!collapsed">{{ group.label }}</span>
+        <span class="nav-group-label" *ngIf="!collapsed">{{
+          group.label
+        }}</span>
 
         <a
           *ngFor="let item of group.items"
@@ -36,8 +45,8 @@
           class="nav-item"
           [class.highlight]="item.highlight"
           [pTooltip]="collapsed ? item.label : ''"
-          tooltipPosition="right">
-
+          tooltipPosition="right"
+        >
           <i [class]="item.icon + ' nav-icon'"></i>
 
           <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
@@ -48,10 +57,8 @@
 
           <!-- Badge colapsado: solo punto -->
           <span class="nav-badge-dot" *ngIf="item.badge && collapsed"></span>
-
         </a>
       </div>
-
     </ng-container>
   </nav>
 
@@ -69,7 +76,8 @@
         class="logout-btn"
         (click)="logout()"
         pTooltip="Cerrar sesión"
-        tooltipPosition="top">
+        tooltipPosition="top"
+      >
         <i class="pi pi-sign-out"></i>
       </button>
     </ng-container>
@@ -79,10 +87,10 @@
         class="logout-btn centered"
         (click)="logout()"
         pTooltip="Cerrar sesión"
-        tooltipPosition="right">
+        tooltipPosition="right"
+      >
         <i class="pi pi-sign-out"></i>
       </button>
     </ng-container>
   </div>
-
 </aside>

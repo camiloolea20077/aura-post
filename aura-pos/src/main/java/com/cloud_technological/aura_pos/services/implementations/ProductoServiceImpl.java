@@ -1,6 +1,7 @@
 package com.cloud_technological.aura_pos.services.implementations;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageImpl;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.cloud_technological.aura_pos.dto.productos.CreateProductoDto;
 import com.cloud_technological.aura_pos.dto.productos.ProductoDto;
+import com.cloud_technological.aura_pos.dto.productos.ProductoListDto;
 import com.cloud_technological.aura_pos.dto.productos.ProductoTableDto;
 import com.cloud_technological.aura_pos.dto.productos.UpdateProductoDto;
 import com.cloud_technological.aura_pos.entity.CategoriaEntity;
@@ -154,5 +156,9 @@ public class ProductoServiceImpl implements ProductoService {
         entity.setDeletedAt(LocalDateTime.now());
         entity.setActivo(false);
         productoJPARepository.save(entity);
+    }
+    @Override
+    public List<ProductoListDto> list(Integer empresaId) {
+        return productoRepository.list(empresaId);
     }
 }

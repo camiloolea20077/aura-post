@@ -130,7 +130,7 @@ CREATE TABLE unidad_medida (
 	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	deleted_at TIMESTAMP;
 );
-
+select * from producto
 -- 4. PRODUCTO (El maestro)
 CREATE TABLE producto (
     id SERIAL PRIMARY KEY,

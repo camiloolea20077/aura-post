@@ -10,6 +10,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import com.cloud_technological.aura_pos.dto.productos.ProductoListDto;
 import com.cloud_technological.aura_pos.dto.productos.ProductoTableDto;
 import com.cloud_technological.aura_pos.utils.PageableDto;
 
@@ -96,5 +97,19 @@ public class ProductoQueryRepository {
         params.addValue("id", id);
         Long count = jdbcTemplate.queryForObject(sql, params, Long.class);
         return count != null && count > 0;
+    }
+    public List<ProductoListDto> list(Integer empresaId){
+        String sql = """
+            SELECT
+                p.id,
+                p.sku,
+                p.nombre
+            FROM producto p
+            WHERE p.empresa_id = :empresaId
+              AND p.deleted_at IS NULL
+                """;
+
+        MapSqlParameterSource params = new MapSqlParameterSource("empresaId", empresaId);
+        return jdbcTemplate.query(sql, params, new BeanPropertyRowMapper<>(ProductoListDto.class));
     }
 }

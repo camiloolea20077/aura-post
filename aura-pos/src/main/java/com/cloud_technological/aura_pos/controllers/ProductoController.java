@@ -1,5 +1,7 @@
 package com.cloud_technological.aura_pos.controllers;
 
+import java.util.List;
+
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.cloud_technological.aura_pos.dto.productos.CreateProductoDto;
 import com.cloud_technological.aura_pos.dto.productos.ProductoDto;
+import com.cloud_technological.aura_pos.dto.productos.ProductoListDto;
 import com.cloud_technological.aura_pos.dto.productos.ProductoTableDto;
 import com.cloud_technological.aura_pos.dto.productos.UpdateProductoDto;
 import com.cloud_technological.aura_pos.services.ProductoService;
@@ -79,5 +82,10 @@ public class ProductoController {
         Integer empresaId = securityUtils.getEmpresaId();
         productoService.eliminar(id, empresaId);
         return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "Producto eliminado correctamente", false, true), HttpStatus.OK);
+    }
+    @GetMapping("/list")
+    public ResponseEntity<ApiResponse<List<ProductoListDto>>> list() {
+        Integer empresaId = securityUtils.getEmpresaId();
+        return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "", false, productoService.list(empresaId)), HttpStatus.OK);
     }
 }

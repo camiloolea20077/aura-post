@@ -1,0 +1,194 @@
+<p-dialog
+  [(visible)]="displayModal"
+  [header]="isEditMode ? 'Editar composición' : 'Nueva composición'"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '520px' }"
+  styleClass="aura-dialog"
+  (onHide)="closeModal()"
+>
+  <div class="dialog-loading" *ngIf="isLoading">
+    <i class="pi pi-spin pi-spinner"></i>
+    <span>Cargando datos...</span>
+  </div>
+
+  <form
+    [formGroup]="frmComposicion"
+    (ngSubmit)="saveComposicion()"
+    class="form-container"
+    *ngIf="!isLoading"
+  >
+    <!-- Selector de tipo (KIT / RECETA) — prominente arriba -->
+    <div class="tipo-selector">
+      <div
+        *ngFor="let opt of tipoOptions"
+        class="tipo-card"
+        [class.selected]="frmComposicion.get('tipo')?.value === opt.value"
+        [class.disabled]="isEditMode"
+        (click)="!isEditMode && frmComposicion.patchValue({ tipo: opt.value })"
+      >
+        <i class="pi {{ opt.icon }} tipo-icon"></i>
+        <div class="tipo-info">
+          <span class="tipo-label">{{ opt.label }}</span>
+          <span class="tipo-desc">{{ opt.desc }}</span>
+        </div>
+        <i
+          class="pi pi-check-circle check-icon"
+          *ngIf="frmComposicion.get('tipo')?.value === opt.value"
+        ></i>
+      </div>
+    </div>
+
+    <!-- Error mismo producto -->
+    <div
+      class="alert-error"
+      *ngIf="frmComposicion.hasError('mismoProducto') && frmComposicion.touched"
+    >
+      <i class="pi pi-exclamation-circle"></i>
+      El producto padre y el componente no pueden ser el mismo.
+    </div>
+
+    <!-- Producto padre -->
+    <div class="field">
+      <label for="productoPadreId">
+        Producto
+        {{ tipoSeleccionado?.value === "RECETA" ? "elaborado" : "Kit" }}
+        <span class="required">*</span>
+        <span class="badge-edit" *ngIf="isEditMode">No modificable</span>
+      </label>
+      <p-dropdown
+        inputId="productoPadreId"
+        formControlName="productoPadreId"
+        [options]="productosOpts"
+        optionLabel="label"
+        optionValue="value"
+        [placeholder]="
+          tipoSeleccionado?.value === 'RECETA'
+            ? 'Selecciona el producto a elaborar...'
+            : 'Selecciona el kit...'
+        "
+        [filter]="true"
+        filterPlaceholder="Buscar producto..."
+        styleClass="w-full"
+        [class.ng-invalid]="isInvalid('productoPadreId')"
+      />
+      <small class="p-error" *ngIf="isInvalid('productoPadreId')"
+        >El producto padre es obligatorio.</small
+      >
+    </div>
+
+    <!-- Flecha visual -->
+    <div class="arrow-divider">
+      <div class="arrow-line"></div>
+      <div class="arrow-label">
+        <i class="pi pi-arrow-down"></i>
+        {{
+          tipoSeleccionado?.value === "RECETA"
+            ? "contiene el insumo"
+            : "incluye el producto"
+        }}
+      </div>
+      <div class="arrow-line"></div>
+    </div>
+
+    <!-- Producto hijo (componente) -->
+    <div class="field">
+      <label for="productoHijoId">
+        {{
+          tipoSeleccionado?.value === "RECETA"
+            ? "Insumo / ingrediente"
+            : "Producto componente"
+        }}
+        <span class="required">*</span>
+        <span class="badge-edit" *ngIf="isEditMode">No modificable</span>
+      </label>
+      <p-dropdown
+        appendTo="body"
+        inputId="productoHijoId"
+        formControlName="productoHijoId"
+        [options]="hijoOptions"
+        optionLabel="label"
+        optionValue="value"
+        [placeholder]="
+          tipoSeleccionado?.value === 'RECETA'
+            ? 'Selecciona el insumo...'
+            : 'Selecciona el componente...'
+        "
+        [filter]="true"
+        filterPlaceholder="Buscar..."
+        styleClass="w-full"
+        [class.ng-invalid]="isInvalid('productoHijoId')"
+      />
+      <small class="p-error" *ngIf="isInvalid('productoHijoId')"
+        >El componente es obligatorio.</small
+      >
+    </div>
+
+    <!-- Cantidad -->
+    <div class="field">
+      <label for="cantidad"> Cantidad <span class="required">*</span> </label>
+      <p-inputNumber
+        inputId="cantidad"
+        formControlName="cantidad"
+        [min]="0.0001"
+        [maxFractionDigits]="4"
+        placeholder="Ej: 1, 6, 0.05..."
+        styleClass="w-full"
+        [class.ng-invalid]="isInvalid('cantidad')"
+        [class.ng-dirty]="frmComposicion.get('cantidad')?.touched"
+      />
+      <small class="p-error" *ngIf="isInvalid('cantidad')"
+        >La cantidad debe ser mayor a 0.</small
+      >
+      <small class="field-hint">
+        <i class="pi pi-info-circle"></i>
+        Cuántas unidades del componente contiene/necesita este producto
+      </small>
+    </div>
+
+    <!-- Resumen visual -->
+    <div
+      class="resumen-card"
+      *ngIf="
+        frmComposicion.get('productoPadreId')?.value &&
+        frmComposicion.get('productoHijoId')?.value
+      "
+    >
+      <i class="pi pi-info-circle"></i>
+      <span>
+        Al
+        {{ tipoSeleccionado?.value === "RECETA" ? "elaborar" : "vender" }}
+        <strong>1 unidad</strong> del producto padre, se consumirán
+        <strong>{{
+          frmComposicion.get("cantidad")?.value | number: "1.0-4"
+        }}</strong>
+        unidad(es) del componente.
+      </span>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button
+        pButton
+        type="button"
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-outlined p-button-secondary"
+        [disabled]="isSubmitting"
+        (click)="closeModal()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        [label]="isEditMode ? 'Actualizar' : 'Guardar'"
+        [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+        class="btn-aura"
+        [disabled]="isSubmitting || isLoading"
+        (click)="saveComposicion()"
+      ></button>
+    </div>
+  </ng-template>
+</p-dialog>
+<p-toast />

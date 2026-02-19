@@ -60,17 +60,6 @@
           {{ totalRecords === 1 ? "producto" : "productos" }}
         </span>
       </div>
-
-      <div class="toolbar-right">
-        <button
-          pButton
-          type="button"
-          icon="pi pi-refresh"
-          class="p-button-outlined p-button-secondary p-button-sm"
-          pTooltip="Recargar"
-          (click)="loadTable(lastLazyEvent ?? { first: 0, rows: rowSize })"
-        ></button>
-      </div>
     </div>
 
     <!-- Tabla -->

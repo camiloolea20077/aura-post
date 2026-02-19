@@ -1,0 +1,202 @@
+<p-dialog
+  [(visible)]="displayModal"
+  [header]="isEditMode ? 'Editar precio' : 'Asignar precio'"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '500px' }"
+  styleClass="aura-dialog"
+  (onHide)="closeModal()"
+>
+  <div class="dialog-loading" *ngIf="isLoading">
+    <i class="pi pi-spin pi-spinner"></i><span>Cargando...</span>
+  </div>
+
+  <form [formGroup]="frmPrecio" class="form-container" *ngIf="!isLoading">
+    <!-- Lista de precios -->
+    <div class="field">
+      <label for="listaPrecioId">
+        Lista de precios <span class="required">*</span>
+        <span class="badge-edit" *ngIf="isEditMode">No modificable</span>
+      </label>
+      <p-dropdown
+        inputId="listaPrecioId"
+        formControlName="listaPrecioId"
+        [options]="listasOpts"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona la lista..."
+        [filter]="true"
+        styleClass="w-full"
+        [class.ng-invalid]="isInvalid('listaPrecioId')"
+      />
+      <small class="p-error" *ngIf="isInvalid('listaPrecioId')"
+        >La lista es obligatoria.</small
+      >
+    </div>
+
+    <p-divider align="left"
+      ><span class="divider-label">Producto</span></p-divider
+    >
+
+    <!-- Producto -->
+    <div class="field">
+      <label for="productoId">
+        Producto <span class="required">*</span>
+        <span class="badge-edit" *ngIf="isEditMode">No modificable</span>
+      </label>
+      <p-dropdown
+        inputId="productoId"
+        formControlName="productoId"
+        [options]="productosOpts"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona el producto..."
+        [filter]="true"
+        filterPlaceholder="Buscar..."
+        styleClass="w-full"
+        [class.ng-invalid]="isInvalid('productoId')"
+      />
+      <small class="p-error" *ngIf="isInvalid('productoId')"
+        >El producto es obligatorio.</small
+      >
+    </div>
+
+    <!-- Presentación -->
+    <div class="field">
+      <label for="productoPresentacionId">
+        Presentación <span class="required">*</span>
+        <span class="badge-edit" *ngIf="isEditMode">No modificable</span>
+      </label>
+      <p-dropdown
+        inputId="productoPresentacionId"
+        formControlName="productoPresentacionId"
+        [options]="presentacionesOpts"
+        optionLabel="label"
+        optionValue="value"
+        [placeholder]="
+          frmPrecio.get('productoId')?.value
+            ? loadingPresentaciones
+              ? 'Cargando presentaciones...'
+              : 'Selecciona la presentación...'
+            : 'Primero selecciona un producto'
+        "
+        styleClass="w-full"
+        [class.ng-invalid]="isInvalid('productoPresentacionId')"
+      />
+      <small class="p-error" *ngIf="isInvalid('productoPresentacionId')"
+        >La presentación es obligatoria.</small
+      >
+      <small
+        class="field-hint"
+        *ngIf="
+          presentacionesOpts.length === 0 &&
+          frmPrecio.get('productoId')?.value &&
+          !loadingPresentaciones
+        "
+      >
+        <i class="pi pi-exclamation-circle" style="color: #d97706"></i>
+        Este producto no tiene presentaciones. Agrégalas primero en el módulo de
+        Presentaciones.
+      </small>
+    </div>
+
+    <p-divider align="left"
+      ><span class="divider-label">Precio</span></p-divider
+    >
+
+    <!-- Precio -->
+    <div class="field">
+      <label for="precio"
+        >Precio de venta <span class="required">*</span></label
+      >
+      <p-inputNumber
+        inputId="precio"
+        formControlName="precio"
+        mode="currency"
+        currency="COP"
+        locale="es-CO"
+        [minFractionDigits]="0"
+        [maxFractionDigits]="0"
+        [min]="0.01"
+        styleClass="w-full"
+        [class.ng-invalid]="isInvalid('precio')"
+        [class.ng-dirty]="frmPrecio.get('precio')?.touched"
+      />
+      <small class="p-error" *ngIf="isInvalid('precio')"
+        >El precio debe ser mayor a 0.</small
+      >
+    </div>
+
+    <!-- Margen calculado -->
+    <div class="margen-card" *ngIf="margenActual !== null">
+      <div class="margen-row">
+        <span class="margen-text">
+          <i class="pi pi-info-circle"></i>
+          Costo del producto:
+          <strong>{{
+            costoReferencia | currency: "COP" : "symbol-narrow" : "1.0-0"
+          }}</strong>
+        </span>
+        <span class="margen-badge" [ngClass]="margenClass">
+          <i class="pi pi-percentage"></i> {{ margenActual }}%
+        </span>
+      </div>
+      <div class="margen-hint" [ngClass]="margenClass">
+        <ng-container *ngIf="margenActual >= 20"
+          >Buen margen de utilidad ✓</ng-container
+        >
+        <ng-container *ngIf="margenActual > 0 && margenActual < 20"
+          >Margen bajo — considera ajustar el precio</ng-container
+        >
+        <ng-container *ngIf="margenActual <= 0"
+          >Precio por debajo del costo — venta a pérdida</ng-container
+        >
+      </div>
+    </div>
+
+    <!-- Utilidad esperada -->
+    <div class="field">
+      <label for="utilidadEsperada">
+        Utilidad esperada (%) <span class="optional">(opcional)</span>
+      </label>
+      <p-inputNumber
+        inputId="utilidadEsperada"
+        formControlName="utilidadEsperada"
+        [min]="0"
+        [maxFractionDigits]="2"
+        suffix="%"
+        styleClass="w-full"
+        placeholder="Ej: 35"
+      />
+      <small class="field-hint">
+        <i class="pi pi-info-circle"></i> Referencia interna — no afecta el
+        precio de venta
+      </small>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button
+        pButton
+        type="button"
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-outlined p-button-secondary"
+        [disabled]="isSubmitting"
+        (click)="closeModal()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        [label]="isEditMode ? 'Actualizar precio' : 'Guardar precio'"
+        [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+        class="btn-aura"
+        [disabled]="isSubmitting || isLoading"
+        (click)="savePrecio()"
+      ></button>
+    </div>
+  </ng-template>
+</p-dialog>
+<p-toast />

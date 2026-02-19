@@ -1,0 +1,148 @@
+.form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 0.25rem 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+
+  label {
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    .required {
+      color: #ef4444;
+    }
+    .optional {
+      font-size: 0.72rem;
+      font-weight: 400;
+      color: #9ca3af;
+    }
+  }
+
+  input.p-inputtext {
+    height: 42px;
+    border-radius: 10px;
+    border: 1.5px solid #e0e3eb;
+    padding: 0 0.9rem;
+    font-family: "Outfit", sans-serif;
+    font-size: 0.875rem;
+    width: 100%;
+    transition: all 0.2s;
+    &::placeholder {
+      color: #9ca3af;
+    }
+    &:focus {
+      border-color: #2e6cf6;
+      box-shadow: 0 0 0 3px rgba(46, 108, 246, 0.1);
+      outline: none;
+    }
+    &.ng-invalid.ng-dirty {
+      border-color: #ef4444;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
+    }
+  }
+}
+
+.badge-edit {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.1rem 0.4rem;
+  border-radius: 20px;
+  background: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+.field-hint {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.25rem;
+  line-height: 1.4;
+  strong {
+    color: #374151;
+  }
+  i {
+    font-size: 0.7rem;
+    margin-top: 0.1rem;
+  }
+}
+
+.factor-card {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
+  background: rgba(46, 108, 246, 0.05);
+  border: 1px solid rgba(46, 108, 246, 0.15);
+  border-radius: 10px;
+  font-size: 0.83rem;
+  color: #374151;
+
+  i {
+    color: #2e6cf6;
+    font-size: 1rem;
+  }
+  strong {
+    color: #2e6cf6;
+  }
+}
+
+.field-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+
+  .switch-label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    .label-text {
+      font-size: 0.83rem;
+      font-weight: 600;
+      color: #374151;
+    }
+    .label-sub {
+      font-size: 0.72rem;
+      color: #94a3b8;
+    }
+  }
+}
+
+.dialog-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  color: #64748b;
+  i {
+    font-size: 1.25rem;
+    color: #2e6cf6;
+  }
+}
+
+.dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+::ng-deep .p-inputswitch.p-inputswitch-checked .p-inputswitch-slider {
+  background: linear-gradient(135deg, #2e6cf6, #7b4dff);
+}

@@ -1,0 +1,250 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="page-title-area">
+      <div class="page-icon">
+        <i class="pi pi-percentage"></i>
+      </div>
+      <div>
+        <h3 class="page-title">Reglas de descuento</h3>
+        <p class="page-sub">
+          Motor de descuentos automáticos por fecha, hora, día y producto
+        </p>
+      </div>
+    </div>
+    <button
+      pButton
+      type="button"
+      label="Nueva regla"
+      icon="pi pi-plus"
+      class="btn-aura"
+      (click)="openCreate()"
+    ></button>
+  </div>
+
+  <div class="card">
+    <div class="table-toolbar">
+      <div class="toolbar-left">
+        <span class="p-input-icon-left search-wrap">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            pInputText
+            class="search-input"
+            placeholder="Buscar por nombre, categoría o producto..."
+            [(ngModel)]="searchQuery"
+            (input)="onSearch()"
+            (keydown.escape)="clearSearch()"
+          />
+          <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">
+            <i class="pi pi-times"></i>
+          </button>
+        </span>
+        <span class="total-badge" *ngIf="!loadingTable">
+          {{ totalRecords }} {{ totalRecords === 1 ? "regla" : "reglas" }}
+        </span>
+      </div>
+    </div>
+
+    <p-table
+      [value]="items"
+      [lazy]="true"
+      (onLazyLoad)="loadTable($event)"
+      [paginator]="true"
+      [rows]="rowSize"
+      [totalRecords]="totalRecords"
+      [loading]="loadingTable"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords} registros"
+      styleClass="aura-table"
+      [tableStyle]="{ 'min-width': '750px' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="r.nombre" style="min-width: 200px">
+            Regla <p-sortIcon field="r.nombre" />
+          </th>
+          <th style="min-width: 160px">Aplica a</th>
+          <th style="width: 130px" class="text-center">Descuento</th>
+          <th style="min-width: 180px">Vigencia</th>
+          <th style="width: 100px" class="text-center">Estado</th>
+          <th style="width: 100px" class="text-center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item>
+        <tr [class.row-inactiva]="!item.activo || !isVigente(item)">
+          <!-- Regla (nombre + badge tipo) -->
+          <td>
+            <div class="cell-regla">
+              <div
+                class="regla-icon"
+                [class.porcentaje]="item.tipoDescuento === 'PORCENTAJE'"
+                [class.monto]="item.tipoDescuento === 'MONTO'"
+              >
+                <i
+                  class="pi"
+                  [ngClass]="
+                    item.tipoDescuento === 'PORCENTAJE'
+                      ? 'pi-percentage'
+                      : 'pi-dollar'
+                  "
+                ></i>
+              </div>
+              <div class="regla-info">
+                <span class="regla-nombre">{{ item.nombre }}</span>
+                <span
+                  class="regla-tipo-badge"
+                  [class.pct]="item.tipoDescuento === 'PORCENTAJE'"
+                  [class.mnt]="item.tipoDescuento === 'MONTO'"
+                >
+                  {{
+                    item.tipoDescuento === "PORCENTAJE"
+                      ? "Porcentaje"
+                      : "Monto fijo"
+                  }}
+                </span>
+              </div>
+            </div>
+          </td>
+
+          <!-- Aplica a -->
+          <td>
+            <div class="cell-alcance">
+              <i class="pi {{ getAlcanceIcon(item) }} alcance-icon"></i>
+              <span class="alcance-text">{{ getAlcance(item) }}</span>
+            </div>
+          </td>
+
+          <!-- Valor del descuento -->
+          <td class="text-center">
+            <span
+              class="valor-badge"
+              [class.porcentaje]="item.tipoDescuento === 'PORCENTAJE'"
+              [class.monto]="item.tipoDescuento === 'MONTO'"
+            >
+              <ng-container *ngIf="item.tipoDescuento === 'PORCENTAJE'">
+                {{ item.valor }}%
+              </ng-container>
+              <ng-container *ngIf="item.tipoDescuento === 'MONTO'">
+                {{ item.valor | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+              </ng-container>
+            </span>
+          </td>
+
+          <!-- Vigencia -->
+          <td>
+            <div class="cell-vigencia">
+              <span class="vigencia-text">{{ getVigencia(item) }}</span>
+              <!-- Alerta si está vencida -->
+              <span
+                class="vencida-badge"
+                *ngIf="
+                  item.activo &&
+                  !isVigente(item) &&
+                  (item.fechaFin || item.fechaInicio)
+                "
+              >
+                <i class="pi pi-clock"></i> Vencida
+              </span>
+            </div>
+          </td>
+
+          <!-- Estado -->
+          <td class="text-center">
+            <p-tag
+              [value]="
+                isVigente(item)
+                  ? 'Activa'
+                  : item.activo
+                    ? 'Vencida'
+                    : 'Inactiva'
+              "
+              [severity]="isVigente(item) ? 'success' : 'danger'"
+              [rounded]="true"
+            />
+          </td>
+
+          <!-- Acciones -->
+          <td class="text-center">
+            <div class="action-buttons">
+              <button
+                pButton
+                type="button"
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm action-edit"
+                pTooltip="Editar"
+                tooltipPosition="top"
+                (click)="openEdit(item)"
+              ></button>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-trash"
+                class="p-button-text p-button-danger p-button-sm action-delete"
+                pTooltip="Eliminar"
+                tooltipPosition="top"
+                (click)="confirmDelete(item)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6">
+            <div class="empty-state">
+              <i class="pi pi-percentage"></i>
+              <p>
+                {{
+                  searchQuery
+                    ? 'Sin resultados para "' + searchQuery + '"'
+                    : "No hay reglas de descuento registradas"
+                }}
+              </p>
+              <button
+                *ngIf="!searchQuery"
+                pButton
+                type="button"
+                label="Crear primera regla"
+                icon="pi pi-plus"
+                class="btn-aura btn-purple p-button-sm"
+                (click)="openCreate()"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr *ngFor="let s of [1, 2, 3, 4, 5]">
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td class="text-center">
+            <p-skeleton width="80px" styleClass="mx-auto" />
+          </td>
+          <td><p-skeleton /></td>
+          <td class="text-center">
+            <p-skeleton width="70px" styleClass="mx-auto" />
+          </td>
+          <td class="text-center">
+            <p-skeleton width="80px" styleClass="mx-auto" />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<app-form-descuentos
+  [displayModal]="showModal"
+  [reglaId]="selectedId"
+  [slug]="modalSlug"
+  (modalClosed)="onModalClosed()"
+  (reglaSaved)="onItemSaved()"
+>
+</app-form-descuentos>
+
+<p-toast />
+<p-confirmDialog />

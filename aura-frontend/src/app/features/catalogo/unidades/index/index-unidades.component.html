@@ -31,7 +31,7 @@
             pInputText
             class="search-input"
             placeholder="Buscar unidad..."
-            [(ngModel)]="filterGlobal"
+            [(ngModel)]="searchQuery"
             (input)="filterGlobal($event)"
             (keydown.escape)="clearSearch()"
           />

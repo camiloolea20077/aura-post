@@ -1,5 +1,7 @@
 package com.cloud_technological.aura_pos.services.implementations;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
@@ -89,5 +91,9 @@ public class ListaPreciosServiceImpl implements ListaPreciosService {
 
         entity.setActiva(false);
         listaPreciosJPARepository.save(entity);
+    }
+    @Override
+    public List<ListaPreciosDto> list(Integer empresaId) {
+        return listaPreciosRepository.listar(empresaId);
     }
 }

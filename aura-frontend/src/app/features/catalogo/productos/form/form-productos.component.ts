@@ -73,7 +73,7 @@ export class FormProductosComponent implements OnInit, OnChanges {
   public isSubmitting = false;
   public isLoading = false;
   public activeTab = 0;
-  public imageValid = false;
+  public imageError = false;
   // ─── Opciones de dropdowns ───────────────────────────────
   public tipoOptions = TIPO_PRODUCTO_OPTIONS;
   public categoriasOpts: { label: string; value: number | null }[] = [
@@ -229,27 +229,31 @@ export class FormProductosComponent implements OnInit, OnChanges {
   }
 
   private patchForm(d: ProductoModel): void {
-    this.frmProducto.patchValue({
-      nombre: d.nombre,
-      sku: d.sku,
-      codigoBarras: d.codigoBarras,
-      descripcion: d.descripcion,
-      categoriaId: d.categoriaId,
-      marcaId: d.marcaId,
-      unidadMedidaBaseId: d.unidadMedidaBaseId,
-      tipoProducto: d.tipoProducto,
-      imagenUrl: d.imagenUrl,
-      activo: d.activo,
-      precio: d.precio,
-      costo: d.costo,
-      ivaPorcentaje: d.ivaPorcentaje,
-      impoconsumo: d.impoconsumo,
-      manejaInventario: d.manejaInventario,
-      manejaLotes: d.manejaLotes,
-      manejaSerial: d.manejaSerial,
-    });
+    setTimeout(() => {
+      this.frmProducto.patchValue(
+        {
+          nombre: d.nombre,
+          sku: d.sku,
+          codigoBarras: d.codigoBarras,
+          descripcion: d.descripcion,
+          categoriaId: d.categoriaId,
+          marcaId: d.marcaId,
+          unidadMedidaBaseId: d.unidadMedidaBaseId,
+          tipoProducto: d.tipoProducto,
+          imagenUrl: d.imagenUrl,
+          activo: d.activo,
+          precio: d.precio,
+          costo: d.costo,
+          ivaPorcentaje: d.ivaPorcentaje,
+          impoconsumo: d.impoconsumo,
+          manejaInventario: d.manejaInventario,
+          manejaLotes: d.manejaLotes,
+          manejaSerial: d.manejaSerial,
+        },
+        { emitEvent: false },
+      ); // ← esto evita que el valueChanges pise los valores
+    }, 0);
   }
-
   // ─── Helpers para el template ─────────────────────────────
   get margenUtilidad(): number {
     const precio = this.frmProducto.get('precio')?.value ?? 0;
@@ -343,14 +347,13 @@ export class FormProductosComponent implements OnInit, OnChanges {
   // ─── Preview de imagen ────────────────────────────────────
   // ─── Preview de imagen ────────────────────────────────────
   onImageUrlChange(): void {
-    this.imageValid = false; // reset hasta que cargue
+    this.imageError = false; // reset hasta que cargue
   }
 
   onImageError(_event: Event): void {
-    this.imageValid = false;
+    this.imageError = true;
   }
-
   onImageLoad(_event: Event): void {
-    this.imageValid = true;
+    this.imageError = false;
   }
 }

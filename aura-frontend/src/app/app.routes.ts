@@ -64,35 +64,66 @@ export const routes: Routes = [
             (m) => m.IndexUnidadesComponent,
           ),
       },
+      {
+        path: 'catalogo/presentaciones',
+        loadComponent: () =>
+          import('./features/catalogo/presentaciones/index/index-presentaciones.component').then(
+            (m) => m.IndexPresentacionesComponent,
+          ),
+      },
+      {
+        path: 'catalogo/composiciones',
+        loadComponent: () =>
+          import('./features/catalogo/composiciones/index/index-composicion.component').then(
+            (m) => m.IndexComposicionComponent,
+          ),
+      },
 
       // // Precios
-      // {
-      //   path: 'precios/listas',
-      //   loadComponent: () =>
-      //     import('./features/precios/listas-precios/index/index-listas.component').then(m => m.IndexListasComponent),
-      // },
-      // {
-      //   path: 'precios/descuentos',
-      //   loadComponent: () =>
-      //     import('./features/precios/reglas-descuento/index/index-descuentos.component').then(m => m.IndexDescuentosComponent),
-      // },
+      {
+        path: 'precios/listas',
+        loadComponent: () =>
+          import('./features/precios/listas-precios/index/index-lista-precios.component').then(
+            (m) => m.IndexListaPreciosComponent,
+          ),
+      },
+      {
+        path: 'precios/productos',
+        loadComponent: () =>
+          import('./features/precios/precios-producto/index/index-producto-precio.component').then(
+            (m) => m.IndexProductoPrecioComponent,
+          ),
+      },
+      {
+        path: 'precios/descuentos',
+        loadComponent: () =>
+          import('./features/precios/reglas-descuento/index/index-descuentos.component').then(
+            (m) => m.IndexDescuentosComponent,
+          ),
+      },
 
       // // Inventario
-      // {
-      //   path: 'inventario/stock',
-      //   loadComponent: () =>
-      //     import('./features/inventario/stock/index/index-stock.component').then(m => m.IndexStockComponent),
-      // },
-      // {
-      //   path: 'inventario/lotes',
-      //   loadComponent: () =>
-      //     import('./features/inventario/lotes/index/index-lotes.component').then(m => m.IndexLotesComponent),
-      // },
-      // {
-      //   path: 'inventario/seriales',
-      //   loadComponent: () =>
-      //     import('./features/inventario/seriales/index/index-seriales.component').then(m => m.IndexSerialesComponent),
-      // },
+      {
+        path: 'inventario/stock',
+        loadComponent: () =>
+          import('./features/inventario/inventario/index/index-inventario.component').then(
+            (m) => m.IndexInventarioComponent,
+          ),
+      },
+      {
+        path: 'inventario/lotes',
+        loadComponent: () =>
+          import('./features/inventario/lotes/index/index-lotes.component').then(
+            (m) => m.IndexLotesComponent,
+          ),
+      },
+      {
+        path: 'inventario/seriales',
+        loadComponent: () =>
+          import('./features/inventario/seriales/index/index-seriales.component').then(
+            (m) => m.IndexSerialesComponent,
+          ),
+      },
       // {
       //   path: 'inventario/kardex',
       //   loadComponent: () =>

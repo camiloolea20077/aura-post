@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap");
 
 .aura-sidebar {
   position: fixed;
@@ -7,13 +7,13 @@
   height: 100vh;
   width: 260px;
   background: #ffffff;
-  border-right: 1px solid #E0E3EB;
+  border-right: 1px solid #e0e3eb;
   display: flex;
   flex-direction: column;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 100;
   overflow: hidden;
-  font-family: 'Outfit', sans-serif;
+  font-family: "Outfit", sans-serif;
 
   &.collapsed {
     width: 72px;
@@ -22,14 +22,19 @@
     .nav-label,
     .nav-badge,
     .logo-texts,
-    .user-details { display: none; }
+    .user-details {
+      display: none;
+    }
 
     .nav-item {
       justify-content: center;
       padding: 0.65rem;
     }
 
-    .collapse-btn { margin-left: auto; margin-right: auto; }
+    .collapse-btn {
+      margin-left: auto;
+      margin-right: auto;
+    }
   }
 }
 
@@ -40,7 +45,7 @@
   justify-content: space-between;
   padding: 1.1rem 1rem;
   min-height: 68px;
-  border-bottom: 1px solid #E0E3EB;
+  border-bottom: 1px solid #e0e3eb;
   flex-shrink: 0;
 }
 
@@ -51,25 +56,27 @@
   min-width: 0;
   flex: 1;
 
-  &.centered { justify-content: center; flex: 1; }
+  &.centered {
+    justify-content: center;
+    flex: 1;
+  }
 }
 
 .logo-icon-box {
-  width: 38px;
-  height: 38px;
-  min-width: 38px;
-  background: linear-gradient(135deg, #2E6CF6 0%, #7B4DFF 100%);
-  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: white;
-  box-shadow: 0 4px 12px rgba(46, 108, 246, 0.3);
-  flex-shrink: 0;
-}
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  border-radius: 8px;
 
+  .logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
 .logo-texts {
   display: flex;
   flex-direction: column;
@@ -80,19 +87,19 @@
 .logo-name {
   font-size: 1rem;
   font-weight: 800;
-  color: #2D2D2D;
+  color: #2d2d2d;
   white-space: nowrap;
   letter-spacing: -0.02em;
 
   span {
     font-weight: 400;
-    color: #6B7280;
+    color: #6b7280;
   }
 }
 
 .logo-empresa {
   font-size: 0.7rem;
-  color: #2E6CF6;
+  color: #2e6cf6;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
@@ -101,7 +108,7 @@
 
 .collapse-btn {
   background: none;
-  border: 1px solid #E0E3EB;
+  border: 1px solid #e0e3eb;
   border-radius: 8px;
   width: 28px;
   height: 28px;
@@ -109,17 +116,19 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #9CA3AF;
+  color: #9ca3af;
   flex-shrink: 0;
   transition: all 0.2s;
 
   &:hover {
     background: rgba(46, 108, 246, 0.06);
-    color: #2E6CF6;
-    border-color: #2E6CF6;
+    color: #2e6cf6;
+    border-color: #2e6cf6;
   }
 
-  i { font-size: 0.65rem; }
+  i {
+    font-size: 0.65rem;
+  }
 }
 
 // ─── Nav ─────────────────────────────────────────────────────
@@ -131,10 +140,14 @@
   flex-direction: column;
   gap: 1.25rem;
 
-  &::-webkit-scrollbar { width: 3px; }
-  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar {
+    width: 3px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
   &::-webkit-scrollbar-thumb {
-    background: #E0E3EB;
+    background: #e0e3eb;
     border-radius: 2px;
   }
 }
@@ -150,7 +163,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #9CA3AF;
+  color: #9ca3af;
   padding: 0 0.5rem;
   margin-bottom: 0.3rem;
   display: block;
@@ -162,7 +175,7 @@
   gap: 0.7rem;
   padding: 0.6rem 0.75rem;
   border-radius: 10px;
-  color: #6B7280;
+  color: #6b7280;
   text-decoration: none;
   font-size: 0.85rem;
   font-weight: 500;
@@ -173,27 +186,35 @@
 
   &:hover {
     background: rgba(46, 108, 246, 0.07);
-    color: #2E6CF6;
+    color: #2e6cf6;
 
-    .nav-icon { color: #2E6CF6; }
+    .nav-icon {
+      color: #2e6cf6;
+    }
   }
 
   &.active {
-    background: linear-gradient(135deg, #2E6CF6 0%, #7B4DFF 100%);
+    background: linear-gradient(135deg, #2e6cf6 0%, #7b4dff 100%);
     color: white;
     box-shadow: 0 4px 14px rgba(46, 108, 246, 0.28);
 
-    .nav-icon { color: white; }
-    .nav-label { color: white; }
+    .nav-icon {
+      color: white;
+    }
+    .nav-label {
+      color: white;
+    }
   }
 
   &.highlight:not(.active) {
     background: rgba(46, 108, 246, 0.08);
-    color: #2E6CF6;
+    color: #2e6cf6;
     border: 1px solid rgba(46, 108, 246, 0.18);
     font-weight: 600;
 
-    .nav-icon { color: #2E6CF6; }
+    .nav-icon {
+      color: #2e6cf6;
+    }
   }
 }
 
@@ -212,7 +233,7 @@
 
 .nav-badge {
   margin-left: auto;
-  background: linear-gradient(135deg, #2E6CF6, #7B4DFF);
+  background: linear-gradient(135deg, #2e6cf6, #7b4dff);
   color: white;
   font-size: 0.6rem;
   font-weight: 700;
@@ -227,13 +248,13 @@
   right: 6px;
   width: 7px;
   height: 7px;
-  background: #2E6CF6;
+  background: #2e6cf6;
   border-radius: 50%;
 }
 
 // ─── Footer ──────────────────────────────────────────────────
 .sidebar-footer {
-  border-top: 1px solid #E0E3EB;
+  border-top: 1px solid #e0e3eb;
   padding: 0.9rem;
   flex-shrink: 0;
   display: flex;
@@ -253,7 +274,7 @@
   width: 36px;
   height: 36px;
   min-width: 36px;
-  background: linear-gradient(135deg, #2E6CF6, #7B4DFF);
+  background: linear-gradient(135deg, #2e6cf6, #7b4dff);
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -274,7 +295,7 @@
 .user-name {
   font-size: 0.78rem;
   font-weight: 600;
-  color: #2D2D2D;
+  color: #2d2d2d;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -282,7 +303,7 @@
 
 .user-role {
   font-size: 0.68rem;
-  color: #9CA3AF;
+  color: #9ca3af;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -290,7 +311,7 @@
 
 .logout-btn {
   background: none;
-  border: 1px solid #E0E3EB;
+  border: 1px solid #e0e3eb;
   border-radius: 8px;
   width: 32px;
   height: 32px;
@@ -298,17 +319,21 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #9CA3AF;
+  color: #9ca3af;
   flex-shrink: 0;
   transition: all 0.2s;
 
-  &.centered { margin: 0 auto; }
+  &.centered {
+    margin: 0 auto;
+  }
 
-  i { font-size: 0.8rem; }
+  i {
+    font-size: 0.8rem;
+  }
 
   &:hover {
-    color: #EF4444;
-    border-color: #EF4444;
+    color: #ef4444;
+    border-color: #ef4444;
     background: rgba(239, 68, 68, 0.06);
   }
 }

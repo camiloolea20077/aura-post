@@ -1,35 +1,48 @@
 // ─── Fuentes ───────────────────────────────────────────────────────────────
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap");
 
 // ─── PrimeNG ───────────────────────────────────────────────────────────────
-@import 'primeicons/primeicons.css';
-@import 'primeflex/primeflex.css';
+@import "primeicons/primeicons.css";
+@import "primeflex/primeflex.css";
 
 // ─── Variables AURA POS ────────────────────────────────────────────────────
 :root {
-  --aura-blue:            #2E6CF6;
-  --aura-blue-light:      #4DA3FF;
-  --aura-purple:          #7B4DFF;
-  --aura-gradient:        linear-gradient(135deg, #2E6CF6 0%, #7B4DFF 100%);
-  --aura-gradient-hover:  linear-gradient(135deg, #1a5ae8 0%, #6a3df0 100%);
-  --aura-gradient-soft:   linear-gradient(135deg, rgba(46,108,246,0.1) 0%, rgba(123,77,255,0.1) 100%);
-  --aura-bg:              #F4F6FA;
-  --aura-surface:         #FFFFFF;
-  --aura-text:            #2D2D2D;
-  --aura-text-muted:      #6B7280;
-  --aura-border:          #E0E3EB;
-  --aura-success:         #10B981;
-  --aura-warning:         #F59E0B;
-  --aura-danger:          #EF4444;
-  --aura-info:            #3B82F6;
-  --sidebar-width:        260px;
-  --sidebar-collapsed:    72px;
-  --shadow-sm:            0 1px 3px rgba(0,0,0,0.06);
-  --shadow-md:            0 4px 16px rgba(46,108,246,0.12);
-  --shadow-lg:            0 8px 32px rgba(46,108,246,0.18);
-  --shadow-card:          0 2px 8px rgba(0,0,0,0.07);
+  --aura-blue: #2e6cf6;
+  --aura-blue-light: #4da3ff;
+  --aura-purple: #7b4dff;
+  --aura-gradient: linear-gradient(135deg, #2e6cf6 0%, #7b4dff 100%);
+  --aura-gradient-hover: linear-gradient(135deg, #1a5ae8 0%, #6a3df0 100%);
+  --aura-gradient-soft: linear-gradient(
+    135deg,
+    rgba(46, 108, 246, 0.1) 0%,
+    rgba(123, 77, 255, 0.1) 100%
+  );
+  --aura-bg: #f4f6fa;
+  --aura-surface: #ffffff;
+  --aura-text: #2d2d2d;
+  --aura-text-muted: #6b7280;
+  --aura-border: #e0e3eb;
+  --aura-success: #10b981;
+  --aura-warning: #f59e0b;
+  --aura-danger: #ef4444;
+  --aura-info: #3b82f6;
+  --sidebar-width: 260px;
+  --sidebar-collapsed: 72px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 16px rgba(46, 108, 246, 0.12);
+  --shadow-lg: 0 8px 32px rgba(46, 108, 246, 0.18);
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.07);
 }
+html.dark-mode {
+  --bg-primary: #1e1e2e;
+  --bg-secondary: #2a2a3e;
+  --text-primary: #cdd6f4;
+  --text-secondary: #a6adc8;
+  --border-color: #45475a;
 
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
 // ─── Reset global ──────────────────────────────────────────────────────────
 * {
   box-sizing: border-box;
@@ -37,9 +50,10 @@
   padding: 0;
 }
 
-html, body {
+html,
+body {
   height: 100%;
-  font-family: 'Outfit', sans-serif;
+  font-family: "Outfit", sans-serif;
   font-size: 14px;
   color: var(--aura-text);
   background: var(--aura-bg);
@@ -49,14 +63,14 @@ html, body {
 
 // ─── PrimeNG overrides globales ────────────────────────────────────────────
 .p-button {
-  font-family: 'Outfit', sans-serif;
+  font-family: "Outfit", sans-serif;
   font-weight: 600;
   border-radius: 10px;
   transition: all 0.2s ease;
 }
 
 .p-inputtext {
-  font-family: 'Outfit', sans-serif;
+  font-family: "Outfit", sans-serif;
   border-radius: 10px;
   border: 1.5px solid var(--aura-border);
   transition: all 0.2s;
@@ -73,25 +87,31 @@ html, body {
 }
 
 .p-dropdown {
-  font-family: 'Outfit', sans-serif;
+  font-family: "Outfit", sans-serif;
   border-radius: 10px;
   border: 1.5px solid var(--aura-border);
   transition: all 0.2s;
 
-  &:not(.p-disabled):hover { border-color: var(--aura-blue); }
+  &:not(.p-disabled):hover {
+    border-color: var(--aura-blue);
+  }
   &.p-focus {
     border-color: var(--aura-blue);
     box-shadow: 0 0 0 3px rgba(46, 108, 246, 0.12);
   }
 
-  &.ng-invalid.ng-dirty { border-color: var(--aura-danger); }
+  &.ng-invalid.ng-dirty {
+    border-color: var(--aura-danger);
+  }
 
-  .p-dropdown-label { font-family: 'Outfit', sans-serif; }
+  .p-dropdown-label {
+    font-family: "Outfit", sans-serif;
+  }
 }
 
 // Datatable
 .p-datatable {
-  font-family: 'Outfit', sans-serif;
+  font-family: "Outfit", sans-serif;
 
   .p-datatable-thead > tr > th {
     background: var(--aura-bg);
@@ -110,16 +130,18 @@ html, body {
     > td {
       padding: 0.75rem 1rem;
       font-size: 0.85rem;
-      border-bottom: 1px solid #F3F4F6;
+      border-bottom: 1px solid #f3f4f6;
     }
 
-    &:hover > td { background: rgba(46, 108, 246, 0.04); }
+    &:hover > td {
+      background: rgba(46, 108, 246, 0.04);
+    }
   }
 
   .p-paginator {
     border-top: 1px solid var(--aura-border);
     background: transparent;
-    font-family: 'Outfit', sans-serif;
+    font-family: "Outfit", sans-serif;
     font-size: 0.82rem;
 
     .p-paginator-current {
@@ -131,7 +153,7 @@ html, body {
 
 // Dialog
 .p-dialog {
-  font-family: 'Outfit', sans-serif;
+  font-family: "Outfit", sans-serif;
   border-radius: 20px;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
@@ -143,18 +165,22 @@ html, body {
     border-radius: 0;
 
     .p-dialog-title {
-      font-family: 'Outfit', sans-serif;
+      font-family: "Outfit", sans-serif;
       font-weight: 700;
       font-size: 1rem;
     }
 
     .p-dialog-header-icon {
       color: rgba(255, 255, 255, 0.8);
-      &:hover { background: rgba(255, 255, 255, 0.15) !important; }
+      &:hover {
+        background: rgba(255, 255, 255, 0.15) !important;
+      }
     }
   }
 
-  .p-dialog-content { padding: 1.5rem; }
+  .p-dialog-content {
+    padding: 1.5rem;
+  }
 
   .p-dialog-footer {
     padding: 1rem 1.5rem;
@@ -165,7 +191,7 @@ html, body {
 
 // Tag
 .p-tag {
-  font-family: 'Outfit', sans-serif;
+  font-family: "Outfit", sans-serif;
   font-weight: 600;
   font-size: 0.72rem;
   border-radius: 6px;
@@ -177,7 +203,7 @@ html, body {
   border-radius: 14px;
   border: 1px solid var(--aura-border);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-  font-family: 'Outfit', sans-serif;
+  font-family: "Outfit", sans-serif;
   overflow: hidden;
 }
 
@@ -185,7 +211,7 @@ html, body {
 .p-toast {
   .p-toast-message {
     border-radius: 12px;
-    font-family: 'Outfit', sans-serif;
+    font-family: "Outfit", sans-serif;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
   }
 }
@@ -199,7 +225,9 @@ html, body {
     background: var(--aura-gradient);
     color: white;
 
-    .p-dialog-header-icon { color: rgba(255,255,255,0.8); }
+    .p-dialog-header-icon {
+      color: rgba(255, 255, 255, 0.8);
+    }
   }
 }
 
@@ -221,7 +249,9 @@ html, body {
 .p-password {
   width: 100%;
 
-  input { border-radius: 10px; }
+  input {
+    border-radius: 10px;
+  }
 }
 
 // ─── Clases utilitarias globales ───────────────────────────────────────────
@@ -234,7 +264,9 @@ html, body {
   box-shadow: var(--shadow-card);
   transition: box-shadow 0.2s;
 
-  &:hover { box-shadow: var(--shadow-md); }
+  &:hover {
+    box-shadow: var(--shadow-md);
+  }
 }
 
 // Botón principal con degradado
@@ -243,7 +275,7 @@ html, body {
   border: none !important;
   border-radius: 10px !important;
   font-weight: 600 !important;
-  font-family: 'Outfit', sans-serif !important;
+  font-family: "Outfit", sans-serif !important;
   box-shadow: 0 4px 14px rgba(46, 108, 246, 0.3) !important;
   transition: all 0.2s !important;
 
@@ -253,12 +285,17 @@ html, body {
     box-shadow: 0 6px 18px rgba(46, 108, 246, 0.4) !important;
   }
 
-  &:disabled { opacity: 0.55 !important; box-shadow: none !important; }
+  &:disabled {
+    opacity: 0.55 !important;
+    box-shadow: none !important;
+  }
 }
 
 // Números y precios
-.numeric, .price, .code {
-  font-family: 'JetBrains Mono', monospace;
+.numeric,
+.price,
+.code {
+  font-family: "JetBrains Mono", monospace;
 }
 
 // Layout de formulario
@@ -281,8 +318,14 @@ html, body {
     align-items: center;
     gap: 0.35rem;
 
-    .required { color: var(--aura-danger); }
-    .optional  { font-weight: 400; color: var(--aura-text-muted); font-size: 0.75rem; }
+    .required {
+      color: var(--aura-danger);
+    }
+    .optional {
+      font-weight: 400;
+      color: var(--aura-text-muted);
+      font-size: 0.75rem;
+    }
   }
 
   .p-error {
@@ -353,7 +396,9 @@ html, body {
     }
   }
 
-  .card-content { padding: 1.25rem; }
+  .card-content {
+    padding: 1.25rem;
+  }
 }
 
 // Toolbar de tabla
@@ -365,7 +410,8 @@ html, body {
   border: none;
   padding: 0;
 
-  .toolbar-left, .toolbar-right {
+  .toolbar-left,
+  .toolbar-right {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -387,7 +433,9 @@ html, body {
       font-size: 0.85rem;
       padding-left: 2.25rem;
 
-      @media (max-width: 600px) { width: 100%; }
+      @media (max-width: 600px) {
+        width: 100%;
+      }
     }
   }
 }
@@ -404,7 +452,9 @@ html, body {
     height: 32px;
     border-radius: 8px;
 
-    .p-button-icon { font-size: 0.8rem; }
+    .p-button-icon {
+      font-size: 0.8rem;
+    }
   }
 }
 
@@ -417,19 +467,29 @@ html, body {
   padding: 3rem 1rem;
   color: var(--aura-text-muted);
 
-  i { font-size: 3rem; opacity: 0.2; }
-  p { font-weight: 600; font-size: 0.9rem; margin: 0; }
+  i {
+    font-size: 3rem;
+    opacity: 0.2;
+  }
+  p {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin: 0;
+  }
 }
 
 // ─── Dark mode ────────────────────────────────────────────────────────────
 .dark-mode {
-  --aura-bg:      #0F1117;
-  --aura-surface: #1A1D2E;
-  --aura-text:    #F1F5F9;
-  --aura-text-muted: #94A3B8;
-  --aura-border:  #2D3148;
+  --aura-bg: #0f1117;
+  --aura-surface: #1a1d2e;
+  --aura-text: #f1f5f9;
+  --aura-text-muted: #94a3b8;
+  --aura-border: #2d3148;
 
-  body { background: var(--aura-bg); color: var(--aura-text); }
+  body {
+    background: var(--aura-bg);
+    color: var(--aura-text);
+  }
 
   .aura-sidebar,
   .aura-topbar,

@@ -1,6 +1,11 @@
 export interface AuthResponse {
   token: string;
-  user: UserAuth;
+  tipoToken: string;
+  usuarioId: number;
+  username: string;
+  nombreCompleto: string;
+  rol: string;
+  sucursales: SucursalAuth[];
 }
 
 export interface UserAuth {
@@ -13,7 +18,11 @@ export interface UserAuth {
   sucursalId: number;
   sucursalNombre: string;
 }
-
+export interface SucursalAuth {
+  id: number;
+  nombre: string;
+  esDefault: boolean | null;
+}
 export interface LoginDto {
   username: string;
   password: string;

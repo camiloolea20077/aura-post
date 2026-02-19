@@ -10,6 +10,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import com.cloud_technological.aura_pos.dto.lista_precios.ListaPreciosDto;
 import com.cloud_technological.aura_pos.dto.lista_precios.ListaPreciosTableDto;
 import com.cloud_technological.aura_pos.utils.PageableDto;
 
@@ -81,5 +82,18 @@ public class ListaPreciosQueryRepository {
         params.addValue("id", id);
         Long count = jdbcTemplate.queryForObject(sql, params, Long.class);
         return count != null && count > 0;
+    }
+    public List<ListaPreciosDto> listar(Integer empresaId) {
+        String sql = """
+            SELECT
+                id,
+                nombre,
+                activa
+            FROM lista_precios
+            WHERE empresa_id = :empresaId
+            AND activa = true
+        """;
+        MapSqlParameterSource params = new MapSqlParameterSource("empresaId", empresaId);
+        return jdbcTemplate.query(sql, params, new BeanPropertyRowMapper<>(ListaPreciosDto.class));
     }
 }

@@ -18,6 +18,7 @@
   <form [formGroup]="frmProducto" *ngIf="!isLoading">
     <p-tabView [(activeIndex)]="activeTab" styleClass="aura-tabs">
       <!-- ─── Tab 1: Info básica ──────────────────────────── -->
+      <!-- ─── Tab 1: Info básica ──────────────────────────── -->
       <p-tabPanel header="Información básica">
         <ng-template pTemplate="header">
           <span class="tab-label">
@@ -25,31 +26,28 @@
           </span>
         </ng-template>
 
-        <div class="tab1-layout">
-          <!-- ── Columna izquierda: imagen ──────────────────── -->
-          <div class="imagen-col">
-            <label class="imagen-label">Imagen del producto</label>
-
-            <div class="imagen-box">
+        <div class="form-container">
+          <!-- ── Imagen superior ──────────────────────────── -->
+          <div class="imagen-top">
+            <div class="imagen-box-top">
               <img
-                *ngIf="frmProducto.get('imagenUrl')?.value && imageValid"
+                *ngIf="frmProducto.get('imagenUrl')?.value && !imageError"
                 [src]="frmProducto.get('imagenUrl')?.value"
                 alt="Imagen producto"
                 (error)="onImageError($event)"
                 (load)="onImageLoad($event)"
-                class="imagen-img"
+                class="imagen-img-top"
               />
-
               <div
-                class="imagen-empty"
-                *ngIf="!frmProducto.get('imagenUrl')?.value || !imageValid"
+                class="imagen-empty-top"
+                *ngIf="!frmProducto.get('imagenUrl')?.value || imageError"
               >
                 <i class="pi pi-image"></i>
                 <span>Sin imagen</span>
               </div>
             </div>
 
-            <div class="field mt-2">
+            <div class="field imagen-url-field">
               <input
                 id="imagenUrl"
                 type="text"
@@ -64,180 +62,175 @@
                 <i class="pi pi-info-circle"></i> URL pública de la imagen
               </small>
             </div>
+          </div>
 
-            <!-- Estado aquí, debajo de la imagen -->
-            <div class="field-inline mt-2">
-              <div class="switch-label">
-                <span class="label-text">Estado</span>
-                <span class="label-sub">
-                  {{ frmProducto.get("activo")?.value ? "Activo" : "Inactivo" }}
-                </span>
-              </div>
-              <p-inputSwitch formControlName="activo" />
+          <!-- ── Estado ─────────────────────────────────────── -->
+          <div class="field-inline">
+            <div class="switch-label">
+              <span class="label-text">Estado</span>
+              <span class="label-sub">
+                {{ frmProducto.get("activo")?.value ? "Activo" : "Inactivo" }}
+              </span>
+            </div>
+            <p-inputSwitch formControlName="activo" />
+          </div>
+
+          <!-- ── Nombre ──────────────────────────────────────── -->
+          <div class="field">
+            <label for="nombre"
+              >Nombre del producto <span class="required">*</span></label
+            >
+            <input
+              id="nombre"
+              type="text"
+              pInputText
+              formControlName="nombre"
+              placeholder="Ej: Coca-Cola 500ml, Arroz Diana 1kg..."
+              [class.ng-invalid]="isInvalid('nombre')"
+              [class.ng-dirty]="frmProducto.get('nombre')?.touched"
+              maxlength="255"
+              autocomplete="off"
+            />
+            <small class="p-error" *ngIf="isInvalid('nombre')">
+              <ng-container
+                *ngIf="frmProducto.get('nombre')?.hasError('required')"
+                >El nombre es obligatorio.</ng-container
+              >
+              <ng-container
+                *ngIf="frmProducto.get('nombre')?.hasError('minlength')"
+                >Mínimo 2 caracteres.</ng-container
+              >
+            </small>
+          </div>
+
+          <!-- SKU + Código de barras -->
+          <div class="field-row">
+            <div class="field">
+              <label for="sku"
+                >SKU <span class="optional">(opcional)</span></label
+              >
+              <input
+                id="sku"
+                type="text"
+                pInputText
+                formControlName="sku"
+                placeholder="Ej: BEB-001"
+                maxlength="50"
+                autocomplete="off"
+                style="
+                  font-family: &quot;JetBrains Mono&quot;, monospace;
+                  text-transform: uppercase;
+                "
+              />
+            </div>
+            <div class="field">
+              <label for="codigoBarras"
+                >Código de barras
+                <span class="optional">(opcional)</span></label
+              >
+              <input
+                id="codigoBarras"
+                type="text"
+                pInputText
+                formControlName="codigoBarras"
+                placeholder="Ej: 7750955051042"
+                maxlength="50"
+                autocomplete="off"
+                style="font-family: &quot;JetBrains Mono&quot;, monospace"
+              />
             </div>
           </div>
 
-          <!-- ── Columna derecha: campos ─────────────────────── -->
-          <div class="campos-col">
-            <!-- Nombre -->
+          <!-- Categoría + Marca -->
+          <div class="field-row">
             <div class="field">
-              <label for="nombre"
-                >Nombre del producto <span class="required">*</span></label
-              >
-              <input
-                id="nombre"
-                type="text"
-                pInputText
-                formControlName="nombre"
-                placeholder="Ej: Coca-Cola 500ml, Arroz Diana 1kg..."
-                [class.ng-invalid]="isInvalid('nombre')"
-                [class.ng-dirty]="frmProducto.get('nombre')?.touched"
-                maxlength="255"
-                autocomplete="off"
+              <label for="categoriaId">Categoría</label>
+              <p-dropdown
+                inputId="categoriaId"
+                formControlName="categoriaId"
+                [options]="categoriasOpts"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccionar..."
+                [filter]="true"
+                filterPlaceholder="Buscar..."
+                [showClear]="true"
+                styleClass="w-full"
               />
-              <small class="p-error" *ngIf="isInvalid('nombre')">
-                <ng-container
-                  *ngIf="frmProducto.get('nombre')?.hasError('required')"
-                  >El nombre es obligatorio.</ng-container
-                >
-                <ng-container
-                  *ngIf="frmProducto.get('nombre')?.hasError('minlength')"
-                  >Mínimo 2 caracteres.</ng-container
-                >
-              </small>
             </div>
-
-            <!-- SKU + Código de barras -->
-            <div class="field-row">
-              <div class="field">
-                <label for="sku"
-                  >SKU <span class="optional">(opcional)</span></label
-                >
-                <input
-                  id="sku"
-                  type="text"
-                  pInputText
-                  formControlName="sku"
-                  placeholder="Ej: BEB-001"
-                  maxlength="50"
-                  autocomplete="off"
-                  style="
-                    font-family: &quot;JetBrains Mono&quot;, monospace;
-                    text-transform: uppercase;
-                  "
-                />
-              </div>
-              <div class="field">
-                <label for="codigoBarras"
-                  >Código de barras
-                  <span class="optional">(opcional)</span></label
-                >
-                <input
-                  id="codigoBarras"
-                  type="text"
-                  pInputText
-                  formControlName="codigoBarras"
-                  placeholder="Ej: 7750955051042"
-                  maxlength="50"
-                  autocomplete="off"
-                  style="font-family: &quot;JetBrains Mono&quot;, monospace"
-                />
-              </div>
-            </div>
-
-            <!-- Categoría + Marca -->
-            <div class="field-row">
-              <div class="field">
-                <label for="categoriaId">Categoría</label>
-                <p-dropdown
-                  inputId="categoriaId"
-                  formControlName="categoriaId"
-                  [options]="categoriasOpts"
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="Seleccionar..."
-                  [filter]="true"
-                  filterPlaceholder="Buscar..."
-                  [showClear]="true"
-                  styleClass="w-full"
-                />
-              </div>
-              <div class="field">
-                <label for="marcaId">Marca</label>
-                <p-dropdown
-                  inputId="marcaId"
-                  formControlName="marcaId"
-                  [options]="marcasOpts"
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="Seleccionar..."
-                  [filter]="true"
-                  filterPlaceholder="Buscar..."
-                  [showClear]="true"
-                  styleClass="w-full"
-                />
-              </div>
-            </div>
-
-            <!-- Unidad de medida + Tipo -->
-            <div class="field-row">
-              <div class="field">
-                <label for="unidadMedidaBaseId"
-                  >Unidad de medida <span class="required">*</span></label
-                >
-                <p-dropdown
-                  inputId="unidadMedidaBaseId"
-                  formControlName="unidadMedidaBaseId"
-                  [options]="unidadesOpts"
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="Seleccionar unidad..."
-                  [class.ng-invalid]="isInvalid('unidadMedidaBaseId')"
-                  [filter]="true"
-                  filterPlaceholder="Buscar..."
-                  styleClass="w-full"
-                />
-                <small class="p-error" *ngIf="isInvalid('unidadMedidaBaseId')">
-                  La unidad de medida es obligatoria.
-                </small>
-              </div>
-              <div class="field">
-                <label for="tipoProducto"
-                  >Tipo de producto <span class="required">*</span></label
-                >
-                <p-dropdown
-                  inputId="tipoProducto"
-                  formControlName="tipoProducto"
-                  [options]="tipoOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  styleClass="w-full"
-                />
-              </div>
-            </div>
-
-            <!-- Descripción -->
             <div class="field">
-              <label for="descripcion"
-                >Descripción <span class="optional">(opcional)</span></label
-              >
-              <textarea
-                id="descripcion"
-                pTextarea
-                formControlName="descripcion"
-                placeholder="Descripción del producto..."
-                rows="3"
-                maxlength="500"
-              ></textarea>
-
-              <small class="char-count">
-                {{ frmProducto.get("descripcion")?.value?.length ?? 0 }}/500
-              </small>
+              <label for="marcaId">Marca</label>
+              <p-dropdown
+                inputId="marcaId"
+                formControlName="marcaId"
+                [options]="marcasOpts"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccionar..."
+                [filter]="true"
+                filterPlaceholder="Buscar..."
+                [showClear]="true"
+                styleClass="w-full"
+              />
             </div>
+          </div>
+
+          <!-- Unidad + Tipo -->
+          <div class="field-row">
+            <div class="field">
+              <label for="unidadMedidaBaseId"
+                >Unidad de medida <span class="required">*</span></label
+              >
+              <p-dropdown
+                inputId="unidadMedidaBaseId"
+                formControlName="unidadMedidaBaseId"
+                [options]="unidadesOpts"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccionar unidad..."
+                [class.ng-invalid]="isInvalid('unidadMedidaBaseId')"
+                [filter]="true"
+                filterPlaceholder="Buscar..."
+                styleClass="w-full"
+              />
+              <small class="p-error" *ngIf="isInvalid('unidadMedidaBaseId')"
+                >La unidad de medida es obligatoria.</small
+              >
+            </div>
+            <div class="field">
+              <label for="tipoProducto"
+                >Tipo de producto <span class="required">*</span></label
+              >
+              <p-dropdown
+                inputId="tipoProducto"
+                formControlName="tipoProducto"
+                [options]="tipoOptions"
+                optionLabel="label"
+                optionValue="value"
+                styleClass="w-full"
+              />
+            </div>
+          </div>
+
+          <!-- Descripción -->
+          <div class="field">
+            <label for="descripcion"
+              >Descripción <span class="optional">(opcional)</span></label
+            >
+            <textarea
+              id="descripcion"
+              pTextarea
+              formControlName="descripcion"
+              placeholder="Descripción del producto..."
+              rows="3"
+              maxlength="500"
+            ></textarea>
+            <small class="char-count">
+              {{ frmProducto.get("descripcion")?.value?.length ?? 0 }}/500
+            </small>
           </div>
         </div>
       </p-tabPanel>
-
       <!-- ─── Tab 2: Precios e impuestos ─────────────────── -->
       <p-tabPanel>
         <ng-template pTemplate="header">

@@ -103,9 +103,14 @@ export class FormMarcasComponent implements OnInit, OnChanges {
     try {
       const response = await lastValueFrom(this.marcaService.getById(id));
       if (response?.status === 200 && response?.data) {
-        this.frmMarca.patchValue({
-          nombre: response.data.nombre,
-          activo: response.data.activo,
+        setTimeout(() => {
+          this.frmMarca.patchValue(
+            {
+              nombre: response.data.nombre,
+              activo: response.data.activo,
+            },
+            { emitEvent: false },
+          );
         });
       }
     } catch {
