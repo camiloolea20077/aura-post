@@ -1,0 +1,48 @@
+<p-dialog
+  [header]="isEdit ? 'Editar motivo' : 'Nuevo motivo'"
+  [(visible)]="visible"
+  (onHide)="close()"
+  [modal]="true"
+  [style]="{ width: '420px' }"
+  [draggable]="false"
+>
+  <form [formGroup]="form" class="dialog-form">
+    <div class="field">
+      <label class="field-label">Nombre <span class="required">*</span></label>
+      <input
+        type="text"
+        pInputText
+        formControlName="nombre"
+        placeholder="Ej: Vencimiento, Robo, Daño..."
+        class="w-full"
+        [class.ng-invalid]="isInvalid('nombre')"
+      />
+      <small class="field-error" *ngIf="isInvalid('nombre')"
+        >El nombre es obligatorio</small
+      >
+    </div>
+
+    <div class="field field-row">
+      <label class="field-label">Afecta contabilidad</label>
+      <p-inputSwitch formControlName="afectaContabilidad" />
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="close()"
+    ></button>
+    <button
+      pButton
+      [label]="isEdit ? 'Actualizar' : 'Guardar'"
+      icon="pi pi-check"
+      class="btn-aura btn-primary"
+      [loading]="loading"
+      (click)="save()"
+    ></button>
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,150 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { TableLazyLoadEvent, TableModule } from 'primeng/table';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { TagModule } from 'primeng/tag';
+import { ToastModule } from 'primeng/toast';
+import { TooltipModule } from 'primeng/tooltip';
+import { SkeletonModule } from 'primeng/skeleton';
+import { MessageService } from 'primeng/api';
+import { lastValueFrom } from 'rxjs';
+import {
+  EstadoVenta,
+  VentaPageableDto,
+  VentaTableModel,
+} from '../../../core/models/venta.model';
+import { VentaService } from '../../../core/services/venta.service';
+import { AlertService } from '../../../shared/pipes/alert.service';
+import { DetalleVentaComponent } from '../detalle/detalle-venta.component';
+
+type TagSeverity =
+  | 'success'
+  | 'secondary'
+  | 'info'
+  | 'warn'
+  | 'danger'
+  | 'contrast'
+  | undefined;
+@Component({
+  selector: 'app-index-ventas',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    TableModule,
+    ButtonModule,
+    InputTextModule,
+    TagModule,
+    ToastModule,
+    TooltipModule,
+    SkeletonModule,
+    DetalleVentaComponent,
+  ],
+  providers: [MessageService],
+  templateUrl: './index-ventas.component.html',
+  styleUrls: ['./index-ventas.component.scss'],
+})
+export class IndexVentasComponent implements OnInit {
+  public showDetalle = false;
+  public selectedId: number | null = null;
+
+  public items: VentaTableModel[] = [];
+  public loadingTable = true;
+  public totalRecords = 0;
+  public rowSize = 15;
+  public searchQuery = '';
+  public lastLazyEvent!: TableLazyLoadEvent;
+
+  constructor(
+    private readonly ventaService: VentaService,
+    private readonly alertService: AlertService,
+  ) {}
+
+  ngOnInit(): void {}
+
+  async loadTable(event: TableLazyLoadEvent): Promise<void> {
+    this.lastLazyEvent = event;
+    this.loadingTable = true;
+    const page =
+      event.first != null && event.rows
+        ? Math.floor(event.first / event.rows)
+        : 0;
+    const sortField = Array.isArray(event.sortField)
+      ? event.sortField[0]
+      : event.sortField;
+    const dto: VentaPageableDto = {
+      page,
+      rows: event.rows ?? this.rowSize,
+      search: this.searchQuery || null,
+      order_by: sortField ?? 'v.id',
+      order: event.sortOrder === 1 ? 'ASC' : 'DESC',
+    };
+    try {
+      const res = await lastValueFrom(this.ventaService.page(dto));
+      this.items = res?.data?.content ?? [];
+      this.totalRecords = res?.data?.totalElements ?? 0;
+    } catch (err: any) {
+      if (err?.status !== 206)
+        this.alertService.showError(
+          'Error',
+          'No se pudieron cargar las ventas.',
+        );
+      this.items = [];
+      this.totalRecords = 0;
+    } finally {
+      this.loadingTable = false;
+    }
+  }
+
+  onSearch(): void {
+    if (this.lastLazyEvent) this.loadTable({ ...this.lastLazyEvent, first: 0 });
+  }
+  clearSearch(): void {
+    this.searchQuery = '';
+    this.onSearch();
+  }
+  private reloadTable(): void {
+    if (this.lastLazyEvent) this.loadTable(this.lastLazyEvent);
+  }
+
+  openDetalle(item: VentaTableModel): void {
+    this.selectedId = item.id;
+    this.showDetalle = true;
+  }
+  onDetalleClosed(): void {
+    this.showDetalle = false;
+  }
+  onAnulada(): void {
+    this.showDetalle = false;
+    this.reloadTable();
+  }
+
+  getEstadoSeverity(e: EstadoVenta): TagSeverity {
+    const map: Record<EstadoVenta, TagSeverity> = {
+      COMPLETADA: 'success',
+      ANULADA: 'danger',
+    };
+    return map[e] ?? 'secondary';
+  }
+  getEstadoLabel(e: EstadoVenta): string {
+    return e === 'COMPLETADA' ? 'Completada' : 'Anulada';
+  }
+
+  formatCOP = (v: number) =>
+    new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      maximumFractionDigits: 0,
+    }).format(v);
+
+  formatFecha(f: string): string {
+    return new Date(f).toLocaleString('es-CO', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+}

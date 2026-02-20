@@ -29,11 +29,11 @@ export const routes: Routes = [
       },
 
       // // POS
-      // {
-      //   path: 'pos',
-      //   loadComponent: () =>
-      //     import('./features/pos/pos.component').then(m => m.PosComponent),
-      // },
+      {
+        path: 'pos',
+        loadComponent: () =>
+          import('./features/pos/pos.component').then((m) => m.PosComponent),
+      },
 
       // // Catálogo
       {
@@ -124,52 +124,68 @@ export const routes: Routes = [
             (m) => m.IndexSerialesComponent,
           ),
       },
-      // {
-      //   path: 'inventario/kardex',
-      //   loadComponent: () =>
-      //     import('./features/inventario/kardex/index/index-kardex.component').then(m => m.IndexKardexComponent),
-      // },
+      {
+        path: 'inventario/kardex',
+        loadComponent: () =>
+          import('./features/inventario/kardex/index/index-kardex.component').then(
+            (m) => m.IndexKardexComponent,
+          ),
+      },
 
       // // Operaciones
-      // {
-      //   path: 'compras',
-      //   loadComponent: () =>
-      //     import('./features/compras/index/index-compras.component').then(m => m.IndexComprasComponent),
-      // },
-      // {
-      //   path: 'ventas',
-      //   loadComponent: () =>
-      //     import('./features/ventas/index/index-ventas.component').then(m => m.IndexVentasComponent),
-      // },
-      // {
-      //   path: 'mermas',
-      //   loadComponent: () =>
-      //     import('./features/mermas/index/index-mermas.component').then(m => m.IndexMermasComponent),
-      // },
-      // {
-      //   path: 'traslados',
-      //   loadComponent: () =>
-      //     import('./features/traslados/index/index-traslados.component').then(m => m.IndexTrasladosComponent),
-      // },
+      {
+        path: 'compras',
+        loadComponent: () =>
+          import('./features/compras/index/index-compras.component').then(
+            (m) => m.IndexComprasComponent,
+          ),
+      },
+      {
+        path: 'ventas',
+        loadComponent: () =>
+          import('./features/ventas/index/index-ventas.component').then(
+            (m) => m.IndexVentasComponent,
+          ),
+      },
+      {
+        path: 'mermas',
+        loadComponent: () =>
+          import('./features/mermas/index/index-mermas.component').then(
+            (m) => m.IndexMermasComponent,
+          ),
+      },
+      {
+        path: 'traslados',
+        loadComponent: () =>
+          import('./features/traslados/index/index-traslados.component').then(
+            (m) => m.IndexTrasladosComponent,
+          ),
+      },
 
       // // Terceros
-      // {
-      //   path: 'terceros',
-      //   loadComponent: () =>
-      //     import('./features/terceros/index/index-terceros.component').then(m => m.IndexTercerosComponent),
-      // },
+      {
+        path: 'terceros',
+        loadComponent: () =>
+          import('./features/terceros/index/index-terceros.component').then(
+            (m) => m.IndexTercerosComponent,
+          ),
+      },
 
       // // Caja
-      // {
-      //   path: 'caja/cajas',
-      //   loadComponent: () =>
-      //     import('./features/caja/cajas/index/index-cajas.component').then(m => m.IndexCajasComponent),
-      // },
-      // {
-      //   path: 'caja/turnos',
-      //   loadComponent: () =>
-      //     import('./features/caja/turnos/index/index-turnos.component').then(m => m.IndexTurnosComponent),
-      // },
+      {
+        path: 'caja/cajas',
+        loadComponent: () =>
+          import('./features/caja/cajas/index/index-cajas.component').then(
+            (m) => m.IndexCajasComponent,
+          ),
+      },
+      {
+        path: 'caja/turnos',
+        loadComponent: () =>
+          import('./features/caja/turnos/index/index-turnos.component').then(
+            (m) => m.IndexTurnosComponent,
+          ),
+      },
 
       // // Reportes
       // {

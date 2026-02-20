@@ -1,0 +1,331 @@
+$indigo: #6366f1;
+$red: #ef4444;
+$emerald: #10b981;
+$orange: #f97316;
+$border: #e2e8f0;
+$text: #1e293b;
+$muted: #94a3b8;
+$bg: #f8fafc;
+$mono: "JetBrains Mono", monospace;
+
+.module-container {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+// ── Header ────────────────────────────────────────────────────
+.module-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(99, 102, 241, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    i {
+      font-size: 1.1rem;
+      color: $indigo;
+    }
+  }
+
+  .header-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: $text;
+    margin: 0;
+  }
+  .header-sub {
+    font-size: 0.78rem;
+    color: $muted;
+    margin: 0;
+  }
+}
+
+.total-badge {
+  font-family: $mono;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: $indigo;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 20px;
+  padding: 0.25rem 0.85rem;
+}
+
+// ── Filtros card ──────────────────────────────────────────────
+.filtros-card {
+  background: #fff;
+  border: 1.5px solid $border;
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.filtros-main {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.filtros-extra {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+  padding-top: 0.85rem;
+  border-top: 1.5px solid $border;
+}
+
+.field-filtro {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  flex: 1;
+  min-width: 180px;
+
+  .filtro-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: $muted;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  ::ng-deep .filtro-input,
+  ::ng-deep .filtro-ac-input {
+    height: 36px !important;
+    font-size: 0.84rem;
+    border-radius: 9px;
+    border: 1.5px solid $border;
+    padding-left: 2.2rem;
+
+    &:focus {
+      border-color: $indigo !important;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1) !important;
+    }
+  }
+
+  ::ng-deep .filtro-dropdown .p-dropdown,
+  ::ng-deep .filtro-calendar .p-calendar {
+    width: 100%;
+    .p-dropdown-label,
+    .p-inputtext {
+      font-size: 0.84rem;
+      height: 36px;
+      line-height: 36px;
+      padding: 0 0.75rem;
+    }
+  }
+}
+
+.filtros-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  padding-bottom: 0;
+  align-self: flex-end;
+}
+
+.btn-expandir {
+  border-color: $border !important;
+  color: $muted !important;
+  font-size: 0.8rem !important;
+  height: 36px;
+
+  &.active {
+    border-color: $indigo !important;
+    color: $indigo !important;
+    background: rgba(99, 102, 241, 0.05) !important;
+  }
+}
+
+.filtros-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: $indigo;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  margin-left: -0.25rem;
+}
+
+.btn-sm {
+  height: 36px;
+}
+
+// ── Producto filtro wrap ───────────────────────────────────────
+.producto-filtro-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  ::ng-deep p-autoComplete {
+    flex: 1;
+  }
+
+  .clear-producto {
+    position: absolute;
+    right: 0.25rem;
+    color: $muted !important;
+  }
+}
+
+// ── Tabla ─────────────────────────────────────────────────────
+.table-card {
+  background: #fff;
+  border: 1.5px solid $border;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.clickable-row {
+  cursor: pointer;
+  transition: background 0.1s;
+  &:hover {
+    background: #fafbff !important;
+  }
+}
+
+// ── Celda producto ────────────────────────────────────────────
+.producto-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+
+  .producto-nombre {
+    font-size: 0.84rem;
+  }
+  .producto-sku {
+    font-size: 0.7rem;
+  }
+}
+
+// ── Tag tipo (más compacto) ────────────────────────────────────
+::ng-deep .tipo-tag-sm .p-tag {
+  font-size: 0.68rem !important;
+  padding: 0.2rem 0.55rem !important;
+  border-radius: 20px !important;
+  white-space: nowrap;
+}
+
+// ── Delta chip ────────────────────────────────────────────────
+.delta-chip {
+  display: inline-block;
+  font-family: $mono;
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 0.15rem 0.55rem;
+  border-radius: 20px;
+
+  &.delta-pos {
+    background: rgba(16, 185, 129, 0.1);
+    color: $emerald;
+  }
+  &.delta-neg {
+    background: rgba(239, 68, 68, 0.08);
+    color: $red;
+  }
+}
+
+// ── Empty ─────────────────────────────────────────────────────
+.empty-row {
+  padding: 2rem !important;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  color: $muted;
+  i {
+    font-size: 2rem;
+  }
+  p {
+    font-size: 0.85rem;
+    margin: 0;
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+.fw-600 {
+  font-weight: 600;
+}
+.fw-700 {
+  font-weight: 700;
+}
+.mono {
+  font-family: $mono;
+}
+.text-muted {
+  color: $muted;
+}
+.text-center {
+  text-align: center;
+}
+.text-right {
+  text-align: right;
+}
+.w-full {
+  width: 100%;
+}
+
+::ng-deep .btn-primary.p-button {
+  background: linear-gradient(135deg, $indigo, #818cf8) !important;
+  border: none !important;
+  font-weight: 600 !important;
+}
+
+// ── Input icon izquierdo ──────────────────────────────────────
+span.p-input-icon-left {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  position: relative;
+
+  i {
+    position: absolute;
+    left: 0.75rem;
+    color: $muted;
+    font-size: 0.82rem;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  input {
+    width: 100%;
+    padding-left: 2.2rem;
+    height: 36px;
+    border-radius: 9px;
+    border: 1.5px solid $border;
+    font-size: 0.84rem;
+    transition: all 0.15s;
+
+    &:focus {
+      border-color: $indigo;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+      outline: none;
+    }
+  }
+}

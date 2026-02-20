@@ -1,0 +1,88 @@
+<p-dialog
+  [(visible)]="displayModal"
+  [header]="isEditMode ? 'Editar caja' : 'Nueva caja'"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '400px' }"
+  styleClass="aura-dialog"
+  (onHide)="closeModal()"
+>
+  <div class="dialog-loading" *ngIf="isLoading">
+    <i class="pi pi-spin pi-spinner"></i><span>Cargando...</span>
+  </div>
+
+  <form [formGroup]="frmCaja" class="form-container" *ngIf="!isLoading">
+    <div class="field">
+      <label
+        >Sucursal <span class="required">*</span>
+        <span class="badge-edit" *ngIf="isEditMode">No modificable</span>
+      </label>
+      <p-dropdown
+        formControlName="sucursalId"
+        [options]="sucursalesOpts"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona..."
+        styleClass="w-full"
+        [class.ng-invalid]="isInvalid('sucursalId')"
+      />
+      <small class="p-error" *ngIf="isInvalid('sucursalId')"
+        >La sucursal es obligatoria.</small
+      >
+    </div>
+
+    <div class="field">
+      <label>Nombre de la caja <span class="required">*</span></label>
+      <input
+        type="text"
+        pInputText
+        formControlName="nombre"
+        placeholder="Ej: Caja Principal, Caja 2, Caja Express..."
+        [class.ng-invalid]="isInvalid('nombre')"
+        [class.ng-dirty]="frmCaja.get('nombre')?.touched"
+        maxlength="100"
+        autocomplete="off"
+      />
+      <small class="p-error" *ngIf="isInvalid('nombre')"
+        >Nombre requerido (mín. 2 caracteres).</small
+      >
+    </div>
+
+    <div class="field-inline">
+      <div class="switch-label">
+        <span class="label-text">Estado</span>
+        <span class="label-sub">{{
+          frmCaja.get("activa")?.value
+            ? "Activa — disponible para turnos"
+            : "Inactiva"
+        }}</span>
+      </div>
+      <p-inputSwitch formControlName="activa" />
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button
+        pButton
+        type="button"
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-outlined p-button-secondary"
+        [disabled]="isSubmitting"
+        (click)="closeModal()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        [label]="isEditMode ? 'Guardar cambios' : 'Crear caja'"
+        [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+        class="btn-aura"
+        [disabled]="isSubmitting || isLoading"
+        (click)="saveCaja()"
+      ></button>
+    </div>
+  </ng-template>
+</p-dialog>
+<p-toast />

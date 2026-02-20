@@ -1,0 +1,340 @@
+<p-dialog
+  [(visible)]="displayModal"
+  [header]="isEditMode ? 'Editar tercero' : 'Nuevo tercero'"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '600px' }"
+  styleClass="aura-dialog"
+  (onHide)="closeModal()"
+>
+  <div class="dialog-loading" *ngIf="isLoading">
+    <i class="pi pi-spin pi-spinner"></i><span>Cargando...</span>
+  </div>
+
+  <form [formGroup]="frmTercero" class="form-container" *ngIf="!isLoading">
+    <!-- ══ IDENTIFICACIÓN ════════════════════════════════════ -->
+    <div class="section-label">Identificación</div>
+
+    <div class="field-row">
+      <!-- Tipo de documento -->
+      <div class="field" style="min-width: 170px">
+        <label>Tipo <span class="required">*</span></label>
+        <p-dropdown
+          formControlName="tipoDocumento"
+          [options]="tipoDocOpts"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+        />
+      </div>
+
+      <!-- Número de documento -->
+      <div class="field flex-1">
+        <label>Número de documento <span class="required">*</span></label>
+        <input
+          type="text"
+          pInputText
+          formControlName="numeroDocumento"
+          placeholder="Ej: 900123456"
+          [class.ng-invalid]="isInvalid('numeroDocumento')"
+          [class.ng-dirty]="frmTercero.get('numeroDocumento')?.touched"
+          maxlength="20"
+          autocomplete="off"
+        />
+        <small class="p-error" *ngIf="isInvalid('numeroDocumento')"
+          >Requerido (mín. 3 caracteres).</small
+        >
+      </div>
+
+      <!-- DV solo si es NIT/RUT -->
+      <div class="field dv-field" *ngIf="esJuridica">
+        <label>DV</label>
+        <input
+          type="text"
+          pInputText
+          formControlName="dv"
+          placeholder="0"
+          maxlength="2"
+          autocomplete="off"
+          style="
+            text-align: center;
+            font-family: &quot;JetBrains Mono&quot;, monospace;
+          "
+        />
+      </div>
+    </div>
+
+    <!-- Indicador tipo persona -->
+    <div class="tipo-badge" [class.juridica]="esJuridica">
+      <i class="pi" [ngClass]="esJuridica ? 'pi-building' : 'pi-user'"></i>
+      {{
+        esJuridica
+          ? "Persona jurídica — ingresa razón social"
+          : "Persona natural — ingresa nombres y apellidos"
+      }}
+    </div>
+
+    <!-- Razón social (jurídica) -->
+    <div class="field" *ngIf="esJuridica">
+      <label>Razón social <span class="required">*</span></label>
+      <input
+        type="text"
+        pInputText
+        formControlName="razonSocial"
+        placeholder="Ej: Distribuidora Nacional S.A.S"
+        [class.ng-invalid]="
+          frmTercero.hasError('razonSocialRequerida') && frmTercero.touched
+        "
+        [class.ng-dirty]="frmTercero.touched"
+        maxlength="200"
+        autocomplete="off"
+      />
+      <small
+        class="p-error"
+        *ngIf="
+          frmTercero.hasError('razonSocialRequerida') && frmTercero.touched
+        "
+      >
+        La razón social es obligatoria para NIT/RUT.
+      </small>
+    </div>
+
+    <!-- Nombres + Apellidos (natural) -->
+    <div class="field-row" *ngIf="!esJuridica">
+      <div class="field flex-1">
+        <label>Nombres <span class="required">*</span></label>
+        <input
+          type="text"
+          pInputText
+          formControlName="nombres"
+          placeholder="Ej: Juan Carlos"
+          [class.ng-invalid]="
+            frmTercero.hasError('nombresRequeridos') && frmTercero.touched
+          "
+          [class.ng-dirty]="frmTercero.touched"
+          maxlength="100"
+          autocomplete="off"
+        />
+        <small
+          class="p-error"
+          *ngIf="frmTercero.hasError('nombresRequeridos') && frmTercero.touched"
+        >
+          El nombre es obligatorio.
+        </small>
+      </div>
+      <div class="field flex-1">
+        <label>Apellidos</label>
+        <input
+          type="text"
+          pInputText
+          formControlName="apellidos"
+          placeholder="Ej: Pérez Gómez"
+          maxlength="100"
+          autocomplete="off"
+        />
+      </div>
+    </div>
+
+    <p-divider align="left"
+      ><span class="divider-label">Contacto</span></p-divider
+    >
+
+    <!-- ══ CONTACTO ══════════════════════════════════════════ -->
+    <div class="field-row">
+      <div class="field flex-1">
+        <label>Teléfono</label>
+        <input
+          type="text"
+          pInputText
+          formControlName="telefono"
+          placeholder="Ej: 3001234567"
+          maxlength="20"
+          autocomplete="off"
+        />
+      </div>
+      <div class="field flex-1">
+        <label>Email</label>
+        <input
+          type="email"
+          pInputText
+          formControlName="email"
+          placeholder="correo@ejemplo.com"
+          maxlength="100"
+          autocomplete="off"
+          [class.ng-invalid]="isInvalid('email')"
+          [class.ng-dirty]="frmTercero.get('email')?.touched"
+        />
+        <small class="p-error" *ngIf="isInvalid('email')"
+          >Email inválido.</small
+        >
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field flex-1">
+        <label
+          >Email facturación electrónica
+          <span class="optional">(opcional)</span>
+        </label>
+        <input
+          type="email"
+          pInputText
+          formControlName="emailFe"
+          placeholder="fe@empresa.com"
+          maxlength="100"
+          autocomplete="off"
+          [class.ng-invalid]="isInvalid('emailFe')"
+          [class.ng-dirty]="frmTercero.get('emailFe')?.touched"
+        />
+        <small class="p-error" *ngIf="isInvalid('emailFe')"
+          >Email inválido.</small
+        >
+      </div>
+      <div class="field flex-1">
+        <label>Responsabilidad fiscal</label>
+        <p-dropdown
+          formControlName="responsabilidadFiscal"
+          [options]="respFiscalOpts"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Selecciona..."
+          [showClear]="true"
+          styleClass="w-full"
+        />
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Dirección</label>
+      <input
+        type="text"
+        pInputText
+        formControlName="direccion"
+        placeholder="Ej: Calle 80 # 45-20, Bogotá"
+        maxlength="200"
+        autocomplete="off"
+      />
+    </div>
+
+    <p-divider align="left"><span class="divider-label">Roles</span></p-divider>
+
+    <!-- ══ ROLES ═════════════════════════════════════════════ -->
+    <div class="roles-grid">
+      <div
+        class="role-card"
+        [class.active]="frmTercero.get('esCliente')?.value"
+        (click)="
+          frmTercero.patchValue({
+            esCliente: !frmTercero.get('esCliente')?.value,
+          })
+        "
+      >
+        <div class="role-icon cliente">
+          <i class="pi pi-shopping-cart"></i>
+        </div>
+        <div class="role-info">
+          <span class="role-label">Cliente</span>
+          <span class="role-desc">Puede comprar en el POS</span>
+        </div>
+        <i
+          class="pi pi-check-circle check-icon"
+          *ngIf="frmTercero.get('esCliente')?.value"
+        ></i>
+      </div>
+
+      <div
+        class="role-card"
+        [class.active]="frmTercero.get('esProveedor')?.value"
+        (click)="
+          frmTercero.patchValue({
+            esProveedor: !frmTercero.get('esProveedor')?.value,
+          })
+        "
+      >
+        <div class="role-icon proveedor">
+          <i class="pi pi-truck"></i>
+        </div>
+        <div class="role-info">
+          <span class="role-label">Proveedor</span>
+          <span class="role-desc">Aparece en módulo de compras</span>
+        </div>
+        <i
+          class="pi pi-check-circle check-icon"
+          *ngIf="frmTercero.get('esProveedor')?.value"
+        ></i>
+      </div>
+
+      <div
+        class="role-card"
+        [class.active]="frmTercero.get('esEmpleado')?.value"
+        (click)="
+          frmTercero.patchValue({
+            esEmpleado: !frmTercero.get('esEmpleado')?.value,
+          })
+        "
+      >
+        <div class="role-icon empleado">
+          <i class="pi pi-id-card"></i>
+        </div>
+        <div class="role-info">
+          <span class="role-label">Empleado</span>
+          <span class="role-desc">Personal de la empresa</span>
+        </div>
+        <i
+          class="pi pi-check-circle check-icon"
+          *ngIf="frmTercero.get('esEmpleado')?.value"
+        ></i>
+      </div>
+    </div>
+
+    <div
+      class="warn-roles"
+      *ngIf="
+        !frmTercero.get('esCliente')?.value &&
+        !frmTercero.get('esProveedor')?.value &&
+        !frmTercero.get('esEmpleado')?.value
+      "
+    >
+      <i class="pi pi-exclamation-triangle"></i>
+      Selecciona al menos un rol para el tercero.
+    </div>
+
+    <p-divider />
+
+    <!-- Estado -->
+    <div class="field-inline">
+      <div class="switch-label">
+        <span class="label-text">Estado</span>
+        <span class="label-sub">{{
+          frmTercero.get("activo")?.value ? "Activo" : "Inactivo"
+        }}</span>
+      </div>
+      <p-inputSwitch formControlName="activo" />
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button
+        pButton
+        type="button"
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-outlined p-button-secondary"
+        [disabled]="isSubmitting"
+        (click)="closeModal()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        [label]="isEditMode ? 'Actualizar' : 'Guardar'"
+        [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+        class="btn-aura btn-indigo"
+        [disabled]="isSubmitting || isLoading"
+        (click)="saveTercero()"
+      ></button>
+    </div>
+  </ng-template>
+</p-dialog>
+<p-toast />

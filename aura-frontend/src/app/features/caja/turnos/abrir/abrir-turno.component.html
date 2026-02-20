@@ -1,0 +1,103 @@
+<p-dialog
+  [(visible)]="displayModal"
+  header="Abrir turno de caja"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '420px' }"
+  styleClass="aura-dialog"
+  (onHide)="closeModal()"
+>
+  <form [formGroup]="frmAbrir" class="form-container">
+    <!-- Selección de caja -->
+    <div class="field">
+      <label>Caja <span class="required">*</span></label>
+      <p-dropdown
+        formControlName="cajaId"
+        [options]="cajasOpts"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona la caja que vas a operar..."
+        styleClass="w-full"
+        [class.ng-invalid]="isInvalid('cajaId')"
+      >
+        <ng-template let-opt pTemplate="item">
+          <div class="caja-opt">
+            <i class="pi pi-desktop"></i>
+            <div>
+              <span class="opt-nombre">{{ opt.label }}</span>
+              <span class="opt-suc">{{ opt.sucursal }}</span>
+            </div>
+          </div>
+        </ng-template>
+      </p-dropdown>
+      <small class="p-error" *ngIf="isInvalid('cajaId')"
+        >Selecciona una caja.</small
+      >
+    </div>
+
+    <!-- Sucursal badge (cuando caja seleccionada) -->
+    <div class="caja-selected-badge" *ngIf="cajaSeleccionada">
+      <i class="pi pi-building"></i>
+      <span>{{ cajaSeleccionada.sucursal }}</span>
+    </div>
+
+    <!-- Base inicial -->
+    <div class="field">
+      <label>Base inicial en efectivo <span class="required">*</span></label>
+      <p-inputNumber
+        formControlName="baseInicial"
+        mode="currency"
+        currency="COP"
+        locale="es-CO"
+        [minFractionDigits]="0"
+        [min]="0"
+        placeholder="$ 0"
+        styleClass="w-full input-base"
+        [class.ng-invalid]="isInvalid('baseInicial')"
+      />
+      <small class="p-error" *ngIf="isInvalid('baseInicial')"
+        >Ingresa la base inicial (puede ser $0).</small
+      >
+      <small class="hint"
+        >El efectivo físico que tiene la caja al iniciar el turno.</small
+      >
+    </div>
+
+    <!-- Info card -->
+    <div class="info-turno">
+      <i class="pi pi-info-circle"></i>
+      <div>
+        <p>Al abrir el turno podrás registrar ventas en esta caja.</p>
+        <p>
+          Al cierre, el sistema calculará el efectivo esperado y podrás ingresar
+          el efectivo real contado.
+        </p>
+      </div>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button
+        pButton
+        type="button"
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-outlined p-button-secondary"
+        [disabled]="isSubmitting"
+        (click)="closeModal()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        label="Abrir turno"
+        [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-unlock'"
+        class="btn-aura"
+        [disabled]="isSubmitting"
+        (click)="abrirTurno()"
+      ></button>
+    </div>
+  </ng-template>
+</p-dialog>
+<p-toast />

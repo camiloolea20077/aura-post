@@ -1,0 +1,288 @@
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.header-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  i {
+    color: white;
+    font-size: 0.95rem;
+  }
+}
+
+.header-meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.header-numero {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1e293b;
+  font-family: "JetBrains Mono", monospace;
+}
+.header-fecha {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+.loading-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.25rem 0;
+}
+.sidebar-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0.25rem 0;
+}
+
+.info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid #f1f5f9;
+  &:last-child {
+    border-bottom: none;
+  }
+  .info-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .info-val {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    i {
+      font-size: 0.78rem;
+      color: #6366f1;
+    }
+  }
+  .mono-sm {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.65rem;
+    max-width: 240px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.div-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+// Líneas detalle
+.detalle-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.det-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid #f8fafc;
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.det-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  background: rgba(99, 102, 241, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #6366f1;
+}
+
+.det-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  .det-nombre {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #1e293b;
+  }
+  .det-sku {
+    font-size: 0.65rem;
+    color: #94a3b8;
+    font-family: "JetBrains Mono", monospace;
+  }
+}
+
+.det-calc {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+  .det-expr {
+    font-size: 0.68rem;
+    color: #94a3b8;
+  }
+  .det-sub {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #374151;
+  }
+}
+
+// Pagos
+.pagos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.pago-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  i {
+    font-size: 0.85rem;
+  }
+  .pago-metodo {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #374151;
+    flex: 1;
+  }
+  .pago-ref {
+    font-size: 0.7rem;
+    color: #94a3b8;
+  }
+  .pago-monto {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #1e293b;
+  }
+}
+
+// Totales
+.totales-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.85rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  margin-top: 0.25rem;
+}
+
+.tot-row {
+  display: flex;
+  justify-content: space-between;
+  .tot-label {
+    font-size: 0.8rem;
+    color: #64748b;
+  }
+  .tot-val {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #374151;
+  }
+}
+
+.total-fin {
+  padding-top: 0.5rem;
+  border-top: 1px solid #e2e8f0;
+  margin-top: 0.15rem;
+}
+.tot-total {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #1e293b;
+}
+.tot-total-val {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #6366f1;
+}
+
+// Zona anular
+.anular-zone {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.9rem;
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.05);
+  border: 1.5px solid rgba(239, 68, 68, 0.18);
+}
+
+.anular-warn {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-start;
+  i {
+    font-size: 1rem;
+    color: #dc2626;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+  }
+  .warn-title {
+    font-size: 0.83rem;
+    font-weight: 700;
+    color: #dc2626;
+    margin: 0 0 0.15rem;
+  }
+  .warn-sub {
+    font-size: 0.75rem;
+    color: #b91c1c;
+    margin: 0;
+    line-height: 1.4;
+  }
+}

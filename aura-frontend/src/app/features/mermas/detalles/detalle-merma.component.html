@@ -1,0 +1,109 @@
+<p-dialog
+  header="Detalle de Merma"
+  [(visible)]="visible"
+  (onHide)="close()"
+  [modal]="true"
+  [style]="{ width: '780px' }"
+  [draggable]="false"
+>
+  <!-- Skeleton mientras carga -->
+  <div *ngIf="loading" class="skeleton-wrap">
+    <p-skeleton height="20px" styleClass="mb-2" />
+    <p-skeleton height="20px" width="60%" styleClass="mb-3" />
+    <p-skeleton height="120px" />
+  </div>
+
+  <!-- Contenido -->
+  <div *ngIf="!loading && merma" class="detalle-wrap">
+    <!-- Cabecera info -->
+    <div class="detalle-header">
+      <div class="detalle-info-grid">
+        <div class="info-item">
+          <span class="info-label">Motivo</span>
+          <span class="info-value fw-700">{{ merma.motivoNombre }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Sucursal</span>
+          <span class="info-value">{{ merma.sucursalNombre }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Usuario</span>
+          <span class="info-value">{{ merma.usuarioNombre }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Fecha</span>
+          <span class="info-value mono">{{
+            merma.fecha | date: "dd/MM/yyyy HH:mm"
+          }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Estado</span>
+          <p-tag
+            [value]="merma.estado"
+            [severity]="getSeverity(merma.estado)"
+          />
+        </div>
+        <div class="info-item" *ngIf="merma.observacion">
+          <span class="info-label">Observación</span>
+          <span class="info-value text-muted">{{ merma.observacion }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla detalles -->
+    <p-table
+      [value]="merma.detalles"
+      styleClass="p-datatable-sm p-datatable-gridlines"
+      class="mt-3"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Producto</th>
+          <th>SKU</th>
+          <th>Lote</th>
+          <th style="width: 100px; text-align: center">Cantidad</th>
+          <th style="width: 130px; text-align: right">Costo unit.</th>
+          <th style="width: 130px; text-align: right">Subtotal</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-d>
+        <tr>
+          <td class="fw-600">{{ d.productoNombre }}</td>
+          <td class="mono text-muted">{{ d.productoSku || "—" }}</td>
+          <td class="mono text-muted">{{ d.codigoLote || "—" }}</td>
+          <td class="mono text-center">{{ d.cantidad }}</td>
+          <td class="mono text-right">{{ formatCOP(d.costoUnitario) }}</td>
+          <td class="mono text-right fw-600 text-danger">
+            {{ formatCOP(d.subtotalCosto) }}
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <!-- Total -->
+    <div class="detalle-total">
+      <span>Costo total de merma</span>
+      <span class="total-val text-danger">{{
+        formatCOP(merma.costoTotal)
+      }}</span>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cerrar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="close()"
+    ></button>
+    <button
+      pButton
+      label="Anular merma"
+      icon="pi pi-ban"
+      class="p-button-danger"
+      *ngIf="merma && merma.estado === 'APROBADA'"
+      (click)="onAnular()"
+    ></button>
+  </ng-template>
+</p-dialog>

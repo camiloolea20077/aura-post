@@ -1,0 +1,350 @@
+<p-dialog
+  [(visible)]="displayModal"
+  header="Registrar compra"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [maximizable]="true"
+  [style]="{ width: '900px' }"
+  styleClass="aura-dialog compra-dialog"
+  (onHide)="closeModal()"
+>
+  <div class="compra-form">
+    <!-- ══ CABECERA ═════════════════════════════════════════ -->
+    <div class="seccion-cabecera">
+      <div class="seccion-title">
+        <i class="pi pi-file-edit"></i> Datos de la compra
+      </div>
+
+      <div class="cab-grid">
+        <!-- Proveedor autocomplete -->
+        <div class="field field-proveedor">
+          <label>Proveedor <span class="required">*</span></label>
+          <div class="proveedor-wrap" *ngIf="!proveedorSeleccionado">
+            <p-autoComplete
+              [(ngModel)]="proveedorQuery"
+              [suggestions]="proveedoresSugerencias"
+              field="nombreCompleto"
+              placeholder="Busca por nombre, NIT o razón social..."
+              (completeMethod)="buscarProveedores($event.query)"
+              (onSelect)="seleccionarProveedor($event)"
+              styleClass="w-full auto-proveedor"
+              [minLength]="1"
+              [delay]="300"
+            >
+              <ng-template let-t pTemplate="item">
+                <div class="sug-item">
+                  <span class="sug-nombre">{{ t.nombreCompleto }}</span>
+                  <span class="sug-doc"
+                    >{{ t.tipoDocumento }} {{ t.numeroDocumento }}</span
+                  >
+                </div>
+              </ng-template>
+            </p-autoComplete>
+          </div>
+          <!-- Proveedor seleccionado -->
+          <div class="proveedor-chip" *ngIf="proveedorSeleccionado">
+            <i class="pi pi-truck"></i>
+            <div class="chip-info">
+              <span class="chip-nombre">{{
+                proveedorSeleccionado.nombreCompleto
+              }}</span>
+              <span class="chip-doc"
+                >{{ proveedorSeleccionado.tipoDocumento }}
+                {{ proveedorSeleccionado.numeroDocumento }}</span
+              >
+            </div>
+            <button
+              type="button"
+              class="chip-clear"
+              (click)="limpiarProveedor()"
+              pTooltip="Cambiar proveedor"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Sucursal -->
+        <div class="field">
+          <label>Sucursal <span class="required">*</span></label>
+          <p-dropdown
+            [(ngModel)]="sucursalId"
+            [options]="sucursalesOpts"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Selecciona..."
+            styleClass="w-full"
+          />
+        </div>
+
+        <!-- Número de compra -->
+        <div class="field">
+          <label
+            >N° Factura / Remisión
+            <span class="optional">(opcional)</span></label
+          >
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="numeroCompra"
+            placeholder="Ej: FC-001-2025"
+            maxlength="50"
+            autocomplete="off"
+          />
+        </div>
+
+        <!-- Fecha -->
+        <div class="field">
+          <label>Fecha de compra</label>
+          <p-calendar
+            [(ngModel)]="fechaCompra"
+            [showTime]="true"
+            hourFormat="12"
+            dateFormat="dd/mm/yy"
+            styleClass="w-full"
+          />
+        </div>
+      </div>
+
+      <!-- Observaciones -->
+      <div class="field">
+        <label>Observaciones <span class="optional">(opcional)</span></label>
+        <textarea
+          pInputTextarea
+          [(ngModel)]="observaciones"
+          placeholder="Notas internas sobre esta compra..."
+          [rows]="2"
+          maxlength="500"
+          style="
+            font-family: &quot;Outfit&quot;, sans-serif;
+            font-size: 0.85rem;
+            border-radius: 10px;
+            width: 100%;
+            border: 1.5px solid #e0e3eb;
+          "
+        >
+        </textarea>
+      </div>
+    </div>
+
+    <!-- ══ LÍNEAS DE DETALLE ══════════════════════════════════ -->
+    <div class="seccion-detalle">
+      <div class="detalle-header">
+        <div class="seccion-title"><i class="pi pi-list"></i> Productos</div>
+        <button
+          pButton
+          type="button"
+          label="Agregar producto"
+          icon="pi pi-plus"
+          class="p-button-outlined p-button-sm btn-add-linea"
+          (click)="agregarLinea()"
+        ></button>
+      </div>
+
+      <!-- Lista de líneas -->
+      <div class="lineas-container" *ngIf="lineas.length > 0">
+        <!-- Encabezado de columnas -->
+        <div class="lineas-header">
+          <span class="col-producto">Producto</span>
+          <span class="col-lote">Lote / Venc.</span>
+          <span class="col-cant">Cantidad</span>
+          <span class="col-costo">Costo unit.</span>
+          <span class="col-imp">Impuesto</span>
+          <span class="col-subtotal">Subtotal</span>
+          <span class="col-acc"></span>
+        </div>
+
+        <div
+          class="linea-row"
+          *ngFor="let l of lineas; let i = index; trackBy: trackByLinea"
+        >
+          <!-- Producto dropdown -->
+          <div class="col-producto">
+            <p-dropdown
+              appendTo="body"
+              [ngModel]="l.productoId"
+              (ngModelChange)="onProductoChange(i, $event)"
+              [options]="productosOpts"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Selecciona producto..."
+              [filter]="true"
+              filterPlaceholder="Buscar..."
+              styleClass="w-full dropdown-prod"
+              [class.sin-seleccion]="!l.productoId"
+            />
+          </div>
+
+          <!-- Lote + fecha de vencimiento (solo si manejaLotes) -->
+          <div class="col-lote">
+            <ng-container *ngIf="l.manejaLotes">
+              <input
+                type="text"
+                pTextarea
+                [ngModel]="l.codigoLote"
+                (ngModelChange)="onCodigoLoteChange(i, $event)"
+                placeholder="Cód. lote *"
+                maxlength="80"
+                class="input-lote"
+                [class.input-required]="!l.codigoLote"
+                style="
+                  text-transform: uppercase;
+                  font-family: &quot;JetBrains Mono&quot;, monospace;
+                  font-size: 0.78rem;
+                "
+              />
+              <p-calendar
+                [(ngModel)]="l.fechaVencimiento"
+                dateFormat="dd/mm/yy"
+                placeholder="Venc."
+                [showButtonBar]="true"
+                styleClass="cal-venc"
+              />
+            </ng-container>
+            <span class="sin-lote" *ngIf="!l.manejaLotes">—</span>
+          </div>
+
+          <!-- Cantidad -->
+          <div class="col-cant">
+            <p-inputNumber
+              [ngModel]="l.cantidad"
+              (ngModelChange)="onCantidadChange(i, $event)"
+              [min]="0.0001"
+              [maxFractionDigits]="4"
+              styleClass="w-full input-num"
+              placeholder="0"
+            />
+          </div>
+
+          <!-- Costo unitario -->
+          <div class="col-costo">
+            <p-inputNumber
+              [ngModel]="l.costoUnitario"
+              (ngModelChange)="onCostoChange(i, $event)"
+              mode="currency"
+              currency="COP"
+              locale="es-CO"
+              [minFractionDigits]="0"
+              [min]="0.01"
+              styleClass="w-full input-num"
+            />
+          </div>
+
+          <!-- Impuesto -->
+          <div class="col-imp">
+            <p-inputNumber
+              [ngModel]="l.impuestoValor"
+              (ngModelChange)="onImpuestoChange(i, $event)"
+              mode="currency"
+              currency="COP"
+              locale="es-CO"
+              [minFractionDigits]="0"
+              [min]="0"
+              styleClass="w-full input-num"
+            />
+          </div>
+
+          <!-- Subtotal calculado -->
+          <div class="col-subtotal">
+            <span class="subtotal-val" [class.cero]="!l.subtotal">
+              {{ l.subtotal | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+            </span>
+          </div>
+
+          <!-- Acciones fila -->
+          <div class="col-acc">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-copy"
+              class="p-button-text p-button-sm p-button-secondary"
+              pTooltip="Duplicar línea"
+              tooltipPosition="top"
+              (click)="duplicarLinea(i)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-trash"
+              class="p-button-text p-button-sm p-button-danger"
+              pTooltip="Eliminar línea"
+              tooltipPosition="top"
+              (click)="eliminarLinea(i)"
+            ></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty lineas -->
+      <div class="lineas-empty" *ngIf="lineas.length === 0">
+        <i class="pi pi-inbox"></i>
+        <p>
+          Aún no has agregado productos. Haz click en "Agregar producto" para
+          comenzar.
+        </p>
+        <button
+          pButton
+          type="button"
+          label="Agregar primer producto"
+          icon="pi pi-plus"
+          class="p-button-outlined p-button-sm btn-add-linea"
+          (click)="agregarLinea()"
+        ></button>
+      </div>
+    </div>
+
+    <!-- ══ TOTALES ════════════════════════════════════════════ -->
+    <div class="totales-panel" *ngIf="lineas.length > 0">
+      <div class="totales-row">
+        <span class="totales-label">Subtotal</span>
+        <span class="totales-val">{{
+          subtotal | currency: "COP" : "symbol-narrow" : "1.0-0"
+        }}</span>
+      </div>
+      <div class="totales-row">
+        <span class="totales-label">Impuestos</span>
+        <span class="totales-val impuesto">{{
+          impuestosTotal | currency: "COP" : "symbol-narrow" : "1.0-0"
+        }}</span>
+      </div>
+      <div class="totales-divider"></div>
+      <div class="totales-row total-final">
+        <span class="totales-label">Total a pagar</span>
+        <span class="totales-val total">{{
+          total | currency: "COP" : "symbol-narrow" : "1.0-0"
+        }}</span>
+      </div>
+      <div class="items-count">
+        <i class="pi pi-box"></i>
+        {{ lineas.length }}
+        {{ lineas.length === 1 ? "producto" : "productos" }} —
+        {{ totalUnidades | number: "1.0-4" }} unidades en total
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button
+        pButton
+        type="button"
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-outlined p-button-secondary"
+        [disabled]="isSubmitting"
+        (click)="closeModal()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        label="Registrar compra"
+        [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+        class="btn-aura"
+        [disabled]="isSubmitting || lineas.length === 0"
+        (click)="saveCompra()"
+      ></button>
+    </div>
+  </ng-template>
+</p-dialog>
+<p-toast />

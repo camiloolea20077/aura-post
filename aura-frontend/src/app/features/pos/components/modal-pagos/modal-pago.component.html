@@ -1,0 +1,134 @@
+<p-dialog
+  [(visible)]="displayModal"
+  header="Cobrar venta"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '480px' }"
+  styleClass="aura-dialog"
+  (onHide)="closeModal()"
+>
+  <div class="pago-container">
+    <!-- Total a pagar -->
+    <div class="total-banner">
+      <span class="banner-label">Total a cobrar</span>
+      <span class="banner-total">{{ formatCOP(total) }}</span>
+    </div>
+
+    <!-- Líneas de pago -->
+    <div class="pagos-list">
+      <div class="pago-line" *ngFor="let pago of pagos; let i = index">
+        <!-- Selector método -->
+        <div class="metodo-grid">
+          <button
+            class="metodo-btn"
+            *ngFor="let m of metodos"
+            [class.active]="pago.metodoPago === m.value"
+            [style.--mcolor]="m.color"
+            (click)="setMetodo(pago, m.value)"
+          >
+            <i [class]="m.icon"></i>
+            <span>{{ m.label }}</span>
+          </button>
+        </div>
+
+        <!-- Monto + referencia -->
+        <div class="monto-row">
+          <div class="monto-field">
+            <label>Monto recibido</label>
+            <p-inputNumber
+              [(ngModel)]="pago.monto"
+              mode="currency"
+              currency="COP"
+              locale="es-CO"
+              [minFractionDigits]="0"
+              [min]="0"
+              placeholder="$ 0"
+              styleClass="w-full monto-inp"
+            />
+            <button
+              class="fill-btn"
+              (click)="distribuirRestante(pago)"
+              pTooltip="Rellenar con el restante"
+            >
+              <i class="pi pi-arrow-down"></i>
+            </button>
+          </div>
+          <div class="ref-field" *ngIf="pago.metodoPago !== 'EFECTIVO'">
+            <label>Referencia / aprobación</label>
+            <input
+              type="text"
+              pInputText
+              [(ngModel)]="pago.referencia"
+              placeholder="Opcional"
+              class="ref-inp"
+            />
+          </div>
+        </div>
+
+        <!-- Quitar pago -->
+        <button
+          class="remove-pago"
+          *ngIf="pagos.length > 1"
+          (click)="removePago(i)"
+        >
+          <i class="pi pi-times"></i> Quitar
+        </button>
+      </div>
+    </div>
+
+    <!-- Agregar método -->
+    <button class="add-metodo-btn" *ngIf="pagos.length < 4" (click)="addPago()">
+      <i class="pi pi-plus"></i> Agregar otro método de pago
+    </button>
+
+    <p-divider />
+
+    <!-- Resumen -->
+    <div class="resumen-pago">
+      <div class="res-row">
+        <span class="res-label">Total cobrado</span>
+        <span class="res-val">{{ formatCOP(totalPagado) }}</span>
+      </div>
+      <div class="res-row res-total">
+        <span class="res-label">Total venta</span>
+        <span class="res-val mono-val">{{ formatCOP(total) }}</span>
+      </div>
+
+      <!-- Faltante -->
+      <div class="res-row alert-row faltante" *ngIf="faltante > 0">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>Faltante: {{ formatCOP(faltante) }}</span>
+      </div>
+
+      <!-- Vuelto -->
+      <div class="res-row vuelto-row" *ngIf="vuelto > 0">
+        <span class="vuelto-label">Vuelto a entregar</span>
+        <span class="vuelto-val">{{ formatCOP(vuelto) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button
+        pButton
+        type="button"
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-outlined p-button-secondary"
+        (click)="closeModal()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        [label]="isSubmitting ? 'Procesando...' : 'Confirmar venta'"
+        [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+        class="btn-confirmar"
+        [disabled]="!cuadra || isSubmitting"
+        (click)="confirmar()"
+      ></button>
+    </div>
+  </ng-template>
+</p-dialog>
+<p-toast />

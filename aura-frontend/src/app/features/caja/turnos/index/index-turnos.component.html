@@ -1,0 +1,239 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="page-title-area">
+      <div class="page-icon"><i class="pi pi-clock"></i></div>
+      <div>
+        <h3 class="page-title">Turnos de caja</h3>
+        <p class="page-sub">
+          Historial de aperturas y cierres — cuadre de efectivo
+        </p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <!-- Turno activo visible -->
+      <div class="turno-activo-chip" *ngIf="turnoActivo">
+        <span class="chip-dot"></span>
+        <div class="chip-info">
+          <span class="chip-caja">{{ turnoActivo.cajaNombre }}</span>
+          <span class="chip-label">Turno activo</span>
+        </div>
+        <button
+          pButton
+          type="button"
+          label="Cerrar turno"
+          icon="pi pi-lock"
+          class="p-button-outlined p-button-sm btn-cerrar"
+          (click)="openCerrar()"
+        ></button>
+      </div>
+
+      <button
+        pButton
+        type="button"
+        label="Abrir turno"
+        icon="pi pi-unlock"
+        class="btn-aura"
+        [disabled]="!!turnoActivo"
+        pTooltip="{{
+          turnoActivo ? 'Ya tienes un turno activo' : 'Abrir nuevo turno'
+        }}"
+        (click)="openAbrir()"
+      ></button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="table-toolbar">
+      <div class="toolbar-left">
+        <span class="p-input-icon-left search-wrap">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            pInputText
+            class="search-input"
+            placeholder="Buscar por caja, cajero o estado..."
+            [(ngModel)]="searchQuery"
+            (input)="onSearch()"
+            (keydown.escape)="clearSearch()"
+          />
+          <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">
+            <i class="pi pi-times"></i>
+          </button>
+        </span>
+        <span class="total-badge" *ngIf="!loadingTable"
+          >{{ totalRecords }} turnos</span
+        >
+      </div>
+    </div>
+
+    <p-table
+      [value]="items"
+      [lazy]="true"
+      (onLazyLoad)="loadTable($event)"
+      [paginator]="true"
+      [rows]="rowSize"
+      [totalRecords]="totalRecords"
+      [loading]="loadingTable"
+      [rowsPerPageOptions]="[10, 15, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords}"
+      styleClass="aura-table"
+      [tableStyle]="{ 'min-width': '750px' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 70px">#</th>
+          <th style="min-width: 140px">Caja</th>
+          <th style="min-width: 120px">Cajero</th>
+          <th pSortableColumn="t.fecha_apertura" style="min-width: 130px">
+            Apertura <p-sortIcon field="t.fecha_apertura" />
+          </th>
+          <th style="min-width: 110px">Cierre</th>
+          <th style="width: 80px" class="text-center">Duración</th>
+          <th style="width: 120px" class="text-right">Base inicial</th>
+          <th style="width: 120px" class="text-right">Diferencia</th>
+          <th style="width: 90px" class="text-center">Estado</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item>
+        <tr [class.row-activo]="item.estado === 'ABIERTA'">
+          <td>
+            <span class="id-badge">#{{ item.id }}</span>
+          </td>
+
+          <!-- Caja -->
+          <td>
+            <div class="cell-caja">
+              <i class="pi pi-desktop caja-icon"></i>
+              <span class="caja-nombre">{{ item.cajaNombre }}</span>
+            </div>
+          </td>
+
+          <!-- Cajero -->
+          <td>
+            <div class="cell-cajero">
+              <div class="cajero-avatar">
+                {{ item.usuarioNombre.charAt(0).toUpperCase() }}
+              </div>
+              <span class="cajero-nombre">{{ item.usuarioNombre }}</span>
+            </div>
+          </td>
+
+          <!-- Apertura -->
+          <td>
+            <span class="fecha-val">{{ formatFecha(item.fechaApertura) }}</span>
+          </td>
+
+          <!-- Cierre -->
+          <td>
+            <span class="fecha-val" *ngIf="item.fechaCierre">{{
+              formatFecha(item.fechaCierre)
+            }}</span>
+            <span class="en-curso" *ngIf="!item.fechaCierre">
+              <span class="pulse-dot"></span> En curso
+            </span>
+          </td>
+
+          <!-- Duración -->
+          <td class="text-center">
+            <span class="duracion-chip">{{ duracion(item) }}</span>
+          </td>
+
+          <!-- Base inicial -->
+          <td class="text-right">
+            <span class="monto-val">{{ formatCOP(item.baseInicial) }}</span>
+          </td>
+
+          <!-- Diferencia -->
+          <td class="text-right">
+            <span
+              *ngIf="item.diferencia !== null && item.diferencia !== undefined"
+              class="diferencia-val"
+              [ngClass]="getDiferenciaClass(item.diferencia)"
+            >
+              {{ item.diferencia >= 0 ? "+" : ""
+              }}{{ formatCOP(item.diferencia) }}
+            </span>
+            <span
+              *ngIf="item.diferencia === null || item.diferencia === undefined"
+              class="sin-dato"
+              >—</span
+            >
+          </td>
+
+          <!-- Estado -->
+          <td class="text-center">
+            <p-tag
+              [value]="getEstadoLabel(item.estado)"
+              [severity]="getEstadoSeverity(item.estado)"
+              [rounded]="true"
+            />
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9">
+            <div class="empty-state">
+              <i class="pi pi-clock"></i>
+              <p>
+                {{
+                  searchQuery ? "Sin resultados" : "No hay turnos registrados"
+                }}
+              </p>
+              <button
+                *ngIf="!searchQuery"
+                pButton
+                label="Abrir primer turno"
+                icon="pi pi-unlock"
+                class="btn-aura btn-orange p-button-sm"
+                (click)="openAbrir()"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr *ngFor="let s of [1, 2, 3, 4, 5]">
+          <td><p-skeleton width="50px" /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton width="100px" /></td>
+          <td><p-skeleton width="90px" /></td>
+          <td class="text-center">
+            <p-skeleton width="60px" styleClass="mx-auto" />
+          </td>
+          <td class="text-right">
+            <p-skeleton width="90px" styleClass="ml-auto" />
+          </td>
+          <td class="text-right">
+            <p-skeleton width="80px" styleClass="ml-auto" />
+          </td>
+          <td class="text-center">
+            <p-skeleton width="70px" styleClass="mx-auto" />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<app-abrir-turno
+  [displayModal]="showAbrir"
+  (modalClosed)="onAbrirClosed()"
+  (turnoAbierto)="onTurnoAbierto($event)"
+>
+</app-abrir-turno>
+
+<app-cerrar-turno
+  [displayModal]="showCerrar"
+  [turno]="turnoActivo"
+  (modalClosed)="onCerrarClosed()"
+  (turnoCerrado)="onTurnoCerrado()"
+>
+</app-cerrar-turno>
+
+<p-toast />

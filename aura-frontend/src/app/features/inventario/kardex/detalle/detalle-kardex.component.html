@@ -1,0 +1,119 @@
+<p-dialog
+  header="Detalle de Movimiento"
+  [(visible)]="visible"
+  (onHide)="close()"
+  [modal]="true"
+  [style]="{ width: '620px' }"
+  [draggable]="false"
+>
+  <!-- Skeleton -->
+  <div *ngIf="loading" class="skeleton-wrap">
+    <p-skeleton height="20px" styleClass="mb-2" />
+    <p-skeleton height="20px" width="50%" styleClass="mb-2" />
+    <p-skeleton height="20px" styleClass="mb-2" />
+    <p-skeleton height="20px" width="70%" />
+  </div>
+
+  <div *ngIf="!loading && movimiento" class="detalle-wrap">
+    <!-- Tipo y referencia -->
+    <div class="mov-header">
+      <p-tag
+        [value]="getLabelTipo(movimiento.tipoMovimiento)"
+        [severity]="getSeverity(movimiento.tipoMovimiento)"
+        styleClass="tipo-tag"
+      />
+      <span class="referencia" *ngIf="movimiento.referenciaOrigen">
+        <i class="pi pi-link"></i> {{ movimiento.referenciaOrigen }}
+      </span>
+    </div>
+
+    <!-- Delta visual -->
+    <div
+      class="delta-card"
+      [class.entrada]="esEntrada"
+      [class.salida]="!esEntrada"
+    >
+      <div class="delta-label">
+        {{ esEntrada ? "Entrada de stock" : "Salida de stock" }}
+      </div>
+      <div class="delta-valor">
+        {{ esEntrada ? "+" : "" }}{{ deltaStock }}
+        <span class="delta-unidad">unidades</span>
+      </div>
+      <div class="delta-saldos">
+        <span>{{ movimiento.saldoAnterior }}</span>
+        <i class="pi pi-arrow-right"></i>
+        <span class="saldo-nuevo">{{ movimiento.saldoNuevo }}</span>
+      </div>
+    </div>
+
+    <!-- Grid de info -->
+    <div class="info-grid">
+      <div class="info-item">
+        <span class="info-label">Producto</span>
+        <span class="info-value fw-700">{{ movimiento.productoNombre }}</span>
+      </div>
+
+      <div class="info-item">
+        <span class="info-label">SKU</span>
+        <span class="info-value mono">{{ movimiento.productoSku || "—" }}</span>
+      </div>
+
+      <div class="info-item">
+        <span class="info-label">Sucursal</span>
+        <span class="info-value">{{ movimiento.sucursalNombre }}</span>
+      </div>
+
+      <div class="info-item">
+        <span class="info-label">Lote</span>
+        <span class="info-value mono">{{ movimiento.codigoLote || "—" }}</span>
+      </div>
+
+      <div class="info-item">
+        <span class="info-label">Cantidad movida</span>
+        <span class="info-value mono fw-700">{{ movimiento.cantidad }}</span>
+      </div>
+
+      <div class="info-item">
+        <span class="info-label">Costo histórico</span>
+        <span class="info-value mono">{{
+          formatCOP(movimiento.costoHistorico)
+        }}</span>
+      </div>
+
+      <div class="info-item">
+        <span class="info-label">Saldo anterior</span>
+        <span class="info-value mono">{{ movimiento.saldoAnterior }}</span>
+      </div>
+
+      <div class="info-item">
+        <span class="info-label">Saldo nuevo</span>
+        <span class="info-value mono fw-700">{{ movimiento.saldoNuevo }}</span>
+      </div>
+
+      <div class="info-item span-full">
+        <span class="info-label">Fecha y hora</span>
+        <span class="info-value mono">{{
+          movimiento.createdAt | date: "dd/MM/yyyy HH:mm:ss"
+        }}</span>
+      </div>
+    </div>
+
+    <!-- Nota inmutabilidad -->
+    <div class="inmutable-note">
+      <i class="pi pi-lock"></i>
+      Los movimientos de inventario son registros inmutables — no pueden
+      editarse ni eliminarse.
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cerrar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="close()"
+    ></button>
+  </ng-template>
+</p-dialog>

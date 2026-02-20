@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.cloud_technological.aura_pos.dto.productos.CreateProductoDto;
 import com.cloud_technological.aura_pos.dto.productos.ProductoDto;
 import com.cloud_technological.aura_pos.dto.productos.ProductoListDto;
+import com.cloud_technological.aura_pos.dto.productos.ProductoPosDto;
 import com.cloud_technological.aura_pos.dto.productos.ProductoTableDto;
 import com.cloud_technological.aura_pos.dto.productos.UpdateProductoDto;
 import com.cloud_technological.aura_pos.entity.CategoriaEntity;
@@ -160,5 +161,10 @@ public class ProductoServiceImpl implements ProductoService {
     @Override
     public List<ProductoListDto> list(Integer empresaId) {
         return productoRepository.list(empresaId);
+    }
+
+    @Override
+    public List<ProductoPosDto> listarPos(Integer empresaId, Long sucursalId) {
+        return productoRepository.listarPos(empresaId, sucursalId);
     }
 }

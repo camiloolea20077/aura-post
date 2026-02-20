@@ -1,0 +1,125 @@
+<div class="module-container">
+  <!-- Header -->
+  <div class="module-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="pi pi-arrow-right-arrow-left"></i>
+      </div>
+      <div>
+        <h2 class="header-title">Traslados</h2>
+        <p class="header-sub">Transferencia de inventario entre sucursales</p>
+      </div>
+    </div>
+    <button
+      pButton
+      label="Nuevo traslado"
+      icon="pi pi-plus"
+      class="btn-aura btn-primary"
+      (click)="nuevo()"
+    ></button>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="table-toolbar">
+    <span class="search-wrap">
+      <i class="pi pi-search"></i>
+      <input
+        type="text"
+        pInputText
+        placeholder="Buscar por sucursal o usuario..."
+        [(ngModel)]="search"
+        (input)="onSearch()"
+        class="search-input"
+      />
+    </span>
+  </div>
+
+  <!-- Tabla -->
+  <div class="table-card">
+    <p-table
+      [value]="rows"
+      [lazy]="true"
+      [loading]="loading"
+      [totalRecords]="totalRows"
+      [rows]="pageSize"
+      [paginator]="true"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      (onPage)="onPage($event)"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords}"
+      styleClass="p-datatable-sm p-datatable-gridlines"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 80px">#</th>
+          <th>Origen</th>
+          <th style="width: 40px; text-align: center"></th>
+          <th>Destino</th>
+          <th>Usuario</th>
+          <th style="width: 160px">Fecha</th>
+          <th style="width: 110px; text-align: center">Productos</th>
+          <th style="width: 120px">Estado</th>
+          <th style="width: 110px">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-t>
+        <tr class="clickable-row" (click)="verDetalle(t)">
+          <td class="mono text-muted">{{ t.id }}</td>
+          <td class="fw-600">{{ t.sucursalOrigenNombre }}</td>
+          <td class="text-center">
+            <i
+              class="pi pi-arrow-right"
+              style="color: #94a3b8; font-size: 0.8rem"
+            ></i>
+          </td>
+          <td class="fw-600 text-indigo">{{ t.sucursalDestinoNombre }}</td>
+          <td>{{ t.usuarioNombre }}</td>
+          <td class="mono text-muted">
+            {{ t.fecha | date: "dd/MM/yyyy HH:mm" }}
+          </td>
+          <td class="mono text-center fw-600">{{ t.totalProductos }}</td>
+          <td>
+            <p-tag [value]="t.estado" [severity]="getSeverity(t.estado)" />
+          </td>
+          <td (click)="$event.stopPropagation()">
+            <div class="actions">
+              <button
+                pButton
+                icon="pi pi-eye"
+                class="p-button-text p-button-sm"
+                pTooltip="Ver detalle"
+                (click)="verDetalle(t)"
+              ></button>
+              <button
+                pButton
+                icon="pi pi-ban"
+                class="p-button-text p-button-danger p-button-sm"
+                pTooltip="Anular"
+                [disabled]="t.estado === 'ANULADO'"
+                (click)="confirmAnular(t)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9" class="empty-row">No hay traslados registrados</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- Dialogs -->
+<app-form-traslado [(visible)]="showForm" (saved)="onSaved()" />
+
+<app-detalle-traslado
+  [(visible)]="showDetalle"
+  [traslado]="trasladoDetalle"
+  [loading]="loadingDetalle"
+  (anular)="confirmAnular($event)"
+/>
+
+<p-confirmDialog />
+<p-toast />

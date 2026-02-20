@@ -1,0 +1,124 @@
+$indigo: #6366f1;
+$red: #ef4444;
+$border: #e2e8f0;
+$text: #1e293b;
+$muted: #94a3b8;
+$bg: #f8fafc;
+$mono: "JetBrains Mono", monospace;
+
+.module-container {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.module-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(99, 102, 241, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    i {
+      font-size: 1.1rem;
+      color: $indigo;
+    }
+  }
+
+  .header-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: $text;
+    margin: 0;
+  }
+
+  .header-sub {
+    font-size: 0.78rem;
+    color: $muted;
+    margin: 0;
+  }
+}
+
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  .search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    .pi-search {
+      position: absolute;
+      left: 0.75rem;
+      color: $muted;
+      font-size: 0.82rem;
+      pointer-events: none;
+    }
+
+    .search-input {
+      height: 38px;
+      padding-left: 2.2rem;
+      border-radius: 10px;
+      border: 1.5px solid $border;
+      font-size: 0.85rem;
+      width: 280px;
+      transition: all 0.15s;
+
+      &:focus {
+        border-color: $indigo;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        outline: none;
+      }
+    }
+  }
+}
+
+.table-card {
+  background: #fff;
+  border: 1.5px solid $border;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.text-muted {
+  color: $muted;
+}
+.mono {
+  font-family: $mono;
+}
+.fw-600 {
+  font-weight: 600;
+}
+
+.empty-row {
+  text-align: center;
+  color: $muted;
+  font-size: 0.85rem;
+  padding: 2rem !important;
+}
+
+::ng-deep .btn-primary.p-button {
+  background: linear-gradient(135deg, $indigo, #818cf8) !important;
+  border: none !important;
+  font-weight: 600 !important;
+}

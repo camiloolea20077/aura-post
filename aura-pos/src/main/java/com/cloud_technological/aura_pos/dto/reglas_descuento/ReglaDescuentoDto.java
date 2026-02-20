@@ -11,6 +11,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ReglaDescuentoDto {
+    private Integer id;
     private Integer empresaId;
     private String nombre;
     private LocalDateTime fechaInicio;

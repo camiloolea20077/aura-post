@@ -1,0 +1,274 @@
+$indigo: #6366f1;
+$red: #ef4444;
+$orange: #f97316;
+$emerald: #10b981;
+$border: #e2e8f0;
+$text: #1e293b;
+$muted: #94a3b8;
+$bg: #f8fafc;
+$mono: "JetBrains Mono", monospace;
+
+// ── Cuerpo del dialog ─────────────────────────────────────────
+.dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 0.25rem 0;
+  overflow-y: auto;
+  max-height: 65vh;
+}
+
+.dialog-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+// ── Cabecera ──────────────────────────────────────────────────
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  .field-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: $text;
+  }
+  .required {
+    color: $red;
+  }
+  .field-error {
+    color: $red;
+    font-size: 0.72rem;
+  }
+}
+
+// ── Header de sección ─────────────────────────────────────────
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .section-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: $text;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    i {
+      color: $indigo;
+      font-size: 0.85rem;
+    }
+  }
+}
+
+.btn-add {
+  border-color: $indigo !important;
+  color: $indigo !important;
+  &:hover {
+    background: rgba(99, 102, 241, 0.05) !important;
+  }
+}
+
+// ── Empty ─────────────────────────────────────────────────────
+.lines-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem 1rem;
+  color: $muted;
+  border: 1.5px dashed $border;
+  border-radius: 12px;
+  i {
+    font-size: 1.8rem;
+  }
+  p {
+    font-size: 0.82rem;
+    margin: 0;
+  }
+}
+
+// ── Tabla líneas ──────────────────────────────────────────────
+.lines-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+// Columnas
+.col-producto {
+  flex: 2;
+}
+.col-lote {
+  flex: 1.2;
+}
+.col-stock {
+  width: 72px;
+  flex-shrink: 0;
+  text-align: center;
+}
+.col-cantidad {
+  width: 100px;
+  flex-shrink: 0;
+}
+.col-costo {
+  width: 130px;
+  flex-shrink: 0;
+}
+.col-subtotal {
+  width: 110px;
+  flex-shrink: 0;
+  text-align: right;
+}
+.col-accion {
+  width: 38px;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.lines-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.75rem;
+  background: $bg;
+  border: 1.5px solid $border;
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: $muted;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.line-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.75rem;
+  border: 1.5px solid $border;
+  border-top: none;
+  background: #fff;
+  transition: background 0.1s;
+
+  &:last-child {
+    border-radius: 0 0 10px 10px;
+  }
+  &:hover {
+    background: #fafbff;
+  }
+
+  ::ng-deep .line-input {
+    height: 32px !important;
+    font-size: 0.82rem;
+    font-family: $mono;
+    padding: 0 0.5rem;
+  }
+  ::ng-deep .line-ac-input {
+    height: 32px !important;
+    font-size: 0.82rem;
+  }
+  ::ng-deep .text-center input {
+    text-align: center;
+  }
+  ::ng-deep .text-right input {
+    text-align: right;
+  }
+}
+
+// ── Stock pill ────────────────────────────────────────────────
+.stock-pill {
+  display: inline-block;
+  padding: 0.12rem 0.5rem;
+  border-radius: 20px;
+  font-family: $mono;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: rgba(16, 185, 129, 0.1);
+  color: $emerald;
+
+  &.danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: $red;
+  }
+}
+
+.no-aplica {
+  color: $muted;
+  font-size: 0.8rem;
+}
+
+.subtotal-val {
+  font-family: $mono;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: $red;
+}
+
+// ── Alerta stock ──────────────────────────────────────────────
+.stock-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.85rem;
+  background: rgba(249, 115, 22, 0.08);
+  border: 1px solid rgba(249, 115, 22, 0.25);
+  border-radius: 10px;
+  font-size: 0.78rem;
+  color: $orange;
+  i {
+    font-size: 0.85rem;
+  }
+}
+
+// ── Footer ────────────────────────────────────────────────────
+.dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+
+  .total-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    .total-label {
+      font-size: 0.82rem;
+      color: #64748b;
+      font-weight: 500;
+    }
+    .total-val {
+      font-family: $mono;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: $red;
+    }
+  }
+
+  .footer-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+.w-full {
+  width: 100%;
+}
+
+::ng-deep .btn-primary.p-button {
+  background: linear-gradient(135deg, $indigo, #818cf8) !important;
+  border: none !important;
+  font-weight: 600 !important;
+}

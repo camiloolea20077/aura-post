@@ -71,11 +71,11 @@ export interface PageableDto {
 }
 
 // ─── Enum tipo producto ───────────────────────────────────────
-export type TipoProducto = 'ESTANDAR' | 'KIT' | 'RECETA' | 'SERVICIO';
+export type TipoProducto = 'ESTANDAR' | 'KIT' | 'PESABLE' | 'SERVICIO';
 
 export const TIPO_PRODUCTO_OPTIONS: { label: string; value: TipoProducto }[] = [
   { label: 'Estándar', value: 'ESTANDAR' },
   { label: 'Kit', value: 'KIT' },
-  { label: 'Receta', value: 'RECETA' },
+  { label: 'Pesable', value: 'PESABLE' },
   { label: 'Servicio', value: 'SERVICIO' },
 ];

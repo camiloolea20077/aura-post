@@ -1,0 +1,294 @@
+::ng-deep .compra-sidebar .p-sidebar-header {
+  padding: 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+::ng-deep .compra-sidebar .p-sidebar-content {
+  padding: 0;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  width: 100%;
+}
+
+.compra-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #10b981, #34d399);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  i {
+    color: white;
+    font-size: 1rem;
+  }
+  &.loading {
+    background: #e2e8f0;
+    i {
+      color: #94a3b8;
+    }
+  }
+}
+
+.header-info {
+  flex: 1;
+  min-width: 0;
+}
+.compra-num {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.15rem;
+}
+.compra-sub {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+::ng-deep .estado-tag {
+  font-size: 0.65rem !important;
+  flex-shrink: 0;
+}
+
+.sidebar-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem;
+  color: #64748b;
+  i {
+    font-size: 1.25rem;
+    color: #10b981;
+  }
+}
+
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding-bottom: 1.5rem;
+}
+
+// ─── Info general ─────────────────────────────────────────────
+.info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 1rem 1.25rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.info-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.info-val {
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  &.proveedor i {
+    color: #10b981;
+    font-size: 0.8rem;
+  }
+  &.obs {
+    font-size: 0.8rem;
+    color: #64748b;
+    font-style: italic;
+    line-height: 1.4;
+  }
+}
+
+.section-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+// ─── Líneas ───────────────────────────────────────────────────
+.detalle-list {
+  display: flex;
+  flex-direction: column;
+  padding: 0 1.25rem;
+  gap: 0;
+}
+
+.detalle-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f1f5f9;
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.det-num {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: 6px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #10b981;
+  margin-top: 0.1rem;
+}
+
+.det-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.det-nombre {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #1e293b;
+  line-height: 1.3;
+}
+.det-meta {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.det-sku {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.68rem;
+  color: #94a3b8;
+}
+.det-lote {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+  padding: 0.1rem 0.35rem;
+  border-radius: 5px;
+  i {
+    font-size: 0.6rem;
+  }
+}
+
+.det-nums {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+}
+.det-cant {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #374151;
+}
+.det-costo {
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.det-subtotal {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1e293b;
+  min-width: 100px;
+  text-align: right;
+}
+
+// ─── Totales ──────────────────────────────────────────────────
+.totales-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.85rem 1.25rem;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.83rem;
+  color: #64748b;
+  span:last-child {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 600;
+    color: #374151;
+  }
+  .imp {
+    color: #d97706;
+  }
+  &.final {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-top: 0.25rem;
+    padding-top: 0.6rem;
+    border-top: 2px solid #e2e8f0;
+    .total-val {
+      font-size: 1.1rem;
+      color: #10b981;
+    }
+  }
+}
+
+// ─── Anular ───────────────────────────────────────────────────
+.anular-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0.75rem 1.25rem 0;
+  padding: 0.85rem 1rem;
+  border-radius: 11px;
+  background: #fff1f2;
+  border: 1px solid #fecaca;
+}
+
+.anular-warn {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  color: #dc2626;
+  line-height: 1.45;
+  i {
+    font-size: 0.85rem;
+    margin-top: 0.05rem;
+    flex-shrink: 0;
+  }
+}
+
+::ng-deep .btn-anular.p-button {
+  width: 100%;
+  justify-content: center;
+  border-radius: 9px !important;
+  font-size: 0.83rem !important;
+}

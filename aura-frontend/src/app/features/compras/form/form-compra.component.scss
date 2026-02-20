@@ -1,0 +1,522 @@
+.compra-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.seccion-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  i {
+    font-size: 0.8rem;
+  }
+}
+
+// ─── Cabecera ─────────────────────────────────────────────────
+.seccion-cabecera {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1rem;
+  background: #fafbfe;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+.cab-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  // ¡Crucial! evita que el campo desborde el grid
+  min-width: 0;
+
+  label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    .required {
+      color: #ef4444;
+    }
+    .optional {
+      font-size: 0.7rem;
+      font-weight: 400;
+      color: #9ca3af;
+    }
+  }
+  input.p-inputtext {
+    height: 40px;
+    border-radius: 9px;
+    border: 1.5px solid #e0e3eb;
+    padding: 0 0.85rem;
+    font-family: "Outfit", sans-serif;
+    font-size: 0.84rem;
+    width: 100%;
+    box-sizing: border-box;
+    transition: all 0.2s;
+    &::placeholder {
+      color: #9ca3af;
+    }
+    &:focus {
+      border-color: #10b981;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+      outline: none;
+    }
+  }
+  &.field-proveedor {
+    grid-column: span 2;
+  }
+}
+
+// Autocomplete proveedor
+::ng-deep .auto-proveedor {
+  width: 100%;
+  .p-autocomplete-input {
+    border-radius: 9px;
+    border: 1.5px solid #e0e3eb;
+    height: 40px;
+    width: 100%;
+    font-family: "Outfit", sans-serif;
+    font-size: 0.84rem;
+    box-sizing: border-box;
+    &:focus {
+      border-color: #10b981 !important;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+    }
+  }
+  .p-autocomplete-panel .p-autocomplete-item {
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+.sug-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.sug-nombre {
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+.sug-doc {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.proveedor-wrap {
+  width: 100%;
+}
+
+.proveedor-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 9px;
+  background: rgba(16, 185, 129, 0.06);
+  border: 1.5px solid rgba(16, 185, 129, 0.25);
+  i.pi-truck {
+    font-size: 1rem;
+    color: #10b981;
+    flex-shrink: 0;
+  }
+  .chip-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+  .chip-nombre {
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .chip-doc {
+    font-size: 0.68rem;
+    color: #94a3b8;
+    font-family: "JetBrains Mono", monospace;
+  }
+}
+
+.chip-clear {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.2rem;
+  color: #94a3b8;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  &:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+  }
+  i {
+    font-size: 0.75rem;
+  }
+}
+
+// ─── Detalle ──────────────────────────────────────────────────
+.seccion-detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.detalle-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+::ng-deep .btn-add-linea.p-button {
+  border-color: #10b981 !important;
+  color: #10b981 !important;
+  border-radius: 9px !important;
+  font-size: 0.8rem !important;
+  &:hover {
+    background: rgba(16, 185, 129, 0.08) !important;
+  }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TABLA: definición de columnas en UN SOLO LUGAR para garantizar
+// que header y filas siempre estén sincronizados.
+// Producto | Lote/Venc | Cant  | Costo | Imp  | Subtotal | Acc
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+$cols: 2.2fr 1.6fr 0.85fr 1.15fr 0.95fr 0.95fr 72px;
+
+.lineas-container {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.lineas-header {
+  display: grid;
+  grid-template-columns: $cols;
+  gap: 0.5rem;
+  padding: 0.6rem 0.85rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+
+  span {
+    display: flex;
+    align-items: center;
+    // ¡Crucial! cada celda del header no debe desbordarse
+    min-width: 0;
+    overflow: hidden;
+  }
+  .col-cant,
+  .col-costo,
+  .col-imp,
+  .col-subtotal {
+    justify-content: flex-end;
+  }
+}
+
+.linea-row {
+  display: grid;
+  grid-template-columns: $cols;
+  gap: 0.5rem;
+  padding: 0.5rem 0.85rem;
+  align-items: center;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.12s;
+
+  &:last-child {
+    border-bottom: none;
+  }
+  &:hover {
+    background: rgba(16, 185, 129, 0.025);
+  }
+
+  // ¡CLAVE! todas las celdas hijas respetan su columna
+  > * {
+    min-width: 0;
+  }
+}
+
+// ── Celdas individuales ───────────────────────────────────────
+.col-producto {
+  // el dropdown debe llenar la celda, no empujarla
+  overflow: hidden;
+}
+
+.col-lote {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  overflow: hidden;
+}
+
+.col-cant,
+.col-costo,
+.col-imp {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.col-subtotal {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.col-acc {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+// ── PrimeNG overrides: forzar width 100% dentro de la celda ──
+::ng-deep {
+  // Dropdown de producto
+  .col-producto .p-dropdown {
+    width: 100% !important;
+    height: 36px;
+    border-radius: 9px !important;
+    border-width: 1.5px !important;
+
+    .p-dropdown-label {
+      font-size: 0.82rem;
+      font-family: "Outfit", sans-serif;
+      padding: 0 0.7rem;
+      line-height: 34px;
+    }
+
+    .p-dropdown-trigger {
+      width: 2rem;
+    }
+
+    &.sin-seleccion .p-dropdown-label {
+      color: #9ca3af;
+    }
+  }
+
+  // InputNumber (cantidad, costo, impuesto)
+  .col-cant,
+  .col-costo,
+  .col-imp {
+    .p-inputnumber {
+      width: 100%;
+    }
+    .p-inputnumber-input {
+      width: 100% !important;
+      border-radius: 9px !important;
+      border-width: 1.5px !important;
+      height: 36px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.82rem;
+      text-align: right;
+      box-sizing: border-box;
+    }
+  }
+
+  // Calendar de vencimiento en lote
+  .col-lote .p-calendar {
+    width: 100%;
+    .p-inputtext {
+      width: 100%;
+      border-radius: 9px !important;
+      border-width: 1.5px !important;
+      height: 32px;
+      font-size: 0.78rem;
+      box-sizing: border-box;
+    }
+  }
+}
+
+.input-lote {
+  height: 34px;
+  border-radius: 9px;
+  border: 1.5px solid #e0e3eb;
+  padding: 0 0.7rem;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: "Outfit", sans-serif;
+  font-size: 0.78rem;
+
+  &.input-required {
+    border-color: rgba(239, 68, 68, 0.4);
+    background: rgba(239, 68, 68, 0.03);
+  }
+  &::placeholder {
+    color: #9ca3af;
+    font-family: "Outfit", sans-serif;
+  }
+}
+
+.sin-lote {
+  color: #cbd5e1;
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.subtotal-val {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1e293b;
+  white-space: nowrap;
+  &.cero {
+    color: #cbd5e1;
+  }
+}
+
+// Botones de acción por fila (duplicar / eliminar)
+::ng-deep .col-acc .p-button.p-button-sm {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 8px !important;
+  padding: 0 !important;
+  flex-shrink: 0;
+  i {
+    font-size: 0.75rem;
+  }
+}
+
+.lineas-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2.5rem 1rem;
+  border: 2px dashed #e2e8f0;
+  border-radius: 12px;
+  i {
+    font-size: 2rem;
+    color: #cbd5e1;
+  }
+  p {
+    font-size: 0.82rem;
+    color: #94a3b8;
+    margin: 0;
+    text-align: center;
+    max-width: 360px;
+  }
+}
+
+// ─── Totales ──────────────────────────────────────────────────
+.totales-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  align-self: flex-end;
+  min-width: 300px;
+}
+
+.totales-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  .totales-label {
+    font-size: 0.82rem;
+    color: #64748b;
+    font-weight: 500;
+  }
+  .totales-val {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #1e293b;
+    &.impuesto {
+      color: #d97706;
+    }
+    &.total {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #10b981;
+    }
+  }
+  &.total-final .totales-label {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #1e293b;
+  }
+}
+
+.totales-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 0.25rem 0;
+}
+
+.items-count {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
+  i {
+    font-size: 0.68rem;
+  }
+}
+
+// ─── Footer del diálogo ───────────────────────────────────────
+.dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+::ng-deep .btn-aura.p-button {
+  background: linear-gradient(135deg, #10b981, #34d399) !important;
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3) !important;
+  border-radius: 9px !important;
+  &:hover {
+    opacity: 0.92;
+  }
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
+::ng-deep .compra-dialog {
+  .p-dialog-header {
+    padding: 1.1rem 1.5rem;
+  }
+  .p-dialog-content {
+    padding: 1.25rem 1.5rem;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+}

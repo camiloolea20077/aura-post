@@ -7,6 +7,7 @@ import org.springframework.data.domain.PageImpl;
 import com.cloud_technological.aura_pos.dto.productos.CreateProductoDto;
 import com.cloud_technological.aura_pos.dto.productos.ProductoDto;
 import com.cloud_technological.aura_pos.dto.productos.ProductoListDto;
+import com.cloud_technological.aura_pos.dto.productos.ProductoPosDto;
 import com.cloud_technological.aura_pos.dto.productos.ProductoTableDto;
 import com.cloud_technological.aura_pos.dto.productos.UpdateProductoDto;
 import com.cloud_technological.aura_pos.utils.PageableDto;
@@ -18,4 +19,5 @@ public interface ProductoService {
     ProductoDto actualizar(Long id, UpdateProductoDto dto, Integer empresaId);
     void eliminar(Long id, Integer empresaId);
     List<ProductoListDto> list(Integer empresaId);
+    List<ProductoPosDto> listarPos(Integer empresaId, Long sucursalId);
 }

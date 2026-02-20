@@ -1,0 +1,383 @@
+<!-- GUARD: cargando turno -->
+<div class="guard-container" *ngIf="loadingTurno">
+  <i class="pi pi-spin pi-spinner"></i>
+  <p>Verificando turno activo...</p>
+</div>
+
+<!-- GUARD: sin turno -->
+<div class="guard-container guard-error" *ngIf="!loadingTurno && turnoError">
+  <div class="guard-icon"><i class="pi pi-lock"></i></div>
+  <h3>Sin turno abierto</h3>
+  <p>Debes abrir un turno de caja antes de registrar ventas.</p>
+  <button
+    pButton
+    label="Ir a turnos"
+    icon="pi pi-arrow-right"
+    class="btn-aura btn-indigo"
+    (click)="goTurnos()"
+  ></button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     POS PRINCIPAL
+════════════════════════════════════════════════════════════════ -->
+<div class="pos-layout" *ngIf="!loadingTurno && !turnoError">
+  <!-- ══ PANEL IZQUIERDO — Catálogo ════════════════════════════ -->
+  <div class="catalog-panel">
+    <!-- Header: turno + búsqueda -->
+    <div class="catalog-header">
+      <div class="catalog-turno">
+        <span class="turno-dot"></span>
+        <span class="turno-label">{{ turnoActivo?.cajaNombre }}</span>
+      </div>
+      <span class="search-wrap">
+        <i class="pi pi-search"></i>
+        <input
+          type="text"
+          class="product-search"
+          placeholder="Buscar producto o SKU..."
+          [(ngModel)]="searchProducto"
+          (input)="onSearch()"
+        />
+        <button
+          *ngIf="searchProducto"
+          class="clear-search"
+          (click)="searchProducto = ''; filtrar()"
+        >
+          <i class="pi pi-times"></i>
+        </button>
+      </span>
+    </div>
+
+    <!-- Filtro categorías -->
+    <div class="cat-bar" *ngIf="categorias.length > 0">
+      <button
+        class="cat-chip"
+        [class.active]="categoriaActiva === null"
+        (click)="setCategoria(null)"
+      >
+        Todos
+      </button>
+      <button
+        class="cat-chip"
+        *ngFor="let c of categorias"
+        [class.active]="categoriaActiva === c.id"
+        (click)="setCategoria(c.id)"
+      >
+        {{ c.nombre }}
+      </button>
+    </div>
+
+    <!-- Skeletons mientras carga -->
+    <div class="product-grid" *ngIf="loadingProductos">
+      <div
+        class="product-card skeleton-card"
+        *ngFor="let s of [1, 2, 3, 4, 5, 6, 7, 8]"
+      >
+        <p-skeleton height="80px" borderRadius="12px" />
+      </div>
+    </div>
+
+    <!-- Grid productos -->
+    <div class="product-grid" *ngIf="!loadingProductos">
+      <div
+        class="product-card"
+        *ngFor="let p of productosFiltrados; trackBy: trackByProd"
+        [class.sin-stock]="p.stockActual <= 0"
+        [class.low-stock]="p.stockActual > 0 && p.stockActual < 5"
+        (click)="addToCart(p)"
+      >
+        <!-- Badges -->
+        <span
+          class="stock-badge low"
+          *ngIf="p.stockActual > 0 && p.stockActual < 5"
+          >¡Últimas!</span
+        >
+        <span class="stock-badge empty" *ngIf="p.stockActual <= 0"
+          >Agotado</span
+        >
+        <span class="promo-badge" *ngIf="p.descuentoNombre">
+          <i class="pi pi-tag"></i> {{ p.descuentoNombre }}
+        </span>
+
+        <!-- Avatar / imagen -->
+        <div class="prod-avatar">
+          <img
+            *ngIf="p.imagenUrl"
+            [src]="p.imagenUrl"
+            [alt]="p.nombre"
+            class="prod-avatar-img"
+            (error)="p.imagenUrl = null"
+          />
+          <span *ngIf="!p.imagenUrl" class="prod-avatar-letter">
+            {{ p.nombre.charAt(0).toUpperCase() }}
+          </span>
+          <div class="prod-overlay"><i class="pi pi-plus"></i></div>
+        </div>
+
+        <!-- Nombre + SKU -->
+        <div class="prod-body">
+          <span class="prod-nombre">{{ p.nombre }}</span>
+          <span class="prod-sku" *ngIf="p.sku">{{ p.sku }}</span>
+          <!-- Unidad de medida para pesables -->
+          <span class="prod-unidad" *ngIf="p.tipoProducto === 'PESABLE'">
+            {{ p.unidadMedidaNombre | lowercase }}
+          </span>
+        </div>
+
+        <!-- Footer: precio + stock -->
+        <div class="prod-footer">
+          <div class="precio-wrap">
+            <!-- Precio original tachado si hay descuento automático -->
+            <span class="precio-original" *ngIf="p.descuentoValor">
+              {{ formatCOP(p.precio) }}
+            </span>
+            <!-- Precio final (con IVA incluido para mostrar) -->
+            <span class="prod-precio">
+              {{
+                formatCOP(
+                  (p.precioFinal ?? p.precio) *
+                    (1 + (p.ivaPorcentaje ?? 0) / 100)
+                )
+              }}
+            </span>
+          </div>
+          <span
+            class="prod-stock-pill"
+            [class.ok]="p.stockActual >= 5"
+            [class.low]="p.stockActual > 0 && p.stockActual < 5"
+            [class.empty]="p.stockActual <= 0"
+          >
+            {{ p.stockActual <= 0 ? "0" : p.stockActual }}
+            <span class="stock-unit">{{
+              p.tipoProducto === "PESABLE"
+                ? (p.unidadMedidaNombre | lowercase)
+                : "uds"
+            }}</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div class="catalog-empty" *ngIf="productosFiltrados.length === 0">
+        <div class="empty-icon"><i class="pi pi-box"></i></div>
+        <p class="empty-title">
+          {{ searchProducto ? "Sin resultados" : "No hay productos" }}
+        </p>
+        <p class="empty-sub" *ngIf="searchProducto">
+          Intenta con otro nombre o SKU
+        </p>
+      </div>
+    </div>
+  </div>
+  <!-- /catalog-panel -->
+
+  <!-- ══ PANEL DERECHO — Carrito ═══════════════════════════════ -->
+  <div class="cart-panel">
+    <!-- Header carrito -->
+    <div class="cart-header">
+      <div class="cart-title">
+        <i class="pi pi-shopping-cart"></i>
+        <span>Venta</span>
+        <span class="cart-count" *ngIf="cart.length">{{ cart.length }}</span>
+      </div>
+      <button
+        pButton
+        icon="pi pi-trash"
+        class="p-button-text p-button-danger p-button-sm clear-btn"
+        pTooltip="Vaciar carrito"
+        *ngIf="cart.length"
+        (click)="clearCart()"
+      ></button>
+    </div>
+
+    <!-- Búsqueda de cliente -->
+    <div class="cliente-area">
+      <!-- Cliente ya seleccionado -->
+      <div class="cliente-chip" *ngIf="clienteNombre">
+        <i class="pi pi-user"></i>
+        <span class="cliente-nombre">{{ clienteNombre }}</span>
+        <button class="chip-clear" (click)="clearCliente()">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+      <!-- Input buscar cliente -->
+      <div class="cliente-search" *ngIf="!clienteNombre">
+        <input
+          type="text"
+          placeholder="Consumidor final — buscar cliente..."
+          class="cliente-input"
+          #clienteInput
+          (input)="buscarCliente(clienteInput.value)"
+        />
+        <div class="cliente-sugerencias" *ngIf="clienteSugerencias.length">
+          <div
+            class="sug-item"
+            *ngFor="let c of clienteSugerencias"
+            (click)="selectCliente(c)"
+          >
+            <i class="pi pi-user sug-icon"></i>
+            <div>
+              <span class="sug-nombre">{{ c.nombreCompleto }}</span>
+              <span class="sug-doc"
+                >{{ c.tipoDocumento }} {{ c.numeroDocumento }}</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Líneas del carrito ─────────────────────────────── -->
+    <div class="cart-lines" *ngIf="cart.length > 0">
+      <div class="cart-line" *ngFor="let item of cart; trackBy: trackById">
+        <!-- Fila 1: nombre + eliminar -->
+        <div class="line-top">
+          <div class="line-nombre-wrap">
+            <span class="line-nombre">{{ item.productoNombre }}</span>
+            <!-- Badge descuento automático -->
+            <span class="line-auto-badge" *ngIf="item.descuentoAutomatico">
+              <i class="pi pi-tag"></i> {{ item.descuentoAutomatico }}
+            </span>
+          </div>
+          <button class="line-remove" (click)="removeItem(item._id)">
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+
+        <!-- Fila 2: cantidad + precio c/u + subtotal -->
+        <div class="line-body">
+          <!-- ESTÁNDAR: botones +/- -->
+          <div class="qty-control" *ngIf="!item.esPesable">
+            <button
+              class="qty-btn"
+              (click)="updateCantidad(item, item.cantidad - 1)"
+            >
+              <i class="pi pi-minus"></i>
+            </button>
+            <span class="qty-value">{{ item.cantidad }}</span>
+            <button
+              class="qty-btn"
+              (click)="updateCantidad(item, item.cantidad + 1)"
+            >
+              <i class="pi pi-plus"></i>
+            </button>
+          </div>
+
+          <!-- PESABLE: input libre con decimales -->
+          <div class="qty-pesable" *ngIf="item.esPesable">
+            <input
+              type="number"
+              step="0.001"
+              min="0.001"
+              [ngModel]="item.cantidad"
+              (ngModelChange)="updateCantidad(item, $event)"
+              class="qty-input-pesable"
+            />
+            <span class="unidad-label">{{
+              item.unidadMedida | lowercase
+            }}</span>
+          </div>
+
+          <!-- Precio c/u (con IVA) -->
+          <div class="line-precio-wrap">
+            <span class="line-precio-label">c/u</span>
+            <span class="line-precio">
+              {{ formatCOP(item.precio * (1 + item.impuesto / 100)) }}
+            </span>
+          </div>
+
+          <!-- Subtotal de línea (ya incluye IVA) -->
+          <div class="line-subtotal-wrap">
+            <span class="line-subtotal">{{ formatCOP(item.subtotal) }}</span>
+          </div>
+        </div>
+
+        <!-- Fila 3: descuento activo -->
+        <div
+          class="line-desc-row"
+          *ngIf="item.showDescuento || item.descuento > 0"
+        >
+          <span class="desc-badge"><i class="pi pi-tag"></i> Desc. manual</span>
+          <p-inputNumber
+            [ngModel]="item.descuento"
+            (ngModelChange)="updateDescuento(item, $event)"
+            [min]="0"
+            [max]="item.precio * item.cantidad"
+            inputStyleClass="desc-input"
+            mode="currency"
+            currency="COP"
+            locale="es-CO"
+            [minFractionDigits]="0"
+            styleClass="desc-spinner"
+          />
+          <button
+            class="desc-close"
+            (click)="item.showDescuento = false; updateDescuento(item, 0)"
+          >
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+
+        <!-- Botón agregar descuento manual -->
+        <button
+          class="add-desc-btn"
+          *ngIf="!item.showDescuento && item.descuento === 0"
+          (click)="item.showDescuento = true"
+        >
+          <i class="pi pi-tag"></i> Agregar descuento
+        </button>
+      </div>
+    </div>
+    <!-- /cart-lines -->
+
+    <!-- Carrito vacío -->
+    <div class="cart-empty" *ngIf="cart.length === 0">
+      <i class="pi pi-shopping-bag"></i>
+      <p>Toca un producto para agregarlo</p>
+    </div>
+
+    <!-- ── Footer: totales + cobrar ──────────────────────── -->
+    <div class="cart-footer">
+      <div class="totales">
+        <div class="tot-row">
+          <span class="tot-label">Subtotal (sin IVA)</span>
+          <span class="tot-val">{{ formatCOP(subtotal) }}</span>
+        </div>
+        <div class="tot-row" *ngIf="descTotal > 0">
+          <span class="tot-label desc-label">Descuento</span>
+          <span class="tot-val desc-val">-{{ formatCOP(descTotal) }}</span>
+        </div>
+        <div class="tot-row" *ngIf="impTotal > 0">
+          <span class="tot-label">IVA</span>
+          <span class="tot-val">{{ formatCOP(impTotal) }}</span>
+        </div>
+        <div class="tot-row total-row">
+          <span class="tot-label-total">TOTAL</span>
+          <span class="tot-val-total">{{ formatCOP(total) }}</span>
+        </div>
+      </div>
+
+      <button
+        pButton
+        [label]="'$ Cobrar ' + formatCOP(total)"
+        class="btn-cobrar"
+        [disabled]="cart.length === 0"
+        (click)="irAlPago()"
+      ></button>
+    </div>
+  </div>
+  <!-- /cart-panel -->
+</div>
+<!-- /pos-layout -->
+
+<!-- Modal pago -->
+<app-modal-pago
+  [displayModal]="showPago"
+  [total]="total"
+  [pagosPrev]="pagosPrev"
+  (modalClosed)="showPago = false"
+  (ventaConfirmada)="onVentaConfirmada($event)"
+/>
+
+<p-toast />

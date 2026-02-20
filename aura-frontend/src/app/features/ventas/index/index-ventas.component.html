@@ -1,0 +1,160 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="page-title-area">
+      <div class="page-icon"><i class="pi pi-receipt"></i></div>
+      <div>
+        <h3 class="page-title">Historial de ventas</h3>
+        <p class="page-sub">Todas las transacciones registradas</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="table-toolbar">
+      <div class="toolbar-left">
+        <span class="p-input-icon-left search-wrap">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            pInputText
+            class="search-input"
+            placeholder="Buscar por N° venta, cliente o caja..."
+            [(ngModel)]="searchQuery"
+            (input)="onSearch()"
+            (keydown.escape)="clearSearch()"
+          />
+          <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">
+            <i class="pi pi-times"></i>
+          </button>
+        </span>
+        <span class="total-badge" *ngIf="!loadingTable"
+          >{{ totalRecords }} ventas</span
+        >
+      </div>
+    </div>
+
+    <p-table
+      [value]="items"
+      [lazy]="true"
+      (onLazyLoad)="loadTable($event)"
+      [paginator]="true"
+      [rows]="rowSize"
+      [totalRecords]="totalRecords"
+      [loading]="loadingTable"
+      [rowsPerPageOptions]="[10, 15, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords}"
+      styleClass="aura-table"
+      [tableStyle]="{ 'min-width': '700px' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 70px">#</th>
+          <th pSortableColumn="v.numero_venta" style="min-width: 120px">
+            N° Venta <p-sortIcon field="v.numero_venta" />
+          </th>
+          <th style="min-width: 160px">Cliente</th>
+          <th style="min-width: 120px">Caja</th>
+          <th pSortableColumn="v.fecha" style="min-width: 130px">
+            Fecha <p-sortIcon field="v.fecha" />
+          </th>
+          <th style="width: 130px" class="text-right">Total</th>
+          <th style="width: 100px" class="text-center">Estado</th>
+          <th style="width: 60px" class="text-center">Ver</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item>
+        <tr [class.row-anulada]="item.estadoVenta === 'ANULADA'">
+          <td>
+            <span class="id-badge">#{{ item.id }}</span>
+          </td>
+          <td>
+            <span class="numero-venta">{{ item.numeroVenta ?? "—" }}</span>
+          </td>
+          <td>
+            <div class="cell-cliente">
+              <div class="cliente-av">
+                {{ (item.clienteNombre ?? "CF").charAt(0).toUpperCase() }}
+              </div>
+              <span class="cliente-n">{{
+                item.clienteNombre ?? "Consumidor final"
+              }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="caja-chip"
+              ><i class="pi pi-desktop"></i> {{ item.cajaNombre }}</span
+            >
+          </td>
+          <td>
+            <span class="fecha-val">{{ formatFecha(item.fechaEmision) }}</span>
+          </td>
+          <td class="text-right">
+            <span class="monto-val">{{ formatCOP(item.totalPagar) }}</span>
+          </td>
+          <td class="text-center">
+            <p-tag
+              [value]="getEstadoLabel(item.estadoVenta)"
+              [severity]="getEstadoSeverity(item.estadoVenta)"
+              [rounded]="true"
+            />
+          </td>
+          <td class="text-center">
+            <button
+              pButton
+              icon="pi pi-eye"
+              class="p-button-text p-button-sm action-view"
+              pTooltip="Ver detalle"
+              (click)="openDetalle(item)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8">
+            <div class="empty-state">
+              <i class="pi pi-receipt"></i>
+              <p>
+                {{
+                  searchQuery ? "Sin resultados" : "No hay ventas registradas"
+                }}
+              </p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr *ngFor="let s of [1, 2, 3, 4, 5]">
+          <td><p-skeleton width="50px" /></td>
+          <td><p-skeleton width="90px" /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton width="100px" /></td>
+          <td><p-skeleton width="110px" /></td>
+          <td class="text-right">
+            <p-skeleton width="90px" styleClass="ml-auto" />
+          </td>
+          <td class="text-center">
+            <p-skeleton width="80px" styleClass="mx-auto" />
+          </td>
+          <td class="text-center">
+            <p-skeleton width="32px" styleClass="mx-auto" />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<app-detalle-venta
+  [ventaId]="selectedId"
+  [visible]="showDetalle"
+  (closed)="onDetalleClosed()"
+  (anulada)="onAnulada()"
+>
+</app-detalle-venta>
+
+<p-toast />

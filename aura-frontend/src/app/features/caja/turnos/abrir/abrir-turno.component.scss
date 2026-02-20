@@ -1,0 +1,122 @@
+.form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.25rem 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  label {
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    .required {
+      color: #ef4444;
+    }
+  }
+  .hint {
+    font-size: 0.72rem;
+    color: #94a3b8;
+  }
+}
+
+.caja-opt {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  i {
+    font-size: 0.9rem;
+    color: #f97316;
+  }
+  .opt-nombre {
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: #1e293b;
+    display: block;
+  }
+  .opt-suc {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    display: block;
+  }
+}
+
+.caja-selected-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #0284c7;
+  background: rgba(2, 132, 199, 0.07);
+  border: 1px solid rgba(2, 132, 199, 0.18);
+  padding: 0.3rem 0.7rem;
+  border-radius: 8px;
+  margin-top: -0.25rem;
+  i {
+    font-size: 0.78rem;
+  }
+}
+
+::ng-deep .input-base .p-inputnumber-input {
+  height: 44px;
+  border-radius: 10px;
+  border: 1.5px solid #e0e3eb;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  text-align: center;
+  &:focus {
+    border-color: #f97316;
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.12);
+  }
+}
+
+.info-turno {
+  display: flex;
+  gap: 0.65rem;
+  padding: 0.85rem;
+  border-radius: 11px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  i {
+    font-size: 1rem;
+    color: #f97316;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+  }
+  div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+  p {
+    font-size: 0.77rem;
+    color: #92400e;
+    margin: 0;
+    line-height: 1.45;
+  }
+}
+
+.dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+::ng-deep .btn-orange.p-button {
+  background: linear-gradient(135deg, #f97316, #fb923c) !important;
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3) !important;
+  &:hover {
+    opacity: 0.92;
+  }
+}

@@ -1,0 +1,72 @@
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+
+import {
+  TerceroModel,
+  TerceroTableModel,
+  CreateTerceroDto,
+  UpdateTerceroDto,
+  TerceroPageableDto,
+} from '../models/tercero.model';
+import { environment } from '../../../environments/environment';
+import { ResponseTableModel } from '../../shared/utils/response-table.model';
+import { ResponseModel } from '../../shared/utils/responde.models';
+
+@Injectable({ providedIn: 'root' })
+export class TerceroService {
+  private readonly apiUrl = `${environment.apiUrl}terceros`;
+  constructor(private readonly http: HttpClient) {}
+
+  page(
+    dto: TerceroPageableDto,
+  ): Observable<ResponseTableModel<TerceroTableModel>> {
+    return this.http.post<ResponseTableModel<TerceroTableModel>>(
+      `${this.apiUrl}/page`,
+      dto,
+    );
+  }
+
+  getById(id: number): Observable<ResponseModel<TerceroModel>> {
+    return this.http.get<ResponseModel<TerceroModel>>(`${this.apiUrl}/${id}`);
+  }
+
+  /** Selector POS — clientes activos */
+  clientes(search = ''): Observable<ResponseModel<TerceroTableModel[]>> {
+    const params = new HttpParams().set('search', search);
+    return this.http.get<ResponseModel<TerceroTableModel[]>>(
+      `${this.apiUrl}/clientes`,
+      { params },
+    );
+  }
+
+  /** Selector compras — proveedores activos */
+  proveedores(search = ''): Observable<ResponseModel<TerceroTableModel[]>> {
+    const params = new HttpParams().set('search', search);
+    return this.http.get<ResponseModel<TerceroTableModel[]>>(
+      `${this.apiUrl}/proveedores`,
+      { params },
+    );
+  }
+
+  create(dto: CreateTerceroDto): Observable<ResponseModel<TerceroModel>> {
+    return this.http.post<ResponseModel<TerceroModel>>(
+      `${this.apiUrl}/create`,
+      dto,
+    );
+  }
+
+  update(
+    id: number,
+    dto: UpdateTerceroDto,
+  ): Observable<ResponseModel<TerceroModel>> {
+    return this.http.put<ResponseModel<TerceroModel>>(
+      `${this.apiUrl}/${id}`,
+      dto,
+    );
+  }
+
+  delete(id: number): Observable<ResponseModel<void>> {
+    return this.http.delete<ResponseModel<void>>(`${this.apiUrl}/${id}`);
+  }
+}

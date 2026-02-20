@@ -1,0 +1,239 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="page-title-area">
+      <div class="page-icon"><i class="pi pi-users"></i></div>
+      <div>
+        <h3 class="page-title">Terceros</h3>
+        <p class="page-sub">
+          Clientes, proveedores y empleados en un solo directorio
+        </p>
+      </div>
+    </div>
+    <button
+      pButton
+      type="button"
+      label="Nuevo tercero"
+      icon="pi pi-plus"
+      class="btn-aura btn-indigo"
+      (click)="openCreate()"
+    ></button>
+  </div>
+
+  <div class="card">
+    <div class="table-toolbar">
+      <div class="toolbar-left">
+        <span class="p-input-icon-left search-wrap">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            pInputText
+            class="search-input"
+            placeholder="Buscar por nombre, documento, email o teléfono..."
+            [(ngModel)]="searchQuery"
+            (input)="onSearch()"
+            (keydown.escape)="clearSearch()"
+          />
+          <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">
+            <i class="pi pi-times"></i>
+          </button>
+        </span>
+
+        <!-- Filtro por rol -->
+        <div class="rol-chips">
+          <span
+            class="rol-chip"
+            *ngFor="let opt of filtroOpts"
+            [class.active]="filtroRol === opt.value"
+            (click)="filtroRol = opt.value; onFiltroChange()"
+          >
+            {{ opt.label }}
+          </span>
+        </div>
+
+        <span class="total-badge" *ngIf="!loadingTable">
+          {{ totalRecords }} {{ totalRecords === 1 ? "tercero" : "terceros" }}
+        </span>
+      </div>
+    </div>
+
+    <p-table
+      [value]="items"
+      [lazy]="true"
+      (onLazyLoad)="loadTable($event)"
+      [paginator]="true"
+      [rows]="rowSize"
+      [totalRecords]="totalRecords"
+      [loading]="loadingTable"
+      [rowsPerPageOptions]="[10, 15, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords}"
+      styleClass="aura-table"
+      [tableStyle]="{ 'min-width': '680px' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="t.id" style="min-width: 240px">
+            Tercero <p-sortIcon field="t.id" />
+          </th>
+          <th style="min-width: 160px">Documento</th>
+          <th style="min-width: 130px">Contacto</th>
+          <th style="min-width: 160px">Roles</th>
+          <th style="width: 90px" class="text-center">Estado</th>
+          <th style="width: 90px" class="text-center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item>
+        <tr [class.row-inactivo]="!item.activo">
+          <!-- Nombre / avatar -->
+          <td>
+            <div class="cell-tercero">
+              <div
+                class="avatar"
+                [class.juridica]="
+                  item.tipoDocumento === 'NIT' || item.tipoDocumento === 'RUT'
+                "
+              >
+                {{ getInitial(item.nombreCompleto) }}
+              </div>
+              <div class="tercero-info">
+                <span class="tercero-nombre">{{ item.nombreCompleto }}</span>
+                <span class="tercero-tipo">
+                  {{
+                    item.tipoDocumento === "NIT" || item.tipoDocumento === "RUT"
+                      ? "Persona jurídica"
+                      : "Persona natural"
+                  }}
+                </span>
+              </div>
+            </div>
+          </td>
+
+          <!-- Documento -->
+          <td>
+            <div class="cell-doc">
+              <span class="doc-tipo">{{ item.tipoDocumento }}</span>
+              <span class="doc-num">{{ item.numeroDocumento }}</span>
+            </div>
+          </td>
+
+          <!-- Contacto -->
+          <td>
+            <div class="cell-contacto">
+              <span *ngIf="item.telefono" class="contacto-item">
+                <i class="pi pi-phone"></i> {{ item.telefono }}
+              </span>
+              <span *ngIf="item.email" class="contacto-item email">
+                <i class="pi pi-envelope"></i> {{ item.email }}
+              </span>
+              <span *ngIf="!item.telefono && !item.email" class="sin-contacto"
+                >—</span
+              >
+            </div>
+          </td>
+
+          <!-- Roles -->
+          <td>
+            <div class="roles-cell">
+              <span
+                *ngFor="let rol of getRoles(item)"
+                class="rol-tag"
+                [ngClass]="getRolClass(rol)"
+              >
+                {{ rol }}
+              </span>
+              <span *ngIf="getRoles(item).length === 0" class="sin-rol"
+                >Sin rol</span
+              >
+            </div>
+          </td>
+
+          <!-- Estado -->
+          <td class="text-center">
+            <p-tag
+              [value]="item.activo ? 'Activo' : 'Inactivo'"
+              [severity]="item.activo ? 'success' : 'danger'"
+              [rounded]="true"
+            />
+          </td>
+
+          <!-- Acciones -->
+          <td class="text-center">
+            <div class="action-buttons">
+              <button
+                pButton
+                type="button"
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm action-edit"
+                pTooltip="Editar"
+                tooltipPosition="top"
+                (click)="openEdit(item)"
+              ></button>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-trash"
+                class="p-button-text p-button-danger p-button-sm action-delete"
+                pTooltip="Eliminar"
+                tooltipPosition="top"
+                (click)="confirmDelete(item)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6">
+            <div class="empty-state">
+              <i class="pi pi-users"></i>
+              <p>
+                {{
+                  searchQuery
+                    ? 'Sin resultados para "' + searchQuery + '"'
+                    : "No hay terceros registrados"
+                }}
+              </p>
+              <button
+                *ngIf="!searchQuery"
+                pButton
+                type="button"
+                label="Crear primer tercero"
+                icon="pi pi-plus"
+                class="btn-aura btn-indigo p-button-sm"
+                (click)="openCreate()"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr *ngFor="let s of [1, 2, 3, 4, 5, 6]">
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton width="120px" /></td>
+          <td class="text-center">
+            <p-skeleton width="70px" styleClass="mx-auto" />
+          </td>
+          <td class="text-center">
+            <p-skeleton width="80px" styleClass="mx-auto" />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<app-form-tercero
+  [displayModal]="showModal"
+  [terceroId]="selectedId"
+  [slug]="modalSlug"
+  (modalClosed)="onModalClosed()"
+  (terceroSaved)="onItemSaved()"
+>
+</app-form-tercero>
+<p-toast />
+<p-confirmDialog />

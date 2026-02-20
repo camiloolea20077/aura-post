@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.cloud_technological.aura_pos.dto.productos.CreateProductoDto;
 import com.cloud_technological.aura_pos.dto.productos.ProductoDto;
 import com.cloud_technological.aura_pos.dto.productos.ProductoListDto;
+import com.cloud_technological.aura_pos.dto.productos.ProductoPosDto;
 import com.cloud_technological.aura_pos.dto.productos.ProductoTableDto;
 import com.cloud_technological.aura_pos.dto.productos.UpdateProductoDto;
 import com.cloud_technological.aura_pos.services.ProductoService;
@@ -87,5 +88,13 @@ public class ProductoController {
     public ResponseEntity<ApiResponse<List<ProductoListDto>>> list() {
         Integer empresaId = securityUtils.getEmpresaId();
         return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "", false, productoService.list(empresaId)), HttpStatus.OK);
+    }
+
+    @GetMapping("/pos")
+    public ResponseEntity<ApiResponse<List<ProductoPosDto>>> listarPos() {
+        Integer empresaId = securityUtils.getEmpresaId();
+        Long sucursalId = securityUtils.getSucursalId();
+        List<ProductoPosDto> result = productoService.listarPos(empresaId, sucursalId);
+        return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "Listado exitoso", false, result), HttpStatus.OK);
     }
 }

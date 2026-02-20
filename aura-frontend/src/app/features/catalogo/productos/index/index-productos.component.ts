@@ -198,7 +198,7 @@ export class IndexProductosComponent implements OnInit {
     const map: Record<TipoProducto, any> = {
       ESTANDAR: 'info',
       KIT: 'success',
-      RECETA: 'warn',
+      PESABLE: 'warn',
       SERVICIO: 'danger',
     };
     return map[tipo] ?? 'info';
@@ -208,7 +208,7 @@ export class IndexProductosComponent implements OnInit {
     const map: Record<TipoProducto, string> = {
       ESTANDAR: 'Estándar',
       KIT: 'Kit',
-      RECETA: 'Receta',
+      PESABLE: 'Pesable',
       SERVICIO: 'Servicio',
     };
     return map[tipo] ?? tipo;

@@ -1,0 +1,144 @@
+<p-sidebar
+  [(visible)]="visible"
+  position="right"
+  [style]="{ width: '540px' }"
+  styleClass="aura-sidebar"
+  (onHide)="closePanel()"
+>
+  <ng-template pTemplate="header">
+    <div class="sidebar-header" *ngIf="venta && !isLoading">
+      <div class="header-icon"><i class="pi pi-receipt"></i></div>
+      <div class="header-meta">
+        <span class="header-numero">{{
+          venta.numeroVenta ?? "Venta #" + venta.id
+        }}</span>
+        <span class="header-fecha">{{ formatFecha(venta.fechaEmision) }}</span>
+      </div>
+      <p-tag
+        [value]="venta.estadoVenta === 'COMPLETADA' ? 'Completada' : 'Anulada'"
+        [severity]="venta.estadoVenta === 'COMPLETADA' ? 'success' : 'danger'"
+        [rounded]="true"
+      />
+    </div>
+    <div class="sidebar-header" *ngIf="isLoading">
+      <p-skeleton width="36px" height="36px" borderRadius="10px" />
+      <div style="flex: 1">
+        <p-skeleton width="60%" /><p-skeleton
+          width="40%"
+          height="10px"
+          styleClass="mt-1"
+        />
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- Loading -->
+  <div class="loading-body" *ngIf="isLoading">
+    <p-skeleton height="80px" borderRadius="10px" />
+    <p-skeleton height="160px" borderRadius="10px" />
+    <p-skeleton height="100px" borderRadius="10px" />
+  </div>
+
+  <div class="sidebar-body" *ngIf="venta && !isLoading">
+    <!-- Info general -->
+    <div class="info-grid">
+      <div class="info-item">
+        <span class="info-label">Caja</span>
+        <span class="info-val"
+          ><i class="pi pi-desktop"></i> {{ venta.cajaNombre }}</span
+        >
+      </div>
+      <div class="info-item">
+        <span class="info-label">Cliente</span>
+        <span class="info-val"
+          ><i class="pi pi-user"></i>
+          {{ venta.clienteNombre ?? "Consumidor final" }}</span
+        >
+      </div>
+      <div class="info-item" *ngIf="venta.cufe">
+        <span class="info-label">CUFE</span>
+        <span class="info-val mono-sm">{{ venta.cufe }}</span>
+      </div>
+    </div>
+
+    <p-divider align="left"><span class="div-label">Productos</span></p-divider>
+
+    <!-- Líneas de detalle -->
+    <div class="detalle-list">
+      <div class="det-item" *ngFor="let d of venta.detalles; let i = index">
+        <div class="det-num">{{ i + 1 }}</div>
+        <div class="det-info">
+          <span class="det-nombre">{{ d.productoNombre }}</span>
+          <span class="det-sku" *ngIf="d.productoSku">{{ d.productoSku }}</span>
+        </div>
+        <div class="det-calc">
+          <span class="det-expr"
+            >{{ d.cantidad }} × {{ formatCOP(d.precioUnitario) }}</span
+          >
+          <span class="det-sub">{{ formatCOP(d.subtotalLinea) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <p-divider align="left"><span class="div-label">Pagos</span></p-divider>
+
+    <!-- Pagos -->
+    <div class="pagos-list">
+      <div class="pago-item" *ngFor="let p of venta.pagos">
+        <i
+          [class]="getMetodoInfo(p.metodoPago).icon"
+          [style.color]="getMetodoInfo(p.metodoPago).color"
+        ></i>
+        <span class="pago-metodo">{{ getMetodoInfo(p.metodoPago).label }}</span>
+        <span class="pago-ref" *ngIf="p.referencia">{{ p.referencia }}</span>
+        <span class="pago-monto">{{ formatCOP(p.monto) }}</span>
+      </div>
+    </div>
+
+    <!-- Totales -->
+    <div class="totales-block">
+      <div class="tot-row">
+        <span class="tot-label">Subtotal</span>
+        <span class="tot-val">{{ formatCOP(venta.subtotal) }}</span>
+      </div>
+      <div class="tot-row" *ngIf="venta.descuentoTotal > 0">
+        <span class="tot-label" style="color: #dc2626">Descuento</span>
+        <span class="tot-val" style="color: #dc2626"
+          >-{{ formatCOP(venta.descuentoTotal) }}</span
+        >
+      </div>
+      <div class="tot-row" *ngIf="venta.impuestosTotal > 0">
+        <span class="tot-label">Impuestos</span>
+        <span class="tot-val">{{ formatCOP(venta.impuestosTotal) }}</span>
+      </div>
+      <div class="tot-row total-fin">
+        <span class="tot-total">TOTAL</span>
+        <span class="tot-total-val">{{ formatCOP(venta.totalPagar) }}</span>
+      </div>
+    </div>
+
+    <!-- Zona anular -->
+    <div class="anular-zone" *ngIf="venta.estadoVenta === 'COMPLETADA'">
+      <div class="anular-warn">
+        <i class="pi pi-exclamation-triangle"></i>
+        <div>
+          <p class="warn-title">Anular venta</p>
+          <p class="warn-sub">
+            Se revertirá el stock de todos los productos incluidos.
+          </p>
+        </div>
+      </div>
+      <button
+        pButton
+        type="button"
+        label="Anular venta"
+        icon="pi pi-ban"
+        class="p-button-danger p-button-outlined p-button-sm"
+        [loading]="isAnulando"
+        (click)="confirmarAnular()"
+      ></button>
+    </div>
+  </div>
+</p-sidebar>
+
+<p-toast /><p-confirmDialog />

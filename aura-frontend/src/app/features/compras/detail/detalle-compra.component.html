@@ -1,0 +1,135 @@
+<p-sidebar
+  [(visible)]="visible"
+  position="right"
+  [style]="{ width: '560px' }"
+  styleClass="aura-sidebar compra-sidebar"
+  (onHide)="close()"
+>
+  <ng-template pTemplate="header">
+    <div class="sidebar-header" *ngIf="compra && !isLoading">
+      <div class="compra-icon"><i class="pi pi-shopping-bag"></i></div>
+      <div class="header-info">
+        <h4 class="compra-num">
+          {{ compra.numeroCompra ?? "Compra #" + compra.id }}
+        </h4>
+        <p class="compra-sub">{{ formatFecha(compra.fecha) }}</p>
+      </div>
+      <p-tag
+        [value]="compra.estado === 'RECIBIDA' ? 'Recibida' : 'Anulada'"
+        [severity]="compra.estado === 'RECIBIDA' ? 'success' : 'danger'"
+        [rounded]="true"
+        styleClass="estado-tag"
+      />
+    </div>
+    <div class="sidebar-header" *ngIf="isLoading">
+      <div class="compra-icon loading">
+        <i class="pi pi-spin pi-spinner"></i>
+      </div>
+      <div><h4 class="compra-num">Cargando...</h4></div>
+    </div>
+  </ng-template>
+
+  <div class="sidebar-loading" *ngIf="isLoading">
+    <i class="pi pi-spin pi-spinner"></i><span>Cargando detalle...</span>
+  </div>
+
+  <div class="sidebar-content" *ngIf="compra && !isLoading">
+    <!-- Info general -->
+    <div class="info-grid">
+      <div class="info-item">
+        <span class="info-label">Proveedor</span>
+        <span class="info-val proveedor">
+          <i class="pi pi-truck"></i> {{ compra.proveedorNombre }}
+        </span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Sucursal</span>
+        <span class="info-val">{{ compra.sucursalNombre }}</span>
+      </div>
+      <div class="info-item" *ngIf="compra.observaciones">
+        <span class="info-label">Observaciones</span>
+        <span class="info-val obs">{{ compra.observaciones }}</span>
+      </div>
+    </div>
+
+    <p-divider align="left"
+      ><span class="section-label">Productos</span></p-divider
+    >
+
+    <!-- Líneas de detalle -->
+    <div class="detalle-list">
+      <div
+        class="detalle-item"
+        *ngFor="let d of compra.detalles; let i = index"
+      >
+        <div class="det-num">{{ i + 1 }}</div>
+        <div class="det-info">
+          <span class="det-nombre">{{ d.productoNombre }}</span>
+          <div class="det-meta">
+            <span class="det-sku" *ngIf="d.productoSku">{{
+              d.productoSku
+            }}</span>
+            <span class="det-lote" *ngIf="d.codigoLote">
+              <i class="pi pi-tag"></i> {{ d.codigoLote }}
+            </span>
+          </div>
+        </div>
+        <div class="det-nums">
+          <div class="det-cant">{{ d.cantidad | number: "1.0-4" }} u.</div>
+          <div class="det-costo">
+            ×
+            {{ d.costoUnitario | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+          </div>
+        </div>
+        <div class="det-subtotal">
+          {{ d.subtotalLinea | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+        </div>
+      </div>
+    </div>
+
+    <p-divider />
+
+    <!-- Totales -->
+    <div class="totales-panel">
+      <div class="total-row">
+        <span>Subtotal</span>
+        <span>{{
+          compra.subtotal | currency: "COP" : "symbol-narrow" : "1.0-0"
+        }}</span>
+      </div>
+      <div class="total-row" *ngIf="compra.impuestosTotal > 0">
+        <span>Impuestos</span>
+        <span class="imp">{{
+          compra.impuestosTotal | currency: "COP" : "symbol-narrow" : "1.0-0"
+        }}</span>
+      </div>
+      <div class="total-row final">
+        <span>Total</span>
+        <span class="total-val">{{
+          compra.total | currency: "COP" : "symbol-narrow" : "1.0-0"
+        }}</span>
+      </div>
+    </div>
+
+    <!-- Anular -->
+    <div class="anular-zone" *ngIf="compra.estado === 'RECIBIDA'">
+      <div class="anular-warn">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span
+          >Anular esta compra revertirá el stock y los lotes afectados.</span
+        >
+      </div>
+      <button
+        pButton
+        type="button"
+        label="Anular compra"
+        icon="pi pi-ban"
+        class="p-button-danger p-button-outlined btn-anular"
+        [loading]="isAnulando"
+        (click)="confirmarAnular()"
+      ></button>
+    </div>
+  </div>
+</p-sidebar>
+<p-toast />
+<p-confirmDialog />

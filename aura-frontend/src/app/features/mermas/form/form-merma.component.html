@@ -1,0 +1,203 @@
+<p-dialog
+  header="Registrar Merma"
+  [(visible)]="visible"
+  (onHide)="close()"
+  [modal]="true"
+  [style]="{ width: '860px', maxHeight: '90vh' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="dialog-body" [formGroup]="form">
+    <!-- Cabecera: motivo + observación -->
+    <div class="dialog-section">
+      <div class="form-grid-2">
+        <div class="field">
+          <label class="field-label"
+            >Motivo <span class="required">*</span></label
+          >
+          <p-dropdown
+            formControlName="motivoId"
+            [options]="motivos"
+            optionLabel="nombre"
+            optionValue="id"
+            placeholder="Selecciona un motivo"
+            styleClass="w-full"
+            [class.ng-invalid]="isInvalid('motivoId')"
+          />
+          <small class="field-error" *ngIf="isInvalid('motivoId')"
+            >El motivo es obligatorio</small
+          >
+        </div>
+
+        <div class="field">
+          <label class="field-label">Observación</label>
+          <textarea
+            pTextarea
+            formControlName="observacion"
+            placeholder="Detalle adicional (opcional)..."
+            rows="2"
+            class="w-full"
+          ></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Líneas de productos -->
+    <div class="dialog-section">
+      <div class="section-header">
+        <span class="section-title"
+          ><i class="pi pi-list"></i> Productos afectados</span
+        >
+        <button
+          pButton
+          label="Agregar producto"
+          icon="pi pi-plus"
+          class="p-button-outlined p-button-sm btn-add"
+          (click)="addLinea()"
+        ></button>
+      </div>
+
+      <!-- Empty -->
+      <div class="lines-empty" *ngIf="lineas.length === 0">
+        <i class="pi pi-inbox"></i>
+        <p>Agrega los productos que se perdieron</p>
+      </div>
+
+      <!-- Tabla -->
+      <div class="lines-wrap" *ngIf="lineas.length > 0">
+        <div class="lines-header">
+          <span class="col-producto">Producto</span>
+          <span class="col-lote">Lote</span>
+          <span class="col-stock">Stock</span>
+          <span class="col-cantidad">Cantidad</span>
+          <span class="col-costo">Costo unit.</span>
+          <span class="col-subtotal">Subtotal</span>
+          <span class="col-accion"></span>
+        </div>
+
+        <div class="line-row" *ngFor="let l of lineas; trackBy: trackById">
+          <!-- Producto -->
+          <div class="col-producto">
+            <p-autoComplete
+              appendTo="body"
+              [(ngModel)]="l.productoNombre"
+              [ngModelOptions]="{ standalone: true }"
+              [suggestions]="productoSugerencias"
+              field="label"
+              placeholder="Buscar producto..."
+              styleClass="w-full"
+              inputStyleClass="line-ac-input"
+              (completeMethod)="buscarProductos($event)"
+              (onSelect)="seleccionarProducto($event, l)"
+              [minLength]="2"
+            />
+          </div>
+
+          <!-- Lote -->
+          <div class="col-lote">
+            <p-dropdown
+              appendTo="body"
+              *ngIf="l.manejaLotes"
+              [(ngModel)]="l.loteId"
+              [ngModelOptions]="{ standalone: true }"
+              [options]="l.lotesDisponibles"
+              optionLabel="codigoLote"
+              optionValue="id"
+              placeholder="Lote..."
+              styleClass="w-full"
+              (onChange)="onLoteChange(l, $event.value)"
+            />
+            <span class="no-aplica" *ngIf="!l.manejaLotes">—</span>
+          </div>
+
+          <!-- Stock -->
+          <div class="col-stock">
+            <span
+              class="stock-pill"
+              [class.danger]="l.productoId && l.cantidad > l.stockActual"
+            >
+              {{ l.stockActual }}
+            </span>
+          </div>
+
+          <!-- Cantidad -->
+          <div class="col-cantidad">
+            <p-inputNumber
+              [ngModel]="l.cantidad"
+              [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="updateCantidad(l, $event)"
+              [min]="0.001"
+              [maxFractionDigits]="4"
+              inputStyleClass="line-input text-center"
+              styleClass="w-full"
+            />
+          </div>
+
+          <!-- Costo -->
+          <div class="col-costo">
+            <p-inputNumber
+              [ngModel]="l.costoUnitario"
+              [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="updateCosto(l, $event)"
+              [min]="0"
+              mode="currency"
+              currency="COP"
+              locale="es-CO"
+              [minFractionDigits]="0"
+              inputStyleClass="line-input text-right"
+              styleClass="w-full"
+            />
+          </div>
+
+          <!-- Subtotal -->
+          <div class="col-subtotal">
+            <span class="subtotal-val">{{ formatCOP(l.subtotalCosto) }}</span>
+          </div>
+
+          <!-- Eliminar -->
+          <div class="col-accion">
+            <button
+              pButton
+              icon="pi pi-trash"
+              class="p-button-text p-button-danger p-button-sm"
+              (click)="removeLinea(l._id)"
+            ></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerta stock inválido -->
+    <div class="stock-alert" *ngIf="hayStockInvalido">
+      <i class="pi pi-exclamation-triangle"></i>
+      Hay productos con cantidad mayor al stock disponible
+    </div>
+  </div>
+
+  <!-- Footer del dialog -->
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <div class="total-wrap">
+        <span class="total-label">Costo total merma</span>
+        <span class="total-val">{{ formatCOP(costoTotal) }}</span>
+      </div>
+      <div class="footer-actions">
+        <button
+          pButton
+          label="Cancelar"
+          icon="pi pi-times"
+          class="p-button-text"
+          (click)="close()"
+        ></button>
+        <button
+          pButton
+          label="Registrar merma"
+          icon="pi pi-check"
+          class="btn-aura btn-primary"
+          [loading]="loading"
+          (click)="guardar()"
+        ></button>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>
