@@ -48,10 +48,9 @@ CREATE TABLE tercero (
     activo BOOLEAN DEFAULT TRUE,
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	deleted_at TIMESTAMP;
+	deleted_at TIMESTAMP,
     UNIQUE(empresa_id, numero_documento)
 );
-select * from categoria
 -- USUARIOS DEL SISTEMA
 CREATE TABLE usuario (
     id SERIAL PRIMARY KEY,
@@ -128,9 +127,8 @@ CREATE TABLE unidad_medida (
     activo BOOLEAN DEFAULT TRUE,
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-	deleted_at TIMESTAMP;
+	deleted_at TIMESTAMP
 );
-select * from producto
 -- 4. PRODUCTO (El maestro)
 CREATE TABLE producto (
     id SERIAL PRIMARY KEY,
@@ -293,7 +291,6 @@ CREATE TABLE compra_detalle (
     impuesto_valor DECIMAL(14,2) DEFAULT 0,
     subtotal_linea DECIMAL(14,2)
 );
-SELECT id, nombre, maneja_lotes FROM producto WHERE id = 1;
 -- Motivos de Merma
 CREATE TABLE motivo_merma (
     id SERIAL PRIMARY KEY,
@@ -324,7 +321,6 @@ CREATE TABLE merma_detalle (
     cantidad DECIMAL(14,4),
     costo_unitario DECIMAL(14,2)
 );
-select * from movimiento_inventario
 -- Kardex (Historial inmutable)
 CREATE TABLE movimiento_inventario (
     id SERIAL PRIMARY KEY,
@@ -435,10 +431,9 @@ CREATE TABLE venta_detalle (
 );
 
 CREATE TABLE venta_detalle_serial (
-	id BIGSERIAL PRIMARY KEY;
+	id BIGSERIAL PRIMARY key,
     venta_detalle_id INT REFERENCES venta_detalle(id),
-    serial_pro
-	ducto_id INT REFERENCES serial_producto(id)
+    serial_producto_id INT REFERENCES serial_producto(id)
 );
 
 CREATE TABLE venta_pago (
