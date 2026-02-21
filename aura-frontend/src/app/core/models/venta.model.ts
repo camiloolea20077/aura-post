@@ -134,6 +134,7 @@ export interface ProductoPOS {
   descuentoNombre: string | null; // ← nuevo
   descuentoValor: number | null; // ← nuevo
   stockActual: number;
+  codigoBarras: string | null;
 }
 
 // ─── Opciones UI ─────────────────────────────────────────────

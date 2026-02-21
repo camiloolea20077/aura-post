@@ -70,3 +70,43 @@ export interface TurnoPageableDto {
   order_by?: string | null;
   order?: string | null;
 }
+// ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+
+export interface VentaCategoriaDto {
+  categoriaId: number;
+  categoriaNombre: string;
+  totalProductosVendidos: number;
+  totalBruto: number;
+  totalDescuentos: number;
+  totalNeto: number;
+}
+
+export interface VentaMetodoPagoDto {
+  metodoPago: string; // EFECTIVO | NEQUI | TARJETA
+  totalPagos: number;
+  totalMonto: number;
+}
+
+export interface ResumenTurnoDto {
+  turnoId: number;
+  cajaNombre: string;
+  usuarioNombre: string;
+  fechaApertura: string;
+  baseInicial: number;
+  estado: EstadoTurno;
+
+  ventasPorCategoria: VentaCategoriaDto[];
+  ventasPorMetodoPago: VentaMetodoPagoDto[];
+
+  totalVentasBruto: number;
+  totalDescuentos: number;
+  totalImpuestos: number;
+  totalNeto: number;
+  totalTransacciones: number;
+
+  // Disponible solo al cerrar
+  totalEfectivoSistema: number | null;
+  totalEfectivoReal: number | null;
+  diferencia: number | null;
+}

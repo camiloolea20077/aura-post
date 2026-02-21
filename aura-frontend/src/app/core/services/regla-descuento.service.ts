@@ -37,7 +37,10 @@ export class ReglaDescuentoService {
   create(
     dto: CreateReglaDescuentoDto,
   ): Observable<ResponseModel<ReglaDescuentoModel>> {
-    return this.http.post<ResponseModel<ReglaDescuentoModel>>(this.apiUrl, dto);
+    return this.http.post<ResponseModel<ReglaDescuentoModel>>(
+      `${this.apiUrl}/create`,
+      dto,
+    );
   }
 
   update(

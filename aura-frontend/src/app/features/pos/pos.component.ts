@@ -2,6 +2,9 @@ import {
   Component,
   OnInit,
   OnDestroy,
+  AfterViewInit,
+  ViewChild,
+  ElementRef,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
 } from '@angular/core';
@@ -57,7 +60,10 @@ import { ModalPagoComponent } from './components/modal-pagos/modal-pago.componen
   templateUrl: './pos.component.html',
   styleUrls: ['./pos.component.scss'],
 })
-export class PosComponent implements OnInit, OnDestroy {
+export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
+  // ─── NUEVO: referencia al input de búsqueda ───────────────
+  @ViewChild('searchInput') searchInputRef!: ElementRef<HTMLInputElement>;
+
   // ── Turno ──────────────────────────────────────────────────
   public turnoActivo: TurnoCajaModel | null = null;
   public turnoError = false;
@@ -98,9 +104,19 @@ export class PosComponent implements OnInit, OnDestroy {
     this.setupSearch();
   }
 
+  // ─── NUEVO: autofocus al renderizar ──────────────────────
+  ngAfterViewInit(): void {
+    this.focusSearch();
+  }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  // ─── NUEVO: helper para enfocar el input ─────────────────
+  focusSearch(): void {
+    setTimeout(() => this.searchInputRef?.nativeElement?.focus(), 50);
   }
 
   // ── Turno ──────────────────────────────────────────────────
@@ -153,8 +169,38 @@ export class PosComponent implements OnInit, OnDestroy {
       });
   }
 
+  // ─── MODIFICADO: onSearch ahora detecta código de barras ─
   onSearch(): void {
-    this.searchSubject$.next(this.searchProducto);
+    const query = this.searchProducto.trim();
+
+    // La pistola envía el código completo de golpe (sin debounce).
+    // Buscamos coincidencia EXACTA por codigoBarras o SKU.
+    const matchBarcode = this.productos.find(
+      (p) =>
+        (p.codigoBarras && p.codigoBarras === query) ||
+        (p.sku && p.sku === query),
+    );
+
+    if (matchBarcode) {
+      this.addToCart(matchBarcode);
+      // Limpiar input y devolver foco para el siguiente escaneo
+      this.searchProducto = '';
+      this.filtrar();
+      this.focusSearch();
+      this.cdr.markForCheck();
+      return;
+    }
+
+    // Búsqueda normal por texto con debounce
+    this.searchSubject$.next(query);
+  }
+
+  // ─── NUEVO: limpiar búsqueda y devolver foco ─────────────
+  clearSearch(): void {
+    this.searchProducto = '';
+    this.filtrar();
+    this.focusSearch();
+    this.cdr.markForCheck();
   }
 
   filtrar(): void {
@@ -166,7 +212,8 @@ export class PosComponent implements OnInit, OnDestroy {
       list = list.filter(
         (p) =>
           p.nombre.toLowerCase().includes(q) ||
-          (p.sku?.toLowerCase().includes(q) ?? false),
+          (p.sku?.toLowerCase().includes(q) ?? false) ||
+          (p.codigoBarras?.toLowerCase().includes(q) ?? false), // ← incluir barcode en filtro texto
       );
     this.productosFiltrados = list;
   }
@@ -179,7 +226,10 @@ export class PosComponent implements OnInit, OnDestroy {
 
   // ── Carrito ───────────────────────────────────────────────
   addToCart(p: ProductoPOS): void {
-    if (p.stockActual <= 0) {
+    // Servicios no tienen stock — los dejamos pasar sin validación
+    const tieneInventario = p.tipoProducto !== 'SERVICIO';
+
+    if (tieneInventario && p.stockActual <= 0) {
       this.alertService.showWarn(
         'Sin stock',
         `${p.nombre} no tiene stock disponible.`,
@@ -189,7 +239,7 @@ export class PosComponent implements OnInit, OnDestroy {
 
     const existing = this.cart.find((c) => c.productoId === p.id);
     if (existing) {
-      if (existing.cantidad >= p.stockActual) {
+      if (tieneInventario && existing.cantidad >= p.stockActual) {
         this.alertService.showWarn(
           'Stock insuficiente',
           `Solo hay ${p.stockActual} unidades.`,
@@ -199,26 +249,23 @@ export class PosComponent implements OnInit, OnDestroy {
       existing.cantidad++;
       this.calcLine(existing);
     } else {
-      const precioBase = p.precioFinal ?? p.precio; // usa precioFinal si hay descuento automático
-
+      const precioBase = p.precioFinal ?? p.precio;
       const item: CartItem = {
         _id: uuid(),
         productoId: p.id,
         productoNombre: p.nombre,
         productoSku: p.sku,
-        precio: precioBase, // precio BASE sin IVA
+        precio: precioBase,
         cantidad: 1,
         descuento: 0,
         descuentoAutomatico: p.descuentoNombre ?? null,
-        impuesto: p.ivaPorcentaje ?? 0, // porcentaje IVA
-        impuestoValor: 0, // calculado en calcLine
-        subtotal: 0, // calculado en calcLine
+        impuesto: p.ivaPorcentaje ?? 0,
+        impuestoValor: 0,
+        subtotal: 0,
         esPesable: p.tipoProducto === 'PESABLE',
         unidadMedida: p.unidadMedidaNombre ?? 'UND',
         showDescuento: false,
       };
-
-      // ← CORRECCIÓN: llamar calcLine al insertar para que subtotal sea correcto
       this.calcLine(item);
       this.cart = [...this.cart, item];
     }
@@ -241,20 +288,10 @@ export class PosComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  /**
-   * Calcula impuestoValor y subtotal de una línea.
-   *
-   * Fórmula:
-   *   base        = precio * cantidad
-   *   base_neta   = base - descuento
-   *   iva         = base_neta * (ivaPct / 100)
-   *   subtotal    = base_neta + iva
-   */
   private calcLine(item: CartItem): void {
     const base = item.precio * item.cantidad;
     const baseNeta = Math.max(0, base - item.descuento);
     const iva = baseNeta * (item.impuesto / 100);
-
     item.impuestoValor = iva;
     item.subtotal = baseNeta + iva;
   }
@@ -272,27 +309,18 @@ export class PosComponent implements OnInit, OnDestroy {
   }
 
   // ── Getters de totales ────────────────────────────────────
-  /** Suma de precios base × cantidades (sin IVA, sin descuentos) */
   get subtotal(): number {
     return this.cart.reduce((s, c) => s + c.precio * c.cantidad, 0);
   }
-
-  /** Suma de descuentos manuales en $ */
   get descTotal(): number {
     return this.cart.reduce((s, c) => s + c.descuento, 0);
   }
-
-  /** Suma de IVA en $ (calculado sobre base neta) */
   get impTotal(): number {
     return this.cart.reduce((s, c) => s + c.impuestoValor, 0);
   }
-
-  /** Total a cobrar = subtotal - descuentos + IVA */
   get total(): number {
     return this.subtotal - this.descTotal + this.impTotal;
   }
-
-  /** Cantidad total de ítems en el carrito */
   get itemCount(): number {
     return this.cart.reduce((s, c) => s + c.cantidad, 0);
   }
@@ -361,6 +389,7 @@ export class PosComponent implements OnInit, OnDestroy {
         );
         this.clearCart();
         this.showPago = false;
+        this.focusSearch(); // ← devolver foco tras venta exitosa
         this.cdr.markForCheck();
       }
     } catch (err: any) {

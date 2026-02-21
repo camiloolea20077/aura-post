@@ -13,6 +13,7 @@ import {
   AbrirTurnoDto,
   CerrarTurnoDto,
   TurnoPageableDto,
+  ResumenTurnoDto,
 } from '../models/caja.model';
 import { environment } from '../../../environments/environment';
 import { ResponseTableModel } from '../../shared/utils/response-table.model';
@@ -79,10 +80,15 @@ export class TurnoCajaService {
   cerrar(
     id: number,
     dto: CerrarTurnoDto,
-  ): Observable<ResponseModel<TurnoCajaModel>> {
-    return this.http.patch<ResponseModel<TurnoCajaModel>>(
+  ): Observable<ResponseModel<ResumenTurnoDto>> {
+    return this.http.patch<ResponseModel<ResumenTurnoDto>>(
       `${this.apiUrl}/${id}/cerrar`,
       dto,
+    );
+  }
+  resumen(id: number): Observable<ResponseModel<ResumenTurnoDto>> {
+    return this.http.get<ResponseModel<ResumenTurnoDto>>(
+      `${this.apiUrl}/${id}/resumen`,
     );
   }
 }

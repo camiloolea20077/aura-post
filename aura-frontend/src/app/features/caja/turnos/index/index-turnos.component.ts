@@ -1,4 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
@@ -17,10 +23,11 @@ import {
   TurnoCajaModel,
   TurnoCajaTableModel,
   TurnoPageableDto,
+  ResumenTurnoDto, // ← NUEVO
 } from '../../../../core/models/caja.model';
 import { CerrarTurnoComponent } from '../cerdad/cerrar-turno.component';
 import { AbrirTurnoComponent } from '../abrir/abrir-turno.component';
-import { EstadoCompra } from '../../../../core/models/compra.model';
+import { DividerModule } from 'primeng/divider';
 
 type TagSeverity =
   | 'success'
@@ -30,14 +37,17 @@ type TagSeverity =
   | 'danger'
   | 'contrast'
   | undefined;
+
 @Component({
   selector: 'app-index-turnos',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush, // ← NUEVO
   imports: [
     CommonModule,
     FormsModule,
     TableModule,
     ButtonModule,
+    DividerModule,
     InputTextModule,
     TagModule,
     ToastModule,
@@ -50,36 +60,88 @@ type TagSeverity =
   templateUrl: './index-turnos.component.html',
   styleUrls: ['./index-turnos.component.scss'],
 })
-export class IndexTurnosComponent implements OnInit {
-  public showAbrir = false;
-  public showCerrar = false;
-  public turnoActivo: TurnoCajaModel | null = null;
+export class IndexTurnosComponent implements OnInit, OnDestroy {
+  showAbrir = false;
+  showCerrar = false;
+  turnoActivo: TurnoCajaModel | null = null;
 
-  public items: TurnoCajaTableModel[] = [];
-  public loadingTable = true;
-  public totalRecords = 0;
-  public rowSize = 15;
-  public searchQuery = '';
-  public lastLazyEvent!: TableLazyLoadEvent;
+  // ── NUEVO: resumen en tiempo real ─────────────────────────
+  resumen: ResumenTurnoDto | null = null;
+  loadingResumen = false;
+  private polling: any;
+
+  // Tabla histórica
+  items: TurnoCajaTableModel[] = [];
+  loadingTable = true;
+  totalRecords = 0;
+  rowSize = 15;
+  searchQuery = '';
+  lastLazyEvent!: TableLazyLoadEvent;
 
   constructor(
     private readonly turnoCajaService: TurnoCajaService,
     private readonly alertService: AlertService,
+    private readonly cdr: ChangeDetectorRef, // ← NUEVO
   ) {}
 
   ngOnInit(): void {
     this.checkTurnoActivo();
   }
+  ngOnDestroy(): void {
+    this.detenerPolling();
+  }
 
+  // ── Verificar turno activo ────────────────────────────────
   private async checkTurnoActivo(): Promise<void> {
     try {
       const res = await lastValueFrom(this.turnoCajaService.turnoActivo());
       this.turnoActivo = res?.data ?? null;
+      if (this.turnoActivo) {
+        await this.cargarResumen();
+        this.iniciarPolling();
+      }
     } catch {
       this.turnoActivo = null;
     }
+    this.cdr.markForCheck();
   }
 
+  // ── Resumen en tiempo real ────────────────────────────────
+  async cargarResumen(): Promise<void> {
+    if (!this.turnoActivo) return;
+    this.loadingResumen = true;
+    try {
+      const res = await lastValueFrom(
+        this.turnoCajaService.resumen(this.turnoActivo.id),
+      );
+      this.resumen = res?.data ?? null;
+    } catch {
+      /* silencioso */
+    } finally {
+      this.loadingResumen = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  private iniciarPolling(): void {
+    this.polling = setInterval(() => this.cargarResumen(), 30_000);
+  }
+
+  private detenerPolling(): void {
+    if (this.polling) clearInterval(this.polling);
+  }
+
+  // ── Icono por método de pago ──────────────────────────────
+  metodoPagoIcon(m: string): string {
+    const map: Record<string, string> = {
+      EFECTIVO: 'pi pi-money-bill',
+      NEQUI: 'pi pi-mobile',
+      TARJETA: 'pi pi-credit-card',
+    };
+    return map[m] ?? 'pi pi-wallet';
+  }
+
+  // ── Tabla histórica ───────────────────────────────────────
   async loadTable(event: TableLazyLoadEvent): Promise<void> {
     this.lastLazyEvent = event;
     this.loadingTable = true;
@@ -111,6 +173,7 @@ export class IndexTurnosComponent implements OnInit {
       this.totalRecords = 0;
     } finally {
       this.loadingTable = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -125,7 +188,7 @@ export class IndexTurnosComponent implements OnInit {
     if (this.lastLazyEvent) this.loadTable(this.lastLazyEvent);
   }
 
-  // ─── Abrir turno ──────────────────────────────────────────
+  // ── Abrir turno ───────────────────────────────────────────
   openAbrir(): void {
     this.showAbrir = true;
   }
@@ -135,10 +198,14 @@ export class IndexTurnosComponent implements OnInit {
   onTurnoAbierto(t: TurnoCajaModel): void {
     this.showAbrir = false;
     this.turnoActivo = t;
+    this.resumen = null;
+    this.cargarResumen();
+    this.iniciarPolling();
     this.reloadTable();
+    this.cdr.markForCheck();
   }
 
-  // ─── Cerrar turno ─────────────────────────────────────────
+  // ── Cerrar turno ──────────────────────────────────────────
   openCerrar(): void {
     this.showCerrar = true;
   }
@@ -148,12 +215,15 @@ export class IndexTurnosComponent implements OnInit {
   onTurnoCerrado(): void {
     this.showCerrar = false;
     this.turnoActivo = null;
+    this.resumen = null;
+    this.detenerPolling();
     this.reloadTable();
+    this.cdr.markForCheck();
   }
 
-  // ─── UI helpers ───────────────────────────────────────────
-  getEstadoSeverity(e: EstadoCompra): TagSeverity {
-    return e === 'RECIBIDA' ? 'success' : 'danger';
+  // ── UI helpers ────────────────────────────────────────────
+  getEstadoSeverity(e: EstadoTurno): TagSeverity {
+    return e === 'ABIERTA' ? 'success' : 'secondary';
   }
   getEstadoLabel(e: EstadoTurno): string {
     return e === 'ABIERTA' ? 'Abierta' : 'Cerrada';

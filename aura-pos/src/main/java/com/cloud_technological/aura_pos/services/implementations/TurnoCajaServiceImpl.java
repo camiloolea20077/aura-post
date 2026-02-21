@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import com.cloud_technological.aura_pos.dto.caja.AbrirTurnoDto;
 import com.cloud_technological.aura_pos.dto.caja.CerrarTurnoDto;
+import com.cloud_technological.aura_pos.dto.caja.ResumenTurnoDto;
 import com.cloud_technological.aura_pos.dto.caja.TurnoCajaDto;
 import com.cloud_technological.aura_pos.dto.caja.TurnoCajaTableDto;
 import com.cloud_technological.aura_pos.entity.CajaEntity;
@@ -99,14 +100,14 @@ public class TurnoCajaServiceImpl implements TurnoCajaService{
 
     @Override
     @Transactional
-    public TurnoCajaDto cerrar(Long id, CerrarTurnoDto dto, Integer empresaId) {
+    public ResumenTurnoDto cerrar(Long id, CerrarTurnoDto dto, Integer empresaId) {
         TurnoCajaEntity turno = turnoJPARepository.findByIdAndCajaSucursalEmpresaId(id, empresaId)
                 .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Turno no encontrado"));
 
         if (turno.getEstado().equals("CERRADA"))
             throw new GlobalException(HttpStatus.BAD_REQUEST, "El turno ya está cerrado");
 
-        // Calcular total efectivo del sistema
+        // Tu lógica existente — sin cambios
         BigDecimal totalSistema = turnoRepository.calcularTotalEfectivoSistema(id);
 
         turno.setFechaCierre(LocalDateTime.now());
@@ -114,7 +115,70 @@ public class TurnoCajaServiceImpl implements TurnoCajaService{
         turno.setTotalEfectivoReal(dto.getTotalEfectivoReal());
         turno.setDiferencia(dto.getTotalEfectivoReal().subtract(totalSistema));
         turno.setEstado("CERRADA");
+        turnoJPARepository.save(turno);
 
-        return turnoMapper.toDto(turnoJPARepository.save(turno));
+        // Nuevo: retornar resumen completo en vez del DTO simple
+        return construirResumen(id);
+    }
+    @Override
+    public ResumenTurnoDto resumen(Long id, Integer empresaId) {
+        // Validar que el turno pertenezca a la empresa
+        turnoJPARepository.findByIdAndCajaSucursalEmpresaId(id, empresaId)
+                .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Turno no encontrado"));
+
+        return construirResumen(id);
+    }
+    private ResumenTurnoDto construirResumen(Long turnoId) {
+        // Datos base del turno (reutiliza tu obtenerTurnoActivo modificado o el mapper)
+        TurnoCajaEntity entity = turnoJPARepository.findById(turnoId)
+                .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Turno no encontrado"));
+
+        TurnoCajaDto turnoDto = turnoMapper.toDto(entity);
+
+        // Desglose calculado desde ventas
+        var porCategoria  = turnoRepository.ventasPorCategoria(turnoId);
+        var porMetodoPago = turnoRepository.ventasPorMetodoPago(turnoId);
+        var totales       = turnoRepository.totalesGenerales(turnoId);
+
+        ResumenTurnoDto resumen = new ResumenTurnoDto();
+
+        // Info turno
+        resumen.setTurnoId(turnoDto.getId());
+        resumen.setCajaNombre(turnoDto.getCajaNombre());
+        resumen.setUsuarioNombre(turnoDto.getUsuarioNombre());
+        resumen.setFechaApertura(turnoDto.getFechaApertura() != null
+            ? turnoDto.getFechaApertura().toString() : null);
+        resumen.setBaseInicial(entity.getBaseInicial());
+        resumen.setEstado(entity.getEstado());
+
+        // Desglose
+        resumen.setVentasPorCategoria(porCategoria);
+        resumen.setVentasPorMetodoPago(porMetodoPago);
+
+        // Totales calculados
+        resumen.setTotalVentasBruto(toBD(totales.get("total_ventas_bruto")));
+        resumen.setTotalDescuentos(toBD(totales.get("total_descuentos")));
+        resumen.setTotalImpuestos(toBD(totales.get("total_impuestos")));
+        resumen.setTotalNeto(toBD(totales.get("total_neto")));
+        resumen.setTotalTransacciones(toInt(totales.get("total_transacciones")));
+
+        // Efectivo (disponible al cerrar, null si aún está abierto)
+        resumen.setTotalEfectivoSistema(entity.getTotalEfectivoSistema());
+        resumen.setTotalEfectivoReal(entity.getTotalEfectivoReal());
+        resumen.setDiferencia(entity.getDiferencia());
+
+        return resumen;
+    }
+
+    private BigDecimal toBD(Object val) {
+        if (val == null) return BigDecimal.ZERO;
+        if (val instanceof BigDecimal bd) return bd;
+        return new BigDecimal(val.toString());
+    }
+
+    private Integer toInt(Object val) {
+        if (val == null) return 0;
+        if (val instanceof Integer i) return i;
+        return Integer.parseInt(val.toString());
     }
 }

@@ -10,7 +10,6 @@
       </div>
     </div>
     <div class="header-actions">
-      <!-- Turno activo visible -->
       <div class="turno-activo-chip" *ngIf="turnoActivo">
         <span class="chip-dot"></span>
         <div class="chip-info">
@@ -26,7 +25,6 @@
           (click)="openCerrar()"
         ></button>
       </div>
-
       <button
         pButton
         type="button"
@@ -42,6 +40,187 @@
     </div>
   </div>
 
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- PANEL RESUMEN EN TIEMPO REAL (solo cuando hay turno)  -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <ng-container *ngIf="turnoActivo">
+    <!-- KPIs del turno -->
+    <div class="kpi-grid" *ngIf="resumen && !loadingResumen">
+      <div class="kpi-card kpi-ventas">
+        <div class="kpi-icon"><i class="pi pi-shopping-cart"></i></div>
+        <div class="kpi-info">
+          <span class="kpi-label">Ventas del turno</span>
+          <span class="kpi-value">{{ formatCOP(resumen.totalNeto) }}</span>
+          <span class="kpi-sub"
+            >{{ resumen.totalTransacciones }} transacciones</span
+          >
+        </div>
+      </div>
+      <div class="kpi-card kpi-efectivo">
+        <div class="kpi-icon"><i class="pi pi-money-bill"></i></div>
+        <div class="kpi-info">
+          <span class="kpi-label">Efectivo esperado</span>
+          <span class="kpi-value">
+            {{
+              formatCOP(
+                turnoActivo.baseInicial +
+                  (turnoActivo.totalEfectivoSistema ?? 0)
+              )
+            }}
+          </span>
+          <span class="kpi-sub"
+            >Base {{ formatCOP(turnoActivo.baseInicial) }}</span
+          >
+        </div>
+      </div>
+      <div class="kpi-card kpi-descuentos">
+        <div class="kpi-icon"><i class="pi pi-tag"></i></div>
+        <div class="kpi-info">
+          <span class="kpi-label">Descuentos</span>
+          <span class="kpi-value">{{
+            formatCOP(resumen.totalDescuentos)
+          }}</span>
+          <span class="kpi-sub"
+            >Sobre {{ formatCOP(resumen.totalVentasBruto) }} bruto</span
+          >
+        </div>
+      </div>
+      <div class="kpi-card kpi-refresh">
+        <button
+          pButton
+          icon="pi pi-refresh"
+          label="Actualizar"
+          class="p-button-outlined p-button-secondary btn-refresh"
+          (click)="cargarResumen()"
+        ></button>
+        <span class="refresh-hint">Se actualiza cada 30 seg.</span>
+      </div>
+    </div>
+
+    <!-- Skeleton KPIs -->
+    <div class="kpi-grid" *ngIf="loadingResumen">
+      <p-skeleton
+        height="80px"
+        borderRadius="14px"
+        *ngFor="let i of [1, 2, 3, 4]"
+      />
+    </div>
+
+    <!-- Desglose: categorías + métodos de pago -->
+    <div class="resumen-grid" *ngIf="resumen && !loadingResumen">
+      <!-- Ventas por categoría -->
+      <div class="panel">
+        <div class="panel-header">
+          <i class="pi pi-chart-bar"></i>
+          <span>Ventas por categoría</span>
+          <span
+            class="panel-badge"
+            *ngIf="resumen.ventasPorCategoria.length > 0"
+          >
+            {{ resumen.ventasPorCategoria.length }}
+          </span>
+        </div>
+        <div class="panel-body">
+          <div class="cat-header-row">
+            <span>Categoría</span>
+            <span class="text-center">Unidades</span>
+            <span class="text-right">Neto</span>
+          </div>
+          <div class="cat-row" *ngFor="let cat of resumen.ventasPorCategoria">
+            <span class="cat-nombre">
+              <span class="cat-dot"></span>{{ cat.categoriaNombre }}
+            </span>
+            <span class="cat-qty text-center">{{
+              cat.totalProductosVendidos
+            }}</span>
+            <div class="cat-neto-wrap">
+              <span class="cat-neto">{{ formatCOP(cat.totalNeto) }}</span>
+              <div class="cat-bar-wrap">
+                <div
+                  class="cat-bar"
+                  [style.width.%]="
+                    resumen!.totalNeto > 0
+                      ? (cat.totalNeto / resumen!.totalNeto) * 100
+                      : 0
+                  "
+                ></div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="cat-total-row"
+            *ngIf="resumen.ventasPorCategoria.length > 0"
+          >
+            <span><strong>Total</strong></span>
+            <span class="text-center text-muted"
+              >{{ resumen.totalTransacciones }} transacc.</span
+            >
+            <span class="cat-total-val">{{
+              formatCOP(resumen.totalNeto)
+            }}</span>
+          </div>
+          <div
+            class="empty-resumen"
+            *ngIf="resumen.ventasPorCategoria.length === 0"
+          >
+            <i class="pi pi-inbox"></i> Sin ventas en este turno
+          </div>
+        </div>
+      </div>
+
+      <!-- Métodos de pago -->
+      <div class="panel">
+        <div class="panel-header">
+          <i class="pi pi-wallet"></i>
+          <span>Métodos de pago</span>
+        </div>
+        <div class="panel-body">
+          <div
+            class="metodo-row"
+            *ngFor="let mp of resumen.ventasPorMetodoPago"
+          >
+            <div class="metodo-left">
+              <div class="metodo-icon-wrap">
+                <i [class]="metodoPagoIcon(mp.metodoPago)"></i>
+              </div>
+              <div class="metodo-info">
+                <span class="metodo-nombre">{{ mp.metodoPago }}</span>
+                <span class="metodo-count">{{ mp.totalPagos }} pagos</span>
+              </div>
+            </div>
+            <span class="metodo-monto">{{ formatCOP(mp.totalMonto) }}</span>
+          </div>
+          <div
+            class="empty-resumen"
+            *ngIf="resumen.ventasPorMetodoPago.length === 0"
+          >
+            <i class="pi pi-inbox"></i> Sin pagos registrados
+          </div>
+          <div
+            class="metodo-total-row"
+            *ngIf="resumen.ventasPorMetodoPago.length > 0"
+          >
+            <span>Total recaudado</span>
+            <span class="metodo-total-val">{{
+              formatCOP(resumen.totalNeto)
+            }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /resumen-grid -->
+
+    <!-- Skeleton desglose -->
+    <div class="resumen-grid" *ngIf="loadingResumen">
+      <p-skeleton height="200px" borderRadius="14px" />
+      <p-skeleton height="200px" borderRadius="14px" />
+    </div>
+
+    <p-divider />
+  </ng-container>
+  <!-- ── FIN PANEL RESUMEN ── -->
+
+  <!-- Tabla histórica (igual que antes) -->
   <div class="card">
     <div class="table-toolbar">
       <div class="toolbar-left">
@@ -101,16 +280,12 @@
           <td>
             <span class="id-badge">#{{ item.id }}</span>
           </td>
-
-          <!-- Caja -->
           <td>
             <div class="cell-caja">
               <i class="pi pi-desktop caja-icon"></i>
               <span class="caja-nombre">{{ item.cajaNombre }}</span>
             </div>
           </td>
-
-          <!-- Cajero -->
           <td>
             <div class="cell-cajero">
               <div class="cajero-avatar">
@@ -119,13 +294,9 @@
               <span class="cajero-nombre">{{ item.usuarioNombre }}</span>
             </div>
           </td>
-
-          <!-- Apertura -->
           <td>
             <span class="fecha-val">{{ formatFecha(item.fechaApertura) }}</span>
           </td>
-
-          <!-- Cierre -->
           <td>
             <span class="fecha-val" *ngIf="item.fechaCierre">{{
               formatFecha(item.fechaCierre)
@@ -134,18 +305,12 @@
               <span class="pulse-dot"></span> En curso
             </span>
           </td>
-
-          <!-- Duración -->
           <td class="text-center">
             <span class="duracion-chip">{{ duracion(item) }}</span>
           </td>
-
-          <!-- Base inicial -->
           <td class="text-right">
             <span class="monto-val">{{ formatCOP(item.baseInicial) }}</span>
           </td>
-
-          <!-- Diferencia -->
           <td class="text-right">
             <span
               *ngIf="item.diferencia !== null && item.diferencia !== undefined"
@@ -161,8 +326,6 @@
               >—</span
             >
           </td>
-
-          <!-- Estado -->
           <td class="text-center">
             <p-tag
               [value]="getEstadoLabel(item.estado)"

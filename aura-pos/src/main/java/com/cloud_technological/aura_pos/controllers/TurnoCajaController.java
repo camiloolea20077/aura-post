@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.cloud_technological.aura_pos.dto.caja.AbrirTurnoDto;
 import com.cloud_technological.aura_pos.dto.caja.CerrarTurnoDto;
+import com.cloud_technological.aura_pos.dto.caja.ResumenTurnoDto;
 import com.cloud_technological.aura_pos.dto.caja.TurnoCajaDto;
 import com.cloud_technological.aura_pos.dto.caja.TurnoCajaTableDto;
 import com.cloud_technological.aura_pos.services.TurnoCajaService;
@@ -67,11 +68,21 @@ public class TurnoCajaController {
     }
 
     @PatchMapping("/{id}/cerrar")
-    public ResponseEntity<ApiResponse<TurnoCajaDto>> cerrar(
+    public ResponseEntity<ApiResponse<ResumenTurnoDto>> cerrar(   // ← ResumenTurnoDto en vez de TurnoCajaDto
             @PathVariable Long id,
             @Valid @RequestBody CerrarTurnoDto dto) {
         Integer empresaId = securityUtils.getEmpresaId();
-        TurnoCajaDto result = turnoService.cerrar(id, dto, empresaId);
-        return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "Turno cerrado correctamente", false, result), HttpStatus.OK);
+        ResumenTurnoDto result = turnoService.cerrar(id, dto, empresaId);  // ← mismo llamado
+        return new ResponseEntity<>(
+            new ApiResponse<>(HttpStatus.OK.value(), "Turno cerrado correctamente", false, result),
+            HttpStatus.OK);
+    }
+    @GetMapping("/{id}/resumen")
+    public ResponseEntity<ApiResponse<ResumenTurnoDto>> resumen(@PathVariable Long id) {
+        Integer empresaId = securityUtils.getEmpresaId();
+        ResumenTurnoDto result = turnoService.resumen(id, empresaId);
+        return new ResponseEntity<>(
+            new ApiResponse<>(HttpStatus.OK.value(), "Resumen del turno", false, result),
+            HttpStatus.OK);
     }
 }

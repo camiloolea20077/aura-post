@@ -4,12 +4,12 @@
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
-  [style]="{ width: '460px' }"
+  [style]="{ width: '520px' }"
   styleClass="aura-dialog"
   (onHide)="closeModal()"
 >
   <div class="cierre-container" *ngIf="turno">
-    <!-- Resumen del turno -->
+    <!-- Cabecera turno -->
     <div class="turno-header">
       <div class="turno-icon"><i class="pi pi-desktop"></i></div>
       <div class="turno-meta">
@@ -18,9 +18,79 @@
           >Apertura: {{ formatFecha(turno.fechaApertura) }}</span
         >
       </div>
+      <div class="turno-badge"><i class="pi pi-circle-fill"></i> ABIERTA</div>
     </div>
 
-    <!-- Fila base + ventas + total sistema -->
+    <!-- ── Desglose por categorías ── -->
+    <div class="section-title">
+      <i class="pi pi-chart-bar"></i>
+      Ventas por categoría
+    </div>
+
+    <!-- Skeleton mientras carga -->
+    <div class="categorias-list" *ngIf="loadingResumen">
+      <div class="cat-row skeleton-row" *ngFor="let i of [1, 2, 3]">
+        <p-skeleton width="40%" height="14px" />
+        <p-skeleton width="20%" height="14px" />
+        <p-skeleton width="25%" height="14px" />
+      </div>
+    </div>
+
+    <!-- Lista real -->
+    <div class="categorias-list" *ngIf="!loadingResumen && resumen">
+      <div class="cat-header">
+        <span>Categoría</span>
+        <span>Unidades</span>
+        <span>Total</span>
+      </div>
+      <div class="cat-row" *ngFor="let cat of resumen.ventasPorCategoria">
+        <span class="cat-nombre">
+          <i class="pi pi-tag"></i>
+          {{ cat.categoriaNombre }}
+        </span>
+        <span class="cat-unidades">{{ cat.totalProductosVendidos }}</span>
+        <span class="cat-total">{{ formatCOP(cat.totalNeto) }}</span>
+      </div>
+      <div
+        class="cat-row cat-total-row"
+        *ngIf="resumen.ventasPorCategoria.length > 1"
+      >
+        <span class="cat-nombre"><strong>Total ventas</strong></span>
+        <span class="cat-unidades"
+          >{{ resumen.totalTransacciones }} transacc.</span
+        >
+        <span class="cat-total total-highlight">{{
+          formatCOP(resumen.totalNeto)
+        }}</span>
+      </div>
+      <!-- Sin ventas -->
+      <div class="sin-ventas" *ngIf="resumen.ventasPorCategoria.length === 0">
+        <i class="pi pi-inbox"></i>
+        Sin ventas registradas en este turno
+      </div>
+    </div>
+
+    <!-- ── Métodos de pago ── -->
+    <div
+      class="metodos-pago"
+      *ngIf="
+        !loadingResumen && resumen && resumen.ventasPorMetodoPago.length > 0
+      "
+    >
+      <div class="section-title">
+        <i class="pi pi-wallet"></i>
+        Ingresos por método de pago
+      </div>
+      <div class="metodos-grid">
+        <div class="metodo-item" *ngFor="let mp of resumen.ventasPorMetodoPago">
+          <i [class]="metodoPagoIcon(mp.metodoPago)"></i>
+          <span class="metodo-nombre">{{ mp.metodoPago }}</span>
+          <span class="metodo-monto">{{ formatCOP(mp.totalMonto) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Resumen de efectivo ── -->
     <div class="resumen-grid">
       <div class="res-item">
         <span class="res-label">Base inicial</span>
@@ -32,16 +102,17 @@
       </div>
       <div class="res-item sistema-total">
         <span class="res-label">Total esperado en caja</span>
-        <span class="res-val sistema">{{
-          formatCOP(turno.baseInicial + (turno.totalEfectivoSistema ?? 0))
-        }}</span>
+        <span class="res-val sistema">
+          {{ formatCOP(turno.baseInicial + (turno.totalEfectivoSistema ?? 0)) }}
+        </span>
       </div>
     </div>
 
-    <p-divider align="left"
-      ><span class="div-label">Conteo real</span></p-divider
-    >
+    <p-divider align="left">
+      <span class="div-label">Conteo real</span>
+    </p-divider>
 
+    <!-- ── Formulario efectivo real ── -->
     <form [formGroup]="frmCerrar">
       <div class="field">
         <label>Efectivo real contado <span class="required">*</span></label>
@@ -56,9 +127,9 @@
           styleClass="w-full input-real"
           [class.ng-invalid]="isInvalid('totalEfectivoReal')"
         />
-        <small class="p-error" *ngIf="isInvalid('totalEfectivoReal')"
-          >Ingresa el efectivo contado.</small
-        >
+        <small class="p-error" *ngIf="isInvalid('totalEfectivoReal')">
+          Ingresa el efectivo contado.
+        </small>
       </div>
 
       <!-- Diferencia en tiempo real -->
@@ -69,9 +140,9 @@
       >
         <div class="dif-row">
           <span class="dif-label">{{ diferenciaLabel }}</span>
-          <span class="dif-val">{{
-            formatCOP(diferencia < 0 ? -diferencia : diferencia)
-          }}</span>
+          <span class="dif-val">
+            {{ formatCOP(diferencia < 0 ? -diferencia : diferencia) }}
+          </span>
         </div>
         <div class="dif-bar" *ngIf="diferencia !== 0">
           <div
@@ -108,7 +179,7 @@
         type="button"
         label="Cerrar turno"
         [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-lock'"
-        class="btn-aura"
+        class="btn-aura btn-cierre"
         [disabled]="isSubmitting || frmCerrar.invalid"
         (click)="cerrarTurno()"
       ></button>
