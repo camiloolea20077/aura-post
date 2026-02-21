@@ -380,5 +380,10 @@
   (modalClosed)="showPago = false"
   (ventaConfirmada)="onVentaConfirmada($event)"
 />
-
+<!-- NUEVO: modal tirilla -->
+<app-modal-tirilla
+  [displayModal]="showTirilla"
+  [venta]="ventaActual"
+  (modalClosed)="onTirillaClose()"
+/>
 <p-toast />

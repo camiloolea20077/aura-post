@@ -17,7 +17,7 @@ export class SidebarComponent implements OnInit {
   @Input() collapsed = false;
   @Output() toggleCollapse = new EventEmitter<void>();
 
-  public menuGroups: SidebarMenuGroup[] = SIDEBAR_MENU;
+  public menuGroups: SidebarMenuGroup[] = [];
   public userName = '';
   public userRole = '';
   public userInitials = '';
@@ -39,7 +39,24 @@ export class SidebarComponent implements OnInit {
       this.userRole = auth.rol;
       this.empresaNombre = auth.username;
       this.userInitials = this.getInitials(auth.nombreCompleto);
+      this.menuGroups = this.filtrarMenu(auth.rol);
     }
+  }
+
+  // ── Filtra grupos e ítems según el rol ────────────────────
+  private filtrarMenu(rol: string): SidebarMenuGroup[] {
+    return SIDEBAR_MENU.filter((group) => this.tieneAcceso(group.roles, rol))
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => this.tieneAcceso(item.roles, rol)),
+      }))
+      .filter((group) => group.items.length > 0); // eliminar grupos vacíos
+  }
+
+  // undefined en roles = todos los roles tienen acceso
+  private tieneAcceso(roles: string[] | undefined, rol: string): boolean {
+    if (!roles || roles.length === 0) return true;
+    return roles.includes(rol);
   }
 
   private getInitials(name: string): string {

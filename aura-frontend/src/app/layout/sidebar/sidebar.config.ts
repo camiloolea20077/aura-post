@@ -4,11 +4,13 @@ export interface SidebarMenuItem {
   route?: string;
   badge?: string;
   highlight?: boolean;
+  roles?: string[]; // undefined = todos los roles pueden verlo
 }
 
 export interface SidebarMenuGroup {
   label: string;
   items: SidebarMenuItem[];
+  roles?: string[]; // undefined = todos los roles pueden verlo
 }
 
 export const SIDEBAR_MENU: SidebarMenuGroup[] = [
@@ -22,11 +24,13 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         route: '/pos',
         badge: 'POS',
         highlight: true,
+        // todos los roles
       },
     ],
   },
   {
     label: 'Catálogo',
+    roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [
       { label: 'Productos', icon: 'pi pi-box', route: '/catalogo/productos' },
       {
@@ -54,6 +58,7 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
   },
   {
     label: 'Precios',
+    roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [
       {
         label: 'Listas de Precio',
@@ -74,6 +79,7 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
   },
   {
     label: 'Inventario',
+    roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [
       { label: 'Stock', icon: 'pi pi-database', route: '/inventario/stock' },
       { label: 'Lotes', icon: 'pi pi-calendar', route: '/inventario/lotes' },
@@ -87,6 +93,7 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
   },
   {
     label: 'Operaciones',
+    roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [
       { label: 'Compras', icon: 'pi pi-truck', route: '/compras' },
       { label: 'Ventas', icon: 'pi pi-receipt', route: '/ventas' },
@@ -101,13 +108,25 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         label: 'Clientes y Proveedores',
         icon: 'pi pi-users',
         route: '/terceros',
+        roles: ['SUPER_ADMIN', 'ADMIN'],
       },
-      { label: 'Cajas', icon: 'pi pi-desktop', route: '/caja/cajas' },
-      { label: 'Turnos', icon: 'pi pi-clock', route: '/caja/turnos' },
+      {
+        label: 'Cajas',
+        icon: 'pi pi-desktop',
+        route: '/caja/cajas',
+        roles: ['SUPER_ADMIN', 'ADMIN'],
+      },
+      {
+        label: 'Turnos',
+        icon: 'pi pi-clock',
+        route: '/caja/turnos',
+        // todos — el cajero también necesita acceder a Turnos para abrir/cerrar
+      },
     ],
   },
   {
     label: 'Reportes',
+    roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [
       { label: 'Ventas', icon: 'pi pi-chart-line', route: '/reportes/ventas' },
       {

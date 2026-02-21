@@ -38,6 +38,8 @@ import { AlertService } from '../../shared/pipes/alert.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { ModalPagoComponent } from './components/modal-pagos/modal-pago.component';
+import { VentaResponse } from '../../core/models/venta-response.model';
+import { ModalTirillaComponent } from './components/modal-tirilla/modal-tirilla.component';
 
 @Component({
   selector: 'app-pos',
@@ -55,6 +57,7 @@ import { ModalPagoComponent } from './components/modal-pagos/modal-pago.componen
     TooltipModule,
     SkeletonModule,
     ModalPagoComponent,
+    ModalTirillaComponent,
   ],
   providers: [MessageService],
   templateUrl: './pos.component.html',
@@ -63,6 +66,8 @@ import { ModalPagoComponent } from './components/modal-pagos/modal-pago.componen
 export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   // ─── NUEVO: referencia al input de búsqueda ───────────────
   @ViewChild('searchInput') searchInputRef!: ElementRef<HTMLInputElement>;
+  public showTirilla = false;
+  public ventaActual: VentaResponse | null = null;
 
   // ── Turno ──────────────────────────────────────────────────
   public turnoActivo: TurnoCajaModel | null = null;
@@ -383,13 +388,10 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     try {
       const res = await lastValueFrom(this.ventaService.create(dto));
       if (res?.status === 201) {
-        this.alertService.showSuccess(
-          'Venta completada',
-          `#${res.data?.numeroVenta ?? res.data?.id}`,
-        );
-        this.clearCart();
+        this.ventaActual = res.data as unknown as VentaResponse;
         this.showPago = false;
-        this.focusSearch(); // ← devolver foco tras venta exitosa
+        this.showTirilla = true;
+        this.clearCart();
         this.cdr.markForCheck();
       }
     } catch (err: any) {
@@ -399,7 +401,12 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       );
     }
   }
-
+  onTirillaClose(): void {
+    this.showTirilla = false;
+    this.ventaActual = null;
+    this.focusSearch();
+    this.cdr.markForCheck();
+  }
   goTurnos(): void {
     this.router.navigate(['/turnos']);
   }
