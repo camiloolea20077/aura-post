@@ -84,7 +84,7 @@
       <div
         class="product-card"
         *ngFor="let p of productosFiltrados; trackBy: trackByProd"
-        [class.sin-stock]="p.stockActual <= 0"
+        [class.sin-stock]="p.stockActual <= 0 && p.tipoProducto !== 'SERVICIO'"
         [class.low-stock]="p.stockActual > 0 && p.stockActual < 5"
         (click)="addToCart(p)"
       >
@@ -94,8 +94,14 @@
           *ngIf="p.stockActual > 0 && p.stockActual < 5"
           >¡Últimas!</span
         >
-        <span class="stock-badge empty" *ngIf="p.stockActual <= 0"
-          >Agotado</span
+        <span
+          class="stock-badge low"
+          *ngIf="
+            p.stockActual > 0 &&
+            p.stockActual < 5 &&
+            p.tipoProducto !== 'SERVICIO'
+          "
+          >¡Últimas!</span
         >
         <span class="promo-badge" *ngIf="p.descuentoNombre">
           <i class="pi pi-tag"></i> {{ p.descuentoNombre }}
@@ -145,6 +151,7 @@
           </div>
           <span
             class="prod-stock-pill"
+            *ngIf="p.tipoProducto !== 'SERVICIO'"
             [class.ok]="p.stockActual >= 5"
             [class.low]="p.stockActual > 0 && p.stockActual < 5"
             [class.empty]="p.stockActual <= 0"
@@ -155,6 +162,14 @@
                 ? (p.unidadMedidaNombre | lowercase)
                 : "uds"
             }}</span>
+          </span>
+
+          <!-- Pill especial para servicios -->
+          <span
+            class="prod-stock-pill servicio"
+            *ngIf="p.tipoProducto === 'SERVICIO'"
+          >
+            <span class="stock-unit">servicio</span>
           </span>
         </div>
       </div>
