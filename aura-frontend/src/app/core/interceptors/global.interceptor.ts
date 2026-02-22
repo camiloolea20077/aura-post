@@ -54,8 +54,12 @@ export class GlobalInterceptor implements HttpInterceptor {
               );
               this.indexDBService.deleteDataAuthDB();
               this.router.navigate(['/login']);
+            } else if (error.status >= 400) {
+              this.alertService.showError(
+                'Error',
+                error.error?.message ?? error.message ?? 'Ocurrió un error en el servidor'
+              );
             }
-            // Propaga el error para que el catch del servicio lo maneje
             return throwError(() => error.error || error);
           })
         );
