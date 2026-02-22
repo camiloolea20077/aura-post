@@ -108,7 +108,7 @@ public class MermaServiceImpl implements MermaService {
         EmpresaEntity empresa = empresaRepository.findById(empresaId)
                 .orElseThrow(() -> new GlobalException(HttpStatus.INTERNAL_SERVER_ERROR, "Empresa no encontrada"));
 
-        SucursalEntity sucursal = sucursalJPARepository.findByIdAndEmpresaId(dto.getSucursalId(), empresaId)
+        SucursalEntity sucursal = sucursalJPARepository.findByIdAndEmpresaId(dto.getSucursalId().intValue(), empresaId)
                 .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST, "Sucursal no encontrada"));
 
         MotivoMermaEntity motivo = motivoJPARepository.findByIdAndEmpresaId(dto.getMotivoId(), empresaId)

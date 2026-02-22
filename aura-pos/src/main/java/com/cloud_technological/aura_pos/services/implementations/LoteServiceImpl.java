@@ -1,9 +1,12 @@
 package com.cloud_technological.aura_pos.services.implementations;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
-import java.util.List;
+import org.springframework.stereotype.Service;
+
 import com.cloud_technological.aura_pos.dto.inventario.CreateLoteDto;
 import com.cloud_technological.aura_pos.dto.inventario.LoteDto;
 import com.cloud_technological.aura_pos.dto.inventario.LoteTableDto;
@@ -17,8 +20,8 @@ import com.cloud_technological.aura_pos.repositories.productos.ProductoJPAReposi
 import com.cloud_technological.aura_pos.repositories.sucursales.SucursalJPARepository;
 import com.cloud_technological.aura_pos.utils.GlobalException;
 import com.cloud_technological.aura_pos.utils.PageableDto;
+
 import jakarta.transaction.Transactional;
-import org.springframework.stereotype.Service;
 
 @Service
 public class LoteServiceImpl implements LoteService {
@@ -74,7 +77,7 @@ public class LoteServiceImpl implements LoteService {
         ProductoEntity producto = productoJPARepository.findByIdAndEmpresaId(dto.getProductoId(), empresaId)
                 .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST, "Producto no encontrado"));
 
-        SucursalEntity sucursal = sucursalJPARepository.findByIdAndEmpresaId(dto.getSucursalId(), empresaId)
+        SucursalEntity sucursal = sucursalJPARepository.findByIdAndEmpresaId(dto.getSucursalId().intValue(), empresaId)
                 .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST, "Sucursal no encontrada"));
 
         LoteEntity entity = loteMapper.toEntity(dto);

@@ -107,10 +107,10 @@ public class TrasladoServiceImpl implements TrasladoService{
         EmpresaEntity empresa = empresaRepository.findById(empresaId)
                 .orElseThrow(() -> new GlobalException(HttpStatus.INTERNAL_SERVER_ERROR, "Empresa no encontrada"));
 
-        SucursalEntity origen = sucursalJPARepository.findByIdAndEmpresaId(dto.getSucursalOrigenId(), empresaId)
+        SucursalEntity origen = sucursalJPARepository.findByIdAndEmpresaId(dto.getSucursalOrigenId().intValue(), empresaId)
                 .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST, "Sucursal origen no encontrada"));
 
-        SucursalEntity destino = sucursalJPARepository.findByIdAndEmpresaId(dto.getSucursalDestinoId(), empresaId)
+        SucursalEntity destino = sucursalJPARepository.findByIdAndEmpresaId(dto.getSucursalDestinoId().intValue(), empresaId)
                 .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST, "Sucursal destino no encontrada"));
 
         UsuarioEntity usuario = usuarioJPARepository.findById(usuarioId.intValue())

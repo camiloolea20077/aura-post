@@ -10,6 +10,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import com.cloud_technological.aura_pos.dto.sucursal.SucursalDto;
 import com.cloud_technological.aura_pos.dto.sucursal.SucursalTableDto;
 import com.cloud_technological.aura_pos.utils.PageableDto;
 
@@ -84,5 +85,26 @@ public class SucursalQueryRepository {
                 .addValue("excludeId", excludeId);
         Long count = jdbc.queryForObject(sql, params, Long.class);
         return count != null && count > 0;
+    }
+
+    public List<SucursalDto> listarActivas(Integer empresaId) {
+        String sql = """
+                SELECT s.id,
+                       s.codigo,
+                       s.nombre,
+                       s.direccion,
+                       s.ciudad,
+                       s.telefono,
+                       s.activa,
+                       s.consecutivo_actual,
+                       s.empresa_id
+                FROM sucursal s
+                WHERE s.empresa_id = :empresaId
+                  AND s.activa = true
+                ORDER BY s.nombre ASC
+                """;
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("empresaId", empresaId);
+        return jdbc.query(sql, params, BeanPropertyRowMapper.newInstance(SucursalDto.class));
     }
 }

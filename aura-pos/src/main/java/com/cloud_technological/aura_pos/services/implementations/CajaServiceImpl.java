@@ -54,7 +54,7 @@ public class CajaServiceImpl implements CajaService{
     @Override
     @Transactional
     public CajaDto crear(CreateCajaDto dto, Integer empresaId) {
-        SucursalEntity sucursal = sucursalJPARepository.findByIdAndEmpresaId(dto.getSucursalId(), empresaId)
+        SucursalEntity sucursal = sucursalJPARepository.findByIdAndEmpresaId(dto.getSucursalId().intValue(), empresaId)
                 .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST, "Sucursal no encontrada"));
 
         CajaEntity entity = cajaMapper.toEntity(dto);

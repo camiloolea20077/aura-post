@@ -122,6 +122,18 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         route: '/caja/turnos',
         // todos — el cajero también necesita acceder a Turnos para abrir/cerrar
       },
+      {
+        label: 'Sucursales',
+        icon: 'pi pi-building',
+        route: '/admin/sucursales',
+        roles: ['SUPER_ADMIN', 'ADMIN'],
+      },
+      {
+        label: 'Usuarios',
+        icon: 'pi pi-users',
+        route: '/admin/usuarios',
+        roles: ['SUPER_ADMIN', 'ADMIN'],
+      },
     ],
   },
   {
