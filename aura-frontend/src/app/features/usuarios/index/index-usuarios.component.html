@@ -1,0 +1,147 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="module-wrapper">
+  <!-- ─── Header ─────────────────────────────────────────────── -->
+  <div class="module-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="pi pi-users"></i>
+      </div>
+      <div>
+        <h2 class="header-title">Usuarios</h2>
+        <p class="header-sub">Gestión de usuarios y accesos</p>
+      </div>
+    </div>
+    <button
+      pButton
+      icon="pi pi-plus"
+      label="Nuevo usuario"
+      class="btn-aura btn-primary"
+      (click)="nuevo()"
+    ></button>
+  </div>
+
+  <!-- ─── Tabla ───────────────────────────────────────────────── -->
+  <div class="table-card">
+    <div class="table-toolbar">
+      <div class="search-wrap">
+        <i class="pi pi-search"></i>
+        <input
+          pInputText
+          [(ngModel)]="search"
+          placeholder="Buscar por nombre, username o documento..."
+          (input)="onSearch()"
+          class="search-input"
+        />
+        <button *ngIf="search" class="clear-btn" (click)="clearSearch()">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+      <span class="total-badge">{{ totalRows }} registros</span>
+    </div>
+
+    <p-table
+      [value]="rows"
+      [lazy]="true"
+      (onLazyLoad)="loadTable($event)"
+      [paginator]="true"
+      [rows]="rowSize"
+      [totalRecords]="totalRows"
+      [loading]="loadingTable"
+      [rowHover]="true"
+      [sortField]="'id'"
+      [sortOrder]="-1"
+      dataKey="id"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="username" style="width: 160px">
+            Username <p-sortIcon field="username" />
+          </th>
+          <th pSortableColumn="nombreCompleto">
+            Nombre completo <p-sortIcon field="nombreCompleto" />
+          </th>
+          <th style="width: 150px">Documento</th>
+          <th style="width: 140px">Teléfono</th>
+          <th style="width: 130px; text-align: center">Rol</th>
+          <th style="width: 100px; text-align: center">Estado</th>
+          <th style="width: 90px; text-align: center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-u>
+        <tr class="clickable-row" (click)="editar(u.id)">
+          <td>
+            <div class="user-cell">
+              <div class="user-avatar">
+                {{ u.nombreCompleto?.charAt(0) ?? "U" }}
+              </div>
+              <span class="mono fw-600">{{ u.username }}</span>
+            </div>
+          </td>
+          <td class="fw-600">{{ u.nombreCompleto }}</td>
+          <td class="mono text-muted">{{ u.numeroDocumento }}</td>
+          <td class="text-muted">{{ u.telefono ?? "—" }}</td>
+          <td style="text-align: center">
+            <p-tag [value]="u.rol" [severity]="getRolSeverity(u.rol)" />
+          </td>
+          <td style="text-align: center">
+            <p-tag
+              [value]="u.activo ? 'Activo' : 'Inactivo'"
+              [severity]="getActivaSeverity(u.activo)"
+            />
+          </td>
+          <td style="text-align: center" (click)="$event.stopPropagation()">
+            <button
+              pButton
+              icon="pi pi-pencil"
+              class="p-button-text p-button-sm"
+              pTooltip="Editar"
+              tooltipPosition="left"
+              (click)="editar(u.id)"
+            ></button>
+            <button
+              pButton
+              icon="pi pi-ban"
+              class="p-button-text p-button-sm p-button-danger"
+              pTooltip="Desactivar"
+              tooltipPosition="left"
+              *ngIf="u.activo"
+              (click)="confirmarDesactivar(u, $event)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="empty-row">
+            <i class="pi pi-users" style="font-size: 2rem; opacity: 0.2"></i>
+            <p>No se encontraron usuarios</p>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr *ngFor="let i of [1, 2, 3, 4, 5]">
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- ─── Dialog ──────────────────────────────────────────────── -->
+<app-form-usuario
+  [(visible)]="showForm"
+  [usuario]="editTarget"
+  (saved)="onSaved()"
+/>

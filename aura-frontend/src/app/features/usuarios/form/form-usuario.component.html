@@ -1,0 +1,247 @@
+<p-dialog
+  [header]="isEdit ? 'Editar usuario' : 'Nuevo usuario'"
+  [(visible)]="visible"
+  (onHide)="close()"
+  [modal]="true"
+  [style]="{ width: '680px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <form [formGroup]="frmUsuario" class="dialog-form">
+    <!-- ─── Sección: Acceso ────────────────────────────────── -->
+    <div class="section-title"><i class="pi pi-lock"></i> Datos de acceso</div>
+
+    <div class="form-row two-col">
+      <div class="field">
+        <label class="field-label required">Username</label>
+        <input
+          pInputText
+          formControlName="username"
+          placeholder="cajero01"
+          class="w-full"
+          [readOnly]="isEdit"
+          [class.ng-invalid]="isInvalid('username')"
+        />
+        <small class="field-error" *ngIf="isInvalid('username')"
+          >Requerido</small
+        >
+      </div>
+      <div class="field">
+        <label class="field-label" [class.required]="!isEdit">
+          Contraseña {{ isEdit ? "(dejar vacío = no cambia)" : "" }}
+        </label>
+        <p-password
+          formControlName="password"
+          placeholder="••••••••"
+          [feedback]="false"
+          [toggleMask]="true"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+          [class.ng-invalid]="isInvalid('password')"
+        />
+        <small class="field-error" *ngIf="isInvalid('password')"
+          >Mínimo 6 caracteres</small
+        >
+      </div>
+    </div>
+
+    <div class="form-row two-col">
+      <div class="field">
+        <label class="field-label required">Rol</label>
+        <p-dropdown
+          formControlName="rol"
+          [options]="rolesOpts"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Seleccionar rol"
+          styleClass="w-full"
+          [class.ng-invalid]="isInvalid('rol')"
+        />
+      </div>
+      <div class="field">
+        <label class="field-label">PIN de acceso rápido</label>
+        <input
+          pInputText
+          formControlName="pinAccesoRapido"
+          placeholder="1234"
+          maxlength="6"
+          class="w-full"
+          type="password"
+        />
+        <small class="field-hint"
+          >Hasta 6 dígitos. Para desbloqueo táctil.</small
+        >
+      </div>
+    </div>
+
+    <!-- Estado — solo edición -->
+    <div class="field" *ngIf="isEdit">
+      <label class="field-label">Estado</label>
+      <p-toggleButton
+        formControlName="activo"
+        onLabel="Activo"
+        offLabel="Inactivo"
+        offIcon="pi pi-times"
+        styleClass="toggle-estado"
+      />
+    </div>
+
+    <p-divider />
+
+    <!-- ─── Sección: Datos personales ─────────────────────── -->
+    <div class="section-title"><i class="pi pi-user"></i> Datos personales</div>
+
+    <div class="form-row two-col">
+      <div class="field">
+        <label class="field-label required">Nombres</label>
+        <input
+          pInputText
+          formControlName="nombres"
+          placeholder="Carlos"
+          class="w-full"
+          [class.ng-invalid]="isInvalid('nombres')"
+        />
+        <small class="field-error" *ngIf="isInvalid('nombres')"
+          >Requerido</small
+        >
+      </div>
+      <div class="field">
+        <label class="field-label required">Apellidos</label>
+        <input
+          pInputText
+          formControlName="apellidos"
+          placeholder="Pérez González"
+          class="w-full"
+          [class.ng-invalid]="isInvalid('apellidos')"
+        />
+        <small class="field-error" *ngIf="isInvalid('apellidos')"
+          >Requerido</small
+        >
+      </div>
+    </div>
+
+    <div class="form-row two-col">
+      <div class="field">
+        <label class="field-label required">Tipo documento</label>
+        <p-dropdown
+          formControlName="tipoDocumento"
+          [options]="tipoDocOpts"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          [disabled]="isEdit"
+        />
+      </div>
+      <div class="field">
+        <label class="field-label required">Número documento</label>
+        <input
+          pInputText
+          formControlName="numeroDocumento"
+          placeholder="1045678901"
+          class="w-full"
+          [readOnly]="isEdit"
+          [class.ng-invalid]="isInvalid('numeroDocumento')"
+        />
+        <small class="field-error" *ngIf="isInvalid('numeroDocumento')"
+          >Requerido</small
+        >
+      </div>
+    </div>
+
+    <div class="form-row two-col">
+      <div class="field">
+        <label class="field-label">Teléfono</label>
+        <input
+          pInputText
+          formControlName="telefono"
+          placeholder="3001234567"
+          class="w-full"
+        />
+      </div>
+      <div class="field">
+        <label class="field-label">Email</label>
+        <input
+          pInputText
+          formControlName="email"
+          placeholder="usuario@empresa.com"
+          class="w-full"
+          [class.ng-invalid]="isInvalid('email')"
+        />
+        <small class="field-error" *ngIf="isInvalid('email')"
+          >Email inválido</small
+        >
+      </div>
+    </div>
+
+    <p-divider />
+
+    <!-- ─── Sección: Sucursales ───────────────────────────── -->
+    <div class="section-title">
+      <i class="pi pi-building"></i> Sucursales asignadas
+      <span class="section-hint"
+        >Selecciona al menos una y marca la sede principal</span
+      >
+    </div>
+
+    <div class="sucursales-grid">
+      <div
+        class="sucursal-item"
+        *ngFor="let s of sucursalesOpts"
+        [class.selected]="isSucursalChecked(s.id)"
+        [class.is-default]="
+          sucursalDefaultId === s.id && isSucursalChecked(s.id)
+        "
+      >
+        <p-checkbox
+          [ngModel]="isSucursalChecked(s.id)"
+          [ngModelOptions]="{ standalone: true }"
+          [binary]="true"
+          (ngModelChange)="toggleSucursal(s.id, $event)"
+          [inputId]="'suc-' + s.id"
+        />
+        <label [for]="'suc-' + s.id" class="suc-label">
+          <span class="suc-nombre">{{ s.nombre }}</span>
+        </label>
+
+        <!-- Radio default — visible solo si está seleccionada -->
+        <button
+          *ngIf="isSucursalChecked(s.id)"
+          class="default-btn"
+          [class.active]="sucursalDefaultId === s.id"
+          pTooltip="Marcar como sede principal"
+          tooltipPosition="top"
+          type="button"
+          (click)="setDefault(s.id)"
+        >
+          <i
+            class="pi"
+            [class.pi-star-fill]="sucursalDefaultId === s.id"
+            [class.pi-star]="sucursalDefaultId !== s.id"
+          ></i>
+        </button>
+      </div>
+    </div>
+
+    <small class="field-error" *ngIf="errorSucursales">
+      Debes asignar al menos una sucursal
+    </small>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="close()"
+    ></button>
+    <button
+      pButton
+      [label]="isEdit ? 'Actualizar' : 'Guardar'"
+      icon="pi pi-check"
+      class="btn-aura btn-primary"
+      [loading]="loading"
+      (click)="save()"
+    ></button>
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,140 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="module-wrapper">
+  <!-- ─── Header ─────────────────────────────────────────────── -->
+  <div class="module-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="pi pi-building"></i>
+      </div>
+      <div>
+        <h2 class="header-title">Sucursales</h2>
+        <p class="header-sub">Gestión de sedes de la empresa</p>
+      </div>
+    </div>
+    <button
+      pButton
+      icon="pi pi-plus"
+      label="Nueva sucursal"
+      class="btn-aura btn-primary"
+      (click)="nueva()"
+    ></button>
+  </div>
+
+  <!-- ─── Tabla ───────────────────────────────────────────────── -->
+  <div class="table-card">
+    <!-- Barra búsqueda -->
+    <div class="table-toolbar">
+      <div class="search-wrap">
+        <i class="pi pi-search"></i>
+        <input
+          pInputText
+          [(ngModel)]="search"
+          placeholder="Buscar por nombre, código o ciudad..."
+          (input)="onSearch()"
+          class="search-input"
+        />
+        <button *ngIf="search" class="clear-btn" (click)="clearSearch()">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+      <span class="total-badge">{{ totalRows }} registros</span>
+    </div>
+
+    <!-- p-table lazy -->
+    <p-table
+      [value]="rows"
+      [lazy]="true"
+      (onLazyLoad)="loadTable($event)"
+      [paginator]="true"
+      [rows]="rowSize"
+      [totalRecords]="totalRows"
+      [loading]="loadingTable"
+      [rowHover]="true"
+      [sortField]="'id'"
+      [sortOrder]="-1"
+      dataKey="id"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="codigo" style="width: 110px">
+            Código <p-sortIcon field="codigo" />
+          </th>
+          <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre" /></th>
+          <th pSortableColumn="ciudad" style="width: 150px">
+            Ciudad <p-sortIcon field="ciudad" />
+          </th>
+          <th style="width: 150px">Teléfono</th>
+          <th style="width: 100px; text-align: center">Estado</th>
+          <th style="width: 90px; text-align: center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-s>
+        <tr class="clickable-row" (click)="editar(s.id)">
+          <td>
+            <span class="codigo-tag" *ngIf="s.codigo">{{ s.codigo }}</span>
+            <span class="text-muted" *ngIf="!s.codigo">—</span>
+          </td>
+          <td class="fw-600">{{ s.nombre }}</td>
+          <td class="text-muted">{{ s.ciudad ?? "—" }}</td>
+          <td class="mono text-muted">{{ s.telefono ?? "—" }}</td>
+          <td style="text-align: center">
+            <p-tag
+              [value]="s.activa ? 'Activa' : 'Inactiva'"
+              [severity]="getActivaSeverity(s.activa)"
+            />
+          </td>
+          <td style="text-align: center" (click)="$event.stopPropagation()">
+            <button
+              pButton
+              icon="pi pi-pencil"
+              class="p-button-text p-button-sm"
+              pTooltip="Editar"
+              tooltipPosition="left"
+              (click)="editar(s.id)"
+            ></button>
+            <button
+              pButton
+              icon="pi pi-ban"
+              class="p-button-text p-button-sm p-button-danger"
+              pTooltip="Desactivar"
+              tooltipPosition="left"
+              *ngIf="s.activa"
+              (click)="confirmarEliminar(s, $event)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="empty-row">
+            <i class="pi pi-building" style="font-size: 2rem; opacity: 0.2"></i>
+            <p>No se encontraron sucursales</p>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr *ngFor="let i of [1, 2, 3, 4, 5]">
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- ─── Dialog ──────────────────────────────────────────────── -->
+<app-form-sucursal
+  [(visible)]="showForm"
+  [sucursal]="editTarget"
+  (saved)="onSaved()"
+/>

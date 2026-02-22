@@ -207,22 +207,22 @@ export const routes: Routes = [
             (m) => m.IndexTurnosComponent,
           ),
       },
-      // {
-      //   path: 'admin/sucursales',
-      //   canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
-      //   loadComponent: () =>
-      //     import('./features/admin/sucursales/index/index-sucursales.component').then(
-      //       (m) => m.IndexSucursalesComponent,
-      //     ),
-      // },
-      // {
-      //   path: 'admin/usuarios',
-      //   canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
-      //   loadComponent: () =>
-      //     import('./features/admin/usuarios/index/index-usuarios.component').then(
-      //       (m) => m.IndexUsuariosComponent,
-      //     ),
-      // },
+      {
+        path: 'admin/sucursales',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/sucursales/index/index-sucursales.component').then(
+            (m) => m.IndexSucursalesComponent,
+          ),
+      },
+      {
+        path: 'admin/usuarios',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/usuarios/index/index-usuarios.component').then(
+            (m) => m.IndexUsuariosComponent,
+          ),
+      },
       // Reportes
       // {
       //   path: 'reportes/ventas',

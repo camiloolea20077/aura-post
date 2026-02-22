@@ -69,7 +69,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Override
     @Transactional
     public UsuarioDto crear(CreateUsuarioDto dto, Integer empresaId) {
-        if (usuarioRepo.existsByUsername(dto.getUsername())) {
+        if (usuarioRepo.existsByUsername(dto.getEmail())) {
             throw new IllegalArgumentException("El username ya está en uso");
         }
 
@@ -77,6 +77,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         tercero = terceroRepo.save(tercero);
 
         UsuarioEntity usuario = usuarioMapper.toEntity(dto);
+        usuario.setUsername(dto.getEmail());
         usuario.setPassword(passwordEncoder.encode(dto.getPassword()));
         if (dto.getPinAccesoRapido() != null) {
             usuario.setPinAccesoRapido(passwordEncoder.encode(dto.getPinAccesoRapido()));

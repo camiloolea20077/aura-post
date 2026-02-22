@@ -1,0 +1,112 @@
+<p-dialog
+  [header]="isEdit ? 'Editar sucursal' : 'Nueva sucursal'"
+  [(visible)]="visible"
+  (onHide)="close()"
+  [modal]="true"
+  [style]="{ width: '560px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <form [formGroup]="frmSucursal" class="dialog-form">
+    <!-- Nombre + Código -->
+    <div class="form-row two-col">
+      <div class="field">
+        <label class="field-label required">Nombre</label>
+        <input
+          pInputText
+          formControlName="nombre"
+          placeholder="Sede Centro"
+          class="w-full"
+          [class.ng-invalid]="isInvalid('nombre')"
+        />
+        <small class="field-error" *ngIf="isInvalid('nombre')">Requerido</small>
+      </div>
+      <div class="field">
+        <label class="field-label">Código</label>
+        <input
+          pInputText
+          formControlName="codigo"
+          placeholder="SUC-01"
+          class="w-full"
+        />
+      </div>
+    </div>
+
+    <!-- Dirección -->
+    <div class="field">
+      <label class="field-label">Dirección</label>
+      <input
+        pInputText
+        formControlName="direccion"
+        placeholder="Calle 45 # 12-30"
+        class="w-full"
+      />
+    </div>
+
+    <!-- Ciudad + Teléfono -->
+    <div class="form-row two-col">
+      <div class="field">
+        <label class="field-label">Ciudad</label>
+        <input
+          pInputText
+          formControlName="ciudad"
+          placeholder="Sincelejo"
+          class="w-full"
+        />
+      </div>
+      <div class="field">
+        <label class="field-label">Teléfono</label>
+        <input
+          pInputText
+          formControlName="telefono"
+          placeholder="3001234567"
+          class="w-full"
+        />
+      </div>
+    </div>
+
+    <!-- Prefijo facturación -->
+    <div class="form-row two-col">
+      <div class="field">
+        <label class="field-label">Prefijo facturación</label>
+        <input
+          pInputText
+          formControlName="prefijoFacturacion"
+          placeholder="PREF-01"
+          class="w-full"
+        />
+      </div>
+      <!-- Activa solo en edición -->
+      <div class="field" *ngIf="isEdit">
+        <label class="field-label">Estado</label>
+        <div class="toggle-wrap">
+          <p-toggleButton
+            formControlName="activa"
+            onLabel="Activa"
+            offLabel="Inactiva"
+            offIcon="pi pi-times"
+            styleClass="toggle-estado"
+          />
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="close()"
+    ></button>
+    <button
+      pButton
+      [label]="isEdit ? 'Actualizar' : 'Guardar'"
+      icon="pi pi-check"
+      class="btn-aura btn-primary"
+      [loading]="loading"
+      (click)="save()"
+    ></button>
+  </ng-template>
+</p-dialog>
