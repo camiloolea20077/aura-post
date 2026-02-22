@@ -1,0 +1,301 @@
+$blue: #3498db;
+$purple: #9b59b6;
+$text: #2c3e50;
+$muted: #7f8c8d;
+$border: #e0e0e0;
+$bg: #f8f9fa;
+$green: #27ae60;
+$red: #e74c3c;
+$indigo: #6366f1;
+$font: "Outfit", sans-serif;
+$mono: "JetBrains Mono", monospace;
+
+// ── Shell ─────────────────────────────────────────────────────
+.factura-shell {
+  padding: 0.25rem 0;
+}
+
+// ── Preview ───────────────────────────────────────────────────
+.factura-preview {
+  background: #fff;
+  border: 1.5px solid $border;
+  border-radius: 12px;
+  overflow: hidden;
+  max-height: 65vh;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: $border;
+    border-radius: 2px;
+  }
+}
+
+// ── Header empresa ────────────────────────────────────────────
+.fp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1.25rem 1.5rem 1rem;
+}
+
+.fp-logo-area {
+  .fp-logo-text {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: $blue;
+    letter-spacing: 2px;
+    span {
+      color: $purple;
+    }
+  }
+  .fp-logo-sub {
+    font-size: 0.72rem;
+    color: $purple;
+    margin-top: 2px;
+  }
+}
+
+.fp-empresa-area {
+  text-align: right;
+  .fp-empresa-nombre {
+    font-size: 1rem;
+    font-weight: 700;
+    color: $text;
+  }
+}
+
+// Barra de acento degradado
+.fp-accent-bar {
+  height: 4px;
+  background: linear-gradient(to right, $blue, $purple);
+  margin-bottom: 1rem;
+}
+
+// ── Details box ───────────────────────────────────────────────
+.fp-details-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  background: $bg;
+  padding: 1rem 1.5rem;
+  margin: 0 1rem;
+  border-radius: 10px;
+  margin-bottom: 1.25rem;
+}
+
+.fp-bill-to {
+  .fp-cliente-nombre {
+    font-size: 1rem;
+    font-weight: 700;
+    color: $text;
+    margin-top: 4px;
+  }
+  .fp-cliente-doc {
+    font-size: 0.78rem;
+    margin-top: 2px;
+  }
+}
+
+.fp-invoice-meta {
+  text-align: right;
+}
+
+.fp-meta-row {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 2px;
+
+  .fp-meta-key {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: $muted;
+  }
+  .fp-meta-val {
+    font-size: 0.82rem;
+    color: $text;
+  }
+}
+
+.fp-section-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: $purple;
+  margin-bottom: 4px;
+  &.text-right {
+    text-align: right;
+  }
+}
+
+// ── Tabla productos ───────────────────────────────────────────
+.fp-table-wrap {
+  padding: 0 1rem;
+  margin-bottom: 1.25rem;
+  overflow-x: auto;
+}
+
+.fp-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead tr {
+    background: linear-gradient(to right, $blue, $purple);
+    th {
+      color: white;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 0.55rem 0.75rem;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+  }
+
+  tbody tr {
+    border-bottom: 1px solid $border;
+    &:nth-child(even) {
+      background: $bg;
+    }
+    &:last-child {
+      border-bottom: none;
+    }
+
+    td {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.82rem;
+      color: $text;
+    }
+  }
+
+  .fp-prod-nombre {
+    font-weight: 500;
+  }
+}
+
+.fp-iva-pill {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(52, 152, 219, 0.1);
+  color: $blue;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 20px;
+}
+
+// ── Totales ───────────────────────────────────────────────────
+.fp-totales-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0 1rem 1.25rem;
+  gap: 1rem;
+}
+
+.fp-pagos {
+  .fp-pago-row {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.82rem;
+    color: $text;
+    padding: 2px 0;
+    span:first-child {
+      color: $muted;
+    }
+  }
+}
+
+.fp-subtotales {
+  min-width: 200px;
+
+  .fp-tot-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    color: $text;
+    padding: 3px 0;
+    border-bottom: 1px solid $border;
+
+    &.descuento {
+      color: $red;
+    }
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  .fp-total-final {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: $blue;
+    padding: 6px 0 2px;
+    border-top: 2px solid $blue;
+    margin-top: 2px;
+  }
+}
+
+// ── Observaciones ─────────────────────────────────────────────
+.fp-obs {
+  padding: 0.75rem 1.5rem 1rem;
+  border-top: 1px solid $border;
+
+  .fp-obs-text {
+    font-size: 0.82rem;
+    color: $muted;
+    font-style: italic;
+    margin-top: 4px;
+  }
+}
+
+// ── Estados ───────────────────────────────────────────────────
+.estado-ok {
+  color: $green;
+  font-weight: 700;
+}
+.estado-err {
+  color: $red;
+  font-weight: 700;
+}
+
+// ── Footer botones ────────────────────────────────────────────
+.factura-footer-btns {
+  display: flex;
+  gap: 0.65rem;
+  justify-content: flex-end;
+}
+
+::ng-deep .btn-print-outline.p-button {
+  color: $blue !important;
+  border-color: $blue !important;
+  &:hover {
+    background: rgba(52, 152, 219, 0.07) !important;
+  }
+}
+
+::ng-deep .btn-primary.p-button {
+  background: linear-gradient(135deg, $indigo, #818cf8) !important;
+  border: none !important;
+  font-weight: 600 !important;
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+.text-right {
+  text-align: right;
+}
+.text-muted {
+  color: $muted;
+}
+.mono {
+  font-family: $mono;
+}
+.fw-700 {
+  font-weight: 700;
+}

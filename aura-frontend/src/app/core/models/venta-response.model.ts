@@ -25,7 +25,7 @@ export interface VentaResponse {
   sucursalId: number;
   sucursalNombre: string;
   clienteId: number | null;
-  clienteNombre: string;
+  clienteNombre: string | null;
   usuarioId: number;
   turnoCajaId: number;
   tipoDocumento: string;
@@ -40,4 +40,8 @@ export interface VentaResponse {
   observaciones: string | null;
   detalles: VentaDetalleResponse[];
   pagos: VentaPagoResponse[];
+  cajaNombre: string | null;
+  numeroVenta: string | null;
+  cufe: string | null;
+  estadoDian: string | null;
 }

@@ -20,6 +20,7 @@ export interface VentaDetalleModel {
   descuentoValor: number;
   impuestoValor: number;
   subtotalLinea: number;
+  montoDescuento: number;
 }
 
 // ─── Pago ─────────────────────────────────────────────────────
@@ -33,6 +34,16 @@ export interface VentaPagoModel {
 // ─── Venta completa ───────────────────────────────────────────
 export interface VentaModel {
   id: number;
+  // ── Campos que faltaban (necesarios para la tirilla) ──
+  empresaId: number;
+  sucursalId: number;
+  sucursalNombre: string;
+  usuarioId: number;
+  prefijo: string | null;
+  consecutivo: number | null;
+  tipoDocumento: string;
+  observaciones: string | null;
+
   turnoCajaId: number;
   cajaNombre: string;
   clienteId: number | null;

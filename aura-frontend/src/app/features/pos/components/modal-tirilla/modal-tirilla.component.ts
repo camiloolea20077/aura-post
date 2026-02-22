@@ -17,6 +17,7 @@ import {
   VentaPagoResponse,
   VentaResponse,
 } from '../../../../core/models/venta-response.model';
+import { VentaModel } from '../../../../core/models/venta.model';
 
 type AnchoTirilla = 58 | 80;
 
@@ -37,7 +38,7 @@ type AnchoTirilla = 58 | 80;
 })
 export class ModalTirillaComponent implements OnChanges {
   @Input() displayModal = false;
-  @Input() venta: VentaResponse | null = null;
+  @Input() venta: VentaModel | null = null;
   @Output() modalClosed = new EventEmitter<void>();
 
   ancho: AnchoTirilla = 80;

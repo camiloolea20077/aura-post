@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
@@ -12,12 +12,16 @@ import { MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 import {
   EstadoVenta,
+  VentaModel,
   VentaPageableDto,
   VentaTableModel,
 } from '../../../core/models/venta.model';
 import { VentaService } from '../../../core/services/venta.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
 import { DetalleVentaComponent } from '../detalle/detalle-venta.component';
+import { VentaResponse } from '../../../core/models/venta-response.model';
+import { ModalTirillaComponent } from '../../pos/components/modal-tirilla/modal-tirilla.component';
+import { ModalFacturaComponent } from '../../pos/components/modal-factuta/modal-factura.component';
 
 type TagSeverity =
   | 'success'
@@ -41,14 +45,21 @@ type TagSeverity =
     TooltipModule,
     SkeletonModule,
     DetalleVentaComponent,
+    ModalTirillaComponent,
+    ModalFacturaComponent,
   ],
   providers: [MessageService],
   templateUrl: './index-ventas.component.html',
   styleUrls: ['./index-ventas.component.scss'],
 })
 export class IndexVentasComponent implements OnInit {
+  showTirilla = false;
+  ventaImpresion: VentaModel | null = null;
+  loadingTirilla = false;
   public showDetalle = false;
   public selectedId: number | null = null;
+  showFactura = false;
+  ventaFactura: VentaModel | null = null;
 
   public items: VentaTableModel[] = [];
   public loadingTable = true;
@@ -58,6 +69,7 @@ export class IndexVentasComponent implements OnInit {
   public lastLazyEvent!: TableLazyLoadEvent;
 
   constructor(
+    private readonly cdr: ChangeDetectorRef,
     private readonly ventaService: VentaService,
     private readonly alertService: AlertService,
   ) {}
@@ -146,5 +158,40 @@ export class IndexVentasComponent implements OnInit {
       hour: '2-digit',
       minute: '2-digit',
     });
+  }
+  // Método nuevo
+  async reimprimir(item: VentaTableModel, event: Event): Promise<void> {
+    event.stopPropagation();
+    this.loadingTirilla = true;
+    try {
+      const res = await lastValueFrom(this.ventaService.getById(item.id));
+      this.ventaImpresion = res?.data ?? null;
+      this.showTirilla = true;
+    } catch {
+      this.alertService.showError('Error', 'No se pudo cargar la venta');
+    } finally {
+      this.loadingTirilla = false;
+    }
+  }
+
+  onTirillaClose(): void {
+    this.showTirilla = false;
+    this.ventaImpresion = null;
+  }
+  async abrirFactura(item: VentaTableModel, event: Event): Promise<void> {
+    event.stopPropagation();
+    try {
+      const res = await lastValueFrom(this.ventaService.getById(item.id));
+      this.ventaFactura = res?.data ?? null;
+      this.showFactura = true;
+      this.cdr.markForCheck();
+    } catch {
+      this.alertService.showError('Error', 'No se pudo cargar la venta');
+    }
+  }
+
+  onFacturaClosed(): void {
+    this.showFactura = false;
+    this.ventaFactura = null;
   }
 }

@@ -29,6 +29,7 @@ import {
   CreateVentaDto,
   PagoUI,
   ProductoPOS,
+  VentaModel,
 } from '../../core/models/venta.model';
 import { TurnoCajaModel } from '../../core/models/caja.model';
 import { VentaService } from '../../core/services/venta.service';
@@ -67,7 +68,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   // ─── NUEVO: referencia al input de búsqueda ───────────────
   @ViewChild('searchInput') searchInputRef!: ElementRef<HTMLInputElement>;
   public showTirilla = false;
-  public ventaActual: VentaResponse | null = null;
+  public ventaActual: VentaModel | null = null;
 
   // ── Turno ──────────────────────────────────────────────────
   public turnoActivo: TurnoCajaModel | null = null;
@@ -388,7 +389,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     try {
       const res = await lastValueFrom(this.ventaService.create(dto));
       if (res?.status === 201) {
-        this.ventaActual = res.data as unknown as VentaResponse;
+        this.ventaActual = res.data as unknown as VentaModel;
         this.showPago = false;
         this.showTirilla = true;
         this.clearCart();

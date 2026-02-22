@@ -60,7 +60,7 @@
           </th>
           <th style="width: 130px" class="text-right">Total</th>
           <th style="width: 100px" class="text-center">Estado</th>
-          <th style="width: 60px" class="text-center">Ver</th>
+          <th style="width: 90px" class="text-center">Ver</th>
         </tr>
       </ng-template>
 
@@ -100,13 +100,33 @@
               [rounded]="true"
             />
           </td>
-          <td class="text-center">
+          <td class="text-center flex">
             <button
               pButton
               icon="pi pi-eye"
               class="p-button-text p-button-sm action-view"
               pTooltip="Ver detalle"
               (click)="openDetalle(item)"
+            ></button>
+            <button
+              pButton
+              icon="pi pi-print"
+              class="p-button-text p-button-sm"
+              style="color: #6366f1"
+              pTooltip="Reimprimir tirilla"
+              tooltipPosition="left"
+              *ngIf="item.estadoVenta === 'COMPLETADA'"
+              [loading]="loadingTirilla"
+              (click)="reimprimir(item, $event)"
+            ></button>
+            <button
+              pButton
+              icon="pi pi-file-pdf"
+              class="p-button-text p-button-sm"
+              style="color: #e74c3c"
+              pTooltip="Factura PDF"
+              *ngIf="item.estadoVenta === 'COMPLETADA'"
+              (click)="abrirFactura(item, $event)"
             ></button>
           </td>
         </tr>
@@ -158,3 +178,13 @@
 </app-detalle-venta>
 
 <p-toast />
+<app-modal-tirilla
+  [displayModal]="showTirilla"
+  [venta]="ventaImpresion"
+  (modalClosed)="onTirillaClose()"
+/>
+<app-modal-factura
+  [displayModal]="showFactura"
+  [venta]="ventaFactura"
+  (modalClosed)="onFacturaClosed()"
+/>

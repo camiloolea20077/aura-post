@@ -72,7 +72,7 @@
                 : (d.cantidad | number: "1.3-3")
             }}</span>
             <span class="t-col-desc">{{ d.productoNombre }}</span>
-            <span class="t-col-iva">{{ d.impuestoValor }}%</span>
+            <span class="t-col-iva">{{ getPctIva(d) }}%</span>
             <span class="t-col-imp">{{
               formatCOP(d.subtotalLinea + d.impuestoValor - d.montoDescuento)
             }}</span>
@@ -118,6 +118,9 @@
         <div class="t-pago-row" *ngFor="let p of venta.pagos">
           <span class="t-pago-metodo">{{ metodoPagoLabel(p.metodoPago) }}</span>
           <span class="t-pago-monto">{{ formatCOP(p.monto) }}</span>
+          <span class="t-pago-cambio">
+            {{ getCambio(p) > 0 ? formatCOP(getCambio(p)) : "" }}
+          </span>
         </div>
 
         <!-- Cliente -->
