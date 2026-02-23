@@ -248,7 +248,9 @@ $mono: "JetBrains Mono", monospace;
     box-shadow 0.15s,
     transform 0.12s;
   overflow: hidden;
-
+  &:has(.promo-badge) .prod-footer {
+    padding-bottom: 1.6rem; // espacio para que el badge no tape el precio
+  }
   // Línea de acento top
   &::before {
     content: "";
