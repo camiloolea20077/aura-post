@@ -37,8 +37,8 @@ public class UsuarioEntity {
     private EmpresaEntity empresa;
 
     // Relación con los datos personales (Nombre, Cédula)
-    @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "tercero_id")
+    @OneToOne(fetch = FetchType.EAGER, optional = true)
+    @JoinColumn(name = "tercero_id", nullable = true)
     private TerceroEntity tercero;
 
     @Column(nullable = false, unique = true)

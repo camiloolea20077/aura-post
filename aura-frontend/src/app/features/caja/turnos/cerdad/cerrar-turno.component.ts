@@ -102,9 +102,10 @@ export class CerrarTurnoComponent implements OnChanges {
   // ── Diferencia calculada en tiempo real ───────────────────
   get diferencia(): number | null {
     const real = this.frmCerrar.get('totalEfectivoReal')?.value;
-    const sistema = this.turno?.totalEfectivoSistema ?? 0;
+    const esperado =
+      this.resumen?.totalEsperado ?? this.turno?.baseInicial ?? 0;
     if (real === null || real === undefined) return null;
-    return real - (sistema + (this.turno?.baseInicial ?? 0));
+    return real - esperado;
   }
 
   get diferenciaClass(): string {

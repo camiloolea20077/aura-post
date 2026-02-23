@@ -1,0 +1,123 @@
+$sidebar-bg: #0f172a;
+$sidebar-w: 220px;
+$accent: #6366f1;
+$text-dim: #94a3b8;
+$text-light: #e2e8f0;
+
+.platform-shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: #f4f6fa;
+}
+
+.platform-sidebar {
+  width: $sidebar-w;
+  background: $sidebar-bg;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.ps-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 1.25rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.ps-logo-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: white;
+  letter-spacing: 1px;
+}
+
+.ps-logo-title {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: $text-light;
+}
+
+.ps-logo-sub {
+  display: block;
+  font-size: 0.66rem;
+  color: $text-dim;
+}
+
+.ps-nav {
+  flex: 1;
+  padding: 1rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ps-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 10px;
+  color: $text-dim;
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 500;
+  transition: all 0.15s;
+
+  i {
+    font-size: 0.9rem;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: $text-light;
+  }
+
+  &.active {
+    background: rgba(99, 102, 241, 0.18);
+    color: #a5b4fc;
+  }
+}
+
+.ps-footer {
+  padding: 0.85rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.ps-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: $text-dim;
+  font-size: 0.78rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 8px;
+  width: 100%;
+
+  &:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+  }
+
+  i {
+    font-size: 0.85rem;
+  }
+}
+
+.platform-content {
+  flex: 1;
+  overflow-y: auto;
+}

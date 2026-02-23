@@ -113,7 +113,7 @@ public class TurnoCajaServiceImpl implements TurnoCajaService{
         turno.setFechaCierre(LocalDateTime.now());
         turno.setTotalEfectivoSistema(totalSistema);
         turno.setTotalEfectivoReal(dto.getTotalEfectivoReal());
-        turno.setDiferencia(dto.getTotalEfectivoReal().subtract(totalSistema));
+        turno.setDiferencia(dto.getTotalEfectivoReal().subtract(turno.getBaseInicial().add(totalSistema)));
         turno.setEstado("CERRADA");
         turnoJPARepository.save(turno);
 
@@ -163,10 +163,28 @@ public class TurnoCajaServiceImpl implements TurnoCajaService{
         resumen.setTotalTransacciones(toInt(totales.get("total_transacciones")));
 
         // Efectivo (disponible al cerrar, null si aún está abierto)
-        resumen.setTotalEfectivoSistema(entity.getTotalEfectivoSistema());
-        resumen.setTotalEfectivoReal(entity.getTotalEfectivoReal());
-        resumen.setDiferencia(entity.getDiferencia());
-
+        // Si el turno está ABIERTA → calcular en vivo desde venta_pago
+        // Si está CERRADA → usar los valores ya guardados en la entidad
+        if ("ABIERTA".equals(entity.getEstado())) {
+            BigDecimal efectivoSistema = turnoRepository.calcularTotalEfectivoSistema(turnoId);
+            BigDecimal totalEsperado   = entity.getBaseInicial().add(efectivoSistema);
+            resumen.setTotalEfectivoSistema(efectivoSistema);
+            resumen.setTotalEsperado(totalEsperado);       // ← base + ventas efectivo
+            resumen.setTotalEfectivoReal(null);            // aún no se ha contado
+            resumen.setDiferencia(null);                   // aún no hay cuadre
+        } else {
+            // CERRADA o CERRADA_AUTO → valores definitivos ya guardados
+            resumen.setTotalEfectivoSistema(entity.getTotalEfectivoSistema());
+            resumen.setTotalEfectivoReal(entity.getTotalEfectivoReal());
+            resumen.setDiferencia(entity.getDiferencia());
+            resumen.setTotalEsperado(
+                entity.getBaseInicial().add(
+                    entity.getTotalEfectivoSistema() != null
+                        ? entity.getTotalEfectivoSistema()
+                        : BigDecimal.ZERO
+                )
+            );
+        }
         return resumen;
     }
 

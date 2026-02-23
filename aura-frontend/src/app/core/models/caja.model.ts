@@ -109,4 +109,5 @@ export interface ResumenTurnoDto {
   totalEfectivoSistema: number | null;
   totalEfectivoReal: number | null;
   diferencia: number | null;
+  totalEsperado: number | null;
 }

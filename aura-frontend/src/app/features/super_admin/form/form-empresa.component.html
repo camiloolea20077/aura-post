@@ -1,0 +1,173 @@
+<!-- ─── form-empresa.component.html ─────────────────────────── -->
+<form [formGroup]="frmEmpresa" class="fe-form">
+  <!-- ── Datos empresa ──────────────────────────────────────── -->
+  <div class="section-title">
+    <i class="pi pi-building"></i> Datos de la empresa
+  </div>
+
+  <div class="form-row two-col">
+    <div class="field">
+      <label class="field-label required">Razón social</label>
+      <input
+        pInputText
+        formControlName="razonSocial"
+        placeholder="Mi Empresa S.A.S"
+        class="w-full"
+        [class.ng-invalid]="isInvalid('razonSocial')"
+      />
+      <small class="field-error" *ngIf="isInvalid('razonSocial')"
+        >Requerido</small
+      >
+    </div>
+    <div class="field">
+      <label class="field-label">Nombre comercial</label>
+      <input
+        pInputText
+        formControlName="nombreComercial"
+        placeholder="Mi Empresa"
+        class="w-full"
+      />
+    </div>
+  </div>
+
+  <div class="form-row two-col">
+    <div class="field">
+      <label class="field-label required">NIT</label>
+      <input
+        pInputText
+        formControlName="nit"
+        placeholder="900555222"
+        class="w-full"
+        [readOnly]="isEdit"
+        [class.ng-invalid]="isInvalid('nit')"
+      />
+      <small class="field-error" *ngIf="isInvalid('nit')">Requerido</small>
+    </div>
+    <div class="field">
+      <label class="field-label">DV</label>
+      <input
+        pInputText
+        formControlName="dv"
+        placeholder="1"
+        maxlength="2"
+        class="w-full"
+      />
+    </div>
+  </div>
+
+  <!-- Estado solo en edición -->
+  <div class="field" *ngIf="isEdit">
+    <label class="field-label">Estado</label>
+    <p-toggleButton
+      formControlName="activa"
+      onLabel="Activa"
+      offLabel="Suspendida"
+      offIcon="pi pi-ban"
+      styleClass="toggle-estado"
+    />
+  </div>
+
+  <!-- ── Datos admin — solo en creación ──────────────────────── -->
+  <ng-container *ngIf="!isEdit">
+    <p-divider />
+    <div class="section-title">
+      <i class="pi pi-user"></i> Administrador de la empresa
+    </div>
+
+    <div class="form-row two-col">
+      <div class="field">
+        <label class="field-label required">Email</label>
+        <input
+          pInputText
+          formControlName="emailAdmin"
+          placeholder="admin@empresa.com"
+          class="w-full"
+          [class.ng-invalid]="isInvalid('emailAdmin')"
+        />
+        <small class="field-error" *ngIf="isInvalid('emailAdmin')"
+          >Email válido requerido</small
+        >
+      </div>
+      <div class="field">
+        <label class="field-label required">Contraseña</label>
+        <p-password
+          formControlName="passwordAdmin"
+          placeholder="••••••••"
+          [feedback]="false"
+          [toggleMask]="true"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+          [class.ng-invalid]="isInvalid('passwordAdmin')"
+        />
+        <small class="field-error" *ngIf="isInvalid('passwordAdmin')"
+          >Mínimo 6 caracteres</small
+        >
+      </div>
+    </div>
+
+    <div class="form-row two-col">
+      <div class="field">
+        <label class="field-label required">Nombres</label>
+        <input
+          pInputText
+          formControlName="nombresAdmin"
+          placeholder="Juan"
+          class="w-full"
+          [class.ng-invalid]="isInvalid('nombresAdmin')"
+        />
+      </div>
+      <div class="field">
+        <label class="field-label required">Apellidos</label>
+        <input
+          pInputText
+          formControlName="apellidosAdmin"
+          placeholder="Pérez"
+          class="w-full"
+          [class.ng-invalid]="isInvalid('apellidosAdmin')"
+        />
+      </div>
+    </div>
+
+    <div class="form-row two-col">
+      <div class="field">
+        <label class="field-label required">Documento</label>
+        <input
+          pInputText
+          formControlName="documentoAdmin"
+          placeholder="1045678901"
+          class="w-full"
+          [class.ng-invalid]="isInvalid('documentoAdmin')"
+        />
+      </div>
+      <div class="field">
+        <label class="field-label required">Sucursal principal</label>
+        <input
+          pInputText
+          formControlName="nombreSucursal"
+          placeholder="Sede Principal"
+          class="w-full"
+          [class.ng-invalid]="isInvalid('nombreSucursal')"
+        />
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Footer -->
+  <div class="fe-footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text p-button-secondary"
+      (click)="cancelled.emit()"
+    ></button>
+    <button
+      pButton
+      [label]="isEdit ? 'Actualizar' : 'Crear empresa'"
+      icon="pi pi-check"
+      class="btn-platform btn-primary"
+      [loading]="loading"
+      (click)="save()"
+    ></button>
+  </div>
+</form>

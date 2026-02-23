@@ -1,0 +1,191 @@
+// ─── index-empresas.component.scss ───────────────────────────
+$indigo: #6366f1;
+$border: #e2e8f0;
+$text: #1e293b;
+$muted: #94a3b8;
+$bg: #f8fafc;
+$red: #ef4444;
+$green: #10b981;
+$mono: "JetBrains Mono", monospace;
+$font: "Outfit", sans-serif;
+
+.pe-wrapper {
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.pe-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+  .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(99, 102, 241, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    i {
+      font-size: 1.1rem;
+      color: $indigo;
+    }
+  }
+  .header-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: $text;
+    margin: 0;
+  }
+  .header-sub {
+    font-size: 0.78rem;
+    color: $muted;
+    margin: 0;
+  }
+}
+
+.table-card {
+  background: #fff;
+  border: 1.5px solid $border;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid $border;
+}
+.search-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  .pi-search {
+    position: absolute;
+    left: 0.75rem;
+    color: $muted;
+    font-size: 0.82rem;
+    pointer-events: none;
+  }
+  .search-input {
+    width: 100%;
+    padding-left: 2.2rem;
+    padding-right: 2rem;
+    height: 38px;
+    border-radius: 10px;
+  }
+  .clear-btn {
+    position: absolute;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: $muted;
+    display: flex;
+    i {
+      font-size: 0.72rem;
+    }
+    &:hover {
+      color: $red;
+    }
+  }
+}
+.total-badge {
+  white-space: nowrap;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: $muted;
+  background: $bg;
+  border: 1px solid $border;
+  padding: 0.2rem 0.65rem;
+  border-radius: 20px;
+}
+
+.emp-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+.emp-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $indigo, #818cf8);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.stat-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: $bg;
+  border: 1px solid $border;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.15rem 0.65rem;
+  color: $text;
+}
+.id-badge {
+  font-family: $mono;
+  font-size: 0.72rem;
+  color: $muted;
+}
+.clickable-row {
+  cursor: pointer;
+  &:hover {
+    background: #fafbff !important;
+  }
+}
+.empty-row {
+  text-align: center;
+  color: $muted;
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  i {
+    font-size: 2rem;
+    opacity: 0.2;
+  }
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+  }
+}
+.fw-600 {
+  font-weight: 600;
+}
+.mono {
+  font-family: $mono;
+  font-size: 0.8rem;
+}
+.text-muted {
+  color: $muted;
+  font-size: 0.75rem;
+}
+.text-center {
+  text-align: center;
+}
+
+::ng-deep .btn-primary.p-button {
+  background: linear-gradient(135deg, $indigo, #818cf8) !important;
+  border: none !important;
+  font-weight: 600 !important;
+}

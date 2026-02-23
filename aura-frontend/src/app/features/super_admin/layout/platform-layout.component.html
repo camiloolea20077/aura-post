@@ -1,0 +1,43 @@
+<div class="platform-shell">
+  <!-- Sidebar -->
+  <aside class="platform-sidebar">
+    <div class="ps-logo">
+      <div class="ps-logo-icon">CT</div>
+      <div class="ps-logo-text">
+        <span class="ps-logo-title">Platform</span>
+        <span class="ps-logo-sub">Admin Panel</span>
+      </div>
+    </div>
+
+    <nav class="ps-nav">
+      <a
+        class="ps-nav-item"
+        routerLink="/platform/dashboard"
+        routerLinkActive="active"
+      >
+        <i class="pi pi-th-large"></i>
+        <span>Dashboard</span>
+      </a>
+      <a
+        class="ps-nav-item"
+        routerLink="/platform/empresas"
+        routerLinkActive="active"
+      >
+        <i class="pi pi-building"></i>
+        <span>Empresas</span>
+      </a>
+    </nav>
+
+    <div class="ps-footer">
+      <button class="ps-logout-btn" (click)="logout()">
+        <i class="pi pi-sign-out"></i>
+        <span>Cerrar sesión</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Contenido -->
+  <main class="platform-content">
+    <router-outlet />
+  </main>
+</div>

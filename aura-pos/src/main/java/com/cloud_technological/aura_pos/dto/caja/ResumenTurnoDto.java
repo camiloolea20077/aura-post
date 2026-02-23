@@ -34,4 +34,6 @@ public class ResumenTurnoDto {
     private BigDecimal totalEfectivoSistema; // lo que dice el sistema
     private BigDecimal totalEfectivoReal;    // lo que declaró la cajera (null si aún abierto)
     private BigDecimal diferencia;   
+    // ResumenTurnoDto.java
+    private BigDecimal totalEsperado; // base inicial + ventas en efectivo
 }

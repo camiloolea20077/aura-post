@@ -158,16 +158,17 @@ public class AuthServiceImpl implements AuthService{
                         .findFirst()
                         .orElse(Long.valueOf(sucursales.get(0).getId()));
             } else {
-                 // Opcional: Si es SUPER_ADMIN podría no tener sucursal asignada, pero si es un usuario normal debería tener al menos una.
-                 if(!"SUPER_ADMIN".equals(usuario.getRol())) {
-                     throw new GlobalException(HttpStatus.FORBIDDEN, "El usuario no tiene sucursales asignadas");
-                 }
+                if (!"SUPER_ADMIN".equals(usuario.getRol())
+                    && !"PLATFORM_ADMIN".equals(usuario.getRol())) { // ← AGREGAR
+                    throw new GlobalException(HttpStatus.FORBIDDEN, "El usuario no tiene sucursales asignadas");
+                }
             }
-
+            Integer empresaId = usuario.getEmpresa() != null ? usuario.getEmpresa().getId() : null;
             // 5. Generar Token (Incluyendo ID de Empresa y Sucursal Actual)
             String token = jwtTokenProvider.generateToken(
+                
                 authentication, 
-                usuario.getEmpresa().getId(), 
+                empresaId, 
                 sucursalActualId,
                 usuario.getRol(),
                 Long.valueOf(usuario.getId())

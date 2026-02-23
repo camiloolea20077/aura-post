@@ -3,6 +3,8 @@ import { AuthGuard } from './core/guards/auth.guard';
 import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
 import { LoginComponent } from './features/auth/pages/login/login.component';
 import { rolGuard } from './core/guards/role.guard';
+import { platformGuard } from './core/guards/platform.guard';
+import { clienteGuard } from './core/guards/cliente.guard';
 
 export const routes: Routes = [
   // Auth
@@ -11,12 +13,20 @@ export const routes: Routes = [
     component: LoginComponent,
     canActivate: [AuthGuard],
   },
+  {
+    path: 'platform',
+    canActivate: [platformGuard],
+    loadChildren: () =>
+      import('./features/super_admin/platform.routes').then(
+        (m) => m.PLATFORM_ROUTES,
+      ),
+  },
 
   // App protegida
   {
     path: '',
     component: MainLayoutComponent,
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, clienteGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 

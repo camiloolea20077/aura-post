@@ -1,7 +1,35 @@
--- ==================================================================
+<-- ==================================================================
 -- 1. ESTRUCTURA EMPRESARIAL Y SEGURIDAD (LOGIN MULTI-SEDE)
 -- ==================================================================
+INSERT INTO empresa (razon_social, nit, activa)
+VALUES ('Cloud Technological SAS', '000000001', true);
 
+INSERT INTO usuario (empresa_id, username, password_hash, rol, activo)
+VALUES (
+    (SELECT id FROM empresa WHERE nit = '000000001'),
+    'platform@cloudtechnological.com',
+    '$2a$10$C15Lc45DVbvd0PqDk3MTZ.3cNNSvpfbeC.ya6K9nb7CV/MKJOXoVm',
+    'PLATFORM_ADMIN',
+    true
+);
+UPDATE usuario 
+SET password_hash = '$2a$10$C15Lc45DVbvd0PqDk3MTZ.3cNNSvpfbeC.ya6K9nb7CV/MKJOXoVm'
+WHERE username = 'platform@cloudtechnological.com';
+
+SELECT id, username, password_hash, rol, activo 
+FROM usuario 
+WHERE username = 'platform@cloudtechnological.com';
+
+SELECT id, username, password_hash, rol, activo 
+FROM usuario 
+WHERE username = 'platform@cloudtechnological.com';
+
+-- 1. Ver el valor actual en BD
+SELECT username, password_hash, activo, rol 
+FROM usuario 
+WHERE username = 'platform@cloudtechnological.com';
+
+select * from usuario
 CREATE TABLE empresa (
     id SERIAL PRIMARY KEY,
     razon_social VARCHAR(255) NOT NULL,

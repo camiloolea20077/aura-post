@@ -1,6 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { InputTextModule } from 'primeng/inputtext';
@@ -12,7 +17,6 @@ import { lastValueFrom } from 'rxjs';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { IndexDBService } from '../../../../core/services/index-db.service';
-
 
 @Component({
   selector: 'app-login',
@@ -40,7 +44,7 @@ export class LoginComponent implements OnInit {
     private readonly indexDBService: IndexDBService,
     private readonly alertService: AlertService,
     private readonly router: Router,
-    private readonly messageService: MessageService
+    private readonly messageService: MessageService,
   ) {}
 
   ngOnInit(): void {
@@ -49,7 +53,7 @@ export class LoginComponent implements OnInit {
 
   private initForm(): void {
     this.frmLogin = this.fb.group({
-      email:    [null, [Validators.required, Validators.email]],
+      email: [null, [Validators.required, Validators.email]],
       password: [null, [Validators.required, Validators.minLength(6)]],
     });
   }
@@ -69,18 +73,28 @@ export class LoginComponent implements OnInit {
 
     try {
       const { email, password } = this.frmLogin.value;
-      const response = await lastValueFrom(this.authService.login({ username: email, password }));
+      const response = await lastValueFrom(
+        this.authService.login({ username: email, password }),
+      );
 
       if (response?.status === 200 && response?.data?.token) {
         await this.indexDBService.saveAuthData(response.data);
-        this.router.navigate(['/dashboard']);
+        const rol = response.data.rol;
+        if (rol === 'PLATFORM_ADMIN') {
+          this.router.navigate(['/platform/dashboard']);
+        } else {
+          this.router.navigate(['/dashboard']);
+        }
       } else {
-        this.alertService.showError('Error', response?.message ?? 'Credenciales inválidas');
+        this.alertService.showError(
+          'Error',
+          response?.message ?? 'Credenciales inválidas',
+        );
       }
     } catch (error: any) {
       this.alertService.showError(
         'Error de autenticación',
-        error?.message ?? 'No se pudo iniciar sesión. Intenta de nuevo.'
+        error?.message ?? 'No se pudo iniciar sesión. Intenta de nuevo.',
       );
     } finally {
       this.isSubmitting = false;

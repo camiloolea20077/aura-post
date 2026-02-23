@@ -1,0 +1,154 @@
+// ─── form-empresa.component.scss ─────────────────────────────
+$indigo: #6366f1;
+$border: #e2e8f0;
+$text: #1e293b;
+$muted: #94a3b8;
+$red: #ef4444;
+$green: #10b981;
+
+.fe-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.25rem 0;
+}
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+.two-col > .field {
+  flex: 1;
+  min-width: 0;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #374151;
+  &.required::after {
+    content: " *";
+    color: $red;
+  }
+}
+.field-error {
+  color: $red;
+  font-size: 0.72rem;
+}
+.w-full {
+  width: 100%;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: $indigo;
+  i {
+    font-size: 0.85rem;
+  }
+}
+
+.fe-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid $border;
+  margin-top: 0.5rem;
+}
+
+::ng-deep .toggle-estado.p-togglebutton {
+  &.p-button-checked {
+    background: rgba(16, 185, 129, 0.1) !important;
+    border-color: $green !important;
+    color: $green !important;
+  }
+  &:not(.p-button-checked) {
+    background: rgba(239, 68, 68, 0.07) !important;
+    border-color: $red !important;
+    color: $red !important;
+  }
+}
+::ng-deep .btn-primary.p-button {
+  background: linear-gradient(135deg, $indigo, #818cf8) !important;
+  border: none !important;
+  font-weight: 600 !important;
+}
+
+// ─── platform.routes.ts ───────────────────────────────────────
+/*
+import { Routes } from '@angular/router';
+import { PlatformLayoutComponent } from './layout/platform-layout.component';
+
+export const PLATFORM_ROUTES: Routes = [
+  {
+    path: '',
+    component: PlatformLayoutComponent,
+    children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./dashboard/dashboard-platform.component')
+          .then(m => m.DashboardPlatformComponent),
+      },
+      {
+        path: 'empresas',
+        loadComponent: () => import('./empresas/index/index-empresas.component')
+          .then(m => m.IndexEmpresasComponent),
+      },
+    ],
+  },
+];
+*/
+
+// ─── app.routes.ts — agregar la ruta de plataforma ────────────
+/*
+{
+  path: 'platform',
+  canActivate: [platformGuard],          // guard que valida PLATFORM_ADMIN
+  loadChildren: () => import('./features/platform/platform.routes')
+    .then(m => m.PLATFORM_ROUTES),
+},
+*/
+
+// ─── platform.guard.ts ────────────────────────────────────────
+/*
+import { inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { IndexDBService } from '../core/services/index-db.service';
+
+export const platformGuard = async () => {
+  const indexDB = inject(IndexDBService);
+  const router  = inject(Router);
+  const auth    = await indexDB.loadDataAuthDB();
+  if (auth?.user?.rol === 'PLATFORM_ADMIN') return true;
+  router.navigate(['/login']);
+  return false;
+};
+*/
+
+// ─── SQL — crear usuario PLATFORM_ADMIN ───────────────────────
+/*
+-- 1. Empresa plataforma (virtual, solo para FK)
+INSERT INTO empresa (razon_social, nit, activa)
+VALUES ('Cloud Technological SAS', '000000001', true);
+
+-- Guarda el ID que devuelve, ej: 1
+
+-- 2. Usuario PLATFORM_ADMIN
+-- Genera tu hash BCrypt desde Spring o con herramienta:
+-- new BCryptPasswordEncoder().encode("TuPasswordSegura123")
+
+INSERT INTO usuario (empresa_id, username, password, rol, activo)
+VALUES (1, 'platform@cloudtechnological.com', '$2a$10$HASH', 'PLATFORM_ADMIN', true);
+
+-- 3. Verificar
+SELECT id, username, rol FROM usuario WHERE rol = 'PLATFORM_ADMIN';
+*/

@@ -1,0 +1,252 @@
+$indigo: #6366f1;
+$border: #e2e8f0;
+$text: #1e293b;
+$muted: #94a3b8;
+$bg: #f8fafc;
+$green: #10b981;
+$red: #ef4444;
+$font: "Outfit", sans-serif;
+$mono: "JetBrains Mono", monospace;
+
+.pd-wrapper {
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+// ── Header ────────────────────────────────────────────────────
+.pd-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  .pd-title {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: $text;
+    margin: 0;
+  }
+  .pd-sub {
+    font-size: 0.78rem;
+    color: $muted;
+    margin: 0;
+  }
+}
+
+// ── Métricas ──────────────────────────────────────────────────
+.pd-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.metric-card {
+  background: white;
+  border: 1.5px solid $border;
+  border-radius: 16px;
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  &.skeleton-card {
+    min-height: 76px;
+  }
+}
+
+.metric-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  i {
+    font-size: 1.1rem;
+  }
+
+  &.total {
+    background: rgba(99, 102, 241, 0.1);
+    i {
+      color: $indigo;
+    }
+  }
+  &.activas {
+    background: rgba(16, 185, 129, 0.1);
+    i {
+      color: $green;
+    }
+  }
+  &.inactivas {
+    background: rgba(239, 68, 68, 0.1);
+    i {
+      color: $red;
+    }
+  }
+  &.nuevas {
+    background: rgba(99, 102, 241, 0.1);
+    i {
+      color: $indigo;
+    }
+  }
+}
+
+.metric-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  .metric-val {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: $text;
+    line-height: 1;
+  }
+  .metric-label {
+    font-size: 0.72rem;
+    color: $muted;
+  }
+  .green {
+    color: $green;
+  }
+  .red {
+    color: $red;
+  }
+  .indigo {
+    color: $indigo;
+  }
+}
+
+// ── Card tabla ────────────────────────────────────────────────
+.pd-card {
+  background: white;
+  border: 1.5px solid $border;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.pd-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.25rem;
+  border-bottom: 1px solid $border;
+
+  .pd-card-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: $text;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    i {
+      color: $indigo;
+    }
+  }
+  .pd-ver-todas {
+    font-size: 0.75rem;
+    color: $indigo;
+    text-decoration: none;
+    font-weight: 600;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.pd-table-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 80px 80px 120px 90px;
+  padding: 0.55rem 1.25rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: $muted;
+  letter-spacing: 0.05em;
+  background: $bg;
+  border-bottom: 1px solid $border;
+}
+
+.pd-table-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 80px 80px 120px 90px;
+  align-items: center;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid $border;
+  cursor: pointer;
+  font-size: 0.82rem;
+  color: $text;
+  &:last-child {
+    border-bottom: none;
+  }
+  &:hover {
+    background: #fafbff;
+  }
+}
+
+.emp-nombre {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.emp-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $indigo, #818cf8);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.stat-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: $bg;
+  border: 1px solid $border;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.15rem 0.6rem;
+  color: $text;
+  width: fit-content;
+}
+
+.pd-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 3rem;
+  color: $muted;
+  font-size: 0.82rem;
+  i {
+    font-size: 2rem;
+    opacity: 0.2;
+  }
+  p {
+    margin: 0;
+  }
+}
+
+.fw-600 {
+  font-weight: 600;
+}
+.mono {
+  font-family: $mono;
+  font-size: 0.78rem;
+}
+.text-muted {
+  color: $muted;
+  font-size: 0.75rem;
+}
+
+::ng-deep .btn-primary.p-button {
+  background: linear-gradient(135deg, $indigo, #818cf8) !important;
+  border: none !important;
+  font-weight: 600 !important;
+}

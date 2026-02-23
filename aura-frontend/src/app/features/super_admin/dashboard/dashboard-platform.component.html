@@ -1,0 +1,127 @@
+<div class="pd-wrapper">
+  <!-- Header -->
+  <div class="pd-header">
+    <div>
+      <h2 class="pd-title">Dashboard</h2>
+      <p class="pd-sub">Visión general de la plataforma</p>
+    </div>
+    <button
+      pButton
+      icon="pi pi-plus"
+      label="Nueva empresa"
+      class="btn-platform btn-primary"
+      routerLink="/platform/empresas"
+    ></button>
+  </div>
+
+  <!-- Métricas -->
+  <div class="pd-metrics">
+    <ng-container *ngIf="!loading && data">
+      <div class="metric-card">
+        <div class="metric-icon total"><i class="pi pi-building"></i></div>
+        <div class="metric-info">
+          <span class="metric-val">{{ data.totalEmpresas }}</span>
+          <span class="metric-label">Total empresas</span>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon activas">
+          <i class="pi pi-check-circle"></i>
+        </div>
+        <div class="metric-info">
+          <span class="metric-val green">{{ data.empresasActivas }}</span>
+          <span class="metric-label">Activas</span>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon inactivas"><i class="pi pi-ban"></i></div>
+        <div class="metric-info">
+          <span class="metric-val red">{{ data.empresasInactivas }}</span>
+          <span class="metric-label">Suspendidas</span>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon nuevas">
+          <i class="pi pi-calendar-plus"></i>
+        </div>
+        <div class="metric-info">
+          <span class="metric-val indigo">{{ data.nuevasEsteMes }}</span>
+          <span class="metric-label">Nuevas este mes</span>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- Skeletons -->
+    <ng-container *ngIf="loading">
+      <div class="metric-card skeleton-card" *ngFor="let i of [1, 2, 3, 4]">
+        <p-skeleton width="40px" height="40px" borderRadius="12px" />
+        <div style="flex: 1">
+          <p-skeleton width="50px" height="22px" styleClass="mb-1" />
+          <p-skeleton width="80px" height="12px" />
+        </div>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- Últimas empresas -->
+  <div class="pd-card">
+    <div class="pd-card-header">
+      <span class="pd-card-title">
+        <i class="pi pi-history"></i> Últimas empresas registradas
+      </span>
+      <a routerLink="/platform/empresas" class="pd-ver-todas">Ver todas →</a>
+    </div>
+
+    <div class="pd-table" *ngIf="!loading && data">
+      <div class="pd-table-header">
+        <span>Empresa</span>
+        <span>NIT</span>
+        <span>Sucursales</span>
+        <span>Usuarios</span>
+        <span>Registro</span>
+        <span>Estado</span>
+      </div>
+      <div
+        class="pd-table-row"
+        *ngFor="let e of data.ultimasEmpresas"
+        [routerLink]="['/platform/empresas']"
+      >
+        <span class="emp-nombre">
+          <div class="emp-avatar">{{ e.razonSocial.charAt(0) }}</div>
+          <div>
+            <div class="fw-600">{{ e.razonSocial }}</div>
+            <div class="text-muted" *ngIf="e.nombreComercial">
+              {{ e.nombreComercial }}
+            </div>
+          </div>
+        </span>
+        <span class="mono">{{ e.nit }}</span>
+        <span class="stat-chip">{{ e.totalSucursales }}</span>
+        <span class="stat-chip">{{ e.totalUsuarios }}</span>
+        <span class="text-muted">{{ formatFecha(e.createdAt) }}</span>
+        <span>
+          <p-tag
+            [value]="e.activa ? 'Activa' : 'Suspendida'"
+            [severity]="e.activa ? 'success' : 'danger'"
+          />
+        </span>
+      </div>
+      <div class="pd-empty" *ngIf="data.ultimasEmpresas.length === 0">
+        <i class="pi pi-building"></i>
+        <p>No hay empresas registradas aún</p>
+      </div>
+    </div>
+
+    <!-- Skeleton tabla -->
+    <div class="pd-table" *ngIf="loading">
+      <div class="pd-table-row" *ngFor="let i of [1, 2, 3]">
+        <span><p-skeleton /></span>
+        <span><p-skeleton width="80px" /></span>
+        <span><p-skeleton width="40px" /></span>
+        <span><p-skeleton width="40px" /></span>
+        <span><p-skeleton width="90px" /></span>
+        <span><p-skeleton width="60px" /></span>
+      </div>
+    </div>
+  </div>
+</div>
