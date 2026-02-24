@@ -22,6 +22,7 @@ export interface ProductoModel {
   ivaPorcentaje: number;
   impoconsumo: number;
   activo: boolean;
+  visibleEnPos: boolean;
 }
 
 // ─── Tabla paginada ──────────────────────────────────────────
@@ -57,6 +58,7 @@ export interface CreateProductoDto {
   ivaPorcentaje: number;
   impoconsumo: number;
   activo: boolean;
+  visibleEnPos: boolean;
 }
 
 export interface UpdateProductoDto extends CreateProductoDto {}

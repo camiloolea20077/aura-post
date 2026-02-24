@@ -118,7 +118,7 @@ public class EmpresaPlataformaServiceImpl implements EmpresaPlataformaService{
                 .tercero(tercero)
                 .username(dto.getEmailAdmin())
                 .password(passwordEncoder.encode(dto.getPasswordAdmin()))
-                .rol("SUPER_ADMIN")
+                .rol("ADMIN")
                 .activo(true)
                 .build();
         usuario = usuarioRepo.save(usuario);

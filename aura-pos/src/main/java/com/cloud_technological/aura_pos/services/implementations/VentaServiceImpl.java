@@ -18,6 +18,7 @@ import com.cloud_technological.aura_pos.entity.EmpresaEntity;
 import com.cloud_technological.aura_pos.entity.InventarioEntity;
 import com.cloud_technological.aura_pos.entity.LoteEntity;
 import com.cloud_technological.aura_pos.entity.MovimientoInventarioEntity;
+import com.cloud_technological.aura_pos.entity.ProductoComposicionEntity;
 import com.cloud_technological.aura_pos.entity.ProductoEntity;
 import com.cloud_technological.aura_pos.entity.SerialProductoEntity;
 import com.cloud_technological.aura_pos.entity.SucursalEntity;
@@ -37,6 +38,7 @@ import com.cloud_technological.aura_pos.repositories.inventario.LoteJPARepositor
 import com.cloud_technological.aura_pos.repositories.inventario.SerialProductoJPARepository;
 import com.cloud_technological.aura_pos.repositories.movimiento_inventario.MovimientoInventarioJPARepository;
 import com.cloud_technological.aura_pos.repositories.productos.ProductoJPARepository;
+import com.cloud_technological.aura_pos.repositories.productos_composicion.ProductoComposicionJPARepository;
 import com.cloud_technological.aura_pos.repositories.sucursales.SucursalJPARepository;
 import com.cloud_technological.aura_pos.repositories.terceros.TerceroJPARepository;
 import com.cloud_technological.aura_pos.repositories.turno_caja.TurnoCajaJPARepository;
@@ -72,6 +74,7 @@ public class VentaServiceImpl implements VentaService{
     private final VentaMapper ventaMapper;
     private final VentaDetalleMapper detalleMapper;
     private final VentaPagoMapper pagoMapper;
+    private final ProductoComposicionJPARepository composicionJPARepository;
 
     @Autowired
     public VentaServiceImpl(VentaQueryRepository ventaRepository,
@@ -90,6 +93,7 @@ public class VentaServiceImpl implements VentaService{
             SucursalJPARepository sucursalJPARepository,
             MovimientoInventarioJPARepository movimientoJPARepository,
             VentaMapper ventaMapper,
+            ProductoComposicionJPARepository composicionJPARepository,
             VentaDetalleMapper detalleMapper,
             VentaPagoMapper pagoMapper) {
         this.ventaRepository = ventaRepository;
@@ -104,6 +108,7 @@ public class VentaServiceImpl implements VentaService{
         this.serialJPARepository = serialJPARepository;
         this.terceroJPARepository = terceroJPARepository;
         this.usuarioJPARepository = usuarioJPARepository;
+        this.composicionJPARepository = composicionJPARepository;
         this.empresaRepository = empresaRepository;
         this.sucursalJPARepository = sucursalJPARepository;
         this.movimientoJPARepository = movimientoJPARepository;
@@ -184,17 +189,40 @@ public class VentaServiceImpl implements VentaService{
                     .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST,
                             "Producto no encontrado: " + item.getProductoId()));
 
-            // 4.1 Validar stock
-            if (Boolean.TRUE.equals(producto.getManejaInventario())) {
-                InventarioEntity inventario = inventarioJPARepository
-                        .findBySucursalIdAndProductoId(Long.valueOf(sucursal.getId()), producto.getId())
+            // REEMPLAZAR el bloque 4.1 por esto:
+            List<ProductoComposicionEntity> compValidacion =
+                composicionJPARepository.findByProductoPadreId(producto.getId());
+
+            if (!compValidacion.isEmpty()) {
+                // Validar stock de cada componente
+                for (ProductoComposicionEntity comp : compValidacion) {
+                    ProductoEntity hijo = comp.getProductoHijo();
+                    if (!Boolean.TRUE.equals(hijo.getManejaInventario())) continue;
+
+                    BigDecimal cantidadRequerida = item.getCantidad().multiply(comp.getCantidad());
+
+                    InventarioEntity invHijo = inventarioJPARepository
+                        .findBySucursalIdAndProductoId(Long.valueOf(sucursal.getId()), hijo.getId())
                         .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST,
-                                "El producto " + producto.getNombre() + " no tiene inventario en esta sucursal"));
+                            "El componente '" + hijo.getNombre() + "' no tiene inventario en esta sucursal"));
+
+                    if (invHijo.getStockActual().compareTo(cantidadRequerida) < 0)
+                        throw new GlobalException(HttpStatus.BAD_REQUEST,
+                            "Stock insuficiente del componente: " + hijo.getNombre()
+                            + ". Disponible: " + invHijo.getStockActual()
+                            + " | Requerido: " + cantidadRequerida);
+                }
+            } else if (Boolean.TRUE.equals(producto.getManejaInventario())) {
+                // Validación normal para producto simple
+                InventarioEntity inventario = inventarioJPARepository
+                    .findBySucursalIdAndProductoId(Long.valueOf(sucursal.getId()), producto.getId())
+                    .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST,
+                        "El producto " + producto.getNombre() + " no tiene inventario en esta sucursal"));
 
                 if (inventario.getStockActual().compareTo(item.getCantidad()) < 0)
                     throw new GlobalException(HttpStatus.BAD_REQUEST,
-                            "Stock insuficiente para: " + producto.getNombre()
-                            + ". Disponible: " + inventario.getStockActual());
+                        "Stock insuficiente para: " + producto.getNombre()
+                        + ". Disponible: " + inventario.getStockActual());
             }
 
             // 4.2 Calcular impuesto
@@ -257,24 +285,61 @@ public class VentaServiceImpl implements VentaService{
                 }
             }
 
-            // 4.6 Actualizar inventario
-            if (Boolean.TRUE.equals(producto.getManejaInventario())) {
+            // REEMPLAZAR el bloque 4.6 completo por esto:
+
+            // 4.6 Verificar si tiene composición
+            List<ProductoComposicionEntity> componentes =
+                composicionJPARepository.findByProductoPadreId(producto.getId());
+
+            if (!componentes.isEmpty()) {
+                // ── Producto compuesto → descontar componentes SIN importar manejaInventario del padre
+                for (ProductoComposicionEntity comp : componentes) {
+                    ProductoEntity hijo = comp.getProductoHijo();
+
+                    if (!Boolean.TRUE.equals(hijo.getManejaInventario())) continue;
+
+                    BigDecimal cantidadDescontar = item.getCantidad().multiply(comp.getCantidad());
+
+                    InventarioEntity invHijo = inventarioJPARepository
+                        .findBySucursalIdAndProductoId(Long.valueOf(sucursal.getId()), hijo.getId())
+                        .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST,
+                            "El componente '" + hijo.getNombre() + "' no tiene inventario en esta sucursal"));
+
+                    if (invHijo.getStockActual().compareTo(cantidadDescontar) < 0)
+                        throw new GlobalException(HttpStatus.BAD_REQUEST,
+                            "Stock insuficiente del componente: " + hijo.getNombre()
+                            + ". Disponible: " + invHijo.getStockActual()
+                            + " | Requerido: " + cantidadDescontar);
+
+                    BigDecimal saldoAnt  = invHijo.getStockActual();
+                    BigDecimal saldoNuevo = saldoAnt.subtract(cantidadDescontar);
+
+                    invHijo.setStockActual(saldoNuevo);
+                    invHijo.setUpdatedAt(LocalDateTime.now());
+                    inventarioJPARepository.save(invHijo);
+
+                    registrarMovimiento(sucursal, hijo, null,
+                        cantidadDescontar.negate(), saldoAnt, saldoNuevo,
+                        item.getPrecioUnitario(), "VENTA",
+                        "Venta #" + venta.getId() + " [componente de " + producto.getNombre() + "]");
+                }
+
+            } else if (Boolean.TRUE.equals(producto.getManejaInventario())) {
+                // ── Producto simple con inventario → comportamiento normal
                 InventarioEntity inventario = inventarioJPARepository
-                        .findBySucursalIdAndProductoId(Long.valueOf(sucursal.getId()), producto.getId()).get();
+                    .findBySucursalIdAndProductoId(Long.valueOf(sucursal.getId()), producto.getId()).get();
 
                 BigDecimal saldoAnterior = inventario.getStockActual();
-                BigDecimal saldoNuevo = saldoAnterior.subtract(item.getCantidad());
+                BigDecimal saldoNuevo    = saldoAnterior.subtract(item.getCantidad());
 
                 inventario.setStockActual(saldoNuevo);
                 inventario.setUpdatedAt(LocalDateTime.now());
                 inventarioJPARepository.save(inventario);
 
-                // 4.7 Kardex
                 registrarMovimiento(sucursal, producto, detalle.getLote(),
-                        item.getCantidad().negate(), saldoAnterior, saldoNuevo,
-                        item.getPrecioUnitario(), "VENTA", "Venta #" + venta.getId());
+                    item.getCantidad().negate(), saldoAnterior, saldoNuevo,
+                    item.getPrecioUnitario(), "VENTA", "Venta #" + venta.getId());
             }
-
             subtotal = subtotal.add(subtotalLinea);
             descuentoTotal = descuentoTotal.add(item.getMontoDescuento());
             impuestosTotal = impuestosTotal.add(impuestoLinea);
@@ -317,11 +382,43 @@ public class VentaServiceImpl implements VentaService{
         for (VentaDetalleEntity detalle : detalles) {
             ProductoEntity producto = detalle.getProducto();
 
-            if (Boolean.TRUE.equals(producto.getManejaInventario())) {
-                InventarioEntity inventario = inventarioJPARepository
-                        .findBySucursalIdAndProductoId(Long.valueOf(venta.getSucursal().getId()), producto.getId())
+        // En anular(), reemplazar el bloque if (Boolean.TRUE.equals(producto.getManejaInventario()))
+        if (Boolean.TRUE.equals(producto.getManejaInventario())) {
+
+            List<ProductoComposicionEntity> componentes =
+                composicionJPARepository.findByProductoPadreId(producto.getId());
+
+            if (!componentes.isEmpty()) {
+                // Devolver cada componente al inventario
+                for (ProductoComposicionEntity comp : componentes) {
+                    ProductoEntity hijo = comp.getProductoHijo();
+                    if (!Boolean.TRUE.equals(hijo.getManejaInventario())) continue;
+
+                    BigDecimal cantidadDevolver = detalle.getCantidad().multiply(comp.getCantidad());
+
+                    InventarioEntity invHijo = inventarioJPARepository
+                        .findBySucursalIdAndProductoId(Long.valueOf(venta.getSucursal().getId()), hijo.getId())
                         .orElseThrow(() -> new GlobalException(HttpStatus.INTERNAL_SERVER_ERROR,
-                                "Inventario no encontrado para: " + producto.getNombre()));
+                            "Inventario no encontrado para componente: " + hijo.getNombre()));
+
+                    BigDecimal saldoAnt = invHijo.getStockActual();
+                    BigDecimal saldoNuevo = saldoAnt.add(cantidadDevolver);
+
+                    invHijo.setStockActual(saldoNuevo);
+                    invHijo.setUpdatedAt(LocalDateTime.now());
+                    inventarioJPARepository.save(invHijo);
+
+                    registrarMovimiento(venta.getSucursal(), hijo, null,
+                        cantidadDevolver, saldoAnt, saldoNuevo,
+                        detalle.getPrecioUnitario(), "ANULACION_VENTA",
+                        "Anulación Venta #" + venta.getId() + " [componente de " + producto.getNombre() + "]");
+                }
+            } else {
+                // Producto simple — lógica actual sin cambios
+                InventarioEntity inventario = inventarioJPARepository
+                    .findBySucursalIdAndProductoId(Long.valueOf(venta.getSucursal().getId()), producto.getId())
+                    .orElseThrow(() -> new GlobalException(HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Inventario no encontrado para: " + producto.getNombre()));
 
                 BigDecimal saldoAnterior = inventario.getStockActual();
                 BigDecimal saldoNuevo = saldoAnterior.add(detalle.getCantidad());
@@ -330,20 +427,18 @@ public class VentaServiceImpl implements VentaService{
                 inventario.setUpdatedAt(LocalDateTime.now());
                 inventarioJPARepository.save(inventario);
 
-                // Devolver al lote si aplica
                 if (detalle.getLote() != null) {
                     LoteEntity lote = detalle.getLote();
                     lote.setStockActual(lote.getStockActual().add(detalle.getCantidad()));
                     loteJPARepository.save(lote);
                 }
 
-                // Kardex anulación
                 registrarMovimiento(venta.getSucursal(), producto, detalle.getLote(),
-                        detalle.getCantidad(), saldoAnterior, saldoNuevo,
-                        detalle.getPrecioUnitario(), "ANULACION_VENTA",
-                        "Anulación Venta #" + venta.getId());
+                    detalle.getCantidad(), saldoAnterior, saldoNuevo,
+                    detalle.getPrecioUnitario(), "ANULACION_VENTA",
+                    "Anulación Venta #" + venta.getId());
             }
-
+        }
             // Devolver seriales a DISPONIBLE
             if (Boolean.TRUE.equals(producto.getManejaSerial())) {
                 serialJPARepository.findAll().stream()

@@ -247,23 +247,20 @@
     <!-- ── Líneas del carrito ─────────────────────────────── -->
     <div class="cart-lines" *ngIf="cart.length > 0">
       <div class="cart-line" *ngFor="let item of cart; trackBy: trackById">
-        <!-- Fila 1: nombre + eliminar -->
-        <div class="line-top">
-          <div class="line-nombre-wrap">
-            <span class="line-nombre">{{ item.productoNombre }}</span>
-            <!-- Badge descuento automático -->
-            <span class="line-auto-badge" *ngIf="item.descuentoAutomatico">
-              <i class="pi pi-tag"></i> {{ item.descuentoAutomatico }}
+        <div class="line-header">
+          <span class="line-nombre">
+            {{ item.productoNombre }}
+            <span
+              class="badge-desc"
+              *ngIf="item.descuento > 0 || item.descuentoAutomatico"
+            >
+              <i class="pi pi-tag"></i> Desc. aplicado
             </span>
-          </div>
-          <button class="line-remove" (click)="removeItem(item._id)">
-            <i class="pi pi-times"></i>
-          </button>
+          </span>
+          <span class="line-subtotal">{{ formatCOP(item.subtotal) }}</span>
         </div>
 
-        <!-- Fila 2: cantidad + precio c/u + subtotal -->
-        <div class="line-body">
-          <!-- ESTÁNDAR: botones +/- -->
+        <div class="line-actions">
           <div class="qty-control" *ngIf="!item.esPesable">
             <button
               class="qty-btn"
@@ -280,7 +277,6 @@
             </button>
           </div>
 
-          <!-- PESABLE: input libre con decimales -->
           <div class="qty-pesable" *ngIf="item.esPesable">
             <input
               type="number"
@@ -295,55 +291,66 @@
             }}</span>
           </div>
 
-          <!-- Precio c/u (con IVA) -->
-          <div class="line-precio-wrap">
-            <span class="line-precio-label">c/u</span>
-            <span class="line-precio">
-              {{ formatCOP(item.precio * (1 + item.impuesto / 100)) }}
-            </span>
-          </div>
+          <span class="line-precio-unitario">
+            x {{ formatCOP(item.precio * (1 + item.impuesto / 100)) }}
+          </span>
 
-          <!-- Subtotal de línea (ya incluye IVA) -->
-          <div class="line-subtotal-wrap">
-            <span class="line-subtotal">{{ formatCOP(item.subtotal) }}</span>
+          <div class="spacer"></div>
+
+          <div class="line-tools">
+            <button
+              class="tool-btn btn-desc"
+              [class.has-desc]="item.descuento > 0"
+              pTooltip="Aplicar descuento"
+              tooltipPosition="top"
+            >
+              <i class="pi pi-percentage"></i>
+            </button>
+            <button
+              class="tool-btn btn-delete"
+              (click)="removeItem(item._id)"
+              pTooltip="Eliminar"
+              tooltipPosition="top"
+            >
+              <i class="pi pi-trash"></i>
+            </button>
           </div>
         </div>
-
-        <!-- Fila 3: descuento activo -->
-        <div
-          class="line-desc-row"
-          *ngIf="item.showDescuento || item.descuento > 0"
-        >
-          <span class="desc-badge"><i class="pi pi-tag"></i> Desc. manual</span>
-          <p-inputNumber
-            [ngModel]="item.descuento"
-            (ngModelChange)="updateDescuento(item, $event)"
-            [min]="0"
-            [max]="item.precio * item.cantidad"
-            inputStyleClass="desc-input"
-            mode="currency"
-            currency="COP"
-            locale="es-CO"
-            [minFractionDigits]="0"
-            styleClass="desc-spinner"
-          />
-          <button
-            class="desc-close"
-            (click)="item.showDescuento = false; updateDescuento(item, 0)"
-          >
-            <i class="pi pi-times"></i>
-          </button>
-        </div>
-
-        <!-- Botón agregar descuento manual -->
-        <button
-          class="add-desc-btn"
-          *ngIf="!item.showDescuento && item.descuento === 0"
-          (click)="item.showDescuento = true"
-        >
-          <i class="pi pi-tag"></i> Agregar descuento
-        </button>
       </div>
+    </div>
+
+    <div class="cart-footer">
+      <div class="totales-grid">
+        <div class="tot-col">
+          <span class="tot-label">Subtotal</span>
+          <span class="tot-val">{{ formatCOP(subtotal) }}</span>
+        </div>
+        <div class="tot-col" *ngIf="descTotal > 0">
+          <span class="tot-label text-red">Desc.</span>
+          <span class="tot-val text-red">-{{ formatCOP(descTotal) }}</span>
+        </div>
+        <div class="tot-col" *ngIf="impTotal > 0">
+          <span class="tot-label">IVA</span>
+          <span class="tot-val">{{ formatCOP(impTotal) }}</span>
+        </div>
+        <div class="tot-col tot-total">
+          <span class="tot-label">Total</span>
+          <span class="tot-val-total">{{ formatCOP(total) }}</span>
+        </div>
+      </div>
+
+      <button
+        pButton
+        class="btn-cobrar"
+        [disabled]="cart.length === 0"
+        (click)="irAlPago()"
+      >
+        <div class="cobrar-content">
+          <span class="cobrar-text">Cobrar</span>
+          <span class="cobrar-amount">{{ formatCOP(total) }}</span>
+        </div>
+        <i class="pi pi-arrow-right"></i>
+      </button>
     </div>
     <!-- /cart-lines -->
 
@@ -354,7 +361,7 @@
     </div>
 
     <!-- ── Footer: totales + cobrar ──────────────────────── -->
-    <div class="cart-footer">
+    <!-- <div class="cart-footer">
       <div class="totales">
         <div class="tot-row">
           <span class="tot-label">Subtotal (sin IVA)</span>
@@ -381,7 +388,7 @@
         [disabled]="cart.length === 0"
         (click)="irAlPago()"
       ></button>
-    </div>
+    </div> -->
   </div>
   <!-- /cart-panel -->
 </div>

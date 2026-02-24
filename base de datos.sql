@@ -157,6 +157,15 @@ CREATE TABLE unidad_medida (
 	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	deleted_at TIMESTAMP
 );
+
+select * from producto
+
+ALTER TABLE producto ADD COLUMN visible_en_pos BOOLEAN NOT NULL DEFAULT true;
+
+-- Ocultar los insumos que ya tienes
+UPDATE producto SET visible_en_pos = false 
+WHERE id IN (12, 13, 14); -- Jarabe, Vaso, Pitillo
+
 -- 4. PRODUCTO (El maestro)
 CREATE TABLE producto (
     id SERIAL PRIMARY KEY,
@@ -176,7 +185,7 @@ CREATE TABLE producto (
     maneja_inventario BOOLEAN DEFAULT TRUE,
     maneja_lotes BOOLEAN DEFAULT FALSE,
     maneja_serial BOOLEAN DEFAULT FALSE,
-    
+    visible_en_pos BOOLEAN NOT NULL DEFAULT true,
     -- Precios Base e Impuestos
     costo DECIMAL(19, 2) DEFAULT 0,  -- Costo promedio o última compra
     precio DECIMAL(19, 2) DEFAULT 0, -- Precio base de venta

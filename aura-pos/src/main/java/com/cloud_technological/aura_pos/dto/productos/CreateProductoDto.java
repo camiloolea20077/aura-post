@@ -30,4 +30,5 @@ public class CreateProductoDto {
     private BigDecimal ivaPorcentaje = BigDecimal.ZERO;
     private BigDecimal impoconsumo = BigDecimal.ZERO;
     private Boolean activo = true;
+    private Boolean visibleEnPos;
 }

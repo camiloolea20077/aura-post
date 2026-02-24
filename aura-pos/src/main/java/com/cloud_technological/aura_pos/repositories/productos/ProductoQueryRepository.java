@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageImpl;
@@ -13,6 +14,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import com.cloud_technological.aura_pos.dto.productos.ComponentePosDto;
 import com.cloud_technological.aura_pos.dto.productos.ProductoListDto;
 import com.cloud_technological.aura_pos.dto.productos.ProductoPosDto;
 import com.cloud_technological.aura_pos.dto.productos.ProductoTableDto;
@@ -121,18 +123,17 @@ public class ProductoQueryRepository {
     }
 
     public List<ProductoPosDto> listarPos(Integer empresaId, Long sucursalId) {
-        // Query 1 — productos (la que ya tienes)
         List<ProductoPosDto> productos = getProductos(empresaId, sucursalId);
-
-        // Query 2 — todas las reglas activas AHORA (una sola llamada)
         List<ReglaDescuentoDto> reglas = getReglasVigentes(empresaId);
 
-        // Mapeo en memoria — O(n*m) pero n y m son pequeños
+        // ← NUEVO: cargar todas las composiciones de la empresa en una sola query
+        List<ComponentePosDto> todasComposiciones = getComposiciones(empresaId);
+
         for (ProductoPosDto p : productos) {
+            // Descuentos — igual que antes
             ReglaDescuentoDto regla = reglas.stream()
                 .filter(r -> aplicaAProducto(r, p))
-                .findFirst()
-                .orElse(null);
+                .findFirst().orElse(null);
 
             if (regla != null) {
                 BigDecimal descuento = calcularDescuento(p.getPrecio(), regla);
@@ -142,8 +143,37 @@ public class ProductoQueryRepository {
             } else {
                 p.setPrecioFinal(p.getPrecio());
             }
+
+            // ← NUEVO: asignar componentes
+            List<ComponentePosDto> misComponentes = todasComposiciones.stream()
+                .filter(c -> c.getProductoPadreId().equals(p.getId()))
+                .collect(Collectors.toList());
+
+            p.setComponentes(misComponentes);
+            p.setEsCompuesto(!misComponentes.isEmpty());
         }
         return productos;
+    }
+    private List<ComponentePosDto> getComposiciones(Integer empresaId) {
+        String sql = """
+            SELECT
+                pc.producto_padre_id  AS productoPadreId,
+                pc.producto_hijo_id   AS productoHijoId,
+                ph.nombre             AS productoHijoNombre,
+                pc.cantidad,
+                pc.tipo
+            FROM producto_composicion pc
+            JOIN producto ph ON ph.id = pc.producto_hijo_id
+            JOIN producto pp ON pp.id = pc.producto_padre_id
+            WHERE pp.empresa_id = :empresaId
+            AND pp.deleted_at IS NULL
+            AND ph.deleted_at IS NULL
+            ORDER BY pc.producto_padre_id, pc.id
+            """;
+
+        return jdbcTemplate.query(sql,
+            new MapSqlParameterSource("empresaId", empresaId),
+            new BeanPropertyRowMapper<>(ComponentePosDto.class));
     }
     private List<ReglaDescuentoDto> getReglasVigentes(Integer empresaId) {
         String sql = """
@@ -245,6 +275,7 @@ public class ProductoQueryRepository {
             p.precio,
             p.costo,
             p.iva_porcentaje     AS ivaPorcentaje,
+            p.visible_en_pos     AS visibleEnPos,
             p.impoconsumo,
             c.id                 AS categoriaId,
             c.nombre             AS categoriaNombre,
@@ -261,6 +292,7 @@ public class ProductoQueryRepository {
         LEFT JOIN inventario i ON p.id = i.producto_id AND i.sucursal_id = :sucursalId
         WHERE p.empresa_id  = :empresaId
           AND p.deleted_at  IS NULL
+          AND p.visible_en_pos = true
           AND p.activo      = true
         ORDER BY p.nombre ASC
         """;

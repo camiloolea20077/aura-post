@@ -141,6 +141,7 @@ export class FormProductosComponent implements OnInit, OnChanges {
       manejaInventario: [true, Validators.required],
       manejaLotes: [false, Validators.required],
       manejaSerial: [false, Validators.required],
+      visibleEnPos: [true, Validators.required],
     });
 
     // Si no maneja inventario → no puede manejar lotes ni seriales
@@ -249,6 +250,7 @@ export class FormProductosComponent implements OnInit, OnChanges {
           manejaInventario: d.manejaInventario,
           manejaLotes: d.manejaLotes,
           manejaSerial: d.manejaSerial,
+          visibleEnPos: d.visibleEnPos,
         },
         { emitEvent: false },
       ); // ← esto evita que el valueChanges pise los valores
@@ -287,6 +289,7 @@ export class FormProductosComponent implements OnInit, OnChanges {
       manejaInventario: v.manejaInventario,
       manejaLotes: v.manejaLotes,
       manejaSerial: v.manejaSerial,
+      visibleEnPos: v.visibleEnPos ?? true,
     };
   }
 

@@ -30,4 +30,5 @@ public class ProductoDto {
     private BigDecimal ivaPorcentaje;
     private BigDecimal impoconsumo;
     private Boolean activo;
+    private Boolean visibleEnPos;
 }

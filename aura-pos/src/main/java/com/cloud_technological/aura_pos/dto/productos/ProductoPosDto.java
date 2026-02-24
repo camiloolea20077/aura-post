@@ -1,6 +1,8 @@
 package com.cloud_technological.aura_pos.dto.productos;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -33,4 +35,7 @@ public class ProductoPosDto {
     private BigDecimal precioFinal;      // precio después de descuento automático
     private String descuentoNombre;      // "Happy Hour", "Promo viernes", etc.
     private BigDecimal descuentoValor;
+    private Boolean esCompuesto = false;
+    private Boolean visibleEnPos;
+    private List<ComponentePosDto> componentes = new ArrayList<>();
 }

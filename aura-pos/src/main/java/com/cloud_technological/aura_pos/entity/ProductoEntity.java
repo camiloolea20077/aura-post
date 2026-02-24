@@ -71,7 +71,8 @@ public class ProductoEntity {
 
     private BigDecimal impoconsumo;
     private Boolean activo;
-
+    @Column(name = "visible_en_pos")
+    private Boolean visibleEnPos = true;
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
