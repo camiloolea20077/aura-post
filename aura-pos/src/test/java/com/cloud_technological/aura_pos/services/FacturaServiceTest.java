@@ -18,13 +18,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.cloud_technological.aura_pos.entity.EmpresaEntity;
 import com.cloud_technological.aura_pos.entity.FacturaEntity;
+import com.cloud_technological.aura_pos.entity.UsuarioEntity;
 import com.cloud_technological.aura_pos.entity.VentaEntity;
 import com.cloud_technological.aura_pos.mappers.FacturaMapper;
 import com.cloud_technological.aura_pos.repositories.empresas.EmpresaJPARepository;
 import com.cloud_technological.aura_pos.repositories.facturacion.FacturaJPARepository;
 import com.cloud_technological.aura_pos.repositories.facturacion.FacturaQueryRepository;
 import com.cloud_technological.aura_pos.repositories.facturacion.ReciboPagoJPARepository;
-import com.cloud_technological.aura_pos.repositories.terceros.TerceroEntity;
 import com.cloud_technological.aura_pos.repositories.users.UsuarioJPARepository;
 import com.cloud_technological.aura_pos.repositories.ventas.VentaJPARepository;
 import com.cloud_technological.aura_pos.repositories.venta_pago.VentaPagoJPARepository;

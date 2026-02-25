@@ -59,7 +59,7 @@ class NotaContableServiceTest {
     void setUp() {
         empresaMock = new EmpresaEntity();
         empresaMock.setId(1);
-        empresaMock.setNombre("Empresa Test");
+        empresaMock.setNombreComercial("Empresa Test");
 
         usuarioMock = new UsuarioEntity();
         usuarioMock.setId(1);
