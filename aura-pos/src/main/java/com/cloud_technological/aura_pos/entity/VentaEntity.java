@@ -76,5 +76,11 @@ public class VentaEntity {
     @Column(name = "estado_venta")
     private String estadoVenta;
 
+    @Column(name = "pago_parcial")
+    private Boolean pagoParcial;
+
+    @Column(name = "saldo_pendiente")
+    private BigDecimal saldoPendiente;
+
     private String observaciones;
 }
