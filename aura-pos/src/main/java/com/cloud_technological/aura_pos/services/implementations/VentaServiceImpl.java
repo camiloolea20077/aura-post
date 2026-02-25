@@ -14,6 +14,7 @@ import com.cloud_technological.aura_pos.dto.ventas.CreateVentaDto;
 import com.cloud_technological.aura_pos.dto.ventas.CreateVentaPagoDto;
 import com.cloud_technological.aura_pos.dto.ventas.VentaDto;
 import com.cloud_technological.aura_pos.dto.ventas.VentaTableDto;
+import com.cloud_technological.aura_pos.dto.facturacion.FacturaDto;
 import com.cloud_technological.aura_pos.entity.EmpresaEntity;
 import com.cloud_technological.aura_pos.entity.InventarioEntity;
 import com.cloud_technological.aura_pos.entity.LoteEntity;
@@ -49,6 +50,7 @@ import com.cloud_technological.aura_pos.repositories.venta_pago.VentaPagoJPARepo
 import com.cloud_technological.aura_pos.repositories.ventas.VentaJPARepository;
 import com.cloud_technological.aura_pos.repositories.ventas.VentaQueryRepository;
 import com.cloud_technological.aura_pos.services.VentaService;
+import com.cloud_technological.aura_pos.services.FacturaService;
 import com.cloud_technological.aura_pos.utils.GlobalException;
 import com.cloud_technological.aura_pos.utils.PageableDto;
 
@@ -75,6 +77,7 @@ public class VentaServiceImpl implements VentaService{
     private final VentaDetalleMapper detalleMapper;
     private final VentaPagoMapper pagoMapper;
     private final ProductoComposicionJPARepository composicionJPARepository;
+    private final FacturaService facturaService;
 
     @Autowired
     public VentaServiceImpl(VentaQueryRepository ventaRepository,
@@ -95,7 +98,8 @@ public class VentaServiceImpl implements VentaService{
             VentaMapper ventaMapper,
             ProductoComposicionJPARepository composicionJPARepository,
             VentaDetalleMapper detalleMapper,
-            VentaPagoMapper pagoMapper) {
+            VentaPagoMapper pagoMapper,
+            FacturaService facturaService) {
         this.ventaRepository = ventaRepository;
         this.ventaJPARepository = ventaJPARepository;
         this.detalleJPARepository = detalleJPARepository;
@@ -115,6 +119,7 @@ public class VentaServiceImpl implements VentaService{
         this.ventaMapper = ventaMapper;
         this.detalleMapper = detalleMapper;
         this.pagoMapper = pagoMapper;
+        this.facturaService = facturaService;
     }
 
     @Override
@@ -157,6 +162,22 @@ public class VentaServiceImpl implements VentaService{
                 .map(CreateVentaPagoDto::getMonto)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        // 2.1. Validar cliente obligatorio para ventas a crédito (HU-006)
+        boolean tienePagoCredito = dto.getPagos().stream()
+                .anyMatch(p -> "credito".equalsIgnoreCase(p.getMetodoPago()));
+        
+        if (tienePagoCredito && dto.getClienteId() == null) {
+            throw new GlobalException(HttpStatus.BAD_REQUEST, 
+                    "Las ventas a crédito requieren un cliente asociado");
+        }
+
+        // 2.2. Validar que el cliente existe si se proporcionó
+        TerceroEntity cliente = null;
+        if (dto.getClienteId() != null) {
+            cliente = terceroJPARepository.findByIdAndEmpresaId(dto.getClienteId(), empresaId)
+                    .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Cliente no encontrado"));
+        }
+
         // 3. Crear cabecera
         VentaEntity venta = new VentaEntity();
         venta.setEmpresa(empresa);
@@ -165,15 +186,18 @@ public class VentaServiceImpl implements VentaService{
         venta.setTurnoCaja(turno);
         venta.setTipoDocumento(dto.getTipoDocumento());
         venta.setPrefijo(sucursal.getPrefijoFacturacion());
+        /**
+         * TODO: posible error al tratar de obtener el siguiente consecutivo
+         * * porque varias instancias de la aplicacion podrian estar usando el mismo
+         * * consecutivo
+         */
         venta.setConsecutivo(ventaRepository.obtenerSiguienteConsecutivo(Long.valueOf(sucursal.getId())));
         venta.setFechaEmision(LocalDateTime.now());
         venta.setObservaciones(dto.getObservaciones());
         venta.setEstadoVenta("COMPLETADA");
 
-        // Cliente opcional
-        if (dto.getClienteId() != null) {
-            TerceroEntity cliente = terceroJPARepository.findByIdAndEmpresaId(dto.getClienteId(), empresaId)
-                    .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST, "Cliente no encontrado"));
+        // Cliente ya validado arriba (obligatorio si hay pago a crédito)
+        if (cliente != null) {
             venta.setCliente(cliente);
         }
 
@@ -358,14 +382,34 @@ public class VentaServiceImpl implements VentaService{
             pagoJPARepository.save(pagoEntity);
         }
 
-        // 7. Actualizar totales
+        // 7. Actualizar totales y calcular pagos parciales (HU-004)
+        BigDecimal saldoPendiente = totalFinal.subtract(totalPagado);
+        boolean esPagoParcial = saldoPendiente.compareTo(BigDecimal.ZERO) > 0;
+        
         venta.setSubtotal(subtotal);
         venta.setDescuentoTotal(descuentoTotal);
         venta.setImpuestosTotal(impuestosTotal);
         venta.setTotalPagar(totalFinal);
+        
+        // Campos de pago parcial
+        venta.setPagoParcial(esPagoParcial);
+        venta.setSaldoPendiente(saldoPendiente);
+        
+        // Si es pago parcial, el estado sigue como PAGO_PARCIAL, sino COMPLETADA
+        if (esPagoParcial) {
+            venta.setEstadoVenta("PAGO_PARCIAL");
+        }
+        
         ventaJPARepository.save(venta);
 
-        return obtenerPorId(venta.getId(), empresaId);
+        // 8. Crear factura automáticamente desde la venta
+        FacturaDto facturaDto = facturaService.crearDesdeVenta(venta.getId(), empresaId, usuarioId.intValue());
+        
+        // 9. Obtener venta con factura asignada
+        VentaDto ventaDto = obtenerPorId(venta.getId(), empresaId);
+        ventaDto.setFacturaId(facturaDto.getId());
+        
+        return ventaDto;
     }
 
     @Override
