@@ -18,5 +18,11 @@ public class CreateProductoPresentacionDto {
     private String codigoBarras;
     @NotNull(message = "El factor de conversión es obligatorio")
     private BigDecimal factorConversion;
+    private Boolean esDefaultCompra;
+    private Boolean esDefaultVenta;
+    @NotNull(message = "El precio es obligatorio")
+    private BigDecimal precio;
+    @NotNull(message = "El costo es obligatorio")
+    private BigDecimal costo;
     private Boolean activo = true;
 }

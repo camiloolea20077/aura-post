@@ -63,12 +63,29 @@ public class ProductoPresentacionServiceImpl implements ProductoPresentacionServ
     @Override
     @Transactional
     public ProductoPresentacionDto crear(CreateProductoPresentacionDto dto, Integer empresaId) {
+        // Validar código de barras duplicado
         if (dto.getCodigoBarras() != null && !dto.getCodigoBarras().isBlank() &&
                 presentacionRepository.existeCodigoBarras(dto.getCodigoBarras()))
             throw new GlobalException(HttpStatus.BAD_REQUEST, "El código de barras ya está registrado");
 
         ProductoEntity producto = productoJPARepository.findByIdAndEmpresaId(dto.getProductoId(), empresaId)
                 .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST, "Producto no encontrado"));
+
+        // Validar factor de conversión duplicado en el mismo producto
+        if (presentacionJPARepository.existsByProductoIdAndFactorConversion(
+                dto.getProductoId(), dto.getFactorConversion()))
+            throw new GlobalException(HttpStatus.BAD_REQUEST,
+                    "Ya existe una presentación con ese factor de conversión para este producto");
+
+        // Si se marca como default compra → desmarcar las demás del mismo producto
+        if (Boolean.TRUE.equals(dto.getEsDefaultCompra())) {
+            desmarcarDefaultCompra(dto.getProductoId());
+        }
+
+        // Si se marca como default venta → desmarcar las demás del mismo producto
+        if (Boolean.TRUE.equals(dto.getEsDefaultVenta())) {
+            desmarcarDefaultVenta(dto.getProductoId());
+        }
 
         ProductoPresentacionEntity entity = presentacionMapper.toEntity(dto);
         entity.setProducto(producto);
@@ -82,9 +99,30 @@ public class ProductoPresentacionServiceImpl implements ProductoPresentacionServ
         ProductoPresentacionEntity entity = presentacionJPARepository.findByIdAndProductoEmpresaId(id, empresaId)
                 .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Presentación no encontrada"));
 
+        // Validar código de barras duplicado excluyendo la actual
         if (dto.getCodigoBarras() != null && !dto.getCodigoBarras().isBlank() &&
                 presentacionRepository.existeCodigoBarrasExcluyendo(dto.getCodigoBarras(), id))
             throw new GlobalException(HttpStatus.BAD_REQUEST, "El código de barras ya está en uso");
+
+        // Validar factor duplicado excluyendo la actual
+        if (presentacionJPARepository.existsByProductoIdAndFactorConversionAndIdNot(
+                entity.getProducto().getId(), dto.getFactorConversion(), id))
+            throw new GlobalException(HttpStatus.BAD_REQUEST,
+                    "Ya existe una presentación con ese factor de conversión para este producto");
+
+        Long productoId = entity.getProducto().getId();
+
+        // Si se marca como default compra → desmarcar las demás
+        if (Boolean.TRUE.equals(dto.getEsDefaultCompra()) &&
+                !Boolean.TRUE.equals(entity.getEsDefaultCompra())) {
+            desmarcarDefaultCompra(productoId);
+        }
+
+        // Si se marca como default venta → desmarcar las demás
+        if (Boolean.TRUE.equals(dto.getEsDefaultVenta()) &&
+                !Boolean.TRUE.equals(entity.getEsDefaultVenta())) {
+            desmarcarDefaultVenta(productoId);
+        }
 
         presentacionMapper.updateEntityFromDto(dto, entity);
         return presentacionMapper.toDto(presentacionJPARepository.save(entity));
@@ -96,7 +134,34 @@ public class ProductoPresentacionServiceImpl implements ProductoPresentacionServ
         ProductoPresentacionEntity entity = presentacionJPARepository.findByIdAndProductoEmpresaId(id, empresaId)
                 .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Presentación no encontrada"));
 
+        // No permitir eliminar la default de compra o venta si es la única
+        if (Boolean.TRUE.equals(entity.getEsDefaultCompra()) ||
+                Boolean.TRUE.equals(entity.getEsDefaultVenta())) {
+            long total = presentacionJPARepository.countByProductoIdAndActivoTrue(entity.getProducto().getId());
+            if (total <= 1)
+                throw new GlobalException(HttpStatus.BAD_REQUEST,
+                        "No puedes eliminar la única presentación activa del producto");
+        }
+
         entity.setActivo(false);
         presentacionJPARepository.save(entity);
+    }
+
+    // ─── Helpers privados ────────────────────────────────────────────
+
+    private void desmarcarDefaultCompra(Long productoId) {
+        presentacionJPARepository.findByProductoIdAndEsDefaultCompraTrue(productoId)
+                .forEach(p -> {
+                    p.setEsDefaultCompra(false);
+                    presentacionJPARepository.save(p);
+                });
+    }
+
+    private void desmarcarDefaultVenta(Long productoId) {
+        presentacionJPARepository.findByProductoIdAndEsDefaultVentaTrue(productoId)
+                .forEach(p -> {
+                    p.setEsDefaultVenta(false);
+                    presentacionJPARepository.save(p);
+                });
     }
 }

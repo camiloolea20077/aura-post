@@ -14,5 +14,9 @@ public class ProductoPresentacionDto {
     private String nombre;
     private String codigoBarras;
     private BigDecimal factorConversion;
+    private Boolean esDefaultCompra;
+    private Boolean esDefaultVenta;
+    private BigDecimal precio;
+    private BigDecimal costo;
     private Boolean activo;
 }

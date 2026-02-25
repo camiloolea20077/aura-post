@@ -35,5 +35,15 @@ public class ProductoPresentacionEntity {
     @Column(name = "factor_conversion")
     private BigDecimal factorConversion;
 
+    @Column(name = "es_default_compra")
+    private Boolean esDefaultCompra;
+
+    @Column(name = "es_default_venta")
+    private Boolean esDefaultVenta;
+
+    private BigDecimal precio;
+
+    private BigDecimal costo;
+
     private Boolean activo;
 }

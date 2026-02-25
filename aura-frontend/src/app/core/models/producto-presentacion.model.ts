@@ -6,6 +6,10 @@ export interface ProductoPresentacionModel {
   nombre: string;
   codigoBarras: string | null;
   factorConversion: number;
+  esDefaultCompra: boolean;
+  esDefaultVenta: boolean;
+  precio: number;
+  costo: number;
   activo: boolean;
 }
 
@@ -26,6 +30,10 @@ export interface CreateProductoPresentacionDto {
   nombre: string;
   codigoBarras: string | null;
   factorConversion: number;
+  esDefaultCompra: boolean;
+  esDefaultVenta: boolean;
+  precio: number;
+  costo: number;
   activo: boolean;
 }
 
@@ -33,6 +41,10 @@ export interface UpdateProductoPresentacionDto {
   nombre: string;
   codigoBarras: string | null;
   factorConversion: number;
+  esDefaultCompra: boolean;
+  esDefaultVenta: boolean;
+  precio: number;
+  costo: number;
   activo: boolean;
 }
 

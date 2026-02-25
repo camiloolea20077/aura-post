@@ -24,7 +24,16 @@ export interface ProductoModel {
   activo: boolean;
   visibleEnPos: boolean;
 }
-
+export interface PresentacionFormItem {
+  id?: number; // null = nueva (no guardada aún)
+  nombre: string;
+  factor: number;
+  codigoBarras: string | null;
+  precio: number;
+  activo: boolean;
+  _editando: boolean; // controla modo edición inline
+  _esNueva: boolean; // para saber si hacer POST o PUT
+}
 // ─── Tabla paginada ──────────────────────────────────────────
 export interface ProductoTableModel {
   id: number;
