@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 public class NotaContableDto {
     private Long id;
     private Long facturaId;
+    private Long compraId;
     private BigDecimal valor;
     private String banco;
     private Integer tipo;

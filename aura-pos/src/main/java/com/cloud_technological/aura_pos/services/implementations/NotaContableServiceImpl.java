@@ -11,10 +11,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.cloud_technological.aura_pos.dto.facturacion.NotaContableDto;
+import com.cloud_technological.aura_pos.entity.CompraEntity;
 import com.cloud_technological.aura_pos.entity.FacturaEntity;
 import com.cloud_technological.aura_pos.entity.NotaContableEntity;
 import com.cloud_technological.aura_pos.entity.UsuarioEntity;
 import com.cloud_technological.aura_pos.mappers.NotaContableMapper;
+import com.cloud_technological.aura_pos.repositories.compras.CompraJPARepository;
 import com.cloud_technological.aura_pos.repositories.facturacion.FacturaJPARepository;
 import com.cloud_technological.aura_pos.repositories.notas_contables.NotaContableJPARepository;
 import com.cloud_technological.aura_pos.repositories.users.UsuarioJPARepository;
@@ -27,16 +29,19 @@ public class NotaContableServiceImpl implements NotaContableService {
 
     private final NotaContableJPARepository notaContableRepository;
     private final FacturaJPARepository facturaRepository;
+    private final CompraJPARepository compraRepository;
     private final UsuarioJPARepository usuarioRepository;
     private final NotaContableMapper notaContableMapper;
 
     @Autowired
     public NotaContableServiceImpl(NotaContableJPARepository notaContableRepository,
             FacturaJPARepository facturaRepository,
+            CompraJPARepository compraRepository,
             UsuarioJPARepository usuarioRepository,
             NotaContableMapper notaContableMapper) {
         this.notaContableRepository = notaContableRepository;
         this.facturaRepository = facturaRepository;
+        this.compraRepository = compraRepository;
         this.usuarioRepository = usuarioRepository;
         this.notaContableMapper = notaContableMapper;
     }
@@ -125,5 +130,32 @@ public class NotaContableServiceImpl implements NotaContableService {
                 .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Factura no encontrada"));
         
         return crear(dto, factura.getEmpresa().getId(), usuarioId);
+    }
+
+    @Override
+    @Transactional
+    public NotaContableDto generarNotaDebitoPagoCompra(Long compraId, BigDecimal monto, Integer usuarioId, 
+            String metodoPago, String descripcion) {
+        
+        // La empresa se obtendrá de la compra
+        CompraEntity compra = compraRepository.findById(compraId)
+                .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Compra no encontrada"));
+        
+        // Validar usuario
+        UsuarioEntity usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+        
+        // Crear nota contable de DÉBITO (salida de dinero en compras)
+        NotaContableEntity entity = new NotaContableEntity();
+        entity.setCompra(compra);
+        entity.setUsuario(usuario);
+        entity.setValor(monto);
+        entity.setTipo(NotaContableTipo.DEBITO);
+        entity.setNota(descripcion != null ? descripcion : "Pago de compra");
+        entity.setMetodoPago(metodoPago);
+        entity.setCreatedAt(LocalDateTime.now());
+        
+        entity = notaContableRepository.save(entity);
+        return notaContableMapper.toDto(entity);
     }
 }

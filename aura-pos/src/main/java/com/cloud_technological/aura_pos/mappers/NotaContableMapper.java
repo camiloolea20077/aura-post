@@ -12,6 +12,7 @@ public interface NotaContableMapper {
     
     @Mappings({
         @Mapping(target = "facturaId", source = "entity.factura.id"),
+        @Mapping(target = "compraId", source = "entity.compra.id"),
         @Mapping(target = "usuarioId", source = "entity.usuario.id"),
     })
     NotaContableDto toDto(NotaContableEntity entity);
@@ -19,6 +20,7 @@ public interface NotaContableMapper {
     @Mappings({
         @Mapping(target = "id", ignore = true),
         @Mapping(target = "factura", ignore = true),
+        @Mapping(target = "compra", ignore = true),
         @Mapping(target = "usuario", ignore = true),
         @Mapping(target = "createdAt", ignore = true),
     })

@@ -21,4 +21,7 @@ public class CreateCompraDto {
     private String observaciones;
     @NotEmpty(message = "Debe agregar al menos un producto")
     private List<CreateCompraDetalleDto> detalles;
+    
+    // Pagos de la compra (opcional)
+    private List<CreateCompraPagoDto> pagos;
 }

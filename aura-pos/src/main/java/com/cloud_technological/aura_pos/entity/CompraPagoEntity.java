@@ -15,42 +15,34 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 
-@Entity
-@Table(name = "nota_contable")
 @Getter
 @Setter
-public class NotaContableEntity {
-
+@Table(name = "compra_pago")
+@Entity
+public class CompraPagoEntity {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "factura_id")
-    private FacturaEntity factura;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "compra_id")
     private CompraEntity compra;
 
-    private BigDecimal valor;
+    @Column(name = "metodo_pago")
+    private String metodoPago;
 
-    @Column(length = 300)
-    private String banco;
+    private BigDecimal monto;
 
-    @Column(nullable = false)
-    private Integer tipo; // 1 = CRÉDITO, 2 = DÉBITO
-
-    @Column(length = 500, nullable = false)
-    private String nota;
+    @Column(name = "fecha_pago")
+    private LocalDateTime fechaPago;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "usuario_id")
     private UsuarioEntity usuario;
 
-    @Column(name = "metodo_pago", nullable = false)
-    private String metodoPago;
+    @Column(length = 300)
+    private String banco;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private Boolean activo = true;
 }

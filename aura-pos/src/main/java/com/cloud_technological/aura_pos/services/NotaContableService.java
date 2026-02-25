@@ -14,4 +14,6 @@ public interface NotaContableService {
     NotaContableDto generarNotaCreditoVuelto(Long facturaId, BigDecimal monto, Integer usuarioId, String metodoPago, String descripcion);
     
     NotaContableDto generarNotaDebitoPago(Long facturaId, BigDecimal monto, Integer usuarioId, String metodoPago, String descripcion);
+    
+    NotaContableDto generarNotaDebitoPagoCompra(Long compraId, BigDecimal monto, Integer usuarioId, String metodoPago, String descripcion);
 }
