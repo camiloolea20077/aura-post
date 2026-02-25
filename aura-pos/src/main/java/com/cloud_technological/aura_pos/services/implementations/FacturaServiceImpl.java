@@ -32,6 +32,8 @@ import com.cloud_technological.aura_pos.repositories.users.UsuarioJPARepository;
 import com.cloud_technological.aura_pos.repositories.ventas.VentaJPARepository;
 import com.cloud_technological.aura_pos.repositories.venta_pago.VentaPagoJPARepository;
 import com.cloud_technological.aura_pos.services.FacturaService;
+import com.cloud_technological.aura_pos.services.FacturaLogService;
+import com.cloud_technological.aura_pos.utils.FacturaLogEvento;
 import com.cloud_technological.aura_pos.utils.GlobalException;
 
 @Service
@@ -45,6 +47,7 @@ public class FacturaServiceImpl implements FacturaService {
     private final EmpresaJPARepository empresaJPARepository;
     private final UsuarioJPARepository usuarioJPARepository;
     private final FacturaMapper facturaMapper;
+    private final FacturaLogService facturaLogService;
 
     @Value("${app.facturacion.clave-tecnica:default-clave-tecnica}")
     private String claveTecnica;
@@ -63,7 +66,8 @@ public class FacturaServiceImpl implements FacturaService {
             VentaPagoJPARepository ventaPagoJPARepository,
             EmpresaJPARepository empresaJPARepository,
             UsuarioJPARepository usuarioJPARepository,
-            FacturaMapper facturaMapper) {
+            FacturaMapper facturaMapper,
+            FacturaLogService facturaLogService) {
         this.facturaJPARepository = facturaJPARepository;
         this.facturaQueryRepository = facturaQueryRepository;
         this.reciboPagoJPARepository = reciboPagoJPARepository;
@@ -72,6 +76,7 @@ public class FacturaServiceImpl implements FacturaService {
         this.empresaJPARepository = empresaJPARepository;
         this.usuarioJPARepository = usuarioJPARepository;
         this.facturaMapper = facturaMapper;
+        this.facturaLogService = facturaLogService;
     }
 
     @Override
@@ -134,6 +139,22 @@ public class FacturaServiceImpl implements FacturaService {
 
         factura = facturaJPARepository.save(factura);
 
+        // Registrar evento de creación de factura (async - no bloquea)
+        try {
+            facturaLogService.registrarLogAsync(
+                factura.getId(),
+                FacturaLogEvento.CREACION,
+                null,
+                "PENDIENTE",
+                buildFacturaData(factura),
+                usuarioId,
+                "Factura creada automáticamente desde venta #" + ventaId,
+                null
+            );
+        } catch (Exception e) {
+            // Silencioso - el logging nunca debe fallar el proceso principal
+        }
+
         // Copiar pagos de VentaPago a ReciboPago
         for (VentaPagoEntity pagoVenta : pagosVenta) {
             ReciboPagoEntity reciboPago = new ReciboPagoEntity();
@@ -192,5 +213,24 @@ public class FacturaServiceImpl implements FacturaService {
         } catch (NoSuchAlgorithmException e) {
             throw new GlobalException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al generar CUFE");
         }
+    }
+
+    /**
+     * Construye un mapa con los datos de la factura para el log
+     */
+    private java.util.Map<String, Object> buildFacturaData(FacturaEntity factura) {
+        java.util.Map<String, Object> data = new java.util.HashMap<>();
+        data.put("id", factura.getId());
+        data.put("prefijo", factura.getPrefijo());
+        data.put("consecutivo", factura.getConsecutivo());
+        data.put("valor", factura.getValor());
+        data.put("descuento", factura.getDescuento());
+        data.put("cufe", factura.getCufe());
+        data.put("estadoDian", factura.getEstadoDian());
+        data.put("metodoPago", factura.getMetodoPago());
+        data.put("fechaHoraEmision", factura.getFechaHoraEmision());
+        data.put("ventaId", factura.getVenta() != null ? factura.getVenta().getId() : null);
+        data.put("empresaId", factura.getEmpresa() != null ? factura.getEmpresa().getId() : null);
+        return data;
     }
 }
