@@ -162,6 +162,22 @@ public class VentaServiceImpl implements VentaService{
                 .map(CreateVentaPagoDto::getMonto)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        // 2.1. Validar cliente obligatorio para ventas a crédito (HU-006)
+        boolean tienePagoCredito = dto.getPagos().stream()
+                .anyMatch(p -> "credito".equalsIgnoreCase(p.getMetodoPago()));
+        
+        if (tienePagoCredito && dto.getClienteId() == null) {
+            throw new GlobalException(HttpStatus.BAD_REQUEST, 
+                    "Las ventas a crédito requieren un cliente asociado");
+        }
+
+        // 2.2. Validar que el cliente existe si se proporcionó
+        TerceroEntity cliente = null;
+        if (dto.getClienteId() != null) {
+            cliente = terceroJPARepository.findByIdAndEmpresaId(dto.getClienteId(), empresaId)
+                    .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Cliente no encontrado"));
+        }
+
         // 3. Crear cabecera
         VentaEntity venta = new VentaEntity();
         venta.setEmpresa(empresa);
@@ -180,10 +196,8 @@ public class VentaServiceImpl implements VentaService{
         venta.setObservaciones(dto.getObservaciones());
         venta.setEstadoVenta("COMPLETADA");
 
-        // Cliente opcional
-        if (dto.getClienteId() != null) {
-            TerceroEntity cliente = terceroJPARepository.findByIdAndEmpresaId(dto.getClienteId(), empresaId)
-                    .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST, "Cliente no encontrado"));
+        // Cliente ya validado arriba (obligatorio si hay pago a crédito)
+        if (cliente != null) {
             venta.setCliente(cliente);
         }
 
@@ -368,11 +382,24 @@ public class VentaServiceImpl implements VentaService{
             pagoJPARepository.save(pagoEntity);
         }
 
-        // 7. Actualizar totales
+        // 7. Actualizar totales y calcular pagos parciales (HU-004)
+        BigDecimal saldoPendiente = totalFinal.subtract(totalPagado);
+        boolean esPagoParcial = saldoPendiente.compareTo(BigDecimal.ZERO) > 0;
+        
         venta.setSubtotal(subtotal);
         venta.setDescuentoTotal(descuentoTotal);
         venta.setImpuestosTotal(impuestosTotal);
         venta.setTotalPagar(totalFinal);
+        
+        // Campos de pago parcial
+        venta.setPagoParcial(esPagoParcial);
+        venta.setSaldoPendiente(saldoPendiente);
+        
+        // Si es pago parcial, el estado sigue como PAGO_PARCIAL, sino COMPLETADA
+        if (esPagoParcial) {
+            venta.setEstadoVenta("PAGO_PARCIAL");
+        }
+        
         ventaJPARepository.save(venta);
 
         // 8. Crear factura automáticamente desde la venta
