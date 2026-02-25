@@ -28,6 +28,7 @@ public class VentaDto {
     private BigDecimal totalPagar;
     private String estadoVenta;
     private String observaciones;
+    private Long facturaId;
     private List<VentaDetalleDto> detalles;
     private List<VentaPagoDto> pagos;
 }

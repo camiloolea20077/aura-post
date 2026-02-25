@@ -14,6 +14,7 @@ import com.cloud_technological.aura_pos.dto.ventas.CreateVentaDto;
 import com.cloud_technological.aura_pos.dto.ventas.CreateVentaPagoDto;
 import com.cloud_technological.aura_pos.dto.ventas.VentaDto;
 import com.cloud_technological.aura_pos.dto.ventas.VentaTableDto;
+import com.cloud_technological.aura_pos.dto.facturacion.FacturaDto;
 import com.cloud_technological.aura_pos.entity.EmpresaEntity;
 import com.cloud_technological.aura_pos.entity.InventarioEntity;
 import com.cloud_technological.aura_pos.entity.LoteEntity;
@@ -49,6 +50,7 @@ import com.cloud_technological.aura_pos.repositories.venta_pago.VentaPagoJPARepo
 import com.cloud_technological.aura_pos.repositories.ventas.VentaJPARepository;
 import com.cloud_technological.aura_pos.repositories.ventas.VentaQueryRepository;
 import com.cloud_technological.aura_pos.services.VentaService;
+import com.cloud_technological.aura_pos.services.FacturaService;
 import com.cloud_technological.aura_pos.utils.GlobalException;
 import com.cloud_technological.aura_pos.utils.PageableDto;
 
@@ -75,6 +77,7 @@ public class VentaServiceImpl implements VentaService{
     private final VentaDetalleMapper detalleMapper;
     private final VentaPagoMapper pagoMapper;
     private final ProductoComposicionJPARepository composicionJPARepository;
+    private final FacturaService facturaService;
 
     @Autowired
     public VentaServiceImpl(VentaQueryRepository ventaRepository,
@@ -95,7 +98,8 @@ public class VentaServiceImpl implements VentaService{
             VentaMapper ventaMapper,
             ProductoComposicionJPARepository composicionJPARepository,
             VentaDetalleMapper detalleMapper,
-            VentaPagoMapper pagoMapper) {
+            VentaPagoMapper pagoMapper,
+            FacturaService facturaService) {
         this.ventaRepository = ventaRepository;
         this.ventaJPARepository = ventaJPARepository;
         this.detalleJPARepository = detalleJPARepository;
@@ -115,6 +119,7 @@ public class VentaServiceImpl implements VentaService{
         this.ventaMapper = ventaMapper;
         this.detalleMapper = detalleMapper;
         this.pagoMapper = pagoMapper;
+        this.facturaService = facturaService;
     }
 
     @Override
@@ -165,6 +170,11 @@ public class VentaServiceImpl implements VentaService{
         venta.setTurnoCaja(turno);
         venta.setTipoDocumento(dto.getTipoDocumento());
         venta.setPrefijo(sucursal.getPrefijoFacturacion());
+        /**
+         * TODO: posible error al tratar de obtener el siguiente consecutivo
+         * * porque varias instancias de la aplicacion podrian estar usando el mismo
+         * * consecutivo
+         */
         venta.setConsecutivo(ventaRepository.obtenerSiguienteConsecutivo(Long.valueOf(sucursal.getId())));
         venta.setFechaEmision(LocalDateTime.now());
         venta.setObservaciones(dto.getObservaciones());
@@ -365,7 +375,14 @@ public class VentaServiceImpl implements VentaService{
         venta.setTotalPagar(totalFinal);
         ventaJPARepository.save(venta);
 
-        return obtenerPorId(venta.getId(), empresaId);
+        // 8. Crear factura automáticamente desde la venta
+        FacturaDto facturaDto = facturaService.crearDesdeVenta(venta.getId(), empresaId, usuarioId.intValue());
+        
+        // 9. Obtener venta con factura asignada
+        VentaDto ventaDto = obtenerPorId(venta.getId(), empresaId);
+        ventaDto.setFacturaId(facturaDto.getId());
+        
+        return ventaDto;
     }
 
     @Override
