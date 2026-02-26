@@ -215,6 +215,10 @@ CREATE TABLE producto_presentacion (
     nombre VARCHAR(100), 
     codigo_barras VARCHAR(150) UNIQUE,
     factor_conversion DECIMAL(14,4) NOT NULL DEFAULT 1,
+	es_default_compra BOOLEAN NOT NULL DEFAULT false,
+	es_default_venta  BOOLEAN NOT NULL DEFAULT false,
+	precio            NUMERIC(18,2) NOT NULL DEFAULT 0,
+	costo             NUMERIC(18,2) NOT NULL DEFAULT 0,
     activo BOOLEAN DEFAULT TRUE
 );
 

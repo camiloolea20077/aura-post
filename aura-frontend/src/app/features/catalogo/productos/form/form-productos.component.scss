@@ -414,3 +414,366 @@
     background: linear-gradient(135deg, #2e6cf6, #7b4dff);
   }
 }
+// ══════════════════════════════════════════════════════════════════
+// Agregar al final de form-productos.component.scss
+// ══════════════════════════════════════════════════════════════════
+
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--aura-primary, #6366f1);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 10px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 6px;
+}
+
+// ─── Lista ────────────────────────────────────────────────────────
+.pres-container {
+  padding-top: 0.5rem;
+}
+
+.pres-list {
+  border: 1px solid var(--surface-border, #e2e8f0);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.pres-row {
+  display: grid;
+  grid-template-columns: 1fr 160px 130px 72px;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--surface-border, #e2e8f0);
+  gap: 0.75rem;
+  transition: background 0.15s;
+
+  &:last-child {
+    border-bottom: none;
+  }
+  &:hover:not(.pres-row--editing) {
+    background: var(--surface-hover, #f8fafc);
+  }
+
+  &.pres-row--editing {
+    display: block;
+    padding: 1rem;
+    background: var(--surface-ground, #f8fafc);
+    border-left: 3px solid var(--aura-primary, #6366f1);
+  }
+}
+
+// ─── Celdas ───────────────────────────────────────────────────────
+.pres-cell--nombre {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pres-cell--codigo {
+  font-size: 12px;
+  color: var(--text-color-secondary);
+}
+.pres-cell--precios {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.pres-cell--acciones {
+  display: flex;
+  gap: 2px;
+  justify-content: flex-end;
+}
+
+.pres-nombre-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pres-nombre {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-color);
+}
+
+// ─── Badges de default ────────────────────────────────────────────
+.pres-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 2px 7px;
+
+  i {
+    font-size: 9px;
+  }
+
+  &--compra {
+    background: #dcfce7;
+    color: #15803d;
+  }
+
+  &--venta {
+    background: #fef9c3;
+    color: #a16207;
+  }
+}
+
+.pres-factor-badge {
+  display: inline-flex;
+  align-items: center;
+  background: #e0e7ff;
+  color: #4338ca;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+  padding: 2px 7px;
+  width: fit-content;
+}
+
+.pres-precio-venta {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-color);
+}
+
+.pres-precio-costo {
+  font-size: 11px;
+  color: var(--text-color-secondary);
+}
+
+.pres-codigo {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  i {
+    margin-right: 3px;
+    opacity: 0.6;
+  }
+}
+.pres-sin-codigo {
+  color: #94a3b8;
+}
+
+// ─── Edición inline ───────────────────────────────────────────────
+.pres-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.pres-edit-row {
+  display: grid;
+  grid-template-columns: 1.5fr 0.8fr 1fr;
+  gap: 0.75rem;
+  align-items: start;
+
+  &--2col {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+// ─── Toggles de default ───────────────────────────────────────────
+.pres-defaults-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.875rem 1rem;
+}
+
+.pres-default-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.pres-default-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pres-default-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  i {
+    color: var(--aura-primary, #6366f1);
+    font-size: 12px;
+  }
+}
+
+.pres-default-sub {
+  font-size: 11px;
+  color: var(--text-color-secondary);
+}
+
+// ─── Preview de factor ────────────────────────────────────────────
+.pres-factor-preview {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+  font-size: 13px;
+  color: #1e40af;
+
+  i {
+    color: #3b82f6;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+}
+
+.pres-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  padding-top: 0.25rem;
+}
+
+// ─── Estado vacío ─────────────────────────────────────────────────
+.pres-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2.5rem 1rem;
+  text-align: center;
+  border: 2px dashed var(--surface-border, #e2e8f0);
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.pres-empty-icon {
+  font-size: 2.5rem;
+  color: #cbd5e1;
+  margin-bottom: 0.75rem;
+}
+.pres-empty-title {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text-color);
+  margin: 0 0 0.4rem;
+}
+.pres-empty-sub {
+  font-size: 13px;
+  color: var(--text-color-secondary);
+  margin: 0;
+  line-height: 1.6;
+}
+
+// ─── Botón agregar ────────────────────────────────────────────────
+.pres-add-wrapper {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.btn-aura-outline {
+  border-color: var(--aura-primary, #6366f1) !important;
+  color: var(--aura-primary, #6366f1) !important;
+
+  &:hover:not(:disabled) {
+    background: #eef2ff !important;
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+// ── Agregar al final del SCSS ─────────────────────────────────────
+
+// ─── Nota informativa de precio ───────────────────────────────────
+.precio-info-card {
+  display: flex;
+  gap: 0.875rem;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 10px;
+  padding: 0.875rem 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.precio-info-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  background: #22c55e;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  i {
+    color: #fff;
+    font-size: 16px;
+  }
+}
+
+.precio-info-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.precio-info-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: #15803d;
+}
+
+.precio-info-sub {
+  font-size: 12px;
+  color: #166534;
+  line-height: 1.5;
+}
+
+// ─── Precio calculado (solo lectura) ──────────────────────────────
+.precio-calculado {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: var(--surface-ground, #f8fafc);
+  border: 1px solid var(--surface-border, #e2e8f0);
+  border-radius: 8px;
+  padding: 0.6rem 0.875rem;
+}
+
+.precio-calculado-valor {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.precio-calculado-hint {
+  font-size: 11px;
+  color: var(--text-color-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  i {
+    font-size: 10px;
+  }
+}

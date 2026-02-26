@@ -239,54 +239,79 @@
           </div>
         </div>
       </p-tabPanel>
-      <!-- ─── Tab 2: Precios e impuestos ─────────────────── -->
+      <!-- ─── Tab 2: Precios e impuestos ─────────────────────────────────
+──────────────────────────────────────────────────────────────────── -->
+
       <p-tabPanel>
         <ng-template pTemplate="header">
-          <span class="tab-label"> <i class="pi pi-dollar"></i> Precios </span>
+          <span class="tab-label">
+            <i class="pi pi-dollar"></i> Impuestos
+          </span>
         </ng-template>
 
         <div class="form-container">
-          <!-- Precio + Costo -->
-          <div class="field-row">
-            <div class="field">
-              <label for="precio"
-                >Precio de venta <span class="required">*</span></label
-              >
-              <p-inputNumber
-                inputId="precio"
-                formControlName="precio"
-                mode="currency"
-                currency="COP"
-                locale="es-CO"
-                [minFractionDigits]="0"
-                [maxFractionDigits]="0"
-                [min]="0"
-                styleClass="w-full"
-                [class.ng-invalid]="isInvalid('precio')"
-                [class.ng-dirty]="frmProducto.get('precio')?.touched"
-              />
+          <!-- Nota informativa — precio se define en presentaciones -->
+          <div class="precio-info-card">
+            <div class="precio-info-icon">
+              <i class="pi pi-lightbulb"></i>
             </div>
-            <div class="field">
-              <label for="costo">Costo <span class="required">*</span></label>
-              <p-inputNumber
-                inputId="costo"
-                formControlName="costo"
-                mode="currency"
-                currency="COP"
-                locale="es-CO"
-                [minFractionDigits]="0"
-                [maxFractionDigits]="0"
-                [min]="0"
-                styleClass="w-full"
-              />
+            <div class="precio-info-content">
+              <span class="precio-info-title"
+                >El precio se define en las presentaciones</span
+              >
+              <span class="precio-info-sub">
+                Ve al tab <strong>Presentaciones</strong>, agrega la
+                presentación de compra (ej: Caja x 100) con su costo y precio, y
+                el sistema calculará automáticamente el precio por unidad base.
+              </span>
             </div>
           </div>
 
-          <!-- Indicador de margen -->
+          <!-- Precio y costo base — solo lectura, calculado desde presentación de compra -->
+          <div
+            class="field-row"
+            *ngIf="
+              frmProducto.get('precio')?.value > 0 ||
+              frmProducto.get('costo')?.value > 0
+            "
+          >
+            <div class="field">
+              <label>Precio unitario base</label>
+              <div class="precio-calculado">
+                <span class="precio-calculado-valor">
+                  {{
+                    frmProducto.get("precio")?.value
+                      | currency: "COP" : "symbol-narrow" : "1.0-2"
+                  }}
+                </span>
+                <span class="precio-calculado-hint">
+                  <i class="pi pi-info-circle"></i>
+                  Calculado desde la presentación de compra
+                </span>
+              </div>
+            </div>
+            <div class="field">
+              <label>Costo unitario base</label>
+              <div class="precio-calculado">
+                <span class="precio-calculado-valor">
+                  {{
+                    frmProducto.get("costo")?.value
+                      | currency: "COP" : "symbol-narrow" : "1.0-2"
+                  }}
+                </span>
+                <span class="precio-calculado-hint">
+                  <i class="pi pi-info-circle"></i>
+                  Calculado desde la presentación de compra
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Margen — solo si ya hay precio calculado -->
           <div class="margen-card" *ngIf="frmProducto.get('precio')?.value > 0">
             <div class="margen-info">
               <i class="pi pi-percentage"></i>
-              <span>Margen de utilidad estimado</span>
+              <span>Margen de utilidad estimado (por unidad base)</span>
             </div>
             <span
               class="margen-value"
@@ -319,8 +344,7 @@
                 placeholder="0"
               />
               <small class="field-hint">
-                <i class="pi pi-info-circle"></i>
-                Valores comunes: 0%, 5%, 19%
+                <i class="pi pi-info-circle"></i> Valores comunes: 0%, 5%, 19%
               </small>
             </div>
             <div class="field">
@@ -338,23 +362,25 @@
                 styleClass="w-full"
               />
               <small class="field-hint">
-                <i class="pi pi-info-circle"></i>
-                Aplica a bebidas azucaradas, licores, etc.
+                <i class="pi pi-info-circle"></i> Aplica a bebidas azucaradas,
+                licores, etc.
               </small>
             </div>
           </div>
 
-          <!-- Resumen de precio final -->
+          <!-- Resumen precio final — solo si hay precio calculado -->
           <div
             class="precio-resumen"
             *ngIf="frmProducto.get('precio')?.value > 0"
           >
             <div class="pr-row">
-              <span>Precio base</span>
-              <span class="numeric">{{
-                frmProducto.get("precio")?.value
-                  | currency: "COP" : "symbol-narrow" : "1.0-0"
-              }}</span>
+              <span>Precio unitario base</span>
+              <span class="numeric">
+                {{
+                  frmProducto.get("precio")?.value
+                    | currency: "COP" : "symbol-narrow" : "1.0-0"
+                }}
+              </span>
             </div>
             <div
               class="pr-row"
@@ -374,13 +400,15 @@
               *ngIf="frmProducto.get('impoconsumo')?.value > 0"
             >
               <span>Impoconsumo</span>
-              <span class="numeric">{{
-                frmProducto.get("impoconsumo")?.value
-                  | currency: "COP" : "symbol-narrow" : "1.0-0"
-              }}</span>
+              <span class="numeric">
+                {{
+                  frmProducto.get("impoconsumo")?.value
+                    | currency: "COP" : "symbol-narrow" : "1.0-0"
+                }}
+              </span>
             </div>
             <div class="pr-row pr-total">
-              <span>Precio final al cliente</span>
+              <span>Precio final al cliente (por unidad base)</span>
               <span class="numeric">
                 {{
                   frmProducto.get("precio")?.value +
@@ -512,6 +540,313 @@
               ></i>
               <span>Trazabilidad por serial</span>
             </div>
+          </div>
+        </div>
+      </p-tabPanel>
+      <!-- ─── Tab 4: Presentaciones ───────────────────────────────────
+────────────────────────────────────────────────────────────── -->
+      <!-- ─── Tab 4: Presentaciones ────────────────────────────────────── -->
+      <p-tabPanel>
+        <ng-template pTemplate="header">
+          <span class="tab-label">
+            <i class="pi pi-th-large"></i> Presentaciones
+            <span class="tab-badge" *ngIf="presentaciones.length > 0">
+              {{ presentaciones.length }}
+            </span>
+          </span>
+        </ng-template>
+
+        <div class="form-container pres-container">
+          <!-- Info card -->
+          <div class="inv-info-card">
+            <i class="pi pi-info-circle"></i>
+            <p>
+              Define cómo se <strong>compra y vende</strong> este producto. La
+              unidad base es <strong>{{ unidadBaseNombre }}</strong
+              >. El factor indica cuántas unidades base contiene cada
+              presentación.
+            </p>
+          </div>
+
+          <!-- Lista de presentaciones -->
+          <div class="pres-list" *ngIf="presentaciones.length > 0">
+            <div
+              class="pres-row"
+              *ngFor="let item of presentaciones"
+              [class.pres-row--editing]="item._editando"
+            >
+              <!-- ── Vista normal ─────────────────────────────────── -->
+              <ng-container *ngIf="!item._editando">
+                <div class="pres-cell pres-cell--nombre">
+                  <div class="pres-nombre-row">
+                    <span class="pres-nombre">{{ item.nombre }}</span>
+                    <span
+                      class="pres-badge pres-badge--compra"
+                      *ngIf="item.esDefaultCompra"
+                    >
+                      <i class="pi pi-shopping-cart"></i> Compra
+                    </span>
+                    <span
+                      class="pres-badge pres-badge--venta"
+                      *ngIf="item.esDefaultVenta"
+                    >
+                      <i class="pi pi-star-fill"></i> Venta
+                    </span>
+                  </div>
+                  <span class="pres-factor-badge">
+                    × {{ item.factorConversion | number: "1.0-4" }}
+                    {{ unidadBaseNombre }}
+                  </span>
+                </div>
+
+                <div class="pres-cell pres-cell--codigo">
+                  <span class="pres-codigo" *ngIf="item.codigoBarras">
+                    <i class="pi pi-barcode"></i> {{ item.codigoBarras }}
+                  </span>
+                  <span class="pres-sin-codigo" *ngIf="!item.codigoBarras"
+                    >—</span
+                  >
+                </div>
+
+                <div class="pres-cell pres-cell--precios">
+                  <span class="pres-precio-venta">
+                    {{
+                      item.precio | currency: "COP" : "symbol-narrow" : "1.0-0"
+                    }}
+                  </span>
+                  <span class="pres-precio-costo">
+                    Costo:
+                    {{
+                      item.costo | currency: "COP" : "symbol-narrow" : "1.0-0"
+                    }}
+                  </span>
+                </div>
+
+                <div class="pres-cell pres-cell--acciones">
+                  <button
+                    pButton
+                    type="button"
+                    icon="pi pi-pencil"
+                    class="p-button-text p-button-sm p-button-rounded"
+                    pTooltip="Editar"
+                    (click)="editarPresentacion(item)"
+                  ></button>
+                  <button
+                    pButton
+                    type="button"
+                    icon="pi pi-trash"
+                    class="p-button-text p-button-sm p-button-rounded p-button-danger"
+                    pTooltip="Eliminar"
+                    (click)="confirmarEliminarPresentacion(item)"
+                  ></button>
+                </div>
+              </ng-container>
+
+              <!-- ── Modo edición inline ───────────────────────────── -->
+              <ng-container *ngIf="item._editando">
+                <div class="pres-edit-form" [formGroup]="frmPresentacion">
+                  <!-- Fila 1: Nombre + Factor + Código -->
+                  <div class="pres-edit-row">
+                    <div class="field pres-field-nombre">
+                      <label>Nombre <span class="required">*</span></label>
+                      <input
+                        pInputText
+                        formControlName="nombre"
+                        placeholder="Ej: Unidad, Caja x 100, Bulto 50kg..."
+                        maxlength="100"
+                        autocomplete="off"
+                        [class.ng-invalid]="
+                          frmPresentacion.get('nombre')?.invalid &&
+                          frmPresentacion.get('nombre')?.touched
+                        "
+                      />
+                      <small
+                        class="p-error"
+                        *ngIf="
+                          frmPresentacion.get('nombre')?.invalid &&
+                          frmPresentacion.get('nombre')?.touched
+                        "
+                      >
+                        Obligatorio
+                      </small>
+                    </div>
+
+                    <div class="field pres-field-factor">
+                      <label>Factor <span class="required">*</span></label>
+                      <p-inputNumber
+                        formControlName="factorConversion"
+                        [min]="0.0001"
+                        [maxFractionDigits]="4"
+                        placeholder="1"
+                        styleClass="w-full"
+                        [class.ng-invalid]="
+                          frmPresentacion.get('factorConversion')?.invalid &&
+                          frmPresentacion.get('factorConversion')?.touched
+                        "
+                      />
+                      <small class="field-hint"
+                        >Unidades base que contiene</small
+                      >
+                    </div>
+
+                    <div class="field pres-field-codigo">
+                      <label
+                        >Código de barras
+                        <span class="optional">(opcional)</span></label
+                      >
+                      <input
+                        pInputText
+                        formControlName="codigoBarras"
+                        placeholder="Ej: 7701234560012"
+                        maxlength="50"
+                        autocomplete="off"
+                        style="
+                          font-family: &quot;JetBrains Mono&quot;, monospace;
+                        "
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Fila 2: Precio + Costo -->
+                  <div class="pres-edit-row pres-edit-row--2col">
+                    <div class="field">
+                      <label
+                        >Precio de venta <span class="required">*</span></label
+                      >
+                      <p-inputNumber
+                        formControlName="precio"
+                        mode="currency"
+                        currency="COP"
+                        locale="es-CO"
+                        [minFractionDigits]="0"
+                        [min]="0"
+                        styleClass="w-full"
+                      />
+                      <small class="field-hint">
+                        <i class="pi pi-info-circle"></i>
+                        Lo que paga el cliente por esta presentación
+                      </small>
+                    </div>
+
+                    <div class="field">
+                      <label>Costo <span class="required">*</span></label>
+                      <p-inputNumber
+                        formControlName="costo"
+                        mode="currency"
+                        currency="COP"
+                        locale="es-CO"
+                        [minFractionDigits]="0"
+                        [min]="0"
+                        styleClass="w-full"
+                      />
+                      <small class="field-hint">
+                        <i class="pi pi-info-circle"></i>
+                        Lo que pagaste al proveedor por esta presentación
+                      </small>
+                    </div>
+                  </div>
+
+                  <!-- Fila 3: Toggles de default -->
+                  <div class="pres-defaults-row">
+                    <div class="pres-default-item">
+                      <p-inputSwitch formControlName="esDefaultCompra" />
+                      <div class="pres-default-label">
+                        <span class="pres-default-title">
+                          <i class="pi pi-shopping-cart"></i>
+                          Presentación de compra por defecto
+                        </span>
+                        <span class="pres-default-sub">
+                          Se preselecciona en el módulo de compras
+                        </span>
+                      </div>
+                    </div>
+
+                    <div class="pres-default-item">
+                      <p-inputSwitch formControlName="esDefaultVenta" />
+                      <div class="pres-default-label">
+                        <span class="pres-default-title">
+                          <i class="pi pi-star"></i>
+                          Presentación de venta por defecto
+                        </span>
+                        <span class="pres-default-sub">
+                          Aparece seleccionada primero en el POS
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Preview del factor -->
+                  <div
+                    class="pres-factor-preview"
+                    *ngIf="
+                      frmPresentacion.get('nombre')?.value &&
+                      frmPresentacion.get('factorConversion')?.value
+                    "
+                  >
+                    <i class="pi pi-arrow-right"></i>
+                    Al comprar/vender
+                    <strong
+                      >1 {{ frmPresentacion.get("nombre")?.value }}</strong
+                    >
+                    se moverán
+                    <strong>{{
+                      frmPresentacion.get("factorConversion")?.value
+                        | number: "1.0-4"
+                    }}</strong>
+                    {{ unidadBaseNombre }} del inventario.
+                  </div>
+
+                  <!-- Botones -->
+                  <div class="pres-edit-actions">
+                    <button
+                      pButton
+                      type="button"
+                      label="Cancelar"
+                      icon="pi pi-times"
+                      class="p-button-outlined p-button-secondary p-button-sm"
+                      (click)="cancelarEdicion(item)"
+                    ></button>
+                    <button
+                      pButton
+                      type="button"
+                      label="Guardar presentación"
+                      [icon]="
+                        savingPresentacion
+                          ? 'pi pi-spin pi-spinner'
+                          : 'pi pi-check'
+                      "
+                      class="btn-aura p-button-sm"
+                      [disabled]="savingPresentacion"
+                      (click)="guardarPresentacion(item)"
+                    ></button>
+                  </div>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+
+          <!-- Estado vacío -->
+          <div class="pres-empty" *ngIf="presentaciones.length === 0">
+            <i class="pi pi-th-large pres-empty-icon"></i>
+            <p class="pres-empty-title">Sin presentaciones configuradas</p>
+            <p class="pres-empty-sub">
+              Sin presentaciones, el producto se vende en su unidad base.<br />
+              Agrega presentaciones si se vende por
+              <strong>cajas, bultos, paquetes</strong>, etc.
+            </p>
+          </div>
+
+          <!-- Botón agregar -->
+          <div class="pres-add-wrapper">
+            <button
+              pButton
+              type="button"
+              label="Agregar presentación"
+              icon="pi pi-plus"
+              class="p-button-outlined btn-aura-outline"
+              [disabled]="presentacionEnEdicion !== null"
+              (click)="agregarPresentacion()"
+            ></button>
           </div>
         </div>
       </p-tabPanel>

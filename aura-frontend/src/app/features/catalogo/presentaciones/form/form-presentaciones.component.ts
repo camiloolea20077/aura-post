@@ -192,12 +192,20 @@ export class FormPresentacionesComponent implements OnInit, OnChanges {
           nombre: v.nombre?.trim(),
           codigoBarras: v.codigoBarras?.trim() || null,
           factorConversion: v.factorConversion,
+          esDefaultCompra: false, // Por ahora no se editan estos campos desde el formulario
+          esDefaultVenta: false,
+          precio: 0,
+          costo: 0,
           activo: v.activo,
         };
         obs = this.presentacionService.update(this.presentacionId!, dto);
       } else {
         const dto: CreateProductoPresentacionDto = {
           productoId: v.productoId,
+          esDefaultCompra: false, // Por ahora no se editan estos campos desde el formulario
+          esDefaultVenta: false,
+          precio: 0,
+          costo: 0,
           nombre: v.nombre?.trim(),
           codigoBarras: v.codigoBarras?.trim() || null,
           factorConversion: v.factorConversion,
