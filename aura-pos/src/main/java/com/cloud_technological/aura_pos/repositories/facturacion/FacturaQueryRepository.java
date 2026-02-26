@@ -39,13 +39,17 @@ public class FacturaQueryRepository {
     
     // Obtener siguiente consecutivo de factura para la empresa
     public Long obtenerSiguienteConsecutivo(Integer empresaId) {
-        String sql = """
-            SELECT COALESCE(MAX(consecutivo), 0) + 1
-            FROM factura
-            WHERE empresa_id = :empresaId
-            AND deleted_at IS NULL
+        try {
+            String sql = """
+                SELECT COALESCE(MAX(consecutivo), 0) + 1
+                FROM factura
+                WHERE empresa_id = :empresaId
+                AND deleted_at IS NULL
         """;
         MapSqlParameterSource params = new MapSqlParameterSource("empresaId", empresaId);
         return jdbcTemplate.queryForObject(sql, params, Long.class);
+        } catch (Exception e) {
+            return 1L; // Si ocurre un error, retornar 1 como el primer consecutivo
+        }
     }
 }

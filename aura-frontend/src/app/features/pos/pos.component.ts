@@ -41,6 +41,7 @@ import { environment } from '../../../environments/environment';
 import { ModalPagoComponent } from './components/modal-pagos/modal-pago.component';
 import { VentaResponse } from '../../core/models/venta-response.model';
 import { ModalTirillaComponent } from './components/modal-tirilla/modal-tirilla.component';
+import { FilterProductsPipe } from '../../shared/pipes/filter-products.pipe';
 
 @Component({
   selector: 'app-pos',
@@ -59,12 +60,16 @@ import { ModalTirillaComponent } from './components/modal-tirilla/modal-tirilla.
     SkeletonModule,
     ModalPagoComponent,
     ModalTirillaComponent,
+    FilterProductsPipe,
   ],
   providers: [MessageService],
   templateUrl: './pos.component.html',
   styleUrls: ['./pos.component.scss'],
 })
 export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
+  searchProduct = '';
+  page = 1;
+  length = 12;
   // ─── NUEVO: referencia al input de búsqueda ───────────────
   @ViewChild('searchInput') searchInputRef!: ElementRef<HTMLInputElement>;
   public showTirilla = false;
@@ -221,7 +226,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
           (p.sku?.toLowerCase().includes(q) ?? false) ||
           (p.codigoBarras?.toLowerCase().includes(q) ?? false), // ← incluir barcode en filtro texto
       );
-    this.productosFiltrados = list;
+    this.productosFiltrados = list.filter((p) => p.stockActual > 0);
   }
 
   setCategoria(id: number | null): void {
@@ -374,6 +379,17 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async onVentaConfirmada(pagos: any[]): Promise<void> {
+    // ✅ VALIDAR: Si hay crédito, necesita cliente
+    const tieneCredito = pagos.some((p) => p.metodoPago === 'CRÉDITO');
+
+    if (tieneCredito && !this.clienteId) {
+      this.alertService.showError(
+        'Cliente requerido',
+        'Las ventas a crédito requieren un cliente asociado',
+      );
+      return;
+    }
+
     const dto: CreateVentaDto = {
       turnoCajaId: this.turnoActivo!.id,
       clienteId: this.clienteId,
@@ -385,6 +401,9 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         impuestoValor: c.impuestoValor,
       })),
       pagos,
+      // ✅ NUEVO: Pasar flags de pago parcial
+      pagoParcial: tieneCredito,
+      saldoPendiente: tieneCredito ? this.total : 0,
     };
     try {
       const res = await lastValueFrom(this.ventaService.create(dto));
@@ -396,10 +415,21 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         this.cdr.markForCheck();
       }
     } catch (err: any) {
-      this.alertService.showError(
-        'Error',
-        err?.message ?? 'No se pudo registrar la venta.',
-      );
+      // ✅ CAPTURAR: Error específico de cliente faltante
+      const message =
+        err?.error?.message ?? err?.message ?? 'No se pudo registrar la venta.';
+
+      if (
+        tieneCredito &&
+        (message.includes('crédito') || message.includes('cliente'))
+      ) {
+        this.alertService.showError(
+          'Cliente requerido',
+          'Las ventas a crédito requieren un cliente asociado',
+        );
+      } else {
+        this.alertService.showError('Error', message);
+      }
     }
   }
   onTirillaClose(): void {

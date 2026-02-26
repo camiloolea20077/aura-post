@@ -105,12 +105,16 @@ public class VentaQueryRepository {
 
     // Obtener consecutivo siguiente por sucursal
     public Long obtenerSiguienteConsecutivo(Long sucursalId) {
-        String sql = """
+        try {
+            String sql = """
             SELECT COALESCE(MAX(consecutivo), 0) + 1
             FROM venta
             WHERE sucursal_id = :sucursalId
         """;
         MapSqlParameterSource params = new MapSqlParameterSource("sucursalId", sucursalId);
         return jdbcTemplate.queryForObject(sql, params, Long.class);
+        } catch (Exception e) {
+            return 1L; // Si ocurre un error, retornar 1 como el primer consecutivo
+        }
     }
 }

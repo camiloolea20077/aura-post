@@ -7,7 +7,8 @@ export type MetodoPago =
   | 'TARJETA'
   | 'TRANSFERENCIA'
   | 'NEQUI'
-  | 'DAVIPLATA';
+  | 'DAVIPLATA'
+  | 'CREDITO';
 
 // ─── Detalle ──────────────────────────────────────────────────
 export interface VentaDetalleModel {
@@ -93,6 +94,8 @@ export interface CreateVentaDto {
   clienteId: number | null;
   detalles: CreateVentaDetalleDto[];
   pagos: CreateVentaPagoDto[];
+  pagoParcial?: boolean;
+  saldoPendiente?: number;
 }
 
 export interface VentaPageableDto {
@@ -179,5 +182,11 @@ export const METODOS_PAGO: {
     value: 'DAVIPLATA',
     icon: 'pi pi-wallet',
     color: '#EF4444',
+  },
+  {
+    label: 'Crédito',
+    value: 'CREDITO',
+    icon: 'pi pi-file-invoice',
+    color: '#F59E0B',
   },
 ];

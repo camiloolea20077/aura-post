@@ -73,9 +73,19 @@ export class ModalPagoComponent implements OnChanges {
     return this.totalPagado >= this.total;
   }
 
+  // ✅ NUEVO: Detectar si hay CREDITO
+  get tieneCredito(): boolean {
+    return this.pagos.some((p) => p.metodoPago === 'CREDITO');
+  }
+
   setMetodo(pago: PagoUI, m: MetodoPago): void {
     pago.metodoPago = m;
+    // ✅ Si es CREDITO, llenar monto automáticamente
+    if (m === 'CREDITO') {
+      pago.monto = this.total;
+    }
   }
+
   addPago(): void {
     this.pagos.push({
       metodoPago: 'EFECTIVO',
@@ -83,6 +93,7 @@ export class ModalPagoComponent implements OnChanges {
       referencia: null,
     });
   }
+
   removePago(i: number): void {
     if (this.pagos.length > 1) this.pagos.splice(i, 1);
   }
