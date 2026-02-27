@@ -1,0 +1,103 @@
+<p-dialog
+  [header]="isEdit ? 'Editar Cuenta por Pagar' : 'Nueva Cuenta por Pagar'"
+  [(visible)]="visible"
+  (onHide)="close()"
+  [modal]="true"
+  [style]="{ width: '560px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <form [formGroup]="form" class="dialog-form">
+    <div class="form-field">
+      <label for="proveedorId">Proveedor <span class="required">*</span></label>
+      <p-dropdown
+        id="proveedorId"
+        formControlName="proveedorId"
+        [options]="proveedores"
+        placeholder="Seleccione un proveedor"
+        [filter]="true"
+        filterPlaceholder="Buscar proveedor..."
+        optionLabel="label"
+        optionValue="value"
+        [class.ng-invalid]="isInvalid('proveedorId')"
+        styleClass="w-full"
+      ></p-dropdown>
+      <small *ngIf="isInvalid('proveedorId')" class="p-error">
+        El proveedor es requerido
+      </small>
+    </div>
+
+    <div class="form-field">
+      <label for="totalDeuda">Total Deuda <span class="required">*</span></label>
+      <p-inputNumber
+        id="totalDeuda"
+        formControlName="totalDeuda"
+        mode="currency"
+        currency="COP"
+        locale="es-CO"
+        [min]="1"
+        [class.ng-invalid]="isInvalid('totalDeuda')"
+        styleClass="w-full"
+      ></p-inputNumber>
+      <small *ngIf="isInvalid('totalDeuda')" class="p-error">
+        El total de deuda debe ser mayor a 0
+      </small>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label for="fechaEmision">Fecha de Emisión <span class="required">*</span></label>
+        <p-calendar
+          id="fechaEmision"
+          formControlName="fechaEmision"
+          [showIcon]="true"
+          dateFormat="dd/mm/yy"
+          [class.ng-invalid]="isInvalid('fechaEmision')"
+          styleClass="w-full"
+        ></p-calendar>
+      </div>
+
+      <div class="form-field">
+        <label for="fechaVencimiento">Fecha de Vencimiento</label>
+        <p-calendar
+          id="fechaVencimiento"
+          formControlName="fechaVencimiento"
+          [showIcon]="true"
+          dateFormat="dd/mm/yy"
+          [minDate]="form.get('fechaEmision')?.value"
+          styleClass="w-full"
+        ></p-calendar>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label for="observaciones">Observaciones</label>
+      <textarea
+        pInputTextarea
+        id="observaciones"
+        formControlName="observaciones"
+        rows="3"
+        placeholder="Observaciones adicionales..."
+        class="w-full"
+      ></textarea>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="close()"
+    ></button>
+    <button
+      pButton
+      [label]="isEdit ? 'Actualizar' : 'Guardar'"
+      icon="pi pi-check"
+      class="btn-aura btn-primary"
+      [loading]="loading"
+      (click)="save()"
+    ></button>
+  </ng-template>
+</p-dialog>
