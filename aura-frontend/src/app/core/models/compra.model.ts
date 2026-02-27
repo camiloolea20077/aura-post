@@ -1,6 +1,15 @@
 // ─── Estados ──────────────────────────────────────────────────
 export type EstadoCompra = 'RECIBIDA' | 'ANULADA';
 
+// ─── Opción de presentación para el dropdown de línea ─────────
+export interface PresentacionOpcion {
+  label: string; // "Caja x 100 (×100)"
+  value: number; // id presentación
+  factor: number; // factorConversion
+  costo: number; // costo por presentación
+  esDefaultCompra: boolean;
+}
+
 // ─── Detalle línea ────────────────────────────────────────────
 export interface CompraDetalleModel {
   id: number;
@@ -15,7 +24,7 @@ export interface CompraDetalleModel {
   subtotalLinea: number;
 }
 
-// ─── Detalle completo (con detalles) ─────────────────────────
+// ─── Modelo completo ──────────────────────────────────────────
 export interface CompraModel {
   id: number;
   empresaId: number;
@@ -25,7 +34,7 @@ export interface CompraModel {
   proveedorNombre: string;
   usuarioId: number | null;
   numeroCompra: string | null;
-  fecha: string; // ISO LocalDateTime
+  fecha: string;
   subtotal: number;
   descuentoTotal: number;
   impuestosTotal: number;
@@ -49,8 +58,10 @@ export interface CompraTableModel {
 // ─── DTOs de creación ─────────────────────────────────────────
 export interface CreateCompraDetalleDto {
   productoId: number;
+  presentacionId: number | null; // ← nuevo
+  factorConversion: number; // ← nuevo (default 1)
   codigoLote: string | null;
-  fechaVencimiento: string | null; // "YYYY-MM-DD"
+  fechaVencimiento: string | null;
   cantidad: number;
   costoUnitario: number;
   impuestoValor: number;
@@ -60,7 +71,7 @@ export interface CreateCompraDto {
   proveedorId: number;
   sucursalId: number;
   numeroCompra: string | null;
-  fecha: string | null; // ISO LocalDateTime
+  fecha: string | null;
   observaciones: string | null;
   detalles: CreateCompraDetalleDto[];
 }
@@ -76,16 +87,22 @@ export interface CompraPageableDto {
 
 // ─── UI — línea en el builder ─────────────────────────────────
 export interface CompraLineaUI {
-  _id: string; // UUID local para trackBy
+  _id: string;
   productoId: number | null;
   productoNombre: string;
   manejaLotes: boolean;
   codigoLote: string | null;
   fechaVencimiento: Date | null;
+
+  // Presentación
+  presentacionId: number | null;
+  presentacionNombre: string;
+  factorConversion: number;
+  presentacionesOpts: PresentacionOpcion[];
+
   cantidad: number | null;
   costoUnitario: number | null;
   impuestoValor: number;
-  // calculados
   subtotal: number;
 }
 

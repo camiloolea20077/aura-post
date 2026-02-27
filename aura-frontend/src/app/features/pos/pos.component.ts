@@ -182,7 +182,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ─── MODIFICADO: onSearch ahora detecta código de barras ─
   onSearch(): void {
-    const query = this.searchProducto.trim();
+    const query = this.searchProduct.trim();
 
     // La pistola envía el código completo de golpe (sin debounce).
     // Buscamos coincidencia EXACTA por codigoBarras o SKU.
@@ -195,7 +195,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     if (matchBarcode) {
       this.addToCart(matchBarcode);
       // Limpiar input y devolver foco para el siguiente escaneo
-      this.searchProducto = '';
+      this.searchProduct = '';
       this.filtrar();
       this.focusSearch();
       this.cdr.markForCheck();
@@ -208,7 +208,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ─── NUEVO: limpiar búsqueda y devolver foco ─────────────
   clearSearch(): void {
-    this.searchProducto = '';
+    this.searchProduct = '';
     this.filtrar();
     this.focusSearch();
     this.cdr.markForCheck();
@@ -218,7 +218,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     let list = this.productos;
     if (this.categoriaActiva)
       list = list.filter((p) => p.categoriaId === this.categoriaActiva);
-    const q = this.searchProducto.trim().toLowerCase();
+    const q = this.searchProduct.trim().toLowerCase();
     if (q)
       list = list.filter(
         (p) =>
