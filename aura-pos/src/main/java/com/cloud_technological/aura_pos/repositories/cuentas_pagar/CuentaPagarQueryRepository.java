@@ -23,6 +23,26 @@ public class CuentaPagarQueryRepository {
         int page = pageable.getPage() != null ? pageable.getPage().intValue() : 0;
         int size = pageable.getRows() != null ? pageable.getRows().intValue() : 10;
         String search = pageable.getSearch() != null ? pageable.getSearch().trim().toLowerCase() : "";
+        String orderBy = pageable.getOrder_by() != null ? pageable.getOrder_by() : "id";
+        String order = pageable.getOrder() != null ? pageable.getOrder().toUpperCase() : "DESC";
+        
+        // Mapear campos de ordenamiento
+        String orderByColumn = switch (orderBy) {
+            case "fecha_emision" -> "cp.fecha_emision";
+            case "fecha_vencimiento" -> "cp.fecha_vencimiento";
+            case "total_deuda" -> "cp.total_deuda";
+            case "total_abonado" -> "cp.total_abonado";
+            case "saldo_pendiente" -> "cp.saldo_pendiente";
+            case "estado" -> "cp.estado";
+            case "numero_cuenta" -> "cp.numero_cuenta";
+            case "proveedor_nombre" -> "proveedor_nombre";
+            default -> "cp.id";
+        };
+        
+        // Validar orden
+        if (!order.equals("ASC") && !order.equals("DESC")) {
+            order = "DESC";
+        }
 
         StringBuilder sql = new StringBuilder("""
             SELECT
@@ -57,7 +77,7 @@ public class CuentaPagarQueryRepository {
             params.addValue("search", "%" + search + "%");
         }
 
-        sql.append(" ORDER BY cp.id DESC OFFSET :offset LIMIT :limit ");
+        sql.append(" ORDER BY ").append(orderByColumn).append(" ").append(order).append(" OFFSET :offset LIMIT :limit ");
         params.addValue("offset", page * size);
         params.addValue("limit", size);
 
@@ -73,6 +93,26 @@ public class CuentaPagarQueryRepository {
         int page = pageable.getPage() != null ? pageable.getPage().intValue() : 0;
         int size = pageable.getRows() != null ? pageable.getRows().intValue() : 10;
         String search = pageable.getSearch() != null ? pageable.getSearch().trim().toLowerCase() : "";
+        String orderBy = pageable.getOrder_by() != null ? pageable.getOrder_by() : "id";
+        String order = pageable.getOrder() != null ? pageable.getOrder().toUpperCase() : "DESC";
+        
+        // Mapear campos de ordenamiento
+        String orderByColumn = switch (orderBy) {
+            case "fecha_emision" -> "cp.fecha_emision";
+            case "fecha_vencimiento" -> "cp.fecha_vencimiento";
+            case "total_deuda" -> "cp.total_deuda";
+            case "total_abonado" -> "cp.total_abonado";
+            case "saldo_pendiente" -> "cp.saldo_pendiente";
+            case "estado" -> "cp.estado";
+            case "numero_cuenta" -> "cp.numero_cuenta";
+            case "proveedor_nombre" -> "proveedor_nombre";
+            default -> "cp.id";
+        };
+        
+        // Validar orden
+        if (!order.equals("ASC") && !order.equals("DESC")) {
+            order = "DESC";
+        }
 
         StringBuilder sql = new StringBuilder("""
             SELECT
@@ -127,7 +167,7 @@ public class CuentaPagarQueryRepository {
             params.addValue("estado", estado);
         }
 
-        sql.append(" ORDER BY cp.id DESC OFFSET :offset LIMIT :limit ");
+        sql.append(" ORDER BY ").append(orderByColumn).append(" ").append(order).append(" OFFSET :offset LIMIT :limit ");
         params.addValue("offset", page * size);
         params.addValue("limit", size);
 

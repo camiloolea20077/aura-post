@@ -1,0 +1,229 @@
+<p-dialog
+  header="Detalle de Cuenta por Pagar"
+  [(visible)]="visible"
+  (onHide)="close()"
+  [modal]="true"
+  [style]="{ width: '780px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div *ngIf="loading" class="loading-container">
+    <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+    <p>Cargando información...</p>
+  </div>
+
+  <div *ngIf="!loading && cuenta" class="detalle-content">
+    <div class="cuenta-header">
+      <div class="cuenta-info">
+        <div class="cuenta-numero">
+          <span class="label">Número:</span>
+          <span class="value mono">{{ cuenta.numeroCuenta }}</span>
+        </div>
+        <p-tag
+          [value]="getEstadoLabel(cuenta.estado)"
+          [severity]="getSeverity(cuenta.estado)"
+        ></p-tag>
+      </div>
+    </div>
+
+    <div class="cuenta-details">
+      <div class="detail-row">
+        <div class="detail-item">
+          <span class="label">Proveedor:</span>
+          <span class="value">{{ cuenta.proveedorNombre }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="label">Documento:</span>
+          <span class="value mono">{{ cuenta.proveedorDocumento }}</span>
+        </div>
+      </div>
+
+      <div class="detail-row">
+        <div class="detail-item">
+          <span class="label">Fecha de Emisión:</span>
+          <span class="value">{{ cuenta.fechaEmision | date: 'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="label">Vencimiento:</span>
+          <span class="value" [class.text-danger]="cuenta.estado === 'vencida'">
+            {{ cuenta.fechaVencimiento | date: 'dd/MM/yyyy' || '-' }}
+          </span>
+        </div>
+      </div>
+
+      <div *ngIf="cuenta.observaciones" class="detail-row">
+        <div class="detail-item full-width">
+          <span class="label">Observaciones:</span>
+          <span class="value">{{ cuenta.observaciones }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cuenta-saldos">
+      <div class="saldo-item">
+        <span class="label">Total Deuda</span>
+        <span class="value mono">{{ formatCOP(cuenta.totalDeuda) }}</span>
+      </div>
+      <div class="saldo-item">
+        <span class="label">Total Pagado</span>
+        <span class="value mono text-success">{{ formatCOP(cuenta.totalAbonado) }}</span>
+      </div>
+      <div class="saldo-item highlight">
+        <span class="label">Saldo Pendiente</span>
+        <span class="value mono">{{ formatCOP(cuenta.saldoPendiente) }}</span>
+      </div>
+    </div>
+
+    <div class="progress-section">
+      <div class="progress-label">
+        <span>Progreso de Pago</span>
+        <span class="progress-percent">{{ progressPercent }}%</span>
+      </div>
+      <p-progressBar
+        [value]="progressPercent"
+        [showValue]="false"
+        [style]="{ height: '12px' }"
+      ></p-progressBar>
+    </div>
+
+    <div class="abonos-section">
+      <div class="section-header">
+        <h3>Pagos</h3>
+        <button
+          *ngIf="puedeRegistrarAbono"
+          pButton
+          label="Registrar Pago"
+          icon="pi pi-plus"
+          class="p-button-sm btn-aura btn-primary"
+          (click)="openAbonoForm()"
+        ></button>
+      </div>
+
+      <div *ngIf="!showAbonoForm && cuenta.abonos?.length === 0" class="no-abonos">
+        <i class="pi pi-inbox"></i>
+        <p>No hay pagos registrados</p>
+      </div>
+
+      <div *ngIf="(cuenta.abonos?.length ?? 0) > 0" class="abonos-list">
+        <p-table [value]="cuenta.abonos" styleClass="p-datatable-sm">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Fecha</th>
+              <th>Método</th>
+              <th>Banco</th>
+              <th>Referencia</th>
+              <th class="text-right">Monto</th>
+              <th>Usuario</th>
+              <th style="width: 60px"></th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-abono>
+            <tr>
+              <td>{{ abono.fechaPago | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ getMetodoLabel(abono.metodoPago) }}</td>
+              <td>{{ abono.banco || '-' }}</td>
+              <td class="mono">{{ abono.referencia || '-' }}</td>
+              <td class="text-right mono">{{ formatCOP(abono.monto) }}</td>
+              <td>{{ abono.usuarioNombre }}</td>
+              <td>
+                <button
+                  *ngIf="isAbonoFromToday(abono.fechaPago)"
+                  pButton
+                  icon="pi pi-trash"
+                  class="p-button-text p-button-danger p-button-sm"
+                  (click)="confirmDeleteAbono(abono)"
+                  pTooltip="Eliminar pago"
+                ></button>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <div *ngIf="showAbonoForm" class="abono-form">
+        <h4>Nuevo Pago</h4>
+        <form [formGroup]="abonoForm" class="abono-form-fields">
+          <div class="form-row">
+            <div class="form-field">
+              <label>Monto <span class="required">*</span></label>
+              <p-inputNumber
+                formControlName="monto"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [max]="cuenta.saldoPendiente"
+                [class.ng-invalid]="isInvalid('monto')"
+                styleClass="w-full"
+              ></p-inputNumber>
+              <small class="p-error" *ngIf="isInvalid('monto')">El monto es requerido</small>
+              <small class="max-hint">Máximo: {{ formatCOP(cuenta.saldoPendiente) }}</small>
+            </div>
+
+            <div class="form-field">
+              <label>Método de Pago <span class="required">*</span></label>
+              <p-dropdown
+                formControlName="metodoPago"
+                [options]="metodosPago"
+                optionLabel="label"
+                optionValue="value"
+                styleClass="w-full"
+              ></p-dropdown>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label>Banco</label>
+              <input
+                pInputText
+                formControlName="banco"
+                placeholder="Nombre del banco..."
+                class="w-full"
+              />
+            </div>
+
+            <div class="form-field">
+              <label>Referencia</label>
+              <input
+                pInputText
+                formControlName="referencia"
+                placeholder="Número de referencia..."
+                class="w-full"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field">
+              <label>Fecha de Pago <span class="required">*</span></label>
+              <p-calendar
+                formControlName="fechaPago"
+                [showIcon]="true"
+                dateFormat="dd/mm/yy"
+                styleClass="w-full"
+              ></p-calendar>
+            </div>
+          </div>
+
+          <div class="abono-form-actions">
+            <button
+              pButton
+              label="Cancelar"
+              icon="pi pi-times"
+              class="p-button-text"
+              (click)="showAbonoForm = false"
+            ></button>
+            <button
+              pButton
+              label="Registrar Pago"
+              icon="pi pi-check"
+              class="btn-aura btn-primary"
+              [loading]="loadingAbono"
+              (click)="saveAbono()"
+            ></button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</p-dialog>

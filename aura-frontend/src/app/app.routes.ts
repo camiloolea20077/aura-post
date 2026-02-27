@@ -121,6 +121,23 @@ export const routes: Routes = [
             (m) => m.IndexDescuentosComponent,
           ),
       },
+      // CUENTAS POR COBRAR Y PAGAR
+      {
+        path: 'cuentas/cuentas-por-cobrar',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/cuentas/index-cuentas-por-cobrar/index-cuentas-por-cobrar.component').then(
+            (m) => m.IndexCuentasPorCobrarComponent,
+          ),
+      },
+      {
+        path: 'cuentas/cuentas-por-pagar',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/cuentas/index-cuentas-por-pagar/index-cuentas-por-pagar.component').then(
+            (m) => m.IndexCuentasPorPagarComponent,
+          ),
+      },
 
       // Inventario
       {
