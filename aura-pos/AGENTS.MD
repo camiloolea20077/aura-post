@@ -11,6 +11,32 @@ This file provides guidelines for agents working on the AURA POS backend codebas
 - **Security**: Spring Security 6 with JWT
 - **API Documentation**: Swagger (springfox)
 
+## Documentation
+
+Project documentation is located in the `docs/` directory:
+- **Epics**: `docs/epics/` - High-level feature descriptions
+- **User Stories**: `docs/hu/` - Detailed user stories with acceptance criteria
+
+### Existing Epics
+
+| Epic ID | Title | Description |
+|---------|-------|-------------|
+| EP-001 | Módulo de Empresa y Sucursales | Gestión de empresas y sucursales |
+| EP-002 | Módulo de Terceros | Gestión de clientes, proveedores y empleados |
+| EP-003 | Módulo de Ventas y Compras | Gestión de ventas y compras |
+| EP-004 | Módulo de Cuentas por Cobrar y Pagar | Gestión de cuentas, abonos y saldos |
+
+### User Stories
+
+| HU ID | Epic | Title |
+|-------|------|-------|
+| HU-001 a HU-008 | EP-001 a EP-003 | Módulos anteriores |
+| HU-009 | EP-004 | Gestión de Cuentas por Cobrar |
+| HU-010 | EP-004 | Gestión de Cuentas por Pagar |
+| HU-011 | EP-004 | Abonos a Cuentas por Cobrar |
+| HU-012 | EP-004 | Abonos a Cuentas por Pagar |
+| HU-013 | EP-004 | Cálculo de Totales de Cuentas |
+
 ## Build Commands
 
 ```bash
@@ -200,3 +226,108 @@ Integer empresaId = securityUtils.getEmpresaId();
 - Exception handling: `src/main/java/com/cloud_technological/aura_pos/utils/GlobalException.java`
 - API Response: `src/main/java/com/cloud_technological/aura_pos/utils/ApiResponse.java`
 - SecurityUtils: `src/main/java/com/cloud_technological/aura_pos/utils/SecurityUtils.java`
+
+## API Endpoints
+
+### Cuentas por Cobrar (EP-004 - HU-009, HU-011, HU-013)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/cuentas-cobrar/page` | Listar cuentas con paginación y filtros |
+| GET | `/api/cuentas-cobrar/{id}` | Obtener detalle de cuenta |
+| POST | `/api/cuentas-cobrar` | Crear cuenta por cobrar |
+| PUT | `/api/cuentas-cobrar/{id}` | Actualizar cuenta |
+| POST | `/api/cuentas-cobrar/{id}/abonos` | Registrar abono (entrada de caja) |
+| GET | `/api/cuentas-cobrar/{id}/abonos` | Listar abonos de cuenta |
+| DELETE | `/api/cuentas-cobrar/{cuentaId}/abonos/{abonoId}` | Eliminar abono |
+| GET | `/api/cuentas-cobrar/resumen` | Obtener resumen (totales, activas, pagadas, vencidas) |
+| GET | `/api/cuentas-cobrar/vencidas` | Listar cuentas vencidas |
+
+**Filtros para `/page` y `/resumen`:**
+- `fechaDesde` (String) - Fecha de emisión inicial
+- `fechaHasta` (String) - Fecha de emisión final
+- `clienteId` (Long) - Filtrar por cliente
+- `estado` (String) - Estado: activa, pagada, vencida
+
+### Cuentas por Pagar (EP-004 - HU-010, HU-012, HU-013)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/cuentas-pagar/page` | Listar cuentas con paginación y filtros |
+| GET | `/api/cuentas-pagar/{id}` | Obtener detalle de cuenta |
+| POST | `/api/cuentas-pagar` | Crear cuenta por pagar |
+| PUT | `/api/cuentas-pagar/{id}` | Actualizar cuenta |
+| POST | `/api/cuentas-pagar/{id}/abonos` | Registrar abono (salida de caja) |
+| GET | `/api/cuentas-pagar/{id}/abonos` | Listar abonos de cuenta |
+| DELETE | `/api/cuentas-pagar/{cuentaId}/abonos/{abonoId}` | Eliminar abono |
+| GET | `/api/cuentas-pagar/resumen` | Obtener resumen (totales, activas, pagadas, vencidas) |
+| GET | `/api/cuentas-pagar/vencidas` | Listar cuentas vencidas |
+
+**Filtros para `/page` y `/resumen`:**
+- `fechaDesde` (String) - Fecha de emisión inicial
+- `fechaHasta` (String) - Fecha de emisión final
+- `proveedorId` (Long) - Filtrar por proveedor
+- `estado` (String) - Estado: activa, pagada, vencida
+
+### Estructura de DTOs
+
+**CuentaCobrarDto / CuentaPagarDto:**
+```json
+{
+  "id": 1,
+  "empresaId": 1,
+  "terceroId": 1,
+  "numeroCuenta": "CC-20260225-0001",
+  "fechaEmision": "2026-02-25T10:00:00",
+  "fechaVencimiento": "2026-03-25T10:00:00",
+  "totalDeuda": 100000.00,
+  "totalAbonado": 25000.00,
+  "saldoPendiente": 75000.00,
+  "estado": "activa",
+  "observaciones": "Compra de mercancía",
+  "createdAt": "2026-02-25T10:00:00"
+}
+```
+
+**CuentaCobrarTableDto / CuentaPagarTableDto:**
+```json
+{
+  "id": 1,
+  "numeroCuenta": "CC-20260225-0001",
+  "clienteNombre": "Juan Pérez",
+  "clienteDocumento": "12345678",
+  "fechaEmision": "2026-02-25T10:00:00",
+  "fechaVencimiento": "2026-03-25T10:00:00",
+  "totalDeuda": 100000.00,
+  "totalAbonado": 25000.00,
+  "saldoPendiente": 75000.00,
+  "estado": "activa",
+  "totalRows": 10
+}
+```
+
+**ResumenDto:**
+```json
+{
+  "totalCuentas": 50,
+  "totalDeuda": 5000000.00,
+  "totalAbonado": 1500000.00,
+  "saldoPendiente": 3500000.00,
+  "cantidadActivas": 30,
+  "cantidadPagadas": 15,
+  "cantidadVencidas": 5
+}
+```
+
+**AbonoDto:**
+```json
+{
+  "id": 1,
+  "cuentaCobrarId": 1,
+  "monto": 25000.00,
+  "metodoPago": "efectivo",
+  "referencia": "REC-001",
+  "fechaPago": "2026-02-25T15:30:00",
+  "usuarioNombre": "admin"
+}
+```
