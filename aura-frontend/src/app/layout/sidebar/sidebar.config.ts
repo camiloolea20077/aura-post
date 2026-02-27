@@ -102,6 +102,22 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
     ],
   },
   {
+    label: 'Cuentas',
+    roles: ['SUPER_ADMIN', 'ADMIN'],
+    items: [
+      {
+        label: 'Cuentas por Cobrar',
+        icon: 'pi pi-money-bill',
+        route: '/cuentas/cuentas-por-cobrar',
+      },
+      {
+        label: 'Cuentas por Pagar',
+        icon: 'pi pi-money-bill',
+        route: '/cuentas/cuentas-por-pagar',
+      },
+    ],
+  },
+  {
     label: 'Administración',
     items: [
       {

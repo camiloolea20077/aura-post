@@ -146,8 +146,8 @@
             <span class="prod-precio">
               {{
                 formatCOP(
-                  (p.precioFinal ?? p.precio) *
-                    (1 + (p.ivaPorcentaje ?? 0) / 100)
+                  (p.precioFinal || p.precio) *
+                    (1 + (p.ivaPorcentaje || 0) / 100)
                 )
               }}
             </span>
