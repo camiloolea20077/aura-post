@@ -9,13 +9,22 @@ import lombok.Setter;
 @Setter
 public class FactusBillDto {
     private Long id;
-    private String number;                // número de la factura
-    private String cufe;                  // código único DIAN
-    private String qr;                    // URL QR DIAN
-    @JsonProperty("issue_date")
-    private String issueDate;
+
+    // "SETP990000049"
+    private String number;
+
+    // Hash DIAN
+    private String cufe;
+
+    // URL QR DIAN
+    private String qr;
+
+    @JsonProperty("public_url")
+    private String publicUrl;
+
     @JsonProperty("pdf_download_link")
     private String pdfDownloadLink;
+
     @JsonProperty("xml_download_link")
     private String xmlDownloadLink;
 }

@@ -1,7 +1,9 @@
 package com.cloud_technological.aura_pos.dto.factus;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,16 +15,26 @@ public class FactusCreateBillRequestDto {
     private Integer numberingRangeId;
 
     @JsonProperty("reference_code")
-    private String referenceCode;          // número interno del sistema
+    private String referenceCode;
 
     @JsonProperty("observation")
     private String observation;
 
-    @JsonProperty("payment_method_code")
-    private String paymentMethodCode;      // "10"=Efectivo, "42"=Transferencia, "20"=Cheque
+    // "1"=Contado, "2"=Crédito
+    @JsonProperty("payment_form")
+    private String paymentForm = "1";
 
-    @JsonProperty("due_date")
-    private String dueDate;               // "YYYY-MM-DD"
+    // "YYYY-MM-DD"
+    @JsonProperty("payment_due_date")
+    private String paymentDueDate;
+
+    // "10"=Efectivo, "42"=Transferencia, "20"=Cheque
+    @JsonProperty("payment_method_code")
+    private String paymentMethodCode;
+
+    // 10 = Estándar
+    @JsonProperty("operation_type")
+    private Integer operationType = 10;
 
     private FactusCustomerDto customer;
 
