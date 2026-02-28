@@ -70,6 +70,8 @@ export class IndexCuentasPorCobrarComponent implements OnInit {
   search = '';
   page = 0;
   pageSize = 10;
+  orderBy: string = 'id';
+  order: string = 'desc';
 
   fechaDesde: Date | null = null;
   fechaHasta: Date | null = null;
@@ -94,7 +96,7 @@ export class IndexCuentasPorCobrarComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.load();
+    // this.load();
   }
 
   async load(): Promise<void> {
@@ -116,8 +118,8 @@ export class IndexCuentasPorCobrarComponent implements OnInit {
           page: this.page,
           rows: this.pageSize,
           search: this.search || undefined,
-          order_by: 'fecha_emision',
-          order: 'desc',
+          order_by: this.orderBy,
+          order: this.order,
           ...filters,
         }),
       );
@@ -132,8 +134,11 @@ export class IndexCuentasPorCobrarComponent implements OnInit {
   }
 
   onPage(e: any): void {
+    const sortField = Array.isArray(e.sortField) ? e.sortField[0] : e.sortField;
     this.page = e.first / e.rows;
     this.pageSize = e.rows;
+    this.orderBy = sortField ?? 'id';
+    this.order = e.sortOrder === 1 ? 'DESC' : 'ASC';
     this.load();
   }
 

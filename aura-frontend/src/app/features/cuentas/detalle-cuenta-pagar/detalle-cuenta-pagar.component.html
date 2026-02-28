@@ -41,12 +41,14 @@
       <div class="detail-row">
         <div class="detail-item">
           <span class="label">Fecha de Emisión:</span>
-          <span class="value">{{ cuenta.fechaEmision | date: 'dd/MM/yyyy HH:mm' }}</span>
+          <span class="value">{{
+            cuenta.fechaEmision | date: "dd/MM/yyyy HH:mm"
+          }}</span>
         </div>
         <div class="detail-item">
           <span class="label">Vencimiento:</span>
           <span class="value" [class.text-danger]="cuenta.estado === 'vencida'">
-            {{ cuenta.fechaVencimiento | date: 'dd/MM/yyyy' || '-' }}
+            {{ cuenta.fechaVencimiento | date: "dd/MM/yyyy" }}
           </span>
         </div>
       </div>
@@ -66,7 +68,9 @@
       </div>
       <div class="saldo-item">
         <span class="label">Total Pagado</span>
-        <span class="value mono text-success">{{ formatCOP(cuenta.totalAbonado) }}</span>
+        <span class="value mono text-success">{{
+          formatCOP(cuenta.totalAbonado)
+        }}</span>
       </div>
       <div class="saldo-item highlight">
         <span class="label">Saldo Pendiente</span>
@@ -99,7 +103,10 @@
         ></button>
       </div>
 
-      <div *ngIf="!showAbonoForm && cuenta.abonos?.length === 0" class="no-abonos">
+      <div
+        *ngIf="!showAbonoForm && cuenta.abonos?.length === 0"
+        class="no-abonos"
+      >
         <i class="pi pi-inbox"></i>
         <p>No hay pagos registrados</p>
       </div>
@@ -119,10 +126,10 @@
           </ng-template>
           <ng-template pTemplate="body" let-abono>
             <tr>
-              <td>{{ abono.fechaPago | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ abono.fechaPago | date: "dd/MM/yyyy HH:mm" }}</td>
               <td>{{ getMetodoLabel(abono.metodoPago) }}</td>
-              <td>{{ abono.banco || '-' }}</td>
-              <td class="mono">{{ abono.referencia || '-' }}</td>
+              <td>{{ abono.banco || "-" }}</td>
+              <td class="mono">{{ abono.referencia || "-" }}</td>
               <td class="text-right mono">{{ formatCOP(abono.monto) }}</td>
               <td>{{ abono.usuarioNombre }}</td>
               <td>
@@ -130,8 +137,8 @@
                   *ngIf="isAbonoFromToday(abono.fechaPago)"
                   pButton
                   icon="pi pi-trash"
-                  class="p-button-text p-button-danger p-button-sm"
                   (click)="confirmDeleteAbono(abono)"
+                  class="p-button-text p-button-danger p-button-sm"
                   pTooltip="Eliminar pago"
                 ></button>
               </td>
@@ -155,8 +162,12 @@
                 [class.ng-invalid]="isInvalid('monto')"
                 styleClass="w-full"
               ></p-inputNumber>
-              <small class="p-error" *ngIf="isInvalid('monto')">El monto es requerido</small>
-              <small class="max-hint">Máximo: {{ formatCOP(cuenta.saldoPendiente) }}</small>
+              <small class="p-error" *ngIf="isInvalid('monto')"
+                >El monto es requerido</small
+              >
+              <small class="max-hint"
+                >Máximo: {{ formatCOP(cuenta.saldoPendiente) }}</small
+              >
             </div>
 
             <div class="form-field">

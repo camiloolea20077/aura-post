@@ -1,5 +1,9 @@
 export type EstadoCuentaPagar = 'activa' | 'pagada' | 'vencida';
-export type MetodoPago = 'efectivo' | 'transferencia' | 'consignacion' | 'cheque';
+export type MetodoPago =
+  | 'efectivo'
+  | 'transferencia'
+  | 'consignacion'
+  | 'cheque';
 
 export interface AbonoPagarModel {
   id: number;
@@ -73,7 +77,9 @@ export interface CuentaPagarFilters {
   fechaDesde?: string | null;
   fechaHasta?: string | null;
   proveedorId?: number | null;
-  estado?: EstadoCuentaPagar | null;
+  params: {
+    estado?: EstadoCuentaPagar | null;
+  };
 }
 
 export interface ResumenCuentasPagar {
