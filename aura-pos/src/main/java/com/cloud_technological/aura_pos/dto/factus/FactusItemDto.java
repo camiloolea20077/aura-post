@@ -12,28 +12,38 @@ import lombok.Setter;
 @Setter
 public class FactusItemDto {
     @JsonProperty("code_reference")
-    private String codeReference;          // SKU del producto
+    private String codeReference;
 
-    private String description;
+    @JsonProperty("name")
+    private String name;
 
     @JsonProperty("quantity")
     private Integer quantity;
 
     @JsonProperty("discount_rate")
-    private BigDecimal discountRate;       // % descuento (0 si no hay)
+    private BigDecimal discountRate = BigDecimal.ZERO;
 
+    // Precio unitario SIN IVA
     @JsonProperty("price")
-    private BigDecimal price;             // precio SIN IVA
+    private BigDecimal price;
 
+    // "19.00", "5.00", "0.00"
     @JsonProperty("tax_rate")
-    private String taxRate;              // "19.00", "5.00", "0.00"
+    private String taxRate;
 
+    // 1=IVA, 3=No aplica (exento/excluido)
+    @JsonProperty("tribute_id")
+    private Integer tributeId;
+
+    // 70=Unidad
     @JsonProperty("unit_measure_id")
-    private Integer unitMeasureId;        // 70 = unidad, 94 = kilo, etc.
+    private Integer unitMeasureId = 70;
 
+    // 1=Estándar DIAN
     @JsonProperty("standard_code_id")
-    private Integer standardCodeId;      // 1 = código estándar DIAN
+    private Integer standardCodeId = 1;
 
+    // 0=gravado, 1=excluido
     @JsonProperty("is_excluded")
-    private Integer isExcluded;          // 0=gravado, 1=excluido
+    private Integer isExcluded = 0;
 }

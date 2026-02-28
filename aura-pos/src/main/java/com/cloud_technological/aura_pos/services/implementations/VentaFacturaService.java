@@ -146,7 +146,7 @@ public class VentaFacturaService {
                 .collect(Collectors.toList());
 
         return FacturaElectronicaRequest.builder()
-                .numeroVenta(empresa.getFactusPrefijo() + "-" + venta.getConsecutivo())
+                .numeroVenta((empresa.getFactusPrefijo() != null ? empresa.getFactusPrefijo() : "POS") + "-" + venta.getConsecutivo())
                 .observacion(venta.getObservaciones())
                 .metodoPago("10") // Efectivo por defecto
                 .fechaVencimiento(LocalDate.now().toString())
