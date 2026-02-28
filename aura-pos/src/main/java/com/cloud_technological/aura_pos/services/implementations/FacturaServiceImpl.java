@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ import com.cloud_technological.aura_pos.entity.TerceroEntity;
 import com.cloud_technological.aura_pos.entity.UsuarioEntity;
 import com.cloud_technological.aura_pos.entity.VentaEntity;
 import com.cloud_technological.aura_pos.entity.VentaPagoEntity;
+import com.cloud_technological.aura_pos.event.FacturaLogEvent;
 import com.cloud_technological.aura_pos.mappers.FacturaMapper;
 import com.cloud_technological.aura_pos.repositories.empresas.EmpresaJPARepository;
 import com.cloud_technological.aura_pos.repositories.facturacion.FacturaJPARepository;
@@ -32,7 +34,6 @@ import com.cloud_technological.aura_pos.repositories.users.UsuarioJPARepository;
 import com.cloud_technological.aura_pos.repositories.ventas.VentaJPARepository;
 import com.cloud_technological.aura_pos.repositories.venta_pago.VentaPagoJPARepository;
 import com.cloud_technological.aura_pos.services.FacturaService;
-import com.cloud_technological.aura_pos.services.FacturaLogService;
 import com.cloud_technological.aura_pos.utils.FacturaLogEvento;
 import com.cloud_technological.aura_pos.utils.GlobalException;
 
@@ -47,7 +48,7 @@ public class FacturaServiceImpl implements FacturaService {
     private final EmpresaJPARepository empresaJPARepository;
     private final UsuarioJPARepository usuarioJPARepository;
     private final FacturaMapper facturaMapper;
-    private final FacturaLogService facturaLogService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Value("${app.facturacion.clave-tecnica:default-clave-tecnica}")
     private String claveTecnica;
@@ -67,7 +68,7 @@ public class FacturaServiceImpl implements FacturaService {
             EmpresaJPARepository empresaJPARepository,
             UsuarioJPARepository usuarioJPARepository,
             FacturaMapper facturaMapper,
-            FacturaLogService facturaLogService) {
+            ApplicationEventPublisher eventPublisher) {
         this.facturaJPARepository = facturaJPARepository;
         this.facturaQueryRepository = facturaQueryRepository;
         this.reciboPagoJPARepository = reciboPagoJPARepository;
@@ -76,7 +77,7 @@ public class FacturaServiceImpl implements FacturaService {
         this.empresaJPARepository = empresaJPARepository;
         this.usuarioJPARepository = usuarioJPARepository;
         this.facturaMapper = facturaMapper;
-        this.facturaLogService = facturaLogService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -139,21 +140,23 @@ public class FacturaServiceImpl implements FacturaService {
 
         factura = facturaJPARepository.save(factura);
 
-        // Registrar evento de creación de factura (async - no bloquea)
-        try {
-            facturaLogService.registrarLogAsync(
-                factura.getId(),
-                FacturaLogEvento.CREACION,
-                null,
-                "PENDIENTE",
-                buildFacturaData(factura),
-                usuarioId,
-                "Factura creada automáticamente desde venta #" + ventaId,
-                null
-            );
-        } catch (Exception e) {
-            // Silencioso - el logging nunca debe fallar el proceso principal
-        }
+        // Registrar evento de creación de factura (Post-Commit)
+        java.util.Map<String, Object> retryPayload = new java.util.HashMap<>();
+        retryPayload.put("action", "crearDesdeVenta");
+        retryPayload.put("ventaId", ventaId);
+        retryPayload.put("empresaId", empresaId);
+        retryPayload.put("usuarioId", usuarioId);
+
+        eventPublisher.publishEvent(new FacturaLogEvent(
+            factura.getId(),
+            FacturaLogEvento.CREACION,
+            null,
+            "PENDIENTE",
+            buildFacturaData(factura),
+            usuarioId,
+            "Factura creada automáticamente desde venta #" + ventaId,
+            retryPayload
+        ));
 
         // Copiar pagos de VentaPago a ReciboPago
         for (VentaPagoEntity pagoVenta : pagosVenta) {

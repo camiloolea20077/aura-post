@@ -26,12 +26,12 @@ public class FacturaLogEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "factura_id")
-    private FacturaEntity factura;
+    @Column(name = "factura_id", nullable = false)
+    private Long facturaId;
 
     @Column(nullable = false)
     private String evento;
+
 
     @Column(name = "estado_anterior")
     private String estadoAnterior;
@@ -41,7 +41,7 @@ public class FacturaLogEntity {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
-    private Object datos;
+    private java.util.Map<String, Object> datos;
 
     @Column(name = "usuario_id")
     private Integer usuarioId;
@@ -51,7 +51,7 @@ public class FacturaLogEntity {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "metadata", columnDefinition = "jsonb")
-    private Object metadata;
+    private java.util.Map<String, Object> metadata;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
