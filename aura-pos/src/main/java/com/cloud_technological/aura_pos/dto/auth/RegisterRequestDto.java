@@ -36,4 +36,25 @@ public class RegisterRequestDto {
 
     @NotBlank(message = "La contraseña es obligatoria")
     private String password;
+
+    // ── Facturación electrónica (Factus) ─────────────────────────────
+    // Si el cliente no va a facturar electrónicamente, todos los campos
+    // de Factus son opcionales. Si facturaElectronica = true, el backend
+    // valida que estén presentes.
+    private boolean facturaElectronica = false;
+
+    // Credenciales OAuth2 de Factus (proporcionadas por Factus al cliente)
+    private String factusClientId;
+    private String factusClientSecret;
+
+    // Credenciales de la cuenta Factus
+    private String factusUsername;
+    private String factusPassword;
+
+    // ID del rango de numeración DIAN registrado en Factus
+    // (el cliente lo obtiene en el panel de Factus)
+    private Integer factusNumberingRangeId;
+
+    // Prefijo de la factura (ej: "SETP")
+    private String factusPrefijo;
 }

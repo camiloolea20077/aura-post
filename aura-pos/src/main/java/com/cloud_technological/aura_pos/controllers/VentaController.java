@@ -14,10 +14,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.cloud_technological.aura_pos.dto.factus.FacturaElectronicaResponseDto;
 import com.cloud_technological.aura_pos.dto.ventas.CreateVentaDto;
 import com.cloud_technological.aura_pos.dto.ventas.VentaDto;
 import com.cloud_technological.aura_pos.dto.ventas.VentaTableDto;
 import com.cloud_technological.aura_pos.services.VentaService;
+import com.cloud_technological.aura_pos.services.implementations.VentaFacturaService;
 import com.cloud_technological.aura_pos.utils.ApiResponse;
 import com.cloud_technological.aura_pos.utils.GlobalException;
 import com.cloud_technological.aura_pos.utils.PageableDto;
@@ -32,6 +34,9 @@ public class VentaController {
 
     @Autowired
     private SecurityUtils securityUtils;
+
+    @Autowired
+    private VentaFacturaService ventaFacturaService;
 
     @PostMapping("/page")
     public ResponseEntity<ApiResponse<PageImpl<VentaTableDto>>> listar(
@@ -63,5 +68,33 @@ public class VentaController {
         Integer empresaId = securityUtils.getEmpresaId();
         ventaService.anular(id, empresaId);
         return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "Venta anulada correctamente", false, true), HttpStatus.OK);
+    }
+    /**
+     * POST /api/ventas/{ventaId}/factura-electronica
+     *
+     * Sin body — el backend toma los datos del cliente
+     * desde la venta ya registrada.
+     *
+     * Valida internamente:
+     *  ✓ empresa.facturaElectronica = true
+     *  ✓ venta.cliente != null
+     *  ✓ venta.estadoDian != "EMITIDA"
+     */
+    @PostMapping("/{ventaId}/factura-electronica")
+    public ResponseEntity<ApiResponse<FacturaElectronicaResponseDto>> generarFacturaElectronica(
+            @PathVariable Long ventaId) {
+
+        Integer empresaId = securityUtils.getEmpresaId();
+
+        FacturaElectronicaResponseDto result =
+                ventaFacturaService.generarFacturaElectronica(ventaId, empresaId);
+
+        return new ResponseEntity<>(
+                new ApiResponse<>(
+                        HttpStatus.OK.value(),
+                        "Factura electrónica generada exitosamente",
+                        false,
+                        result),
+                HttpStatus.OK);
     }
 }

@@ -49,6 +49,36 @@ public class EmpresaEntity {
 
     private Boolean activa = true;
 
+    @Column(name = "factura_electronica", nullable = false)
+    private boolean facturaElectronica = false;
+
+    @Column(name = "factus_client_id", length = 255)
+    private String factusClientId;
+
+    @Column(name = "factus_client_secret", length = 500)
+    private String factusClientSecret;
+
+    @Column(name = "factus_username", length = 255)
+    private String factusUsername;
+
+    @Column(name = "factus_password", length = 500)
+    private String factusPassword;
+
+    @Column(name = "factus_numbering_range_id")
+    private Integer factusNumberingRangeId;
+
+    @Column(name = "factus_prefijo", length = 20)
+    private String factusPrefijo;
+
+    @Column(name = "factus_access_token", columnDefinition = "TEXT")
+    private String factusAccessToken;
+
+    @Column(name = "factus_refresh_token", columnDefinition = "TEXT")
+    private String factusRefreshToken;
+
+    @Column(name = "factus_token_expiry")
+    private java.time.LocalDateTime factusTokenExpiry;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 

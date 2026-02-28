@@ -38,4 +38,10 @@ export class VentaService {
       {},
     );
   }
+  generarFacturaElectronica(ventaId: number): Observable<ResponseModel<any>> {
+    return this.http.post<ResponseModel<any>>(
+      `${this.apiUrl}/${ventaId}/factura-electronica`,
+      {},
+    );
+  }
 }

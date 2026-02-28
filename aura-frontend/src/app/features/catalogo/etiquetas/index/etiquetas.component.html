@@ -1,0 +1,210 @@
+<div class="etiquetas-page">
+  <!-- ══ HEADER ══════════════════════════════════════════════════════ -->
+  <div class="page-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="pi pi-tags"></i>
+      </div>
+      <div>
+        <h1 class="page-title">Etiquetas de precio</h1>
+        <p class="page-sub">
+          Productos sin código de barras — genera e imprime
+        </p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button
+        pButton
+        type="button"
+        icon="pi pi-refresh"
+        label="Recargar"
+        class="p-button-outlined p-button-secondary p-button-sm"
+        (click)="cargarProductos()"
+        [disabled]="isLoading"
+      ></button>
+    </div>
+  </div>
+
+  <!-- ══ TOOLBAR DE ACCIONES ══════════════════════════════════════════ -->
+  <div class="toolbar" *ngIf="!isLoading">
+    <div class="toolbar-left">
+      <!-- Buscador -->
+      <span class="p-input-icon-left search-wrap">
+        <i class="pi pi-search"></i>
+        <input
+          pInputText
+          type="text"
+          [(ngModel)]="busqueda"
+          placeholder="Buscar producto o SKU..."
+          class="search-input"
+        />
+      </span>
+
+      <!-- Seleccionar todos -->
+      <div class="select-all-wrap">
+        <p-checkbox
+          [ngModel]="todosSeleccionados"
+          [binary]="true"
+          (onChange)="toggleTodos()"
+          inputId="chk-todos"
+        />
+        <label for="chk-todos" class="select-all-label">
+          Seleccionar todos ({{ productosFiltrados.length }})
+        </label>
+      </div>
+    </div>
+
+    <!-- Acciones batch -->
+    <div class="toolbar-right" *ngIf="seleccionados.length > 0">
+      <div class="batch-info">
+        <i class="pi pi-check-circle"></i>
+        <span
+          >{{ seleccionados.length }} seleccionados —
+          {{ totalEtiquetas }} etiquetas</span
+        >
+      </div>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-barcode"
+        label="Generar códigos"
+        class="p-button-outlined p-button-sm btn-generar"
+        (click)="generarTodosSeleccionados()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-print"
+        label="Imprimir"
+        class="p-button-sm btn-imprimir"
+        (click)="imprimirSeleccionados()"
+      ></button>
+    </div>
+  </div>
+
+  <!-- ══ LOADING ══════════════════════════════════════════════════════ -->
+  <div class="loading-state" *ngIf="isLoading">
+    <p-progressSpinner strokeWidth="3" styleClass="spinner-sm" />
+    <span>Cargando productos...</span>
+  </div>
+
+  <!-- ══ TABLA ═════════════════════════════════════════════════════════ -->
+  <div class="tabla-wrap" *ngIf="!isLoading">
+    <!-- Empty state -->
+    <div class="empty-state" *ngIf="productosFiltrados.length === 0">
+      <div class="empty-icon">
+        <i class="pi pi-check-circle"></i>
+      </div>
+      <h3>¡Todo al día!</h3>
+      <p>Todos los productos ya tienen código de barras asignado.</p>
+    </div>
+
+    <!-- Tabla -->
+    <table class="etiquetas-table" *ngIf="productosFiltrados.length > 0">
+      <thead>
+        <tr>
+          <th class="col-chk"></th>
+          <th class="col-nombre">Producto</th>
+          <th class="col-sku">SKU</th>
+          <th class="col-codigo">Código generado</th>
+          <th class="col-copias">Copias</th>
+          <th class="col-acc">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          *ngFor="let p of productosFiltrados"
+          [class.row-guardado]="p.guardado"
+          [class.row-seleccionado]="p.seleccionado"
+        >
+          <!-- Checkbox -->
+          <td class="col-chk">
+            <p-checkbox [(ngModel)]="p.seleccionado" [binary]="true" />
+          </td>
+
+          <!-- Nombre -->
+          <td class="col-nombre">
+            <div class="prod-nombre">{{ p.nombre }}</div>
+            <div class="prod-cat" *ngIf="p.categoriaNombre">
+              <i class="pi pi-folder"></i> {{ p.categoriaNombre }}
+            </div>
+          </td>
+
+          <!-- SKU -->
+          <td class="col-sku">
+            <code class="sku-badge" *ngIf="p.sku">{{ p.sku }}</code>
+            <span class="sin-sku" *ngIf="!p.sku">—</span>
+          </td>
+
+          <!-- Código generado -->
+          <td class="col-codigo">
+            <!-- Ya tiene código generado -->
+            <div class="codigo-generado" *ngIf="p.codigoGenerado">
+              <i class="pi pi-barcode"></i>
+              <code>{{ p.codigoGenerado }}</code>
+              <p-tag
+                value="Guardado"
+                severity="success"
+                styleClass="tag-mini"
+              />
+            </div>
+            <!-- Sin código aún -->
+            <span class="sin-codigo" *ngIf="!p.codigoGenerado">
+              <i class="pi pi-minus-circle"></i> Sin código
+            </span>
+          </td>
+
+          <!-- Copias -->
+          <td class="col-copias">
+            <p-inputNumber
+              [(ngModel)]="p.copias"
+              [min]="1"
+              [max]="50"
+              [showButtons]="true"
+              buttonLayout="horizontal"
+              incrementButtonIcon="pi pi-plus"
+              decrementButtonIcon="pi pi-minus"
+              styleClass="copias-input"
+            />
+          </td>
+
+          <!-- Acciones -->
+          <td class="col-acc">
+            <!-- Generando... -->
+            <div class="generando-wrap" *ngIf="p.generando">
+              <p-progressSpinner strokeWidth="4" styleClass="spinner-xs" />
+            </div>
+
+            <!-- Botón generar -->
+            <button
+              pButton
+              type="button"
+              *ngIf="!p.generando && !p.guardado"
+              icon="pi pi-barcode"
+              label="Generar"
+              class="p-button-outlined p-button-sm p-button-secondary btn-gen-row"
+              pTooltip="Generar código EAN-13 y guardar"
+              tooltipPosition="left"
+              (click)="generarCodigo(p)"
+            ></button>
+
+            <!-- Imprimir individual -->
+            <button
+              pButton
+              type="button"
+              *ngIf="p.guardado"
+              icon="pi pi-print"
+              label="Imprimir"
+              class="p-button-sm p-button-outlined btn-print-row"
+              pTooltip="Imprimir esta etiqueta"
+              tooltipPosition="left"
+              (click)="p.seleccionado = true; imprimirSeleccionados()"
+            ></button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p-toast />
+</div>

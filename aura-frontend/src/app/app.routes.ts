@@ -95,6 +95,14 @@ export const routes: Routes = [
             (m) => m.IndexComposicionComponent,
           ),
       },
+      {
+        path: 'catalogo/etiquetas',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/catalogo/etiquetas/index/etiquetas.component').then(
+            (m) => m.EtiquetasComponent,
+          ),
+      },
 
       // Precios
       {

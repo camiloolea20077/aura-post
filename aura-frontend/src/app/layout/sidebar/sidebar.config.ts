@@ -54,6 +54,11 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         icon: 'pi pi-cog',
         route: '/catalogo/composiciones',
       },
+      {
+        label: 'Etiquetas',
+        icon: 'pi pi-bookmark',
+        route: '/catalogo/etiquetas',
+      },
     ],
   },
   {

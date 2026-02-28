@@ -186,6 +186,7 @@ public class AuthServiceImpl implements AuthService{
                     .username(usuario.getUsername())
                     .nombreCompleto(nombreCompleto)
                     .rol(usuario.getRol())
+                    .facturaElectronica(usuario.getEmpresa().isFacturaElectronica())
                     .sucursales(sucursales) // El front usará esto para pintar el selector de sedes
                     .build();
 

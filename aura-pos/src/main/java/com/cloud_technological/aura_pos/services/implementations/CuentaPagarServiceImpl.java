@@ -12,10 +12,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.cloud_technological.aura_pos.dto.cuentas_pagar.AbonoPagarDto;
-import com.cloud_technological.aura_pos.dto.cuentas_pagar.CuentaPagarDto;
-import com.cloud_technological.aura_pos.dto.cuentas_pagar.CuentaPagarTableDto;
-import com.cloud_technological.aura_pos.dto.cuentas_pagar.CuentaPagarResumenDto;
 import com.cloud_technological.aura_pos.dto.cuentas_pagar.CreateCuentaPagarDto;
+import com.cloud_technological.aura_pos.dto.cuentas_pagar.CuentaPagarDto;
+import com.cloud_technological.aura_pos.dto.cuentas_pagar.CuentaPagarResumenDto;
+import com.cloud_technological.aura_pos.dto.cuentas_pagar.CuentaPagarTableDto;
 import com.cloud_technological.aura_pos.entity.AbonoPagarEntity;
 import com.cloud_technological.aura_pos.entity.CuentaPagarEntity;
 import com.cloud_technological.aura_pos.entity.EmpresaEntity;
@@ -83,7 +83,7 @@ public class CuentaPagarServiceImpl implements CuentaPagarService {
     @Transactional
     public CuentaPagarDto crear(CreateCuentaPagarDto dto, Integer empresaId, Long usuarioId) {
         // Validar proveedor
-        TerceroEntity tercero = terceroRepository.findById(dto.getProveedorId())
+        TerceroEntity tercero = terceroRepository.findById(dto.getProveedorId().intValue())
                 .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST, "Proveedor no encontrado"));
         
         if (!Boolean.TRUE.equals(tercero.getEsProveedor())) {
@@ -157,8 +157,8 @@ public class CuentaPagarServiceImpl implements CuentaPagarService {
         }
 
         // Obtener usuario
-        UsuarioEntity usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST, "Usuario no encontrado"));
+        UsuarioEntity usuario = usuarioRepository.findById(usuarioId.intValue())
+                .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
         // Crear abono
         AbonoPagarEntity abono = AbonoPagarEntity.builder()
@@ -193,9 +193,7 @@ public class CuentaPagarServiceImpl implements CuentaPagarService {
         jpaRepository.findByIdAndEmpresaId(cuentaId, empresaId)
                 .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Cuenta por pagar no encontrada"));
 
-        List<AbonoPagarEntity> abonos = abonoJpaRepository.findAll().stream()
-                .filter(a -> a.getCuentaPagar() != null && a.getCuentaPagar().getId().equals(cuentaId))
-                .toList();
+        List<AbonoPagarEntity> abonos = abonoJpaRepository.findByCuentaPagarId(cuentaId);
 
         return abonos.stream().map(this::toAbonoDto).toList();
     }
@@ -210,7 +208,7 @@ public class CuentaPagarServiceImpl implements CuentaPagarService {
                 .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Abono no encontrado"));
 
         // Solo permitir anulación si el abono es del día actual
-        if (abono.getCreatedAt().toLocalDate().isBefore(LocalDateTime.now().toLocalDate())) {
+        if (!abono.getCreatedAt().toLocalDate().equals(LocalDateTime.now().toLocalDate())) {
             throw new GlobalException(HttpStatus.BAD_REQUEST, "Solo se pueden eliminar abonos del día actual");
         }
 
@@ -242,7 +240,7 @@ public class CuentaPagarServiceImpl implements CuentaPagarService {
         dto.setCreatedAt(entity.getCreatedAt());
         
         if (entity.getEmpresa() != null) {
-            dto.setEmpresaId(entity.getEmpresa().getId().intValue());
+            dto.setEmpresaId(entity.getEmpresa().getId().longValue());
         }
         if (entity.getTercero() != null) {
             dto.setTerceroId(entity.getTercero().getId());
@@ -253,10 +251,15 @@ public class CuentaPagarServiceImpl implements CuentaPagarService {
             dto.setCompraId(entity.getCompra().getId());
         }
 
-        // Cargar abonos
-        List<AbonoPagarDto> abonos = entity.getAbonos() != null ? 
-                entity.getAbonos().stream().map(this::toAbonoDto).toList() : new ArrayList<>();
-        dto.setAbonos(abonos);
+        // Cargar abonos - usar lazy loading seguro
+        try {
+            List<AbonoPagarDto> abonos = entity.getAbonos() != null && !entity.getAbonos().isEmpty() ? 
+                    entity.getAbonos().stream().map(this::toAbonoDto).toList() : new ArrayList<>();
+            dto.setAbonos(abonos);
+        } catch (Exception e) {
+            // Si los abonos no están cargados, retornar lista vacía
+            dto.setAbonos(new ArrayList<>());
+        }
 
         return dto;
     }
@@ -273,7 +276,11 @@ public class CuentaPagarServiceImpl implements CuentaPagarService {
     private AbonoPagarDto toAbonoDto(AbonoPagarEntity entity) {
         AbonoPagarDto dto = new AbonoPagarDto();
         dto.setId(entity.getId());
-        dto.setCuentaPagarId(entity.getCuentaPagar().getId());
+        
+        if (entity.getCuentaPagar() != null) {
+            dto.setCuentaPagarId(entity.getCuentaPagar().getId());
+        }
+        
         dto.setMonto(entity.getMonto());
         dto.setMetodoPago(entity.getMetodoPago());
         dto.setReferencia(entity.getReferencia());
@@ -282,7 +289,7 @@ public class CuentaPagarServiceImpl implements CuentaPagarService {
         dto.setCreatedAt(entity.getCreatedAt());
         
         if (entity.getUsuario() != null) {
-            dto.setUsuarioId(entity.getUsuario().getId());
+            dto.setUsuarioId(entity.getUsuario().getId().longValue());
             dto.setUsuarioNombre(entity.getUsuario().getUsername());
         }
 

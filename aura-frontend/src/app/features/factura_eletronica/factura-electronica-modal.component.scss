@@ -1,0 +1,281 @@
+:host {
+  --fe-primary: #6366f1;
+  --fe-primary-light: #eef2ff;
+  --fe-success: #22c55e;
+  --fe-success-light: #f0fdf4;
+  --fe-error: #ef4444;
+  --fe-error-light: #fef2f2;
+  --fe-border: #e5e7eb;
+  --fe-text: #111827;
+  --fe-sub: #6b7280;
+}
+
+// ── Header ───────────────────────────────────────────────────────────
+.fe-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fe-header-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--fe-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  i {
+    font-size: 1.2rem;
+    color: var(--fe-primary);
+  }
+}
+
+.fe-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--fe-text);
+  margin: 0;
+}
+
+.fe-sub {
+  font-size: 0.78rem;
+  color: var(--fe-sub);
+  margin: 2px 0 0;
+}
+
+// ── Body genérico ────────────────────────────────────────────────────
+.fe-body {
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// ── Card del cliente ─────────────────────────────────────────────────
+.cliente-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--fe-primary-light);
+  border: 1.5px solid #c7d2fe;
+  border-radius: 10px;
+  padding: 12px 16px;
+
+  > i {
+    font-size: 1.4rem;
+    color: var(--fe-primary);
+  }
+
+  > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+}
+
+.cliente-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fe-primary);
+}
+
+.cliente-nombre {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--fe-text);
+}
+
+.cliente-doc {
+  font-size: 0.78rem;
+  color: var(--fe-sub);
+}
+
+// ── Pregunta ─────────────────────────────────────────────────────────
+.fe-question {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--fe-text);
+  margin: 0;
+  text-align: center;
+}
+
+.fe-hint {
+  font-size: 0.82rem;
+  color: var(--fe-sub);
+  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 10px 12px;
+
+  i {
+    color: var(--fe-primary);
+    margin-top: 1px;
+  }
+  strong {
+    color: var(--fe-text);
+  }
+}
+
+// ── Generando ────────────────────────────────────────────────────────
+.fe-loading {
+  align-items: center;
+  padding: 24px 0;
+
+  .fe-spinner {
+    width: 48px !important;
+    height: 48px !important;
+  }
+}
+
+.fe-loading-txt {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--fe-text);
+  margin: 0;
+}
+
+.fe-loading-sub {
+  font-size: 0.8rem;
+  color: var(--fe-sub);
+}
+
+// ── Éxito ────────────────────────────────────────────────────────────
+.fe-success {
+  align-items: center;
+  padding: 8px 0;
+}
+
+.success-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--fe-success-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  i {
+    font-size: 2rem;
+    color: var(--fe-success);
+  }
+}
+
+.success-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--fe-text);
+  margin: 0;
+}
+
+.success-numero {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--fe-primary);
+  margin: 0;
+  background: var(--fe-primary-light);
+  padding: 4px 14px;
+  border-radius: 20px;
+}
+
+.cufe-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f9fafb;
+  border: 1.5px solid var(--fe-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  width: 100%;
+}
+
+.cufe-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--fe-sub);
+  white-space: nowrap;
+}
+
+.cufe-val {
+  font-family: "JetBrains Mono", "Courier New", monospace;
+  font-size: 0.75rem;
+  color: var(--fe-text);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fe-acciones-resultado {
+  display: flex;
+  gap: 8px;
+
+  a {
+    text-decoration: none;
+  }
+}
+
+// ── Error ────────────────────────────────────────────────────────────
+.fe-error {
+  align-items: center;
+  padding: 8px 0;
+}
+
+.error-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--fe-error-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  i {
+    font-size: 2rem;
+    color: var(--fe-error);
+  }
+}
+
+.error-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--fe-text);
+  margin: 0;
+}
+
+.error-msg {
+  font-size: 0.85rem;
+  color: var(--fe-error);
+  margin: 0;
+  text-align: center;
+  background: var(--fe-error-light);
+  padding: 8px 14px;
+  border-radius: 8px;
+  width: 100%;
+}
+
+.error-hint {
+  font-size: 0.8rem;
+  color: var(--fe-sub);
+  margin: 0;
+  text-align: center;
+}
+
+// ── Footer ───────────────────────────────────────────────────────────
+.fe-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.btn-generar-fe {
+  background: var(--fe-primary) !important;
+  border-color: var(--fe-primary) !important;
+}

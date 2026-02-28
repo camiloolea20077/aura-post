@@ -375,6 +375,15 @@
   (modalClosed)="showPago = false"
   (ventaConfirmada)="onVentaConfirmada($event)"
 />
+<app-factura-electronica-modal
+  [(visible)]="mostrarModalFE"
+  [ventaId]="ventaCompletadaId"
+  [clienteNombre]="feClienteNombre"
+  [clienteDocumento]="feClienteDocumento"
+  [clienteEmail]="feClienteEmail"
+  (facturaEmitida)="onFacturaEmitida($event)"
+  (omitida)="onFacturaOmitida()"
+/>
 <!-- NUEVO: modal tirilla -->
 <app-modal-tirilla
   [displayModal]="showTirilla"

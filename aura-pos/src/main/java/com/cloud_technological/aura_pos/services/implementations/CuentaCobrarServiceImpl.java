@@ -83,7 +83,7 @@ public class CuentaCobrarServiceImpl implements CuentaCobrarService {
     @Transactional
     public CuentaCobrarDto crear(CreateCuentaCobrarDto dto, Integer empresaId, Long usuarioId) {
         // Validar cliente
-        TerceroEntity tercero = terceroRepository.findById(dto.getClienteId())
+        TerceroEntity tercero = terceroRepository.findById(dto.getClienteId().intValue())
                 .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST, "Cliente no encontrado"));
         
         if (!Boolean.TRUE.equals(tercero.getEsCliente())) {
@@ -157,8 +157,8 @@ public class CuentaCobrarServiceImpl implements CuentaCobrarService {
         }
 
         // Obtener usuario
-        UsuarioEntity usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST, "Usuario no encontrado"));
+        UsuarioEntity usuario = usuarioRepository.findById(usuarioId.intValue())
+                .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
         // Crear abono
         AbonoCobrarEntity abono = AbonoCobrarEntity.builder()
@@ -192,9 +192,7 @@ public class CuentaCobrarServiceImpl implements CuentaCobrarService {
         jpaRepository.findByIdAndEmpresaId(cuentaId, empresaId)
                 .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Cuenta por cobrar no encontrada"));
 
-        List<AbonoCobrarEntity> abonos = abonoJpaRepository.findAll().stream()
-                .filter(a -> a.getCuentaCobrar() != null && a.getCuentaCobrar().getId().equals(cuentaId))
-                .toList();
+        List<AbonoCobrarEntity> abonos = abonoJpaRepository.findByCuentaCobrarId(cuentaId);
 
         return abonos.stream().map(this::toAbonoDto).toList();
     }
@@ -209,7 +207,7 @@ public class CuentaCobrarServiceImpl implements CuentaCobrarService {
                 .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Abono no encontrado"));
 
         // Solo permitir anulación si el abono es del día actual
-        if (abono.getCreatedAt().toLocalDate().isBefore(LocalDateTime.now().toLocalDate())) {
+        if (!abono.getCreatedAt().toLocalDate().equals(LocalDateTime.now().toLocalDate())) {
             throw new GlobalException(HttpStatus.BAD_REQUEST, "Solo se pueden eliminar abonos del día actual");
         }
 
@@ -241,7 +239,7 @@ public class CuentaCobrarServiceImpl implements CuentaCobrarService {
         dto.setCreatedAt(entity.getCreatedAt());
         
         if (entity.getEmpresa() != null) {
-            dto.setEmpresaId(entity.getEmpresa().getId().intValue());
+            dto.setEmpresaId(entity.getEmpresa().getId().longValue());
         }
         if (entity.getTercero() != null) {
             dto.setTerceroId(entity.getTercero().getId());
@@ -252,10 +250,15 @@ public class CuentaCobrarServiceImpl implements CuentaCobrarService {
             dto.setVentaId(entity.getVenta().getId());
         }
 
-        // Cargar abonos
-        List<AbonoCobrarDto> abonos = entity.getAbonos() != null ? 
-                entity.getAbonos().stream().map(this::toAbonoDto).toList() : new ArrayList<>();
-        dto.setAbonos(abonos);
+        // Cargar abonos - usar lazy loading seguro
+        try {
+            List<AbonoCobrarDto> abonos = entity.getAbonos() != null && !entity.getAbonos().isEmpty() ? 
+                    entity.getAbonos().stream().map(this::toAbonoDto).toList() : new ArrayList<>();
+            dto.setAbonos(abonos);
+        } catch (Exception e) {
+            // Si los abonos no están cargados, retornar lista vacía
+            dto.setAbonos(new ArrayList<>());
+        }
 
         return dto;
     }
@@ -272,7 +275,11 @@ public class CuentaCobrarServiceImpl implements CuentaCobrarService {
     private AbonoCobrarDto toAbonoDto(AbonoCobrarEntity entity) {
         AbonoCobrarDto dto = new AbonoCobrarDto();
         dto.setId(entity.getId());
-        dto.setCuentaCobrarId(entity.getCuentaCobrar().getId());
+        
+        if (entity.getCuentaCobrar() != null) {
+            dto.setCuentaCobrarId(entity.getCuentaCobrar().getId());
+        }
+        
         dto.setMonto(entity.getMonto());
         dto.setMetodoPago(entity.getMetodoPago());
         dto.setReferencia(entity.getReferencia());
@@ -280,7 +287,7 @@ public class CuentaCobrarServiceImpl implements CuentaCobrarService {
         dto.setCreatedAt(entity.getCreatedAt());
         
         if (entity.getUsuario() != null) {
-            dto.setUsuarioId(entity.getUsuario().getId());
+            dto.setUsuarioId(entity.getUsuario().getId().longValue());
             dto.setUsuarioNombre(entity.getUsuario().getUsername());
         }
 
