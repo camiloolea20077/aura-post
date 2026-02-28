@@ -205,7 +205,7 @@ public class CuentaPagarQueryRepository {
             siguiente = "0001";
         } else {
             String maxSql = """
-                SELECT MAX(SUBSTRING(numero_cuenta FROM 12 FOR 4)) 
+                SELECT MAX(SUBSTRING(numero_cuenta FROM 13 FOR 4)) 
                 FROM cuentas_pagar 
                 WHERE numero_cuenta LIKE 'CP-' || TO_CHAR(NOW(), 'YYYYMMDD') || '-%'
             """;
