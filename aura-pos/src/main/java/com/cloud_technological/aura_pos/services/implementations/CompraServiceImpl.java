@@ -14,6 +14,7 @@ import com.cloud_technological.aura_pos.dto.compras.CompraTableDto;
 import com.cloud_technological.aura_pos.dto.compras.CreateCompraDetalleDto;
 import com.cloud_technological.aura_pos.dto.compras.CreateCompraDto;
 import com.cloud_technological.aura_pos.dto.compras.CreateCompraPagoDto;
+import com.cloud_technological.aura_pos.dto.cuentas_pagar.CreateCuentaPagarDto;
 import com.cloud_technological.aura_pos.entity.CompraDetalleEntity;
 import com.cloud_technological.aura_pos.entity.CompraEntity;
 import com.cloud_technological.aura_pos.entity.CompraPagoEntity;
@@ -40,6 +41,7 @@ import com.cloud_technological.aura_pos.repositories.sucursales.SucursalJPARepos
 import com.cloud_technological.aura_pos.repositories.terceros.TerceroJPARepository;
 import com.cloud_technological.aura_pos.repositories.users.UsuarioJPARepository;
 import com.cloud_technological.aura_pos.services.CompraService;
+import com.cloud_technological.aura_pos.services.CuentaPagarService;
 import com.cloud_technological.aura_pos.services.NotaContableService;
 import com.cloud_technological.aura_pos.utils.GlobalException;
 import com.cloud_technological.aura_pos.utils.PageableDto;
@@ -63,6 +65,7 @@ public class CompraServiceImpl implements CompraService {
     private final CompraMapper compraMapper;
     private final CompraDetalleMapper detalleMapper;
     private final NotaContableService notaContableService;
+    private final CuentaPagarService cuentaPagarService;
 
     @Autowired
     public CompraServiceImpl(CompraQueryRepository compraRepository,
@@ -79,7 +82,8 @@ public class CompraServiceImpl implements CompraService {
             UsuarioJPARepository usuarioRepository,
             CompraMapper compraMapper,
             CompraDetalleMapper detalleMapper,
-            NotaContableService notaContableService) {
+            NotaContableService notaContableService,
+            CuentaPagarService cuentaPagarService) {
         this.compraRepository = compraRepository;
         this.compraJPARepository = compraJPARepository;
         this.compraPagoJPARepository = compraPagoJPARepository;
@@ -95,6 +99,7 @@ public class CompraServiceImpl implements CompraService {
         this.compraMapper = compraMapper;
         this.detalleMapper = detalleMapper;
         this.notaContableService = notaContableService;
+        this.cuentaPagarService = cuentaPagarService;
     }
 
     @Override
@@ -218,6 +223,37 @@ public class CompraServiceImpl implements CompraService {
                         descripcion
                 );
             }
+        }
+
+        // 5. Registrar cuenta por pagar si hay saldo pendiente o pago a crédito
+        BigDecimal montoPagado = BigDecimal.ZERO;
+        boolean esCredito = false;
+        
+        if (dto.getPagos() != null && !dto.getPagos().isEmpty()) {
+            for (CreateCompraPagoDto pagoDto : dto.getPagos()) {
+                if ("CREDITO".equalsIgnoreCase(pagoDto.getMetodoPago())) {
+                    esCredito = true;
+                }
+                montoPagado = montoPagado.add(pagoDto.getMonto());
+            }
+        }
+
+        BigDecimal saldoPendiente = compra.getTotal().subtract(montoPagado);
+        
+        // Crear cuenta por pagar si es crédito o hay saldo pendiente
+        if (esCredito || saldoPendiente.compareTo(BigDecimal.ZERO) > 0) {
+            // Crear cuenta por pagar
+            CreateCuentaPagarDto cuentaPagarDto = new CreateCuentaPagarDto();
+            cuentaPagarDto.setProveedorId(dto.getProveedorId());
+            cuentaPagarDto.setCompraId(compra.getId());
+            cuentaPagarDto.setTotalDeuda(compra.getTotal());
+            cuentaPagarDto.setFechaEmision(compra.getFecha());
+            cuentaPagarDto.setFechaVencimiento(dto.getFechaVencimiento() != null ? dto.getFechaVencimiento() : compra.getFecha().plusDays(30));
+            cuentaPagarDto.setObservaciones(esCredito ? 
+                "Compra #" + compra.getId() + " - Compra a crédito" : 
+                "Compra #" + compra.getId());
+
+            cuentaPagarService.crear(cuentaPagarDto, empresaId, usuarioId);
         }
 
         return obtenerPorId(compra.getId(), empresaId);

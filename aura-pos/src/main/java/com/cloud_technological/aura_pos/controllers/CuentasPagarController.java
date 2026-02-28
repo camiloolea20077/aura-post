@@ -41,12 +41,46 @@ public class CuentasPagarController {
 
     @PostMapping("/page")
     public ResponseEntity<ApiResponse<PageImpl<CuentaPagarTableDto>>> listar(
-            @RequestBody PageableDto<Object> pageable,
-            @RequestParam(required = false) String fechaDesde,
-            @RequestParam(required = false) String fechaHasta,
-            @RequestParam(required = false) Long proveedorId,
-            @RequestParam(required = false) String estado) {
+            @RequestBody PageableDto<Object> pageable) {
         Integer empresaId = securityUtils.getEmpresaId();
+        
+        // Extraer filtros - puede venir en params o como campos directos del pageable
+        String fechaDesde = null;
+        String fechaHasta = null;
+        Long proveedorId = null;
+        String estado = null;
+        
+        // Primero buscar en params
+        if (pageable.getParams() != null) {
+            @SuppressWarnings("unchecked")
+            java.util.Map<String, Object> params = (java.util.Map<String, Object>) pageable.getParams();
+            fechaDesde = (String) params.get("fechaDesde");
+            fechaHasta = (String) params.get("fechaHasta");
+            Object proveedorIdObj = params.get("proveedorId");
+            if (proveedorIdObj != null) {
+                proveedorId = proveedorIdObj instanceof Number ? ((Number) proveedorIdObj).longValue() : Long.parseLong(proveedorIdObj.toString());
+            }
+            estado = (String) params.get("estado");
+        }
+        
+        // Si no están en params, buscar como campos directos usando reflexión
+        if (estado == null) {
+            try {
+                var paramsField = pageable.getClass().getDeclaredField("params");
+                paramsField.setAccessible(true);
+                Object paramsValue = paramsField.get(pageable);
+                if (paramsValue instanceof java.util.Map) {
+                    @SuppressWarnings("unchecked")
+                    java.util.Map<String, Object> mapParams = (java.util.Map<String, Object>) paramsValue;
+                    if (mapParams.containsKey("estado")) {
+                        estado = mapParams.get("estado") != null ? mapParams.get("estado").toString() : null;
+                    }
+                }
+            } catch (Exception e) {
+                // Ignorar errores de reflexión
+            }
+        }
+        
         PageImpl<CuentaPagarTableDto> result;
         
         if (fechaDesde != null || fechaHasta != null || proveedorId != null || estado != null) {
