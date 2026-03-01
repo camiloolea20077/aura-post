@@ -53,9 +53,13 @@ public class CuentaCobrarQueryRepository {
                 cc.fecha_emision,
                 cc.fecha_vencimiento,
                 cc.total_deuda,
-                cc.total_abonado,
-                cc.saldo_pendiente,
-                cc.estado,
+                COALESCE((SELECT SUM(monto) FROM abonos_cobrar WHERE cuenta_cobrar_id = cc.id AND deleted_at IS NULL), 0) AS total_abonado,
+                cc.total_deuda - COALESCE((SELECT SUM(monto) FROM abonos_cobrar WHERE cuenta_cobrar_id = cc.id AND deleted_at IS NULL), 0) AS saldo_pendiente,
+                CASE 
+                    WHEN cc.total_deuda - COALESCE((SELECT SUM(monto) FROM abonos_cobrar WHERE cuenta_cobrar_id = cc.id AND deleted_at IS NULL), 0) <= 0 THEN 'pagada'
+                    WHEN cc.fecha_vencimiento < NOW() THEN 'vencida'
+                    ELSE 'activa'
+                END AS estado,
                 COUNT(*) OVER() AS total_rows
             FROM cuentas_cobrar cc
             INNER JOIN tercero t ON cc.tercero_id = t.id
@@ -123,9 +127,13 @@ public class CuentaCobrarQueryRepository {
                 cc.fecha_emision,
                 cc.fecha_vencimiento,
                 cc.total_deuda,
-                cc.total_abonado,
-                cc.saldo_pendiente,
-                cc.estado,
+                COALESCE((SELECT SUM(monto) FROM abonos_cobrar WHERE cuenta_cobrar_id = cc.id AND deleted_at IS NULL), 0) AS total_abonado,
+                cc.total_deuda - COALESCE((SELECT SUM(monto) FROM abonos_cobrar WHERE cuenta_cobrar_id = cc.id AND deleted_at IS NULL), 0) AS saldo_pendiente,
+                CASE 
+                    WHEN cc.total_deuda - COALESCE((SELECT SUM(monto) FROM abonos_cobrar WHERE cuenta_cobrar_id = cc.id AND deleted_at IS NULL), 0) <= 0 THEN 'pagada'
+                    WHEN cc.fecha_vencimiento < NOW() THEN 'vencida'
+                    ELSE 'activa'
+                END AS estado,
                 COUNT(*) OVER() AS total_rows
             FROM cuentas_cobrar cc
             INNER JOIN tercero t ON cc.tercero_id = t.id
@@ -163,8 +171,14 @@ public class CuentaCobrarQueryRepository {
         }
 
         if (estado != null && !estado.isEmpty()) {
-            sql.append(" AND cc.estado = :estado");
-            params.addValue("estado", estado);
+            // Filtrar por estado calculado dinámicamente
+            if ("pagada".equals(estado)) {
+                sql.append(" AND (cc.total_deuda - COALESCE((SELECT SUM(monto) FROM abonos_cobrar WHERE cuenta_cobrar_id = cc.id AND deleted_at IS NULL), 0)) <= 0");
+            } else if ("vencida".equals(estado)) {
+                sql.append(" AND cc.fecha_vencimiento < NOW() AND (cc.total_deuda - COALESCE((SELECT SUM(monto) FROM abonos_cobrar WHERE cuenta_cobrar_id = cc.id AND deleted_at IS NULL), 0)) > 0");
+            } else if ("activa".equals(estado)) {
+                sql.append(" AND (cc.fecha_vencimiento IS NULL OR cc.fecha_vencimiento >= NOW()) AND (cc.total_deuda - COALESCE((SELECT SUM(monto) FROM abonos_cobrar WHERE cuenta_cobrar_id = cc.id AND deleted_at IS NULL), 0)) > 0");
+            }
         }
 
         sql.append(" ORDER BY ").append(orderByColumn).append(" ").append(order).append(" OFFSET :offset LIMIT :limit ");
@@ -179,13 +193,28 @@ public class CuentaCobrarQueryRepository {
     }
 
     public String generarNumeroCuenta() {
-        String sql = """
-            SELECT 'CC-' || TO_CHAR(NOW(), 'YYYYMMDD') || '-' || 
-                   LPAD(COALESCE(MAX(SUBSTRING(numero_cuenta FROM 10 FOR 4)), '0')::INT + 1, 4, '0')
-            FROM cuentas_cobrar
+        // Primero verificamos si hay cuentas para el día de hoy
+        String checkSql = """
+            SELECT COUNT(*) FROM cuentas_cobrar 
             WHERE numero_cuenta LIKE 'CC-' || TO_CHAR(NOW(), 'YYYYMMDD') || '-%'
         """;
-        return jdbcTemplate.queryForObject(sql, new MapSqlParameterSource(), String.class);
+        Integer count = jdbcTemplate.queryForObject(checkSql, new MapSqlParameterSource(), Integer.class);
+        
+        String siguiente;
+        if (count == null || count == 0) {
+            siguiente = "0001";
+        } else {
+            String maxSql = """
+                SELECT MAX(SUBSTRING(numero_cuenta FROM 13 FOR 4)) 
+                FROM cuentas_cobrar 
+                WHERE numero_cuenta LIKE 'CC-' || TO_CHAR(NOW(), 'YYYYMMDD') || '-%'
+            """;
+            String maxNum = jdbcTemplate.queryForObject(maxSql, new MapSqlParameterSource(), String.class);
+            int sigNum = Integer.parseInt(maxNum != null ? maxNum : "0") + 1;
+            siguiente = String.format("%04d", sigNum);
+        }
+        
+        return "CC-" + java.time.LocalDate.now().toString().replace("-", "") + "-" + siguiente;
     }
 
     public CuentaCobrarResumenDto obtenerResumen(Integer empresaId, String fechaDesde, String fechaHasta, Long clienteId, String estado) {
@@ -248,16 +277,20 @@ public class CuentaCobrarQueryRepository {
                 cc.fecha_emision,
                 cc.fecha_vencimiento,
                 cc.total_deuda,
-                cc.total_abonado,
-                cc.saldo_pendiente,
-                cc.estado,
+                COALESCE((SELECT SUM(monto) FROM abonos_cobrar WHERE cuenta_cobrar_id = cc.id AND deleted_at IS NULL), 0) AS total_abonado,
+                cc.total_deuda - COALESCE((SELECT SUM(monto) FROM abonos_cobrar WHERE cuenta_cobrar_id = cc.id AND deleted_at IS NULL), 0) AS saldo_pendiente,
+                CASE 
+                    WHEN cc.total_deuda - COALESCE((SELECT SUM(monto) FROM abonos_cobrar WHERE cuenta_cobrar_id = cc.id AND deleted_at IS NULL), 0) <= 0 THEN 'pagada'
+                    WHEN cc.fecha_vencimiento < NOW() THEN 'vencida'
+                    ELSE 'activa'
+                END AS estado,
                 1 AS total_rows
             FROM cuentas_cobrar cc
             INNER JOIN tercero t ON cc.tercero_id = t.id
             WHERE cc.empresa_id = :empresaId
             AND cc.deleted_at IS NULL
             AND cc.fecha_vencimiento < NOW()
-            AND cc.estado = 'activa'
+            AND (cc.total_deuda - COALESCE((SELECT SUM(monto) FROM abonos_cobrar WHERE cuenta_cobrar_id = cc.id AND deleted_at IS NULL), 0)) > 0
             ORDER BY cc.fecha_vencimiento ASC
         """;
         MapSqlParameterSource params = new MapSqlParameterSource("empresaId", empresaId);

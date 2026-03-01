@@ -72,6 +72,8 @@ export class IndexCuentasPorPagarComponent implements OnInit {
   search = '';
   page = 0;
   pageSize = 10;
+  orderBy: string = 'id';
+  order: string = 'desc';
 
   fechaDesde: Date | null = null;
   fechaHasta: Date | null = null;
@@ -96,12 +98,16 @@ export class IndexCuentasPorPagarComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.load();
+    // this.load();
   }
 
   async load(): Promise<void> {
     this.loading = true;
-    const filters: CuentaPagarFilters = {};
+    const filters: CuentaPagarFilters = {
+      params: {
+        estado: null,
+      },
+    };
     if (this.fechaDesde) {
       filters.fechaDesde = this.fechaDesde.toISOString().split('T')[0];
     }
@@ -109,7 +115,7 @@ export class IndexCuentasPorPagarComponent implements OnInit {
       filters.fechaHasta = this.fechaHasta.toISOString().split('T')[0];
     }
     if (this.estadoFilter) {
-      filters.estado = this.estadoFilter as any;
+      filters.params.estado = this.estadoFilter as any;
     }
 
     try {
@@ -118,8 +124,8 @@ export class IndexCuentasPorPagarComponent implements OnInit {
           page: this.page,
           rows: this.pageSize,
           search: this.search || null,
-          order_by: 'fecha_emision',
-          order: 'desc',
+          order_by: this.orderBy,
+          order: this.order,
           ...filters,
         }),
       );
@@ -134,8 +140,11 @@ export class IndexCuentasPorPagarComponent implements OnInit {
   }
 
   onPage(e: any): void {
+    const sortField = Array.isArray(e.sortField) ? e.sortField[0] : e.sortField;
     this.page = e.first / e.rows;
     this.pageSize = e.rows;
+    this.orderBy = sortField ?? 'id';
+    this.order = e.sortOrder === 1 ? 'DESC' : 'ASC';
     this.load();
   }
 

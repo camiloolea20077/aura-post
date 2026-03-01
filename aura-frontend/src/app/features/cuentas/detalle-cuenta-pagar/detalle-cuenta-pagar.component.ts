@@ -7,7 +7,13 @@ import {
   ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  FormsModule,
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -19,7 +25,7 @@ import { TagModule } from 'primeng/tag';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
-import { ConfirmationService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
 import { AlertService } from '../../../shared/pipes/alert.service';
@@ -31,12 +37,18 @@ import {
 } from '../models/cuenta-pagar.model';
 import { CuentaPagarService } from '../services/cuenta-pagar.service';
 
-type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' | undefined;
+type TagSeverity =
+  | 'success'
+  | 'secondary'
+  | 'info'
+  | 'warn'
+  | 'danger'
+  | 'contrast'
+  | undefined;
 
 @Component({
   selector: 'app-detalle-cuenta-pagar',
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     FormsModule,
@@ -53,7 +65,7 @@ type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contr
     ConfirmDialogModule,
     TooltipModule,
   ],
-  providers: [ConfirmationService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './detalle-cuenta-pagar.component.html',
   styleUrls: ['./detalle-cuenta-pagar.component.scss'],
 })
@@ -93,7 +105,9 @@ export class DetalleCuentaPagarComponent {
 
   get progressPercent(): number {
     if (!this.cuenta || this.cuenta.totalDeuda === 0) return 0;
-    return Math.round((this.cuenta.totalAbonado / this.cuenta.totalDeuda) * 100);
+    return Math.round(
+      (this.cuenta.totalAbonado / this.cuenta.totalDeuda) * 100,
+    );
   }
 
   get puedeRegistrarAbono(): boolean {
@@ -154,7 +168,10 @@ export class DetalleCuentaPagarComponent {
     }
 
     if (this.abonoForm.value.monto > this.cuenta.saldoPendiente) {
-      this.alert.showError('Error', 'El monto no puede ser mayor al saldo pendiente');
+      this.alert.showError(
+        'Error',
+        'El monto no puede ser mayor al saldo pendiente',
+      );
       return;
     }
 
@@ -171,12 +188,18 @@ export class DetalleCuentaPagarComponent {
 
     try {
       await lastValueFrom(this.service.createAbono(this.cuenta.id, dto));
-      this.alert.showSuccess('Pago registrado', 'El pago ha sido registrado exitosamente');
+      this.alert.showSuccess(
+        'Pago registrado',
+        'El pago ha sido registrado exitosamente',
+      );
       this.showAbonoForm = false;
       this.saved.emit();
       this.close();
     } catch (err: any) {
-      this.alert.showError('Error', err?.error?.message || 'No se pudo registrar el pago');
+      this.alert.showError(
+        'Error',
+        err?.error?.message || 'No se pudo registrar el pago',
+      );
     } finally {
       this.loadingAbono = false;
       this.cdr.markForCheck();
@@ -204,7 +227,10 @@ export class DetalleCuentaPagarComponent {
       this.saved.emit();
       this.close();
     } catch (err: any) {
-      this.alert.showError('Error', err?.error?.message || 'No se pudo eliminar el pago');
+      this.alert.showError(
+        'Error',
+        err?.error?.message || 'No se pudo eliminar el pago',
+      );
     }
   }
 

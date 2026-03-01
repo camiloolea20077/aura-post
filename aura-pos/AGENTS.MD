@@ -1,9 +1,19 @@
 # AGENTS.md - AURA POS
 
-This file provides guidelines for agents working on the AURA POS backend codebase.
+This file provides guidelines for agents working on the AURA POS project (frontend + backend).
+
+---
 
 ## Project Overview
 
+### Frontend (aura-frontend)
+- **Framework**: Angular 18 (Standalone Components)
+- **UI Library**: PrimeNG 18 + PrimeFlex + PrimeIcons
+- **State**: RxJS + Services
+- **Storage**: localforage (IndexedDB for session)
+- **Build**: Angular CLI
+
+### Backend (aura-pos)
 - **Framework**: Spring Boot 3.5.10
 - **Language**: Java 17
 - **Database**: PostgreSQL
@@ -38,6 +48,29 @@ Project documentation is located in the `docs/` directory:
 | HU-013 | EP-004 | Cálculo de Totales de Cuentas |
 
 ## Build Commands
+
+### Frontend (Angular)
+
+```bash
+# Development server
+npm start
+# or: ng serve
+
+# Build for production
+npm run build
+
+# Run tests
+npm test
+
+# Run single test (Karma)
+# Edit karma.conf.js to add single-run: true, then:
+npm test -- --no-watch --browsers=ChromeHeadless
+
+# Watch mode for testing
+npm test -- --watch
+```
+
+### Backend (Spring Boot)
 
 ```bash
 # Build project
@@ -78,6 +111,189 @@ src/main/java/com/cloud_technological/aura_pos/
 │   └── implementations/
 ├── utils/            # Utilities, DTOs (PageableDto, ApiResponse)
 ```
+
+---
+
+## Frontend Guidelines (Angular 18 + PrimeNG)
+
+### Project Structure
+
+```
+src/app/
+├── core/
+│   ├── guards/         # Auth guards
+│   ├── interceptors/   # HTTP interceptors
+│   ├── models/        # Global models
+│   └── services/      # Global services
+├── shared/
+│   ├── pipes/         # AlertService, HelperService
+│   └── utils/        # ColsModel, FilterTable, ResponseModel
+├── layout/            # MainLayout, Sidebar, Topbar
+└── features/
+    ├── auth/          # Login
+    ├── dashboard/
+    ├── pos/          # Punto de venta (special layout)
+    ├── catalogo/      # Categorías, Marcas, Productos
+    ├── mermas/
+    ├── traslados/
+    ├── cuentas/       # Cuentas por Cobrar/Pagar
+    └── reportes/
+```
+
+### Feature Module Structure
+
+Each feature follows this pattern:
+```
+features/mermas/
+├── index/             # Table component
+│   ├── index-mermas.component.ts
+│   ├── index-mermas.component.html
+│   └── index-mermas.component.scss
+├── form/              # Create/Edit dialog
+├── detalle/           # View detail dialog
+├── motives/           # Sub-module (if needed)
+├── models/            # All models in single file
+├── services/          # API services
+└── [feature].routes.ts
+```
+
+### Angular Conventions
+
+| Type | Convention | Example |
+|------|------------|---------|
+| Components | kebab-case | `index-cuentas-cobrar` |
+| Services | kebab-case + .service | `cuenta-cobrar.service.ts` |
+| Models | kebab-case + .model | `cuenta-cobrar.model.ts` |
+| Routes | kebab-case | `cuentas-cobrar` |
+
+### Component Pattern
+
+```typescript
+@Component({
+  selector: 'app-index-cuentas',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,  // ALWAYS
+  imports: [...],
+  providers: [MessageService, ConfirmationService],  // ONLY in index
+  templateUrl: './index-cuentas.component.html',
+  styleUrls: ['./index-cuentas.component.scss'],    // SCSS per component
+})
+export class IndexCuentasComponent implements OnInit {
+  constructor(
+    private readonly cdr: ChangeDetectorRef,  // ALWAYS for async
+  ) {}
+
+  async load(): Promise<void> {
+    this.loading = true;
+    try {
+      const res = await lastValueFrom(this.service.page({ ... }));
+      this.rows = res?.data?.content ?? [];
+    } catch { /* handle error */ }
+    finally {
+      this.loading = false;
+      this.cdr.markForCheck();  // ALWAYS in finally
+    }
+  }
+}
+```
+
+### Form Pattern (ReactiveForms)
+
+```typescript
+@Component({
+  selector: 'app-form-cuenta',
+  standalone: true,
+  imports: [ReactiveFormsModule, DialogModule, ...],
+  templateUrl: './form-cuenta.component.html',
+})
+export class FormCuentaComponent implements OnChanges {
+  @Input() visible = false;
+  @Input() cuenta: any = null;
+  @Output() visibleChange = new EventEmitter<boolean>();
+  @Output() saved = new EventEmitter<void>();
+
+  form: FormGroup;
+
+  get isEdit(): boolean { return !!this.cuenta; }
+
+  ngOnChanges(): void {
+    if (this.visible) {
+      this.form.reset({ ... });
+      if (this.cuenta) this.form.patchValue(this.cuenta);
+    }
+  }
+
+  async save(): Promise<void> {
+    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    // ... save logic
+  }
+}
+```
+
+### Key Rules
+
+1. **Change Detection**: ALWAYS use `ChangeDetectionStrategy.OnPush` + `cdr.markForCheck()`
+2. **Async**: Use `lastValueFrom` from `rxjs` for async/await
+3. **Forms**: Use ReactiveFormsModule + formControlName (NOT ngModel except for filters)
+4. **Dialogs**: Forms are ALWAYS dialogs, never separate routes
+5. **SCSS**: Each component has its own SCSS file (NEVER shared)
+6. **Loading**: Show loading state in try/catch/finally blocks
+
+### Currency Formatting
+
+```typescript
+formatCOP = (v: number): string =>
+  new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    maximumFractionDigits: 0,
+  }).format(v ?? 0);
+```
+
+### Import Order
+
+```typescript
+// Angular
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+
+// PrimeNG
+import { ButtonModule } from 'primeng/button';
+import { TableModule } from 'primeng/table';
+
+// RxJS
+import { lastValueFrom } from 'rxjs';
+
+// Project
+import { AlertService } from '../../../shared/pipes/alert.service';
+import { SomeService } from '../services/some.service';
+```
+
+### API Service Pattern
+
+```typescript
+@Injectable({ providedIn: 'root' })
+export class CuentaCobrarService {
+  private readonly base = `${environment.apiUrl}cuentas-cobrar`;
+
+  constructor(private readonly http: HttpClient) {}
+
+  page(pageable: any): Observable<any> {
+    return this.http.post<any>(`${this.base}/page`, pageable);
+  }
+
+  getById(id: number): Observable<any> {
+    return this.http.get<any>(`${this.base}/${id}`);
+  }
+
+  create(dto: any): Observable<any> {
+    return this.http.post<any>(`${this.base}`, dto);
+  }
+}
+```
+
+---
 
 ## Code Style Guidelines
 

@@ -77,10 +77,10 @@ public class VentaEntity {
     private String estadoVenta;
 
     @Column(name = "pago_parcial")
-    private Boolean pagoParcial;
+    private Boolean pagoParcial = false;
 
     @Column(name = "saldo_pendiente")
-    private BigDecimal saldoPendiente;
+    private BigDecimal saldoPendiente = BigDecimal.ZERO;
 
     private String observaciones;
 }

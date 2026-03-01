@@ -8,15 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('usuario_sucursal', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('usuario_id')->nullable()->constrained('usuario');
-            $table->foreignId('sucursal_id')->nullable()->constrained('sucursal');
-            $table->boolean('es_default')->default(false);
-            $table->boolean('activo')->default(true);
+        if (!Schema::hasTable('usuario_sucursal')) {
+            Schema::create('usuario_sucursal', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('usuario_id')->nullable()->constrained('usuario');
+                $table->foreignId('sucursal_id')->nullable()->constrained('sucursal');
+                $table->boolean('es_default')->default(false);
+                $table->boolean('activo')->default(true);
 
-            $table->unique(['usuario_id', 'sucursal_id']);
-        });
+                $table->unique(['usuario_id', 'sucursal_id']);
+            });
+        }
     }
 
     public function down(): void

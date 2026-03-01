@@ -233,9 +233,38 @@ public class CuentaPagarServiceImpl implements CuentaPagarService {
         dto.setFechaEmision(entity.getFechaEmision());
         dto.setFechaVencimiento(entity.getFechaVencimiento());
         dto.setTotalDeuda(entity.getTotalDeuda());
-        dto.setTotalAbonado(entity.getTotalAbonado());
-        dto.setSaldoPendiente(entity.getSaldoPendiente());
-        dto.setEstado(entity.getEstado());
+        
+        // Calcular totales desde abonos (fuente de verdad)
+        BigDecimal totalAbonado = BigDecimal.ZERO;
+        try {
+            if (entity.getAbonos() != null) {
+                for (AbonoPagarEntity abono : entity.getAbonos()) {
+                    if (abono.getDeletedAt() == null) {
+                        totalAbonado = totalAbonado.add(abono.getMonto());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Si hay error, usar el valor de la entidad como fallback
+            totalAbonado = entity.getTotalAbonado() != null ? entity.getTotalAbonado() : BigDecimal.ZERO;
+        }
+        
+        BigDecimal saldoPendiente = entity.getTotalDeuda().subtract(totalAbonado);
+        
+        dto.setTotalAbonado(totalAbonado);
+        dto.setSaldoPendiente(saldoPendiente);
+        
+        // Calcular estado dinámicamente
+        String estado;
+        if (saldoPendiente.compareTo(BigDecimal.ZERO) <= 0) {
+            estado = "pagada";
+        } else if (entity.getFechaVencimiento() != null && entity.getFechaVencimiento().isBefore(java.time.LocalDateTime.now())) {
+            estado = "vencida";
+        } else {
+            estado = "activa";
+        }
+        dto.setEstado(estado);
+        
         dto.setObservaciones(entity.getObservaciones());
         dto.setCreatedAt(entity.getCreatedAt());
         
@@ -254,7 +283,9 @@ public class CuentaPagarServiceImpl implements CuentaPagarService {
         // Cargar abonos - usar lazy loading seguro
         try {
             List<AbonoPagarDto> abonos = entity.getAbonos() != null && !entity.getAbonos().isEmpty() ? 
-                    entity.getAbonos().stream().map(this::toAbonoDto).toList() : new ArrayList<>();
+                    entity.getAbonos().stream()
+                        .filter(a -> a.getDeletedAt() == null)
+                        .map(this::toAbonoDto).toList() : new ArrayList<>();
             dto.setAbonos(abonos);
         } catch (Exception e) {
             // Si los abonos no están cargados, retornar lista vacía
