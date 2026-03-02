@@ -13,7 +13,7 @@ export interface EmpresaConfig {
   logoUrl?: string;
   telefono?: string;
   direccion?: string;
-  ciudad?: string;
+  municipio?: string;
   facturaElectronica?: boolean;
   sucursalId?: number;
   sucursalNombre?: string;

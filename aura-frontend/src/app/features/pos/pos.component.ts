@@ -450,7 +450,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
           empresaDireccion: this.empresaConfig?.direccion ?? '',
           empresaEmail: this.empresaConfig?.correo ?? '',
           empresaTelefono: this.empresaConfig?.telefono ?? '',
-          empresaCiudad: this.empresaConfig?.ciudad ?? '',
+          municipio: this.empresaConfig?.municipio ?? '',
         } as unknown as VentaModel;
         this.showPago = false;
         this.clearCart();

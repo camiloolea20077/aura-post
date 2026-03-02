@@ -21,7 +21,7 @@ public class EmpresaDto {
     private String telefono;
     private String correo;
     private String direccion;
-    private String ciudad;
+    private String municipio;
     private Boolean facturaElectronica;
     private Integer sucursalId;
     private String sucursalNombre;

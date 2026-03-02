@@ -65,7 +65,7 @@ export interface VentaModel {
   razonSocial?: string;
   empresaEmail?: string;
   empresaTelefono?: string;
-  empresaCiudad?: string;
+  municipio?: string;
   cajeroNombre?: string;
   clienteDocumento?: string;
   logoUrl?: string;

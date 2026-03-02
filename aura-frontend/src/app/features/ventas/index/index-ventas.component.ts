@@ -191,11 +191,10 @@ export class IndexVentasComponent implements OnInit {
         empresaDireccion: empresa?.direccion ?? '',
         empresaEmail: empresa?.correo ?? '',
         empresaTelefono: empresa?.telefono ?? '',
-        empresaCiudad: empresa?.ciudad ?? '',
+        municipio: empresa?.municipio ?? '',
         // Cajero del usuario logueado
         cajeroNombre: auth?.nombreCompleto ?? '',
       } as unknown as VentaModel;
-      console.log('Venta para impresión:', this.ventaImpresion);
       this.showTirilla = true;
       this.cdr.markForCheck();
     } catch {

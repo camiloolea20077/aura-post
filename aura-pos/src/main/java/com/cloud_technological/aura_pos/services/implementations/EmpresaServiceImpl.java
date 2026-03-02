@@ -35,7 +35,7 @@ public class EmpresaServiceImpl implements IEmpresaService {
 
         String telefono = "";
         String direccion = "";
-        String ciudad = "";
+        String municipio = "";
         String correo = "";
 
         if (usuarioId != null) {
@@ -45,6 +45,7 @@ public class EmpresaServiceImpl implements IEmpresaService {
                 correo = tercero.getEmail() != null ? tercero.getEmail() : "";
                 telefono = tercero.getTelefono() != null ? tercero.getTelefono() : "";
                 direccion = tercero.getDireccion() != null ? tercero.getDireccion() : "";
+                municipio = tercero.getMunicipio() != null ? tercero.getMunicipio() : "";
             }
         }
 
@@ -58,7 +59,7 @@ public class EmpresaServiceImpl implements IEmpresaService {
                 .telefono(telefono)
                 .correo(correo)
                 .direccion(direccion)
-                .ciudad(ciudad)
+                .municipio(municipio)
                 .facturaElectronica(empresa.isFacturaElectronica())
                 .sucursalId(sucursal != null ? sucursal.getId() : null)
                 .sucursalNombre(sucursal != null ? sucursal.getNombre() : null)
