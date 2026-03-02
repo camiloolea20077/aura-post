@@ -74,6 +74,14 @@ export class FormEmpresaComponent implements OnChanges {
       documentoAdmin: [''],
       // Sucursal — solo en creación
       nombreSucursal: [''],
+      // Factus — Facturación electrónica
+      facturaElectronica: [false],
+      factusClientId: [''],
+      factusClientSecret: [''],
+      factusUsername: [''],
+      factusPassword: [''],
+      factusNumberingRangeId: [null],
+      factusPrefijo: [''],
     });
   }
 
@@ -99,6 +107,13 @@ export class FormEmpresaComponent implements OnChanges {
         nit: this.empresa!.nit,
         dv: this.empresa!.dv,
         activa: this.empresa!.activa,
+        facturaElectronica: this.empresa!.facturaElectronica,
+        factusClientId: this.empresa!.factusClientId,
+        factusClientSecret: this.empresa!.factusClientSecret,
+        factusUsername: this.empresa!.factusUsername,
+        factusPassword: this.empresa!.factusPassword,
+        factusNumberingRangeId: this.empresa!.factusNumberingRangeId,
+        factusPrefijo: this.empresa!.factusPrefijo,
       });
     } else {
       // Crear — campos admin obligatorios
@@ -133,8 +148,36 @@ export class FormEmpresaComponent implements OnChanges {
         apellidosAdmin: '',
         documentoAdmin: '',
         nombreSucursal: 'Sede Principal',
+        facturaElectronica: false,
+        factusClientId: '',
+        factusClientSecret: '',
+        factusUsername: '',
+        factusPassword: '',
+        factusNumberingRangeId: null,
+        factusPrefijo: '',
       });
     }
+
+    // Listener para validadores condicionales de Factus
+    this.frmEmpresa.get('facturaElectronica')?.valueChanges.subscribe((val) => {
+      const factusFields = [
+        'factusClientId',
+        'factusClientSecret',
+        'factusUsername',
+        'factusPassword',
+        'factusNumberingRangeId',
+        'factusPrefijo',
+      ];
+      factusFields.forEach((f) => {
+        const control = this.frmEmpresa.get(f);
+        if (val) {
+          control?.setValidators([Validators.required]);
+        } else {
+          control?.clearValidators();
+        }
+        control?.updateValueAndValidity();
+      });
+    });
   }
 
   async save(): Promise<void> {
@@ -145,14 +188,32 @@ export class FormEmpresaComponent implements OnChanges {
     this.loading = true;
     try {
       if (this.isEdit) {
-        const { razonSocial, nombreComercial, dv, activa } =
-          this.frmEmpresa.value;
+        const {
+          razonSocial,
+          nombreComercial,
+          dv,
+          activa,
+          facturaElectronica,
+          factusClientId,
+          factusClientSecret,
+          factusUsername,
+          factusPassword,
+          factusNumberingRangeId,
+          factusPrefijo,
+        } = this.frmEmpresa.value;
         await lastValueFrom(
           this.service.actualizar(this.empresa!.id, {
             razonSocial,
             nombreComercial,
             dv,
             activa,
+            facturaElectronica,
+            factusClientId,
+            factusClientSecret,
+            factusUsername,
+            factusPassword,
+            factusNumberingRangeId,
+            factusPrefijo,
           }),
         );
         this.alert.showSuccess('Actualizada', 'Empresa actualizada');

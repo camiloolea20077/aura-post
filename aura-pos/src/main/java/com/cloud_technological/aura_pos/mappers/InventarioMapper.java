@@ -16,7 +16,7 @@ public interface  InventarioMapper {
         @Mapping(target = "id", ignore = true),
         @Mapping(target = "sucursal", ignore = true),
         @Mapping(target = "producto", ignore = true),
-        @Mapping(target = "stockActual", constant = "0"),
+        @Mapping(target = "stockActual", source = "dto.stockActual"),
         @Mapping(target = "updatedAt", ignore = true),
     })
     InventarioEntity toEntity(CreateInventarioDto dto);

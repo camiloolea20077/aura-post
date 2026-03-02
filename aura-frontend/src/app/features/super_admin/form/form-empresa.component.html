@@ -152,6 +152,127 @@
     </div>
   </ng-container>
 
+  <!-- ── Facturación electrónica ────────────────────────────────── -->
+  <p-divider />
+  <div class="section-title">
+    <i class="pi pi-file-pdf"></i> Facturación electrónica (Factus)
+  </div>
+
+  <div class="field">
+    <label class="field-label">Habilitar facturación electrónica</label>
+    <p-toggleButton
+      formControlName="facturaElectronica"
+      onLabel="Habilitada"
+      offLabel="Deshabilitada"
+      onIcon="pi pi-check"
+      offIcon="pi pi-times"
+      styleClass="toggle-estado"
+    />
+  </div>
+
+  <!-- Campos Factus — solo si está habilitada -->
+  <ng-container *ngIf="frmEmpresa.get('facturaElectronica')?.value">
+    <div class="form-row two-col">
+      <div class="field">
+        <label class="field-label required">Client ID</label>
+        <input
+          pInputText
+          formControlName="factusClientId"
+          placeholder="xxxxx"
+          class="w-full"
+          [class.ng-invalid]="isInvalid('factusClientId')"
+        />
+        <small class="field-error" *ngIf="isInvalid('factusClientId')"
+          >Requerido para facturación electrónica</small
+        >
+      </div>
+      <div class="field">
+        <label class="field-label required">Client Secret</label>
+        <p-password
+          formControlName="factusClientSecret"
+          placeholder="••••••••"
+          [feedback]="false"
+          [toggleMask]="true"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+          [class.ng-invalid]="isInvalid('factusClientSecret')"
+        />
+        <small class="field-error" *ngIf="isInvalid('factusClientSecret')"
+          >Requerido para facturación electrónica</small
+        >
+      </div>
+    </div>
+
+    <div class="form-row two-col">
+      <div class="field">
+        <label class="field-label required">Usuario Factus</label>
+        <input
+          pInputText
+          formControlName="factusUsername"
+          placeholder="usuario@factus.com"
+          class="w-full"
+          [class.ng-invalid]="isInvalid('factusUsername')"
+        />
+        <small class="field-error" *ngIf="isInvalid('factusUsername')"
+          >Requerido para facturación electrónica</small
+        >
+      </div>
+      <div class="field">
+        <label class="field-label required">Contraseña Factus</label>
+        <p-password
+          formControlName="factusPassword"
+          placeholder="••••••••"
+          [feedback]="false"
+          [toggleMask]="true"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+          [class.ng-invalid]="isInvalid('factusPassword')"
+        />
+        <small class="field-error" *ngIf="isInvalid('factusPassword')"
+          >Requerido para facturación electrónica</small
+        >
+      </div>
+    </div>
+
+    <div class="form-row two-col">
+      <div class="field">
+        <label class="field-label required">ID Rango Numeración</label>
+        <input
+          pInputText
+          formControlName="factusNumberingRangeId"
+          type="number"
+          placeholder="12345"
+          class="w-full"
+          [class.ng-invalid]="isInvalid('factusNumberingRangeId')"
+        />
+        <small class="field-hint"
+          ><i class="pi pi-info-circle"></i> Obtenido del panel de Factus</small
+        >
+        <small class="field-error" *ngIf="isInvalid('factusNumberingRangeId')"
+          >Requerido para facturación electrónica</small
+        >
+      </div>
+      <div class="field">
+        <label class="field-label required">Prefijo de factura</label>
+        <input
+          pInputText
+          formControlName="factusPrefijo"
+          placeholder="SETP"
+          maxlength="10"
+          class="w-full"
+          style="text-transform: uppercase"
+          [class.ng-invalid]="isInvalid('factusPrefijo')"
+        />
+        <small class="field-hint"
+          ><i class="pi pi-info-circle"></i> Ej: SETP, FAC, etc.</small
+        >
+        <small class="field-error" *ngIf="isInvalid('factusPrefijo')"
+          >Requerido para facturación electrónica</small
+        >
+      </div>
+    </div>
+  </ng-container>
+
   <!-- Footer -->
   <div class="fe-footer">
     <button
