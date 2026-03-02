@@ -38,4 +38,11 @@ public class ProductoPosDto {
     private Boolean esCompuesto = false;
     private Boolean visibleEnPos;
     private List<ComponentePosDto> componentes = new ArrayList<>();
+    
+    // Presentación por defecto para venta
+    private Long presentacionId;
+    private String presentacionNombre;
+    private String presentacionCodigoBarras;
+    private BigDecimal presentacionPrecio;
+    private BigDecimal presentacionFactorConversion;
 }

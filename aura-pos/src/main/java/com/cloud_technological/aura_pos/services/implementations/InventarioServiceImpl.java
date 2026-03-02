@@ -1,6 +1,5 @@
 package com.cloud_technological.aura_pos.services.implementations;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -82,7 +81,6 @@ public class InventarioServiceImpl implements InventarioService {
         InventarioEntity entity = inventarioMapper.toEntity(dto);
         entity.setProducto(producto);
         entity.setSucursal(sucursal);
-        entity.setStockActual(BigDecimal.ZERO);
         entity.setUpdatedAt(LocalDateTime.now());
 
         return inventarioMapper.toDto(inventarioJPARepository.save(entity));

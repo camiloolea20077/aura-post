@@ -33,6 +33,7 @@ export const routes: Routes = [
       // Dashboard
       {
         path: 'dashboard',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/dashboard/dashboard.component').then(
             (m) => m.DashboardComponent,
