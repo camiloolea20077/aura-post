@@ -4,7 +4,10 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -19,12 +22,12 @@ import com.cloud_technological.aura_pos.dto.ventas.CreateVentaDto;
 import com.cloud_technological.aura_pos.dto.ventas.VentaDto;
 import com.cloud_technological.aura_pos.dto.ventas.VentaTableDto;
 import com.cloud_technological.aura_pos.services.VentaService;
+import com.cloud_technological.aura_pos.services.implementations.FacturaPdfService;
 import com.cloud_technological.aura_pos.services.implementations.VentaFacturaService;
 import com.cloud_technological.aura_pos.utils.ApiResponse;
 import com.cloud_technological.aura_pos.utils.GlobalException;
 import com.cloud_technological.aura_pos.utils.PageableDto;
 import com.cloud_technological.aura_pos.utils.SecurityUtils;
-
 
 @RestController
 @RequestMapping("/api/ventas")
@@ -37,6 +40,9 @@ public class VentaController {
 
     @Autowired
     private VentaFacturaService ventaFacturaService;
+
+    @Autowired
+    private FacturaPdfService facturaPdfService;
 
     @PostMapping("/page")
     public ResponseEntity<ApiResponse<PageImpl<VentaTableDto>>> listar(
@@ -96,5 +102,24 @@ public class VentaController {
                         false,
                         result),
                 HttpStatus.OK);
+    }
+        /**
+     * GET /api/ventas/{ventaId}/factura-pdf
+     * Descarga el PDF de Factus y lo retorna como blob al frontend.
+     * El frontend crea un objectURL y lo muestra en un iframe local
+     * (evita el X-Frame-Options de Factus).
+     */
+    @GetMapping("/{ventaId}/factura-pdf")
+    public ResponseEntity<byte[]> descargarPdf(@PathVariable Long ventaId) {
+        Integer empresaId = securityUtils.getEmpresaId();
+        byte[] pdf = facturaPdfService.obtenerPdf(ventaId, empresaId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDisposition(
+            ContentDisposition.inline().filename("factura-" + ventaId + ".pdf").build()
+        );
+
+        return new ResponseEntity<>(pdf, headers, HttpStatus.OK);
     }
 }

@@ -71,6 +71,10 @@ export interface VentaTableModel {
   fechaEmision: string;
   totalPagar: number;
   estadoVenta: EstadoVenta;
+  estadoDian?: string;
+  cufe?: string;
+  factusUrl?: string;
+  factusNumero?: string;
 }
 
 // ─── DTOs ─────────────────────────────────────────────────────
@@ -190,3 +194,23 @@ export const METODOS_PAGO: {
     color: '#F59E0B',
   },
 ];
+export interface VentaReporteItem {
+  id: number;
+  numeroVenta: string;
+  fechaEmision: string; // ISO string
+  cajaNombre: string;
+  totalPagar: number;
+  estadoVenta: 'COMPLETADA' | 'ANULADA';
+  // detalles resumidos (viene del backend)
+  detallesResumen: string; // Ej: "Tubo x2, Válvula x1"
+}
+
+export interface VentaReporteResponse {
+  content: VentaReporteItem[];
+  totalElements: number;
+  totalPages: number;
+  totalCompletadas: number;
+  totalIngresos: number;
+  ticketPromedio: number;
+  porDia: { dia: string; total: number }[]; // últimos 7 días
+}

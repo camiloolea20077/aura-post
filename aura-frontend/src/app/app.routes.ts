@@ -258,17 +258,20 @@ export const routes: Routes = [
             (m) => m.IndexUsuariosComponent,
           ),
       },
-      // Reportes
-      // {
-      //   path: 'reportes/ventas',
-      //   loadComponent: () =>
-      //     import('./features/reportes/ventas/reporte-ventas.component').then(m => m.ReporteVentasComponent),
-      // },
-      // {
-      //   path: 'reportes/inventario',
-      //   loadComponent: () =>
-      //     import('./features/reportes/inventario/reporte-inventario.component').then(m => m.ReporteInventarioComponent),
-      // },
+      {
+        path: 'reportes/ventas',
+        loadComponent: () =>
+          import('./features/reporte-ventas/reporte-ventas.component').then(
+            (m) => m.ReporteVentasComponent,
+          ),
+      },
+      {
+        path: 'reportes/inventario',
+        loadComponent: () =>
+          import('./features/reporte-inventario/reporte-inventario.component').then(
+            (m) => m.ReporteInventarioComponent,
+          ),
+      },
     ],
   },
 

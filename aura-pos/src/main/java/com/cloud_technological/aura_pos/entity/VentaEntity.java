@@ -83,4 +83,10 @@ public class VentaEntity {
     private BigDecimal saldoPendiente = BigDecimal.ZERO;
 
     private String observaciones;
+
+    @Column(name = "factus_url")
+    private String factusUrl;
+
+    @Column(name = "factus_numero")
+    private String factusNumero;
 }

@@ -31,4 +31,8 @@ public class VentaDto {
     private Long facturaId;
     private List<VentaDetalleDto> detalles;
     private List<VentaPagoDto> pagos;
+    private String cufe;
+    private String qrData;
+    private String estadoDian;
+    private String factusUrl;   // URL pública del documento en Factus
 }

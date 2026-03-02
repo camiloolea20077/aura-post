@@ -1,0 +1,298 @@
+.page {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-height: 100%;
+  background: #f8f7ff;
+}
+
+// ── Header ────────────────────────────────────────────────────
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid #ede9fe;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.page-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  i {
+    font-size: 1.3rem;
+    color: #fff;
+  }
+}
+
+.page-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e1b4b;
+  margin: 0;
+}
+.page-sub {
+  font-size: 0.8rem;
+  color: #8b5cf6;
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.filtros {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  :host ::ng-deep .cal-sm input {
+    height: 34px;
+    font-size: 0.82rem;
+    width: 115px;
+  }
+}
+
+.sep-cal {
+  color: #a78bfa;
+  font-size: 0.9rem;
+}
+
+.download-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+// ── Stats grid ────────────────────────────────────────────────
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+
+  @media (max-width: 1100px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stat-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border: 1px solid #e5e7eb;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(91, 33, 182, 0.08);
+  }
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  i {
+    font-size: 1.25rem;
+  }
+}
+
+.stat-card--green .stat-icon {
+  background: #dcfce7;
+  i {
+    color: #16a34a;
+  }
+}
+.stat-card--blue .stat-icon {
+  background: #dbeafe;
+  i {
+    color: #2563eb;
+  }
+}
+.stat-card--purple .stat-icon {
+  background: #ede9fe;
+  i {
+    color: #7c3aed;
+  }
+}
+.stat-card--amber .stat-icon {
+  background: #fef3c7;
+  i {
+    color: #d97706;
+  }
+}
+
+.stat-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.stat-value {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #1e1b4b;
+  line-height: 1.2;
+}
+.stat-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin-top: 2px;
+}
+.stat-sub {
+  font-size: 0.7rem;
+  color: #9ca3af;
+  margin-top: 1px;
+}
+
+// ── Gráfico barras ────────────────────────────────────────────
+.chart-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid #ede9fe;
+}
+
+.chart-header {
+  margin-bottom: 1rem;
+}
+.chart-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1e1b4b;
+}
+
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  height: 120px;
+}
+
+.bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.bar-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  position: relative;
+}
+
+.bar-val {
+  font-size: 0.6rem;
+  color: #7c3aed;
+  font-weight: 700;
+  white-space: nowrap;
+  margin-bottom: 3px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bar {
+  width: 100%;
+  min-height: 3px;
+  background: linear-gradient(180deg, #8b5cf6, #5b21b6);
+  border-radius: 4px 4px 0 0;
+  transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bar-dia {
+  font-size: 0.7rem;
+  color: #9ca3af;
+  text-transform: capitalize;
+}
+
+// ── Tabla ─────────────────────────────────────────────────────
+.tabla-card {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #ede9fe;
+  overflow: hidden;
+}
+
+.tabla-header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.tabla-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1e1b4b;
+  i {
+    margin-right: 6px;
+    color: #8b5cf6;
+  }
+}
+
+.num-badge {
+  background: #ede9fe;
+  color: #5b21b6;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.text-right {
+  text-align: right !important;
+}
+.text-center {
+  text-align: center !important;
+}
+
+.row-anulada td {
+  background: #fef2f2 !important;
+  color: #9ca3af;
+}
+
+.empty-state {
+  padding: 2rem;
+  text-align: center;
+  color: #9ca3af;
+  i {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+}

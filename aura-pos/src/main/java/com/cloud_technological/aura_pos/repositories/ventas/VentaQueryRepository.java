@@ -36,6 +36,10 @@ public class VentaQueryRepository {
                 v.total_pagar,
                 v.estado_venta,
                 v.tipo_documento,
+                v.estado_dian,
+                v.factus_url,
+                v.cufe,
+                v.factus_numero,
                 COUNT(*) OVER() AS total_rows
             FROM venta v
             INNER JOIN sucursal s ON v.sucursal_id = s.id

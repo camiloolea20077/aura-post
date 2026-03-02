@@ -128,6 +128,16 @@
               *ngIf="item.estadoVenta === 'COMPLETADA'"
               (click)="abrirFactura(item, $event)"
             ></button>
+            <p-button
+              *ngIf="item.estadoDian === 'EMITIDA'"
+              icon="pi pi-file-pdf"
+              severity="danger"
+              [rounded]="true"
+              [text]="true"
+              pTooltip="Ver factura electrónica"
+              tooltipPosition="left"
+              (onClick)="verFactura(item, $event)"
+            />
           </td>
         </tr>
       </ng-template>
@@ -188,3 +198,11 @@
   [venta]="ventaFactura"
   (modalClosed)="onFacturaClosed()"
 />
+<app-factura-viewer-modal
+  [(visible)]="mostrarViewerFE"
+  [ventaId]="facturaSeleccionada?.id"
+  [factusUrl]="facturaSeleccionada?.factusUrl"
+  [cufe]="facturaSeleccionada?.cufe"
+  [numero]="facturaSeleccionada?.facturaNumero"
+>
+</app-factura-viewer-modal>

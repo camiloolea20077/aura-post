@@ -1,0 +1,88 @@
+<p-dialog
+  [(visible)]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '90vw', maxWidth: '1100px', height: '92vh' }"
+  [contentStyle]="{
+    padding: '0',
+    height: 'calc(92vh - 115px)',
+    overflow: 'hidden',
+    display: 'flex',
+    flexDirection: 'column',
+  }"
+  header="Factura Electrónica — {{ numero }}"
+>
+  <!-- Loading -->
+  <div class="state-container" *ngIf="loading">
+    <p-progressSpinner strokeWidth="4" />
+    <p>Cargando documento...</p>
+  </div>
+
+  <!-- Error -->
+  <div class="state-container error" *ngIf="error && !loading">
+    <i class="pi pi-exclamation-circle error-icon"></i>
+    <p>No se pudo cargar el documento.</p>
+    <p-button
+      *ngIf="factusUrl"
+      label="Abrir en Factus"
+      icon="pi pi-external-link"
+      severity="secondary"
+      (onClick)="abrirEnFactus()"
+    />
+  </div>
+
+  <!-- PDF viewer -->
+  <iframe
+    *ngIf="pdfSrc && !loading && !error"
+    [src]="pdfSrc"
+    class="pdf-iframe"
+    frameborder="0"
+  >
+  </iframe>
+
+  <!-- Footer -->
+  <ng-template pTemplate="footer">
+    <div class="footer-bar">
+      <!-- CUFE -->
+      <div class="cufe-box" *ngIf="cufe">
+        <span class="cufe-label">CUFE</span>
+        <span class="cufe-value" [title]="cufe"
+          >{{ cufe | slice: 0 : 32 }}...</span
+        >
+        <button class="copy-btn" (click)="copiarCufe()" title="Copiar CUFE">
+          <i class="pi pi-copy"></i>
+        </button>
+      </div>
+
+      <div class="footer-actions">
+        <!-- Descarga directa desde el blob ya cargado, sin nueva petición -->
+        <p-button
+          *ngIf="objectUrl"
+          label="Descargar"
+          icon="pi pi-download"
+          severity="secondary"
+          size="small"
+          (onClick)="descargar()"
+        />
+        <p-button
+          *ngIf="factusUrl"
+          label="Abrir en Factus"
+          icon="pi pi-external-link"
+          severity="secondary"
+          size="small"
+          (onClick)="abrirEnFactus()"
+        />
+        <p-button
+          label="Cerrar"
+          icon="pi pi-times"
+          severity="contrast"
+          size="small"
+          (onClick)="cerrar()"
+        />
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>

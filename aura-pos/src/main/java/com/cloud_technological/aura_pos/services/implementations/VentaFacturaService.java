@@ -41,7 +41,7 @@ public class VentaFacturaService {
         this.factusService = factusService;
     }
 
-    // tipoDocumento del sistema → ID tipo documento en Factus
+ // tipoDocumento del sistema → ID tipo documento en Factus
     private static final Map<String, Integer> TIPO_DOC_FACTUS = Map.of(
         "CC",        3,
         "NIT",       6,
@@ -96,6 +96,8 @@ public class VentaFacturaService {
         venta.setCufe(factura.getCufe());
         venta.setQrData(factura.getQr());
         venta.setEstadoDian("EMITIDA");
+        venta.setFactusUrl(factura.getPublicUrl());
+        venta.setFactusNumero(factura.getNumber());
         ventaRepository.save(venta);
 
         log.info("[Factus] Factura {} | Venta {} | CUFE: {}",
@@ -106,7 +108,7 @@ public class VentaFacturaService {
         response.setFacturaNumero(factura.getNumber());
         response.setCufe(factura.getCufe());
         response.setQr(factura.getQr());
-        response.setPdfUrl(factura.getPdfDownloadLink());
+        response.setPdfUrl(factura.getPublicUrl());
         response.setEstadoDian("EMITIDA");
         return response;
     }
@@ -137,7 +139,9 @@ public class VentaFacturaService {
                                 ? d.getProducto().getSku() : "SIN-SKU")
                         .nombre(d.getProducto().getNombre())
                         .cantidad(d.getCantidad().intValue())
-                        .precioSinIva(precioSinIva(
+                        // Factus recibe el precio CON IVA incluido
+                        // precioUnitario está sin IVA → reconstruir: precio × (1 + IVA%)
+                        .precioSinIva(precioConIva(
                                 d.getPrecioUnitario(),
                                 d.getProducto().getIvaPorcentaje()))
                         .ivaPorcentaje(d.getProducto().getIvaPorcentaje()
@@ -162,11 +166,14 @@ public class VentaFacturaService {
                 .build();
     }
 
-    private BigDecimal precioSinIva(BigDecimal precioConIva, BigDecimal ivaPct) {
+
+    // precioUnitario viene SIN IVA → multiplicar para obtener precio CON IVA
+    // Ej: 4621.85 × 1.19 = 5500 ← lo que Factus espera
+    private BigDecimal precioConIva(BigDecimal precioSinIva, BigDecimal ivaPct) {
         if (ivaPct == null || ivaPct.compareTo(BigDecimal.ZERO) == 0)
-            return precioConIva;
-        BigDecimal divisor = BigDecimal.ONE.add(
+            return precioSinIva.setScale(2, RoundingMode.HALF_UP);
+        BigDecimal factor = BigDecimal.ONE.add(
                 ivaPct.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP));
-        return precioConIva.divide(divisor, 2, RoundingMode.HALF_UP);
+        return precioSinIva.multiply(factor).setScale(2, RoundingMode.HALF_UP);
     }
 }
