@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 public class FactusTokenService {
 
     private static final String FACTUS_TOKEN_URL =
-            "https://api-sandbox.factus.com.co/oauth/token";
+            "https://api.factus.com.co/oauth/token";
 
     private final RestTemplate             restTemplate;
     private final EmpresaJPARepository     empresaRepository;
