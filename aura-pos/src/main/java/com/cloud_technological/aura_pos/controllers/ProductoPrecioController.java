@@ -61,7 +61,7 @@ public class ProductoPrecioController {
         return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "", false, result), HttpStatus.OK);
     }
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<ApiResponse<ProductoPrecioDto>> crear(@Valid @RequestBody CreateProductoPrecioDto dto) {
         Integer empresaId = securityUtils.getEmpresaId();
         ProductoPrecioDto result = productoPrecioService.crear(dto, empresaId);
