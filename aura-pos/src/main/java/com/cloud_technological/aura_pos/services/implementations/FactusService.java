@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 public class FactusService {
 
     private static final String FACTUS_BILL_URL =
-            "https://api-sandbox.factus.com.co/v1/bills/validate";
+            "https://api.factus.com.co/v1/bills/validate";
 
     private final RestTemplate         restTemplate;
     private final EmpresaJPARepository empresaRepository;

@@ -27,7 +27,7 @@ public class FacturaPdfService {
     // Factus: GET /v1/bills/download-pdf/{bill_number}
     // Responde con: { "status": "OK", "data": { "pdf_base_64_encoded": "..." } }
     private static final String FACTUS_PDF_URL =
-            "https://api-sandbox.factus.com.co/v1/bills/download-pdf/{billNumber}";
+            "https://api.factus.com.co/v1/bills/download-pdf/{billNumber}";
 
     private final RestTemplate       restTemplate;
     private final VentaJPARepository ventaJPARepository;
