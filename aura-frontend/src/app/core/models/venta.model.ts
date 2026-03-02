@@ -60,6 +60,15 @@ export interface VentaModel {
   estadoDian: string | null;
   detalles: VentaDetalleModel[];
   pagos: VentaPagoModel[];
+  empresaNit?: string;
+  empresaDireccion?: string;
+  razonSocial?: string;
+  empresaEmail?: string;
+  empresaTelefono?: string;
+  municipio?: string;
+  cajeroNombre?: string;
+  clienteDocumento?: string;
+  logoUrl?: string;
 }
 
 // ─── Tabla ───────────────────────────────────────────────────

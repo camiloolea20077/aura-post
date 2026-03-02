@@ -34,6 +34,10 @@ public class RegisterRequestDto {
     @NotBlank(message = "El email es obligatorio")
     private String email;
 
+    private String telefono;
+    private String direccion;
+    private String municipio;
+
     @NotBlank(message = "La contraseña es obligatoria")
     private String password;
 

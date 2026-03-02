@@ -98,7 +98,12 @@ export class FacturaElectronicaModalComponent implements OnChanges {
         this.qr = res.data.qr;
         this.pdfUrl = res.data.pdfUrl;
         this.estado = 'EMITIDA';
-
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Factura emitida',
+          detail: 'Factura emitida exitosamente.',
+          life: 2000,
+        });
         this.facturaEmitida.emit(res.data);
       }
     } catch (err: any) {

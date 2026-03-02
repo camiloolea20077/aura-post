@@ -3,13 +3,13 @@
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
-  [style]="{ width: '520px' }"
+  [style]="{ width: '540px' }"
   header="Tirilla de venta"
   styleClass="aura-dialog tirilla-dialog"
   (onHide)="close()"
 >
   <div class="tirilla-shell" *ngIf="venta">
-    <!-- Selector de ancho -->
+    <!-- Selector ancho -->
     <div class="ancho-selector">
       <span class="ancho-label"
         ><i class="pi pi-print"></i> Ancho de papel</span
@@ -23,7 +23,6 @@
       />
     </div>
 
-    <!-- Preview -->
     <div class="tirilla-preview-wrap">
       <div
         class="tirilla-preview"
@@ -34,102 +33,139 @@
         <!-- LOGO -->
         <div class="t-logo-wrap">
           <img
-            src="assets/icons/icono.jpeg"
+            *ngIf="logoSafeUrl"
+            [src]="logoSafeUrl || 'assets/icons/icono.jpeg'"
             alt="Logo"
             class="t-logo"
             onerror="this.style.display = 'none'"
           />
         </div>
 
-        <!-- Empresa / Sucursal -->
+        <!-- Datos empresa -->
         <div class="t-header">
-          <div class="t-empresa">{{ venta.sucursalNombre }}</div>
-          <div class="t-tipo-doc">{{ venta.tipoDocumento }}</div>
-          <div class="t-numero">
-            {{ venta.prefijo ? venta.prefijo + "/" : "" }}{{ numeroVenta }}
+          <div class="t-empresa">{{ venta.razonSocial }}</div>
+          <div class="t-dato" *ngIf="venta.empresaNit">
+            Nit {{ venta.empresaNit }}
           </div>
-          <div class="t-fecha">FECHA {{ formatFecha(venta.fechaEmision) }}</div>
+          <div class="t-dato" *ngIf="venta.empresaDireccion">
+            {{ venta.empresaDireccion }}
+          </div>
+          <div class="t-dato" *ngIf="venta.empresaEmail">
+            {{ venta.empresaEmail }}
+          </div>
+          <div class="t-dato" *ngIf="venta.empresaTelefono">
+            Cel. {{ venta.empresaTelefono }}
+          </div>
+          <div class="t-dato" *ngIf="venta.municipio">
+            {{ venta.municipio }}
+          </div>
         </div>
 
         <div class="t-separator"></div>
 
-        <!-- Encabezado columnas productos -->
-        <div class="t-col-header">
-          <span class="t-col-uds">UDS</span>
-          <span class="t-col-desc">DESCRIPCION</span>
-          <span class="t-col-iva">IVA</span>
-          <span class="t-col-imp">IMPORTE</span>
+        <!-- Documento + número + fecha en misma línea -->
+        <div class="t-doc-row">
+          <span class="t-doc-tipo">{{ venta.tipoDocumento ?? "D.E POS" }}</span>
+          <span class="t-doc-num">{{ numeroVenta }}</span>
+          <span class="t-doc-fecha">{{ formatFecha(venta.fechaEmision) }}</span>
         </div>
 
         <div class="t-separator-thin"></div>
 
-        <!-- Líneas de producto -->
-        <div class="t-prod-row" *ngFor="let d of venta.detalles">
-          <div class="t-prod-line">
-            <span class="t-col-uds">{{
-              d.cantidad % 1 === 0
-                ? (d.cantidad | number: "1.0-0")
-                : (d.cantidad | number: "1.3-3")
-            }}</span>
-            <span class="t-col-desc">{{ d.productoNombre }}</span>
-            <span class="t-col-iva">{{ getPctIva(d) }}%</span>
-            <span class="t-col-imp">{{
-              formatCOP(d.subtotalLinea + d.impuestoValor - d.montoDescuento)
-            }}</span>
-          </div>
-          <div class="t-prod-desc-row" *ngIf="d.montoDescuento > 0">
-            <span class="t-desc-label">DESCUENTO:</span>
-            <span class="t-desc-val">-{{ formatCOP(d.montoDescuento) }}</span>
-          </div>
+        <!-- Cajero / cliente / pago -->
+        <div class="t-info-row" *ngIf="venta.cajeroNombre">
+          <span class="t-info-label">Atendido Por :</span>
+          <span class="t-info-val">{{ venta.cajeroNombre }}</span>
+        </div>
+        <div class="t-info-row" *ngIf="venta.clienteNombre">
+          <span class="t-info-label">Cliente</span>
+          <span class="t-info-val">
+            {{ venta.clienteDocumento ? venta.clienteDocumento + " - " : ""
+            }}{{ venta.clienteNombre }}
+          </span>
+        </div>
+        <div class="t-info-row">
+          <span class="t-info-label">Pago :</span>
+          <span class="t-info-val">{{
+            metodoPagoLabel(venta.pagos[0]?.metodoPago || "")
+          }}</span>
         </div>
 
         <div class="t-separator"></div>
 
+        <!-- Cabecera tabla -->
+        <div class="t-col-header">
+          <span class="t-col-art">Artículo</span>
+          <span class="t-col-cant">Cant</span>
+          <span class="t-col-val">Valor</span>
+          <span class="t-col-tot">Total</span>
+        </div>
+        <div class="t-separator-thin"></div>
+
+        <!-- Productos -->
+        <div class="t-prod-row" *ngFor="let d of venta.detalles">
+          <div class="t-prod-line">
+            <span class="t-col-art">{{ d.productoNombre }}</span>
+            <span class="t-col-cant">{{
+              d.cantidad % 1 === 0
+                ? (d.cantidad | number: "1.0-0")
+                : (d.cantidad | number: "1.3-3")
+            }}</span>
+            <span class="t-col-val">{{ formatCOP(d.precioUnitario) }}</span>
+            <span class="t-col-tot">{{
+              formatCOP(d.subtotalLinea + d.impuestoValor - d.montoDescuento)
+            }}</span>
+          </div>
+          <div class="t-prod-desc-row" *ngIf="d.montoDescuento > 0">
+            <span>DESCUENTO:</span
+            ><span>-{{ formatCOP(d.montoDescuento) }}</span>
+          </div>
+        </div>
+
+        <div class="t-separator-thin"></div>
+
         <!-- Totales -->
         <div class="t-totales">
           <div class="t-tot-row">
-            <span>BASE IMPONIBLE</span>
+            <span>Sub Total</span>
             <span>{{ formatCOP(venta.subtotal - venta.descuentoTotal) }}</span>
           </div>
           <div class="t-tot-row" *ngIf="venta.impuestosTotal > 0">
-            <span>IMPUESTO</span>
+            <span>Impuesto (Impo + Iva)</span>
             <span>{{ formatCOP(venta.impuestosTotal) }}</span>
           </div>
           <div class="t-tot-row" *ngIf="venta.descuentoTotal > 0">
-            <span>DESCUENTO</span>
+            <span>Descuento</span>
             <span>-{{ formatCOP(venta.descuentoTotal) }}</span>
           </div>
         </div>
 
-        <!-- TOTAL destacado -->
+        <!-- Total final -->
         <div class="t-total-final">
-          <span>TOTAL</span>
+          <span>Total Pedido</span>
           <span>{{ formatCOP(venta.totalPagar) }}</span>
         </div>
 
         <div class="t-separator-thin"></div>
 
         <!-- Pagos -->
-        <div class="t-pagos-header">
-          <span></span>
-          <span>ENTREGADO</span>
-          <span>CAMBIO</span>
-        </div>
         <div class="t-pago-row" *ngFor="let p of venta.pagos">
           <span class="t-pago-metodo">{{ metodoPagoLabel(p.metodoPago) }}</span>
           <span class="t-pago-monto">{{ formatCOP(p.monto) }}</span>
-          <span class="t-pago-cambio">
-            {{ getCambio(p) > 0 ? formatCOP(getCambio(p)) : "" }}
+          <span class="t-pago-cambio" *ngIf="getCambio(p) > 0">
+            Cambio: {{ formatCOP(getCambio(p)) }}
           </span>
         </div>
 
-        <!-- Cliente -->
-        <div class="t-separator-thin" *ngIf="venta.clienteNombre"></div>
-        <div class="t-cliente" *ngIf="venta.clienteNombre">
-          CLIENTE: {{ venta.clienteNombre }}
+        <div class="t-separator"></div>
+
+        <!-- Texto legal -->
+        <div class="t-legal">
+          Esta factura se asimila a los efectos legales de las facturas de
+          cambio ART. 744 del Código del Comercio.
         </div>
 
-        <div class="t-separator"></div>
+        <div class="t-separator-thin"></div>
 
         <!-- Pie -->
         <div class="t-footer">
@@ -144,7 +180,6 @@
     <div class="tirilla-footer-btns">
       <button
         pButton
-        type="button"
         label="Cerrar"
         icon="pi pi-times"
         class="p-button-outlined p-button-secondary"
@@ -152,7 +187,6 @@
       ></button>
       <button
         pButton
-        type="button"
         label="Imprimir"
         icon="pi pi-print"
         class="btn-aura btn-print"

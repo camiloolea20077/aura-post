@@ -82,6 +82,13 @@ public class AuthServiceImpl implements AuthService{
                 .nit(dto.getNit())
                 .razonSocial(dto.getRazonSocial())
                 .activa(true)
+                .facturaElectronica(dto.isFacturaElectronica())
+                .factusClientId(dto.getFactusClientId())
+                .factusClientSecret(dto.getFactusClientSecret())
+                .factusUsername(dto.getFactusUsername())
+                .factusPassword(dto.getFactusPassword())
+                .factusNumberingRangeId(dto.getFactusNumberingRangeId())
+                .factusPrefijo(dto.getFactusPrefijo())
                 .build();
         empresa = empresaRepository.save(empresa);
 
@@ -89,7 +96,7 @@ public class AuthServiceImpl implements AuthService{
         SucursalEntity sucursal = SucursalEntity.builder()
                 .empresa(empresa)
                 .nombre(dto.getNombreSucursal())
-                .codigo("001") // Código por defecto para la primera
+                .codigo("001")
                 .activa(true)
                 .build();
         sucursal = sucursalRepository.save(sucursal);
@@ -101,7 +108,10 @@ public class AuthServiceImpl implements AuthService{
                 .apellidos(dto.getApellidos())
                 .numeroDocumento(dto.getNumeroDocumento())
                 .email(dto.getEmail())
-                .esEmpleado(true) // Es el admin, así que es empleado
+                .telefono(dto.getTelefono())
+                .direccion(dto.getDireccion())
+                .municipio(dto.getMunicipio())
+                .esEmpleado(true)
                 .activo(true)
                 .build();
         tercero = terceroRepository.save(tercero);

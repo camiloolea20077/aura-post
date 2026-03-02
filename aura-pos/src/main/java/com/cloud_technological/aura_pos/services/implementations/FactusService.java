@@ -142,7 +142,7 @@ public class FactusService {
                 String.valueOf(req.getClienteTipoDocumentoFactusId()));
         // municipality_id — default Bogotá (149) si no hay
         customer.setMunicipalityId(req.getClienteMunicipioId() != null
-                ? String.valueOf(req.getClienteMunicipioId()) : "149");
+                ? String.valueOf(req.getClienteMunicipioId()) : "511");
         // legal_organization_id y tribute_id: persona natural por defecto
         customer.setLegalOrganizationId("2");  // 2=Persona Natural
         customer.setTributeId("21");           // 21=No aplica

@@ -51,6 +51,7 @@ public class TerceroEntity {
     private String direccion;
     private String telefono;
     private String email;
+    private String municipio;
 
     @Column(name = "email_fe")
     private String emailFe;
