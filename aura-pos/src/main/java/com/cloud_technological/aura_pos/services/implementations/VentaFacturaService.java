@@ -161,7 +161,7 @@ public class VentaFacturaService {
                 .clienteTelefono(cliente.getTelefono())
                 .clienteDireccion(cliente.getDireccion())
                 .clienteTipoDocumentoFactusId(tipoDocId)
-                .clienteMunicipioId(149) // TODO: agregar municipio_id a TerceroEntity
+                .clienteMunicipioId(511) // TODO: agregar municipio_id a TerceroEntity
                 .items(items)
                 .build();
     }
