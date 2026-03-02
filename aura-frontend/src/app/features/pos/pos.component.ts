@@ -47,6 +47,11 @@ import {
   FacturaElectronicaResult,
 } from '../factura_eletronica/factura-electronica-modal.component';
 import { IndexDBService } from '../../core/services/index-db.service';
+import { AuthResponse } from '../../core/models/auth.model';
+import {
+  EmpresaConfig,
+  EmpresaService,
+} from '../../core/services/empresa.service';
 
 @Component({
   selector: 'app-pos',
@@ -100,16 +105,16 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   public clienteId: number | null = null;
   public clienteNombre: string | null = null;
   public clienteSugerencias: any[] = [];
-
+  public empesaInfo!: AuthResponse;
   // ── Modal pago ────────────────────────────────────────────
   public showPago = false;
   public pagosPrev: PagoUI[] = [];
-
+  public empresaConfig: EmpresaConfig | null = null;
   // ── Factura electrónica ───────────────────────────────────────────
   public mostrarModalFE = false;
   public ventaCompletadaId: number | null = null;
   public empresaFacturaElec = false;
-
+  public cajeroNombre = '';
   public feClienteNombre = '';
   public feClienteDocumento = '';
   public feClienteEmail = '';
@@ -119,6 +124,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly terceroService: TerceroService,
     private readonly alertService: AlertService,
     private readonly router: Router,
+    private readonly empresaService: EmpresaService,
     private readonly indexDBService: IndexDBService,
     private readonly http: HttpClient,
     private readonly cdr: ChangeDetectorRef,
@@ -134,6 +140,9 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     try {
       const auth = await this.indexDBService.loadDataAuthDB();
       this.empresaFacturaElec = auth?.facturaElectronica ?? false;
+      this.cajeroNombre = auth?.nombreCompleto ?? '';
+      const res = await lastValueFrom(this.empresaService.getConfig());
+      this.empresaConfig = res?.data ?? null;
     } catch {
       this.empresaFacturaElec = false;
     }
@@ -432,19 +441,28 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       const res = await lastValueFrom(this.ventaService.create(dto));
 
       if (res?.status === 201) {
-        this.ventaActual = res.data as unknown as VentaModel;
+        this.ventaActual = {
+          ...res.data,
+          empresaLogoUrl: this.empresaConfig?.logoUrl ?? '',
+          razonSocial: this.empresaConfig?.razonSocial ?? '',
+          cajeroNombre: this.cajeroNombre,
+          empresaNit: this.empresaConfig?.nit ?? '',
+          empresaDireccion: this.empresaConfig?.direccion ?? '',
+          empresaEmail: this.empresaConfig?.correo ?? '',
+          empresaTelefono: this.empresaConfig?.telefono ?? '',
+          empresaCiudad: this.empresaConfig?.ciudad ?? '',
+        } as unknown as VentaModel;
         this.showPago = false;
         this.clearCart();
-        const ventaTieneCliente = (res.data as any)?.clienteId !== undefined;
-        if (this.empresaFacturaElec && ventaTieneCliente) {
-          this.ventaCompletadaId = (res.data as any).id;
-          this.feClienteNombre = clienteNombreParaFE;
-          this.feClienteDocumento = clienteDocParaFE;
-          this.feClienteEmail = clienteEmailParaFE;
-          this.mostrarModalFE = true;
-        } else {
-          this.showTirilla = true;
-        }
+        const clienteIdRespuesta = (res.data as any)?.clienteId;
+        const ventaTieneCliente = (res.data as any)?.clienteId != null;
+
+        // Siempre mostrar la tirilla primero
+        this.ventaCompletadaId = (res.data as any).id;
+        this.feClienteNombre = clienteNombreParaFE;
+        this.feClienteDocumento = clienteDocParaFE;
+        this.feClienteEmail = clienteEmailParaFE;
+        this.showTirilla = true;
 
         this.cdr.markForCheck();
       }

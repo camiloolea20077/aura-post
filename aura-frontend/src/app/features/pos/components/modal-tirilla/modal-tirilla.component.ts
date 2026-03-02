@@ -18,6 +18,7 @@ import {
   VentaResponse,
 } from '../../../../core/models/venta-response.model';
 import { VentaModel } from '../../../../core/models/venta.model';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 
 type AnchoTirilla = 58 | 80;
 
@@ -40,17 +41,20 @@ export class ModalTirillaComponent implements OnChanges {
   @Input() displayModal = false;
   @Input() venta: VentaModel | null = null;
   @Output() modalClosed = new EventEmitter<void>();
-
+  logoSafeUrl: SafeUrl | null = null;
   ancho: AnchoTirilla = 80;
 
   anchoOptions = [
     { label: '58 mm', value: 58 },
     { label: '80 mm', value: 80 },
   ];
-
+  constructor(private sanitizer: DomSanitizer) {}
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['venta'] && this.venta) {
       this.ancho = 80;
+      this.logoSafeUrl = this.venta.logoUrl
+        ? this.sanitizer.bypassSecurityTrustUrl(this.venta.logoUrl)
+        : null;
     }
   }
 

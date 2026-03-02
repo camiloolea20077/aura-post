@@ -23,6 +23,8 @@ import { VentaResponse } from '../../../core/models/venta-response.model';
 import { ModalTirillaComponent } from '../../pos/components/modal-tirilla/modal-tirilla.component';
 import { ModalFacturaComponent } from '../../pos/components/modal-factuta/modal-factura.component';
 import { FacturaViewerModalComponent } from '../../pos/components/factura-viewer-modal/factura-viewer-modal.component';
+import { EmpresaService } from '../../../core/services/empresa.service';
+import { IndexDBService } from '../../../core/services/index-db.service';
 
 type TagSeverity =
   | 'success'
@@ -76,6 +78,8 @@ export class IndexVentasComponent implements OnInit {
     private readonly cdr: ChangeDetectorRef,
     private readonly ventaService: VentaService,
     private readonly alertService: AlertService,
+    private readonly empresaService: EmpresaService, // ← nuevo
+    private readonly indexDBService: IndexDBService, // ← nuevo
   ) {}
 
   ngOnInit(): void {}
@@ -168,13 +172,37 @@ export class IndexVentasComponent implements OnInit {
     event.stopPropagation();
     this.loadingTirilla = true;
     try {
-      const res = await lastValueFrom(this.ventaService.getById(item.id));
-      this.ventaImpresion = res?.data ?? null;
+      // Cargar venta + empresa + cajero en paralelo
+      const [ventaRes, empresaRes, auth] = await Promise.all([
+        lastValueFrom(this.ventaService.getById(item.id)),
+        lastValueFrom(this.empresaService.getConfig()),
+        this.indexDBService.loadDataAuthDB(),
+      ]);
+
+      const empresa = empresaRes?.data;
+
+      this.ventaImpresion = {
+        ...ventaRes?.data,
+        // Datos empresa
+        logoUrl: empresa?.logoUrl ?? '',
+        razonSocial: empresa?.razonSocial ?? '',
+        empresaNombre: empresa?.razonSocial ?? '',
+        empresaNit: empresa?.nit ?? '',
+        empresaDireccion: empresa?.direccion ?? '',
+        empresaEmail: empresa?.correo ?? '',
+        empresaTelefono: empresa?.telefono ?? '',
+        empresaCiudad: empresa?.ciudad ?? '',
+        // Cajero del usuario logueado
+        cajeroNombre: auth?.nombreCompleto ?? '',
+      } as unknown as VentaModel;
+      console.log('Venta para impresión:', this.ventaImpresion);
       this.showTirilla = true;
+      this.cdr.markForCheck();
     } catch {
       this.alertService.showError('Error', 'No se pudo cargar la venta');
     } finally {
       this.loadingTirilla = false;
+      this.cdr.markForCheck();
     }
   }
 
