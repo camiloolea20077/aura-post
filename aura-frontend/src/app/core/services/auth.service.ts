@@ -79,4 +79,12 @@ export class AuthService {
       map(token => (token ? this.decodeToken(token) : null))
     );
   }
+  isAuthenticated(): Observable<boolean> {
+    return this.getAuthResponse().pipe(
+      map(auth => {
+        if (!auth?.token) return false;
+        return !this.isTokenExpired(auth.token);
+      })
+    );
+  }
 }
