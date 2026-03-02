@@ -46,7 +46,10 @@ export class ProductoPrecioService {
   create(
     dto: CreateProductoPrecioDto,
   ): Observable<ResponseModel<ProductoPrecioModel>> {
-    return this.http.post<ResponseModel<ProductoPrecioModel>>(this.apiUrl, dto);
+    return this.http.post<ResponseModel<ProductoPrecioModel>>(
+      `${this.apiUrl}/create`,
+      dto,
+    );
   }
 
   update(

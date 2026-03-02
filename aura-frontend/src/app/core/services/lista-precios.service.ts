@@ -45,7 +45,10 @@ export class ListaPreciosService {
   create(
     dto: CreateListaPreciosDto,
   ): Observable<ResponseModel<ListaPreciosModel>> {
-    return this.http.post<ResponseModel<ListaPreciosModel>>(this.apiUrl, dto);
+    return this.http.post<ResponseModel<ListaPreciosModel>>(
+      `${this.apiUrl}/create`,
+      dto,
+    );
   }
 
   update(
