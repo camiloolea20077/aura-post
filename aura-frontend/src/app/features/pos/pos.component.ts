@@ -143,6 +143,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       this.cajeroNombre = auth?.nombreCompleto ?? '';
       const res = await lastValueFrom(this.empresaService.getConfig());
       this.empresaConfig = res?.data ?? null;
+      console.log('this.empresaConfig', this.empresaConfig);
     } catch {
       this.empresaFacturaElec = false;
     }
@@ -443,9 +444,9 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       if (res?.status === 201) {
         this.ventaActual = {
           ...res.data,
-          empresaLogoUrl: this.empresaConfig?.logoUrl ?? '',
+          logoUrl: this.empresaConfig?.logoUrl ?? '',
           razonSocial: this.empresaConfig?.razonSocial ?? '',
-          cajeroNombre: this.cajeroNombre,
+          empresaNombre: this.empresaConfig?.razonSocial ?? '',
           empresaNit: this.empresaConfig?.nit ?? '',
           empresaDireccion: this.empresaConfig?.direccion ?? '',
           empresaEmail: this.empresaConfig?.correo ?? '',
