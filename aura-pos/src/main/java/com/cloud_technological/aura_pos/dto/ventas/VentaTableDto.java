@@ -18,5 +18,9 @@ public class VentaTableDto {
     private BigDecimal totalPagar;
     private String estadoVenta;
     private String tipoDocumento;
+    private String estadoDian;
+    private String factusUrl;
+    private String cufe;
+    private String factusNumero;
     private long totalRows;
 }

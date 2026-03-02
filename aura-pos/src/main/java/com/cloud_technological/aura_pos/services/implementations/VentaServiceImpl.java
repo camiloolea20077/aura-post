@@ -14,6 +14,8 @@ import com.cloud_technological.aura_pos.dto.ventas.CreateVentaDto;
 import com.cloud_technological.aura_pos.dto.ventas.CreateVentaPagoDto;
 import com.cloud_technological.aura_pos.dto.ventas.VentaDto;
 import com.cloud_technological.aura_pos.dto.ventas.VentaTableDto;
+import com.cloud_technological.aura_pos.dto.facturacion.FacturaDto;
+import com.cloud_technological.aura_pos.dto.cuentas_cobrar.CreateCuentaCobrarDto;
 import com.cloud_technological.aura_pos.entity.EmpresaEntity;
 import com.cloud_technological.aura_pos.entity.InventarioEntity;
 import com.cloud_technological.aura_pos.entity.LoteEntity;
@@ -49,6 +51,8 @@ import com.cloud_technological.aura_pos.repositories.venta_pago.VentaPagoJPARepo
 import com.cloud_technological.aura_pos.repositories.ventas.VentaJPARepository;
 import com.cloud_technological.aura_pos.repositories.ventas.VentaQueryRepository;
 import com.cloud_technological.aura_pos.services.VentaService;
+import com.cloud_technological.aura_pos.services.CuentaCobrarService;
+import com.cloud_technological.aura_pos.services.FacturaService;
 import com.cloud_technological.aura_pos.utils.GlobalException;
 import com.cloud_technological.aura_pos.utils.PageableDto;
 
@@ -75,6 +79,8 @@ public class VentaServiceImpl implements VentaService{
     private final VentaDetalleMapper detalleMapper;
     private final VentaPagoMapper pagoMapper;
     private final ProductoComposicionJPARepository composicionJPARepository;
+    private final FacturaService facturaService;
+    private final CuentaCobrarService cuentaCobrarService;
 
     @Autowired
     public VentaServiceImpl(VentaQueryRepository ventaRepository,
@@ -95,7 +101,9 @@ public class VentaServiceImpl implements VentaService{
             VentaMapper ventaMapper,
             ProductoComposicionJPARepository composicionJPARepository,
             VentaDetalleMapper detalleMapper,
-            VentaPagoMapper pagoMapper) {
+            VentaPagoMapper pagoMapper,
+            FacturaService facturaService,
+            CuentaCobrarService cuentaCobrarService) {
         this.ventaRepository = ventaRepository;
         this.ventaJPARepository = ventaJPARepository;
         this.detalleJPARepository = detalleJPARepository;
@@ -115,6 +123,8 @@ public class VentaServiceImpl implements VentaService{
         this.ventaMapper = ventaMapper;
         this.detalleMapper = detalleMapper;
         this.pagoMapper = pagoMapper;
+        this.facturaService = facturaService;
+        this.cuentaCobrarService = cuentaCobrarService;
     }
 
     @Override
@@ -157,6 +167,22 @@ public class VentaServiceImpl implements VentaService{
                 .map(CreateVentaPagoDto::getMonto)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        // 2.1. Validar cliente obligatorio para ventas a crédito (HU-006)
+        boolean tienePagoCredito = dto.getPagos().stream()
+                .anyMatch(p -> "credito".equalsIgnoreCase(p.getMetodoPago()));
+        
+        if (tienePagoCredito && dto.getClienteId() == null) {
+            throw new GlobalException(HttpStatus.BAD_REQUEST, 
+                    "Las ventas a crédito requieren un cliente asociado");
+        }
+
+        // 2.2. Validar que el cliente existe si se proporcionó
+        TerceroEntity cliente = null;
+        if (dto.getClienteId() != null) {
+            cliente = terceroJPARepository.findByIdAndEmpresaId(dto.getClienteId(), empresaId)
+                    .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Cliente no encontrado"));
+        }
+
         // 3. Crear cabecera
         VentaEntity venta = new VentaEntity();
         venta.setEmpresa(empresa);
@@ -165,15 +191,18 @@ public class VentaServiceImpl implements VentaService{
         venta.setTurnoCaja(turno);
         venta.setTipoDocumento(dto.getTipoDocumento());
         venta.setPrefijo(sucursal.getPrefijoFacturacion());
+        /**
+         * TODO: posible error al tratar de obtener el siguiente consecutivo
+         * * porque varias instancias de la aplicacion podrian estar usando el mismo
+         * * consecutivo
+         */
         venta.setConsecutivo(ventaRepository.obtenerSiguienteConsecutivo(Long.valueOf(sucursal.getId())));
         venta.setFechaEmision(LocalDateTime.now());
         venta.setObservaciones(dto.getObservaciones());
         venta.setEstadoVenta("COMPLETADA");
 
-        // Cliente opcional
-        if (dto.getClienteId() != null) {
-            TerceroEntity cliente = terceroJPARepository.findByIdAndEmpresaId(dto.getClienteId(), empresaId)
-                    .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST, "Cliente no encontrado"));
+        // Cliente ya validado arriba (obligatorio si hay pago a crédito)
+        if (cliente != null) {
             venta.setCliente(cliente);
         }
 
@@ -345,11 +374,23 @@ public class VentaServiceImpl implements VentaService{
             impuestosTotal = impuestosTotal.add(impuestoLinea);
         }
 
-        // 5. Validar que el pago cubra el total
+        // 5. Validar que el pago cubra el total (excepto si hay método CREDITO)
         BigDecimal totalFinal = subtotal.add(impuestosTotal);
-        if (totalPagado.compareTo(totalFinal) < 0)
+        
+        // Detectar si es venta a crédito
+        boolean hayCredito = false;
+        for (CreateVentaPagoDto pago : dto.getPagos()) {
+            if ("CREDITO".equalsIgnoreCase(pago.getMetodoPago())) {
+                hayCredito = true;
+                break;
+            }
+        }
+        
+        // Si no hay crédito, validar que el pago cubra el total
+        if (!hayCredito && totalPagado.compareTo(totalFinal) < 0) {
             throw new GlobalException(HttpStatus.BAD_REQUEST,
                     "El pago recibido (" + totalPagado + ") es menor al total (" + totalFinal + ")");
+        }
 
         // 6. Guardar pagos
         for (CreateVentaPagoDto pago : dto.getPagos()) {
@@ -358,14 +399,66 @@ public class VentaServiceImpl implements VentaService{
             pagoJPARepository.save(pagoEntity);
         }
 
-        // 7. Actualizar totales
+        // 7. Actualizar totales y calcular pagos parciales (HU-004)
+        // Detectar si es venta a crédito
+        boolean esCredito = false;
+        BigDecimal saldoPendiente = BigDecimal.ZERO;
+        
+        for (CreateVentaPagoDto pago : dto.getPagos()) {
+            if ("CREDITO".equalsIgnoreCase(pago.getMetodoPago())) {
+                esCredito = true;
+                saldoPendiente = totalFinal.subtract(totalPagado);
+                break;
+            }
+        }
+        
+        // Si no es crédito pero hay saldo pendiente, es pago parcial
+        boolean esPagoParcial = !esCredito && totalPagado.compareTo(totalFinal) < 0;
+        if (esPagoParcial) {
+            saldoPendiente = totalFinal.subtract(totalPagado);
+        }
+        
         venta.setSubtotal(subtotal);
         venta.setDescuentoTotal(descuentoTotal);
         venta.setImpuestosTotal(impuestosTotal);
         venta.setTotalPagar(totalFinal);
+        
+        // Campos de pago parcial
+        venta.setPagoParcial(esPagoParcial || esCredito);
+        venta.setSaldoPendiente(saldoPendiente);
+        
+        // Si es crédito o pago parcial, el estado sigue como PAGO_PARCIAL, sino COMPLETADA
+        if (esPagoParcial || esCredito) {
+            venta.setEstadoVenta("PAGO_PARCIAL");
+        }
+
+        
         ventaJPARepository.save(venta);
 
-        return obtenerPorId(venta.getId(), empresaId);
+        // 8. Crear cuenta por cobrar si es crédito o pago parcial (HU-014)
+        if ((esCredito || esPagoParcial) && dto.getClienteId() != null) {
+            CreateCuentaCobrarDto cuentaCobrarDto = new CreateCuentaCobrarDto();
+            cuentaCobrarDto.setClienteId(dto.getClienteId());
+            cuentaCobrarDto.setVentaId(venta.getId());
+            cuentaCobrarDto.setTotalDeuda(totalFinal);
+            cuentaCobrarDto.setFechaEmision(venta.getFechaEmision());
+            cuentaCobrarDto.setFechaVencimiento(dto.getFechaVencimiento() != null ? 
+                dto.getFechaVencimiento() : venta.getFechaEmision().plusDays(30));
+            cuentaCobrarDto.setObservaciones(esCredito ? 
+                "Venta #" + venta.getId() + " - Venta a crédito" : 
+                "Venta #" + venta.getId() + " - Pago parcial");
+
+            cuentaCobrarService.crear(cuentaCobrarDto, empresaId, usuarioId);
+        }
+
+        // 9. Crear factura automáticamente desde la venta
+        FacturaDto facturaDto = facturaService.crearDesdeVenta(venta.getId(), empresaId, usuarioId.intValue());
+        
+        // 9. Obtener venta con factura asignada
+        VentaDto ventaDto = obtenerPorId(venta.getId(), empresaId);
+        ventaDto.setFacturaId(facturaDto.getId());
+        
+        return ventaDto;
     }
 
     @Override

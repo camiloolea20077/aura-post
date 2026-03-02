@@ -1,850 +1,549 @@
-# AGENTS.MD - AURA POS Backend Architecture & Roadmap
+# AGENTS.md - AURA POS
 
-# ============================================================
-# 1. ARQUITECTURA DEL SISTEMA
-# ============================================================
+This file provides guidelines for agents working on the AURA POS project (frontend + backend).
 
-Este proyecto utiliza **Spring Boot 3** con arquitectura modular y patrón **CQRS Ligero**.
+---
 
-## Estructura de Capas
+## Project Overview
 
-1. Controller
-   - Recibe HTTP request
-   - Valida DTOs (@Valid)
-   - Retorna ApiResponse
-   - NO contiene lógica de negocio
-   - empresaId siempre se extrae del token via SecurityUtils
+### Frontend (aura-frontend)
+- **Framework**: Angular 18 (Standalone Components)
+- **UI Library**: PrimeNG 18 + PrimeFlex + PrimeIcons
+- **State**: RxJS + Services
+- **Storage**: localforage (IndexedDB for session)
+- **Build**: Angular CLI
 
-2. Service (Interface + Impl)
-   - Contiene lógica de negocio
-   - Maneja transacciones (@Transactional)
-   - Orquesta repositorios
-   - Usa MapStruct, NO hace set/get manual masivo
+### Backend (aura-pos)
+- **Framework**: Spring Boot 3.5.10
+- **Language**: Java 17
+- **Database**: PostgreSQL
+- **Build Tool**: Maven
+- **Security**: Spring Security 6 with JWT
+- **API Documentation**: Swagger (springfox)
 
-3. Mapper (MapStruct)
-   - Convierte DTO <-> Entity
-   - Relaciones (empresa, sucursal, etc.) se ignoran en el mapper
-   - Se asignan manualmente en el Service
+## Documentation
 
-4. Repository (Separación estricta)
+Project documentation is located in the `docs/` directory:
+- **Epics**: `docs/epics/` - High-level feature descriptions
+- **User Stories**: `docs/hu/` - Detailed user stories with acceptance criteria
 
-   a) ...JPARepository
-      - Extiende JpaRepository
-      - Métodos simples: findByIdAndEmpresaId, existsBy...
-      - SIN métodos con nombres largos tipo findByIdAndEmpresaIdAndDeletedAtIsNull
-      - Validaciones complejas van al QueryRepository
+### Existing Epics
 
-   b) ...QueryRepository
-      - @Repository
-      - Usa NamedParameterJdbcTemplate
-      - Listados paginados, reportes, validaciones complejas
-      - Métodos de existencia: existeNombre(), existeNombreExcluyendo()
-      - Retorna DTOs directos con BeanPropertyRowMapper
+| Epic ID | Title | Description |
+|---------|-------|-------------|
+| EP-001 | Módulo de Empresa y Sucursales | Gestión de empresas y sucursales |
+| EP-002 | Módulo de Terceros | Gestión de clientes, proveedores y empleados |
+| EP-003 | Módulo de Ventas y Compras | Gestión de ventas y compras |
+| EP-004 | Módulo de Cuentas por Cobrar y Pagar | Gestión de cuentas, abonos y saldos |
 
---------------------------------------------------------------
+### User Stories
 
-# ============================================================
-# 2. SEGURIDAD (SPRING SECURITY 6)
-# ============================================================
+| HU ID | Epic | Title |
+|-------|------|-------|
+| HU-001 a HU-008 | EP-001 a EP-003 | Módulos anteriores |
+| HU-009 | EP-004 | Gestión de Cuentas por Cobrar |
+| HU-010 | EP-004 | Gestión de Cuentas por Pagar |
+| HU-011 | EP-004 | Abonos a Cuentas por Cobrar |
+| HU-012 | EP-004 | Abonos a Cuentas por Pagar |
+| HU-013 | EP-004 | Cálculo de Totales de Cuentas |
 
-- Autenticación Stateless con JWT
-- Password con BCrypt
-- Custom Claims en el token:
+## Build Commands
 
-{
-  "empresaId": 1,
-  "sucursalId": 3,
-  "usuarioId": 1,
-  "rol": "ADMIN"
+### Frontend (Angular)
+
+```bash
+# Development server
+npm start
+# or: ng serve
+
+# Build for production
+npm run build
+
+# Run tests
+npm test
+
+# Run single test (Karma)
+# Edit karma.conf.js to add single-run: true, then:
+npm test -- --no-watch --browsers=ChromeHeadless
+
+# Watch mode for testing
+npm test -- --watch
+```
+
+### Backend (Spring Boot)
+
+```bash
+# Build project
+mvn clean install
+
+# Run application
+mvn spring-boot:run
+
+# Run tests
+mvn test
+
+# Run single test class
+mvn test -Dtest=TestClassName
+
+# Run single test method
+mvn test -Dtest=TestClassName#testMethodName
+
+# Package (skip tests)
+mvn package -DskipTests
+```
+
+## Project Structure
+
+```
+src/main/java/com/cloud_technological/aura_pos/
+├── config/           # Configuration classes
+├── controllers/      # REST controllers (@RestController)
+├── dto/              # Data Transfer Objects
+│   └── [module]/     # DTOs organized by module
+├── entity/           # JPA entities
+├── mappers/          # MapStruct mappers
+├── repositories/     # JPA repositories + Query repositories
+│   ├── [module]/     # JPA repositories
+│   └── [module]/
+│       └── QueryRepository.java  # Custom JDBC queries
+├── security/         # JWT, SecurityConfig, SecurityUtils
+├── services/         # Service interfaces + implementations
+│   └── implementations/
+├── utils/            # Utilities, DTOs (PageableDto, ApiResponse)
+```
+
+---
+
+## Frontend Guidelines (Angular 18 + PrimeNG)
+
+### Project Structure
+
+```
+src/app/
+├── core/
+│   ├── guards/         # Auth guards
+│   ├── interceptors/   # HTTP interceptors
+│   ├── models/        # Global models
+│   └── services/      # Global services
+├── shared/
+│   ├── pipes/         # AlertService, HelperService
+│   └── utils/        # ColsModel, FilterTable, ResponseModel
+├── layout/            # MainLayout, Sidebar, Topbar
+└── features/
+    ├── auth/          # Login
+    ├── dashboard/
+    ├── pos/          # Punto de venta (special layout)
+    ├── catalogo/      # Categorías, Marcas, Productos
+    ├── mermas/
+    ├── traslados/
+    ├── cuentas/       # Cuentas por Cobrar/Pagar
+    └── reportes/
+```
+
+### Feature Module Structure
+
+Each feature follows this pattern:
+```
+features/mermas/
+├── index/             # Table component
+│   ├── index-mermas.component.ts
+│   ├── index-mermas.component.html
+│   └── index-mermas.component.scss
+├── form/              # Create/Edit dialog
+├── detalle/           # View detail dialog
+├── motives/           # Sub-module (if needed)
+├── models/            # All models in single file
+├── services/          # API services
+└── [feature].routes.ts
+```
+
+### Angular Conventions
+
+| Type | Convention | Example |
+|------|------------|---------|
+| Components | kebab-case | `index-cuentas-cobrar` |
+| Services | kebab-case + .service | `cuenta-cobrar.service.ts` |
+| Models | kebab-case + .model | `cuenta-cobrar.model.ts` |
+| Routes | kebab-case | `cuentas-cobrar` |
+
+### Component Pattern
+
+```typescript
+@Component({
+  selector: 'app-index-cuentas',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,  // ALWAYS
+  imports: [...],
+  providers: [MessageService, ConfirmationService],  // ONLY in index
+  templateUrl: './index-cuentas.component.html',
+  styleUrls: ['./index-cuentas.component.scss'],    // SCSS per component
+})
+export class IndexCuentasComponent implements OnInit {
+  constructor(
+    private readonly cdr: ChangeDetectorRef,  // ALWAYS for async
+  ) {}
+
+  async load(): Promise<void> {
+    this.loading = true;
+    try {
+      const res = await lastValueFrom(this.service.page({ ... }));
+      this.rows = res?.data?.content ?? [];
+    } catch { /* handle error */ }
+    finally {
+      this.loading = false;
+      this.cdr.markForCheck();  // ALWAYS in finally
+    }
+  }
 }
-
-Componentes:
-- SecurityConfig
-- JwtTokenProvider
-- JwtAuthenticationFilter
-- CustomUserDetailsService
-- SecurityUtils → extrae claims del token en cada request
-
---------------------------------------------------------------
-
-# ============================================================
-# 3. MODELO DE DATOS COMPLETO
-# ============================================================
-
-El sistema soporta:
-
-✔ Multi-empresa
-✔ Multi-sucursal
-✔ Multi-usuario
-✔ POS
-✔ Inventario avanzado
-✔ Lotes (FEFO)
-✔ Seriales
-✔ Kardex inmutable (9 tipos de movimiento)
-✔ Motor de descuentos automático
-✔ Facturación electrónica (estructura lista)
-✔ Auditoría de sesiones
-
---------------------------------------------------------------
-
-# 3.1 ESTRUCTURA EMPRESARIAL
-
-TABLAS:
-- empresa
-- sucursal
-- tercero
-- usuario
-- usuario_sucursal
-- historial_sesion
-
-Características clave:
-• UNIQUE(empresa_id, numero_documento) en tercero
-• Usuario puede pertenecer a múltiples sucursales
-• Una sucursal default por usuario
-• Auditoría completa de sesiones
-
---------------------------------------------------------------
-
-# 3.2 CATÁLOGO DE PRODUCTOS
-
-TABLAS:
-- categoria (jerárquica con padre_id)
-- marca
-- unidad_medida (sin empresa_id, es global)
-- producto
-- producto_presentacion
-- producto_composicion
-
-Características avanzadas del producto:
-- tipo_producto: ESTANDAR | SERVICIO | KIT | PESABLE
-- maneja_inventario
-- maneja_lotes → si true, compras crean/actualizan lotes automáticamente
-- maneja_serial
-- atributos JSONB dinámicos
-
---------------------------------------------------------------
-
-# 3.3 PRECIOS Y MOTOR DE DESCUENTOS
-
-TABLAS:
-- lista_precios
-- producto_precio
-- regla_descuento (JSONB para dias_semana)
-
-Motor de descuentos:
-- Por fecha, día de semana, hora
-- Por producto o categoría (no ambos)
-- Tipo: PORCENTAJE | MONTO
-- buscarReglasAplicables() en QueryRepository para motor de ventas
-
---------------------------------------------------------------
-
-# 3.4 INVENTARIO (KARDEX PROFESIONAL)
-
-TABLAS:
-- inventario (stock actual por sucursal/producto)
-- lote (FEFO - First Expired First Out)
-- serial_producto (estado: DISPONIBLE | VENDIDO | GARANTIA)
-- motivo_merma
-- merma + merma_detalle
-- movimiento_inventario (INMUTABLE)
-
-Reglas críticas:
-1. movimiento_inventario NUNCA se edita ni elimina
-2. Stock SOLO se mueve via movimientos registrados
-3. Cada operación registra saldo_anterior y saldo_nuevo
-4. Si producto.maneja_lotes = true → compra crea/actualiza lote
-5. Stock nunca queda negativo → validación en anulaciones
-
-Tipos de movimiento (9 en total):
-- COMPRA / ANULACION_COMPRA
-- VENTA / ANULACION_VENTA
-- MERMA / ANULACION_MERMA
-- TRASLADO_SALIDA / TRASLADO_ENTRADA / ANULACION_TRASLADO
-
---------------------------------------------------------------
-
-# 3.5 COMPRAS
-
-TABLAS:
-- compra (cabecera)
-- compra_detalle
-
-Flujo:
-1. Crear cabecera
-2. Por cada detalle:
-   a. Crear compra_detalle
-   b. resolverLote() → crea o actualiza lote si maneja_lotes = true
-   c. resolverInventario() → crea o actualiza stock en inventario
-   d. registrarMovimiento() → Kardex tipo COMPRA
-3. Actualizar totales en cabecera
-
-Estados: RECIBIDA | ANULADA
-
---------------------------------------------------------------
-
-# 3.6 TERCEROS
-
-TABLAS:
-- tercero
-
-Características:
-- Un tercero puede ser cliente, proveedor y empleado simultáneamente
-- nombre_completo = COALESCE(razon_social, nombres + apellidos)
-- listarClientes() y listarProveedores() para selectores en POS y compras
-- Soft delete con deleted_at
-
---------------------------------------------------------------
-
-# 3.7 VENTAS (POS)
-
-TABLAS:
-- caja
-- turno_caja
-- venta
-- venta_detalle
-- venta_detalle_serial
-- venta_pago
-
-Flujo:
-1. Validar turno abierto
-2. Validar stock por producto
-3. Crear cabecera con consecutivo automático por sucursal
-4. Por cada detalle:
-   - Calcular impuestos (iva_porcentaje del producto)
-   - Descontar stock + lote si aplica
-   - Marcar seriales como VENDIDO
-   - Kardex tipo VENTA
-5. Validar pago >= total
-6. Guardar métodos de pago
-7. Actualizar totales
-
-Estados: COMPLETADA | ANULADA
-Métodos de pago: EFECTIVO | TARJETA | NEQUI | (extensible)
-
---------------------------------------------------------------
-
-# 3.8 MERMAS
-
-TABLAS:
-- motivo_merma
-- merma + merma_detalle
-
-Flujo:
-1. Validar stock suficiente
-2. Restar inventario + lote si aplica
-3. Kardex tipo MERMA
-4. Anulación revierte con ANULACION_MERMA
-
-Estados: APROBADA | ANULADA
-
---------------------------------------------------------------
-
-# 3.9 TRASLADOS
-
-TABLAS:
-- traslado
-- traslado_detalle
-
-Flujo:
-1. Validar stock en sucursal origen
-2. Restar origen → Kardex TRASLADO_SALIDA
-3. Sumar destino → Kardex TRASLADO_ENTRADA
-4. Si maneja lotes: restar lote origen, crear/actualizar lote destino
-5. Anulación revierte ambas sucursales con ANULACION_TRASLADO
-
-Estados: COMPLETADO | ANULADO
-
---------------------------------------------------------------
-
-# ============================================================
-# 4. PATRONES Y CONVENCIONES
-# ============================================================
-
-## DTOs
-- XxxDto → detalle completo (formulario/obtenerPorId)
-- XxxTableDto → tabla paginada (incluye totalRows)
-- CreateXxxDto → creación
-- UpdateXxxDto → actualización
-
-## Paginación
-- Siempre via POST /page con PageableDto
-- COUNT(*) OVER() AS total_rows en queries
-- BeanPropertyRowMapper para mapeo automático
-- PageImpl como respuesta
-
-## Soft Delete
-- Entidades con deleted_at: categoria, marca, producto, tercero
-- Entidades con activo flag: unidad_medida, lista_precios, lote, regla_descuento, caja
-- Hard delete: serial_producto, producto_composicion, motivo_merma
-
-## Seguridad
-- empresaId siempre del token: securityUtils.getEmpresaId()
-- sucursalId del token: securityUtils.getSucursalId()
-- usuarioId del token: securityUtils.getUsuarioId()
-- NUNCA recibir empresaId por header o body
-
-## Validaciones
-- Duplicados → QueryRepository (existeNombre, existeDocumento)
-- Existencia por id → JPARepository (findByIdAndEmpresaId)
-- Lógica de negocio → Service
-
---------------------------------------------------------------
-
-# ============================================================
-# 5. ROADMAP DEL PROYECTO
-# ============================================================
-
-## ✅ FASE 1 - CORE Y SEGURIDAD (COMPLETADO)
-- Spring Boot 3 + PostgreSQL + JWT
-- Login + Register transaccional multi-sede
-- SecurityUtils con claims del token
-
-## ✅ FASE 2 - CATÁLOGO (COMPLETADO)
-- Categorías (jerárquico)
-- Marcas
-- Unidades de Medida (global)
-- Productos
-- Presentaciones
-- Composición (Kits y Recetas)
-- Listas de Precios
-- Precios por Producto
-
-## ✅ FASE 3 - MOTOR DE DESCUENTOS (COMPLETADO)
-- Reglas de Descuento (por fecha, hora, día, categoría, producto)
-
-## ✅ FASE 4 - INVENTARIO (COMPLETADO)
-- Inventario
-- Lotes
-- Seriales
-
-## ✅ FASE 5 - OPERACIONES (COMPLETADO)
-- Terceros (clientes y proveedores)
-- Compras + Kardex automático
-- Caja + Turnos de Caja
-- Ventas / POS
-- Mermas
-- Traslados entre sucursales
-
-## ✅ FASE 6 - CONSULTAS (COMPLETADO)
-- Kardex Viewer (9 tipos de movimiento, filtros avanzados)
-- Dashboard (ventas hoy/mes, stock bajo, lotes por vencer, top productos)
-
---------------------------------------------------------------
-
-# ============================================================
-# 6. POR CONSTRUIR - PRIORIDAD ALTA
-# ============================================================
-
-## 6.1 REPORTES (Prioridad Alta)
-
-### Reporte de Ventas
-- Ventas por período (día, semana, mes, rango)
-- Ventas por vendedor/usuario
-- Ventas por sucursal
-- Ventas por método de pago
-- Devoluciones y anulaciones
-- Ticket promedio por período
-
-Endpoints sugeridos:
-- POST /api/reportes/ventas/periodo
-- POST /api/reportes/ventas/por-usuario
-- POST /api/reportes/ventas/por-sucursal
-
-### Reporte de Inventario
-- Stock valorizado (cantidad × costo unitario)
-- Rotación de inventario (kardex del período)
-- Productos sin movimiento en X días
-- Stock por sucursal comparativo
-- Historial de precios de costo
-
-Endpoints sugeridos:
-- GET /api/reportes/inventario/valorizado
-- POST /api/reportes/inventario/rotacion
-- GET /api/reportes/inventario/sin-movimiento
-
-### Reporte de Compras
-- Compras por proveedor y período
-- Costo promedio por producto
-- Evolución de precios de compra
-
-Endpoints sugeridos:
-- POST /api/reportes/compras/por-proveedor
-- POST /api/reportes/compras/periodo
-
-### Reporte de Mermas
-- Mermas por motivo y período
-- Costo total de mermas
-- Productos con más mermas
-
-Endpoints sugeridos:
-- POST /api/reportes/mermas/periodo
-
---------------------------------------------------------------
-
-## 6.2 FACTURACIÓN ELECTRÓNICA DIAN (Prioridad Alta para Colombia)
-
-### Estructura necesaria (tabla venta ya tiene campos):
-- cufe VARCHAR
-- qr_data TEXT
-- estado_dian VARCHAR (PENDIENTE | ENVIADA | ACEPTADA | RECHAZADA)
-
-### Módulos a construir:
-
-#### Configuración DIAN por empresa
-```sql
-CREATE TABLE configuracion_dian (
-    id SERIAL PRIMARY KEY,
-    empresa_id INT REFERENCES empresa(id),
-    ambiente VARCHAR(10), -- PRUEBAS | PRODUCCION
-    nit_empresa VARCHAR(20),
-    software_id VARCHAR(100),
-    software_pin VARCHAR(100),
-    set_pruebas VARCHAR(100),
-    certificado_path TEXT,
-    certificado_password VARCHAR(100),
-    resolucion_numero VARCHAR(50),
-    resolucion_fecha DATE,
-    resolucion_prefijo VARCHAR(10),
-    resolucion_desde BIGINT,
-    resolucion_hasta BIGINT,
-    resolucion_vigencia DATE,
-    activo BOOLEAN DEFAULT TRUE
-);
 ```
 
-#### Flujo DIAN:
-1. Venta se crea con estado_dian = 'PENDIENTE'
-2. Job asíncrono (@Scheduled) toma ventas PENDIENTE
-3. Genera XML UBL 2.1
-4. Firma con certificado digital (X.509)
-5. Envía a web service DIAN
-6. Actualiza CUFE + estado_dian
-7. Genera QR con datos de la factura
-8. Guarda PDF de la factura
+### Form Pattern (ReactiveForms)
 
-#### Dependencias necesarias:
-```xml
-<!-- Firma digital -->
-<dependency>
-    <groupId>org.apache.santuario</groupId>
-    <artifactId>xmlsec</artifactId>
-</dependency>
-<!-- Generación PDF -->
-<dependency>
-    <groupId>net.sf.jasperreports</groupId>
-    <artifactId>jasperreports</artifactId>
-</dependency>
-<!-- QR -->
-<dependency>
-    <groupId>com.google.zxing</groupId>
-    <artifactId>core</artifactId>
-</dependency>
+```typescript
+@Component({
+  selector: 'app-form-cuenta',
+  standalone: true,
+  imports: [ReactiveFormsModule, DialogModule, ...],
+  templateUrl: './form-cuenta.component.html',
+})
+export class FormCuentaComponent implements OnChanges {
+  @Input() visible = false;
+  @Input() cuenta: any = null;
+  @Output() visibleChange = new EventEmitter<boolean>();
+  @Output() saved = new EventEmitter<void>();
+
+  form: FormGroup;
+
+  get isEdit(): boolean { return !!this.cuenta; }
+
+  ngOnChanges(): void {
+    if (this.visible) {
+      this.form.reset({ ... });
+      if (this.cuenta) this.form.patchValue(this.cuenta);
+    }
+  }
+
+  async save(): Promise<void> {
+    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    // ... save logic
+  }
+}
 ```
 
---------------------------------------------------------------
+### Key Rules
 
-# ============================================================
-# 7. POR CONSTRUIR - MÓDULOS PARA COMPETIR CON SIGO POS
-# ============================================================
+1. **Change Detection**: ALWAYS use `ChangeDetectionStrategy.OnPush` + `cdr.markForCheck()`
+2. **Async**: Use `lastValueFrom` from `rxjs` for async/await
+3. **Forms**: Use ReactiveFormsModule + formControlName (NOT ngModel except for filters)
+4. **Dialogs**: Forms are ALWAYS dialogs, never separate routes
+5. **SCSS**: Each component has its own SCSS file (NEVER shared)
+6. **Loading**: Show loading state in try/catch/finally blocks
 
-## 7.1 CUENTAS POR COBRAR (CxC) ← CRÍTICO
+### Currency Formatting
 
-Sigo POS tiene cartera completa. Sin esto perdemos clientes que dan crédito.
-
-```sql
-CREATE TABLE credito_cliente (
-    id SERIAL PRIMARY KEY,
-    empresa_id INT REFERENCES empresa(id),
-    cliente_id INT REFERENCES tercero(id),
-    venta_id INT REFERENCES venta(id),
-    monto_total DECIMAL(14,2),
-    monto_pagado DECIMAL(14,2) DEFAULT 0,
-    saldo DECIMAL(14,2),
-    fecha_vencimiento DATE,
-    estado VARCHAR(20) -- VIGENTE | VENCIDO | PAGADO
-);
-
-CREATE TABLE pago_credito (
-    id SERIAL PRIMARY KEY,
-    credito_id INT REFERENCES credito_cliente(id),
-    usuario_id INT REFERENCES usuario(id),
-    monto DECIMAL(14,2),
-    metodo_pago VARCHAR(30),
-    referencia VARCHAR(100),
-    fecha TIMESTAMP DEFAULT NOW(),
-    observacion TEXT
-);
+```typescript
+formatCOP = (v: number): string =>
+  new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    maximumFractionDigits: 0,
+  }).format(v ?? 0);
 ```
 
-Funcionalidad:
-- Estado de cuenta por cliente
-- Ventas a crédito con cupo máximo
-- Registro de abonos parciales
-- Alertas de cartera vencida
-- Reporte de cartera por edades
+### Import Order
 
---------------------------------------------------------------
+```typescript
+// Angular
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
-## 7.2 CUENTAS POR PAGAR (CxP)
+// PrimeNG
+import { ButtonModule } from 'primeng/button';
+import { TableModule } from 'primeng/table';
 
-```sql
-CREATE TABLE credito_proveedor (
-    id SERIAL PRIMARY KEY,
-    empresa_id INT REFERENCES empresa(id),
-    proveedor_id INT REFERENCES tercero(id),
-    compra_id INT REFERENCES compra(id),
-    monto_total DECIMAL(14,2),
-    monto_pagado DECIMAL(14,2) DEFAULT 0,
-    saldo DECIMAL(14,2),
-    fecha_vencimiento DATE,
-    estado VARCHAR(20)
-);
+// RxJS
+import { lastValueFrom } from 'rxjs';
 
-CREATE TABLE pago_proveedor (
-    id SERIAL PRIMARY KEY,
-    credito_proveedor_id INT REFERENCES credito_proveedor(id),
-    usuario_id INT REFERENCES usuario(id),
-    monto DECIMAL(14,2),
-    metodo_pago VARCHAR(30),
-    referencia VARCHAR(100),
-    fecha TIMESTAMP DEFAULT NOW()
-);
+// Project
+import { AlertService } from '../../../shared/pipes/alert.service';
+import { SomeService } from '../services/some.service';
 ```
 
---------------------------------------------------------------
+### API Service Pattern
 
-## 7.3 DEVOLUCIONES DE VENTA ← CRÍTICO
+```typescript
+@Injectable({ providedIn: 'root' })
+export class CuentaCobrarService {
+  private readonly base = `${environment.apiUrl}cuentas-cobrar`;
 
-Sin esto el cajero no puede devolver dinero ni producto formalmente.
+  constructor(private readonly http: HttpClient) {}
 
-```sql
-CREATE TABLE devolucion_venta (
-    id SERIAL PRIMARY KEY,
-    empresa_id INT REFERENCES empresa(id),
-    venta_id INT REFERENCES venta(id),
-    usuario_id INT REFERENCES usuario(id),
-    motivo TEXT,
-    tipo VARCHAR(20), -- DINERO | CAMBIO_PRODUCTO
-    estado VARCHAR(20), -- APROBADA | ANULADA
-    fecha TIMESTAMP DEFAULT NOW()
-);
+  page(pageable: any): Observable<any> {
+    return this.http.post<any>(`${this.base}/page`, pageable);
+  }
 
-CREATE TABLE devolucion_venta_detalle (
-    id SERIAL PRIMARY KEY,
-    devolucion_id INT REFERENCES devolucion_venta(id),
-    producto_id INT REFERENCES producto(id),
-    cantidad DECIMAL(14,4),
-    precio_unitario DECIMAL(14,2)
-);
+  getById(id: number): Observable<any> {
+    return this.http.get<any>(`${this.base}/${id}`);
+  }
+
+  create(dto: any): Observable<any> {
+    return this.http.post<any>(`${this.base}`, dto);
+  }
+}
 ```
 
-Flujo:
-- Seleccionar venta original
-- Elegir productos a devolver
-- Devolver stock al inventario
-- Registrar movimiento DEVOLUCION_VENTA en Kardex
-- Generar nota crédito (DIAN)
+---
 
---------------------------------------------------------------
+## Code Style Guidelines
 
-## 7.4 MÓDULO DE EMPLEADOS Y COMISIONES
+### Architecture Pattern
 
-```sql
-CREATE TABLE empleado (
-    id SERIAL PRIMARY KEY,
-    tercero_id INT REFERENCES tercero(id),
-    empresa_id INT REFERENCES empresa(id),
-    cargo VARCHAR(100),
-    salario_base DECIMAL(14,2),
-    tipo_comision VARCHAR(20), -- PORCENTAJE | MONTO_FIJO | NINGUNA
-    valor_comision DECIMAL(14,2),
-    fecha_ingreso DATE,
-    activo BOOLEAN DEFAULT TRUE
-);
+Follow **CQRS Light**:
+1. **Controller**: Receive HTTP requests, validate DTOs, return ApiResponse. NO business logic.
+2. **Service (Interface + Impl)**: Contains business logic, manages transactions (@Transactional).
+3. **Mapper**: MapStruct for DTO <-> Entity conversions.
+4. **Repository**: JPA for simple CRUD; QueryRepository (JDBC) for complex queries.
 
-CREATE TABLE comision_vendedor (
-    id SERIAL PRIMARY KEY,
-    empleado_id INT REFERENCES empleado(id),
-    venta_id INT REFERENCES venta(id),
-    base_calculo DECIMAL(14,2),
-    porcentaje DECIMAL(5,2),
-    monto_comision DECIMAL(14,2),
-    estado VARCHAR(20), -- PENDIENTE | PAGADA
-    fecha TIMESTAMP DEFAULT NOW()
-);
+### Naming Conventions
+
+| Type | Convention | Example |
+|------|------------|---------|
+| Entities | PascalCase, singular | `Producto`, `Venta` |
+| Controllers | `XxxController` | `ProductoController` |
+| Services | `XxxService` + `XxxServiceImpl` | `ProductoService`, `ProductoServiceImpl` |
+| Repositories | `XxxRepository` | `ProductoRepository` |
+| Query Repositories | `XxxQueryRepository` | `ProductoQueryRepository` |
+| DTOs | `XxxDto`, `CreateXxxDto`, `UpdateXxxDto`, `XxxTableDto` | `ProductoDto`, `CreateProductoDto` |
+| Mappers | `XxxMapper` | `ProductoMapper` |
+| Tables | snake_case | `producto`, `venta_detalle` |
+| Columns | snake_case | `empresa_id`, `fecha_creacion` |
+
+### Package by Module
+
+DTOs, entities, repositories, services, and controllers should be organized by module:
+```
+dto/productos/
+  ├── CreateProductoDto.java
+  ├── ProductoDto.java
+  ├── ProductoTableDto.java
+  └── UpdateProductoDto.java
 ```
 
---------------------------------------------------------------
+### DTO Structure
 
-## 7.5 PUNTOS Y FIDELIZACIÓN
+- **XxxDto**: Full detail (form/get by ID)
+- **XxxTableDto**: Paginated table (includes `totalRows`)
+- **CreateXxxDto**: Creation request (with validations)
+- **UpdateXxxDto**: Update request (all fields optional)
 
-```sql
-CREATE TABLE programa_puntos (
-    id SERIAL PRIMARY KEY,
-    empresa_id INT REFERENCES empresa(id),
-    nombre VARCHAR(100),
-    pesos_por_punto DECIMAL(14,2), -- cada X pesos = 1 punto
-    valor_punto DECIMAL(14,2),     -- 1 punto = X pesos de descuento
-    activo BOOLEAN DEFAULT TRUE
-);
+### Security Rules
 
-CREATE TABLE puntos_cliente (
-    id SERIAL PRIMARY KEY,
-    cliente_id INT REFERENCES tercero(id),
-    empresa_id INT REFERENCES empresa(id),
-    puntos_acumulados INT DEFAULT 0,
-    puntos_canjeados INT DEFAULT 0,
-    puntos_disponibles INT DEFAULT 0
-);
+- **ALWAYS** extract `empresaId` from JWT token via `SecurityUtils.getEmpresaId()`
+- **NEVER** accept `empresaId` from request body or header
+- Use `SecurityUtils.getSucursalId()`, `getUsuarioId()`, `getRol()` as needed
 
-CREATE TABLE movimiento_puntos (
-    id SERIAL PRIMARY KEY,
-    cliente_id INT REFERENCES tercero(id),
-    venta_id INT REFERENCES venta(id),
-    tipo VARCHAR(20), -- ACUMULACION | CANJE
-    puntos INT,
-    fecha TIMESTAMP DEFAULT NOW()
-);
+### Pagination
+
+- All list endpoints use `POST /page` with `PageableDto`
+- Query must use `COUNT(*) OVER() AS total_rows`
+- Return `PageImpl` as response
+
+### Database Patterns
+
+**Soft Delete**:
+- Entities with `deleted_at`: Use `@Where(clause = "deleted_at IS NULL")`
+- Entities with `activo` boolean flag: Filter in queries
+
+**Inventory Rules** (CRITICAL):
+1. Stock is NEVER modified directly
+2. All stock changes go through `movimiento_inventario` (immutable)
+3. Every movement records `saldo_anterior` and `saldo_nuevo`
+4. Anulations must validate stock availability (never negative)
+
+**QueryRepository Pattern**:
+- Use for complex queries, reports, paginated lists
+- Use `NamedParameterJdbcTemplate`
+- Return DTOs directly with `BeanPropertyRowMapper`
+- Methods: `existeNombre()`, `existeNombreExcluyendo()`
+
+### Import Order
+
+```java
+// 1. Java/Jakarta
+import java.util.*;
+import javax.validation.*;
+
+// 2. Spring
+import org.springframework.beans.factory.annotation.*;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
+
+// 3. Project imports (grouped by package)
+import com.cloud_technological.aura_pos.dto.*;
+import com.cloud_technological.aura_pos.services.*;
+import com.cloud_technological.aura_pos.repositories.*;
 ```
 
---------------------------------------------------------------
+### Error Handling
 
-## 7.6 ÓRDENES DE PRODUCCIÓN (Para restaurantes/manufactura)
+- Use `GlobalException` for custom errors
+- All controller responses wrap in `ApiResponse<T>`
+- HTTP status codes: 200 (OK), 201 (Created), 400 (Bad Request), 401 (Unauthorized), 404 (Not Found), 500 (Error)
 
-```sql
-CREATE TABLE orden_produccion (
-    id SERIAL PRIMARY KEY,
-    empresa_id INT REFERENCES empresa(id),
-    sucursal_id INT REFERENCES sucursal(id),
-    producto_id INT REFERENCES producto(id), -- producto a producir
-    cantidad DECIMAL(14,4),
-    estado VARCHAR(20), -- PENDIENTE | EN_PROCESO | COMPLETADA | CANCELADA
-    fecha_inicio TIMESTAMP,
-    fecha_fin TIMESTAMP,
-    costo_total DECIMAL(14,2)
-);
+### Lombok Usage
 
-CREATE TABLE orden_produccion_insumo (
-    id SERIAL PRIMARY KEY,
-    orden_id INT REFERENCES orden_produccion(id),
-    producto_id INT REFERENCES producto(id), -- insumo consumido
-    cantidad_requerida DECIMAL(14,4),
-    cantidad_usada DECIMAL(14,4),
-    costo_unitario DECIMAL(14,2)
-);
-```
+Use `@Data`, `@Entity`, `@Table`, `@Service`, `@Repository`, `@Autowired` appropriately. Avoid manual getters/setters.
 
-Flujo:
-- Toma la composición del producto (producto_composicion)
-- Valida stock de insumos
-- Descuenta insumos del inventario
-- Agrega el producto terminado al inventario
-- Genera movimientos en Kardex
+### MapStruct
 
---------------------------------------------------------------
+- One mapper per module
+- Mark relationships as ignored in mapper, assign manually in Service
 
-## 7.7 MULTIMONEDA
+### Testing
 
-```sql
-CREATE TABLE moneda (
-    id SERIAL PRIMARY KEY,
-    codigo VARCHAR(10), -- COP, USD, EUR
-    nombre VARCHAR(50),
-    simbolo VARCHAR(5),
-    tasa_cambio DECIMAL(14,4), -- respecto a moneda base
-    activa BOOLEAN DEFAULT TRUE,
-    updated_at TIMESTAMP
-);
-```
+- Tests go in `src/test/java/com/cloud_technological/aura_pos/`
+- Use JUnit 5 (`org.junit.jupiter.api.*`)
+- Use `@SpringBootTest` for integration tests
+- Single test execution: `mvn test -Dtest=ClassName#methodName`
 
---------------------------------------------------------------
+### Common Patterns
 
-## 7.8 INTEGRACIÓN CON PLATAFORMAS DE DOMICILIOS
-
-```sql
-CREATE TABLE pedido_externo (
-    id SERIAL PRIMARY KEY,
-    empresa_id INT REFERENCES empresa(id),
-    sucursal_id INT REFERENCES sucursal(id),
-    plataforma VARCHAR(30), -- RAPPI | IFOOD | UBER_EATS
-    id_externo VARCHAR(100),
-    venta_id INT REFERENCES venta(id),
-    estado VARCHAR(20),
-    comision_plataforma DECIMAL(14,2),
-    created_at TIMESTAMP DEFAULT NOW()
-);
-```
-
---------------------------------------------------------------
-
-## 7.9 NOTIFICACIONES Y ALERTAS
-
-```sql
-CREATE TABLE alerta (
-    id SERIAL PRIMARY KEY,
-    empresa_id INT REFERENCES empresa(id),
-    tipo VARCHAR(50),    -- STOCK_BAJO | LOTE_VENCER | CARTERA_VENCIDA
-    mensaje TEXT,
-    leida BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT NOW()
-);
-```
-
-Job @Scheduled diario que:
-- Revisa stock bajo mínimo → genera alerta
-- Revisa lotes próximos a vencer → genera alerta
-- Revisa cartera vencida → genera alerta
-
---------------------------------------------------------------
-
-## 7.10 APERTURA Y CIERRE CONTABLE
-
-```sql
-CREATE TABLE periodo_contable (
-    id SERIAL PRIMARY KEY,
-    empresa_id INT REFERENCES empresa(id),
-    anio INT,
-    mes INT,
-    estado VARCHAR(20), -- ABIERTO | CERRADO
-    fecha_cierre TIMESTAMP,
-    usuario_cierre_id INT REFERENCES usuario(id)
-);
-```
-
-Impide modificar documentos de períodos cerrados.
-
---------------------------------------------------------------
-
-## 7.11 BACKUP Y AUDITORÍA AVANZADA
-
-```sql
-CREATE TABLE auditoria_log (
-    id SERIAL PRIMARY KEY,
-    empresa_id INT REFERENCES empresa(id),
-    usuario_id INT REFERENCES usuario(id),
-    tabla VARCHAR(100),
-    operacion VARCHAR(10), -- INSERT | UPDATE | DELETE
-    registro_id BIGINT,
-    datos_anteriores JSONB,
-    datos_nuevos JSONB,
-    ip VARCHAR(45),
-    created_at TIMESTAMP DEFAULT NOW()
-);
-```
-
---------------------------------------------------------------
-
-# ============================================================
-# 8. ANÁLISIS COMPETITIVO VS SIGO POS
-# ============================================================
-
-## ✅ LO QUE TENEMOS Y SIGO TIENE
-
-| Módulo | AURA POS | Sigo POS |
-|--------|----------|----------|
-| Multi-sucursal | ✅ | ✅ |
-| Inventario con Kardex | ✅ | ✅ |
-| Lotes y vencimientos | ✅ | ✅ |
-| Seriales | ✅ | ✅ |
-| Motor de descuentos | ✅ | ✅ |
-| Múltiples listas de precio | ✅ | ✅ |
-| Compras | ✅ | ✅ |
-| POS / Ventas | ✅ | ✅ |
-| Traslados | ✅ | ✅ |
-| Mermas | ✅ | ✅ |
-| Dashboard | ✅ | ✅ |
-| Facturación electrónica DIAN | ⏳ | ✅ |
-
-## ✅ LO QUE TENEMOS Y SIGO NO TIENE
-
-| Ventaja AURA POS |
-|-----------------|
-| Arquitectura moderna (Spring Boot 3, API REST) |
-| API pública documentable con Swagger |
-| Multi-empresa en una sola instancia |
-| Kits y Recetas (producto_composicion) |
-| Motor de descuentos por hora/día/categoría |
-| FEFO automático en lotes |
-| Kardex con 9 tipos de movimiento trazables |
-| Preparado para integración con apps móviles |
-| Código fuente propio (sin licencias) |
-
-## ⚠️ LO QUE SIGO TIENE Y AURA POS AÚN NO
-
-| Módulo Faltante | Prioridad |
-|----------------|-----------|
-| Cuentas por Cobrar (cartera clientes) | 🔴 Alta |
-| Devoluciones de venta | 🔴 Alta |
-| Facturación electrónica DIAN | 🔴 Alta |
-| Reportes exportables (Excel/PDF) | 🟡 Media |
-| Cuentas por Pagar | 🟡 Media |
-| Comisiones vendedores | 🟡 Media |
-| Puntos y fidelización | 🟡 Media |
-| Órdenes de producción | 🟡 Media |
-| Alertas automáticas | 🟡 Media |
-| Integración domicilios (Rappi, iFood) | 🟢 Baja |
-| Multimoneda | 🟢 Baja |
-| Período contable | 🟢 Baja |
-| Auditoría avanzada | 🟢 Baja |
-
---------------------------------------------------------------
-
-# ============================================================
-# 9. ORDEN DE CONSTRUCCIÓN RECOMENDADO (SIGUIENTE FASE)
-# ============================================================
-
-```
-PRIORIDAD 1 - Para poder salir a producción:
-├── Reportes básicos (ventas, inventario)
-├── Devoluciones de venta
-├── CxC (ventas a crédito)
-└── DIAN (para facturar legalmente)
-
-PRIORIDAD 2 - Para competir con Sigo:
-├── CxP (cuentas por pagar)
-├── Comisiones vendedores
-├── Alertas automáticas (@Scheduled)
-└── Exportación Excel/PDF de reportes
-
-PRIORIDAD 3 - Para superar a Sigo:
-├── Puntos y fidelización
-├── Órdenes de producción
-├── Integración domicilios
-└── App móvil PWA
-
-FRONTEND (Angular) - Puede ir en paralelo con Prioridad 2:
-├── Login + dashboard
-├── POS (pantalla de venta)
-├── Módulos de catálogo
-├── Inventario y compras
-└── Reportes y kardex viewer
-```
-
---------------------------------------------------------------
-
-# ============================================================
-# 10. GUÍA PARA CREAR UN NUEVO MÓDULO
-# ============================================================
-
-Orden estricto:
-1. SQL migration (si es tabla nueva)
-2. Entity → domain/models
-3. DTOs → dto/modulo (Dto, TableDto, CreateDto, UpdateDto)
-4. JPARepository → comandos simples
-5. QueryRepository → listados + validaciones complejas
-6. Mapper → MapStruct
-7. Service Interface + ServiceImpl
+**Creating a new module** (in order):
+1. SQL migration (if new table)
+2. Entity
+3. DTOs
+4. JPARepository (simple queries)
+5. QueryRepository (complex queries, paginated)
+6. Mapper (MapStruct)
+7. Service Interface + Implementation
 8. Controller
 
---------------------------------------------------------------
+**Multi-company filtering**:
+```java
+Integer empresaId = securityUtils.getEmpresaId();
+// Always filter queries by empresaId
+```
 
-# REGLAS DE ORO
+## API Response Format
 
-1. Consultas de lectura masiva SIEMPRE van al QueryRepository con JDBC.
-2. El stock NUNCA se modifica directamente, siempre via movimiento_inventario.
-3. Toda operación que mueve stock debe registrar en Kardex (inmutable).
-4. El empresaId SIEMPRE viene del JWT, nunca del body o header.
-5. Nunca usar Hibernate para listar registros masivos.
-6. Todo módulo transaccional va dentro de @Transactional.
-7. Las anulaciones siempre validan que no dejen stock negativo.
+```json
+{
+  "status": 200,
+  "message": "Description",
+  "error": false,
+  "data": { ... }
+}
+```
+
+## Key Files
+
+- Security: `src/main/java/com/cloud_technological/aura_pos/security/`
+- Exception handling: `src/main/java/com/cloud_technological/aura_pos/utils/GlobalException.java`
+- API Response: `src/main/java/com/cloud_technological/aura_pos/utils/ApiResponse.java`
+- SecurityUtils: `src/main/java/com/cloud_technological/aura_pos/utils/SecurityUtils.java`
+
+## API Endpoints
+
+### Cuentas por Cobrar (EP-004 - HU-009, HU-011, HU-013)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/cuentas-cobrar/page` | Listar cuentas con paginación y filtros |
+| GET | `/api/cuentas-cobrar/{id}` | Obtener detalle de cuenta |
+| POST | `/api/cuentas-cobrar` | Crear cuenta por cobrar |
+| PUT | `/api/cuentas-cobrar/{id}` | Actualizar cuenta |
+| POST | `/api/cuentas-cobrar/{id}/abonos` | Registrar abono (entrada de caja) |
+| GET | `/api/cuentas-cobrar/{id}/abonos` | Listar abonos de cuenta |
+| DELETE | `/api/cuentas-cobrar/{cuentaId}/abonos/{abonoId}` | Eliminar abono |
+| GET | `/api/cuentas-cobrar/resumen` | Obtener resumen (totales, activas, pagadas, vencidas) |
+| GET | `/api/cuentas-cobrar/vencidas` | Listar cuentas vencidas |
+
+**Filtros para `/page` y `/resumen`:**
+- `fechaDesde` (String) - Fecha de emisión inicial
+- `fechaHasta` (String) - Fecha de emisión final
+- `clienteId` (Long) - Filtrar por cliente
+- `estado` (String) - Estado: activa, pagada, vencida
+
+### Cuentas por Pagar (EP-004 - HU-010, HU-012, HU-013)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/cuentas-pagar/page` | Listar cuentas con paginación y filtros |
+| GET | `/api/cuentas-pagar/{id}` | Obtener detalle de cuenta |
+| POST | `/api/cuentas-pagar` | Crear cuenta por pagar |
+| PUT | `/api/cuentas-pagar/{id}` | Actualizar cuenta |
+| POST | `/api/cuentas-pagar/{id}/abonos` | Registrar abono (salida de caja) |
+| GET | `/api/cuentas-pagar/{id}/abonos` | Listar abonos de cuenta |
+| DELETE | `/api/cuentas-pagar/{cuentaId}/abonos/{abonoId}` | Eliminar abono |
+| GET | `/api/cuentas-pagar/resumen` | Obtener resumen (totales, activas, pagadas, vencidas) |
+| GET | `/api/cuentas-pagar/vencidas` | Listar cuentas vencidas |
+
+**Filtros para `/page` y `/resumen`:**
+- `fechaDesde` (String) - Fecha de emisión inicial
+- `fechaHasta` (String) - Fecha de emisión final
+- `proveedorId` (Long) - Filtrar por proveedor
+- `estado` (String) - Estado: activa, pagada, vencida
+
+### Estructura de DTOs
+
+**CuentaCobrarDto / CuentaPagarDto:**
+```json
+{
+  "id": 1,
+  "empresaId": 1,
+  "terceroId": 1,
+  "numeroCuenta": "CC-20260225-0001",
+  "fechaEmision": "2026-02-25T10:00:00",
+  "fechaVencimiento": "2026-03-25T10:00:00",
+  "totalDeuda": 100000.00,
+  "totalAbonado": 25000.00,
+  "saldoPendiente": 75000.00,
+  "estado": "activa",
+  "observaciones": "Compra de mercancía",
+  "createdAt": "2026-02-25T10:00:00"
+}
+```
+
+**CuentaCobrarTableDto / CuentaPagarTableDto:**
+```json
+{
+  "id": 1,
+  "numeroCuenta": "CC-20260225-0001",
+  "clienteNombre": "Juan Pérez",
+  "clienteDocumento": "12345678",
+  "fechaEmision": "2026-02-25T10:00:00",
+  "fechaVencimiento": "2026-03-25T10:00:00",
+  "totalDeuda": 100000.00,
+  "totalAbonado": 25000.00,
+  "saldoPendiente": 75000.00,
+  "estado": "activa",
+  "totalRows": 10
+}
+```
+
+**ResumenDto:**
+```json
+{
+  "totalCuentas": 50,
+  "totalDeuda": 5000000.00,
+  "totalAbonado": 1500000.00,
+  "saldoPendiente": 3500000.00,
+  "cantidadActivas": 30,
+  "cantidadPagadas": 15,
+  "cantidadVencidas": 5
+}
+```
+
+**AbonoDto:**
+```json
+{
+  "id": 1,
+  "cuentaCobrarId": 1,
+  "monto": 25000.00,
+  "metodoPago": "efectivo",
+  "referencia": "REC-001",
+  "fechaPago": "2026-02-25T15:30:00",
+  "usuarioNombre": "admin"
+}
+```

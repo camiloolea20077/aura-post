@@ -13,6 +13,7 @@ import com.cloud_technological.aura_pos.dto.productos.ProductoDto;
 import com.cloud_technological.aura_pos.dto.productos.ProductoListDto;
 import com.cloud_technological.aura_pos.dto.productos.ProductoPosDto;
 import com.cloud_technological.aura_pos.dto.productos.ProductoTableDto;
+import com.cloud_technological.aura_pos.dto.productos.UpdateCodigoBarrasDto;
 import com.cloud_technological.aura_pos.dto.productos.UpdateProductoDto;
 import com.cloud_technological.aura_pos.entity.CategoriaEntity;
 import com.cloud_technological.aura_pos.entity.EmpresaEntity;
@@ -166,5 +167,20 @@ public class ProductoServiceImpl implements ProductoService {
     @Override
     public List<ProductoPosDto> listarPos(Integer empresaId, Long sucursalId) {
         return productoRepository.listarPos(empresaId, sucursalId);
+    }
+    @Override
+    @Transactional
+    public ProductoDto actualizarCodigoBarras(Long id, UpdateCodigoBarrasDto dto, Integer empresaId) {
+
+        ProductoEntity entity = productoJPARepository.findByIdAndEmpresaId(id, empresaId)
+                .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Producto no encontrado"));
+
+        // Validar que no esté duplicado en otro producto
+        if (productoRepository.existeCodigoBarrasExcluyendo(dto.getCodigoBarras(), empresaId, id))
+            throw new GlobalException(HttpStatus.BAD_REQUEST, "El código de barras ya está en uso por otro producto");
+
+        entity.setCodigoBarras(dto.getCodigoBarras());
+
+        return productoMapper.toDto(productoJPARepository.save(entity));
     }
 }

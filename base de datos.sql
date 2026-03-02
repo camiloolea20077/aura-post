@@ -209,6 +209,8 @@ CREATE TABLE producto (
 CREATE INDEX idx_producto_nombre ON producto(empresa_id, nombre);
 CREATE INDEX idx_producto_sku ON producto(empresa_id, sku);
 -- Presentaciones (Caja x 12, SixPack)
+
+select * from sucursal
 CREATE TABLE producto_presentacion (
     id SERIAL PRIMARY KEY,
     producto_id INT REFERENCES producto(id),
@@ -446,11 +448,13 @@ CREATE TABLE venta (
     cufe VARCHAR(255),
     qr_data TEXT,
     estado_dian VARCHAR(50), 
-    
+    -- Credito
+	pago_parcial BOOLEAN DEFAULT FALSE,
+	saldo_pendiente DECIMAL(12,2) DEFAULT 0,
+	
     estado_venta VARCHAR(20) DEFAULT 'COMPLETADA',
     observaciones TEXT
 );
-
 CREATE TABLE venta_detalle (
     id SERIAL PRIMARY KEY,
     venta_id INT REFERENCES venta(id),
@@ -484,3 +488,115 @@ CREATE TABLE venta_pago (
     monto DECIMAL(14,2),
     referencia VARCHAR(100)
 );
+CREATE TABLE factura (
+    id BIGSERIAL PRIMARY KEY,
+    prefijo VARCHAR(10) NOT NULL,
+    consecutivo BIGINT NOT NULL,
+    metodo_pago VARCHAR(50) NOT NULL CHECK (metodo_pago IN ('EFECTIVO', 'TRANSFERENCIA', 'TARJETA', 'CREDITO')),
+    valor DECIMAL(12,2) NOT NULL,
+    descuento DECIMAL(12,2) DEFAULT 0,
+    usuario_id INTEGER NOT NULL REFERENCES usuario(id),
+    empresa_id INTEGER NOT NULL REFERENCES empresa(id),
+    venta_id BIGINT NOT NULL REFERENCES venta(id),
+    cufe VARCHAR(100) UNIQUE NOT NULL,
+    descripcion VARCHAR(300),
+    fecha_hora_emision TIMESTAMP NOT NULL DEFAULT NOW(),
+    estado_dian VARCHAR(50) NOT NULL DEFAULT 'PENDIENTE' CHECK (estado_dian IN ('PENDIENTE', 'AUTORIZADO', 'RECHAZADO', 'ERROR')),
+    tipo_ambiente VARCHAR(10) NOT NULL DEFAULT 'dev' CHECK (tipo_ambiente IN ('dev', 'prod')),
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP,
+    deleted_at TIMESTAMP,
+    
+    CONSTRAINT factura_empresa_fk FOREIGN KEY (empresa_id) REFERENCES empresa(id),
+    CONSTRAINT factura_usuario_fk FOREIGN KEY (usuario_id) REFERENCES usuario(id),
+    CONSTRAINT factura_venta_fk FOREIGN KEY (venta_id) REFERENCES venta(id),
+    CONSTRAINT factura_cufe_unique UNIQUE (cufe),
+    CONSTRAINT factura_prefijo_consecutivo_unique UNIQUE (empresa_id, prefijo, consecutivo)
+);
+
+CREATE INDEX idx_factura_empresa ON factura(empresa_id);
+CREATE INDEX idx_factura_venta ON factura(venta_id);
+CREATE INDEX idx_factura_cufe ON factura(cufe);
+CREATE INDEX idx_factura_deleted_at ON factura(deleted_at) WHERE deleted_at IS NULL;
+
+CREATE TABLE factura_pago (
+    id BIGSERIAL PRIMARY KEY,
+    factura_id BIGINT NOT NULL REFERENCES factura(id),
+    valor DECIMAL(12,2) NOT NULL,
+    banco VARCHAR(300),
+    tipo VARCHAR(50) CHECK (tipo IN ('credito', 'debito')),
+    descripcion VARCHAR(300),
+    usuario_id INTEGER NOT NULL REFERENCES usuario(id),
+    metodo_pago VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP,
+    
+    CONSTRAINT factura_pago_factura_fk FOREIGN KEY (factura_id) REFERENCES factura(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_factura_pago_factura ON factura_pago(factura_id);
+
+CREATE TABLE nota_contable (
+    id BIGSERIAL PRIMARY KEY,
+    factura_id BIGINT NOT NULL REFERENCES factura(id),
+    valor DECIMAL(12,2) NOT NULL,
+    banco VARCHAR(300),
+    tipo INTEGER NOT NULL CHECK (tipo IN (1, 2)),
+    nota VARCHAR(500) NOT NULL,
+    usuario_id INTEGER NOT NULL REFERENCES usuario(id),
+    metodo_pago VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    
+    CONSTRAINT nota_contable_factura_fk FOREIGN KEY (factura_id) REFERENCES factura(id) ON DELETE CASCADE,
+    CONSTRAINT nota_contable_valor_positivo CHECK (valor > 0)
+);
+
+CREATE INDEX idx_nota_contable_factura ON nota_contable(factura_id);
+CREATE INDEX idx_nota_contable_tipo ON nota_contable(tipo);
+CREATE INDEX idx_nota_contable_created_at ON nota_contable(created_at);
+
+
+CREATE TABLE recibo_pago (
+    id BIGSERIAL PRIMARY KEY,
+    
+    factura_id BIGINT,
+    
+    valor NUMERIC(19,2),
+    
+    banco VARCHAR(255),
+    
+    tipo VARCHAR(255),
+    
+    descripcion TEXT,
+    
+    usuario_id INTEGER,
+    
+    metodo_pago VARCHAR(255),
+    
+    created_at TIMESTAMP,
+    
+    updated_at TIMESTAMP,
+    
+    CONSTRAINT fk_pago_factura
+        FOREIGN KEY (factura_id)
+        REFERENCES factura(id)
+        ON DELETE SET NULL
+);
+
+CREATE TABLE factura_log (
+    id BIGSERIAL PRIMARY KEY,
+    factura_id BIGINT NOT NULL REFERENCES factura(id),
+    evento VARCHAR(50) NOT NULL,
+    estado_anterior VARCHAR(50),
+    estado_nuevo VARCHAR(50),
+    datos JSONB,
+    usuario_id INTEGER,
+    mensaje VARCHAR(500),
+    metadata JSONB,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+select * from factura_log
+CREATE INDEX idx_factura_log_factura ON factura_log(factura_id);
+CREATE INDEX idx_factura_log_evento ON factura_log(evento);
+CREATE INDEX idx_factura_log_created_at ON factura_log(created_at);
+CREATE INDEX idx_factura_log_factura_fecha ON factura_log(factura_id, created_at DESC);

@@ -1,0 +1,201 @@
+<p-toast></p-toast>
+
+<div class="module-header">
+  <div class="header-left">
+    <div class="header-icon">
+      <i class="pi pi-credit-card"></i>
+    </div>
+    <div>
+      <h1 class="header-title">Cuentas por Pagar</h1>
+      <p class="header-sub">Gestión de cuentas por pagar a proveedores</p>
+    </div>
+  </div>
+  <div class="header-actions">
+    <button
+      pButton
+      label="Nueva Cuenta"
+      icon="pi pi-plus"
+      class="btn-aura btn-primary"
+      (click)="nueva()"
+    ></button>
+  </div>
+</div>
+
+<div class="filters-bar">
+  <div class="filter-row">
+    <div class="filter-field search-field">
+      <p-iconfield>
+        <p-inputicon class="pi pi-search" />
+        <input
+          type="text"
+          pInputText
+          class="w-full"
+          [(ngModel)]="search"
+          (input)="onSearch()"
+          placeholder="Buscar por número de cuenta o cliente..."
+        />
+      </p-iconfield>
+    </div>
+
+    <div class="filter-field">
+      <p-calendar
+        [(ngModel)]="fechaDesde"
+        placeholder="Fecha desde"
+        [showIcon]="true"
+        dateFormat="dd/mm/yy"
+        (onSelect)="onSearch()"
+        [showButtonBar]="true"
+        (onClearClick)="onSearch()"
+      ></p-calendar>
+    </div>
+
+    <div class="filter-field">
+      <p-date-picker
+        [(ngModel)]="fechaHasta"
+        placeholder="Fecha hasta"
+        [showIcon]="true"
+        dateFormat="dd/mm/yy"
+        (onSelect)="onSearch()"
+        [showButtonBar]="true"
+        (onClearClick)="onSearch()"
+      ></p-date-picker>
+    </div>
+
+    <div class="filter-field">
+      <p-select
+        [options]="estados"
+        [(ngModel)]="estadoFilter"
+        placeholder="Estado"
+        (onChange)="onSearch()"
+        [showClear]="true"
+      />
+    </div>
+
+    <div class="filter-field filter-actions">
+      <button
+        pButton
+        icon="pi pi-search"
+        class="p-button-primary"
+        (click)="onSearch()"
+        pTooltip="Buscar"
+      ></button>
+      <button
+        pButton
+        icon="pi pi-filter-slash"
+        class="p-button-secondary p-button-text"
+        (click)="clearFilters()"
+        pTooltip="Limpiar filtros"
+      ></button>
+    </div>
+  </div>
+</div>
+
+<div class="table-card">
+  <p-table
+    [value]="rows"
+    [lazy]="true"
+    [paginator]="true"
+    [rows]="pageSize"
+    [totalRecords]="totalRows"
+    [loading]="loading"
+    (onLazyLoad)="onPage($event)"
+    [rowsPerPageOptions]="[10, 25, 50]"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
+    [tableStyle]="{ 'min-width': '75rem' }"
+    styleClass="p-datatable-striped"
+    [rowHover]="true"
+    (onRowSelect)="verDetalle($event.data)"
+    dataKey="id"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="numeroCuenta">
+          Número <p-sortIcon field="numeroCuenta"></p-sortIcon>
+        </th>
+        <th pSortableColumn="proveedorNombre">
+          Proveedor <p-sortIcon field="proveedorNombre"></p-sortIcon>
+        </th>
+        <th pSortableColumn="proveedorDocumento">
+          Documento <p-sortIcon field="proveedorDocumento"></p-sortIcon>
+        </th>
+        <th pSortableColumn="fechaEmision">
+          Fecha Emisión <p-sortIcon field="fechaEmision"></p-sortIcon>
+        </th>
+        <th pSortableColumn="fechaVencimiento">
+          Vencimiento <p-sortIcon field="fechaVencimiento"></p-sortIcon>
+        </th>
+        <th pSortableColumn="totalDeuda" class="text-right">
+          Total Deuda <p-sortIcon field="totalDeuda"></p-sortIcon>
+        </th>
+        <th pSortableColumn="totalAbonado" class="text-right">
+          Pagado <p-sortIcon field="totalAbonado"></p-sortIcon>
+        </th>
+        <th pSortableColumn="saldoPendiente" class="text-right">
+          Saldo <p-sortIcon field="saldoPendiente"></p-sortIcon>
+        </th>
+        <th pSortableColumn="estado">
+          Estado <p-sortIcon field="estado"></p-sortIcon>
+        </th>
+        <th>Acciones</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-c>
+      <tr class="clickable-row" (click)="verDetalle(c)">
+        <td>
+          <span class="mono fw-600">{{ c.numeroCuenta }}</span>
+        </td>
+        <td>{{ c.proveedorNombre }}</td>
+        <td class="mono">{{ c.proveedorDocumento }}</td>
+        <td>{{ c.fechaEmision | date: "dd/MM/yyyy" }}</td>
+        <td>
+          <span [class.text-danger]="c.estado === 'vencida'">
+            {{ c.fechaVencimiento | date: "dd/MM/yyyy" }}
+          </span>
+        </td>
+        <td class="text-right mono">{{ formatCOP(c.totalDeuda) }}</td>
+        <td class="text-right mono text-success">
+          {{ formatCOP(c.totalAbonado) }}
+        </td>
+        <td class="text-right mono fw-600">
+          {{ formatCOP(c.saldoPendiente) }}
+        </td>
+        <td>
+          <p-tag
+            [value]="getEstadoLabel(c.estado)"
+            [severity]="getSeverity(c.estado)"
+          ></p-tag>
+        </td>
+        <td>
+          <button
+            pButton
+            icon="pi pi-eye"
+            class="p-button-text p-button-sm"
+            (click)="verDetalle(c); $event.stopPropagation()"
+            pTooltip="Ver detalle"
+          ></button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="10" class="empty-row">
+          <i class="pi pi-inbox"></i>
+          <p>No se encontraron cuentas por pagar</p>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<app-form-cuenta-pagar
+  [(visible)]="showForm"
+  (saved)="onSaved()"
+></app-form-cuenta-pagar>
+
+<app-detalle-cuenta-pagar
+  [(visible)]="showDetalle"
+  [cuenta]="cuentaDetalle"
+  [loading]="loadingDetalle"
+  (saved)="onSaved()"
+></app-detalle-cuenta-pagar>

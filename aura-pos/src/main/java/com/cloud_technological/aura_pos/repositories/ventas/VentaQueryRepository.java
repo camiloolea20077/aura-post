@@ -36,6 +36,10 @@ public class VentaQueryRepository {
                 v.total_pagar,
                 v.estado_venta,
                 v.tipo_documento,
+                v.estado_dian,
+                v.factus_url,
+                v.cufe,
+                v.factus_numero,
                 COUNT(*) OVER() AS total_rows
             FROM venta v
             INNER JOIN sucursal s ON v.sucursal_id = s.id
@@ -105,12 +109,16 @@ public class VentaQueryRepository {
 
     // Obtener consecutivo siguiente por sucursal
     public Long obtenerSiguienteConsecutivo(Long sucursalId) {
-        String sql = """
+        try {
+            String sql = """
             SELECT COALESCE(MAX(consecutivo), 0) + 1
             FROM venta
             WHERE sucursal_id = :sucursalId
         """;
         MapSqlParameterSource params = new MapSqlParameterSource("sucursalId", sucursalId);
         return jdbcTemplate.queryForObject(sql, params, Long.class);
+        } catch (Exception e) {
+            return 1L; // Si ocurre un error, retornar 1 como el primer consecutivo
+        }
     }
 }

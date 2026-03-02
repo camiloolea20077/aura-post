@@ -7,7 +7,8 @@ export type MetodoPago =
   | 'TARJETA'
   | 'TRANSFERENCIA'
   | 'NEQUI'
-  | 'DAVIPLATA';
+  | 'DAVIPLATA'
+  | 'CREDITO';
 
 // ─── Detalle ──────────────────────────────────────────────────
 export interface VentaDetalleModel {
@@ -70,6 +71,10 @@ export interface VentaTableModel {
   fechaEmision: string;
   totalPagar: number;
   estadoVenta: EstadoVenta;
+  estadoDian?: string;
+  cufe?: string;
+  factusUrl?: string;
+  factusNumero?: string;
 }
 
 // ─── DTOs ─────────────────────────────────────────────────────
@@ -93,6 +98,8 @@ export interface CreateVentaDto {
   clienteId: number | null;
   detalles: CreateVentaDetalleDto[];
   pagos: CreateVentaPagoDto[];
+  pagoParcial?: boolean;
+  saldoPendiente?: number;
 }
 
 export interface VentaPageableDto {
@@ -180,4 +187,30 @@ export const METODOS_PAGO: {
     icon: 'pi pi-wallet',
     color: '#EF4444',
   },
+  {
+    label: 'Crédito',
+    value: 'CREDITO',
+    icon: 'pi pi-file-invoice',
+    color: '#F59E0B',
+  },
 ];
+export interface VentaReporteItem {
+  id: number;
+  numeroVenta: string;
+  fechaEmision: string; // ISO string
+  cajaNombre: string;
+  totalPagar: number;
+  estadoVenta: 'COMPLETADA' | 'ANULADA';
+  // detalles resumidos (viene del backend)
+  detallesResumen: string; // Ej: "Tubo x2, Válvula x1"
+}
+
+export interface VentaReporteResponse {
+  content: VentaReporteItem[];
+  totalElements: number;
+  totalPages: number;
+  totalCompletadas: number;
+  totalIngresos: number;
+  ticketPromedio: number;
+  porDia: { dia: string; total: number }[]; // últimos 7 días
+}

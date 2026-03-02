@@ -13,8 +13,11 @@ import com.cloud_technological.aura_pos.dto.compras.CompraDto;
 import com.cloud_technological.aura_pos.dto.compras.CompraTableDto;
 import com.cloud_technological.aura_pos.dto.compras.CreateCompraDetalleDto;
 import com.cloud_technological.aura_pos.dto.compras.CreateCompraDto;
+import com.cloud_technological.aura_pos.dto.compras.CreateCompraPagoDto;
+import com.cloud_technological.aura_pos.dto.cuentas_pagar.CreateCuentaPagarDto;
 import com.cloud_technological.aura_pos.entity.CompraDetalleEntity;
 import com.cloud_technological.aura_pos.entity.CompraEntity;
+import com.cloud_technological.aura_pos.entity.CompraPagoEntity;
 import com.cloud_technological.aura_pos.entity.EmpresaEntity;
 import com.cloud_technological.aura_pos.entity.InventarioEntity;
 import com.cloud_technological.aura_pos.entity.LoteEntity;
@@ -22,9 +25,11 @@ import com.cloud_technological.aura_pos.entity.MovimientoInventarioEntity;
 import com.cloud_technological.aura_pos.entity.ProductoEntity;
 import com.cloud_technological.aura_pos.entity.SucursalEntity;
 import com.cloud_technological.aura_pos.entity.TerceroEntity;
+import com.cloud_technological.aura_pos.entity.UsuarioEntity;
 import com.cloud_technological.aura_pos.mappers.CompraDetalleMapper;
 import com.cloud_technological.aura_pos.mappers.CompraMapper;
 import com.cloud_technological.aura_pos.repositories.compras.CompraJPARepository;
+import com.cloud_technological.aura_pos.repositories.compras.CompraPagoJPARepository;
 import com.cloud_technological.aura_pos.repositories.compras.CompraQueryRepository;
 import com.cloud_technological.aura_pos.repositories.detalle_compras.CompraDetalleJPARepository;
 import com.cloud_technological.aura_pos.repositories.empresas.EmpresaJPARepository;
@@ -34,7 +39,10 @@ import com.cloud_technological.aura_pos.repositories.movimiento_inventario.Movim
 import com.cloud_technological.aura_pos.repositories.productos.ProductoJPARepository;
 import com.cloud_technological.aura_pos.repositories.sucursales.SucursalJPARepository;
 import com.cloud_technological.aura_pos.repositories.terceros.TerceroJPARepository;
+import com.cloud_technological.aura_pos.repositories.users.UsuarioJPARepository;
 import com.cloud_technological.aura_pos.services.CompraService;
+import com.cloud_technological.aura_pos.services.CuentaPagarService;
+import com.cloud_technological.aura_pos.services.NotaContableService;
 import com.cloud_technological.aura_pos.utils.GlobalException;
 import com.cloud_technological.aura_pos.utils.PageableDto;
 
@@ -44,6 +52,7 @@ import jakarta.transaction.Transactional;
 public class CompraServiceImpl implements CompraService {
     private final CompraQueryRepository compraRepository;
     private final CompraJPARepository compraJPARepository;
+    private final CompraPagoJPARepository compraPagoJPARepository;
     private final CompraDetalleJPARepository detalleJPARepository;
     private final MovimientoInventarioJPARepository movimientoJPARepository;
     private final InventarioJPARepository inventarioJPARepository;
@@ -52,12 +61,16 @@ public class CompraServiceImpl implements CompraService {
     private final TerceroJPARepository terceroJPARepository;
     private final SucursalJPARepository sucursalJPARepository;
     private final EmpresaJPARepository empresaRepository;
+    private final UsuarioJPARepository usuarioRepository;
     private final CompraMapper compraMapper;
     private final CompraDetalleMapper detalleMapper;
+    private final NotaContableService notaContableService;
+    private final CuentaPagarService cuentaPagarService;
 
     @Autowired
     public CompraServiceImpl(CompraQueryRepository compraRepository,
             CompraJPARepository compraJPARepository,
+            CompraPagoJPARepository compraPagoJPARepository,
             CompraDetalleJPARepository detalleJPARepository,
             MovimientoInventarioJPARepository movimientoJPARepository,
             InventarioJPARepository inventarioJPARepository,
@@ -66,10 +79,14 @@ public class CompraServiceImpl implements CompraService {
             TerceroJPARepository terceroJPARepository,
             SucursalJPARepository sucursalJPARepository,
             EmpresaJPARepository empresaRepository,
+            UsuarioJPARepository usuarioRepository,
             CompraMapper compraMapper,
-            CompraDetalleMapper detalleMapper) {
+            CompraDetalleMapper detalleMapper,
+            NotaContableService notaContableService,
+            CuentaPagarService cuentaPagarService) {
         this.compraRepository = compraRepository;
         this.compraJPARepository = compraJPARepository;
+        this.compraPagoJPARepository = compraPagoJPARepository;
         this.detalleJPARepository = detalleJPARepository;
         this.movimientoJPARepository = movimientoJPARepository;
         this.inventarioJPARepository = inventarioJPARepository;
@@ -78,8 +95,11 @@ public class CompraServiceImpl implements CompraService {
         this.terceroJPARepository = terceroJPARepository;
         this.sucursalJPARepository = sucursalJPARepository;
         this.empresaRepository = empresaRepository;
+        this.usuarioRepository = usuarioRepository;
         this.compraMapper = compraMapper;
         this.detalleMapper = detalleMapper;
+        this.notaContableService = notaContableService;
+        this.cuentaPagarService = cuentaPagarService;
     }
 
     @Override
@@ -162,6 +182,79 @@ public class CompraServiceImpl implements CompraService {
         compra.setDescuentoTotal(BigDecimal.ZERO);
         compra.setTotal(subtotal.add(impuestosTotal));
         compraJPARepository.save(compra);
+
+        // 4. Procesar pagos y generar notas contables (HU-008)
+        if (dto.getPagos() != null && !dto.getPagos().isEmpty()) {
+            UsuarioEntity usuario = usuarioRepository.findById(usuarioId.intValue())
+                    .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+
+            BigDecimal montoPagado = BigDecimal.ZERO;
+
+            for (CreateCompraPagoDto pagoDto : dto.getPagos()) {
+                // Guardar pago
+                CompraPagoEntity pagoEntity = new CompraPagoEntity();
+                pagoEntity.setCompra(compra);
+                pagoEntity.setMetodoPago(pagoDto.getMetodoPago());
+                pagoEntity.setMonto(pagoDto.getMonto());
+                pagoEntity.setBanco(pagoDto.getBanco());
+                pagoEntity.setFechaPago(LocalDateTime.now());
+                pagoEntity.setUsuario(usuario);
+                pagoEntity.setActivo(true);
+                compraPagoJPARepository.save(pagoEntity);
+
+                montoPagado = montoPagado.add(pagoDto.getMonto());
+
+                // Generar nota contable de DÉBITO por cada pago
+                String nombreUsuario = usuario.getTercero() != null ? usuario.getTercero().getNombres() : usuario.getUsername();
+                String descripcion;
+                if (montoPagado.compareTo(compra.getTotal()) < 0) {
+                    // Pago parcial
+                    descripcion = "Pago parcial Compra #" + compra.getId() + " - Usuario: " + nombreUsuario;
+                } else {
+                    // Pago total
+                    descripcion = "Pago total Compra #" + compra.getId();
+                }
+
+                notaContableService.generarNotaDebitoPagoCompra(
+                        compra.getId(),
+                        pagoDto.getMonto(),
+                        usuarioId.intValue(),
+                        pagoDto.getMetodoPago(),
+                        descripcion
+                );
+            }
+        }
+
+        // 5. Registrar cuenta por pagar si hay saldo pendiente o pago a crédito
+        BigDecimal montoPagado = BigDecimal.ZERO;
+        boolean esCredito = false;
+        
+        if (dto.getPagos() != null && !dto.getPagos().isEmpty()) {
+            for (CreateCompraPagoDto pagoDto : dto.getPagos()) {
+                if ("CREDITO".equalsIgnoreCase(pagoDto.getMetodoPago())) {
+                    esCredito = true;
+                }
+                montoPagado = montoPagado.add(pagoDto.getMonto());
+            }
+        }
+
+        BigDecimal saldoPendiente = compra.getTotal().subtract(montoPagado);
+        
+        // Crear cuenta por pagar si es crédito o hay saldo pendiente
+        if (esCredito || saldoPendiente.compareTo(BigDecimal.ZERO) > 0) {
+            // Crear cuenta por pagar
+            CreateCuentaPagarDto cuentaPagarDto = new CreateCuentaPagarDto();
+            cuentaPagarDto.setProveedorId(dto.getProveedorId());
+            cuentaPagarDto.setCompraId(compra.getId());
+            cuentaPagarDto.setTotalDeuda(compra.getTotal());
+            cuentaPagarDto.setFechaEmision(compra.getFecha());
+            cuentaPagarDto.setFechaVencimiento(dto.getFechaVencimiento() != null ? dto.getFechaVencimiento() : compra.getFecha().plusDays(30));
+            cuentaPagarDto.setObservaciones(esCredito ? 
+                "Compra #" + compra.getId() + " - Compra a crédito" : 
+                "Compra #" + compra.getId());
+
+            cuentaPagarService.crear(cuentaPagarDto, empresaId, usuarioId);
+        }
 
         return obtenerPorId(compra.getId(), empresaId);
     }

@@ -1,0 +1,100 @@
+// ── Estados (loading / error) ─────────────────────────────────
+.state-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: #6b7280;
+
+  p {
+    margin: 0;
+    font-size: 0.95rem;
+  }
+
+  &.error {
+    color: #ef4444;
+  }
+}
+
+.error-icon {
+  font-size: 3rem;
+  color: #ef4444;
+}
+
+// ── PDF iframe — ocupa TODO el espacio disponible ─────────────
+.pdf-iframe {
+  flex: 1;
+  width: 100%;
+  min-height: 0; // necesario para que flex funcione en algunos browsers
+  display: block;
+  border: none;
+  background: #525659;
+}
+
+// ── Footer ────────────────────────────────────────────────────
+.footer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 1rem;
+}
+
+.footer-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+// ── CUFE ──────────────────────────────────────────────────────
+.cufe-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 0.3rem 0.75rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.cufe-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
+}
+
+.cufe-value {
+  font-family: "Courier New", monospace;
+  font-size: 0.7rem;
+  color: #374151;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.copy-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 0.2rem 0.3rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+  line-height: 1;
+
+  &:hover {
+    color: #374151;
+    background: #f3f4f6;
+  }
+
+  i {
+    font-size: 0.8rem;
+  }
+}

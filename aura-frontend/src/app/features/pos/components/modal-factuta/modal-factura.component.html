@@ -96,7 +96,7 @@
               <td class="text-right mono fw-700">
                 {{
                   formatCOPPublic(
-                    d.subtotalLinea + d.impuestoValor - (d.montoDescuento ?? 0)
+                    d.subtotalLinea + d.impuestoValor - (d.montoDescuento || 0)
                   )
                 }}
               </td>

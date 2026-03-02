@@ -1,0 +1,176 @@
+<div class="rpt-page">
+  <!-- ── Header ─────────────────────────────────────────── -->
+  <div class="rpt-header">
+    <div class="rpt-header__left">
+      <div class="rpt-icon rpt-icon--inv">
+        <i class="pi pi-box"></i>
+      </div>
+      <div>
+        <h2 class="rpt-title">Reporte de Inventario</h2>
+        <p class="rpt-sub">Estado actual de productos y existencias</p>
+      </div>
+    </div>
+
+    <div class="rpt-header__right">
+      <!-- Búsqueda -->
+      <div class="search-wrap">
+        <i class="pi pi-search search-ico"></i>
+        <input
+          pInputText
+          type="text"
+          [(ngModel)]="busqueda"
+          (input)="filtrar()"
+          placeholder="Buscar producto, SKU…"
+          class="search-input"
+        />
+      </div>
+
+      <!-- Botones descarga -->
+      <div class="download-btns">
+        <p-button
+          icon="pi pi-file-excel"
+          label="Excel"
+          size="small"
+          severity="success"
+          [loading]="loadingExcel"
+          (onClick)="descargarExcel()"
+          pTooltip="Descargar Excel"
+          tooltipPosition="bottom"
+        />
+        <p-button
+          icon="pi pi-file-pdf"
+          label="PDF"
+          size="small"
+          severity="danger"
+          [loading]="loadingPdf"
+          (onClick)="descargarPdf()"
+          pTooltip="Descargar PDF"
+          tooltipPosition="bottom"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Stat cards ──────────────────────────────────────── -->
+  <div class="stats-grid">
+    <ng-container *ngIf="loadingStats">
+      <div class="stat-card" *ngFor="let _ of [1, 2, 3, 4]">
+        <p-skeleton height="88px" borderRadius="14px" />
+      </div>
+    </ng-container>
+
+    <div class="stat-card stat-card--{{ s.color }}" *ngFor="let s of stats">
+      <div class="stat-card__icon"><i class="pi {{ s.icon }}"></i></div>
+      <div class="stat-card__body">
+        <span class="stat-value">{{ s.value }}</span>
+        <span class="stat-label">{{ s.label }}</span>
+        <span class="stat-sub">{{ s.sub }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Categorías + Tabla ──────────────────────────────── -->
+  <div class="bottom-row">
+    <!-- Distribución por categoría -->
+    <div class="cat-card">
+      <p class="cat-card__title">Distribución por categoría</p>
+
+      <div class="cat-list" *ngIf="!loadingStats">
+        <div class="cat-item" *ngFor="let c of categorias">
+          <div class="cat-item__info">
+            <span class="cat-dot" [style.background]="c.color"></span>
+            <span class="cat-nombre">{{ c.nombre }}</span>
+          </div>
+          <div class="cat-bar-wrap">
+            <div
+              class="cat-bar"
+              [style.width.%]="c.pct"
+              [style.background]="c.color"
+            ></div>
+          </div>
+          <span class="cat-pct">{{ c.cantidad }} ({{ c.pct }}%)</span>
+        </div>
+      </div>
+
+      <div class="cat-list" *ngIf="loadingStats">
+        <div *ngFor="let _ of [1, 2, 3, 4]" style="margin-bottom: 0.75rem">
+          <p-skeleton height="28px" borderRadius="6px" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla de productos -->
+    <div class="tabla-card">
+      <p class="tabla-card__title">
+        <i class="pi pi-tags"></i> Productos
+        <span class="tabla-count">{{ productosFiltrados.length }}</span>
+      </p>
+
+      <p-table
+        [value]="productosFiltrados"
+        [loading]="loadingTabla"
+        [scrollable]="true"
+        scrollHeight="300px"
+        styleClass="p-datatable-sm aura-table"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>SKU</th>
+            <th>Producto</th>
+            <th>Categoría</th>
+            <th class="col-c">Stock</th>
+            <th class="col-r">Costo</th>
+            <th class="col-r">Precio</th>
+            <th class="col-c">IVA</th>
+            <th class="col-c">Estado</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-p>
+          <tr
+            [class.row--inactivo]="!p.activo"
+            [class.row--sinstock]="p.activo && p.stock === 0"
+          >
+            <td>
+              <span class="sku-chip">{{ p.sku }}</span>
+            </td>
+            <td class="col-nombre">{{ p.nombre }}</td>
+            <td>
+              <span class="cat-chip">{{ p.categoria }}</span>
+            </td>
+            <td class="col-c">
+              <p-tag
+                [value]="p.stock.toString()"
+                [severity]="severityStock(p)"
+                [rounded]="true"
+              />
+            </td>
+            <td class="col-r col-muted">{{ cop(p.costo) }}</td>
+            <td class="col-r">
+              <strong>{{ cop(p.precio) }}</strong>
+            </td>
+            <td class="col-c col-muted">{{ p.iva }}%</td>
+            <td class="col-c">
+              <p-tag
+                [value]="p.activo ? 'Activo' : 'Inactivo'"
+                [severity]="p.activo ? 'success' : 'secondary'"
+                [rounded]="true"
+              />
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="8">
+              <div class="empty-msg">
+                <i class="pi pi-search"></i>
+                <p>Sin productos que coincidan</p>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+</div>

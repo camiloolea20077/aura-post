@@ -41,6 +41,12 @@ import { environment } from '../../../environments/environment';
 import { ModalPagoComponent } from './components/modal-pagos/modal-pago.component';
 import { VentaResponse } from '../../core/models/venta-response.model';
 import { ModalTirillaComponent } from './components/modal-tirilla/modal-tirilla.component';
+import { FilterProductsPipe } from '../../shared/pipes/filter-products.pipe';
+import {
+  FacturaElectronicaModalComponent,
+  FacturaElectronicaResult,
+} from '../factura_eletronica/factura-electronica-modal.component';
+import { IndexDBService } from '../../core/services/index-db.service';
 
 @Component({
   selector: 'app-pos',
@@ -59,13 +65,17 @@ import { ModalTirillaComponent } from './components/modal-tirilla/modal-tirilla.
     SkeletonModule,
     ModalPagoComponent,
     ModalTirillaComponent,
+    FilterProductsPipe,
+    FacturaElectronicaModalComponent,
   ],
   providers: [MessageService],
   templateUrl: './pos.component.html',
   styleUrls: ['./pos.component.scss'],
 })
 export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
-  // ─── NUEVO: referencia al input de búsqueda ───────────────
+  searchProduct = '';
+  page = 1;
+  length = 12;
   @ViewChild('searchInput') searchInputRef!: ElementRef<HTMLInputElement>;
   public showTirilla = false;
   public ventaActual: VentaModel | null = null;
@@ -95,12 +105,21 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   public showPago = false;
   public pagosPrev: PagoUI[] = [];
 
+  // ── Factura electrónica ───────────────────────────────────────────
+  public mostrarModalFE = false;
+  public ventaCompletadaId: number | null = null;
+  public empresaFacturaElec = false;
+
+  public feClienteNombre = '';
+  public feClienteDocumento = '';
+  public feClienteEmail = '';
   constructor(
     private readonly ventaService: VentaService,
     private readonly turnoCajaService: TurnoCajaService,
     private readonly terceroService: TerceroService,
     private readonly alertService: AlertService,
     private readonly router: Router,
+    private readonly indexDBService: IndexDBService,
     private readonly http: HttpClient,
     private readonly cdr: ChangeDetectorRef,
   ) {}
@@ -108,9 +127,17 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit(): void {
     this.checkTurno();
     this.setupSearch();
+    this.loadEmpresaConfig();
   }
 
-  // ─── NUEVO: autofocus al renderizar ──────────────────────
+  private async loadEmpresaConfig(): Promise<void> {
+    try {
+      const auth = await this.indexDBService.loadDataAuthDB();
+      this.empresaFacturaElec = auth?.facturaElectronica ?? false;
+    } catch {
+      this.empresaFacturaElec = false;
+    }
+  }
   ngAfterViewInit(): void {
     this.focusSearch();
   }
@@ -120,12 +147,10 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // ─── NUEVO: helper para enfocar el input ─────────────────
   focusSearch(): void {
     setTimeout(() => this.searchInputRef?.nativeElement?.focus(), 50);
   }
 
-  // ── Turno ──────────────────────────────────────────────────
   private async checkTurno(): Promise<void> {
     try {
       const res = await lastValueFrom(this.turnoCajaService.turnoActivo());
@@ -140,7 +165,6 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  // ── Catálogo ───────────────────────────────────────────────
   private async loadProductos(): Promise<void> {
     try {
       const res: any = await lastValueFrom(
@@ -175,12 +199,8 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       });
   }
 
-  // ─── MODIFICADO: onSearch ahora detecta código de barras ─
   onSearch(): void {
-    const query = this.searchProducto.trim();
-
-    // La pistola envía el código completo de golpe (sin debounce).
-    // Buscamos coincidencia EXACTA por codigoBarras o SKU.
+    const query = this.searchProduct.trim();
     const matchBarcode = this.productos.find(
       (p) =>
         (p.codigoBarras && p.codigoBarras === query) ||
@@ -189,21 +209,18 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (matchBarcode) {
       this.addToCart(matchBarcode);
-      // Limpiar input y devolver foco para el siguiente escaneo
-      this.searchProducto = '';
+      this.searchProduct = '';
       this.filtrar();
       this.focusSearch();
       this.cdr.markForCheck();
       return;
     }
 
-    // Búsqueda normal por texto con debounce
     this.searchSubject$.next(query);
   }
 
-  // ─── NUEVO: limpiar búsqueda y devolver foco ─────────────
   clearSearch(): void {
-    this.searchProducto = '';
+    this.searchProduct = '';
     this.filtrar();
     this.focusSearch();
     this.cdr.markForCheck();
@@ -213,15 +230,15 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     let list = this.productos;
     if (this.categoriaActiva)
       list = list.filter((p) => p.categoriaId === this.categoriaActiva);
-    const q = this.searchProducto.trim().toLowerCase();
+    const q = this.searchProduct.trim().toLowerCase();
     if (q)
       list = list.filter(
         (p) =>
           p.nombre.toLowerCase().includes(q) ||
           (p.sku?.toLowerCase().includes(q) ?? false) ||
-          (p.codigoBarras?.toLowerCase().includes(q) ?? false), // ← incluir barcode en filtro texto
+          (p.codigoBarras?.toLowerCase().includes(q) ?? false),
       );
-    this.productosFiltrados = list;
+    this.productosFiltrados = list.filter((p) => p.stockActual > 0);
   }
 
   setCategoria(id: number | null): void {
@@ -232,7 +249,6 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ── Carrito ───────────────────────────────────────────────
   addToCart(p: ProductoPOS): void {
-    // Servicios no tienen stock — los dejamos pasar sin validación
     const tieneInventario = p.tipoProducto !== 'SERVICIO';
 
     if (tieneInventario && p.stockActual <= 0) {
@@ -354,6 +370,9 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.clienteId = c.id;
     this.clienteNombre =
       c.nombreCompleto ?? `${c.nombres ?? ''} ${c.apellidos ?? ''}`.trim();
+    // Guardar para el modal FE
+    this.feClienteDocumento = c.numeroDocumento ?? '';
+    this.feClienteEmail = c.emailFe ?? c.email ?? '';
     this.clienteSugerencias = [];
     this.cdr.markForCheck();
   }
@@ -374,6 +393,20 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   async onVentaConfirmada(pagos: any[]): Promise<void> {
+    const tieneCredito = pagos.some((p) => p.metodoPago === 'CRÉDITO');
+
+    if (tieneCredito && !this.clienteId) {
+      this.alertService.showError(
+        'Cliente requerido',
+        'Las ventas a crédito requieren un cliente asociado',
+      );
+      return;
+    }
+    const clienteIdParaFE = this.clienteId;
+    const clienteNombreParaFE = this.feClienteNombre;
+    const clienteDocParaFE = this.feClienteDocumento;
+    const clienteEmailParaFE = this.feClienteEmail;
+
     const dto: CreateVentaDto = {
       turnoCajaId: this.turnoActivo!.id,
       clienteId: this.clienteId,
@@ -385,27 +418,56 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         impuestoValor: c.impuestoValor,
       })),
       pagos,
+      pagoParcial: tieneCredito,
+      saldoPendiente: tieneCredito ? this.total : 0,
     };
+
     try {
       const res = await lastValueFrom(this.ventaService.create(dto));
+
       if (res?.status === 201) {
         this.ventaActual = res.data as unknown as VentaModel;
         this.showPago = false;
-        this.showTirilla = true;
         this.clearCart();
+        const ventaTieneCliente = (res.data as any)?.clienteId !== undefined;
+        if (this.empresaFacturaElec && ventaTieneCliente) {
+          this.ventaCompletadaId = (res.data as any).id;
+          this.feClienteNombre = clienteNombreParaFE;
+          this.feClienteDocumento = clienteDocParaFE;
+          this.feClienteEmail = clienteEmailParaFE;
+          this.mostrarModalFE = true;
+        } else {
+          this.showTirilla = true;
+        }
+
         this.cdr.markForCheck();
       }
     } catch (err: any) {
-      this.alertService.showError(
-        'Error',
-        err?.message ?? 'No se pudo registrar la venta.',
-      );
+      const message =
+        err?.error?.message ?? err?.message ?? 'No se pudo registrar la venta.';
+      if (
+        tieneCredito &&
+        (message.includes('crédito') || message.includes('cliente'))
+      ) {
+        this.alertService.showError(
+          'Cliente requerido',
+          'Las ventas a crédito requieren un cliente asociado',
+        );
+      } else {
+        this.alertService.showError('Error', message);
+      }
     }
   }
   onTirillaClose(): void {
     this.showTirilla = false;
-    this.ventaActual = null;
-    this.focusSearch();
+
+    // ¿Mostrar modal de factura electrónica?
+    if (this.empresaFacturaElec && this.ventaCompletadaId) {
+      this.mostrarModalFE = true;
+    } else {
+      this.ventaActual = null;
+      this.focusSearch();
+    }
     this.cdr.markForCheck();
   }
   goTurnos(): void {
@@ -425,4 +487,19 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       currency: 'COP',
       maximumFractionDigits: 0,
     }).format(v ?? 0);
+  onFacturaEmitida(result: FacturaElectronicaResult): void {
+    this.mostrarModalFE = false;
+    this.ventaCompletadaId = null;
+    this.ventaActual = null;
+    this.focusSearch();
+    this.cdr.markForCheck();
+  }
+
+  onFacturaOmitida(): void {
+    this.mostrarModalFE = false;
+    this.ventaCompletadaId = null;
+    this.ventaActual = null;
+    this.focusSearch();
+    this.cdr.markForCheck();
+  }
 }

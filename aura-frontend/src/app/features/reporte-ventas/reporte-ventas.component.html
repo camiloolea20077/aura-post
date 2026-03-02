@@ -1,0 +1,166 @@
+<div class="page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <div class="page-icon"><i class="pi pi-chart-bar"></i></div>
+      <div>
+        <h2 class="page-title">Reporte de Ventas</h2>
+        <p class="page-sub">Análisis de transacciones y rendimiento</p>
+      </div>
+    </div>
+
+    <!-- Filtros + Descarga -->
+    <div class="header-actions">
+      <div class="filtros">
+        <p-calendar
+          [(ngModel)]="desde"
+          dateFormat="dd/mm/yy"
+          placeholder="Desde"
+          [showIcon]="true"
+          styleClass="cal-sm"
+        />
+        <span class="sep-cal">→</span>
+        <p-calendar
+          [(ngModel)]="hasta"
+          dateFormat="dd/mm/yy"
+          placeholder="Hasta"
+          [showIcon]="true"
+          styleClass="cal-sm"
+        />
+        <p-button
+          icon="pi pi-filter"
+          label="Filtrar"
+          size="small"
+          severity="secondary"
+          (onClick)="filtrar()"
+        />
+      </div>
+
+      <div class="download-group">
+        <p-button
+          icon="pi pi-file-excel"
+          label="Excel"
+          size="small"
+          severity="success"
+          [loading]="loadingExcel"
+          (onClick)="descargarExcel()"
+          pTooltip="Descargar Excel"
+          tooltipPosition="bottom"
+        />
+        <p-button
+          icon="pi pi-file-pdf"
+          label="PDF"
+          size="small"
+          severity="danger"
+          [loading]="loadingPdf"
+          (onClick)="descargarPdf()"
+          pTooltip="Descargar PDF"
+          tooltipPosition="bottom"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats cards -->
+  <div class="stats-grid">
+    <ng-container *ngIf="loadingStats">
+      <div class="stat-card" *ngFor="let s of [1, 2, 3, 4]">
+        <p-skeleton height="90px" borderRadius="12px" />
+      </div>
+    </ng-container>
+
+    <div
+      class="stat-card"
+      *ngFor="let s of stats"
+      [class]="'stat-card--' + s.color"
+    >
+      <div class="stat-icon"><i class="pi" [class]="s.icon"></i></div>
+      <div class="stat-body">
+        <span class="stat-value">{{ s.value }}</span>
+        <span class="stat-label">{{ s.label }}</span>
+        <span class="stat-sub">{{ s.sub }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mini gráfico de barras -->
+  <div class="chart-card" *ngIf="!loadingStats">
+    <div class="chart-header">
+      <span class="chart-title">Ventas últimos 7 días</span>
+    </div>
+    <div class="bar-chart">
+      <div class="bar-col" *ngFor="let b of barras">
+        <div class="bar-wrap">
+          <span class="bar-val" *ngIf="b.valor > 0">{{ cop(b.valor) }}</span>
+          <div class="bar" [style.height.%]="b.pct || 2"></div>
+        </div>
+        <span class="bar-dia">{{ b.dia }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="tabla-card">
+    <div class="tabla-header">
+      <span class="tabla-title"><i class="pi pi-list"></i> Últimas ventas</span>
+    </div>
+
+    <p-table
+      [value]="ventas"
+      [loading]="loadingTabla"
+      styleClass="aura-table"
+      [scrollable]="true"
+      scrollHeight="380px"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>N° Venta</th>
+          <th>Fecha</th>
+          <th>Caja</th>
+          <th class="text-right">Total</th>
+          <th class="text-center">Estado</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-v>
+        <tr [class.row-anulada]="v.estado === 'ANULADA'">
+          <td>
+            <span class="num-badge">{{ v.numero }}</span>
+          </td>
+          <td>{{ v.fecha }}</td>
+          <td>
+            <i
+              class="pi pi-desktop"
+              style="color: #a78bfa; margin-right: 5px"
+            ></i
+            >{{ v.caja }}
+          </td>
+          <td class="text-right">
+            <strong>{{ cop(v.total) }}</strong>
+          </td>
+          <td class="text-center">
+            <p-tag
+              [value]="v.estado === 'COMPLETADA' ? 'Completada' : 'Anulada'"
+              [severity]="getSeverity(v.estado)"
+              [rounded]="true"
+            />
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="loadingbody">
+        <tr *ngFor="let i of [1, 2, 3, 4, 5]">
+          <td *ngFor="let j of [1, 2, 3, 4, 5]"><p-skeleton /></td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5">
+            <div class="empty-state">
+              <i class="pi pi-inbox"></i>
+              <p>Sin datos en el período</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

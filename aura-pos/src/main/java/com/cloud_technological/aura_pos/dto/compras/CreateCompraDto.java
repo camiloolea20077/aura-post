@@ -18,7 +18,11 @@ public class CreateCompraDto {
     private Long sucursalId;
     private String numeroCompra;
     private LocalDateTime fecha;
+    private LocalDateTime fechaVencimiento;
     private String observaciones;
     @NotEmpty(message = "Debe agregar al menos un producto")
     private List<CreateCompraDetalleDto> detalles;
+    
+    // Pagos de la compra (opcional)
+    private List<CreateCompraPagoDto> pagos;
 }

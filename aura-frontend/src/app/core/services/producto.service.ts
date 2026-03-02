@@ -60,4 +60,13 @@ export class ProductoService {
   delete(id: number): Observable<ResponseModel<void>> {
     return this.http.delete<ResponseModel<void>>(`${this.apiUrl}/${id}`);
   }
+  actualizarCodigoBarras(
+    id: number,
+    dto: { codigoBarras: string },
+  ): Observable<ResponseModel<any>> {
+    return this.http.patch<ResponseModel<any>>(
+      `${this.apiUrl}/${id}/codigo-barras`,
+      dto,
+    );
+  }
 }

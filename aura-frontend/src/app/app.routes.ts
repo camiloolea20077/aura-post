@@ -95,6 +95,14 @@ export const routes: Routes = [
             (m) => m.IndexComposicionComponent,
           ),
       },
+      {
+        path: 'catalogo/etiquetas',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/catalogo/etiquetas/index/etiquetas.component').then(
+            (m) => m.EtiquetasComponent,
+          ),
+      },
 
       // Precios
       {
@@ -119,6 +127,23 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/precios/reglas-descuento/index/index-descuentos.component').then(
             (m) => m.IndexDescuentosComponent,
+          ),
+      },
+      // CUENTAS POR COBRAR Y PAGAR
+      {
+        path: 'cuentas/cuentas-por-cobrar',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/cuentas/index-cuentas-por-cobrar/index-cuentas-por-cobrar.component').then(
+            (m) => m.IndexCuentasPorCobrarComponent,
+          ),
+      },
+      {
+        path: 'cuentas/cuentas-por-pagar',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/cuentas/index-cuentas-por-pagar/index-cuentas-por-pagar.component').then(
+            (m) => m.IndexCuentasPorPagarComponent,
           ),
       },
 
@@ -233,17 +258,20 @@ export const routes: Routes = [
             (m) => m.IndexUsuariosComponent,
           ),
       },
-      // Reportes
-      // {
-      //   path: 'reportes/ventas',
-      //   loadComponent: () =>
-      //     import('./features/reportes/ventas/reporte-ventas.component').then(m => m.ReporteVentasComponent),
-      // },
-      // {
-      //   path: 'reportes/inventario',
-      //   loadComponent: () =>
-      //     import('./features/reportes/inventario/reporte-inventario.component').then(m => m.ReporteInventarioComponent),
-      // },
+      {
+        path: 'reportes/ventas',
+        loadComponent: () =>
+          import('./features/reporte-ventas/reporte-ventas.component').then(
+            (m) => m.ReporteVentasComponent,
+          ),
+      },
+      {
+        path: 'reportes/inventario',
+        loadComponent: () =>
+          import('./features/reporte-inventario/reporte-inventario.component').then(
+            (m) => m.ReporteInventarioComponent,
+          ),
+      },
     ],
   },
 

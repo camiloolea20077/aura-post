@@ -9,6 +9,7 @@ import com.cloud_technological.aura_pos.dto.productos.ProductoDto;
 import com.cloud_technological.aura_pos.dto.productos.ProductoListDto;
 import com.cloud_technological.aura_pos.dto.productos.ProductoPosDto;
 import com.cloud_technological.aura_pos.dto.productos.ProductoTableDto;
+import com.cloud_technological.aura_pos.dto.productos.UpdateCodigoBarrasDto;
 import com.cloud_technological.aura_pos.dto.productos.UpdateProductoDto;
 import com.cloud_technological.aura_pos.utils.PageableDto;
 
@@ -20,4 +21,5 @@ public interface ProductoService {
     void eliminar(Long id, Integer empresaId);
     List<ProductoListDto> list(Integer empresaId);
     List<ProductoPosDto> listarPos(Integer empresaId, Long sucursalId);
+    ProductoDto actualizarCodigoBarras(Long id, UpdateCodigoBarrasDto dto, Integer empresaId);
 }

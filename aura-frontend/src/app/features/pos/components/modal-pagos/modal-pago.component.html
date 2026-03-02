@@ -15,6 +15,15 @@
       <span class="banner-total">{{ formatCOP(total) }}</span>
     </div>
 
+    <!-- ✅ NUEVO: Alerta si hay CREDITO -->
+    <div class="credito-info-banner" *ngIf="tieneCredito">
+      <i class="pi pi-info-circle"></i>
+      <span
+        >Esta venta se registrará como venta a CREDITO. El cliente deberá
+        completar estos datos.</span
+      >
+    </div>
+
     <!-- Líneas de pago -->
     <div class="pagos-list">
       <div class="pago-line" *ngFor="let pago of pagos; let i = index">
@@ -35,7 +44,11 @@
         <!-- Monto + referencia -->
         <div class="monto-row">
           <div class="monto-field">
-            <label>Monto recibido</label>
+            <label>{{
+              pago.metodoPago === "CREDITO"
+                ? "Total a CREDITO"
+                : "Monto recibido"
+            }}</label>
             <p-inputNumber
               [(ngModel)]="pago.monto"
               mode="currency"
@@ -45,22 +58,30 @@
               [min]="0"
               placeholder="$ 0"
               styleClass="w-full monto-inp"
+              [disabled]="pago.metodoPago === 'CREDITO'"
             />
             <button
               class="fill-btn"
               (click)="distribuirRestante(pago)"
+              [disabled]="pago.metodoPago === 'CREDITO'"
               pTooltip="Rellenar con el restante"
             >
               <i class="pi pi-arrow-down"></i>
             </button>
           </div>
           <div class="ref-field" *ngIf="pago.metodoPago !== 'EFECTIVO'">
-            <label>Referencia / aprobación</label>
+            <label>{{
+              pago.metodoPago === "CREDITO"
+                ? "Contrato/Referencia"
+                : "Referencia / aprobación"
+            }}</label>
             <input
               type="text"
               pInputText
               [(ngModel)]="pago.referencia"
-              placeholder="Opcional"
+              [placeholder]="
+                pago.metodoPago === 'CREDITO' ? 'Requerido' : 'Opcional'
+              "
               class="ref-inp"
             />
           </div>
@@ -78,7 +99,11 @@
     </div>
 
     <!-- Agregar método -->
-    <button class="add-metodo-btn" *ngIf="pagos.length < 4" (click)="addPago()">
+    <button
+      class="add-metodo-btn"
+      *ngIf="pagos.length < 4 && !tieneCredito"
+      (click)="addPago()"
+    >
       <i class="pi pi-plus"></i> Agregar otro método de pago
     </button>
 

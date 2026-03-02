@@ -19,7 +19,7 @@
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════════
-     POS PRINCIPAL
+    POS PRINCIPAL
 ════════════════════════════════════════════════════════════════ -->
 <div class="pos-layout" *ngIf="!loadingTurno && !turnoError">
   <!-- ══ PANEL IZQUIERDO — Catálogo ════════════════════════════ -->
@@ -37,13 +37,13 @@
           type="text"
           class="product-search"
           placeholder="Buscar producto o SKU..."
-          [(ngModel)]="searchProducto"
+          [(ngModel)]="searchProduct"
           (input)="onSearch()"
         />
         <button
-          *ngIf="searchProducto"
+          *ngIf="searchProduct"
           class="clear-search"
-          (click)="searchProducto = ''; filtrar()"
+          (click)="searchProduct = ''; filtrar()"
         >
           <i class="pi pi-times"></i>
         </button>
@@ -83,7 +83,10 @@
     <div class="product-grid" *ngIf="!loadingProductos">
       <div
         class="product-card"
-        *ngFor="let p of productosFiltrados; trackBy: trackByProd"
+        *ngFor="
+          let p of productosFiltrados | filterProducts: searchProduct : page;
+          trackBy: trackByProd
+        "
         [class.sin-stock]="p.stockActual <= 0 && p.tipoProducto !== 'SERVICIO'"
         [class.low-stock]="p.stockActual > 0 && p.stockActual < 5"
         (click)="addToCart(p)"
@@ -143,8 +146,8 @@
             <span class="prod-precio">
               {{
                 formatCOP(
-                  (p.precioFinal ?? p.precio) *
-                    (1 + (p.ivaPorcentaje ?? 0) / 100)
+                  (p.precioFinal || p.precio) *
+                    (1 + (p.ivaPorcentaje || 0) / 100)
                 )
               }}
             </span>
@@ -359,36 +362,6 @@
       <i class="pi pi-shopping-bag"></i>
       <p>Toca un producto para agregarlo</p>
     </div>
-
-    <!-- ── Footer: totales + cobrar ──────────────────────── -->
-    <!-- <div class="cart-footer">
-      <div class="totales">
-        <div class="tot-row">
-          <span class="tot-label">Subtotal (sin IVA)</span>
-          <span class="tot-val">{{ formatCOP(subtotal) }}</span>
-        </div>
-        <div class="tot-row" *ngIf="descTotal > 0">
-          <span class="tot-label desc-label">Descuento</span>
-          <span class="tot-val desc-val">-{{ formatCOP(descTotal) }}</span>
-        </div>
-        <div class="tot-row" *ngIf="impTotal > 0">
-          <span class="tot-label">IVA</span>
-          <span class="tot-val">{{ formatCOP(impTotal) }}</span>
-        </div>
-        <div class="tot-row total-row">
-          <span class="tot-label-total">TOTAL</span>
-          <span class="tot-val-total">{{ formatCOP(total) }}</span>
-        </div>
-      </div>
-
-      <button
-        pButton
-        [label]="'$ Cobrar ' + formatCOP(total)"
-        class="btn-cobrar"
-        [disabled]="cart.length === 0"
-        (click)="irAlPago()"
-      ></button>
-    </div> -->
   </div>
   <!-- /cart-panel -->
 </div>
@@ -401,6 +374,15 @@
   [pagosPrev]="pagosPrev"
   (modalClosed)="showPago = false"
   (ventaConfirmada)="onVentaConfirmada($event)"
+/>
+<app-factura-electronica-modal
+  [(visible)]="mostrarModalFE"
+  [ventaId]="ventaCompletadaId"
+  [clienteNombre]="feClienteNombre"
+  [clienteDocumento]="feClienteDocumento"
+  [clienteEmail]="feClienteEmail"
+  (facturaEmitida)="onFacturaEmitida($event)"
+  (omitida)="onFacturaOmitida()"
 />
 <!-- NUEVO: modal tirilla -->
 <app-modal-tirilla

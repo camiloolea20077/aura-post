@@ -1,0 +1,149 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [closable]="!isLoading"
+  [style]="{ width: '480px' }"
+  [draggable]="false"
+  styleClass="dialog-factura-electronica"
+  (onHide)="onCerrar()"
+>
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <ng-template pTemplate="header">
+    <div class="fe-header">
+      <div class="fe-header-icon">
+        <i class="pi pi-file-check"></i>
+      </div>
+      <div>
+        <h3 class="fe-title">Factura Electrónica</h3>
+        <p class="fe-sub">Venta #{{ ventaId }}</p>
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- ── ESTADO: pregunta inicial ───────────────────────────── -->
+  <div class="fe-body" *ngIf="estado === 'PREGUNTA'">
+    <div class="cliente-card">
+      <i class="pi pi-user"></i>
+      <div>
+        <span class="cliente-label">Cliente</span>
+        <strong class="cliente-nombre">{{ clienteNombre }}</strong>
+        <span class="cliente-doc">{{ clienteDocumento }}</span>
+      </div>
+    </div>
+
+    <p class="fe-question">
+      ¿El cliente desea factura electrónica para esta venta?
+    </p>
+    <p class="fe-hint">
+      <i class="pi pi-info-circle"></i>
+      La factura se enviará al correo registrado del cliente
+      <strong *ngIf="clienteEmail"> ({{ clienteEmail }})</strong>
+    </p>
+  </div>
+
+  <!-- ── ESTADO: generando ───────────────────────────────────── -->
+  <div class="fe-body fe-loading" *ngIf="estado === 'GENERANDO'">
+    <p-progressSpinner strokeWidth="3" styleClass="fe-spinner" />
+    <p class="fe-loading-txt">Generando factura electrónica...</p>
+    <span class="fe-loading-sub"
+      >Conectando con la DIAN a través de Factus</span
+    >
+  </div>
+
+  <!-- ── ESTADO: éxito ──────────────────────────────────────── -->
+  <div class="fe-body fe-success" *ngIf="estado === 'EMITIDA'">
+    <div class="success-icon">
+      <i class="pi pi-check-circle"></i>
+    </div>
+    <h4 class="success-title">¡Factura emitida!</h4>
+    <p class="success-numero">{{ facturaNumero }}</p>
+
+    <div class="cufe-box">
+      <span class="cufe-label">CUFE</span>
+      <code class="cufe-val"
+        >{{ cufe | slice: 0 : 20 }}...{{ cufe | slice: -8 }}</code
+      >
+      <button
+        pButton
+        type="button"
+        icon="pi pi-copy"
+        class="p-button-text p-button-sm"
+        pTooltip="Copiar CUFE"
+        (click)="copiarCufe()"
+      ></button>
+    </div>
+
+    <div class="fe-acciones-resultado">
+      <a [href]="pdfUrl" target="_blank" *ngIf="pdfUrl">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-download"
+          label="Descargar PDF"
+          class="p-button-outlined p-button-sm"
+        ></button>
+      </a>
+    </div>
+  </div>
+
+  <!-- ── ESTADO: error ──────────────────────────────────────── -->
+  <div class="fe-body fe-error" *ngIf="estado === 'ERROR'">
+    <div class="error-icon">
+      <i class="pi pi-times-circle"></i>
+    </div>
+    <h4 class="error-title">No se pudo generar la factura</h4>
+    <p class="error-msg">{{ errorMsg }}</p>
+    <p class="error-hint">
+      Puedes intentarlo de nuevo desde el historial de ventas.
+    </p>
+  </div>
+
+  <!-- ── Footer ─────────────────────────────────────────────── -->
+  <ng-template pTemplate="footer">
+    <!-- Pregunta inicial -->
+    <div class="fe-footer" *ngIf="estado === 'PREGUNTA'">
+      <button
+        pButton
+        type="button"
+        label="No, omitir"
+        icon="pi pi-times"
+        class="p-button-text p-button-secondary"
+        (click)="onCerrar()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        label="Sí, generar factura"
+        icon="pi pi-file-check"
+        class="p-button-sm btn-generar-fe"
+        (click)="generarFactura()"
+      ></button>
+    </div>
+
+    <!-- Error → cerrar -->
+    <div class="fe-footer" *ngIf="estado === 'ERROR'">
+      <button
+        pButton
+        type="button"
+        label="Cerrar"
+        icon="pi pi-times"
+        class="p-button-outlined"
+        (click)="onCerrar()"
+      ></button>
+    </div>
+
+    <!-- Emitida → cerrar -->
+    <div class="fe-footer" *ngIf="estado === 'EMITIDA'">
+      <button
+        pButton
+        type="button"
+        label="Cerrar"
+        icon="pi pi-check"
+        class="p-button-sm btn-generar-fe"
+        (click)="onCerrar()"
+      ></button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-toast />

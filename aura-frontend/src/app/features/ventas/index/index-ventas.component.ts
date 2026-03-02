@@ -22,6 +22,7 @@ import { DetalleVentaComponent } from '../detalle/detalle-venta.component';
 import { VentaResponse } from '../../../core/models/venta-response.model';
 import { ModalTirillaComponent } from '../../pos/components/modal-tirilla/modal-tirilla.component';
 import { ModalFacturaComponent } from '../../pos/components/modal-factuta/modal-factura.component';
+import { FacturaViewerModalComponent } from '../../pos/components/factura-viewer-modal/factura-viewer-modal.component';
 
 type TagSeverity =
   | 'success'
@@ -47,12 +48,15 @@ type TagSeverity =
     DetalleVentaComponent,
     ModalTirillaComponent,
     ModalFacturaComponent,
+    FacturaViewerModalComponent,
   ],
   providers: [MessageService],
   templateUrl: './index-ventas.component.html',
   styleUrls: ['./index-ventas.component.scss'],
 })
 export class IndexVentasComponent implements OnInit {
+  mostrarViewerFE = false;
+  facturaSeleccionada: any = null;
   showTirilla = false;
   ventaImpresion: VentaModel | null = null;
   loadingTirilla = false;
@@ -193,5 +197,15 @@ export class IndexVentasComponent implements OnInit {
   onFacturaClosed(): void {
     this.showFactura = false;
     this.ventaFactura = null;
+  }
+  verFactura(item: VentaTableModel, event: Event): void {
+    event.stopPropagation();
+    this.facturaSeleccionada = {
+      id: item.id, // ← FALTABA, sin esto ventaId llega null
+      factusUrl: (item as any).factusUrl ?? null,
+      cufe: (item as any).cufe ?? null,
+      facturaNumero: (item as any).factusNumero ?? item.numeroVenta ?? null,
+    };
+    this.mostrarViewerFE = true;
   }
 }

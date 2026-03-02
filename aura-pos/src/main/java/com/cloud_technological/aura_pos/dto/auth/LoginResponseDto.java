@@ -19,6 +19,7 @@ public class LoginResponseDto {
     private Integer usuarioId;
     private String username;
     private String nombreCompleto;
+    private boolean facturaElectronica;
     private String rol;
     private List<SucursalSimpleDto> sucursales;
 }

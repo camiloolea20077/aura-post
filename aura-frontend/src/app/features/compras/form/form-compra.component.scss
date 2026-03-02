@@ -520,3 +520,68 @@ $cols: 2.2fr 1.6fr 0.85fr 1.15fr 0.95fr 0.95fr 72px;
     overflow-y: auto;
   }
 }
+// ── Agregar al form-compra.component.scss ────────────────────────
+
+// Nueva columna presentación en el grid de líneas
+.lineas-header,
+.linea-row {
+  // Ajustar grid para incluir columna presentación
+  // ANTES:  producto  lote  cant  costo  imp  subtotal  acc
+  // AHORA:  producto  pres  lote  cant   costo  imp  subtotal  acc
+  grid-template-columns: 2fr 1.4fr 1fr 0.7fr 1.1fr 0.8fr 1fr 80px;
+}
+
+.col-presentacion {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.unidades-base-hint {
+  font-size: 11px;
+  color: #6366f1;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+
+  i {
+    font-size: 10px;
+  }
+
+  strong {
+    font-weight: 700;
+  }
+}
+
+.sin-presentacion {
+  font-size: 12px;
+  color: var(--text-color-secondary);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  i {
+    font-size: 11px;
+  }
+}
+
+.cant-label {
+  font-size: 11px;
+  color: var(--text-color-secondary);
+  margin-top: 2px;
+}
+
+.subtotal-hint {
+  font-size: 11px;
+  color: #22c55e;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+// Dropdown de presentación más compacto
+.dropdown-pres {
+  .p-dropdown-label {
+    font-size: 0.82rem;
+    padding: 0.35rem 0.5rem;
+  }
+}

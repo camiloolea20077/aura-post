@@ -54,6 +54,11 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         icon: 'pi pi-cog',
         route: '/catalogo/composiciones',
       },
+      {
+        label: 'Etiquetas',
+        icon: 'pi pi-bookmark',
+        route: '/catalogo/etiquetas',
+      },
     ],
   },
   {
@@ -99,6 +104,22 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
       { label: 'Ventas', icon: 'pi pi-receipt', route: '/ventas' },
       { label: 'Mermas', icon: 'pi pi-trash', route: '/mermas' },
       { label: 'Traslados', icon: 'pi pi-arrows-h', route: '/traslados' },
+    ],
+  },
+  {
+    label: 'Cuentas',
+    roles: ['SUPER_ADMIN', 'ADMIN'],
+    items: [
+      {
+        label: 'Cuentas por Cobrar',
+        icon: 'pi pi-money-bill',
+        route: '/cuentas/cuentas-por-cobrar',
+      },
+      {
+        label: 'Cuentas por Pagar',
+        icon: 'pi pi-money-bill',
+        route: '/cuentas/cuentas-por-pagar',
+      },
     ],
   },
   {
