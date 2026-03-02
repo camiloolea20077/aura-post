@@ -98,7 +98,7 @@ class CuentaPagarServiceTest {
 
         // Configurar usuario mock
         usuarioMock = new UsuarioEntity();
-        usuarioMock.setId(1L);
+        usuarioMock.setId(1);
         usuarioMock.setUsername("admin");
 
         // Configurar cuenta por pagar mock
@@ -134,7 +134,7 @@ class CuentaPagarServiceTest {
         dto.setFechaVencimiento(LocalDateTime.now().plusDays(30));
         dto.setObservaciones("Test cuenta");
 
-        when(terceroRepository.findById(1L)).thenReturn(Optional.of(proveedorMock));
+        when(terceroRepository.findById(1)).thenReturn(Optional.of(proveedorMock));
         when(queryRepository.generarNumeroCuenta()).thenReturn("CP-20260226-0001");
         when(empresaRepository.findById(1)).thenReturn(Optional.of(empresaMock));
         when(jpaRepository.save(any(CuentaPagarEntity.class))).thenReturn(cuentaPagarMock);
@@ -166,7 +166,7 @@ class CuentaPagarServiceTest {
         dto.setTotalDeuda(new BigDecimal("100000"));
         dto.setFechaEmision(LocalDateTime.now());
 
-        when(terceroRepository.findById(999L)).thenReturn(Optional.empty());
+        when(terceroRepository.findById(999)).thenReturn(Optional.empty());
 
         // Act & Assert
         GlobalException exception = assertThrows(GlobalException.class,
@@ -195,7 +195,7 @@ class CuentaPagarServiceTest {
         dto.setTotalDeuda(new BigDecimal("100000"));
         dto.setFechaEmision(LocalDateTime.now());
 
-        when(terceroRepository.findById(1L)).thenReturn(Optional.of(terceroNoProveedor));
+        when(terceroRepository.findById(1)).thenReturn(Optional.of(terceroNoProveedor));
 
         // Act & Assert
         GlobalException exception = assertThrows(GlobalException.class,
@@ -219,7 +219,7 @@ class CuentaPagarServiceTest {
         dto.setTotalDeuda(BigDecimal.ZERO);
         dto.setFechaEmision(LocalDateTime.now());
 
-        when(terceroRepository.findById(1L)).thenReturn(Optional.of(proveedorMock));
+        when(terceroRepository.findById(1)).thenReturn(Optional.of(proveedorMock));
 
         // Act & Assert
         GlobalException exception = assertThrows(GlobalException.class,
@@ -320,7 +320,7 @@ class CuentaPagarServiceTest {
                 .build();
 
         when(jpaRepository.findByIdAndEmpresaId(1L, 1)).thenReturn(Optional.of(cuentaPagarMock));
-        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuarioMock));
+        when(usuarioRepository.findById(1)).thenReturn(Optional.of(usuarioMock));
         when(abonoJpaRepository.save(any(AbonoPagarEntity.class))).thenReturn(abonoMock);
         when(jpaRepository.save(any(CuentaPagarEntity.class))).thenReturn(cuentaPagarMock);
 
@@ -357,7 +357,7 @@ class CuentaPagarServiceTest {
                 .build();
 
         when(jpaRepository.findByIdAndEmpresaId(1L, 1)).thenReturn(Optional.of(cuentaPagarMock));
-        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuarioMock));
+        when(usuarioRepository.findById(1)).thenReturn(Optional.of(usuarioMock));
         when(abonoJpaRepository.save(any(AbonoPagarEntity.class))).thenReturn(abonoMock);
         when(jpaRepository.save(any(CuentaPagarEntity.class))).thenAnswer(invocation -> {
             CuentaPagarEntity cuenta = invocation.getArgument(0);
@@ -592,13 +592,13 @@ class CuentaPagarServiceTest {
     void shouldObtenerResumenWhenExistenCuentas() {
         // Arrange
         CuentaPagarResumenDto resumenMock = new CuentaPagarResumenDto();
-        resumenMock.setTotalCuentas(10);
+        resumenMock.setTotalCuentas(10L);
         resumenMock.setTotalDeuda(new BigDecimal("1000000"));
         resumenMock.setTotalAbonado(new BigDecimal("300000"));
         resumenMock.setSaldoPendiente(new BigDecimal("700000"));
-        resumenMock.setCantidadActivas(5);
-        resumenMock.setCantidadPagadas(3);
-        resumenMock.setCantidadVencidas(2);
+        resumenMock.setCantidadActivas(5L);
+        resumenMock.setCantidadPagadas(3L);
+        resumenMock.setCantidadVencidas(2L);
 
         when(queryRepository.obtenerResumen(eq(1), any(), any(), any(), any())).thenReturn(resumenMock);
 
@@ -607,13 +607,13 @@ class CuentaPagarServiceTest {
 
         // Assert
         assertNotNull(resultado);
-        assertEquals(10, resultado.getTotalCuentas());
+        assertEquals(10L, resultado.getTotalCuentas());
         assertEquals(new BigDecimal("1000000"), resultado.getTotalDeuda());
         assertEquals(new BigDecimal("300000"), resultado.getTotalAbonado());
         assertEquals(new BigDecimal("700000"), resultado.getSaldoPendiente());
-        assertEquals(5, resultado.getCantidadActivas());
-        assertEquals(3, resultado.getCantidadPagadas());
-        assertEquals(2, resultado.getCantidadVencidas());
+        assertEquals(5L, resultado.getCantidadActivas());
+        assertEquals(3L, resultado.getCantidadPagadas());
+        assertEquals(2L, resultado.getCantidadVencidas());
     }
 
     /**
@@ -655,9 +655,10 @@ class CuentaPagarServiceTest {
     void shouldListarCuentasWhenPaginacion() {
         // Arrange
         PageableDto<Object> pageable = new PageableDto<>();
-        pageable.setPage(0);
-        pageable.setSize(10);
-        pageable.setSort(new Object[]{"id", "asc"});
+        pageable.setPage(0L);
+        pageable.setRows(10L);
+        pageable.setOrder_by("id");
+        pageable.setOrder("asc");
 
         List<CuentaPagarTableDto> cuentas = new ArrayList<>();
         cuentas.add(new CuentaPagarTableDto());
@@ -684,9 +685,10 @@ class CuentaPagarServiceTest {
     void shouldListarCuentasWithFiltrosWhenDatosValidos() {
         // Arrange
         PageableDto<Object> pageable = new PageableDto<>();
-        pageable.setPage(0);
-        pageable.setSize(10);
-        pageable.setSort(new Object[]{"id", "asc"});
+        pageable.setPage(0L);
+        pageable.setRows(10L);
+        pageable.setOrder_by("id");
+        pageable.setOrder("asc");
 
         List<CuentaPagarTableDto> cuentas = new ArrayList<>();
         cuentas.add(new CuentaPagarTableDto());
@@ -715,8 +717,8 @@ class CuentaPagarServiceTest {
     void shouldListarCuentasWithFiltroProveedorWhenDatosValidos() {
         // Arrange
         PageableDto<Object> pageable = new PageableDto<>();
-        pageable.setPage(0);
-        pageable.setSize(10);
+        pageable.setPage(0L);
+        pageable.setRows(10L);
 
         List<CuentaPagarTableDto> cuentas = new ArrayList<>();
         CuentaPagarTableDto cuenta = new CuentaPagarTableDto();
@@ -749,13 +751,13 @@ class CuentaPagarServiceTest {
     void shouldObtenerResumenWithFiltrosWhenDatosValidos() {
         // Arrange
         CuentaPagarResumenDto resumenMock = new CuentaPagarResumenDto();
-        resumenMock.setTotalCuentas(5);
+        resumenMock.setTotalCuentas(5L);
         resumenMock.setTotalDeuda(new BigDecimal("500000"));
         resumenMock.setTotalAbonado(new BigDecimal("100000"));
         resumenMock.setSaldoPendiente(new BigDecimal("400000"));
-        resumenMock.setCantidadActivas(3);
-        resumenMock.setCantidadPagadas(1);
-        resumenMock.setCantidadVencidas(1);
+        resumenMock.setCantidadActivas(3L);
+        resumenMock.setCantidadPagadas(1L);
+        resumenMock.setCantidadVencidas(1L);
 
         when(queryRepository.obtenerResumen(eq(1), eq("2026-01-01"), eq("2026-12-31"), any(), eq("activa")))
                 .thenReturn(resumenMock);
@@ -797,7 +799,7 @@ class CuentaPagarServiceTest {
                 .build();
 
         when(jpaRepository.findByIdAndEmpresaId(1L, 1)).thenReturn(Optional.of(cuentaPagarMock));
-        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuarioMock));
+        when(usuarioRepository.findById(1)).thenReturn(Optional.of(usuarioMock));
         when(abonoJpaRepository.save(any(AbonoPagarEntity.class))).thenReturn(abonoMock);
         when(jpaRepository.save(any(CuentaPagarEntity.class))).thenReturn(cuentaPagarMock);
 
@@ -823,7 +825,7 @@ class CuentaPagarServiceTest {
         dto.setMetodoPago("efectivo");
 
         when(jpaRepository.findByIdAndEmpresaId(1L, 1)).thenReturn(Optional.of(cuentaPagarMock));
-        when(usuarioRepository.findById(999L)).thenReturn(Optional.empty());
+        when(usuarioRepository.findById(999)).thenReturn(Optional.empty());
 
         // Act & Assert
         GlobalException exception = assertThrows(GlobalException.class,

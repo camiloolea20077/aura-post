@@ -94,7 +94,7 @@ class CuentaCobrarServiceTest {
         clienteMock.setEsCliente(true);
 
         usuarioMock = new UsuarioEntity();
-        usuarioMock.setId(1L);
+        usuarioMock.setId(1);
         usuarioMock.setUsername("admin");
 
         cuentaCobrarMock = CuentaCobrarEntity.builder()
@@ -129,7 +129,7 @@ class CuentaCobrarServiceTest {
         dto.setFechaVencimiento(LocalDateTime.now().plusDays(30));
         dto.setObservaciones("Test cuenta");
 
-        when(terceroRepository.findById(1L)).thenReturn(Optional.of(clienteMock));
+        when(terceroRepository.findById(1)).thenReturn(Optional.of(clienteMock));
         when(queryRepository.generarNumeroCuenta()).thenReturn("CC-20260226-0001");
         when(empresaRepository.findById(1)).thenReturn(Optional.of(empresaMock));
         when(jpaRepository.save(any(CuentaCobrarEntity.class))).thenReturn(cuentaCobrarMock);
@@ -161,7 +161,7 @@ class CuentaCobrarServiceTest {
         dto.setTotalDeuda(new BigDecimal("100000"));
         dto.setFechaEmision(LocalDateTime.now());
 
-        when(terceroRepository.findById(999L)).thenReturn(Optional.empty());
+        when(terceroRepository.findById(999)).thenReturn(Optional.empty());
 
         // Act & Assert
         GlobalException exception = assertThrows(GlobalException.class,
@@ -190,7 +190,7 @@ class CuentaCobrarServiceTest {
         dto.setTotalDeuda(new BigDecimal("100000"));
         dto.setFechaEmision(LocalDateTime.now());
 
-        when(terceroRepository.findById(1L)).thenReturn(Optional.of(terceroNoCliente));
+        when(terceroRepository.findById(1)).thenReturn(Optional.of(terceroNoCliente));
 
         // Act & Assert
         GlobalException exception = assertThrows(GlobalException.class,
@@ -214,7 +214,7 @@ class CuentaCobrarServiceTest {
         dto.setTotalDeuda(BigDecimal.ZERO);
         dto.setFechaEmision(LocalDateTime.now());
 
-        when(terceroRepository.findById(1L)).thenReturn(Optional.of(clienteMock));
+        when(terceroRepository.findById(1)).thenReturn(Optional.of(clienteMock));
 
         // Act & Assert
         GlobalException exception = assertThrows(GlobalException.class,
@@ -314,7 +314,7 @@ class CuentaCobrarServiceTest {
                 .build();
 
         when(jpaRepository.findByIdAndEmpresaId(1L, 1)).thenReturn(Optional.of(cuentaCobrarMock));
-        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuarioMock));
+        when(usuarioRepository.findById(1)).thenReturn(Optional.of(usuarioMock));
         when(abonoJpaRepository.save(any(AbonoCobrarEntity.class))).thenReturn(abonoMock);
         when(jpaRepository.save(any(CuentaCobrarEntity.class))).thenReturn(cuentaCobrarMock);
 
@@ -351,7 +351,7 @@ class CuentaCobrarServiceTest {
                 .build();
 
         when(jpaRepository.findByIdAndEmpresaId(1L, 1)).thenReturn(Optional.of(cuentaCobrarMock));
-        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuarioMock));
+        when(usuarioRepository.findById(1)).thenReturn(Optional.of(usuarioMock));
         when(abonoJpaRepository.save(any(AbonoCobrarEntity.class))).thenReturn(abonoMock);
         when(jpaRepository.save(any(CuentaCobrarEntity.class))).thenAnswer(invocation -> {
             CuentaCobrarEntity cuenta = invocation.getArgument(0);
@@ -540,13 +540,13 @@ class CuentaCobrarServiceTest {
     void shouldObtenerResumenWhenExistenCuentas() {
         // Arrange
         CuentaCobrarResumenDto resumenMock = new CuentaCobrarResumenDto();
-        resumenMock.setTotalCuentas(10);
+        resumenMock.setTotalCuentas(10L);
         resumenMock.setTotalDeuda(new BigDecimal("1000000"));
         resumenMock.setTotalAbonado(new BigDecimal("300000"));
         resumenMock.setSaldoPendiente(new BigDecimal("700000"));
-        resumenMock.setCantidadActivas(5);
-        resumenMock.setCantidadPagadas(3);
-        resumenMock.setCantidadVencidas(2);
+        resumenMock.setCantidadActivas(5L);
+        resumenMock.setCantidadPagadas(3L);
+        resumenMock.setCantidadVencidas(2L);
 
         when(queryRepository.obtenerResumen(eq(1), any(), any(), any(), any())).thenReturn(resumenMock);
 
@@ -555,13 +555,13 @@ class CuentaCobrarServiceTest {
 
         // Assert
         assertNotNull(resultado);
-        assertEquals(10, resultado.getTotalCuentas());
+        assertEquals(10L, resultado.getTotalCuentas());
         assertEquals(new BigDecimal("1000000"), resultado.getTotalDeuda());
         assertEquals(new BigDecimal("300000"), resultado.getTotalAbonado());
         assertEquals(new BigDecimal("700000"), resultado.getSaldoPendiente());
-        assertEquals(5, resultado.getCantidadActivas());
-        assertEquals(3, resultado.getCantidadPagadas());
-        assertEquals(2, resultado.getCantidadVencidas());
+        assertEquals(5L, resultado.getCantidadActivas());
+        assertEquals(3L, resultado.getCantidadPagadas());
+        assertEquals(2L, resultado.getCantidadVencidas());
     }
 
     /**
@@ -603,9 +603,10 @@ class CuentaCobrarServiceTest {
     void shouldListarCuentasWhenPaginacion() {
         // Arrange
         PageableDto<Object> pageable = new PageableDto<>();
-        pageable.setPage(0);
-        pageable.setSize(10);
-        pageable.setSort(new Object[]{"id", "asc"});
+        pageable.setPage(0L);
+        pageable.setRows(10L);
+        pageable.setOrder_by("id");
+        pageable.setOrder("asc");
 
         List<CuentaCobrarTableDto> cuentas = new ArrayList<>();
         cuentas.add(new CuentaCobrarTableDto());
@@ -632,9 +633,10 @@ class CuentaCobrarServiceTest {
     void shouldListarCuentasWithFiltrosWhenDatosValidos() {
         // Arrange
         PageableDto<Object> pageable = new PageableDto<>();
-        pageable.setPage(0);
-        pageable.setSize(10);
-        pageable.setSort(new Object[]{"id", "asc"});
+        pageable.setPage(0L);
+        pageable.setRows(10L);
+        pageable.setOrder_by("id");
+        pageable.setOrder("asc");
 
         List<CuentaCobrarTableDto> cuentas = new ArrayList<>();
         cuentas.add(new CuentaCobrarTableDto());
