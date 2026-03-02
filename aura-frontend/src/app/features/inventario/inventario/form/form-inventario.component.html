@@ -84,7 +84,20 @@
         Al llegar a este nivel el sistema alertará stock bajo
       </small>
     </div>
-
+    <div class="field" *ngIf="!isEditMode">
+      <label>Stock Actual <span class="required">*</span></label>
+      <p-inputNumber
+        formControlName="stockActual"
+        [min]="0"
+        [maxFractionDigits]="4"
+        styleClass="w-full"
+        placeholder="0"
+      />
+      <small class="field-hint">
+        <i class="pi pi-info-circle"></i>
+        Al llegar a este nivel el sistema alertará stock bajo
+      </small>
+    </div>
     <div class="field">
       <label>Ubicación física <span class="optional">(opcional)</span></label>
       <input

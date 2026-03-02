@@ -66,7 +66,7 @@ export class VentaService {
   // ── NUEVO: Descarga PDF de factura electrónica ───────────
   // (ya existe en venta.service.patch.ts anterior — incluido aquí por completitud)
   descargarFacturaPdf(ventaId: number): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}${ventaId}/factura-pdf`, {
+    return this.http.get(`${this.apiUrl}/${ventaId}/factura-pdf`, {
       responseType: 'blob',
     });
   }

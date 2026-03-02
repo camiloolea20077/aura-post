@@ -37,7 +37,10 @@ export class InventarioService {
     );
   }
   create(dto: CreateInventarioDto): Observable<ResponseModel<InventarioModel>> {
-    return this.http.post<ResponseModel<InventarioModel>>(this.apiUrl, dto);
+    return this.http.post<ResponseModel<InventarioModel>>(
+      `${this.apiUrl}/create`,
+      dto,
+    );
   }
   update(
     id: number,

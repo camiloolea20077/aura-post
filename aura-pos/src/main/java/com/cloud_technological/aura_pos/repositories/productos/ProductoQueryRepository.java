@@ -284,12 +284,20 @@ public class ProductoQueryRepository {
             um.id                AS unidadMedidaId,
             um.nombre            AS unidadMedidaNombre,
             COALESCE(i.stock_actual, 0) AS stockActual,
-            p.activo
+            p.activo,
+            pres.id              AS presentacionId,
+            pres.nombre          AS presentacionNombre,
+            pres.codigo_barras   AS presentacionCodigoBarras,
+            pres.precio          AS presentacionPrecio,
+            pres.factor_conversion AS presentacionFactorConversion
         FROM producto p
         LEFT JOIN categoria c  ON p.categoria_id        = c.id
         LEFT JOIN marca m      ON p.marca_id             = m.id
         LEFT JOIN unidad_medida um ON p.unidad_medida_base_id = um.id
         LEFT JOIN inventario i ON p.id = i.producto_id AND i.sucursal_id = :sucursalId
+        LEFT JOIN producto_presentacion pres ON p.id = pres.producto_id 
+            AND pres.es_default_venta = true 
+            AND pres.activo = true
         WHERE p.empresa_id  = :empresaId
           AND p.deleted_at  IS NULL
           AND p.visible_en_pos = true

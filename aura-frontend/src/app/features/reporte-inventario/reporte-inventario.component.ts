@@ -7,7 +7,9 @@ import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
+import { lastValueFrom } from 'rxjs';
 import { ReporteService } from '../../core/services/reporte.service';
+import { ProductoService } from '../../core/services/producto.service';
 
 interface StatCard {
   label: string;
@@ -21,10 +23,8 @@ interface ProductoRow {
   sku: string;
   nombre: string;
   categoria: string;
-  stock: number;
   costo: number;
   precio: number;
-  iva: number;
   activo: boolean;
 }
 
@@ -63,124 +63,55 @@ export class ReporteInventarioComponent implements OnInit {
     color: string;
   }[] = [];
 
-  constructor(private reporteService: ReporteService) {}
+  constructor(
+    private reporteService: ReporteService,
+    private productoService: ProductoService,
+  ) {}
 
   ngOnInit(): void {
     this.cargarDatos();
   }
 
-  cargarDatos(): void {
+  async cargarDatos(): Promise<void> {
     this.loadingStats = true;
     this.loadingTabla = true;
 
-    // TODO: reemplazar con llamada real a ProductoService
-    setTimeout(() => {
-      const mock: ProductoRow[] = [
-        {
-          sku: '7706157618381',
-          nombre: 'Acople Lavamano 40cm Grival',
-          categoria: 'Grifería',
-          stock: 45,
-          costo: 3235,
-          precio: 4622,
-          iva: 19,
-          activo: true,
-        },
-        {
-          sku: '7702884010023',
-          nombre: 'Tubo PVC 4" x 6m',
-          categoria: 'Tuberías',
-          stock: 12,
-          costo: 8500,
-          precio: 12000,
-          iva: 19,
-          activo: true,
-        },
-        {
-          sku: '7706123456789',
-          nombre: 'Válvula de Bola 1/2"',
-          categoria: 'Válvulas',
-          stock: 0,
-          costo: 4200,
-          precio: 6300,
-          iva: 19,
-          activo: true,
-        },
-        {
-          sku: '7706987654321',
-          nombre: 'Reductor 4" a 2"',
-          categoria: 'Accesorios',
-          stock: 28,
-          costo: 1800,
-          precio: 2700,
-          iva: 19,
-          activo: true,
-        },
-        {
-          sku: '7701234567890',
-          nombre: 'Llave de Paso 3/4"',
-          categoria: 'Grifería',
-          stock: 7,
-          costo: 9800,
-          precio: 14500,
-          iva: 19,
-          activo: false,
-        },
-        {
-          sku: '7708765432109',
-          nombre: 'Codo PVC 90° x 4"',
-          categoria: 'Tuberías',
-          stock: 54,
-          costo: 980,
-          precio: 1500,
-          iva: 19,
-          activo: true,
-        },
-        {
-          sku: '7709876543210',
-          nombre: 'Pegante para PVC 250ml',
-          categoria: 'Accesorios',
-          stock: 0,
-          costo: 6500,
-          precio: 9800,
-          iva: 19,
-          activo: true,
-        },
-      ];
+    try {
+      const response = await lastValueFrom(
+        this.productoService.page({
+          page: 0,
+          rows: 1000,
+        }),
+      );
+      const productos = response?.data?.content ?? [];
 
-      this.productos = mock;
-      this.productosFiltrados = mock;
+      // Mapear ProductoTableModel a ProductoRow
+      const rows: ProductoRow[] = productos.map((p) => ({
+        sku: p.sku || '',
+        nombre: p.nombre,
+        categoria: p.categoriaNombre || 'Sin categoría',
+        costo: p.costo,
+        precio: p.precio,
+        activo: p.activo,
+      }));
 
-      const activos = mock.filter((p) => p.activo);
-      const sinStock = mock.filter((p) => p.activo && p.stock === 0);
-      const inactivos = mock.filter((p) => !p.activo);
-      const valorTotal = activos.reduce((s, p) => s + p.costo * p.stock, 0);
+      this.productos = rows;
+      this.productosFiltrados = rows;
+
+      const activos = rows.filter((p) => p.activo);
+      const inactivos = rows.filter((p) => !p.activo);
 
       this.stats = [
         {
-          label: 'Valor en Inventario',
-          value: this.cop(valorTotal),
-          sub: `${activos.length} productos activos`,
-          icon: 'pi-box',
-          color: 'blue',
-        },
-        {
-          label: 'Sin Stock',
-          value: `${sinStock.length}`,
-          sub: 'Necesitan reabastecimiento',
-          icon: 'pi-exclamation-triangle',
-          color: 'red',
-        },
-        {
           label: 'Total Productos',
-          value: `${mock.length}`,
+          value: `${rows.length}`,
           sub: `${inactivos.length} inactivos`,
           icon: 'pi-tags',
           color: 'purple',
         },
         {
           label: 'Categorías',
-          value: `${new Set(mock.map((p) => p.categoria)).size}`,
+          value: `${new Set(rows.map((p) => p.categoria)).size}`,
           sub: 'Familias de productos',
           icon: 'pi-th-large',
           color: 'green',
@@ -189,20 +120,22 @@ export class ReporteInventarioComponent implements OnInit {
 
       // Distribución por categoría
       const catMap: Record<string, number> = {};
-      mock.forEach((p) => {
+      rows.forEach((p) => {
         catMap[p.categoria] = (catMap[p.categoria] ?? 0) + 1;
       });
       const colors = ['#7c3aed', '#2563eb', '#16a34a', '#d97706', '#dc2626'];
       this.categorias = Object.entries(catMap).map(([nombre, cantidad], i) => ({
         nombre,
         cantidad,
-        pct: Math.round((cantidad / mock.length) * 100),
+        pct: Math.round((cantidad / rows.length) * 100),
         color: colors[i % colors.length],
       }));
-
+    } catch (error) {
+      console.error('[ReporteInventario] Error cargando productos:', error);
+    } finally {
       this.loadingStats = false;
       this.loadingTabla = false;
-    }, 800);
+    }
   }
 
   filtrar(): void {
@@ -237,8 +170,6 @@ export class ReporteInventarioComponent implements OnInit {
 
   severityStock(p: ProductoRow): 'success' | 'warn' | 'danger' {
     if (!p.activo) return 'danger';
-    if (p.stock === 0) return 'danger';
-    if (p.stock < 10) return 'warn';
     return 'success';
   }
 

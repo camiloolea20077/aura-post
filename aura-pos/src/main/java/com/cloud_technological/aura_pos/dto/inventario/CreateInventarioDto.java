@@ -15,5 +15,6 @@ public class CreateInventarioDto {
     @NotNull(message = "La sucursal es obligatoria")
     private Long sucursalId;
     private BigDecimal stockMinimo = BigDecimal.ZERO;
+    private BigDecimal stockActual = BigDecimal.ZERO;
     private String ubicacion;
 }

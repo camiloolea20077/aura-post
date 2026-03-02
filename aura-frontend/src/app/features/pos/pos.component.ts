@@ -166,6 +166,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private async loadProductos(): Promise<void> {
+    this.productos = [];
     try {
       const res: any = await lastValueFrom(
         this.http.get<any>(`${environment.apiUrl}productos/pos`),
@@ -238,7 +239,12 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
           (p.sku?.toLowerCase().includes(q) ?? false) ||
           (p.codigoBarras?.toLowerCase().includes(q) ?? false),
       );
-    this.productosFiltrados = list.filter((p) => p.stockActual > 0);
+    this.productosFiltrados = list.filter(
+      (p) =>
+        p.tipoProducto === 'SERVICIO' ||
+        !p.manejaInventario ||
+        p.stockActual > 0,
+    );
   }
 
   setCategoria(id: number | null): void {

@@ -137,7 +137,7 @@
         <div class="ins-icon blue"><i class="pi pi-wallet"></i></div>
         <div class="ins-body">
           <div class="ins-title">Método de pago líder</div>
-          <div class="ins-value">Efectivo</div>
+          <div class="ins-value">{{ metodoPagoLider || "Sin datos" }}</div>
           <div class="ins-sub">Más usado en el mes</div>
         </div>
       </div>
@@ -146,8 +146,14 @@
         <div class="ins-icon purple"><i class="pi pi-tags"></i></div>
         <div class="ins-body">
           <div class="ins-title">Top producto</div>
-          <div class="ins-value">Corona 330ml</div>
-          <div class="ins-sub">Mayor ingreso del mes</div>
+          <div class="ins-value">
+            {{ dashboard.topProductos[0]?.productoNombre || "Sin datos" }}
+          </div>
+          <div class="ins-sub">
+            {{
+              formatCOP(dashboard.topProductos[0]?.totalIngresos ?? 0) || "—"
+            }}
+          </div>
         </div>
       </div>
 

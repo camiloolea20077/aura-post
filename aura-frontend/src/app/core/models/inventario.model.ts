@@ -29,6 +29,7 @@ export interface CreateInventarioDto {
   productoId: number;
   sucursalId: number;
   stockMinimo: number;
+  stockActual: number;
   ubicacion: string | null;
 }
 

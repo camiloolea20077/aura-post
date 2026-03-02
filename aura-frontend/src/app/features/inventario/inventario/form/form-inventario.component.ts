@@ -95,6 +95,7 @@ export class FormInventarioComponent implements OnInit, OnChanges {
       productoId: [null, Validators.required],
       sucursalId: [null, Validators.required],
       stockMinimo: [0, [Validators.required, Validators.min(0)]],
+      stockActual: [0, [Validators.required, Validators.min(0)]],
       ubicacion: [null, Validators.maxLength(100)],
     });
 
@@ -112,6 +113,7 @@ export class FormInventarioComponent implements OnInit, OnChanges {
       productoId: null,
       sucursalId: null,
       stockMinimo: 0,
+      stockActual: 0,
       ubicacion: null,
     });
     if (this.isEditMode) {
@@ -165,6 +167,7 @@ export class FormInventarioComponent implements OnInit, OnChanges {
           productoId: d.productoId,
           sucursalId: d.sucursalId,
           stockMinimo: d.stockMinimo,
+          stockActual: d.stockActual,
           ubicacion: d.ubicacion,
         });
         this.frmInv.get('productoId')?.disable();
@@ -195,6 +198,7 @@ export class FormInventarioComponent implements OnInit, OnChanges {
             productoId: v.productoId,
             sucursalId: v.sucursalId,
             stockMinimo: v.stockMinimo,
+            stockActual: v.stockActual,
             ubicacion: v.ubicacion?.trim() || null,
           } as CreateInventarioDto);
 

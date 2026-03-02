@@ -151,8 +151,14 @@ export interface ProductoPOS {
   precioFinal: number; // ← nuevo
   descuentoNombre: string | null; // ← nuevo
   descuentoValor: number | null; // ← nuevo
+  manejaInventario: boolean;
   stockActual: number;
   codigoBarras: string | null;
+  presentacionId: number | null;
+  presentacionNombre: string | null;
+  presentacionCodigoBarras: string | null;
+  presentacionPrecio: number | null;
+  presentacionFactorConversion: number | null;
 }
 
 // ─── Opciones UI ─────────────────────────────────────────────
