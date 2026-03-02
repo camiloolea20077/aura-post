@@ -11,6 +11,14 @@ export interface EmpresaPlataformaModel {
   totalSucursales: number;
   totalUsuarios: number;
   totalVentas: number;
+  // Facturación electrónica (Factus)
+  facturaElectronica: boolean;
+  factusClientId: string | null;
+  factusClientSecret: string | null;
+  factusUsername: string | null;
+  factusPassword: string | null;
+  factusNumberingRangeId: number | null;
+  factusPrefijo: string | null;
 }
 
 export interface EmpresaTableModel {
@@ -36,6 +44,14 @@ export interface CreateEmpresaDto {
   apellidosAdmin: string;
   documentoAdmin: string;
   nombreSucursal: string;
+  // Facturación electrónica (Factus)
+  facturaElectronica?: boolean;
+  factusClientId?: string;
+  factusClientSecret?: string;
+  factusUsername?: string;
+  factusPassword?: string;
+  factusNumberingRangeId?: number | null;
+  factusPrefijo?: string;
 }
 
 export interface UpdateEmpresaDto {
@@ -43,6 +59,14 @@ export interface UpdateEmpresaDto {
   nombreComercial?: string | null;
   dv?: string | null;
   activa?: boolean;
+  // Facturación electrónica (Factus)
+  facturaElectronica?: boolean;
+  factusClientId?: string;
+  factusClientSecret?: string;
+  factusUsername?: string;
+  factusPassword?: string;
+  factusNumberingRangeId?: number | null;
+  factusPrefijo?: string;
 }
 
 // ─── Dashboard ────────────────────────────────────────────────
