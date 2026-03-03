@@ -6,6 +6,8 @@ import {
   OnInit,
   Output,
   SimpleChanges,
+  ChangeDetectorRef,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -24,6 +26,10 @@ import { DividerModule } from 'primeng/divider';
 import { TabViewModule } from 'primeng/tabview';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
+import {
+  AutoCompleteModule,
+  AutoCompleteSelectEvent,
+} from 'primeng/autocomplete';
 import { lastValueFrom } from 'rxjs';
 import {
   CreateTerceroDto,
@@ -32,6 +38,7 @@ import {
   TerceroModel,
   TIPO_DOCUMENTO_OPTIONS,
   TipoDocumento,
+  MunicipioDto,
 } from '../../../core/models/tercero.model';
 import { TerceroService } from '../../../core/services/tercero.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
@@ -39,6 +46,7 @@ import { AlertService } from '../../../shared/pipes/alert.service';
 @Component({
   selector: 'app-form-tercero',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -50,6 +58,7 @@ import { AlertService } from '../../../shared/pipes/alert.service';
     TabViewModule,
     ButtonModule,
     ToastModule,
+    AutoCompleteModule,
   ],
   providers: [MessageService],
   templateUrl: './form-tercero.component.html',
@@ -71,6 +80,10 @@ export class FormTerceroComponent implements OnInit, OnChanges {
   public readonly tipoDocOpts = TIPO_DOCUMENTO_OPTIONS;
   public readonly respFiscalOpts = RESPONSABILIDAD_FISCAL_OPTIONS;
 
+  // Autocomplete municipio
+  municipioSugerencias: MunicipioDto[] = [];
+  municipioSeleccionado: MunicipioDto | null = null;
+
   // Persona natural vs jurídica (reactivo)
   public esJuridica = false;
 
@@ -78,6 +91,7 @@ export class FormTerceroComponent implements OnInit, OnChanges {
     private readonly fb: FormBuilder,
     private readonly terceroService: TerceroService,
     private readonly alertService: AlertService,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -116,6 +130,7 @@ export class FormTerceroComponent implements OnInit, OnChanges {
         email: [null, [Validators.email, Validators.maxLength(100)]],
         emailFe: [null, [Validators.email, Validators.maxLength(100)]],
         direccion: [null, Validators.maxLength(200)],
+        municipio_id: [null],
         responsabilidadFiscal: [null],
         // Roles
         esCliente: [true],
@@ -153,6 +168,7 @@ export class FormTerceroComponent implements OnInit, OnChanges {
 
   private resetForm(): void {
     this.esJuridica = false;
+    this.municipioSeleccionado = null;
     this.frmTercero?.reset({
       tipoDocumento: 'CC',
       numeroDocumento: null,
@@ -164,6 +180,7 @@ export class FormTerceroComponent implements OnInit, OnChanges {
       email: null,
       emailFe: null,
       direccion: null,
+      municipio_id: null,
       responsabilidadFiscal: null,
       esCliente: true,
       esProveedor: false,
@@ -181,6 +198,18 @@ export class FormTerceroComponent implements OnInit, OnChanges {
     return this.frmTercero.get('tipoDocumento')?.value ?? 'CC';
   }
 
+  // ─── Autocomplete Municipio ─────────────────────────────────
+  async buscarMunicipios(event: { query: string }): Promise<void> {
+    try {
+      const res = await lastValueFrom(
+        this.terceroService.buscarMunicipios(event.query),
+      );
+      this.municipioSugerencias = res?.data ?? [];
+    } catch {
+      this.municipioSugerencias = [];
+    }
+  }
+
   // ─── Carga edición ───────────────────────────────────────
   private async loadData(id: number): Promise<void> {
     this.isLoading = true;
@@ -188,7 +217,9 @@ export class FormTerceroComponent implements OnInit, OnChanges {
       const res = await lastValueFrom(this.terceroService.getById(id));
       if (res?.data) {
         const d = res.data;
+        console.log('Tercero cargado:', d);
         this.esJuridica = esPersonaJuridica(d.tipoDocumento);
+
         setTimeout(() => {
           this.frmTercero.patchValue(
             {
@@ -202,6 +233,10 @@ export class FormTerceroComponent implements OnInit, OnChanges {
               email: d.email,
               emailFe: d.emailFe,
               direccion: d.direccion,
+              municipio_id: {
+                id: d.municipioId,
+                label: this.municipioSeleccionado?.nombre ?? '',
+              },
               responsabilidadFiscal: d.responsabilidadFiscal,
               esCliente: d.esCliente,
               esProveedor: d.esProveedor,
@@ -217,6 +252,7 @@ export class FormTerceroComponent implements OnInit, OnChanges {
       this.closeModal();
     } finally {
       this.isLoading = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -254,13 +290,14 @@ export class FormTerceroComponent implements OnInit, OnChanges {
       email: v.email?.trim() || null,
       emailFe: v.emailFe?.trim() || null,
       direccion: v.direccion?.trim() || null,
+      municipioId: this.frmTercero.get('municipio_id')?.value?.id,
       responsabilidadFiscal: v.responsabilidadFiscal || null,
       esCliente: v.esCliente,
       esProveedor: v.esProveedor,
       esEmpleado: v.esEmpleado,
       activo: v.activo,
     };
-
+    console.log('DTO a enviar:', v);
     this.isSubmitting = true;
     try {
       const obs = this.isEditMode

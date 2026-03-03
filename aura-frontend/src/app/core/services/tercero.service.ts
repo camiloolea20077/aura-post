@@ -8,6 +8,7 @@ import {
   CreateTerceroDto,
   UpdateTerceroDto,
   TerceroPageableDto,
+  MunicipioDto,
 } from '../models/tercero.model';
 import { environment } from '../../../environments/environment';
 import { ResponseTableModel } from '../../shared/utils/response-table.model';
@@ -60,6 +61,7 @@ export class TerceroService {
     id: number,
     dto: UpdateTerceroDto,
   ): Observable<ResponseModel<TerceroModel>> {
+    console.log('DTO recibido para update:', dto);
     return this.http.put<ResponseModel<TerceroModel>>(
       `${this.apiUrl}/${id}`,
       dto,
@@ -68,5 +70,18 @@ export class TerceroService {
 
   delete(id: number): Observable<ResponseModel<void>> {
     return this.http.delete<ResponseModel<void>>(`${this.apiUrl}/${id}`);
+  }
+
+  buscarMunicipios(search: string): Observable<ResponseModel<MunicipioDto[]>> {
+    return this.http.post<ResponseModel<MunicipioDto[]>>(
+      `${environment.apiUrl}municipios`,
+      { search },
+    );
+  }
+
+  getMunicipioById(id: number): Observable<ResponseModel<MunicipioDto>> {
+    return this.http.get<ResponseModel<MunicipioDto>>(
+      `${environment.apiUrl}municipios/${id}`,
+    );
   }
 }
