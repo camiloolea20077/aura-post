@@ -52,7 +52,7 @@ public class TerceroEntity {
     private String telefono;
     private String email;
     private String municipio;
-
+    private Long municipioId;
     @Column(name = "email_fe")
     private String emailFe;
 

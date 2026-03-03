@@ -24,5 +24,6 @@ public class CreateTerceroDto {
     private Boolean esCliente = true;
     private Boolean esProveedor = false;
     private Boolean esEmpleado = false;
+    private Long municipioId;
     private Boolean activo = true;
 }

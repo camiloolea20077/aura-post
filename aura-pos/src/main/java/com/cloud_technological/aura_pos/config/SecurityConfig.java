@@ -40,6 +40,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/municipios/**").permitAll()
                 .requestMatchers("/api/platform/**").hasAuthority("PLATFORM_ADMIN")
                 .requestMatchers("/api/auth/register").hasAuthority("PLATFORM_ADMIN") 
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()

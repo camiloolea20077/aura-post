@@ -18,6 +18,7 @@ public interface TerceroMapper {
         @Mapping(target = "created_at", ignore = true),
         @Mapping(target = "updated_at", ignore = true),
         @Mapping(target = "deleted_at", ignore = true),
+        @Mapping(target = "municipioId", source = "dto.municipioId"),
     })
     TerceroEntity toEntity(CreateTerceroDto dto);
 
@@ -29,6 +30,7 @@ public interface TerceroMapper {
         @Mapping(target = "created_at", ignore = true),
         @Mapping(target = "updated_at", ignore = true),
         @Mapping(target = "deleted_at", ignore = true),
+        @Mapping(target = "municipioId", source = "dto.municipioId"),
     })
     void updateEntityFromDto(UpdateTerceroDto dto, @MappingTarget TerceroEntity entity);
 }
