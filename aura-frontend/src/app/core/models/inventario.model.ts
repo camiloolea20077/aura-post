@@ -34,6 +34,7 @@ export interface CreateInventarioDto {
 }
 
 export interface UpdateInventarioDto {
+  stockActual?: number;
   stockMinimo: number;
   ubicacion: string | null;
 }

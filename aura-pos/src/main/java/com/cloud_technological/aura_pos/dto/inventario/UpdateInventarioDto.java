@@ -9,5 +9,6 @@ import lombok.Setter;
 @Setter
 public class UpdateInventarioDto {
     private BigDecimal stockMinimo;
+    private BigDecimal stockActual;
     private String ubicacion;
 }
