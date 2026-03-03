@@ -21,5 +21,6 @@ public class UpdateTerceroDto {
     private Boolean esCliente;
     private Boolean esProveedor;
     private Boolean esEmpleado;
+    private Long municipioId;
     private Boolean activo;
 }

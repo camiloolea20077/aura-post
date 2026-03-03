@@ -30,6 +30,7 @@ export interface TerceroModel {
   nombres: string | null;
   apellidos: string | null;
   direccion: string | null;
+  municipioId: number | null;
   telefono: string | null;
   email: string | null;
   emailFe: string | null;
@@ -63,6 +64,7 @@ export interface CreateTerceroDto {
   nombres: string | null;
   apellidos: string | null;
   direccion: string | null;
+  municipioId: number;
   telefono: string | null;
   email: string | null;
   emailFe: string | null;
@@ -89,4 +91,12 @@ export interface TerceroPageableDto {
 // ─── Helper ───────────────────────────────────────────────────
 export function esPersonaJuridica(tipo: TipoDocumento): boolean {
   return tipo === 'NIT' || tipo === 'RUT';
+}
+
+// ─── Municipio ───────────────────────────────────────────────
+export interface MunicipioDto {
+  id: number;
+  nombre: string;
+  label: string;
+  codigoDane: string | null;
 }

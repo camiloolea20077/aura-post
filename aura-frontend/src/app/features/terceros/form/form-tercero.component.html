@@ -205,16 +205,31 @@
       </div>
     </div>
 
-    <div class="field">
-      <label>Dirección</label>
-      <input
-        type="text"
-        pInputText
-        formControlName="direccion"
-        placeholder="Ej: Calle 80 # 45-20, Bogotá"
-        maxlength="200"
-        autocomplete="off"
-      />
+    <div class="field-row">
+      <div class="field flex-1">
+        <label>Dirección</label>
+        <input
+          type="text"
+          pInputText
+          formControlName="direccion"
+          placeholder="Ej: Calle 80 # 45-20, Bogotá"
+          maxlength="200"
+          autocomplete="off"
+        />
+      </div>
+      <div class="field" style="min-width: 220px">
+        <label>Municipio</label>
+        <p-autoComplete
+          formControlName="municipio_id"
+          [suggestions]="municipioSugerencias"
+          (completeMethod)="buscarMunicipios($event)"
+          field="label"
+          [dropdown]="false"
+          placeholder="Buscar municipio..."
+          [showClear]="true"
+          styleClass="w-full"
+        ></p-autoComplete>
+      </div>
     </div>
 
     <p-divider align="left"><span class="divider-label">Roles</span></p-divider>
