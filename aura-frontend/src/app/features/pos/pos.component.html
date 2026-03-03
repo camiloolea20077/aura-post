@@ -305,10 +305,63 @@
               class="tool-btn btn-desc"
               [class.has-desc]="item.descuento > 0"
               pTooltip="Aplicar descuento"
+              (click)="
+                op.toggle($event);
+                neto = item.descuento || null;
+                percent = ((item.descuento || 0) / item.subtotal) * 100
+              "
               tooltipPosition="top"
             >
               <i class="pi pi-percentage"></i>
             </button>
+            <p-popover #op>
+              <div class="p-popover-content">
+                <div class="popover-group-input">
+                  <div class="popover-item">
+                    <label for="descuento">Porcentaje</label>
+                    <p-inputnumber
+                      [(ngModel)]="percent"
+                      inputId="percent"
+                      (ngModelChange)="
+                        neto = ((percent || 0) / 100) * item.subtotal
+                      "
+                      inputStyleClass="w-full"
+                      prefix="%"
+                      [min]="0"
+                      [max]="100"
+                    />
+                  </div>
+                  <div class="popover-item">
+                    <label for="descuento">Neto</label>
+                    <p-inputnumber
+                      [(ngModel)]="neto"
+                      (ngModelChange)="
+                        percent = ((neto || 0) / item.subtotal) * 100
+                      "
+                      inputStyleClass="w-full"
+                      inputId="minmax"
+                      mode="decimal"
+                      [min]="0"
+                      [max]="item.subtotal"
+                    />
+                  </div>
+                </div>
+                <div class="popover-group-btn">
+                  <p-button
+                    label="Cancelar"
+                    severity="warn"
+                    (click)="op.hide(); neto = null; percent = null"
+                    icon="pi pi-times"
+                    class="p-button-text"
+                  />
+                  <p-button
+                    label="Aplicar"
+                    (click)="aplicarDescuento(item); op.hide()"
+                    icon="pi pi-check"
+                  />
+                </div>
+              </div>
+            </p-popover>
             <button
               class="tool-btn btn-delete"
               (click)="removeItem(item._id)"

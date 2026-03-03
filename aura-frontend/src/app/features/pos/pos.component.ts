@@ -20,6 +20,7 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
+import { PopoverModule } from 'primeng/popover';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { lastValueFrom } from 'rxjs';
@@ -60,8 +61,10 @@ import {
   imports: [
     CommonModule,
     FormsModule,
+    PopoverModule,
     ButtonModule,
     InputTextModule,
+    InputNumberModule,
     InputNumberModule,
     BadgeModule,
     TagModule,
@@ -118,6 +121,8 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   public feClienteNombre = '';
   public feClienteDocumento = '';
   public feClienteEmail = '';
+  public percent: number | null = null;
+  public neto: number | null = null;
   constructor(
     private readonly ventaService: VentaService,
     private readonly turnoCajaService: TurnoCajaService,
@@ -154,6 +159,13 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  aplicarDescuento(item: CartItem) {
+    if (this.neto !== null) {
+      item.descuento = this.neto * 1;
+      this.neto = null;
+    }
   }
 
   focusSearch(): void {
