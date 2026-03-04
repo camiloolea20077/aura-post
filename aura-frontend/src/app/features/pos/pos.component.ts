@@ -251,8 +251,10 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   aplicarPrecio(item: CartItem): void {
     if (this.tempPrecio === null || this.tempPrecio < 0) return;
     if (item.precioOriginal === undefined) item.precioOriginal = item.precio;
-    item.precio = this.tempPrecio;
-    item.descuento = 0; // reset descuento al cambiar precio base
+    // El cajero ingresa el precio final con IVA → back-calculamos el base
+    const factor = 1 + (item.impuesto / 100);
+    item.precio = factor > 0 ? round2(this.tempPrecio / factor) : this.tempPrecio;
+    item.descuento = 0;
     this.tempPrecio = null;
     this.calcLine(item);
     this.cdr.markForCheck();

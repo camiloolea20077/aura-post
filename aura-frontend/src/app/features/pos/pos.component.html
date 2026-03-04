@@ -403,7 +403,7 @@
               [class.has-price-override]="item.precioOriginal !== undefined"
               pTooltip="Modificar precio"
               tooltipPosition="top"
-              (click)="opPrecio.toggle($event); tempPrecio = item.precio"
+              (click)="opPrecio.toggle($event); tempPrecio = item.precio * (1 + item.impuesto / 100)"
             >
               <i class="pi pi-pencil"></i>
             </button>
@@ -411,7 +411,7 @@
               <div class="p-popover-content">
                 <div class="popover-group-input">
                   <div class="popover-item">
-                    <label>Precio unitario</label>
+                    <label>Precio final (con IVA)</label>
                     <p-inputnumber
                       [(ngModel)]="tempPrecio"
                       mode="currency"
@@ -425,7 +425,7 @@
                       class="precio-original-hint"
                       *ngIf="item.precioOriginal !== undefined"
                     >
-                      Catálogo: {{ formatCOP(item.precioOriginal) }}
+                      Catálogo: {{ formatCOP(item.precioOriginal * (1 + item.impuesto / 100)) }}
                     </small>
                   </div>
                 </div>
