@@ -5,8 +5,10 @@ import org.springframework.stereotype.Service;
 import com.cloud_technological.aura_pos.dto.empresas.EmpresaDto;
 import com.cloud_technological.aura_pos.entity.EmpresaEntity;
 import com.cloud_technological.aura_pos.entity.SucursalEntity;
+import com.cloud_technological.aura_pos.entity.TerceroEntity;
 import com.cloud_technological.aura_pos.repositories.empresas.EmpresaJPARepository;
 import com.cloud_technological.aura_pos.repositories.sucursales.SucursalJPARepository;
+import com.cloud_technological.aura_pos.repositories.terceros.TerceroJPARepository;
 import com.cloud_technological.aura_pos.repositories.users.UsuarioJPARepository;
 import com.cloud_technological.aura_pos.services.IEmpresaService;
 import com.cloud_technological.aura_pos.utils.GlobalException;
@@ -21,6 +23,7 @@ public class EmpresaServiceImpl implements IEmpresaService {
     private final EmpresaJPARepository empresaRepository;
     private final SucursalJPARepository sucursalRepository;
     private final UsuarioJPARepository usuarioRepository;
+    private final TerceroJPARepository terceroRepository;
 
     @Override
     public EmpresaDto obtenerEmpresaActual(Integer empresaId, Long sucursalId, Long usuarioId) {
@@ -38,13 +41,24 @@ public class EmpresaServiceImpl implements IEmpresaService {
         String municipio = "";
         String correo = "";
 
-        var superAdmin = usuarioRepository.findSuperAdminByEmpresaId(empresaId).orElse(null);
-        if (superAdmin != null && superAdmin.getTercero() != null) {
-            var t = superAdmin.getTercero();
-            correo    = t.getEmail()     != null ? t.getEmail()     : "";
-            telefono  = t.getTelefono()  != null ? t.getTelefono()  : "";
-            direccion = t.getDireccion() != null ? t.getDireccion() : "";
-            municipio = t.getMunicipio() != null ? t.getMunicipio() : "";
+        // 1. Buscar el tercero de la empresa por NIT (excluye proveedores)
+        TerceroEntity terceroEmpresa = null;
+        if (empresa.getNit() != null) {
+            terceroEmpresa = terceroRepository
+                    .findEmpresaTerceroByNit(empresaId, empresa.getNit())
+                    .orElse(null);
+        }
+        // 2. Fallback: usar el tercero del SUPER_ADMIN
+        if (terceroEmpresa == null) {
+            var superAdmin = usuarioRepository.findSuperAdminByEmpresaId(empresaId).orElse(null);
+            if (superAdmin != null) terceroEmpresa = superAdmin.getTercero();
+        }
+
+        if (terceroEmpresa != null) {
+            correo    = terceroEmpresa.getEmail()     != null ? terceroEmpresa.getEmail()     : "";
+            telefono  = terceroEmpresa.getTelefono()  != null ? terceroEmpresa.getTelefono()  : "";
+            direccion = terceroEmpresa.getDireccion() != null ? terceroEmpresa.getDireccion() : "";
+            municipio = terceroEmpresa.getMunicipio() != null ? terceroEmpresa.getMunicipio() : "";
         }
 
         return EmpresaDto.builder()
