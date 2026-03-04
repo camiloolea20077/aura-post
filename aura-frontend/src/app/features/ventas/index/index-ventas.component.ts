@@ -147,11 +147,16 @@ export class IndexVentasComponent implements OnInit {
     const map: Record<EstadoVenta, TagSeverity> = {
       COMPLETADA: 'success',
       ANULADA: 'danger',
+      PAGO_PARCIAL: 'warn',
     };
     return map[e] ?? 'secondary';
   }
   getEstadoLabel(e: EstadoVenta): string {
-    return e === 'COMPLETADA' ? 'Completada' : 'Anulada';
+    return e === 'COMPLETADA'
+      ? 'Completada'
+      : e === 'PAGO_PARCIAL'
+        ? 'Pago Parcial'
+        : 'Anulada';
   }
 
   formatCOP = (v: number) =>

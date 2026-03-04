@@ -1125,6 +1125,39 @@ $mono: "JetBrains Mono", monospace;
   gap: 8px;
 }
 
+// ── Fila turno + chip movimiento ───────────────────────────
+.catalog-turno-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+// ── Chip ingreso/egreso ────────────────────────────────────
+.btn-mov-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1.5px solid #f59e0b;
+  background: #fffbeb;
+  color: #b45309;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+
+  i { font-size: 0.72rem; }
+
+  &:hover {
+    background: #fef3c7;
+    border-color: #d97706;
+  }
+}
+
 // ── Botón Cotizar ──────────────────────────────────────────
 .btn-cotizar {
   display: flex;

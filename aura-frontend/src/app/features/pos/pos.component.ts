@@ -43,6 +43,7 @@ import { AlertService } from '../../shared/pipes/alert.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { ModalPagoComponent } from './components/modal-pagos/modal-pago.component';
+import { ModalMovimientoCajaComponent } from './components/modal-movimiento-caja/modal-movimiento-caja.component';
 import { VentaResponse } from '../../core/models/venta-response.model';
 import { ModalTirillaComponent } from './components/modal-tirilla/modal-tirilla.component';
 import { ModalTirillaCotizacionComponent } from './components/modal-tirilla-cotizacion/modal-tirilla-cotizacion.component';
@@ -79,6 +80,7 @@ import {
     TooltipModule,
     SkeletonModule,
     ModalPagoComponent,
+    ModalMovimientoCajaComponent,
     ModalTirillaComponent,
     ModalTirillaCotizacionComponent,
     FilterProductsPipe,
@@ -137,6 +139,9 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ── Nuevo cliente ─────────────────────────────────────────
   public showNuevoCliente = false;
+
+  // ── Movimiento de caja (ingreso / egreso) ─────────────────
+  public showMovimiento = false;
 
   // ── Cotización ────────────────────────────────────────────
   public showCotizacion = false;
@@ -640,6 +645,12 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.ventaCompletadaId = null;
     this.ventaActual = null;
     this.focusSearch();
+    this.cdr.markForCheck();
+  }
+
+  // ── Movimiento de caja ────────────────────────────────────
+  abrirMovimiento(): void {
+    this.showMovimiento = true;
     this.cdr.markForCheck();
   }
 

@@ -185,6 +185,96 @@ $muted: #64748b;
   }
 }
 
+// ── Movimientos manuales ───────────────────────────────────
+.movimientos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid $border;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.mov-header {
+  display: grid;
+  grid-template-columns: 1fr 90px 110px;
+  padding: 0.45rem 0.75rem;
+  background: $bg-light;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: $muted;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid $border;
+}
+
+.mov-row {
+  display: grid;
+  grid-template-columns: 1fr 90px 110px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.83rem;
+  border-bottom: 1px solid $border;
+  align-items: center;
+
+  &:last-child { border-bottom: none; }
+}
+
+.mov-concepto {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: $text;
+  font-weight: 500;
+}
+
+.mov-ingreso-icon { color: #16a34a; }
+.mov-egreso-icon  { color: #dc2626; }
+
+.mov-tipo {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+
+  &.mov-ingreso { color: #16a34a; }
+  &.mov-egreso  { color: #dc2626; }
+}
+
+.mov-monto {
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-align: right;
+
+  &.mov-ingreso { color: #16a34a; }
+  &.mov-egreso  { color: #dc2626; }
+}
+
+.mov-totales {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 2px solid $border;
+}
+
+.mov-tot-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.83rem;
+  font-weight: 700;
+
+  &.mov-ingreso {
+    background: #f0fdf4;
+    color: #15803d;
+  }
+
+  &.mov-egreso {
+    background: #fef2f2;
+    color: #b91c1c;
+  }
+}
+
 // ── Métodos de pago ────────────────────────────────────────
 .metodos-pago {
   display: flex;

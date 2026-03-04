@@ -14,6 +14,8 @@ import {
   CerrarTurnoDto,
   TurnoPageableDto,
   ResumenTurnoDto,
+  MovimientoCajaDto,
+  CreateMovimientoCajaDto,
 } from '../models/caja.model';
 import { environment } from '../../../environments/environment';
 import { ResponseTableModel } from '../../shared/utils/response-table.model';
@@ -89,6 +91,16 @@ export class TurnoCajaService {
   resumen(id: number): Observable<ResponseModel<ResumenTurnoDto>> {
     return this.http.get<ResponseModel<ResumenTurnoDto>>(
       `${this.apiUrl}/${id}/resumen`,
+    );
+  }
+
+  registrarMovimiento(
+    turnoId: number,
+    dto: CreateMovimientoCajaDto,
+  ): Observable<ResponseModel<MovimientoCajaDto>> {
+    return this.http.post<ResponseModel<MovimientoCajaDto>>(
+      `${this.apiUrl}/${turnoId}/movimientos`,
+      dto,
     );
   }
 }

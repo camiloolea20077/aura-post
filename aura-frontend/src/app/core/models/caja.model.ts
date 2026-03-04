@@ -73,6 +73,24 @@ export interface TurnoPageableDto {
 // ─────────────────────────────────────────────────────────────
 // ─────────────────────────────────────────────────────────────
 
+// ─── Movimientos de caja (ingresos / egresos manuales) ────────
+export type TipoMovimiento = 'INGRESO' | 'EGRESO';
+
+export interface MovimientoCajaDto {
+  id: number;
+  tipo: TipoMovimiento;
+  concepto: string;
+  monto: number;
+  fecha: string;
+  usuarioNombre?: string;
+}
+
+export interface CreateMovimientoCajaDto {
+  tipo: TipoMovimiento;
+  concepto: string;
+  monto: number;
+}
+
 export interface VentaCategoriaDto {
   categoriaId: number;
   categoriaNombre: string;
@@ -110,4 +128,9 @@ export interface ResumenTurnoDto {
   totalEfectivoReal: number | null;
   diferencia: number | null;
   totalEsperado: number | null;
+
+  // Movimientos manuales (ingresos / egresos)
+  movimientos: MovimientoCajaDto[];
+  totalIngresos: number;
+  totalEgresos: number;
 }

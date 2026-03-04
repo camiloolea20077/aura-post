@@ -90,6 +90,46 @@
       </div>
     </div>
 
+    <!-- ── Movimientos manuales (ingresos / egresos) ── -->
+    <div
+      *ngIf="!loadingResumen && resumen && resumen.movimientos?.length"
+    >
+      <div class="section-title">
+        <i class="pi pi-arrows-v"></i>
+        Ingresos y egresos manuales
+      </div>
+      <div class="movimientos-list">
+        <div class="mov-header">
+          <span>Concepto</span>
+          <span>Tipo</span>
+          <span>Monto</span>
+        </div>
+        <div class="mov-row" *ngFor="let m of resumen.movimientos">
+          <span class="mov-concepto">
+            <i [class]="m.tipo === 'INGRESO' ? 'pi pi-arrow-circle-down mov-ingreso-icon' : 'pi pi-arrow-circle-up mov-egreso-icon'"></i>
+            {{ m.concepto }}
+          </span>
+          <span class="mov-tipo" [class.mov-ingreso]="m.tipo === 'INGRESO'" [class.mov-egreso]="m.tipo === 'EGRESO'">
+            {{ m.tipo === 'INGRESO' ? 'Ingreso' : 'Egreso' }}
+          </span>
+          <span class="mov-monto" [class.mov-ingreso]="m.tipo === 'INGRESO'" [class.mov-egreso]="m.tipo === 'EGRESO'">
+            {{ m.tipo === 'INGRESO' ? '+' : '-' }}{{ formatCOP(m.monto) }}
+          </span>
+        </div>
+        <!-- Totales movimientos -->
+        <div class="mov-totales" *ngIf="resumen.totalIngresos || resumen.totalEgresos">
+          <div class="mov-tot-item mov-ingreso" *ngIf="resumen.totalIngresos">
+            <span>Total ingresos</span>
+            <span>+{{ formatCOP(resumen.totalIngresos) }}</span>
+          </div>
+          <div class="mov-tot-item mov-egreso" *ngIf="resumen.totalEgresos">
+            <span>Total egresos</span>
+            <span>-{{ formatCOP(resumen.totalEgresos) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── Resumen de efectivo ── -->
     <div class="resumen-grid">
       <div class="res-item">

@@ -1,0 +1,109 @@
+<p-dialog
+  [(visible)]="displayModal"
+  header="Registrar movimiento de caja"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '420px' }"
+  styleClass="aura-dialog"
+  (onHide)="closeModal()"
+>
+  <div class="mov-form">
+    <!-- Tipo -->
+    <div class="form-group">
+      <label class="form-label">
+        <i class="pi pi-exchange"></i> Tipo de movimiento
+      </label>
+      <div class="tipo-btns">
+        <button
+          type="button"
+          class="tipo-btn"
+          [class.ingreso-active]="tipo === 'INGRESO'"
+          (click)="tipo = 'INGRESO'"
+        >
+          <i class="pi pi-arrow-circle-down"></i>
+          Ingreso
+        </button>
+        <button
+          type="button"
+          class="tipo-btn"
+          [class.egreso-active]="tipo === 'EGRESO'"
+          (click)="tipo = 'EGRESO'"
+        >
+          <i class="pi pi-arrow-circle-up"></i>
+          Egreso
+        </button>
+      </div>
+    </div>
+
+    <!-- Concepto -->
+    <div class="form-group">
+      <label class="form-label">
+        <i class="pi pi-pencil"></i> Concepto <span class="required">*</span>
+      </label>
+      <input
+        type="text"
+        pInputText
+        [(ngModel)]="concepto"
+        placeholder="Ej: Pago cuota crédito cliente Juan..."
+        class="w-full"
+        maxlength="200"
+      />
+    </div>
+
+    <!-- Monto -->
+    <div class="form-group">
+      <label class="form-label">
+        <i class="pi pi-money-bill"></i> Monto <span class="required">*</span>
+      </label>
+      <p-inputNumber
+        [(ngModel)]="monto"
+        mode="currency"
+        currency="COP"
+        locale="es-CO"
+        [minFractionDigits]="0"
+        [min]="1"
+        placeholder="$ 0"
+        styleClass="w-full"
+      />
+    </div>
+
+    <!-- Indicador visual -->
+    <div
+      class="mov-preview"
+      [class.preview-ingreso]="tipo === 'INGRESO'"
+      [class.preview-egreso]="tipo === 'EGRESO'"
+      *ngIf="monto && monto > 0 && concepto.trim()"
+    >
+      <i [class]="tipo === 'INGRESO' ? 'pi pi-arrow-circle-down' : 'pi pi-arrow-circle-up'"></i>
+      <span>
+        {{ tipo === 'INGRESO' ? '+' : '-' }}{{ formatCOP(monto) }}
+        &mdash; {{ concepto }}
+      </span>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button
+        pButton
+        type="button"
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-outlined p-button-secondary"
+        [disabled]="isSubmitting"
+        (click)="closeModal()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        [label]="tipo === 'INGRESO' ? 'Registrar ingreso' : 'Registrar egreso'"
+        [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : (tipo === 'INGRESO' ? 'pi pi-arrow-circle-down' : 'pi pi-arrow-circle-up')"
+        [class]="tipo === 'INGRESO' ? 'btn-aura btn-ingreso' : 'btn-aura btn-egreso'"
+        [disabled]="isSubmitting || formInvalid"
+        (click)="confirmar()"
+      ></button>
+    </div>
+  </ng-template>
+</p-dialog>
+<p-toast />

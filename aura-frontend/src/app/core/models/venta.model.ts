@@ -1,7 +1,7 @@
 import { TipoProducto } from './producto.model';
 
 // ─── Estado de venta ──────────────────────────────────────────
-export type EstadoVenta = 'COMPLETADA' | 'ANULADA';
+export type EstadoVenta = 'COMPLETADA' | 'ANULADA' | 'PAGO_PARCIAL';
 export type MetodoPago =
   | 'EFECTIVO'
   | 'TARJETA'
