@@ -1,8 +1,12 @@
 package com.cloud_technological.aura_pos.controllers;
 
+import java.util.Arrays;
+import java.util.List;
+
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,11 +33,22 @@ import com.cloud_technological.aura_pos.utils.SecurityUtils;
 @RestController
 @RequestMapping("/api/turnos")
 public class TurnoCajaController {
+
     @Autowired
     private TurnoCajaService turnoService;
 
     @Autowired
     private SecurityUtils securityUtils;
+
+    /** Roles autorizados para cerrar turno. Default: ADMIN,SUPER_ADMIN */
+    @Value("${app.caja.roles-cierre:ADMIN,SUPER_ADMIN}")
+    private String rolesCierreRaw;
+
+    private List<String> getRolesCierre() {
+        return Arrays.stream(rolesCierreRaw.split(","))
+                .map(String::trim)
+                .toList();
+    }
 
     @PostMapping("/page")
     public ResponseEntity<ApiResponse<PageImpl<TurnoCajaTableDto>>> listar(
@@ -68,15 +83,23 @@ public class TurnoCajaController {
     }
 
     @PatchMapping("/{id}/cerrar")
-    public ResponseEntity<ApiResponse<ResumenTurnoDto>> cerrar(   // ← ResumenTurnoDto en vez de TurnoCajaDto
+    public ResponseEntity<ApiResponse<ResumenTurnoDto>> cerrar(
             @PathVariable Long id,
             @Valid @RequestBody CerrarTurnoDto dto) {
+
+        String rolActual = securityUtils.getRol();
+        if (rolActual == null || !getRolesCierre().contains(rolActual)) {
+            throw new GlobalException(HttpStatus.FORBIDDEN,
+                    "No tienes permiso para cerrar el turno de caja");
+        }
+
         Integer empresaId = securityUtils.getEmpresaId();
-        ResumenTurnoDto result = turnoService.cerrar(id, dto, empresaId);  // ← mismo llamado
+        ResumenTurnoDto result = turnoService.cerrar(id, dto, empresaId);
         return new ResponseEntity<>(
             new ApiResponse<>(HttpStatus.OK.value(), "Turno cerrado correctamente", false, result),
             HttpStatus.OK);
     }
+
     @GetMapping("/{id}/resumen")
     public ResponseEntity<ApiResponse<ResumenTurnoDto>> resumen(@PathVariable Long id) {
         Integer empresaId = securityUtils.getEmpresaId();
