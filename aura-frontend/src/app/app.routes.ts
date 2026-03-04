@@ -200,6 +200,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'cotizaciones',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/cotizaciones/index/index-cotizaciones.component').then(
+            (m) => m.IndexCotizacionesComponent,
+          ),
+      },
+      {
         path: 'mermas',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>

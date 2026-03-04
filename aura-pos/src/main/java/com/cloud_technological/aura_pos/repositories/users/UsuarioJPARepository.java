@@ -12,6 +12,9 @@ public interface UsuarioJPARepository extends JpaRepository<UsuarioEntity, Integ
     @Query("SELECT u FROM UsuarioEntity u LEFT JOIN FETCH u.tercero WHERE u.username = :username")
     Optional<UsuarioEntity> findByUsername(@Param("username") String username);
     Optional<UsuarioEntity> findByIdAndEmpresaId(Integer id, Integer empresaId);
+
+    @Query("SELECT u FROM UsuarioEntity u LEFT JOIN FETCH u.tercero WHERE u.empresa.id = :empresaId AND u.rol = 'SUPER_ADMIN'")
+    Optional<UsuarioEntity> findSuperAdminByEmpresaId(@Param("empresaId") Integer empresaId);
     boolean existsByUsernameAndIdNot(String username, Integer id);
     boolean existsByUsername(String username);
 }

@@ -229,6 +229,14 @@
           #clienteInput
           (input)="buscarCliente(clienteInput.value)"
         />
+        <button
+          class="btn-nuevo-cliente"
+          pButton
+          pTooltip="Crear nuevo cliente"
+          tooltipPosition="top"
+          icon="pi pi-user-plus"
+          (click)="showNuevoCliente = true"
+        ></button>
         <div class="cliente-sugerencias" *ngIf="clienteSugerencias.length">
           <div
             class="sug-item"
@@ -271,7 +279,22 @@
             >
               <i class="pi pi-minus"></i>
             </button>
-            <span class="qty-value">{{ item.cantidad }}</span>
+
+            <input
+              type="number"
+              class="qty-value"
+              min="0.001"
+              step="0.001"
+              [value]="item.cantidad"
+              (focus)="tempCantidad = item.cantidad"
+              (input)="tempCantidad = +$any($event.target).value"
+              (blur)="updateCantidad(item, tempCantidad || 1)"
+              (keydown.enter)="
+                updateCantidad(item, tempCantidad || 1);
+                $any($event.target).blur()
+              "
+            />
+
             <button
               class="qty-btn"
               (click)="updateCantidad(item, item.cantidad + 1)"
@@ -395,18 +418,31 @@
         </div>
       </div>
 
-      <button
-        pButton
-        class="btn-cobrar"
-        [disabled]="cart.length === 0"
-        (click)="irAlPago()"
-      >
-        <div class="cobrar-content">
-          <span class="cobrar-text">Cobrar</span>
-          <span class="cobrar-amount">{{ formatCOP(total) }}</span>
-        </div>
-        <i class="pi pi-arrow-right"></i>
-      </button>
+      <div class="cart-actions">
+        <button
+          pButton
+          class="btn-cotizar"
+          [disabled]="cart.length === 0"
+          pTooltip="Guardar como cotización"
+          tooltipPosition="top"
+          (click)="abrirCotizacion()"
+        >
+          <i class="pi pi-file-edit"></i>
+          <span>Cotizar</span>
+        </button>
+        <button
+          pButton
+          class="btn-cobrar"
+          [disabled]="cart.length === 0"
+          (click)="irAlPago()"
+        >
+          <div class="cobrar-content">
+            <span class="cobrar-text">Cobrar</span>
+            <span class="cobrar-amount">{{ formatCOP(total) }}</span>
+          </div>
+          <i class="pi pi-arrow-right"></i>
+        </button>
+      </div>
     </div>
     <!-- /cart-lines -->
 
@@ -443,4 +479,133 @@
   [venta]="ventaActual"
   (modalClosed)="onTirillaClose()"
 />
+<!-- Tirilla cotización -->
+<app-modal-tirilla-cotizacion
+  [displayModal]="showTirillaCotizacion"
+  [cotizacion]="cotizacionCreada"
+  [empresaNombre]="empresaConfig?.razonSocial ?? ''"
+  [empresaNit]="empresaConfig?.nit ?? ''"
+  [empresaDireccion]="empresaConfig?.direccion ?? ''"
+  [empresaTelefono]="empresaConfig?.telefono ?? ''"
+  [empresaEmail]="empresaConfig?.correo ?? ''"
+  [municipio]="empresaConfig?.municipio ?? ''"
+  (modalClosed)="onTirillaCotizacionClose()"
+/>
+
+<!-- Modal Cotización -->
+<p-dialog
+  [(visible)]="showCotizacion"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '480px' }"
+  header="Nueva cotización"
+  styleClass="aura-dialog"
+>
+  <div class="cotizacion-form">
+    <!-- Cliente -->
+    <div class="form-group">
+      <label class="form-label">
+        <i class="pi pi-user"></i> Cliente <span class="opt-label">(opcional)</span>
+      </label>
+      <div class="cliente-chip" *ngIf="cotizacionTerceroNombre">
+        <i class="pi pi-user"></i>
+        <span>{{ cotizacionTerceroNombre }}</span>
+        <button class="chip-clear" (click)="clearClienteCotizacion()">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+      <div class="cliente-search-wrap" *ngIf="!cotizacionTerceroNombre">
+        <input
+          type="text"
+          placeholder="Buscar cliente..."
+          class="cliente-input"
+          #cotInputRef
+          (input)="buscarClienteCotizacion(cotInputRef.value)"
+        />
+        <div class="cliente-sugerencias" *ngIf="cotizacionSugerencias.length">
+          <div
+            class="sug-item"
+            *ngFor="let c of cotizacionSugerencias"
+            (click)="selectClienteCotizacion(c); cotInputRef.value = ''"
+          >
+            <i class="pi pi-user sug-icon"></i>
+            <div>
+              <span class="sug-nombre">{{ c.nombreCompleto }}</span>
+              <span class="sug-doc">{{ c.tipoDocumento }} {{ c.numeroDocumento }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Días vigencia -->
+    <div class="form-group">
+      <label class="form-label">
+        <i class="pi pi-calendar"></i> Días de vigencia
+      </label>
+      <p-inputnumber
+        [(ngModel)]="cotizacionDiasVigencia"
+        [min]="1"
+        [max]="365"
+        [showButtons]="true"
+        buttonLayout="horizontal"
+        decrementButtonClass="p-button-secondary"
+        incrementButtonClass="p-button-secondary"
+        inputStyleClass="text-center"
+        styleClass="w-full"
+      />
+      <small class="form-hint">Vence el {{ cotizacionDiasVigencia }} día(s) hábil(es)</small>
+    </div>
+
+    <!-- Observaciones -->
+    <div class="form-group">
+      <label class="form-label">
+        <i class="pi pi-comment"></i> Observaciones <span class="opt-label">(opcional)</span>
+      </label>
+      <textarea
+        pInputTextarea
+        [(ngModel)]="cotizacionObservaciones"
+        rows="3"
+        placeholder="Notas adicionales para el cliente..."
+        class="w-full"
+        style="resize: none;"
+      ></textarea>
+    </div>
+
+    <!-- Resumen productos -->
+    <div class="cot-resumen">
+      <span><i class="pi pi-shopping-cart"></i> {{ cart.length }} producto(s)</span>
+      <span class="cot-total">{{ formatCOP(total) }}</span>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text p-button-secondary"
+      (click)="showCotizacion = false"
+    ></button>
+    <button
+      pButton
+      label="Generar cotización"
+      icon="pi pi-file-edit"
+      class="btn-aura btn-indigo"
+      [loading]="savingCotizacion"
+      (click)="onCotizacionConfirmada()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Modal nuevo cliente -->
+<app-form-tercero
+  [displayModal]="showNuevoCliente"
+  slug="create"
+  [soloCliente]="true"
+  (terceroSaved)="onClienteCreado($event)"
+  (modalClosed)="showNuevoCliente = false"
+/>
+
 <p-toast />

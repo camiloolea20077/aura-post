@@ -1,0 +1,164 @@
+<p-sidebar
+  [(visible)]="visible"
+  position="right"
+  [style]="{ width: '540px' }"
+  styleClass="aura-sidebar"
+  (onHide)="closePanel()"
+>
+  <ng-template pTemplate="header">
+    <div class="sidebar-header" *ngIf="cotizacion && !isLoading">
+      <div class="header-icon"><i class="pi pi-file-edit"></i></div>
+      <div class="header-meta">
+        <span class="header-numero">{{ cotizacion.numero }}</span>
+        <span class="header-fecha">{{ formatFecha(cotizacion.fecha) }}</span>
+      </div>
+      <p-tag
+        [value]="getEstadoLabel(cotizacion.estado)"
+        [severity]="getEstadoSeverity(cotizacion.estado)"
+        [rounded]="true"
+      />
+    </div>
+    <div class="sidebar-header" *ngIf="isLoading">
+      <p-skeleton width="36px" height="36px" borderRadius="10px" />
+      <div style="flex: 1">
+        <p-skeleton width="60%" />
+        <p-skeleton width="40%" height="10px" styleClass="mt-1" />
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- Loading -->
+  <div class="loading-body" *ngIf="isLoading">
+    <p-skeleton height="80px" borderRadius="10px" />
+    <p-skeleton height="160px" borderRadius="10px" />
+    <p-skeleton height="100px" borderRadius="10px" />
+  </div>
+
+  <div class="sidebar-body" *ngIf="cotizacion && !isLoading">
+    <!-- Info general -->
+    <div class="info-grid">
+      <div class="info-item">
+        <span class="info-label">Cliente</span>
+        <span class="info-val">
+          <i class="pi pi-user"></i>
+          {{ cotizacion.terceroNombre ?? 'Consumidor final' }}
+        </span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Vigencia</span>
+        <span class="info-val">
+          <i class="pi pi-calendar"></i>
+          {{ cotizacion.diasVigencia }} día(s) — vence {{ formatFecha(cotizacion.fechaVencimiento) }}
+        </span>
+      </div>
+      <div class="info-item" *ngIf="cotizacion.observaciones">
+        <span class="info-label">Observaciones</span>
+        <span class="info-val">{{ cotizacion.observaciones }}</span>
+      </div>
+    </div>
+
+    <p-divider align="left"><span class="div-label">Productos</span></p-divider>
+
+    <!-- Líneas de detalle -->
+    <div class="detalle-list">
+      <div class="det-item" *ngFor="let d of cotizacion.detalles; let i = index">
+        <div class="det-num">{{ i + 1 }}</div>
+        <div class="det-info">
+          <span class="det-nombre">{{ d.productoNombre }}</span>
+          <span class="det-sku" *ngIf="d.productoSku">{{ d.productoSku }}</span>
+        </div>
+        <div class="det-calc">
+          <span class="det-expr">{{ d.cantidad }} × {{ formatCOP(d.precioUnitario) }}</span>
+          <span class="det-sub">{{ formatCOP(d.subtotal) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Totales -->
+    <div class="totales-block">
+      <div class="tot-row">
+        <span class="tot-label">Subtotal</span>
+        <span class="tot-val">{{ formatCOP(cotizacion.subtotal) }}</span>
+      </div>
+      <div class="tot-row" *ngIf="cotizacion.descuento > 0">
+        <span class="tot-label" style="color: #dc2626">Descuento</span>
+        <span class="tot-val" style="color: #dc2626">-{{ formatCOP(cotizacion.descuento) }}</span>
+      </div>
+      <div class="tot-row" *ngIf="cotizacion.iva > 0">
+        <span class="tot-label">IVA</span>
+        <span class="tot-val">{{ formatCOP(cotizacion.iva) }}</span>
+      </div>
+      <div class="tot-row total-fin">
+        <span class="tot-total">TOTAL</span>
+        <span class="tot-total-val">{{ formatCOP(cotizacion.total) }}</span>
+      </div>
+    </div>
+
+    <!-- Imprimir -->
+    <div class="print-zone">
+      <button
+        pButton
+        label="Imprimir tirilla"
+        icon="pi pi-print"
+        class="p-button-outlined p-button-secondary p-button-sm w-full"
+        (click)="imprimir()"
+      ></button>
+    </div>
+
+    <!-- Acciones -->
+    <div class="acciones-zone" *ngIf="cotizacion.estado === 'PENDIENTE'">
+      <!-- Convertir a venta -->
+      <div class="accion-item accion-convertir">
+        <div class="accion-info">
+          <i class="pi pi-shopping-cart"></i>
+          <div>
+            <p class="accion-title">Convertir a venta</p>
+            <p class="accion-sub">Cargará los productos en el carrito del POS.</p>
+          </div>
+        </div>
+        <button
+          pButton
+          label="Convertir"
+          icon="pi pi-shopping-cart"
+          class="p-button-success p-button-sm"
+          [loading]="isConvirtiendo"
+          (click)="convertirAVenta()"
+        ></button>
+      </div>
+
+      <!-- Anular -->
+      <div class="accion-item accion-anular">
+        <div class="accion-info">
+          <i class="pi pi-exclamation-triangle"></i>
+          <div>
+            <p class="accion-title">Anular cotización</p>
+            <p class="accion-sub">La cotización quedará marcada como anulada.</p>
+          </div>
+        </div>
+        <button
+          pButton
+          label="Anular"
+          icon="pi pi-ban"
+          class="p-button-danger p-button-outlined p-button-sm"
+          [loading]="isAnulando"
+          (click)="confirmarAnular()"
+        ></button>
+      </div>
+    </div>
+  </div>
+</p-sidebar>
+
+<app-modal-tirilla-cotizacion
+  [displayModal]="showTirilla"
+  [cotizacion]="cotizacion"
+  [empresaNombre]="empresaNombre"
+  [empresaNit]="empresaNit"
+  [empresaDireccion]="empresaDireccion"
+  [empresaTelefono]="empresaTelefono"
+  [empresaEmail]="empresaEmail"
+  [municipio]="municipio"
+  (modalClosed)="showTirilla = false"
+/>
+
+<p-toast />
+<p-confirmDialog />

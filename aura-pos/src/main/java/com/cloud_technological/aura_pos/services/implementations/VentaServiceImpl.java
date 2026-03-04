@@ -1,6 +1,7 @@
 package com.cloud_technological.aura_pos.services.implementations;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -9,13 +10,13 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import com.cloud_technological.aura_pos.dto.cuentas_cobrar.CreateCuentaCobrarDto;
+import com.cloud_technological.aura_pos.dto.facturacion.FacturaDto;
 import com.cloud_technological.aura_pos.dto.ventas.CreateVentaDetalleDto;
 import com.cloud_technological.aura_pos.dto.ventas.CreateVentaDto;
 import com.cloud_technological.aura_pos.dto.ventas.CreateVentaPagoDto;
 import com.cloud_technological.aura_pos.dto.ventas.VentaDto;
 import com.cloud_technological.aura_pos.dto.ventas.VentaTableDto;
-import com.cloud_technological.aura_pos.dto.facturacion.FacturaDto;
-import com.cloud_technological.aura_pos.dto.cuentas_cobrar.CreateCuentaCobrarDto;
 import com.cloud_technological.aura_pos.entity.EmpresaEntity;
 import com.cloud_technological.aura_pos.entity.InventarioEntity;
 import com.cloud_technological.aura_pos.entity.LoteEntity;
@@ -50,9 +51,9 @@ import com.cloud_technological.aura_pos.repositories.venta_detalle_serial.VentaD
 import com.cloud_technological.aura_pos.repositories.venta_pago.VentaPagoJPARepository;
 import com.cloud_technological.aura_pos.repositories.ventas.VentaJPARepository;
 import com.cloud_technological.aura_pos.repositories.ventas.VentaQueryRepository;
-import com.cloud_technological.aura_pos.services.VentaService;
 import com.cloud_technological.aura_pos.services.CuentaCobrarService;
 import com.cloud_technological.aura_pos.services.FacturaService;
+import com.cloud_technological.aura_pos.services.VentaService;
 import com.cloud_technological.aura_pos.utils.GlobalException;
 import com.cloud_technological.aura_pos.utils.PageableDto;
 
@@ -254,22 +255,22 @@ public class VentaServiceImpl implements VentaService{
                         + ". Disponible: " + inventario.getStockActual());
             }
 
-            // 4.2 Calcular impuesto
-            BigDecimal impuestoLinea = item.getPrecioUnitario()
-                    .multiply(item.getCantidad())
-                    .multiply(producto.getIvaPorcentaje()
-                    .divide(new BigDecimal("100")));
+            // 4.2 Base neta (precio × cantidad − descuento), redondeado a 2 decimales
+            BigDecimal baseNeta = item.getPrecioUnitario()
+                .multiply(item.getCantidad())
+                .subtract(item.getDescuentoValor())
+                .setScale(2, RoundingMode.HALF_UP);
 
-            // 4.3 Calcular subtotal linea
-            BigDecimal subtotalLinea = item.getPrecioUnitario()
-                    .multiply(item.getCantidad())
-                    .subtract(item.getMontoDescuento());
+            // 4.3 Usar el impuesto enviado en el request
+            BigDecimal impuestoLinea = item.getImpuestoValor();
+
 
             // 4.4 Crear detalle
+            BigDecimal subtotalLinea = baseNeta.add(impuestoLinea).setScale(2, RoundingMode.HALF_UP);
             VentaDetalleEntity detalle = detalleMapper.toEntity(item);
             detalle.setVenta(venta);
             detalle.setProducto(producto);
-            detalle.setImpuestoValor(impuestoLinea);
+            detalle.setImpuestoValor(impuestoLinea.setScale(2, RoundingMode.HALF_UP));
             detalle.setSubtotalLinea(subtotalLinea);
 
             // Presentación opcional
@@ -369,13 +370,13 @@ public class VentaServiceImpl implements VentaService{
                     item.getCantidad().negate(), saldoAnterior, saldoNuevo,
                     item.getPrecioUnitario(), "VENTA", "Venta #" + venta.getId());
             }
-            subtotal = subtotal.add(subtotalLinea);
-            descuentoTotal = descuentoTotal.add(item.getMontoDescuento());
-            impuestosTotal = impuestosTotal.add(impuestoLinea);
+            subtotal = subtotal.add(baseNeta);
+            descuentoTotal = descuentoTotal.add(item.getDescuentoValor());
+            impuestosTotal = impuestosTotal.add(impuestoLinea.setScale(2, RoundingMode.HALF_UP));
         }
 
         // 5. Validar que el pago cubra el total (excepto si hay método CREDITO)
-        BigDecimal totalFinal = subtotal.add(impuestosTotal);
+        BigDecimal totalFinal = subtotal.add(impuestosTotal).setScale(2, RoundingMode.HALF_UP);
         
         // Detectar si es venta a crédito
         boolean hayCredito = false;
@@ -386,8 +387,9 @@ public class VentaServiceImpl implements VentaService{
             }
         }
         
-        // Si no hay crédito, validar que el pago cubra el total
-        if (!hayCredito && totalPagado.compareTo(totalFinal) < 0) {
+        // Si no hay crédito, validar que el pago cubra el total (tolerancia de 1 peso por decimales)
+        BigDecimal tolerancia = BigDecimal.ONE;
+        if (!hayCredito && totalPagado.add(tolerancia).compareTo(totalFinal) < 0) {
             throw new GlobalException(HttpStatus.BAD_REQUEST,
                     "El pago recibido (" + totalPagado + ") es menor al total (" + totalFinal + ")");
         }
@@ -412,8 +414,8 @@ public class VentaServiceImpl implements VentaService{
             }
         }
         
-        // Si no es crédito pero hay saldo pendiente, es pago parcial
-        boolean esPagoParcial = !esCredito && totalPagado.compareTo(totalFinal) < 0;
+        // Si no es crédito pero hay saldo pendiente, es pago parcial (tolerancia de 1 peso)
+        boolean esPagoParcial = !esCredito && totalPagado.add(tolerancia).compareTo(totalFinal) < 0;
         if (esPagoParcial) {
             saldoPendiente = totalFinal.subtract(totalPagado);
         }

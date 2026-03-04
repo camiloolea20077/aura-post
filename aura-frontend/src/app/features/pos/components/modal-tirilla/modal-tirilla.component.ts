@@ -51,7 +51,7 @@ export class ModalTirillaComponent implements OnChanges {
   constructor(private sanitizer: DomSanitizer) {}
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['venta'] && this.venta) {
-      this.ancho = 80;
+      this.ancho = 58;
       this.logoSafeUrl = this.venta.logoUrl
         ? this.sanitizer.bypassSecurityTrustUrl(this.venta.logoUrl)
         : null;
@@ -76,97 +76,218 @@ export class ModalTirillaComponent implements OnChanges {
   }
 
   imprimir(): void {
-    const contenido = document.getElementById('tirilla-content');
-    if (!contenido) return;
+    if (!this.venta) return;
 
-    const anchoMm = this.ancho === 58 ? '48mm' : '70mm';
-    const fontSize = this.ancho === 58 ? '8pt' : '9pt';
-    const html = contenido.innerHTML;
+    const v = this.venta;
+    const anchoPage = this.ancho === 58 ? '58mm' : '80mm';
+    const fontSize = this.ancho === 58 ? '11px' : '13px';
+    // Columnas en % del ancho total — nunca se desbordan
+    const colCant = '8%';
+    const colVal = '22%';
+    const colTot = '22%';
+    const numeroVenta = String(v.consecutivo).padStart(6, '0');
+
+    // ── Construir filas de productos ──────────────────────────────
+    const filasProductos = v.detalles
+      .map((d) => {
+        const cantStr =
+          d.cantidad % 1 === 0
+            ? String(Math.round(d.cantidad))
+            : d.cantidad.toFixed(3);
+        const total = d.subtotalLinea + d.impuestoValor - d.montoDescuento;
+        const descRow =
+          d.montoDescuento > 0
+            ? `<div style="display:flex;justify-content:space-between;font-size:0.85em;padding-left:4px;">
+             <span>DESCUENTO:</span><span>-${this.formatCOP(d.montoDescuento)}</span>
+           </div>`
+            : '';
+        return `
+        <div style="margin:2px 0;">
+          <div style="display:table;width:100%;table-layout:fixed;">
+            <span style="display:table-cell;overflow:hidden;">${d.productoNombre}</span>
+            <span style="display:table-cell;width:${colCant};text-align:center;">${cantStr}</span>
+            <span style="display:table-cell;width:${colVal};text-align:right;">${this.formatCOP(d.precioUnitario)}</span>
+            <span style="display:table-cell;width:${colTot};text-align:right;">${this.formatCOP(total)}</span>
+          </div>
+          ${descRow}
+        </div>`;
+      })
+      .join('');
+
+    // ── Construir filas de pagos ──────────────────────────────────
+    const filasPagos = v.pagos
+      .map((p) => {
+        const cambio =
+          p.metodoPago === 'EFECTIVO' ? Math.max(0, p.monto - v.totalPagar) : 0;
+        const cambioHtml =
+          cambio > 0
+            ? `<span style="text-align:right;">Cambio: ${this.formatCOP(cambio)}</span>`
+            : '';
+        return `
+        <div style="display:flex;gap:4px;font-size:0.92em;padding:1px 0;">
+          <span style="flex:1;">${this.metodoPagoLabel(p.metodoPago)}</span>
+          <span style="text-align:right;">${this.formatCOP(p.monto)}</span>
+          ${cambioHtml}
+        </div>`;
+      })
+      .join('');
+
+    // ── Logo ──────────────────────────────────────────────────────
+    const logoHtml = v.logoUrl
+      ? `<div style="text-align:center;margin-bottom:5px;">
+           <img src="${v.logoUrl}" style="max-width:55%;max-height:16mm;object-fit:contain;" onerror="this.style.display='none'" />
+         </div>`
+      : '';
+
+    // ── Totales opcionales ────────────────────────────────────────
+    const impuestoHtml =
+      v.impuestosTotal > 0
+        ? `<div style="display:flex;justify-content:space-between;padding:1px 0;">
+           <span>Impuesto (Impo + Iva)</span><span>${this.formatCOP(v.impuestosTotal)}</span>
+         </div>`
+        : '';
+    const descuentoHtml =
+      v.descuentoTotal > 0
+        ? `<div style="display:flex;justify-content:space-between;padding:1px 0;">
+           <span>Descuento</span><span>-${this.formatCOP(v.descuentoTotal)}</span>
+         </div>`
+        : '';
+
+    // ── Cajero / cliente ──────────────────────────────────────────
+    const cajeroHtml = v.cajeroNombre
+      ? `<div style="display:flex;gap:3px;padding:1px 0;">
+           <span style="white-space:nowrap;">Atendido Por :</span>
+           <span style="flex:1;">${v.cajeroNombre}</span>
+         </div>`
+      : '';
+    const clienteHtml = v.clienteNombre
+      ? `<div style="display:flex;gap:3px;padding:1px 0;">
+           <span style="white-space:nowrap;">Cliente</span>
+           <span style="flex:1;">${v.clienteDocumento ? v.clienteDocumento + ' - ' : ''}${v.clienteNombre}</span>
+         </div>`
+      : '';
 
     const ventana = window.open('', '_blank', 'width=400,height=700');
     if (!ventana) return;
 
-    ventana.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>Tirilla</title>
-          <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body {
-              font-family: 'Courier New', Courier, monospace;
-              font-size: ${fontSize};
-              color: #000;
-              background: white;
-              width: ${anchoMm};
-            }
-            .t-logo-wrap { text-align: center; margin-bottom: 6px; }
-            .t-logo      { max-width: 60%; max-height: 18mm; object-fit: contain; }
+    ventana.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Tirilla</title>
+  <style>
+    @page {
+      size: ${anchoPage} auto;
+      margin: 0 !important;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; font-weight:bold; }
+    html {
+      width: ${anchoPage};
+      max-width: ${anchoPage};
+    }
+    body {
+      width: ${anchoPage};
+      max-width: ${anchoPage};
+      overflow: hidden;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: ${fontSize};
+      line-height: 1.5;
+      color: #000;
+      background: #fff;
+      -webkit-font-smoothing: none;
+      font-smooth: never;
+      padding: 1mm 1.5mm;
+    }
+    img { -webkit-print-color-adjust:exact; print-color-adjust:exact; max-width:100%; }
+    hr.dash  { border:none; border-top:2px dashed #000; margin:4px 0; }
+    hr.solid { border:none; border-top:1px solid #000; margin:2px 0; }
+    /* Todo el contenido se adapta al ancho */
+    div, span { max-width: 100%; }
+    .fila { display:table; width:100%; table-layout:fixed; }
+    .fila span { display:table-cell; overflow:hidden; }
+  </style>
+</head>
+<body>
 
-            .t-header    { text-align: center; margin-bottom: 4px; }
-            .t-empresa   { font-size: 1.15em; font-weight: bold; text-transform: uppercase; }
-            .t-tipo-doc  { font-size: 0.9em; margin-top: 2px; }
-            .t-numero    { font-weight: bold; margin-top: 1px; }
-            .t-fecha     { font-size: 0.85em; color: #333; margin-top: 2px; }
+  ${logoHtml}
 
-            .t-separator      { border-top: 1px dashed #666; margin: 5px 0; }
-            .t-separator-thin { border-top: 1px solid #999; margin: 3px 0; }
+  <div style="text-align:center;margin-bottom:3px;">
+    <div style="font-size:1.15em;text-transform:uppercase;">${v.razonSocial ?? ''}</div>
+    ${v.empresaNit ? `<div style="font-size:0.92em;">Nit ${v.empresaNit}</div>` : ''}
+    ${v.empresaDireccion ? `<div style="font-size:0.92em;">${v.empresaDireccion}</div>` : ''}
+    ${v.empresaEmail ? `<div style="font-size:0.92em;">${v.empresaEmail}</div>` : ''}
+    ${v.empresaTelefono ? `<div style="font-size:0.92em;">Cel. ${v.empresaTelefono}</div>` : ''}
+    ${v.municipio ? `<div style="font-size:0.92em;">${v.municipio}</div>` : ''}
+  </div>
 
-            .t-col-header {
-              display: flex; font-weight: bold; font-size: 0.82em;
-              text-transform: uppercase; padding: 2px 0;
-            }
-            .t-col-uds  { width: 22px; flex-shrink: 0; }
-            .t-col-desc { flex: 1; padding: 0 3px; }
-            .t-col-iva  { width: 30px; text-align: right; flex-shrink: 0; }
-            .t-col-imp  { width: 55px; text-align: right; flex-shrink: 0; }
+  <hr class="dash"/>
 
-            .t-prod-row     { margin: 3px 0; }
-            .t-prod-line    { display: flex; align-items: baseline; }
-            .t-prod-desc-row {
-              display: flex; justify-content: space-between;
-              font-size: 0.82em; color: #555; padding-left: 22px;
-            }
+  <div style="display:flex;justify-content:space-between;font-size:0.92em;padding:2px 0;">
+    <span style="text-transform:uppercase;">${v.tipoDocumento ?? 'D.E POS'}</span>
+    <span>${numeroVenta}</span>
+    <span style="font-size:0.88em;">${this.formatFecha(v.fechaEmision)}</span>
+  </div>
 
-            .t-totales     { margin: 3px 0; }
-            .t-tot-row     { display: flex; justify-content: space-between; font-size: 0.9em; padding: 1px 0; }
-            .t-total-final {
-              display: flex; justify-content: space-between;
-              font-size: 1.2em; font-weight: bold;
-              border-top: 2px solid #000; border-bottom: 2px solid #000;
-              padding: 3px 0; margin: 4px 0;
-            }
+  <hr class="solid"/>
 
-            .t-pagos-header {
-              display: flex; justify-content: space-between;
-              font-size: 0.8em; font-weight: bold;
-              text-transform: uppercase; padding: 1px 0; color: #555;
-            }
-            .t-pago-row {
-              display: flex; font-size: 0.9em; padding: 1px 0;
-            }
-            .t-pago-metodo { flex: 1; }
-            .t-pago-monto  { width: 60px; text-align: right; }
-            .t-pago-cambio { width: 55px; text-align: right; }
+  ${cajeroHtml}
+  ${clienteHtml}
+  <div style="display:flex;gap:3px;padding:1px 0;">
+    <span style="white-space:nowrap;">Pago :</span>
+    <span>${this.metodoPagoLabel(v.pagos[0]?.metodoPago || '')}</span>
+  </div>
 
-            .t-cliente { font-size: 0.85em; margin: 3px 0; }
+  <hr class="dash"/>
 
-            .t-footer     { text-align: center; margin-top: 8px; font-size: 0.88em; font-weight: bold; }
-            .t-footer-sub { font-size: 0.8em; font-weight: normal; color: #555; margin-top: 2px; }
+  <div style="display:table;width:100%;table-layout:fixed;font-size:0.88em;padding:2px 0;">
+    <span style="display:table-cell;">Artículo</span>
+    <span style="display:table-cell;width:${colCant};text-align:center;">Cant</span>
+    <span style="display:table-cell;width:${colVal};text-align:right;">Valor</span>
+    <span style="display:table-cell;width:${colTot};text-align:right;">Total</span>
+  </div>
+  <hr class="solid"/>
 
-            @page { size: ${anchoMm} auto; margin: 3mm; }
-          </style>
-        </head>
-        <body>${html}</body>
-        <script>
-          window.onload = function() {
-            window.print();
-            window.onafterprint = function() { window.close(); };
-          };
-        </script>
-      </html>
-    `);
+  ${filasProductos}
+
+  <hr class="solid"/>
+
+  <div style="margin:2px 0;">
+    <div style="display:flex;justify-content:space-between;padding:1px 0;">
+      <span>Sub Total</span><span>${this.formatCOP(v.subtotal - v.descuentoTotal)}</span>
+    </div>
+    ${impuestoHtml}
+    ${descuentoHtml}
+  </div>
+
+  <div style="display:flex;justify-content:space-between;font-size:1.2em;border-top:2px solid #000;border-bottom:2px solid #000;padding:3px 0;margin:3px 0;">
+    <span>Total Pedido</span><span>${this.formatCOP(v.totalPagar)}</span>
+  </div>
+
+  <hr class="solid"/>
+
+  ${filasPagos}
+
+  <hr class="dash"/>
+
+  <div style="font-size:0.78em;text-align:justify;margin:4px 0;line-height:1.35;">
+    Esta factura se asimila a los efectos legales de las facturas de cambio ART. 744 del Código del Comercio.
+  </div>
+
+  <hr class="solid"/>
+
+  <div style="text-align:center;margin-top:6px;">
+    <div>*** GRACIAS POR SU COMPRA ***</div>
+    <div style="font-size:0.82em;margin-top:2px;">Conserve su comprobante</div>
+  </div>
+
+</body>
+<script>
+  window.onload = function() {
+    window.print();
+    window.onafterprint = function() { window.close(); };
+  };
+</script>
+</html>`);
     ventana.document.close();
   }
 

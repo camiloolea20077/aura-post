@@ -1,7 +1,6 @@
-package com.cloud_technological.aura_pos.dto.ventas;
+package com.cloud_technological.aura_pos.dto.cotizaciones;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 import javax.validation.constraints.NotNull;
 
@@ -10,17 +9,14 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class CreateVentaDetalleDto {
+public class CreateCotizacionDetalleDto {
     @NotNull(message = "El producto es obligatorio")
     private Long productoId;
-    private Long productoPresentacionId;
-    private Long loteId;
-    private List<Long> serialIds; // si maneja serial
+    private String descripcion;
     @NotNull(message = "La cantidad es obligatoria")
     private BigDecimal cantidad;
     @NotNull(message = "El precio es obligatorio")
     private BigDecimal precioUnitario;
-    private Long reglaDescuentoId;
+    private BigDecimal ivaPorcentaje = BigDecimal.ZERO;
     private BigDecimal descuentoValor = BigDecimal.ZERO;
-    private BigDecimal impuestoValor = BigDecimal.ZERO; // IVA u otro impuesto específico
 }

@@ -1,0 +1,210 @@
+$indigo: #6366f1;
+$emerald: #10b981;
+$orange: #f97316;
+$red: #ef4444;
+$bg: #f8fafc;
+$card: #ffffff;
+$border: #e2e8f0;
+$text: #1e293b;
+$muted: #94a3b8;
+
+.page-container {
+  padding: 24px;
+  min-height: 100%;
+  background: $bg;
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-title-area {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.page-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, $indigo, #818cf8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.3rem;
+  box-shadow: 0 4px 12px rgba($indigo, 0.3);
+}
+
+.page-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: $text;
+  margin: 0;
+}
+
+.page-sub {
+  font-size: 0.85rem;
+  color: $muted;
+  margin: 2px 0 0;
+}
+
+.card {
+  background: $card;
+  border-radius: 16px;
+  border: 1px solid $border;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+// ── Toolbar ──────────────────────────────────────────────────
+.table-toolbar {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid $border;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  i.pi-search {
+    position: absolute;
+    left: 12px;
+    color: $muted;
+    z-index: 1;
+  }
+}
+
+.search-input {
+  padding: 8px 36px 8px 36px;
+  border-radius: 10px;
+  border: 1.5px solid $border;
+  background: $bg;
+  font-size: 0.875rem;
+  min-width: 280px;
+  transition: border-color 0.15s;
+
+  &:focus {
+    border-color: $indigo;
+    outline: none;
+  }
+}
+
+.clear-btn {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: $muted;
+  padding: 4px;
+  border-radius: 6px;
+
+  &:hover { color: $text; }
+}
+
+.total-badge {
+  font-size: 0.8rem;
+  color: $muted;
+  background: $bg;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid $border;
+  white-space: nowrap;
+}
+
+// ── Table ─────────────────────────────────────────────────────
+.id-badge {
+  font-size: 0.8rem;
+  color: $muted;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.numero-cot {
+  font-weight: 600;
+  color: $indigo;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.875rem;
+}
+
+.cell-cliente {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cliente-av {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, $indigo, #818cf8);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+.cliente-n {
+  font-size: 0.875rem;
+  color: $text;
+}
+
+.fecha-val {
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+.text-danger {
+  color: $red !important;
+  font-weight: 600;
+}
+
+.monto-val {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: $text;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+
+.action-view { color: $indigo; }
+
+// ── Row states ─────────────────────────────────────────────────
+:host ::ng-deep .aura-table {
+  .row-vencida td { color: $muted; }
+  .row-anulada td {
+    text-decoration: line-through;
+    color: $muted;
+    opacity: 0.7;
+  }
+}
+
+// ── Empty state ─────────────────────────────────────────────────
+.empty-state {
+  padding: 48px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: $muted;
+
+  i { font-size: 2.5rem; opacity: 0.4; }
+  p { font-size: 0.9rem; }
+}

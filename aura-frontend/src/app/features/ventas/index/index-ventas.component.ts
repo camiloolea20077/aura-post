@@ -8,7 +8,7 @@ import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
-import { MessageService } from 'primeng/api';
+import { MessageService, ConfirmationService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 import {
   EstadoVenta,
@@ -25,6 +25,7 @@ import { ModalFacturaComponent } from '../../pos/components/modal-factuta/modal-
 import { FacturaViewerModalComponent } from '../../pos/components/factura-viewer-modal/factura-viewer-modal.component';
 import { EmpresaService } from '../../../core/services/empresa.service';
 import { IndexDBService } from '../../../core/services/index-db.service';
+import { ConfirmDialog } from 'primeng/confirmdialog';
 
 type TagSeverity =
   | 'success'
@@ -51,8 +52,9 @@ type TagSeverity =
     ModalTirillaComponent,
     ModalFacturaComponent,
     FacturaViewerModalComponent,
+    ConfirmDialog,
   ],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './index-ventas.component.html',
   styleUrls: ['./index-ventas.component.scss'],
 })
