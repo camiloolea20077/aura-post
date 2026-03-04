@@ -6,6 +6,8 @@ import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
+
 @Getter
 @Setter
 public class ResumenTurnoDto {
@@ -36,4 +38,9 @@ public class ResumenTurnoDto {
     private BigDecimal diferencia;   
     // ResumenTurnoDto.java
     private BigDecimal totalEsperado; // base inicial + ventas en efectivo
+
+    // Movimientos manuales de caja (ingresos / egresos)
+    private List<MovimientoCajaDto> movimientos = new ArrayList<>();
+    private BigDecimal totalIngresos = BigDecimal.ZERO;
+    private BigDecimal totalEgresos  = BigDecimal.ZERO;
 }

@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.cloud_technological.aura_pos.dto.caja.AbrirTurnoDto;
 import com.cloud_technological.aura_pos.dto.caja.CerrarTurnoDto;
+import com.cloud_technological.aura_pos.dto.caja.CreateMovimientoCajaDto;
+import com.cloud_technological.aura_pos.dto.caja.MovimientoCajaDto;
 import com.cloud_technological.aura_pos.dto.caja.ResumenTurnoDto;
 import com.cloud_technological.aura_pos.dto.caja.TurnoCajaDto;
 import com.cloud_technological.aura_pos.dto.caja.TurnoCajaTableDto;
@@ -107,5 +109,17 @@ public class TurnoCajaController {
         return new ResponseEntity<>(
             new ApiResponse<>(HttpStatus.OK.value(), "Resumen del turno", false, result),
             HttpStatus.OK);
+    }
+
+    @PostMapping("/{id}/movimientos")
+    public ResponseEntity<ApiResponse<MovimientoCajaDto>> registrarMovimiento(
+            @PathVariable Long id,
+            @Valid @RequestBody CreateMovimientoCajaDto dto) {
+        Integer empresaId = securityUtils.getEmpresaId();
+        Long usuarioId = securityUtils.getUsuarioId();
+        MovimientoCajaDto result = turnoService.registrarMovimiento(id, dto, empresaId, usuarioId);
+        return new ResponseEntity<>(
+            new ApiResponse<>(HttpStatus.CREATED.value(), "Movimiento registrado", false, result),
+            HttpStatus.CREATED);
     }
 }

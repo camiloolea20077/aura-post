@@ -3,7 +3,8 @@
 -- ==================================================================
 INSERT INTO empresa (razon_social, nit, activa)
 VALUES ('Cloud Technological SAS', '000000001', true);
-
+  -- Verifica que ambas tablas existen
+select * from empresa
 INSERT INTO usuario (empresa_id, username, password_hash, rol, activo)
 VALUES (
     (SELECT id FROM empresa WHERE nit = '000000001'),
@@ -12,10 +13,12 @@ VALUES (
     'PLATFORM_ADMIN',
     true
 );
+
+select * from usuario
 UPDATE usuario 
 SET password_hash = '$2a$10$C15Lc45DVbvd0PqDk3MTZ.3cNNSvpfbeC.ya6K9nb7CV/MKJOXoVm'
 WHERE username = 'platform@cloudtechnological.com';
-
+select * from usuario
 SELECT id, username, password_hash, rol, activo 
 FROM usuario 
 WHERE username = 'platform@cloudtechnological.com';
@@ -79,6 +82,8 @@ CREATE TABLE tercero (
 	deleted_at TIMESTAMP,
     UNIQUE(empresa_id, numero_documento)
 );
+
+select * from tercero 
 -- USUARIOS DEL SISTEMA
 CREATE TABLE usuario (
     id SERIAL PRIMARY KEY,
@@ -422,6 +427,18 @@ CREATE TABLE turno_caja (
     diferencia DECIMAL(14,2),
     estado VARCHAR(20) DEFAULT 'ABIERTA'
 );
+
+CREATE TABLE movimiento_caja (
+    id SERIAL PRIMARY KEY,
+    turno_caja_id INT NOT NULL REFERENCES turno_caja(id),
+    usuario_id INT NOT NULL REFERENCES usuario(id),
+    tipo VARCHAR(10) NOT NULL CHECK (tipo IN ('INGRESO', 'EGRESO')),
+    concepto VARCHAR(200) NOT NULL,
+    monto DECIMAL(18,2) NOT NULL CHECK (monto > 0),
+    fecha TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_movimiento_caja_turno ON movimiento_caja(turno_caja_id);
 
 CREATE TABLE venta (
     id SERIAL PRIMARY KEY,

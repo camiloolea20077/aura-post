@@ -1,7 +1,7 @@
 import { TipoProducto } from './producto.model';
 
 // ─── Estado de venta ──────────────────────────────────────────
-export type EstadoVenta = 'COMPLETADA' | 'ANULADA';
+export type EstadoVenta = 'COMPLETADA' | 'ANULADA' | 'PAGO_PARCIAL';
 export type MetodoPago =
   | 'EFECTIVO'
   | 'TARJETA'
@@ -126,6 +126,7 @@ export interface CartItem {
   productoNombre: string;
   productoSku: string | null;
   precio: number;
+  precioOriginal?: number; // precio del catálogo antes de override manual
   cantidad: number;
   descuento: number; // valor absoluto
   impuesto: number;

@@ -43,6 +43,7 @@ import { AlertService } from '../../shared/pipes/alert.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { ModalPagoComponent } from './components/modal-pagos/modal-pago.component';
+import { ModalMovimientoCajaComponent } from './components/modal-movimiento-caja/modal-movimiento-caja.component';
 import { VentaResponse } from '../../core/models/venta-response.model';
 import { ModalTirillaComponent } from './components/modal-tirilla/modal-tirilla.component';
 import { ModalTirillaCotizacionComponent } from './components/modal-tirilla-cotizacion/modal-tirilla-cotizacion.component';
@@ -79,6 +80,7 @@ import {
     TooltipModule,
     SkeletonModule,
     ModalPagoComponent,
+    ModalMovimientoCajaComponent,
     ModalTirillaComponent,
     ModalTirillaCotizacionComponent,
     FilterProductsPipe,
@@ -134,9 +136,13 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   public feClienteEmail = '';
   public percent: number | null = null;
   public neto: number | null = null;
+  public tempPrecio: number | null = null;
 
   // ── Nuevo cliente ─────────────────────────────────────────
   public showNuevoCliente = false;
+
+  // ── Movimiento de caja (ingreso / egreso) ─────────────────
+  public showMovimiento = false;
 
   // ── Cotización ────────────────────────────────────────────
   public showCotizacion = false;
@@ -240,6 +246,18 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  aplicarPrecio(item: CartItem): void {
+    if (this.tempPrecio === null || this.tempPrecio < 0) return;
+    if (item.precioOriginal === undefined) item.precioOriginal = item.precio;
+    // El cajero ingresa el precio final con IVA → back-calculamos el base
+    const factor = 1 + (item.impuesto / 100);
+    item.precio = factor > 0 ? round2(this.tempPrecio / factor) : this.tempPrecio;
+    item.descuento = 0;
+    this.tempPrecio = null;
+    this.calcLine(item);
+    this.cdr.markForCheck();
   }
 
   aplicarDescuento(item: CartItem) {
@@ -640,6 +658,12 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.ventaCompletadaId = null;
     this.ventaActual = null;
     this.focusSearch();
+    this.cdr.markForCheck();
+  }
+
+  // ── Movimiento de caja ────────────────────────────────────
+  abrirMovimiento(): void {
+    this.showMovimiento = true;
     this.cdr.markForCheck();
   }
 

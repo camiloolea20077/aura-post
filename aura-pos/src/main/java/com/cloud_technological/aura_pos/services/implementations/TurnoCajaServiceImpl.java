@@ -8,16 +8,23 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import com.cloud_technological.aura_pos.dto.caja.AbrirTurnoDto;
 import com.cloud_technological.aura_pos.dto.caja.CerrarTurnoDto;
+import com.cloud_technological.aura_pos.dto.caja.CreateMovimientoCajaDto;
+import com.cloud_technological.aura_pos.dto.caja.MovimientoCajaDto;
 import com.cloud_technological.aura_pos.dto.caja.ResumenTurnoDto;
 import com.cloud_technological.aura_pos.dto.caja.TurnoCajaDto;
 import com.cloud_technological.aura_pos.dto.caja.TurnoCajaTableDto;
 import com.cloud_technological.aura_pos.entity.CajaEntity;
+import com.cloud_technological.aura_pos.entity.MovimientoCajaEntity;
 import com.cloud_technological.aura_pos.entity.TurnoCajaEntity;
 import com.cloud_technological.aura_pos.entity.UsuarioEntity;
 import com.cloud_technological.aura_pos.mappers.TurnoCajaMapper;
 import com.cloud_technological.aura_pos.repositories.caja.CajaJPARepository;
+import com.cloud_technological.aura_pos.repositories.movimiento_caja.MovimientoCajaJPARepository;
 import com.cloud_technological.aura_pos.repositories.turno_caja.TurnoCajaJPARepository;
 import com.cloud_technological.aura_pos.repositories.turno_caja.TurnoCajaQueryRepository;
 import com.cloud_technological.aura_pos.repositories.users.UsuarioJPARepository;
@@ -35,18 +42,21 @@ public class TurnoCajaServiceImpl implements TurnoCajaService{
     private final CajaJPARepository cajaJPARepository;
     private final UsuarioJPARepository usuarioJPARepository;
     private final TurnoCajaMapper turnoMapper;
+    private final MovimientoCajaJPARepository movimientoRepository;
 
     @Autowired
     public TurnoCajaServiceImpl(TurnoCajaQueryRepository turnoRepository,
             TurnoCajaJPARepository turnoJPARepository,
             CajaJPARepository cajaJPARepository,
             UsuarioJPARepository usuarioJPARepository,
-            TurnoCajaMapper turnoMapper) {
+            TurnoCajaMapper turnoMapper,
+            MovimientoCajaJPARepository movimientoRepository) {
         this.turnoRepository = turnoRepository;
         this.turnoJPARepository = turnoJPARepository;
         this.cajaJPARepository = cajaJPARepository;
         this.usuarioJPARepository = usuarioJPARepository;
         this.turnoMapper = turnoMapper;
+        this.movimientoRepository = movimientoRepository;
     }
 
     @Override
@@ -128,6 +138,41 @@ public class TurnoCajaServiceImpl implements TurnoCajaService{
 
         return construirResumen(id);
     }
+    @Override
+    @Transactional
+    public MovimientoCajaDto registrarMovimiento(Long turnoId, CreateMovimientoCajaDto dto, Integer empresaId, Long usuarioId) {
+        TurnoCajaEntity turno = turnoJPARepository.findByIdAndCajaSucursalEmpresaId(turnoId, empresaId)
+                .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Turno no encontrado"));
+
+        if ("CERRADA".equals(turno.getEstado()))
+            throw new GlobalException(HttpStatus.BAD_REQUEST, "No se pueden registrar movimientos en un turno cerrado");
+
+        UsuarioEntity usuario = usuarioJPARepository.findById(usuarioId.intValue())
+                .orElseThrow(() -> new GlobalException(HttpStatus.INTERNAL_SERVER_ERROR, "Usuario no encontrado"));
+
+        MovimientoCajaEntity mov = new MovimientoCajaEntity();
+        mov.setTurnoCaja(turno);
+        mov.setUsuario(usuario);
+        mov.setTipo(dto.getTipo());
+        mov.setConcepto(dto.getConcepto());
+        mov.setMonto(dto.getMonto());
+        mov.setFecha(java.time.LocalDateTime.now());
+
+        MovimientoCajaEntity saved = movimientoRepository.save(mov);
+        return toMovimientoDto(saved);
+    }
+
+    private MovimientoCajaDto toMovimientoDto(MovimientoCajaEntity e) {
+        MovimientoCajaDto dto = new MovimientoCajaDto();
+        dto.setId(e.getId());
+        dto.setTipo(e.getTipo());
+        dto.setConcepto(e.getConcepto());
+        dto.setMonto(e.getMonto());
+        dto.setFecha(e.getFecha() != null ? e.getFecha().toString() : null);
+        dto.setUsuarioNombre(e.getUsuario() != null ? e.getUsuario().getUsername() : null);
+        return dto;
+    }
+
     private ResumenTurnoDto construirResumen(Long turnoId) {
         // Datos base del turno (reutiliza tu obtenerTurnoActivo modificado o el mapper)
         TurnoCajaEntity entity = turnoJPARepository.findById(turnoId)
@@ -185,6 +230,15 @@ public class TurnoCajaServiceImpl implements TurnoCajaService{
                 )
             );
         }
+        // Movimientos manuales (ingresos / egresos)
+        List<MovimientoCajaEntity> movEntities = movimientoRepository.findByTurnoCajaIdOrderByFechaAsc(turnoId);
+        List<MovimientoCajaDto> movDtos = movEntities.stream().map(this::toMovimientoDto).collect(Collectors.toList());
+        BigDecimal totalIngresos = movimientoRepository.sumMontoByTurnoIdAndTipo(turnoId, "INGRESO");
+        BigDecimal totalEgresos  = movimientoRepository.sumMontoByTurnoIdAndTipo(turnoId, "EGRESO");
+        resumen.setMovimientos(movDtos);
+        resumen.setTotalIngresos(totalIngresos);
+        resumen.setTotalEgresos(totalEgresos);
+
         return resumen;
     }
 
