@@ -104,6 +104,7 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
       { label: 'Ventas', icon: 'pi pi-receipt', route: '/ventas' },
       { label: 'Mermas', icon: 'pi pi-trash', route: '/mermas' },
       { label: 'Traslados', icon: 'pi pi-arrows-h', route: '/traslados' },
+      { label: 'Cotizaciones', icon: 'pi pi-file', route: '/cotizaciones' },
     ],
   },
   {

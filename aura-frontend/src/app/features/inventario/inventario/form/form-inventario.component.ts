@@ -192,6 +192,7 @@ export class FormInventarioComponent implements OnInit, OnChanges {
       const obs = this.isEditMode
         ? this.inventarioService.update(this.inventarioId!, {
             stockMinimo: v.stockMinimo,
+            stockActual: v.stockActual,
             ubicacion: v.ubicacion?.trim() || null,
           } as UpdateInventarioDto)
         : this.inventarioService.create({

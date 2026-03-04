@@ -21,5 +21,6 @@ public class CreateVentaDetalleDto {
     @NotNull(message = "El precio es obligatorio")
     private BigDecimal precioUnitario;
     private Long reglaDescuentoId;
-    private BigDecimal montoDescuento = BigDecimal.ZERO;
+    private BigDecimal descuentoValor = BigDecimal.ZERO;
+    private BigDecimal impuestoValor = BigDecimal.ZERO; // IVA u otro impuesto específico
 }

@@ -64,6 +64,7 @@ export class IndexTurnosComponent implements OnInit, OnDestroy {
   showAbrir = false;
   showCerrar = false;
   turnoActivo: TurnoCajaModel | null = null;
+  turnoParaCerrar: TurnoCajaModel | null = null;
 
   // ── NUEVO: resumen en tiempo real ─────────────────────────
   resumen: ResumenTurnoDto | null = null;
@@ -205,18 +206,32 @@ export class IndexTurnosComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  // ── Cerrar turno ──────────────────────────────────────────
+  // ── Cerrar turno (propio) ─────────────────────────────────
   openCerrar(): void {
+    this.turnoParaCerrar = this.turnoActivo;
     this.showCerrar = true;
   }
+
+  // ── Cerrar turno desde la tabla (cualquier cajero) ────────
+  openCerrarDesdeTabla(item: TurnoCajaTableModel): void {
+    this.turnoParaCerrar = item;
+    this.showCerrar = true;
+  }
+
   onCerrarClosed(): void {
     this.showCerrar = false;
+    this.turnoParaCerrar = null;
   }
+
   onTurnoCerrado(): void {
     this.showCerrar = false;
-    this.turnoActivo = null;
-    this.resumen = null;
-    this.detenerPolling();
+    // Si el que se cerró era el turno activo del admin, limpiar panel
+    if (this.turnoParaCerrar?.id === this.turnoActivo?.id) {
+      this.turnoActivo = null;
+      this.resumen = null;
+      this.detenerPolling();
+    }
+    this.turnoParaCerrar = null;
     this.reloadTable();
     this.cdr.markForCheck();
   }

@@ -20,6 +20,9 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
+import { PopoverModule } from 'primeng/popover';
+import { DialogModule } from 'primeng/dialog';
+import { TextareaModule } from 'primeng/textarea';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { lastValueFrom } from 'rxjs';
@@ -33,6 +36,7 @@ import {
 } from '../../core/models/venta.model';
 import { TurnoCajaModel } from '../../core/models/caja.model';
 import { VentaService } from '../../core/services/venta.service';
+import { CotizacionService } from '../../core/services/cotizacion.service';
 import { TurnoCajaService } from '../../core/services/caja.service';
 import { TerceroService } from '../../core/services/tercero.service';
 import { AlertService } from '../../shared/pipes/alert.service';
@@ -41,7 +45,11 @@ import { environment } from '../../../environments/environment';
 import { ModalPagoComponent } from './components/modal-pagos/modal-pago.component';
 import { VentaResponse } from '../../core/models/venta-response.model';
 import { ModalTirillaComponent } from './components/modal-tirilla/modal-tirilla.component';
+import { ModalTirillaCotizacionComponent } from './components/modal-tirilla-cotizacion/modal-tirilla-cotizacion.component';
+import { CotizacionModel } from '../../core/models/cotizacion.model';
 import { FilterProductsPipe } from '../../shared/pipes/filter-products.pipe';
+import { FormTerceroComponent } from '../terceros/form/form-tercero.component';
+import { TerceroModel } from '../../core/models/tercero.model';
 import {
   FacturaElectronicaModalComponent,
   FacturaElectronicaResult,
@@ -60,8 +68,10 @@ import {
   imports: [
     CommonModule,
     FormsModule,
+    PopoverModule,
     ButtonModule,
     InputTextModule,
+    InputNumberModule,
     InputNumberModule,
     BadgeModule,
     TagModule,
@@ -70,8 +80,12 @@ import {
     SkeletonModule,
     ModalPagoComponent,
     ModalTirillaComponent,
+    ModalTirillaCotizacionComponent,
     FilterProductsPipe,
     FacturaElectronicaModalComponent,
+    DialogModule,
+    TextareaModule,
+    FormTerceroComponent,
   ],
   providers: [MessageService],
   templateUrl: './pos.component.html',
@@ -99,7 +113,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   public categorias: { id: number; nombre: string }[] = [];
   private searchSubject$ = new Subject<string>();
   private destroy$ = new Subject<void>();
-
+  tempCantidad: number = 0;
   // ── Carrito ───────────────────────────────────────────────
   public cart: CartItem[] = [];
   public clienteId: number | null = null;
@@ -118,8 +132,26 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   public feClienteNombre = '';
   public feClienteDocumento = '';
   public feClienteEmail = '';
+  public percent: number | null = null;
+  public neto: number | null = null;
+
+  // ── Nuevo cliente ─────────────────────────────────────────
+  public showNuevoCliente = false;
+
+  // ── Cotización ────────────────────────────────────────────
+  public showCotizacion = false;
+  public showTirillaCotizacion = false;
+  public cotizacionCreada: CotizacionModel | null = null;
+  public cotizacionTerceroId: number | null = null;
+  public cotizacionTerceroNombre: string | null = null;
+  public cotizacionDiasVigencia = 3;
+  public cotizacionObservaciones: string | null = null;
+  public cotizacionSugerencias: any[] = [];
+  public savingCotizacion = false;
+
   constructor(
     private readonly ventaService: VentaService,
+    private readonly cotizacionService: CotizacionService,
     private readonly turnoCajaService: TurnoCajaService,
     private readonly terceroService: TerceroService,
     private readonly alertService: AlertService,
@@ -134,6 +166,60 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.checkTurno();
     this.setupSearch();
     this.loadEmpresaConfig();
+    this.cargarCotizacionDesdeNavegacion();
+  }
+
+  private cargarCotizacionDesdeNavegacion(): void {
+    const cotizacion =
+      this.router.getCurrentNavigation()?.extras?.state?.['cotizacion'] ??
+      history.state?.cotizacion;
+    if (!cotizacion?.detalles?.length) return;
+    // Esperar a que los productos se carguen, luego poblar el carrito
+    const interval = setInterval(() => {
+      if (!this.loadingProductos) {
+        clearInterval(interval);
+        this.poblarCarritoDesdeCotizacion(cotizacion);
+      }
+    }, 100);
+  }
+
+  private poblarCarritoDesdeCotizacion(cotizacion: any): void {
+    this.clearCart();
+    for (const d of cotizacion.detalles) {
+      const item: CartItem = {
+        _id: uuid(),
+        productoId: d.productoId,
+        productoNombre: d.productoNombre,
+        productoSku: d.productoSku ?? null,
+        precio: d.precioUnitario,
+        cantidad: d.cantidad,
+        descuento: d.descuentoValor ?? 0,
+        descuentoAutomatico: null,
+        impuesto: d.ivaPorcentaje ?? 0,
+        impuestoValor: 0,
+        subtotal: 0,
+        esPesable: false,
+        unidadMedida: 'UND',
+        showDescuento: false,
+      };
+      // recalcular línea
+      const base = round2(item.precio * item.cantidad);
+      const desc = round2(item.descuento);
+      const baseNeta = round2(Math.max(0, base - desc));
+      const iva = round2(baseNeta * (item.impuesto / 100));
+      item.impuestoValor = iva;
+      item.subtotal = round2(baseNeta + iva);
+      this.cart = [...this.cart, item];
+    }
+    if (cotizacion.terceroId) {
+      this.clienteId = cotizacion.terceroId;
+      this.clienteNombre = cotizacion.terceroNombre ?? null;
+    }
+    this.alertService.showSuccess(
+      'Cotización cargada',
+      `${cotizacion.numero} lista para procesar`,
+    );
+    this.cdr.markForCheck();
   }
 
   private async loadEmpresaConfig(): Promise<void> {
@@ -154,6 +240,15 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  aplicarDescuento(item: CartItem) {
+    if (this.neto !== null) {
+      item.descuento = this.neto * 1;
+      this.neto = null;
+      this.calcLine(item);
+      this.cdr.markForCheck();
+    }
   }
 
   focusSearch(): void {
@@ -304,7 +399,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         showDescuento: false,
       };
       this.calcLine(item);
-      this.cart = [...this.cart, item];
+      this.cart = [item, ...this.cart];
     }
     this.cdr.markForCheck();
   }
@@ -313,7 +408,8 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     if (item.esPesable) {
       item.cantidad = val && val > 0 ? val : 0.001;
     } else {
-      item.cantidad = Math.max(1, Math.floor(val ?? 1));
+      const parsed = parseFloat((val ?? 1).toString());
+      item.cantidad = isNaN(parsed) || parsed <= 0 ? 1 : parsed;
     }
     this.calcLine(item);
     this.cdr.markForCheck();
@@ -326,11 +422,12 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private calcLine(item: CartItem): void {
-    const base = item.precio * item.cantidad;
-    const baseNeta = Math.max(0, base - item.descuento);
-    const iva = baseNeta * (item.impuesto / 100);
+    const base = round2(item.precio * item.cantidad);
+    const desc = round2(item.descuento);
+    const baseNeta = round2(Math.max(0, base - desc));
+    const iva = round2(baseNeta * (item.impuesto / 100));
     item.impuestoValor = iva;
-    item.subtotal = baseNeta + iva;
+    item.subtotal = round2(baseNeta + iva);
   }
 
   removeItem(id: string): void {
@@ -347,16 +444,18 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ── Getters de totales ────────────────────────────────────
   get subtotal(): number {
-    return this.cart.reduce((s, c) => s + c.precio * c.cantidad, 0);
+    return round2(
+      this.cart.reduce((s, c) => s + round2(c.precio * c.cantidad), 0),
+    );
   }
   get descTotal(): number {
-    return this.cart.reduce((s, c) => s + c.descuento, 0);
+    return round2(this.cart.reduce((s, c) => s + c.descuento, 0));
   }
   get impTotal(): number {
-    return this.cart.reduce((s, c) => s + c.impuestoValor, 0);
+    return round2(this.cart.reduce((s, c) => s + c.impuestoValor, 0));
   }
   get total(): number {
-    return this.subtotal - this.descTotal + this.impTotal;
+    return round2(this.subtotal - this.descTotal + this.impTotal);
   }
   get itemCount(): number {
     return this.cart.reduce((s, c) => s + c.cantidad, 0);
@@ -395,6 +494,17 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   clearCliente(): void {
     this.clienteId = null;
     this.clienteNombre = null;
+    this.cdr.markForCheck();
+  }
+
+  onClienteCreado(tercero: TerceroModel): void {
+    this.showNuevoCliente = false;
+    this.clienteId = tercero.id;
+    this.clienteNombre =
+      tercero.nombres
+        ? `${tercero.nombres} ${tercero.apellidos ?? ''}`.trim()
+        : (tercero.razonSocial ?? '');
+    this.clienteSugerencias = [];
     this.cdr.markForCheck();
   }
 
@@ -482,6 +592,12 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
   }
+  onTirillaCotizacionClose(): void {
+    this.showTirillaCotizacion = false;
+    this.cotizacionCreada = null;
+    this.cdr.markForCheck();
+  }
+
   onTirillaClose(): void {
     this.showTirilla = false;
 
@@ -526,4 +642,85 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.focusSearch();
     this.cdr.markForCheck();
   }
+
+  // ── Cotización ────────────────────────────────────────────
+  abrirCotizacion(): void {
+    this.cotizacionTerceroId = null;
+    this.cotizacionTerceroNombre = null;
+    this.cotizacionDiasVigencia = 3;
+    this.cotizacionObservaciones = null;
+    this.cotizacionSugerencias = [];
+    this.showCotizacion = true;
+    this.cdr.markForCheck();
+  }
+
+  async buscarClienteCotizacion(query: string): Promise<void> {
+    if (!query || query.length < 2) {
+      this.cotizacionSugerencias = [];
+      return;
+    }
+    try {
+      const res: any = await lastValueFrom(
+        this.http.get<any>(
+          `${environment.apiUrl}terceros/clientes?search=${query}`,
+        ),
+      );
+      this.cotizacionSugerencias = res?.data ?? [];
+      this.cdr.markForCheck();
+    } catch {
+      this.cotizacionSugerencias = [];
+    }
+  }
+
+  selectClienteCotizacion(c: any): void {
+    this.cotizacionTerceroId = c.id;
+    this.cotizacionTerceroNombre =
+      c.nombreCompleto ?? `${c.nombres ?? ''} ${c.apellidos ?? ''}`.trim();
+    this.cotizacionSugerencias = [];
+    this.cdr.markForCheck();
+  }
+
+  clearClienteCotizacion(): void {
+    this.cotizacionTerceroId = null;
+    this.cotizacionTerceroNombre = null;
+    this.cdr.markForCheck();
+  }
+
+  async onCotizacionConfirmada(): Promise<void> {
+    if (!this.cart.length) return;
+    this.savingCotizacion = true;
+    try {
+      const dto = {
+        terceroId: this.cotizacionTerceroId,
+        turnoCajaId: this.turnoActivo?.id ?? null,
+        observaciones: this.cotizacionObservaciones || null,
+        diasVigencia: this.cotizacionDiasVigencia ?? 3,
+        detalles: this.cart.map((c) => ({
+          productoId: c.productoId,
+          descripcion: c.productoNombre,
+          cantidad: c.cantidad,
+          precioUnitario: c.precio,
+          ivaPorcentaje: c.impuesto,
+          descuentoValor: c.descuento,
+        })),
+      };
+      const res = await lastValueFrom(this.cotizacionService.create(dto));
+      if (res?.status === 201) {
+        this.showCotizacion = false;
+        this.cotizacionCreada = res.data as CotizacionModel;
+        this.showTirillaCotizacion = true;
+        this.cdr.markForCheck();
+      }
+    } catch (err: any) {
+      const message =
+        err?.error?.message ?? 'No se pudo guardar la cotización.';
+      this.alertService.showError('Error', message);
+    } finally {
+      this.savingCotizacion = false;
+      this.cdr.markForCheck();
+    }
+  }
+}
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
 }

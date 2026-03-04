@@ -33,7 +33,6 @@ import { AlertService } from '../../../shared/pipes/alert.service';
     ConfirmDialogModule,
     SkeletonModule,
   ],
-  providers: [MessageService, ConfirmationService],
   templateUrl: './detalle-venta.component.html',
   styleUrls: ['./detalle-venta.component.scss'],
 })
@@ -46,6 +45,7 @@ export class DetalleVentaComponent implements OnChanges {
   public venta: VentaModel | null = null;
   public isLoading = false;
   public isAnulando = false;
+  private ventaIdToAnular: number | null = null;
 
   constructor(
     private readonly ventaService: VentaService,
@@ -76,6 +76,7 @@ export class DetalleVentaComponent implements OnChanges {
   }
 
   confirmarAnular(): void {
+    this.ventaIdToAnular = this.venta?.id ?? null;
     this.confirmationService.confirm({
       message: `¿Anular la venta <strong>${this.venta?.numeroVenta ?? '#' + this.venta?.id}</strong>?<br>
         <small>Se revertirá el stock de todos los productos.</small>`,
@@ -89,10 +90,11 @@ export class DetalleVentaComponent implements OnChanges {
   }
 
   private async anularVenta(): Promise<void> {
-    if (!this.venta) return;
+    const idToAnular = this.ventaIdToAnular ?? this.venta?.id;
+    if (!idToAnular) return;
     this.isAnulando = true;
     try {
-      await lastValueFrom(this.ventaService.anular(this.venta.id));
+      await lastValueFrom(this.ventaService.anular(idToAnular));
       this.alertService.showSuccess('Venta anulada', '');
       this.anulada.emit();
     } catch (err: any) {

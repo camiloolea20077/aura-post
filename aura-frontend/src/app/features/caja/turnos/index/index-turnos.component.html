@@ -272,6 +272,7 @@
           <th style="width: 120px" class="text-right">Base inicial</th>
           <th style="width: 120px" class="text-right">Diferencia</th>
           <th style="width: 90px" class="text-center">Estado</th>
+          <th style="width: 80px" class="text-center">Acciones</th>
         </tr>
       </ng-template>
 
@@ -333,12 +334,23 @@
               [rounded]="true"
             />
           </td>
+          <td class="text-center">
+            <button
+              *ngIf="item.estado === 'ABIERTA'"
+              pButton
+              icon="pi pi-lock"
+              class="p-button-rounded p-button-sm p-button-danger p-button-outlined"
+              pTooltip="Cerrar turno"
+              tooltipPosition="left"
+              (click)="openCerrarDesdeTabla(item)"
+            ></button>
+          </td>
         </tr>
       </ng-template>
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="9">
+          <td colspan="10">
             <div class="empty-state">
               <i class="pi pi-clock"></i>
               <p>
@@ -378,6 +390,9 @@
           <td class="text-center">
             <p-skeleton width="70px" styleClass="mx-auto" />
           </td>
+          <td class="text-center">
+            <p-skeleton width="36px" styleClass="mx-auto" />
+          </td>
         </tr>
       </ng-template>
     </p-table>
@@ -393,7 +408,7 @@
 
 <app-cerrar-turno
   [displayModal]="showCerrar"
-  [turno]="turnoActivo"
+  [turno]="turnoParaCerrar"
   (modalClosed)="onCerrarClosed()"
   (turnoCerrado)="onTurnoCerrado()"
 >

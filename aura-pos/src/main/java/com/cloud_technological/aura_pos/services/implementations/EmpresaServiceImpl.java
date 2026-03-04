@@ -38,15 +38,13 @@ public class EmpresaServiceImpl implements IEmpresaService {
         String municipio = "";
         String correo = "";
 
-        if (usuarioId != null) {
-            var usuario = usuarioRepository.findById(usuarioId.intValue()).orElse(null);
-            if (usuario != null && usuario.getTercero() != null) {
-                var tercero = usuario.getTercero();
-                correo = tercero.getEmail() != null ? tercero.getEmail() : "";
-                telefono = tercero.getTelefono() != null ? tercero.getTelefono() : "";
-                direccion = tercero.getDireccion() != null ? tercero.getDireccion() : "";
-                municipio = tercero.getMunicipio() != null ? tercero.getMunicipio() : "";
-            }
+        var superAdmin = usuarioRepository.findSuperAdminByEmpresaId(empresaId).orElse(null);
+        if (superAdmin != null && superAdmin.getTercero() != null) {
+            var t = superAdmin.getTercero();
+            correo    = t.getEmail()     != null ? t.getEmail()     : "";
+            telefono  = t.getTelefono()  != null ? t.getTelefono()  : "";
+            direccion = t.getDireccion() != null ? t.getDireccion() : "";
+            municipio = t.getMunicipio() != null ? t.getMunicipio() : "";
         }
 
         return EmpresaDto.builder()

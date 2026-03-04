@@ -16,9 +16,11 @@ $mono: "JetBrains Mono", monospace;
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 10px;
@@ -32,17 +34,21 @@ $mono: "JetBrains Mono", monospace;
   justify-content: center;
   gap: 1rem;
   height: 60vh;
+
   i {
     font-size: 2.5rem;
     color: $muted;
   }
+
   p {
     color: $muted;
     font-size: 0.9rem;
   }
+
   &.guard-error {
     gap: 0.75rem;
   }
+
   h3 {
     font-size: 1.2rem;
     font-weight: 700;
@@ -59,6 +65,7 @@ $mono: "JetBrains Mono", monospace;
   display: flex;
   align-items: center;
   justify-content: center;
+
   i {
     font-size: 2rem;
     color: $indigo;
@@ -114,6 +121,7 @@ $mono: "JetBrains Mono", monospace;
     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
     animation: pulse-dot 1.5s infinite;
   }
+
   .turno-label {
     font-size: 0.78rem;
     font-weight: 600;
@@ -126,6 +134,7 @@ $mono: "JetBrains Mono", monospace;
   100% {
     box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
   }
+
   50% {
     box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.07);
   }
@@ -145,6 +154,7 @@ $mono: "JetBrains Mono", monospace;
     pointer-events: none;
     z-index: 1;
   }
+
   .product-search {
     width: 100%;
     height: 44px; // Mejorado para táctil
@@ -155,9 +165,11 @@ $mono: "JetBrains Mono", monospace;
     font-size: 0.9rem;
     background: $bg;
     transition: all 0.15s;
+
     &::placeholder {
       color: $muted;
     }
+
     &:focus {
       border-color: $indigo;
       box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
@@ -165,6 +177,7 @@ $mono: "JetBrains Mono", monospace;
       background: $card;
     }
   }
+
   .clear-search {
     position: absolute;
     right: 0.6rem;
@@ -174,9 +187,11 @@ $mono: "JetBrains Mono", monospace;
     color: $muted;
     display: flex;
     padding: 0.5rem; // Área táctil mejorada
+
     i {
       font-size: 0.72rem;
     }
+
     &:hover {
       color: $red;
     }
@@ -212,6 +227,7 @@ $mono: "JetBrains Mono", monospace;
     color: $indigo;
     background: rgba(99, 102, 241, 0.05);
   }
+
   &.active {
     border-color: $indigo;
     background: rgba(99, 102, 241, 0.08);
@@ -268,12 +284,15 @@ $mono: "JetBrains Mono", monospace;
     border-color: rgba(99, 102, 241, 0.4);
     box-shadow: 0 6px 20px rgba(99, 102, 241, 0.12);
     transform: translateY(-2px);
+
     &::before {
       opacity: 1;
     }
+
     .prod-overlay {
       opacity: 1;
     }
+
     .prod-avatar-letter {
       transform: scale(0.88);
     }
@@ -288,6 +307,7 @@ $mono: "JetBrains Mono", monospace;
     opacity: 0.5;
     cursor: not-allowed;
     filter: grayscale(0.3);
+
     &::before {
       background: $muted;
       opacity: 1;
@@ -296,6 +316,7 @@ $mono: "JetBrains Mono", monospace;
 
   &.low-stock {
     border-color: rgba(249, 115, 22, 0.35);
+
     &::before {
       background: linear-gradient(90deg, $orange, #fbbf24);
       opacity: 1;
@@ -326,6 +347,7 @@ $mono: "JetBrains Mono", monospace;
   object-fit: cover;
   border-radius: 12px;
   transition: transform 0.2s;
+
   .product-card:hover & {
     transform: scale(1.04);
   }
@@ -353,6 +375,7 @@ $mono: "JetBrains Mono", monospace;
   opacity: 0;
   transition: opacity 0.15s;
   backdrop-filter: blur(2px);
+
   i {
     font-size: 1.4rem;
     color: white;
@@ -375,6 +398,30 @@ $mono: "JetBrains Mono", monospace;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.p-popover-content {
+  width: 20rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  .popover-group-input {
+    width: 100%;
+    display: flex;
+    gap: 0.5rem;
+
+    .popover-item {
+      width: 48%;
+    }
+  }
+
+  .popover-group-btn {
+    width: 100%;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+  }
 }
 
 .prod-sku {
@@ -438,6 +485,7 @@ $mono: "JetBrains Mono", monospace;
     color: $orange;
     border: 1px solid rgba(249, 115, 22, 0.25);
   }
+
   &.empty {
     background: rgba(239, 68, 68, 0.1);
     color: $red;
@@ -462,18 +510,22 @@ $mono: "JetBrains Mono", monospace;
     font-weight: 600;
     opacity: 0.75;
   }
+
   &.ok {
     background: rgba(16, 185, 129, 0.1);
     color: $emerald;
   }
+
   &.low {
     background: rgba(249, 115, 22, 0.1);
     color: $orange;
   }
+
   &.empty {
     background: rgba(239, 68, 68, 0.1);
     color: $red;
   }
+
   &.servicio {
     background: rgba(99, 102, 241, 0.08);
     color: #6366f1;
@@ -495,6 +547,7 @@ $mono: "JetBrains Mono", monospace;
   display: flex;
   align-items: center;
   gap: 0.2rem;
+
   i {
     font-size: 0.55rem;
   }
@@ -523,17 +576,20 @@ $mono: "JetBrains Mono", monospace;
     display: flex;
     align-items: center;
     justify-content: center;
+
     i {
       font-size: 1.5rem;
       color: rgba(99, 102, 241, 0.4);
     }
   }
+
   .empty-title {
     font-size: 0.88rem;
     font-weight: 700;
     color: #475569;
     margin: 0;
   }
+
   .empty-sub {
     font-size: 0.75rem;
     color: $muted;
@@ -564,10 +620,12 @@ $mono: "JetBrains Mono", monospace;
     display: flex;
     align-items: center;
     gap: 0.45rem;
+
     i {
       font-size: 1rem;
       color: $indigo;
     }
+
     span {
       font-size: 0.9rem;
       font-weight: 700;
@@ -614,12 +672,14 @@ $mono: "JetBrains Mono", monospace;
     font-size: 0.9rem;
     color: $indigo;
   }
+
   .cliente-nombre {
     font-size: 0.85rem;
     font-weight: 600;
     color: $text;
     flex: 1;
   }
+
   .chip-clear {
     background: none;
     border: none;
@@ -628,17 +688,45 @@ $mono: "JetBrains Mono", monospace;
     padding: 0.3rem;
     display: flex;
     align-items: center;
+
     i {
       font-size: 0.75rem;
     }
+
     &:hover {
       color: $red;
     }
   }
 }
 
+.cliente-search {
+  position: relative;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.btn-nuevo-cliente {
+  flex-shrink: 0;
+  height: 44px;
+  width: 44px;
+  border-radius: 9px !important;
+  background: #f0fdf4 !important;
+  border: 1.5px solid #bbf7d0 !important;
+  color: #16a34a !important;
+
+  &:hover {
+    background: #dcfce7 !important;
+  }
+
+  ::ng-deep .p-button-icon {
+    font-size: 1rem;
+  }
+}
+
 .cliente-input {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   height: 44px; // Táctil
   border-radius: 9px;
   border: 1.5px solid $border;
@@ -650,6 +738,7 @@ $mono: "JetBrains Mono", monospace;
   &::placeholder {
     color: $muted;
   }
+
   &:focus {
     border-color: $indigo;
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
@@ -682,6 +771,7 @@ $mono: "JetBrains Mono", monospace;
   &:last-child {
     border-bottom: none;
   }
+
   &:hover {
     background: rgba(99, 102, 241, 0.04);
   }
@@ -690,12 +780,14 @@ $mono: "JetBrains Mono", monospace;
     font-size: 0.82rem;
     color: $indigo;
   }
+
   .sug-nombre {
     font-size: 0.8rem;
     font-weight: 600;
     color: $text;
     display: block;
   }
+
   .sug-doc {
     font-size: 0.65rem;
     color: $muted;
@@ -799,6 +891,7 @@ $mono: "JetBrains Mono", monospace;
     background: rgba(99, 102, 241, 0.1);
     color: $indigo;
   }
+
   &:active {
     transform: scale(0.9);
   }
@@ -855,6 +948,7 @@ $mono: "JetBrains Mono", monospace;
 
   &.btn-delete {
     color: #94a3b8;
+
     &:hover {
       background: rgba(239, 68, 68, 0.1);
       color: $red;
@@ -864,11 +958,13 @@ $mono: "JetBrains Mono", monospace;
 
   &.btn-desc {
     color: #94a3b8;
+
     &:hover {
       background: rgba(249, 115, 22, 0.1);
       color: $orange;
       border-color: rgba(249, 115, 22, 0.2);
     }
+
     &.has-desc {
       background: $orange;
       color: white;
@@ -891,6 +987,7 @@ $mono: "JetBrains Mono", monospace;
     font-size: 2.5rem;
     color: #cbd5e1;
   }
+
   p {
     font-size: 0.85rem;
     color: $muted;
@@ -917,6 +1014,7 @@ $mono: "JetBrains Mono", monospace;
     display: flex;
     flex-direction: column;
     gap: 0.2rem;
+
     &.tot-total {
       text-align: right;
     }
@@ -928,18 +1026,21 @@ $mono: "JetBrains Mono", monospace;
     text-transform: uppercase;
     font-weight: 700;
   }
+
   .tot-val {
     font-family: $mono;
     font-size: 0.85rem;
     font-weight: 600;
     color: $text;
   }
+
   .tot-val-total {
     font-family: $mono;
     font-size: 1.2rem;
     font-weight: 900;
     color: $indigo;
   }
+
   .text-red {
     color: $red;
   }
@@ -971,6 +1072,7 @@ $mono: "JetBrains Mono", monospace;
     letter-spacing: 1px;
     color: white;
   }
+
   .cobrar-amount {
     font-family: $mono;
     font-size: 1.4rem;
@@ -986,14 +1088,122 @@ $mono: "JetBrains Mono", monospace;
   &:hover:not(:disabled) {
     transform: translateY(-2px);
   }
+
   &:active:not(:disabled) {
     transform: translateY(0);
     box-shadow: 0 4px 10px rgba(99, 102, 241, 0.4) !important;
   }
+
   &:disabled {
     opacity: 0.4;
     cursor: not-allowed;
     transform: none;
     box-shadow: none !important;
+  }
+}
+.qty-value {
+  width: 40px;
+  text-align: center;
+  border: none;
+  background: transparent;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+  -moz-appearance: textfield; /* quita flechas en Firefox */
+}
+
+/* quita flechas en Chrome/Safari */
+.qty-value::-webkit-inner-spin-button,
+.qty-value::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+}
+
+// ── Botones de acción del carrito ──────────────────────────
+.cart-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+// ── Botón Cotizar ──────────────────────────────────────────
+.btn-cotizar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 44px;
+  border-radius: 12px;
+  border: 2px solid #6366f1;
+  background: transparent;
+  color: #6366f1;
+  font-family: "Outfit", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover:not(:disabled) {
+    background: #eef2ff;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+// ── Formulario modal cotización ────────────────────────────
+.cotizacion-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 4px 0 8px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  .opt-label {
+    font-weight: 400;
+    color: #94a3b8;
+    font-size: 0.8rem;
+  }
+}
+
+.form-hint {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.cliente-search-wrap {
+  position: relative;
+}
+
+.cot-resumen {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: #f1f5f9;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  color: #475569;
+
+  .cot-total {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #1e293b;
   }
 }

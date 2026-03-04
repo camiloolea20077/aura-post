@@ -34,7 +34,7 @@ public interface  InventarioMapper {
         @Mapping(target = "id", ignore = true),
         @Mapping(target = "sucursal", ignore = true),
         @Mapping(target = "producto", ignore = true),
-        @Mapping(target = "stockActual", ignore = true),
+        @Mapping(target = "stockActual", source = "dto.stockActual"),
         @Mapping(target = "updatedAt", ignore = true),
     })
     void updateEntityFromDto(UpdateInventarioDto dto, @MappingTarget InventarioEntity entity);

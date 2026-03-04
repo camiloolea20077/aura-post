@@ -128,6 +128,13 @@
     background: rgba(79, 70, 229, 0.04);
   }
 
+  &.role-locked {
+    cursor: default;
+    pointer-events: none;
+    opacity: 0.85;
+    &:hover { border-color: #4f46e5; }
+  }
+
   .role-icon {
     width: 34px;
     height: 34px;

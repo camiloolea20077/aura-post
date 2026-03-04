@@ -68,6 +68,7 @@ export class FormTerceroComponent implements OnInit, OnChanges {
   @Input() displayModal = false;
   @Input() terceroId: number | null = null;
   @Input() slug = 'create';
+  @Input() soloCliente = false;
 
   @Output() modalClosed = new EventEmitter<void>();
   @Output() terceroSaved = new EventEmitter<TerceroModel>();

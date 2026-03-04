@@ -1,6 +1,6 @@
 <p-dialog
   [(visible)]="displayModal"
-  [header]="isEditMode ? 'Editar tercero' : 'Nuevo tercero'"
+  [header]="isEditMode ? 'Editar tercero' : soloCliente ? 'Nuevo cliente' : 'Nuevo tercero'"
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
@@ -239,11 +239,8 @@
       <div
         class="role-card"
         [class.active]="frmTercero.get('esCliente')?.value"
-        (click)="
-          frmTercero.patchValue({
-            esCliente: !frmTercero.get('esCliente')?.value,
-          })
-        "
+        [class.role-locked]="soloCliente"
+        (click)="!soloCliente && frmTercero.patchValue({ esCliente: !frmTercero.get('esCliente')?.value })"
       >
         <div class="role-icon cliente">
           <i class="pi pi-shopping-cart"></i>
@@ -252,60 +249,46 @@
           <span class="role-label">Cliente</span>
           <span class="role-desc">Puede comprar en el POS</span>
         </div>
-        <i
-          class="pi pi-check-circle check-icon"
-          *ngIf="frmTercero.get('esCliente')?.value"
-        ></i>
+        <i class="pi pi-check-circle check-icon" *ngIf="frmTercero.get('esCliente')?.value"></i>
       </div>
 
-      <div
-        class="role-card"
-        [class.active]="frmTercero.get('esProveedor')?.value"
-        (click)="
-          frmTercero.patchValue({
-            esProveedor: !frmTercero.get('esProveedor')?.value,
-          })
-        "
-      >
-        <div class="role-icon proveedor">
-          <i class="pi pi-truck"></i>
+      <ng-container *ngIf="!soloCliente">
+        <div
+          class="role-card"
+          [class.active]="frmTercero.get('esProveedor')?.value"
+          (click)="frmTercero.patchValue({ esProveedor: !frmTercero.get('esProveedor')?.value })"
+        >
+          <div class="role-icon proveedor">
+            <i class="pi pi-truck"></i>
+          </div>
+          <div class="role-info">
+            <span class="role-label">Proveedor</span>
+            <span class="role-desc">Aparece en módulo de compras</span>
+          </div>
+          <i class="pi pi-check-circle check-icon" *ngIf="frmTercero.get('esProveedor')?.value"></i>
         </div>
-        <div class="role-info">
-          <span class="role-label">Proveedor</span>
-          <span class="role-desc">Aparece en módulo de compras</span>
-        </div>
-        <i
-          class="pi pi-check-circle check-icon"
-          *ngIf="frmTercero.get('esProveedor')?.value"
-        ></i>
-      </div>
 
-      <div
-        class="role-card"
-        [class.active]="frmTercero.get('esEmpleado')?.value"
-        (click)="
-          frmTercero.patchValue({
-            esEmpleado: !frmTercero.get('esEmpleado')?.value,
-          })
-        "
-      >
-        <div class="role-icon empleado">
-          <i class="pi pi-id-card"></i>
+        <div
+          class="role-card"
+          [class.active]="frmTercero.get('esEmpleado')?.value"
+          (click)="frmTercero.patchValue({ esEmpleado: !frmTercero.get('esEmpleado')?.value })"
+        >
+          <div class="role-icon empleado">
+            <i class="pi pi-id-card"></i>
+          </div>
+          <div class="role-info">
+            <span class="role-label">Empleado</span>
+            <span class="role-desc">Personal de la empresa</span>
+          </div>
+          <i class="pi pi-check-circle check-icon" *ngIf="frmTercero.get('esEmpleado')?.value"></i>
         </div>
-        <div class="role-info">
-          <span class="role-label">Empleado</span>
-          <span class="role-desc">Personal de la empresa</span>
-        </div>
-        <i
-          class="pi pi-check-circle check-icon"
-          *ngIf="frmTercero.get('esEmpleado')?.value"
-        ></i>
-      </div>
+      </ng-container>
     </div>
 
     <div
       class="warn-roles"
       *ngIf="
+        !soloCliente &&
         !frmTercero.get('esCliente')?.value &&
         !frmTercero.get('esProveedor')?.value &&
         !frmTercero.get('esEmpleado')?.value
