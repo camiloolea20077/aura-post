@@ -294,8 +294,8 @@
             <input
               type="number"
               class="qty-value"
-              min="0.001"
-              step="0.001"
+              min="0.1"
+              step="0.1"
               [value]="item.cantidad"
               (focus)="tempCantidad = item.cantidad"
               (input)="tempCantidad = +$any($event.target).value"
@@ -317,8 +317,8 @@
           <div class="qty-pesable" *ngIf="item.esPesable">
             <input
               type="number"
-              step="0.001"
-              min="0.001"
+              step="0.1"
+              min="0.1"
               [ngModel]="item.cantidad"
               (ngModelChange)="updateCantidad(item, $event)"
               class="qty-input-pesable"
@@ -396,6 +396,56 @@
                 </div>
               </div>
             </p-popover>
+
+            <!-- Editar precio unitario -->
+            <button
+              class="tool-btn btn-price"
+              [class.has-price-override]="item.precioOriginal !== undefined"
+              pTooltip="Modificar precio"
+              tooltipPosition="top"
+              (click)="opPrecio.toggle($event); tempPrecio = item.precio"
+            >
+              <i class="pi pi-pencil"></i>
+            </button>
+            <p-popover #opPrecio>
+              <div class="p-popover-content">
+                <div class="popover-group-input">
+                  <div class="popover-item">
+                    <label>Precio unitario</label>
+                    <p-inputnumber
+                      [(ngModel)]="tempPrecio"
+                      mode="currency"
+                      currency="COP"
+                      locale="es-CO"
+                      [minFractionDigits]="0"
+                      [min]="0"
+                      inputStyleClass="w-full"
+                    />
+                    <small
+                      class="precio-original-hint"
+                      *ngIf="item.precioOriginal !== undefined"
+                    >
+                      Catálogo: {{ formatCOP(item.precioOriginal) }}
+                    </small>
+                  </div>
+                </div>
+                <div class="popover-group-btn">
+                  <p-button
+                    label="Cancelar"
+                    severity="warn"
+                    (click)="opPrecio.hide(); tempPrecio = null"
+                    icon="pi pi-times"
+                    class="p-button-text"
+                  />
+                  <p-button
+                    label="Aplicar"
+                    (click)="aplicarPrecio(item); opPrecio.hide()"
+                    icon="pi pi-check"
+                  />
+                </div>
+              </div>
+            </p-popover>
+
             <button
               class="tool-btn btn-delete"
               (click)="removeItem(item._id)"
@@ -517,7 +567,8 @@
     <!-- Cliente -->
     <div class="form-group">
       <label class="form-label">
-        <i class="pi pi-user"></i> Cliente <span class="opt-label">(opcional)</span>
+        <i class="pi pi-user"></i> Cliente
+        <span class="opt-label">(opcional)</span>
       </label>
       <div class="cliente-chip" *ngIf="cotizacionTerceroNombre">
         <i class="pi pi-user"></i>
@@ -543,7 +594,9 @@
             <i class="pi pi-user sug-icon"></i>
             <div>
               <span class="sug-nombre">{{ c.nombreCompleto }}</span>
-              <span class="sug-doc">{{ c.tipoDocumento }} {{ c.numeroDocumento }}</span>
+              <span class="sug-doc"
+                >{{ c.tipoDocumento }} {{ c.numeroDocumento }}</span
+              >
             </div>
           </div>
         </div>
@@ -566,13 +619,16 @@
         inputStyleClass="text-center"
         styleClass="w-full"
       />
-      <small class="form-hint">Vence el {{ cotizacionDiasVigencia }} día(s) hábil(es)</small>
+      <small class="form-hint"
+        >Vence el {{ cotizacionDiasVigencia }} día(s) hábil(es)</small
+      >
     </div>
 
     <!-- Observaciones -->
     <div class="form-group">
       <label class="form-label">
-        <i class="pi pi-comment"></i> Observaciones <span class="opt-label">(opcional)</span>
+        <i class="pi pi-comment"></i> Observaciones
+        <span class="opt-label">(opcional)</span>
       </label>
       <textarea
         pInputTextarea
@@ -580,13 +636,15 @@
         rows="3"
         placeholder="Notas adicionales para el cliente..."
         class="w-full"
-        style="resize: none;"
+        style="resize: none"
       ></textarea>
     </div>
 
     <!-- Resumen productos -->
     <div class="cot-resumen">
-      <span><i class="pi pi-shopping-cart"></i> {{ cart.length }} producto(s)</span>
+      <span
+        ><i class="pi pi-shopping-cart"></i> {{ cart.length }} producto(s)</span
+      >
       <span class="cot-total">{{ formatCOP(total) }}</span>
     </div>
   </div>

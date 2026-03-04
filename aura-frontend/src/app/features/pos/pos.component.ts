@@ -136,6 +136,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   public feClienteEmail = '';
   public percent: number | null = null;
   public neto: number | null = null;
+  public tempPrecio: number | null = null;
 
   // ── Nuevo cliente ─────────────────────────────────────────
   public showNuevoCliente = false;
@@ -245,6 +246,16 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  aplicarPrecio(item: CartItem): void {
+    if (this.tempPrecio === null || this.tempPrecio < 0) return;
+    if (item.precioOriginal === undefined) item.precioOriginal = item.precio;
+    item.precio = this.tempPrecio;
+    item.descuento = 0; // reset descuento al cambiar precio base
+    this.tempPrecio = null;
+    this.calcLine(item);
+    this.cdr.markForCheck();
   }
 
   aplicarDescuento(item: CartItem) {

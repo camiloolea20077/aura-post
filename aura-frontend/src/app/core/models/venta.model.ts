@@ -126,6 +126,7 @@ export interface CartItem {
   productoNombre: string;
   productoSku: string | null;
   precio: number;
+  precioOriginal?: number; // precio del catálogo antes de override manual
   cantidad: number;
   descuento: number; // valor absoluto
   impuesto: number;

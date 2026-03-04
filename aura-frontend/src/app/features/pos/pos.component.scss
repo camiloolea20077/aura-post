@@ -971,6 +971,29 @@ $mono: "JetBrains Mono", monospace;
       border-color: $orange;
     }
   }
+
+  &.btn-price {
+    color: #94a3b8;
+
+    &:hover {
+      background: rgba(99, 102, 241, 0.1);
+      color: $indigo;
+      border-color: rgba(99, 102, 241, 0.2);
+    }
+
+    &.has-price-override {
+      background: $indigo;
+      color: white;
+      border-color: $indigo;
+    }
+  }
+}
+
+.precio-original-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: #94a3b8;
 }
 
 // ── Carrito vacío ─────────────────────────────────────────────
