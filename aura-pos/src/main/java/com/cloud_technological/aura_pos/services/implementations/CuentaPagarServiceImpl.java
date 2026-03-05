@@ -20,6 +20,7 @@ import com.cloud_technological.aura_pos.entity.AbonoPagarEntity;
 import com.cloud_technological.aura_pos.entity.CuentaPagarEntity;
 import com.cloud_technological.aura_pos.entity.EmpresaEntity;
 import com.cloud_technological.aura_pos.entity.TerceroEntity;
+import com.cloud_technological.aura_pos.entity.TurnoCajaEntity;
 import com.cloud_technological.aura_pos.entity.UsuarioEntity;
 import com.cloud_technological.aura_pos.mappers.CuentaPagarMapper;
 import com.cloud_technological.aura_pos.repositories.cuentas_pagar.AbonoPagarJPARepository;
@@ -27,6 +28,7 @@ import com.cloud_technological.aura_pos.repositories.cuentas_pagar.CuentaPagarJP
 import com.cloud_technological.aura_pos.repositories.cuentas_pagar.CuentaPagarQueryRepository;
 import com.cloud_technological.aura_pos.repositories.empresas.EmpresaJPARepository;
 import com.cloud_technological.aura_pos.repositories.terceros.TerceroJPARepository;
+import com.cloud_technological.aura_pos.repositories.turno_caja.TurnoCajaJPARepository;
 import com.cloud_technological.aura_pos.repositories.users.UsuarioJPARepository;
 import com.cloud_technological.aura_pos.services.CuentaPagarService;
 import com.cloud_technological.aura_pos.utils.GlobalException;
@@ -41,6 +43,7 @@ public class CuentaPagarServiceImpl implements CuentaPagarService {
     private final EmpresaJPARepository empresaRepository;
     private final TerceroJPARepository terceroRepository;
     private final UsuarioJPARepository usuarioRepository;
+    private final TurnoCajaJPARepository turnoCajaRepository;
     private final CuentaPagarMapper mapper;
 
     @Autowired
@@ -50,6 +53,7 @@ public class CuentaPagarServiceImpl implements CuentaPagarService {
             EmpresaJPARepository empresaRepository,
             TerceroJPARepository terceroRepository,
             UsuarioJPARepository usuarioRepository,
+            TurnoCajaJPARepository turnoCajaRepository,
             CuentaPagarMapper mapper) {
         this.queryRepository = queryRepository;
         this.jpaRepository = jpaRepository;
@@ -57,6 +61,7 @@ public class CuentaPagarServiceImpl implements CuentaPagarService {
         this.empresaRepository = empresaRepository;
         this.terceroRepository = terceroRepository;
         this.usuarioRepository = usuarioRepository;
+        this.turnoCajaRepository = turnoCajaRepository;
         this.mapper = mapper;
     }
 
@@ -160,10 +165,17 @@ public class CuentaPagarServiceImpl implements CuentaPagarService {
         UsuarioEntity usuario = usuarioRepository.findById(usuarioId.intValue())
                 .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
+        // Obtener turno de caja (opcional)
+        TurnoCajaEntity turnoCaja = null;
+        if (dto.getTurnoCajaId() != null) {
+            turnoCaja = turnoCajaRepository.findById(dto.getTurnoCajaId()).orElse(null);
+        }
+
         // Crear abono
         AbonoPagarEntity abono = AbonoPagarEntity.builder()
                 .cuentaPagar(cuenta)
                 .usuario(usuario)
+                .turnoCaja(turnoCaja)
                 .monto(dto.getMonto())
                 .metodoPago(dto.getMetodoPago())
                 .referencia(dto.getReferencia())
@@ -322,6 +334,10 @@ public class CuentaPagarServiceImpl implements CuentaPagarService {
         if (entity.getUsuario() != null) {
             dto.setUsuarioId(entity.getUsuario().getId().longValue());
             dto.setUsuarioNombre(entity.getUsuario().getUsername());
+        }
+
+        if (entity.getTurnoCaja() != null) {
+            dto.setTurnoCajaId(entity.getTurnoCaja().getId());
         }
 
         return dto;

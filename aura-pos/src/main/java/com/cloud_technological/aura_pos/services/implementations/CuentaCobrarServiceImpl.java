@@ -20,6 +20,7 @@ import com.cloud_technological.aura_pos.entity.AbonoCobrarEntity;
 import com.cloud_technological.aura_pos.entity.CuentaCobrarEntity;
 import com.cloud_technological.aura_pos.entity.EmpresaEntity;
 import com.cloud_technological.aura_pos.entity.TerceroEntity;
+import com.cloud_technological.aura_pos.entity.TurnoCajaEntity;
 import com.cloud_technological.aura_pos.entity.UsuarioEntity;
 import com.cloud_technological.aura_pos.mappers.CuentaCobrarMapper;
 import com.cloud_technological.aura_pos.repositories.cuentas_cobrar.AbonoCobrarJPARepository;
@@ -27,6 +28,7 @@ import com.cloud_technological.aura_pos.repositories.cuentas_cobrar.CuentaCobrar
 import com.cloud_technological.aura_pos.repositories.cuentas_cobrar.CuentaCobrarQueryRepository;
 import com.cloud_technological.aura_pos.repositories.empresas.EmpresaJPARepository;
 import com.cloud_technological.aura_pos.repositories.terceros.TerceroJPARepository;
+import com.cloud_technological.aura_pos.repositories.turno_caja.TurnoCajaJPARepository;
 import com.cloud_technological.aura_pos.repositories.users.UsuarioJPARepository;
 import com.cloud_technological.aura_pos.services.CuentaCobrarService;
 import com.cloud_technological.aura_pos.utils.GlobalException;
@@ -41,6 +43,7 @@ public class CuentaCobrarServiceImpl implements CuentaCobrarService {
     private final EmpresaJPARepository empresaRepository;
     private final TerceroJPARepository terceroRepository;
     private final UsuarioJPARepository usuarioRepository;
+    private final TurnoCajaJPARepository turnoCajaRepository;
     private final CuentaCobrarMapper mapper;
 
     @Autowired
@@ -50,6 +53,7 @@ public class CuentaCobrarServiceImpl implements CuentaCobrarService {
             EmpresaJPARepository empresaRepository,
             TerceroJPARepository terceroRepository,
             UsuarioJPARepository usuarioRepository,
+            TurnoCajaJPARepository turnoCajaRepository,
             CuentaCobrarMapper mapper) {
         this.queryRepository = queryRepository;
         this.jpaRepository = jpaRepository;
@@ -57,6 +61,7 @@ public class CuentaCobrarServiceImpl implements CuentaCobrarService {
         this.empresaRepository = empresaRepository;
         this.terceroRepository = terceroRepository;
         this.usuarioRepository = usuarioRepository;
+        this.turnoCajaRepository = turnoCajaRepository;
         this.mapper = mapper;
     }
 
@@ -160,10 +165,17 @@ public class CuentaCobrarServiceImpl implements CuentaCobrarService {
         UsuarioEntity usuario = usuarioRepository.findById(usuarioId.intValue())
                 .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
 
+        // Obtener turno de caja (opcional)
+        TurnoCajaEntity turnoCaja = null;
+        if (dto.getTurnoCajaId() != null) {
+            turnoCaja = turnoCajaRepository.findById(dto.getTurnoCajaId()).orElse(null);
+        }
+
         // Crear abono
         AbonoCobrarEntity abono = AbonoCobrarEntity.builder()
                 .cuentaCobrar(cuenta)
                 .usuario(usuario)
+                .turnoCaja(turnoCaja)
                 .monto(dto.getMonto())
                 .metodoPago(dto.getMetodoPago())
                 .referencia(dto.getReferencia())
@@ -320,6 +332,10 @@ public class CuentaCobrarServiceImpl implements CuentaCobrarService {
         if (entity.getUsuario() != null) {
             dto.setUsuarioId(entity.getUsuario().getId().longValue());
             dto.setUsuarioNombre(entity.getUsuario().getUsername());
+        }
+
+        if (entity.getTurnoCaja() != null) {
+            dto.setTurnoCajaId(entity.getTurnoCaja().getId());
         }
 
         return dto;

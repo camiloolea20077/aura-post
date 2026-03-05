@@ -5,9 +5,16 @@ import {
   EventEmitter,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
+  OnInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  FormsModule,
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -30,8 +37,20 @@ import {
   MetodoPago,
 } from '../models/cuenta-cobrar.model';
 import { CuentaCobrarService } from '../services/cuenta-cobrar.service';
+import { TurnoCajaModel } from '../../../core/models/caja.model';
+import {
+  CajaService,
+  TurnoCajaService,
+} from '../../../core/services/caja.service';
 
-type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' | undefined;
+type TagSeverity =
+  | 'success'
+  | 'secondary'
+  | 'info'
+  | 'warn'
+  | 'danger'
+  | 'contrast'
+  | undefined;
 
 @Component({
   selector: 'app-detalle-cuenta-cobrar',
@@ -57,7 +76,7 @@ type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contr
   templateUrl: './detalle-cuenta-cobrar.component.html',
   styleUrls: ['./detalle-cuenta-cobrar.component.scss'],
 })
-export class DetalleCuentaCobrarComponent {
+export class DetalleCuentaCobrarComponent implements OnInit {
   @Input() visible = false;
   @Input() cuenta: CuentaCobrarModel | null = null;
   @Input() loading = false;
@@ -67,6 +86,8 @@ export class DetalleCuentaCobrarComponent {
   showAbonoForm = false;
   loadingAbono = false;
   abonoForm: FormGroup;
+  turnoActivo: TurnoCajaModel | null = null;
+  loadingTurno = false;
 
   metodosPago = [
     { label: 'Efectivo', value: 'efectivo' },
@@ -78,6 +99,7 @@ export class DetalleCuentaCobrarComponent {
   constructor(
     private readonly fb: FormBuilder,
     private readonly service: CuentaCobrarService,
+    private readonly cajaService: TurnoCajaService,
     private readonly alert: AlertService,
     private readonly confirm: ConfirmationService,
     private readonly cdr: ChangeDetectorRef,
@@ -89,10 +111,15 @@ export class DetalleCuentaCobrarComponent {
       fechaPago: [new Date(), Validators.required],
     });
   }
+  ngOnInit(): void {
+    this.loadTurnoActivo();
+  }
 
   get progressPercent(): number {
     if (!this.cuenta || this.cuenta.totalDeuda === 0) return 0;
-    return Math.round((this.cuenta.totalAbonado / this.cuenta.totalDeuda) * 100);
+    return Math.round(
+      (this.cuenta.totalAbonado / this.cuenta.totalDeuda) * 100,
+    );
   }
 
   get puedeRegistrarAbono(): boolean {
@@ -145,6 +172,19 @@ export class DetalleCuentaCobrarComponent {
     this.cdr.markForCheck();
   }
 
+  private async loadTurnoActivo(): Promise<void> {
+    this.loadingTurno = true;
+    try {
+      const res = await lastValueFrom(this.cajaService.turnoActivo());
+      this.turnoActivo = res?.data ?? null;
+    } catch {
+      this.turnoActivo = null;
+    } finally {
+      this.loadingTurno = false;
+      this.cdr.markForCheck();
+    }
+  }
+
   async saveAbono(): Promise<void> {
     if (this.abonoForm.invalid || !this.cuenta) {
       this.abonoForm.markAllAsTouched();
@@ -152,7 +192,10 @@ export class DetalleCuentaCobrarComponent {
     }
 
     if (this.abonoForm.value.monto > this.cuenta.saldoPendiente) {
-      this.alert.showError('Error', 'El monto no puede ser mayor al saldo pendiente');
+      this.alert.showError(
+        'Error',
+        'El monto no puede ser mayor al saldo pendiente',
+      );
       return;
     }
 
@@ -164,16 +207,23 @@ export class DetalleCuentaCobrarComponent {
       metodoPago: formValue.metodoPago as MetodoPago,
       referencia: formValue.referencia || null,
       fechaPago: formValue.fechaPago.toISOString(),
+      turnoCajaId: this.turnoActivo?.id ?? null,
     };
 
     try {
       await lastValueFrom(this.service.createAbono(this.cuenta.id, dto));
-      this.alert.showSuccess('Abono registrado', 'El abono ha sido registrado exitosamente');
+      this.alert.showSuccess(
+        'Abono registrado',
+        'El abono ha sido registrado exitosamente',
+      );
       this.showAbonoForm = false;
       this.saved.emit();
       this.close();
     } catch (err: any) {
-      this.alert.showError('Error', err?.error?.message || 'No se pudo registrar el abono');
+      this.alert.showError(
+        'Error',
+        err?.error?.message || 'No se pudo registrar el abono',
+      );
     } finally {
       this.loadingAbono = false;
       this.cdr.markForCheck();
@@ -201,7 +251,10 @@ export class DetalleCuentaCobrarComponent {
       this.saved.emit();
       this.close();
     } catch (err: any) {
-      this.alert.showError('Error', err?.error?.message || 'No se pudo eliminar el abono');
+      this.alert.showError(
+        'Error',
+        err?.error?.message || 'No se pudo eliminar el abono',
+      );
     }
   }
 

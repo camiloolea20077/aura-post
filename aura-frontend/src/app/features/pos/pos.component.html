@@ -91,7 +91,11 @@
     </div>
 
     <!-- Grid productos -->
-    <div class="product-grid" *ngIf="!loadingProductos" [class.list-mode]="searchProduct.trim()">
+    <div
+      class="product-grid"
+      *ngIf="!loadingProductos"
+      [class.list-mode]="searchProduct.trim()"
+    >
       <div
         class="product-card"
         *ngFor="
@@ -403,7 +407,10 @@
               [class.has-price-override]="item.precioOriginal !== undefined"
               pTooltip="Modificar precio"
               tooltipPosition="top"
-              (click)="opPrecio.toggle($event); tempPrecio = item.precio * (1 + item.impuesto / 100)"
+              (click)="
+                opPrecio.toggle($event);
+                tempPrecio = item.precio * (1 + item.impuesto / 100)
+              "
             >
               <i class="pi pi-pencil"></i>
             </button>
@@ -425,7 +432,12 @@
                       class="precio-original-hint"
                       *ngIf="item.precioOriginal !== undefined"
                     >
-                      Catálogo: {{ formatCOP(item.precioOriginal * (1 + item.impuesto / 100)) }}
+                      Catálogo:
+                      {{
+                        formatCOP(
+                          item.precioOriginal * (1 + item.impuesto / 100)
+                        )
+                      }}
                     </small>
                   </div>
                 </div>
@@ -669,12 +681,14 @@
 </p-dialog>
 
 <!-- Modal movimiento de caja -->
-<app-modal-movimiento-caja
-  [displayModal]="showMovimiento"
-  [turnoId]="turnoActivo?.id ?? 0"
-  (modalClosed)="showMovimiento = false"
-  (movimientoRegistrado)="showMovimiento = false"
-/>
+@if (showMovimiento) {
+  <app-modal-movimiento-caja
+    [displayModal]="showMovimiento"
+    [turno]="turnoActivo"
+    (modalClosed)="showMovimiento = false"
+    (movimientoRegistrado)="showMovimiento = false"
+  />
+}
 
 <!-- Modal nuevo cliente -->
 <app-form-tercero

@@ -24,4 +24,8 @@ public class CreateMovimientoCajaDto {
     @NotNull(message = "El monto es obligatorio")
     @DecimalMin(value = "0.01", message = "El monto debe ser mayor a cero")
     private BigDecimal monto;
+
+    private Long cuentaCobrarId;
+
+    private Long cuentaPagarId;
 }

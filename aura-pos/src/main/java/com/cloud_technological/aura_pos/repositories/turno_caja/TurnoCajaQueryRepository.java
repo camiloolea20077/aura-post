@@ -41,7 +41,25 @@ public class TurnoCajaQueryRepository {
                 t.base_inicial,
                 t.total_efectivo_sistema,
                 t.total_efectivo_real,
-                t.diferencia,
+                CASE 
+                    WHEN t.estado = 'CERRADA' OR t.estado = 'CERRADA_AUTO' THEN t.diferencia
+                    ELSE t.base_inicial + COALESCE((
+                        SELECT SUM(vp.monto)
+                        FROM venta_pago vp
+                        INNER JOIN venta v ON vp.venta_id = v.id
+                        WHERE v.turno_caja_id = t.id
+                        AND vp.metodo_pago = 'EFECTIVO'
+                        AND v.estado_venta = 'COMPLETADA'
+                    ), 0) + COALESCE((
+                        SELECT SUM(ac.monto)
+                        FROM abonos_cobrar ac
+                        WHERE ac.turno_caja_id = t.id
+                    ), 0) - COALESCE((
+                        SELECT SUM(ap.monto)
+                        FROM abonos_pagar ap
+                        WHERE ap.turno_caja_id = t.id
+                    ), 0)
+                END AS diferencia,
                 t.estado,
                 COUNT(*) OVER() AS total_rows
             FROM turno_caja t

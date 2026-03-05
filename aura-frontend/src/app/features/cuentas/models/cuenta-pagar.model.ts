@@ -15,6 +15,7 @@ export interface AbonoPagarModel {
   fechaPago: string;
   usuarioId: number;
   usuarioNombre: string;
+  turnoCajaId: number | null;
   createdAt: string;
 }
 
@@ -71,6 +72,7 @@ export interface CreateAbonoPagarDto {
   referencia?: string | null;
   banco?: string | null;
   fechaPago: string;
+  turnoCajaId?: number | null;
 }
 
 export interface CuentaPagarFilters {

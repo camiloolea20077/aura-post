@@ -41,6 +41,10 @@ public class AbonoPagarEntity {
     @JoinColumn(name = "usuario_id")
     private UsuarioEntity usuario;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "turno_caja_id")
+    private TurnoCajaEntity turnoCaja;
+
     @Column(precision = 15, scale = 2)
     private BigDecimal monto;
 
