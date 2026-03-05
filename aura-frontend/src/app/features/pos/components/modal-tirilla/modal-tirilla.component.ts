@@ -44,6 +44,9 @@ export class ModalTirillaComponent implements OnChanges {
   logoSafeUrl: SafeUrl | null = null;
   ancho: AnchoTirilla = 80;
 
+  descuentoAdicional: number = 0;
+  descuentoTotal: number = 0;
+
   anchoOptions = [
     { label: '58 mm', value: 58 },
     { label: '80 mm', value: 80 },
@@ -55,6 +58,11 @@ export class ModalTirillaComponent implements OnChanges {
       this.logoSafeUrl = this.venta.logoUrl
         ? this.sanitizer.bypassSecurityTrustUrl(this.venta.logoUrl)
         : null;
+      this.descuentoTotal = this.venta.detalles.reduce(
+        (acc, d) => acc + d.montoDescuento,
+        0,
+      );
+      this.descuentoAdicional = this.venta.descuentoTotal - this.descuentoTotal;
     }
   }
 

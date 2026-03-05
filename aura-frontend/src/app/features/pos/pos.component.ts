@@ -252,8 +252,9 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.tempPrecio === null || this.tempPrecio < 0) return;
     if (item.precioOriginal === undefined) item.precioOriginal = item.precio;
     // El cajero ingresa el precio final con IVA → back-calculamos el base
-    const factor = 1 + (item.impuesto / 100);
-    item.precio = factor > 0 ? round2(this.tempPrecio / factor) : this.tempPrecio;
+    const factor = 1 + item.impuesto / 100;
+    item.precio =
+      factor > 0 ? round2(this.tempPrecio / factor) : this.tempPrecio;
     item.descuento = 0;
     this.tempPrecio = null;
     this.calcLine(item);
@@ -518,10 +519,9 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   onClienteCreado(tercero: TerceroModel): void {
     this.showNuevoCliente = false;
     this.clienteId = tercero.id;
-    this.clienteNombre =
-      tercero.nombres
-        ? `${tercero.nombres} ${tercero.apellidos ?? ''}`.trim()
-        : (tercero.razonSocial ?? '');
+    this.clienteNombre = tercero.nombres
+      ? `${tercero.nombres} ${tercero.apellidos ?? ''}`.trim()
+      : (tercero.razonSocial ?? '');
     this.clienteSugerencias = [];
     this.cdr.markForCheck();
   }
@@ -535,8 +535,12 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.showPago = true;
   }
 
-  async onVentaConfirmada(pagos: any[]): Promise<void> {
-    const tieneCredito = pagos.some((p) => p.metodoPago === 'CRÉDITO');
+  async onVentaConfirmada(event: {
+    pagos: any[];
+    descuentoGeneral: number;
+  }): Promise<void> {
+    const { pagos, descuentoGeneral } = event;
+    const tieneCredito = pagos.some((p) => p.metodoPago === 'CREDITO');
 
     if (tieneCredito && !this.clienteId) {
       this.alertService.showError(
@@ -561,8 +565,11 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         impuestoValor: c.impuestoValor,
       })),
       pagos,
+      descuentoGeneral,
       pagoParcial: tieneCredito,
-      saldoPendiente: tieneCredito ? this.total : 0,
+      saldoPendiente: tieneCredito
+        ? round2(this.total - (descuentoGeneral ?? 0))
+        : 0,
     };
 
     try {

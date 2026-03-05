@@ -51,11 +51,10 @@
             }}</label>
             <p-inputNumber
               [(ngModel)]="pago.monto"
-              mode="currency"
-              currency="COP"
-              locale="es-CO"
-              [minFractionDigits]="0"
+              mode="decimal"
               [min]="0"
+              [maxFractionDigits]="0"
+              prefix="$ "
               placeholder="$ 0"
               styleClass="w-full monto-inp"
               [disabled]="pago.metodoPago === 'CREDITO'"
@@ -107,6 +106,24 @@
       <i class="pi pi-plus"></i> Agregar otro método de pago
     </button>
 
+    <!-- Descuento General -->
+    <div class="descuento-global-section">
+      <div class="desc-field">
+        <label>Descuento General Adicional</label>
+        <p-inputNumber
+          [(ngModel)]="descuentoGeneral"
+          mode="currency"
+          currency="COP"
+          locale="es-CO"
+          [minFractionDigits]="0"
+          [min]="0"
+          [max]="total"
+          placeholder="$ 0"
+          styleClass="w-full desc-inp"
+        />
+      </div>
+    </div>
+
     <p-divider />
 
     <!-- Resumen -->
@@ -115,9 +132,24 @@
         <span class="res-label">Total cobrado</span>
         <span class="res-val">{{ formatCOP(totalPagado) }}</span>
       </div>
+      <p-divider />
+      <div class="res-row">
+        <span class="res-label">Subtotal</span>
+        <span class="res-val">{{ formatCOP(subtotal) }}</span>
+      </div>
+      <div class="res-row" *ngIf="descuentoGeneral > 0">
+        <span class="res-label">Descuento General</span>
+        <span class="res-val desc-val"
+          >- {{ formatCOP(descuentoGeneral) }}</span
+        >
+      </div>
+      <div class="res-row">
+        <span class="res-label">IVA (fijo)</span>
+        <span class="res-val">{{ formatCOP(impuestosTotal) }}</span>
+      </div>
       <div class="res-row res-total">
-        <span class="res-label">Total venta</span>
-        <span class="res-val mono-val">{{ formatCOP(total) }}</span>
+        <span class="res-label">Total Neto a cobrar</span>
+        <span class="res-val mono-val">{{ formatCOP(totalConDescuento) }}</span>
       </div>
 
       <!-- Faltante -->
@@ -127,10 +159,10 @@
       </div>
 
       <!-- Vuelto -->
-      <div class="res-row vuelto-row" *ngIf="vuelto > 0">
+      <!-- <div class="res-row vuelto-row" *ngIf="vuelto > 0">
         <span class="vuelto-label">Vuelto a entregar</span>
         <span class="vuelto-val">{{ formatCOP(vuelto) }}</span>
-      </div>
+      </div> -->
     </div>
   </div>
 

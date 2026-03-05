@@ -109,6 +109,7 @@ export interface CreateVentaDto {
   pagos: CreateVentaPagoDto[];
   pagoParcial?: boolean;
   saldoPendiente?: number;
+  descuentoGeneral?: number;
 }
 
 export interface VentaPageableDto {

@@ -209,9 +209,11 @@ public class VentaServiceImpl implements VentaService{
 
         venta = ventaJPARepository.save(venta);
 
-        BigDecimal subtotal = BigDecimal.ZERO;
-        BigDecimal descuentoTotal = BigDecimal.ZERO;
-        BigDecimal impuestosTotal = BigDecimal.ZERO;
+        BigDecimal subtotalAcumulado = BigDecimal.ZERO;
+        BigDecimal descuentoAcumulado = BigDecimal.ZERO;
+        BigDecimal impuestosAcumulado = BigDecimal.ZERO;
+
+        BigDecimal descGral = dto.getDescuentoGeneral() != null ? dto.getDescuentoGeneral() : BigDecimal.ZERO;
 
         // 4. Procesar cada detalle
         for (CreateVentaDetalleDto item : dto.getDetalles()) {
@@ -255,22 +257,23 @@ public class VentaServiceImpl implements VentaService{
                         + ". Disponible: " + inventario.getStockActual());
             }
 
-            // 4.2 Base neta (precio × cantidad − descuento), redondeado a 2 decimales
-            BigDecimal baseNeta = item.getPrecioUnitario()
+            // 4.2 Base neta (precio × cantidad − descuento)
+            BigDecimal baseNetaOriginal = item.getPrecioUnitario()
                 .multiply(item.getCantidad())
                 .subtract(item.getDescuentoValor())
                 .setScale(2, RoundingMode.HALF_UP);
 
-            // 4.3 Usar el impuesto enviado en el request
-            BigDecimal impuestoLinea = item.getImpuestoValor();
-
+            BigDecimal impuestoLinea = item.getImpuestoValor().setScale(2, RoundingMode.HALF_UP);
 
             // 4.4 Crear detalle
-            BigDecimal subtotalLinea = baseNeta.add(impuestoLinea).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal subtotalLinea = baseNetaOriginal.add(impuestoLinea).setScale(2, RoundingMode.HALF_UP);
             VentaDetalleEntity detalle = detalleMapper.toEntity(item);
             detalle.setVenta(venta);
             detalle.setProducto(producto);
-            detalle.setImpuestoValor(impuestoLinea.setScale(2, RoundingMode.HALF_UP));
+            detalle.setMontoDescuento(item.getDescuentoValor());
+            detalle.setImpuestoValor(impuestoLinea);
+
+
             detalle.setSubtotalLinea(subtotalLinea);
 
             // Presentación opcional
@@ -370,13 +373,13 @@ public class VentaServiceImpl implements VentaService{
                     item.getCantidad().negate(), saldoAnterior, saldoNuevo,
                     item.getPrecioUnitario(), "VENTA", "Venta #" + venta.getId());
             }
-            subtotal = subtotal.add(baseNeta);
-            descuentoTotal = descuentoTotal.add(item.getDescuentoValor());
-            impuestosTotal = impuestosTotal.add(impuestoLinea.setScale(2, RoundingMode.HALF_UP));
+            subtotalAcumulado = subtotalAcumulado.add(baseNetaOriginal);
+            descuentoAcumulado = descuentoAcumulado.add(item.getDescuentoValor());
+            impuestosAcumulado = impuestosAcumulado.add(impuestoLinea);
         }
 
         // 5. Validar que el pago cubra el total (excepto si hay método CREDITO)
-        BigDecimal totalFinal = subtotal.add(impuestosTotal).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalFinal = subtotalAcumulado.add(impuestosAcumulado).subtract(descGral).setScale(2, RoundingMode.HALF_UP);
         
         // Detectar si es venta a crédito
         boolean hayCredito = false;
@@ -420,9 +423,9 @@ public class VentaServiceImpl implements VentaService{
             saldoPendiente = totalFinal.subtract(totalPagado);
         }
         
-        venta.setSubtotal(subtotal);
-        venta.setDescuentoTotal(descuentoTotal);
-        venta.setImpuestosTotal(impuestosTotal);
+        venta.setSubtotal(subtotalAcumulado);
+        venta.setDescuentoTotal(descuentoAcumulado.add(descGral));
+        venta.setImpuestosTotal(impuestosAcumulado);
         venta.setTotalPagar(totalFinal);
         
         // Campos de pago parcial
