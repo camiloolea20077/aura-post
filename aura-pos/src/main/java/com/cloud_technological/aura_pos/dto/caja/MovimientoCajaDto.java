@@ -14,4 +14,9 @@ public class MovimientoCajaDto {
     private BigDecimal monto;
     private String     fecha;
     private String     usuarioNombre;
+    /** Número de la cuenta por cobrar o pagar asociada */
+    private String     cuentaNumero;
+    /** Nombre del cliente (INGRESO) o proveedor (EGRESO) */
+    private String     terceroNombre;
 }
+

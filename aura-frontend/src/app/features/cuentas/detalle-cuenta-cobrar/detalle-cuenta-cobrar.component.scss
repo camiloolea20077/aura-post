@@ -10,18 +10,23 @@ $mono: 'JetBrains Mono', monospace;
 .w-full {
   width: 100%;
 }
+
 .mono {
   font-family: $mono;
 }
+
 .text-danger {
   color: $red;
 }
+
 .text-success {
   color: $emerald;
 }
+
 .text-right {
   text-align: right;
 }
+
 .required {
   color: $red;
 }
@@ -33,6 +38,7 @@ $mono: 'JetBrains Mono', monospace;
   justify-content: center;
   padding: 3rem;
   color: $muted;
+
   i {
     margin-bottom: 1rem;
   }
@@ -55,6 +61,7 @@ $mono: 'JetBrains Mono', monospace;
         color: $muted;
         margin-right: 0.5rem;
       }
+
       .value {
         font-weight: 700;
         font-size: 1.1rem;
@@ -94,6 +101,7 @@ $mono: 'JetBrains Mono', monospace;
         color: $muted;
         font-weight: 600;
       }
+
       .value {
         font-size: 0.9rem;
         color: $text;
@@ -132,6 +140,7 @@ $mono: 'JetBrains Mono', monospace;
       color: $muted;
       font-weight: 600;
     }
+
     .value {
       font-size: 1rem;
       font-weight: 700;
@@ -185,10 +194,16 @@ $mono: 'JetBrains Mono', monospace;
   }
 
   .abonos-list {
-    ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+    ::ng-deep .p-datatable .p-datatable-tbody>tr>td {
       padding: 0.5rem 0.75rem !important;
     }
   }
+}
+
+.flex-g {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: 1rem;
 }
 
 .abono-form {

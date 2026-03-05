@@ -19,10 +19,26 @@
           <span class="label">Número:</span>
           <span class="value mono">{{ cuenta.numeroCuenta }}</span>
         </div>
-        <p-tag
-          [value]="getEstadoLabel(cuenta.estado)"
-          [severity]="getSeverity(cuenta.estado)"
-        ></p-tag>
+
+        <div class="flex-g">
+          @if (turnoActivo) {
+            <div class="flex-g">
+              <b class="label">Caja: </b>
+              <p-tag
+                [value]="turnoActivo.cajaNombre"
+                severity="success"
+              ></p-tag>
+              &nbsp; &nbsp; &nbsp;
+            </div>
+          }
+          <div class="flex-g">
+            <b class="label">Estado: </b>
+            <p-tag
+              [value]="getEstadoLabel(cuenta.estado)"
+              [severity]="getSeverity(cuenta.estado)"
+            ></p-tag>
+          </div>
+        </div>
       </div>
     </div>
 

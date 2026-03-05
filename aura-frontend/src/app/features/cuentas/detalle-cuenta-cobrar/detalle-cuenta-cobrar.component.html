@@ -19,10 +19,26 @@
           <span class="label">Número:</span>
           <span class="value mono">{{ cuenta.numeroCuenta }}</span>
         </div>
-        <p-tag
-          [value]="getEstadoLabel(cuenta.estado)"
-          [severity]="getSeverity(cuenta.estado)"
-        ></p-tag>
+
+        <div class="flex-g">
+          @if (turnoActivo) {
+            <div class="flex-g">
+              <b class="label">Caja: </b>
+              <p-tag
+                [value]="turnoActivo.cajaNombre"
+                severity="success"
+              ></p-tag>
+              &nbsp; &nbsp; &nbsp;
+            </div>
+          }
+          <div class="flex-g">
+            <b class="label">Estado: </b>
+            <p-tag
+              [value]="getEstadoLabel(cuenta.estado)"
+              [severity]="getSeverity(cuenta.estado)"
+            ></p-tag>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -41,12 +57,14 @@
       <div class="detail-row">
         <div class="detail-item">
           <span class="label">Fecha de Emisión:</span>
-          <span class="value">{{ cuenta.fechaEmision | date: 'dd/MM/yyyy HH:mm' }}</span>
+          <span class="value">{{
+            cuenta.fechaEmision | date: "dd/MM/yyyy HH:mm"
+          }}</span>
         </div>
         <div class="detail-item">
           <span class="label">Vencimiento:</span>
           <span class="value" [class.text-danger]="cuenta.estado === 'vencida'">
-            {{ cuenta.fechaVencimiento | date: 'dd/MM/yyyy' || '-' }}
+            {{ cuenta.fechaVencimiento | date: "dd/MM/yyyy" }}
           </span>
         </div>
       </div>
@@ -66,7 +84,9 @@
       </div>
       <div class="saldo-item">
         <span class="label">Total Abonado</span>
-        <span class="value mono text-success">{{ formatCOP(cuenta.totalAbonado) }}</span>
+        <span class="value mono text-success">{{
+          formatCOP(cuenta.totalAbonado)
+        }}</span>
       </div>
       <div class="saldo-item highlight">
         <span class="label">Saldo Pendiente</span>
@@ -99,7 +119,10 @@
         ></button>
       </div>
 
-      <div *ngIf="!showAbonoForm && cuenta.abonos?.length === 0" class="no-abonos">
+      <div
+        *ngIf="!showAbonoForm && cuenta.abonos?.length === 0"
+        class="no-abonos"
+      >
         <i class="pi pi-inbox"></i>
         <p>No hay abonos registrados</p>
       </div>
@@ -118,9 +141,9 @@
           </ng-template>
           <ng-template pTemplate="body" let-abono>
             <tr>
-              <td>{{ abono.fechaPago | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ abono.fechaPago | date: "dd/MM/yyyy HH:mm" }}</td>
               <td>{{ getMetodoLabel(abono.metodoPago) }}</td>
-              <td class="mono">{{ abono.referencia || '-' }}</td>
+              <td class="mono">{{ abono.referencia || "-" }}</td>
               <td class="text-right mono">{{ formatCOP(abono.monto) }}</td>
               <td>{{ abono.usuarioNombre }}</td>
               <td>
@@ -153,8 +176,12 @@
                 [class.ng-invalid]="isInvalid('monto')"
                 styleClass="w-full"
               ></p-inputNumber>
-              <small class="p-error" *ngIf="isInvalid('monto')">El monto es requerido</small>
-              <small class="max-hint">Máximo: {{ formatCOP(cuenta.saldoPendiente) }}</small>
+              <small class="p-error" *ngIf="isInvalid('monto')"
+                >El monto es requerido</small
+              >
+              <small class="max-hint"
+                >Máximo: {{ formatCOP(cuenta.saldoPendiente) }}</small
+              >
             </div>
 
             <div class="form-field">

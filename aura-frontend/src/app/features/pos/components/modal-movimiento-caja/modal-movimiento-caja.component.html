@@ -19,7 +19,7 @@
           type="button"
           class="tipo-btn"
           [class.ingreso-active]="tipo === 'INGRESO'"
-          (click)="tipo = 'INGRESO'"
+          (click)="tipo = 'INGRESO'; onTipoChange()"
         >
           <i class="pi pi-arrow-circle-down"></i>
           Ingreso
@@ -28,12 +28,55 @@
           type="button"
           class="tipo-btn"
           [class.egreso-active]="tipo === 'EGRESO'"
-          (click)="tipo = 'EGRESO'"
+          (click)="tipo = 'EGRESO'; onTipoChange()"
         >
           <i class="pi pi-arrow-circle-up"></i>
           Egreso
         </button>
       </div>
+    </div>
+
+    <!-- Cuenta -->
+    <div class="form-group">
+      <label class="form-label">
+        <i class="pi pi-credit-card"></i>
+        {{ tipo === "INGRESO" ? "Cuenta por cobrar" : "Cuenta por pagar" }}
+        <span class="text-muted">(opcional)</span>
+      </label>
+      <p-autoComplete
+        [(ngModel)]="cuentaSeleccionada"
+        [suggestions]="cuentasSugeridas"
+        (completeMethod)="buscarCuentas($event)"
+        (onSelect)="onSelectCuenta($event)"
+        optionLabel="numeroCuenta"
+        [dropdown]="false"
+        [forceSelection]="true"
+        placeholder="Buscar por número, nombre o documento..."
+        styleClass="w-full"
+        inputStyleClass="w-full"
+      >
+        <ng-template let-cuenta pTemplate="item">
+          <div class="cuenta-suggestion">
+            <div class="cuenta-numero">{{ cuenta.numeroCuenta }}</div>
+            <div class="cuenta-info">
+              {{
+                tipo === "INGRESO"
+                  ? cuenta.clienteNombre
+                  : cuenta.proveedorNombre
+              }}
+              |
+              {{
+                tipo === "INGRESO"
+                  ? cuenta.clienteDocumento
+                  : cuenta.proveedorDocumento
+              }}
+            </div>
+            <div class="cuenta-saldo">
+              Saldo: {{ cuenta.saldoPendiente | currency: "COP" }}
+            </div>
+          </div>
+        </ng-template>
+      </p-autoComplete>
     </div>
 
     <!-- Concepto -->
@@ -65,6 +108,7 @@
         [min]="1"
         placeholder="$ 0"
         styleClass="w-full"
+        [max]="cuentaSeleccionada?.saldoPendiente || null"
       />
     </div>
 
@@ -75,10 +119,16 @@
       [class.preview-egreso]="tipo === 'EGRESO'"
       *ngIf="monto && monto > 0 && concepto.trim()"
     >
-      <i [class]="tipo === 'INGRESO' ? 'pi pi-arrow-circle-down' : 'pi pi-arrow-circle-up'"></i>
+      <i
+        [class]="
+          tipo === 'INGRESO'
+            ? 'pi pi-arrow-circle-down'
+            : 'pi pi-arrow-circle-up'
+        "
+      ></i>
       <span>
-        {{ tipo === 'INGRESO' ? '+' : '-' }}{{ formatCOP(monto) }}
-        &mdash; {{ concepto }}
+        {{ tipo === "INGRESO" ? "+" : "-" }}{{ formatCOP(monto) }} &mdash;
+        {{ concepto }}
       </span>
     </div>
   </div>
@@ -98,8 +148,16 @@
         pButton
         type="button"
         [label]="tipo === 'INGRESO' ? 'Registrar ingreso' : 'Registrar egreso'"
-        [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : (tipo === 'INGRESO' ? 'pi pi-arrow-circle-down' : 'pi pi-arrow-circle-up')"
-        [class]="tipo === 'INGRESO' ? 'btn-aura btn-ingreso' : 'btn-aura btn-egreso'"
+        [icon]="
+          isSubmitting
+            ? 'pi pi-spin pi-spinner'
+            : tipo === 'INGRESO'
+              ? 'pi pi-arrow-circle-down'
+              : 'pi pi-arrow-circle-up'
+        "
+        [class]="
+          tipo === 'INGRESO' ? 'btn-aura btn-ingreso' : 'btn-aura btn-egreso'
+        "
         [disabled]="isSubmitting || formInvalid"
         (click)="confirmar()"
       ></button>

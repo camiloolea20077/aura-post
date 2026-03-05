@@ -89,6 +89,8 @@ export interface CreateMovimientoCajaDto {
   tipo: TipoMovimiento;
   concepto: string;
   monto: number;
+  cuentaCobrarId?: number | null;
+  cuentaPagarId?: number | null;
 }
 
 export interface VentaCategoriaDto {

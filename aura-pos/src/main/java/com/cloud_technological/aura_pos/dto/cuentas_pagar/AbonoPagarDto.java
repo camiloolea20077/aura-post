@@ -14,6 +14,7 @@ public class AbonoPagarDto {
     private Long cuentaPagarId;
     private Long usuarioId;
     private String usuarioNombre;
+    private Long turnoCajaId;
     
     @NotNull(message = "El monto es requerido")
     private BigDecimal monto;
