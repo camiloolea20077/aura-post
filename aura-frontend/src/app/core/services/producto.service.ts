@@ -39,6 +39,13 @@ export class ProductoService {
     );
   }
 
+  // ─── Búsqueda para selects (server-side, limitado) ───────
+  search(query: string): Observable<ResponseModel<ProductoTableModel[]>> {
+    return this.http.get<ResponseModel<ProductoTableModel[]>>(
+      `${this.apiUrl}/list?search=${encodeURIComponent(query)}`,
+    );
+  }
+
   // ─── CRUD ─────────────────────────────────────────────────
   create(dto: CreateProductoDto): Observable<ResponseModel<ProductoModel>> {
     return this.http.post<ResponseModel<ProductoModel>>(

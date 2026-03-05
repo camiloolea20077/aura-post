@@ -93,7 +93,13 @@
 
         <div class="t-separator"></div>
 
-        <table>
+        <table class="t-productos">
+          <colgroup>
+            <col />
+            <col class="col-cant" />
+            <col class="col-precio" />
+            <col class="col-total" />
+          </colgroup>
           <thead>
             <tr>
               <th style="text-align: left">Artículo</th>
@@ -105,7 +111,7 @@
           <tbody>
             @for (d of venta.detalles; track d.productoId) {
               <tr>
-                <td>{{ d.productoNombre }}</td>
+                <td class="t-art-cell">{{ d.productoNombre }}</td>
                 <td style="text-align: center">
                   {{
                     d.cantidad % 1 === 0
@@ -113,17 +119,17 @@
                       : (d.cantidad | number)
                   }}
                 </td>
-                <td style="text-align: right">
+                <td class="t-num-cell">
                   {{ formatCOP(d.precioUnitario) }}
                 </td>
-                <td style="text-align: right">
+                <td class="t-num-cell">
                   {{ formatCOP(d.subtotalLinea) }}
                 </td>
               </tr>
               @if (d.montoDescuento > 0) {
                 <tr>
                   <td colspan="3">DESCUENTO:</td>
-                  <td style="text-align: right">
+                  <td class="t-num-cell">
                     -{{ formatCOP(d.montoDescuento) }}
                   </td>
                 </tr>
@@ -170,6 +176,27 @@
             Cambio: {{ formatCOP(getCambio(p)) }}
           </span>
         </div> -->
+
+        <!-- Sección Factura Electrónica (QR + CUFE) -->
+        <ng-container *ngIf="qrData || cufeCode">
+          <div class="t-separator"></div>
+          <div class="t-fe-section">
+            <div class="t-fe-title">✓ FACTURA ELECTRÓNICA</div>
+            <div #qrWrap class="t-fe-qr" *ngIf="qrData">
+              <qrcode
+                [qrdata]="qrData"
+                [width]="110"
+                [margin]="1"
+                elementType="canvas"
+                errorCorrectionLevel="M"
+              ></qrcode>
+            </div>
+            <div class="t-cufe" *ngIf="cufeCode">
+              <span class="t-cufe-label">CUFE:</span>
+              <span class="t-cufe-value">{{ cufeCode }}</span>
+            </div>
+          </div>
+        </ng-container>
 
         <div class="t-separator"></div>
 

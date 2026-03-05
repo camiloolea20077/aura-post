@@ -75,7 +75,6 @@ export class FormPresentacionesComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.initForm();
-    this.loadProductos();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -127,18 +126,24 @@ export class FormPresentacionesComponent implements OnInit, OnChanges {
     return !!(ctrl?.invalid && ctrl?.touched);
   }
 
-  private async loadProductos(): Promise<void> {
+  async onFiltroProducto(event: { filter: string }): Promise<void> {
+    const q = event.filter?.trim();
+    if (!q || q.length < 2) { this.productosOpts = []; return; }
     try {
-      const response = await lastValueFrom(this.productoService.list());
-      if (response?.data) {
-        this.productosOpts = response.data.map((p) => ({
-          label: p.nombre,
-          value: p.id,
-        }));
-      }
-    } catch {
-      /* no bloquear */
-    }
+      const res = await lastValueFrom(this.productoService.search(q));
+      this.productosOpts = (res?.data ?? []).map((p: any) => ({
+        label: p.nombre + (p.sku ? ` [${p.sku}]` : ''),
+        value: p.id,
+      }));
+    } catch { /* no bloquear */ }
+  }
+
+  private async precargarProducto(id: number): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.productoService.getById(id));
+      if (res?.data)
+        this.productosOpts = [{ label: res.data.nombre, value: res.data.id }];
+    } catch { /* silencioso */ }
   }
 
   private async loadData(id: number): Promise<void> {
@@ -149,6 +154,7 @@ export class FormPresentacionesComponent implements OnInit, OnChanges {
       );
       if (response?.status === 200 && response?.data) {
         const d = response.data;
+        await this.precargarProducto(d.productoId);
         setTimeout(() => {
           this.frmPresentacion.patchValue({
             productoId: d.productoId,

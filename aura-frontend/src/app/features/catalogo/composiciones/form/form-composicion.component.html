@@ -60,16 +60,17 @@
       <p-dropdown
         inputId="productoPadreId"
         formControlName="productoPadreId"
-        [options]="productosOpts"
+        [options]="productosOptsP"
         optionLabel="label"
         optionValue="value"
         [placeholder]="
           tipoSeleccionado?.value === 'RECETA'
-            ? 'Selecciona el producto a elaborar...'
-            : 'Selecciona el kit...'
+            ? 'Escribe para buscar...'
+            : 'Escribe para buscar...'
         "
         [filter]="true"
-        filterPlaceholder="Buscar producto..."
+        filterPlaceholder="Escribe 2+ letras..."
+        (onFilter)="onFiltroPadre($event)"
         styleClass="w-full"
         [class.ng-invalid]="isInvalid('productoPadreId')"
       />
@@ -107,16 +108,17 @@
         appendTo="body"
         inputId="productoHijoId"
         formControlName="productoHijoId"
-        [options]="hijoOptions"
+        [options]="hijoFilteredOpts"
         optionLabel="label"
         optionValue="value"
         [placeholder]="
           tipoSeleccionado?.value === 'RECETA'
-            ? 'Selecciona el insumo...'
-            : 'Selecciona el componente...'
+            ? 'Escribe para buscar...'
+            : 'Escribe para buscar...'
         "
         [filter]="true"
-        filterPlaceholder="Buscar..."
+        filterPlaceholder="Escribe 2+ letras..."
+        (onFilter)="onFiltroHijo($event)"
         styleClass="w-full"
         [class.ng-invalid]="isInvalid('productoHijoId')"
       />

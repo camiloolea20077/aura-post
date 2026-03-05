@@ -26,6 +26,7 @@ import { FacturaViewerModalComponent } from '../../pos/components/factura-viewer
 import { EmpresaService } from '../../../core/services/empresa.service';
 import { IndexDBService } from '../../../core/services/index-db.service';
 import { ConfirmDialog } from 'primeng/confirmdialog';
+import { FacturaElectronicaModalComponent, FacturaElectronicaResult } from '../../factura_eletronica/factura-electronica-modal.component';
 
 type TagSeverity =
   | 'success'
@@ -52,6 +53,7 @@ type TagSeverity =
     ModalTirillaComponent,
     ModalFacturaComponent,
     FacturaViewerModalComponent,
+    FacturaElectronicaModalComponent,
     ConfirmDialog,
   ],
   providers: [MessageService, ConfirmationService],
@@ -61,6 +63,8 @@ type TagSeverity =
 export class IndexVentasComponent implements OnInit {
   mostrarViewerFE = false;
   facturaSeleccionada: any = null;
+  mostrarModalFE = false;
+  ventaParaFE: VentaTableModel | null = null;
   showTirilla = false;
   ventaImpresion: VentaModel | null = null;
   loadingTirilla = false;
@@ -232,6 +236,38 @@ export class IndexVentasComponent implements OnInit {
     this.showFactura = false;
     this.ventaFactura = null;
   }
+  generarFE(item: VentaTableModel, event: Event): void {
+    event.stopPropagation();
+    this.ventaParaFE = item;
+    this.mostrarModalFE = true;
+    this.cdr.markForCheck();
+  }
+
+  onFEEmitida(result: FacturaElectronicaResult): void {
+    if (this.ventaParaFE) {
+      const idx = this.items.findIndex((i) => i.id === this.ventaParaFE!.id);
+      if (idx !== -1) {
+        this.items[idx] = {
+          ...this.items[idx],
+          estadoDian: result.estadoDian,
+          cufe: result.cufe,
+          factusUrl: result.pdfUrl,
+          factusNumero: result.facturaNumero,
+        };
+        this.items = [...this.items];
+      }
+    }
+    this.mostrarModalFE = false;
+    this.ventaParaFE = null;
+    this.cdr.markForCheck();
+  }
+
+  onFEModalClosed(): void {
+    this.mostrarModalFE = false;
+    this.ventaParaFE = null;
+    this.cdr.markForCheck();
+  }
+
   verFactura(item: VentaTableModel, event: Event): void {
     event.stopPropagation();
     this.facturaSeleccionada = {

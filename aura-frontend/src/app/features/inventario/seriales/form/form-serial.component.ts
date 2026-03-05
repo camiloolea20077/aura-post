@@ -108,20 +108,12 @@ export class FormSerialComponent implements OnInit, OnChanges {
 
   private async loadDropdowns(): Promise<void> {
     try {
-      const prods = await lastValueFrom(this.productoService.list());
-      if (prods?.data)
-        this.productosOpts = prods.data.map((p: any) => ({
-          label: p.nombre,
-          value: p.id,
-        }));
       const auth = await this.indexDBService.loadDataAuthDB();
       if (auth?.sucursales) {
         this.sucursalesOpts = auth.sucursales.map((s) => ({
           label: s.nombre,
           value: s.id,
         }));
-
-        // Preseleccionar la sucursal default
         const def =
           auth.sucursales.find((s) => s.esDefault) ?? auth.sucursales[0];
         if (def) this.frmSerial.patchValue({ sucursalId: def.id });
@@ -129,6 +121,18 @@ export class FormSerialComponent implements OnInit, OnChanges {
     } catch {
       /* no bloquear */
     }
+  }
+
+  async onFiltroProducto(event: { filter: string }): Promise<void> {
+    const q = event.filter?.trim();
+    if (!q || q.length < 2) { this.productosOpts = []; return; }
+    try {
+      const res = await lastValueFrom(this.productoService.search(q));
+      this.productosOpts = (res?.data ?? []).map((p: any) => ({
+        label: p.nombre + (p.sku ? ` [${p.sku}]` : ''),
+        value: p.id,
+      }));
+    } catch { /* no bloquear */ }
   }
 
   async saveItem(): Promise<void> {

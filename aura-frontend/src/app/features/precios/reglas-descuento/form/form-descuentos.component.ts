@@ -211,23 +211,35 @@ export class FormDescuentosComponent implements OnInit, OnChanges {
   // ─── Dropdowns ────────────────────────────────────────────
   private async loadDropdowns(): Promise<void> {
     try {
-      const [cats, prods] = await Promise.all([
-        lastValueFrom(this.categoriaService.list()),
-        lastValueFrom(this.productoService.list()),
-      ]);
+      const cats = await lastValueFrom(this.categoriaService.list());
       if (cats?.data)
         this.categoriasOpts = cats.data.map((c) => ({
           label: c.nombre,
           value: c.id,
         }));
-      if (prods?.data)
-        this.productosOpts = prods.data.map((p) => ({
-          label: p.nombre,
-          value: p.id,
-        }));
     } catch {
       /* no bloquear */
     }
+  }
+
+  async onFiltroProducto(event: { filter: string }): Promise<void> {
+    const q = event.filter?.trim();
+    if (!q || q.length < 2) { this.productosOpts = []; return; }
+    try {
+      const res = await lastValueFrom(this.productoService.search(q));
+      this.productosOpts = (res?.data ?? []).map((p: any) => ({
+        label: p.nombre + (p.sku ? ` [${p.sku}]` : ''),
+        value: p.id,
+      }));
+    } catch { /* no bloquear */ }
+  }
+
+  private async precargarProducto(id: number): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.productoService.getById(id));
+      if (res?.data)
+        this.productosOpts = [{ label: res.data.nombre, value: res.data.id }];
+    } catch { /* silencioso */ }
   }
 
   // ─── Carga para edición ───────────────────────────────────
@@ -240,7 +252,7 @@ export class FormDescuentosComponent implements OnInit, OnChanges {
 
         // Detectar aplicaA
         if (d.categoriaId) this.aplicaA = 'CATEGORIA';
-        else if (d.productoId) this.aplicaA = 'PRODUCTO';
+        else if (d.productoId) { this.aplicaA = 'PRODUCTO'; await this.precargarProducto(d.productoId); }
         else this.aplicaA = 'TODO';
 
         // Días de semana

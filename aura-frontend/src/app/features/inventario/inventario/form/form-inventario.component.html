@@ -36,9 +36,10 @@
         [options]="productosOpts"
         optionLabel="label"
         optionValue="value"
-        placeholder="Selecciona el producto..."
+        placeholder="Escribe para buscar..."
         [filter]="true"
-        filterPlaceholder="Buscar..."
+        filterPlaceholder="Escribe 2+ letras..."
+        (onFilter)="onFiltroProducto($event)"
         styleClass="w-full"
         [class.ng-invalid]="isInvalid('productoId')"
       />

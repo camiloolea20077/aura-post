@@ -129,25 +129,12 @@ export class FormInventarioComponent implements OnInit, OnChanges {
 
   private async loadDropdowns(): Promise<void> {
     try {
-      // Productos desde el servicio
-      const prods = await lastValueFrom(this.productoService.list());
-      if (prods?.data) {
-        (this as any)._productosData = prods.data;
-        this.productosOpts = prods.data.map((p: any) => ({
-          label: p.nombre,
-          value: p.id,
-        }));
-      }
-
-      // Sucursales desde IndexDB
       const auth = await this.indexDBService.loadDataAuthDB();
       if (auth?.sucursales) {
         this.sucursalesOpts = auth.sucursales.map((s) => ({
           label: s.nombre,
           value: s.id,
         }));
-
-        // Preseleccionar la sucursal default
         const def =
           auth.sucursales.find((s) => s.esDefault) ?? auth.sucursales[0];
         if (def) this.frmInv.patchValue({ sucursalId: def.id });
@@ -157,12 +144,33 @@ export class FormInventarioComponent implements OnInit, OnChanges {
     }
   }
 
+  async onFiltroProducto(event: { filter: string }): Promise<void> {
+    const q = event.filter?.trim();
+    if (!q || q.length < 2) { this.productosOpts = []; return; }
+    try {
+      const res = await lastValueFrom(this.productoService.search(q));
+      this.productosOpts = (res?.data ?? []).map((p: any) => ({
+        label: p.nombre + (p.sku ? ` [${p.sku}]` : ''),
+        value: p.id,
+      }));
+    } catch { /* no bloquear */ }
+  }
+
+  private async precargarProducto(id: number): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.productoService.getById(id));
+      if (res?.data)
+        this.productosOpts = [{ label: res.data.nombre, value: res.data.id }];
+    } catch { /* silencioso */ }
+  }
+
   private async loadData(id: number): Promise<void> {
     this.isLoading = true;
     try {
       const res = await lastValueFrom(this.inventarioService.getById(id));
       if (res?.data) {
         const d = res.data;
+        await this.precargarProducto(d.productoId);
         this.frmInv.patchValue({
           productoId: d.productoId,
           sucursalId: d.sucursalId,

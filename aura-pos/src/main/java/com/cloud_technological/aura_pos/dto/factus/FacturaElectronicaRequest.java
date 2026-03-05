@@ -34,7 +34,7 @@ public class FacturaElectronicaRequest {
     public static class ItemFacturaRequest {
         private String sku;
         private String nombre;
-        private Integer cantidad;
+        private BigDecimal cantidad;
         private BigDecimal precioSinIva;  // precio unitario SIN IVA
         private String ivaPorcentaje;     // "19.00", "5.00", "0.00"
     }

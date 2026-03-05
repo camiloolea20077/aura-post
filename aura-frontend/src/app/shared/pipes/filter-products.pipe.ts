@@ -1,6 +1,7 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { ProductoPOS } from '../../core/models/venta.model';
-import { filterTable } from '../utils/filter-post.model';
+
+export const SEARCH_RESULT_LIMIT = 100;
 
 @Pipe({
   name: 'filterProducts',
@@ -13,10 +14,10 @@ export class FilterProductsPipe implements PipeTransform {
     page = 1,
     length = 10,
   ): ProductoPOS[] {
+    if (search && typeof search === 'string' && search.trim().length > 0)
+      return data.slice(0, SEARCH_RESULT_LIMIT);
     const startIndex = (page - 1) * length;
     const endIndex = startIndex + length;
-    if (!search || typeof search != 'string')
-      return data.slice(startIndex, endIndex);
-    return filterTable(data, search, 0, length * 2);
+    return data.slice(startIndex, endIndex);
   }
 }

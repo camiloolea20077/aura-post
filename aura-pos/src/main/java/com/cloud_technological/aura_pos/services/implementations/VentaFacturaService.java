@@ -138,7 +138,7 @@ public class VentaFacturaService {
                         .sku(d.getProducto().getSku() != null
                                 ? d.getProducto().getSku() : "SIN-SKU")
                         .nombre(d.getProducto().getNombre())
-                        .cantidad(d.getCantidad().intValue())
+                        .cantidad(d.getCantidad())
                         // Factus recibe el precio CON IVA incluido
                         // precioUnitario está sin IVA → reconstruir: precio × (1 + IVA%)
                         .precioSinIva(precioConIva(

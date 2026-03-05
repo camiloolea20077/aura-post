@@ -18,7 +18,7 @@ public class FactusItemDto {
     private String name;
 
     @JsonProperty("quantity")
-    private Integer quantity;
+    private BigDecimal quantity;
 
     @JsonProperty("discount_rate")
     private BigDecimal discountRate = BigDecimal.ZERO;

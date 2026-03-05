@@ -60,7 +60,7 @@
     }
   }
   input.p-inputtext {
-    height: 40px;
+    height: 34px;
     border-radius: 9px;
     border: 1.5px solid #e0e3eb;
     padding: 0 0.85rem;
@@ -89,7 +89,7 @@
   .p-autocomplete-input {
     border-radius: 9px;
     border: 1.5px solid #e0e3eb;
-    height: 40px;
+    height: 34px;
     width: 100%;
     font-family: "Outfit", sans-serif;
     font-size: 0.84rem;
@@ -301,25 +301,21 @@ $cols: 2.2fr 1.6fr 0.85fr 1.15fr 0.95fr 0.95fr 72px;
 
 // ── PrimeNG overrides: forzar width 100% dentro de la celda ──
 ::ng-deep {
-  // Dropdown de producto
-  .col-producto .p-dropdown {
+  // AutoComplete de producto
+  .col-producto .p-autocomplete {
     width: 100% !important;
-    height: 36px;
-    border-radius: 9px !important;
-    border-width: 1.5px !important;
 
-    .p-dropdown-label {
+    .p-inputtext {
+      width: 100% !important;
+      height: 36px;
+      border-radius: 9px !important;
+      border-width: 1.5px !important;
       font-size: 0.82rem;
       font-family: "Outfit", sans-serif;
       padding: 0 0.7rem;
-      line-height: 34px;
     }
 
-    .p-dropdown-trigger {
-      width: 2rem;
-    }
-
-    &.sin-seleccion .p-dropdown-label {
+    &.sin-seleccion .p-inputtext {
       color: #9ca3af;
     }
   }

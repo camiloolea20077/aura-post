@@ -90,6 +90,15 @@
       </div>
     </div>
 
+    <!-- Aviso de resultados limitados -->
+    <div
+      class="search-result-info"
+      *ngIf="searchProduct.trim() && productosFiltrados.length > searchResultLimit"
+    >
+      <i class="pi pi-info-circle"></i>
+      Mostrando {{ searchResultLimit }} de {{ productosFiltrados.length }} resultados. Refina la búsqueda para ver más.
+    </div>
+
     <!-- Grid productos -->
     <div
       class="product-grid"
@@ -552,6 +561,8 @@
 <app-modal-tirilla
   [displayModal]="showTirilla"
   [venta]="ventaActual"
+  [qrData]="qrDataActual"
+  [cufeCode]="cufeActual"
   (modalClosed)="onTirillaClose()"
 />
 <!-- Tirilla cotización -->

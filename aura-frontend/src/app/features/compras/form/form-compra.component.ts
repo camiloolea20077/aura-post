@@ -81,11 +81,11 @@ export class FormCompraComponent implements OnInit, OnChanges {
   public numeroCompra = '';
   public fechaCompra: Date = new Date();
   public observaciones = '';
-
+  public productosOpts: ProductoOpcion[] = [];
   // ─── Líneas ───────────────────────────────────────────────────────
   public lineas: CompraLineaUI[] = [];
-  private _productosData: ProductoOpcion[] = [];
-  public productosOpts: ProductoOpcion[] = [];
+  public productoSelAC: (ProductoOpcion | null)[] = [];
+  public productoSugerencias: ProductoOpcion[] = [];
 
   // ─── Estado ───────────────────────────────────────────────────────
   public isSubmitting = false;
@@ -128,19 +128,6 @@ export class FormCompraComponent implements OnInit, OnChanges {
   // ─── Carga datos ──────────────────────────────────────────────────
   private async loadDropdowns(): Promise<void> {
     try {
-      const prods = await lastValueFrom(this.productoService.list());
-      if (prods?.data) {
-        this._productosData = prods.data.map(
-          (p: any): ProductoOpcion => ({
-            label: p.nombre + (p.sku ? ` [${p.sku}]` : ''),
-            value: p.id,
-            manejaLotes: !!p.manejaLotes,
-            sku: p.sku ?? null,
-          }),
-        );
-        this.productosOpts = [...this._productosData];
-      }
-
       const auth = await this.indexDBService.loadDataAuthDB();
       if (auth?.sucursales) {
         this.sucursalesOpts = auth.sucursales.map((s) => ({
@@ -154,6 +141,32 @@ export class FormCompraComponent implements OnInit, OnChanges {
     } catch {
       /* silencioso */
     }
+  }
+
+  // ─── Búsqueda servidor para autoComplete de producto ─────────────
+  async buscarProductoEnLinea(event: { query: string }): Promise<void> {
+    const q = event.query?.trim();
+    if (!q || q.length < 2) {
+      this.productoSugerencias = [];
+      return;
+    }
+    try {
+      const res = await lastValueFrom(this.productoService.search(q));
+      this.productoSugerencias = (res?.data ?? []).map(
+        (p: any): ProductoOpcion => ({
+          label: p.nombre + (p.sku ? ` [${p.sku}]` : ''),
+          value: p.id,
+          manejaLotes: !!p.manejaLotes,
+          sku: p.sku ?? null,
+        }),
+      );
+    } catch {
+      this.productoSugerencias = [];
+    }
+  }
+
+  onProductoACSelect(idx: number, item: ProductoOpcion): void {
+    this.onProductoChange(idx, item.value);
   }
 
   // ─── Autocomplete proveedor ───────────────────────────────────────
@@ -196,15 +209,17 @@ export class FormCompraComponent implements OnInit, OnChanges {
       subtotal: 0,
     };
     this.lineas = [...this.lineas, nueva];
+    this.productoSelAC = [...this.productoSelAC, null];
   }
 
   eliminarLinea(idx: number): void {
     this.lineas = this.lineas.filter((_, i) => i !== idx);
+    this.productoSelAC = this.productoSelAC.filter((_, i) => i !== idx);
   }
 
   // ─── Selección de producto → cargar presentaciones ───────────────
   async onProductoChange(idx: number, productoId: number): Promise<void> {
-    const prod = this._productosData.find((p) => p.value === productoId);
+    const prod = this.productosOpts.find((p) => p.value === productoId);
     if (!prod) return;
 
     let presentacionesOpts: PresentacionOpcion[] = [];
@@ -353,6 +368,9 @@ export class FormCompraComponent implements OnInit, OnChanges {
     const nuevo = [...this.lineas];
     nuevo.splice(idx + 1, 0, l);
     this.lineas = nuevo;
+    const nuevoAC = [...this.productoSelAC];
+    nuevoAC.splice(idx + 1, 0, this.productoSelAC[idx] ?? null);
+    this.productoSelAC = nuevoAC;
   }
 
   trackByLinea(_: number, l: CompraLineaUI): string {
@@ -445,10 +463,30 @@ export class FormCompraComponent implements OnInit, OnChanges {
     this.fechaCompra = new Date();
     this.observaciones = '';
     this.lineas = [];
+    this.productoSelAC = [];
+    this.productoSugerencias = [];
   }
 
   closeModal(): void {
     this.resetForm();
     this.modalClosed.emit();
+  }
+  async onFiltroProducto(event: { filter: string }): Promise<void> {
+    const q = event.filter?.trim();
+    if (!q || q.length < 2) {
+      this.productosOpts = [];
+      return;
+    }
+    try {
+      const res = await lastValueFrom(this.productoService.search(q));
+      this.productosOpts = (res?.data ?? []).map((p: any): ProductoOpcion => ({
+        label: p.nombre + (p.sku ? ` [${p.sku}]` : ''),
+        value: p.id,
+        manejaLotes: !!p.manejaLotes,
+        sku: p.sku ?? null,
+      }));
+    } catch {
+      /* no bloquear */
+    }
   }
 }

@@ -48,7 +48,7 @@ import { VentaResponse } from '../../core/models/venta-response.model';
 import { ModalTirillaComponent } from './components/modal-tirilla/modal-tirilla.component';
 import { ModalTirillaCotizacionComponent } from './components/modal-tirilla-cotizacion/modal-tirilla-cotizacion.component';
 import { CotizacionModel } from '../../core/models/cotizacion.model';
-import { FilterProductsPipe } from '../../shared/pipes/filter-products.pipe';
+import { FilterProductsPipe, SEARCH_RESULT_LIMIT } from '../../shared/pipes/filter-products.pipe';
 import { FormTerceroComponent } from '../terceros/form/form-tercero.component';
 import { TerceroModel } from '../../core/models/tercero.model';
 import {
@@ -97,9 +97,12 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   searchProduct = '';
   page = 1;
   length = 12;
+  readonly searchResultLimit = SEARCH_RESULT_LIMIT;
   @ViewChild('searchInput') searchInputRef!: ElementRef<HTMLInputElement>;
   public showTirilla = false;
   public ventaActual: VentaModel | null = null;
+  public qrDataActual: string | null = null;
+  public cufeActual: string | null = null;
 
   // ── Turno ──────────────────────────────────────────────────
   public turnoActivo: TurnoCajaModel | null = null;
@@ -351,23 +354,18 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   filtrar(): void {
-    let list = this.productos;
-    if (this.categoriaActiva)
-      list = list.filter((p) => p.categoriaId === this.categoriaActiva);
     const q = this.searchProduct.trim().toLowerCase();
-    if (q)
-      list = list.filter(
-        (p) =>
-          p.nombre.toLowerCase().includes(q) ||
-          (p.sku?.toLowerCase().includes(q) ?? false) ||
-          (p.codigoBarras?.toLowerCase().includes(q) ?? false),
+    const cat = this.categoriaActiva;
+    this.productosFiltrados = this.productos.filter((p) => {
+      if (cat && p.categoriaId !== cat) return false;
+      if (p.tipoProducto !== 'SERVICIO' && p.manejaInventario && p.stockActual <= 0) return false;
+      if (!q) return true;
+      return (
+        p.nombre.toLowerCase().includes(q) ||
+        (p.sku != null && p.sku.toLowerCase().includes(q)) ||
+        (p.codigoBarras != null && p.codigoBarras.toLowerCase().includes(q))
       );
-    this.productosFiltrados = list.filter(
-      (p) =>
-        p.tipoProducto === 'SERVICIO' ||
-        !p.manejaInventario ||
-        p.stockActual > 0,
-    );
+    });
   }
 
   setCategoria(id: number | null): void {
@@ -592,12 +590,20 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         const clienteIdRespuesta = (res.data as any)?.clienteId;
         const ventaTieneCliente = (res.data as any)?.clienteId != null;
 
-        // Siempre mostrar la tirilla primero
         this.ventaCompletadaId = (res.data as any).id;
         this.feClienteNombre = clienteNombreParaFE;
         this.feClienteDocumento = clienteDocParaFE;
         this.feClienteEmail = clienteEmailParaFE;
-        this.showTirilla = true;
+        this.qrDataActual = null;
+        this.cufeActual = null;
+
+        if (this.empresaFacturaElec && this.ventaCompletadaId) {
+          // Preguntar si desea factura electrónica → modal FE primero
+          this.mostrarModalFE = true;
+        } else {
+          // Sin FE: abrir tirilla directo
+          this.showTirilla = true;
+        }
 
         this.cdr.markForCheck();
       }
@@ -625,16 +631,13 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onTirillaClose(): void {
     this.showTirilla = false;
-
-    // ¿Mostrar modal de factura electrónica?
-    if (this.empresaFacturaElec && this.ventaCompletadaId) {
-      this.mostrarModalFE = true;
-    } else {
-      this.ventaActual = null;
-      this.focusSearch();
-    }
+    this.ventaActual = null;
+    this.qrDataActual = null;
+    this.cufeActual = null;
+    this.focusSearch();
     this.cdr.markForCheck();
   }
+
   goTurnos(): void {
     this.router.navigate(['/turnos']);
   }
@@ -654,17 +657,19 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     }).format(v ?? 0);
   onFacturaEmitida(result: FacturaElectronicaResult): void {
     this.mostrarModalFE = false;
-    this.ventaCompletadaId = null;
-    this.ventaActual = null;
-    this.focusSearch();
+    this.qrDataActual = result.qr || null;
+    this.cufeActual = result.cufe || null;
+    // Abrir tirilla con QR y CUFE embebidos
+    this.showTirilla = true;
     this.cdr.markForCheck();
   }
 
   onFacturaOmitida(): void {
     this.mostrarModalFE = false;
-    this.ventaCompletadaId = null;
-    this.ventaActual = null;
-    this.focusSearch();
+    this.qrDataActual = null;
+    this.cufeActual = null;
+    // Abrir tirilla sin FE
+    this.showTirilla = true;
     this.cdr.markForCheck();
   }
 
