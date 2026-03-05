@@ -22,8 +22,16 @@ import com.cloud_technological.aura_pos.entity.CajaEntity;
 import com.cloud_technological.aura_pos.entity.MovimientoCajaEntity;
 import com.cloud_technological.aura_pos.entity.TurnoCajaEntity;
 import com.cloud_technological.aura_pos.entity.UsuarioEntity;
+import com.cloud_technological.aura_pos.entity.AbonoCobrarEntity;
+import com.cloud_technological.aura_pos.entity.AbonoPagarEntity;
+import com.cloud_technological.aura_pos.entity.CuentaCobrarEntity;
+import com.cloud_technological.aura_pos.entity.CuentaPagarEntity;
 import com.cloud_technological.aura_pos.mappers.TurnoCajaMapper;
 import com.cloud_technological.aura_pos.repositories.caja.CajaJPARepository;
+import com.cloud_technological.aura_pos.repositories.cuentas_cobrar.AbonoCobrarJPARepository;
+import com.cloud_technological.aura_pos.repositories.cuentas_cobrar.CuentaCobrarJPARepository;
+import com.cloud_technological.aura_pos.repositories.cuentas_pagar.AbonoPagarJPARepository;
+import com.cloud_technological.aura_pos.repositories.cuentas_pagar.CuentaPagarJPARepository;
 import com.cloud_technological.aura_pos.repositories.movimiento_caja.MovimientoCajaJPARepository;
 import com.cloud_technological.aura_pos.repositories.turno_caja.TurnoCajaJPARepository;
 import com.cloud_technological.aura_pos.repositories.turno_caja.TurnoCajaQueryRepository;
@@ -43,6 +51,10 @@ public class TurnoCajaServiceImpl implements TurnoCajaService{
     private final UsuarioJPARepository usuarioJPARepository;
     private final TurnoCajaMapper turnoMapper;
     private final MovimientoCajaJPARepository movimientoRepository;
+    private final AbonoCobrarJPARepository abonoCobrarRepository;
+    private final AbonoPagarJPARepository abonoPagarRepository;
+    private final CuentaCobrarJPARepository cuentaCobrarRepository;
+    private final CuentaPagarJPARepository cuentaPagarRepository;
 
     @Autowired
     public TurnoCajaServiceImpl(TurnoCajaQueryRepository turnoRepository,
@@ -50,13 +62,21 @@ public class TurnoCajaServiceImpl implements TurnoCajaService{
             CajaJPARepository cajaJPARepository,
             UsuarioJPARepository usuarioJPARepository,
             TurnoCajaMapper turnoMapper,
-            MovimientoCajaJPARepository movimientoRepository) {
+            MovimientoCajaJPARepository movimientoRepository,
+            AbonoCobrarJPARepository abonoCobrarRepository,
+            AbonoPagarJPARepository abonoPagarRepository,
+            CuentaCobrarJPARepository cuentaCobrarRepository,
+            CuentaPagarJPARepository cuentaPagarRepository) {
         this.turnoRepository = turnoRepository;
         this.turnoJPARepository = turnoJPARepository;
         this.cajaJPARepository = cajaJPARepository;
         this.usuarioJPARepository = usuarioJPARepository;
         this.turnoMapper = turnoMapper;
         this.movimientoRepository = movimientoRepository;
+        this.abonoCobrarRepository = abonoCobrarRepository;
+        this.abonoPagarRepository = abonoPagarRepository;
+        this.cuentaCobrarRepository = cuentaCobrarRepository;
+        this.cuentaPagarRepository = cuentaPagarRepository;
     }
 
     @Override
@@ -158,6 +178,64 @@ public class TurnoCajaServiceImpl implements TurnoCajaService{
         mov.setMonto(dto.getMonto());
         mov.setFecha(java.time.LocalDateTime.now());
 
+        if ("INGRESO".equals(dto.getTipo()) && dto.getCuentaCobrarId() != null) {
+            CuentaCobrarEntity cuenta = cuentaCobrarRepository.findById(dto.getCuentaCobrarId())
+                    .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Cuenta por cobrar no encontrada"));
+            
+            if (cuenta.getSaldoPendiente().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new GlobalException(HttpStatus.BAD_REQUEST, "La cuenta por cobrar ya está pagada");
+            }
+            
+            AbonoCobrarEntity abono = AbonoCobrarEntity.builder()
+                    .cuentaCobrar(cuenta)
+                    .usuario(usuario)
+                    .turnoCaja(turno)
+                    .monto(dto.getMonto())
+                    .metodoPago("efectivo")
+                    .fechaPago(LocalDateTime.now())
+                    .build();
+            abonoCobrarRepository.save(abono);
+            
+            cuenta.setTotalAbonado(cuenta.getTotalAbonado().add(dto.getMonto()));
+            cuenta.setSaldoPendiente(cuenta.getSaldoPendiente().subtract(dto.getMonto()));
+            if (cuenta.getSaldoPendiente().compareTo(BigDecimal.ZERO) <= 0) {
+                cuenta.setSaldoPendiente(BigDecimal.ZERO);
+                cuenta.setEstado("pagada");
+            }
+            cuentaCobrarRepository.save(cuenta);
+            
+            mov.setCuentaCobrarId(dto.getCuentaCobrarId());
+        }
+        
+        if ("EGRESO".equals(dto.getTipo()) && dto.getCuentaPagarId() != null) {
+            CuentaPagarEntity cuenta = cuentaPagarRepository.findById(dto.getCuentaPagarId())
+                    .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Cuenta por pagar no encontrada"));
+            
+            if (cuenta.getSaldoPendiente().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new GlobalException(HttpStatus.BAD_REQUEST, "La cuenta por pagar ya está pagada");
+            }
+            
+            AbonoPagarEntity abono = AbonoPagarEntity.builder()
+                    .cuentaPagar(cuenta)
+                    .usuario(usuario)
+                    .turnoCaja(turno)
+                    .monto(dto.getMonto())
+                    .metodoPago("efectivo")
+                    .fechaPago(LocalDateTime.now())
+                    .build();
+            abonoPagarRepository.save(abono);
+            
+            cuenta.setTotalAbonado(cuenta.getTotalAbonado().add(dto.getMonto()));
+            cuenta.setSaldoPendiente(cuenta.getSaldoPendiente().subtract(dto.getMonto()));
+            if (cuenta.getSaldoPendiente().compareTo(BigDecimal.ZERO) <= 0) {
+                cuenta.setSaldoPendiente(BigDecimal.ZERO);
+                cuenta.setEstado("pagada");
+            }
+            cuentaPagarRepository.save(cuenta);
+            
+            mov.setCuentaPagarId(dto.getCuentaPagarId());
+        }
+
         MovimientoCajaEntity saved = movimientoRepository.save(mov);
         return toMovimientoDto(saved);
     }
@@ -235,6 +313,15 @@ public class TurnoCajaServiceImpl implements TurnoCajaService{
         List<MovimientoCajaDto> movDtos = movEntities.stream().map(this::toMovimientoDto).collect(Collectors.toList());
         BigDecimal totalIngresos = movimientoRepository.sumMontoByTurnoIdAndTipo(turnoId, "INGRESO");
         BigDecimal totalEgresos  = movimientoRepository.sumMontoByTurnoIdAndTipo(turnoId, "EGRESO");
+        
+        // Sumar abonos de cuentas asociados al turno (abonos directos que tienen turno_caja_id)
+        BigDecimal totalAbonosCobrar = abonoCobrarRepository.sumMontoByTurnoCajaId(turnoId);
+        BigDecimal totalAbonosPagar = abonoPagarRepository.sumMontoByTurnoCajaId(turnoId);
+        
+        // Agregar abonos a los totales de ingresos/egresos
+        totalIngresos = totalIngresos.add(totalAbonosCobrar != null ? totalAbonosCobrar : BigDecimal.ZERO);
+        totalEgresos = totalEgresos.add(totalAbonosPagar != null ? totalAbonosPagar : BigDecimal.ZERO);
+        
         resumen.setMovimientos(movDtos);
         resumen.setTotalIngresos(totalIngresos);
         resumen.setTotalEgresos(totalEgresos);

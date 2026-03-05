@@ -45,4 +45,10 @@ public class MovimientoCajaEntity {
 
     @Column(name = "fecha", nullable = false)
     private LocalDateTime fecha;
+
+    @Column(name = "cuenta_cobrar_id")
+    private Long cuentaCobrarId;
+
+    @Column(name = "cuenta_pagar_id")
+    private Long cuentaPagarId;
 }

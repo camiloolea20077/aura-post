@@ -182,6 +182,8 @@ export class ModalMovimientoCajaComponent implements OnChanges {
         tipo: this.tipo,
         concepto: this.concepto.trim(),
         monto: this.monto!,
+        cuentaCobrarId: this.tipo === 'INGRESO' ? this.cuentaSeleccionada?.id ?? null : null,
+        cuentaPagarId: this.tipo === 'EGRESO' ? this.cuentaSeleccionada?.id ?? null : null,
       };
       const res = await lastValueFrom(
         this.turnoCajaService.registrarMovimiento(this.turno!.id, dto),
