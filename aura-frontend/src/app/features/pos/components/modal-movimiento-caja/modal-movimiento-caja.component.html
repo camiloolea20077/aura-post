@@ -19,7 +19,7 @@
           type="button"
           class="tipo-btn"
           [class.ingreso-active]="tipo === 'INGRESO'"
-          (click)="tipo = 'INGRESO'"
+          (click)="tipo = 'INGRESO'; onTipoChange()"
         >
           <i class="pi pi-arrow-circle-down"></i>
           Ingreso
@@ -28,12 +28,47 @@
           type="button"
           class="tipo-btn"
           [class.egreso-active]="tipo === 'EGRESO'"
-          (click)="tipo = 'EGRESO'"
+          (click)="tipo = 'EGRESO'; onTipoChange()"
         >
           <i class="pi pi-arrow-circle-up"></i>
           Egreso
         </button>
       </div>
+    </div>
+
+    <!-- Cuenta关联 -->
+    <div class="form-group">
+      <label class="form-label">
+        <i class="pi pi-credit-card"></i>
+        {{ tipo === 'INGRESO' ? 'Cuenta por cobrar' : 'Cuenta por pagar' }}
+        <span class="text-muted">(opcional)</span>
+      </label>
+      <p-autoComplete
+        [(ngModel)]="cuentaSeleccionada"
+        [suggestions]="cuentasSugeridas"
+        (completeMethod)="buscarCuentas($event)"
+        (onSelect)="onSelectCuenta($event)"
+        [field]="cuentaLabel"
+        [dropdown]="false"
+        [forceSelection]="true"
+        [loading]="loadingCuentas"
+        placeholder="Buscar por número, nombre o documento..."
+        styleClass="w-full"
+        inputStyleClass="w-full"
+      >
+        <ng-template let-cuenta pTemplate="item">
+          <div class="cuenta-suggestion">
+            <div class="cuenta-numero">{{ cuenta.numeroCuenta }}</div>
+            <div class="cuenta-info">
+              {{ tipo === 'INGRESO' ? (cuenta as any).clienteNombre : (cuenta as any).proveedorNombre }} |
+              {{ tipo === 'INGRESO' ? (cuenta as any).clienteDocumento : (cuenta as any).proveedorDocumento }}
+            </div>
+            <div class="cuenta-saldo">
+              Saldo: {{ formatCOP((cuenta as any).saldoPendiente) }}
+            </div>
+          </div>
+        </ng-template>
+      </p-autoComplete>
     </div>
 
     <!-- Concepto -->
