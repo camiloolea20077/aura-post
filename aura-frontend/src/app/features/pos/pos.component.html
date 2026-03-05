@@ -91,7 +91,7 @@
     </div>
 
     <!-- Grid productos -->
-    <div class="product-grid" *ngIf="!loadingProductos">
+    <div class="product-grid" *ngIf="!loadingProductos" [class.list-mode]="searchProduct.trim()">
       <div
         class="product-card"
         *ngFor="
