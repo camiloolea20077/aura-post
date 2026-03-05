@@ -51,17 +51,9 @@ public class TurnoCajaQueryRepository {
                         AND vp.metodo_pago = 'EFECTIVO'
                         AND v.estado_venta = 'COMPLETADA'
                     ), 0) + COALESCE((
-                        SELECT SUM(mc.monto)
-                        FROM movimiento_caja mc
-                        WHERE mc.turno_caja_id = t.id AND mc.tipo = 'INGRESO'
-                    ), 0) + COALESCE((
                         SELECT SUM(ac.monto)
                         FROM abonos_cobrar ac
                         WHERE ac.turno_caja_id = t.id
-                    ), 0) - COALESCE((
-                        SELECT SUM(mc.monto)
-                        FROM movimiento_caja mc
-                        WHERE mc.turno_caja_id = t.id AND mc.tipo = 'EGRESO'
                     ), 0) - COALESCE((
                         SELECT SUM(ap.monto)
                         FROM abonos_pagar ap

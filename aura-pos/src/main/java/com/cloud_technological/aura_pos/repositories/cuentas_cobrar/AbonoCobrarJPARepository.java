@@ -13,7 +13,8 @@ import com.cloud_technological.aura_pos.entity.AbonoCobrarEntity;
 public interface AbonoCobrarJPARepository extends JpaRepository<AbonoCobrarEntity, Long> {
     Optional<AbonoCobrarEntity> findByIdAndCuentaCobrarId(Long id, Long cuentaCobrarId);
     List<AbonoCobrarEntity> findByCuentaCobrarId(Long cuentaCobrarId);
-    
+    List<AbonoCobrarEntity> findByTurnoCajaIdOrderByFechaPagoAsc(Long turnoCajaId);
+
     @Query("SELECT COALESCE(SUM(a.monto), 0) FROM AbonoCobrarEntity a WHERE a.turnoCaja.id = :turnoCajaId")
     BigDecimal sumMontoByTurnoCajaId(@Param("turnoCajaId") Long turnoCajaId);
 }
