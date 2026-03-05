@@ -10,6 +10,7 @@ export interface AbonoCobrarModel {
   fechaPago: string;
   usuarioId: number;
   usuarioNombre: string;
+  turnoCajaId: number | null;
   createdAt: string;
 }
 
@@ -65,6 +66,7 @@ export interface CreateAbonoCobrarDto {
   metodoPago: MetodoPago;
   referencia?: string | null;
   fechaPago: string;
+  turnoCajaId?: number | null;
 }
 
 export interface CuentaCobrarFilters {

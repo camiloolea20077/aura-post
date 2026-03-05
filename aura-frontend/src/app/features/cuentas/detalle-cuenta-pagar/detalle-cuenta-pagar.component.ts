@@ -5,6 +5,7 @@ import {
   EventEmitter,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
+  OnInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -36,6 +37,11 @@ import {
   MetodoPago,
 } from '../models/cuenta-pagar.model';
 import { CuentaPagarService } from '../services/cuenta-pagar.service';
+import { TurnoCajaModel } from '../../../core/models/caja.model';
+import {
+  CajaService,
+  TurnoCajaService,
+} from '../../../core/services/caja.service';
 
 type TagSeverity =
   | 'success'
@@ -69,7 +75,7 @@ type TagSeverity =
   templateUrl: './detalle-cuenta-pagar.component.html',
   styleUrls: ['./detalle-cuenta-pagar.component.scss'],
 })
-export class DetalleCuentaPagarComponent {
+export class DetalleCuentaPagarComponent implements OnInit {
   @Input() visible = false;
   @Input() cuenta: CuentaPagarModel | null = null;
   @Input() loading = false;
@@ -79,6 +85,8 @@ export class DetalleCuentaPagarComponent {
   showAbonoForm = false;
   loadingAbono = false;
   abonoForm: FormGroup;
+  turnoActivo: TurnoCajaModel | null = null;
+  loadingTurno = false;
 
   metodosPago = [
     { label: 'Efectivo', value: 'efectivo' },
@@ -90,6 +98,7 @@ export class DetalleCuentaPagarComponent {
   constructor(
     private readonly fb: FormBuilder,
     private readonly service: CuentaPagarService,
+    private readonly cajaService: TurnoCajaService,
     private readonly alert: AlertService,
     private readonly confirm: ConfirmationService,
     private readonly cdr: ChangeDetectorRef,
@@ -101,6 +110,9 @@ export class DetalleCuentaPagarComponent {
       banco: [null],
       fechaPago: [new Date(), Validators.required],
     });
+  }
+  ngOnInit(): void {
+    this.loadTurnoActivo();
   }
 
   get progressPercent(): number {
@@ -161,6 +173,19 @@ export class DetalleCuentaPagarComponent {
     this.cdr.markForCheck();
   }
 
+  private async loadTurnoActivo(): Promise<void> {
+    this.loadingTurno = true;
+    try {
+      const res = await lastValueFrom(this.cajaService.turnoActivo());
+      this.turnoActivo = res?.data ?? null;
+    } catch {
+      this.turnoActivo = null;
+    } finally {
+      this.loadingTurno = false;
+      this.cdr.markForCheck();
+    }
+  }
+
   async saveAbono(): Promise<void> {
     if (this.abonoForm.invalid || !this.cuenta) {
       this.abonoForm.markAllAsTouched();
@@ -184,6 +209,7 @@ export class DetalleCuentaPagarComponent {
       referencia: formValue.referencia || null,
       banco: formValue.banco || null,
       fechaPago: formValue.fechaPago.toISOString(),
+      turnoCajaId: this.turnoActivo?.id ?? null,
     };
 
     try {
