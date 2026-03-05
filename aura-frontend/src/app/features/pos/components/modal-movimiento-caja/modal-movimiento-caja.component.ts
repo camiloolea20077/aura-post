@@ -67,7 +67,8 @@ export class ModalMovimientoCajaComponent implements OnChanges {
 
   cuentaSearch = '';
   cuentasSugeridas: (CuentaCobrarTableModel | CuentaPagarTableModel)[] = [];
-  cuentaSeleccionada: CuentaCobrarTableModel | CuentaPagarTableModel | null = null;
+  cuentaSeleccionada: CuentaCobrarTableModel | CuentaPagarTableModel | null =
+    null;
   loadingCuentas = false;
 
   constructor(
@@ -103,6 +104,8 @@ export class ModalMovimientoCajaComponent implements OnChanges {
     this.cuentaSearch = '';
     this.cuentasSugeridas = [];
     this.cdr.markForCheck();
+    this.concepto = '';
+    this.monto = null;
   }
 
   async buscarCuentas(event: { query: string }): Promise<void> {
@@ -121,7 +124,7 @@ export class ModalMovimientoCajaComponent implements OnChanges {
             page: 0,
             rows: 20,
             search: query,
-            params: { estado: 'activa' },
+            estado: 'activa',
           }),
         );
         this.cuentasSugeridas = res?.data?.content ?? [];
@@ -145,13 +148,17 @@ export class ModalMovimientoCajaComponent implements OnChanges {
   }
 
   onSelectCuenta(event: any): void {
-    const cuenta = event.value as CuentaCobrarTableModel | CuentaPagarTableModel;
+    const cuenta = event.value as
+      | CuentaCobrarTableModel
+      | CuentaPagarTableModel;
     this.cuentaSeleccionada = cuenta;
 
     const numeroCuenta = cuenta.numeroCuenta;
-    const nombreTercero = 'clienteNombre' in cuenta ? cuenta.clienteNombre : cuenta.proveedorNombre;
+    const nombreTercero =
+      'clienteNombre' in cuenta ? cuenta.clienteNombre : cuenta.proveedorNombre;
     const nombreCaja = this.turno?.cajaNombre ?? 'Caja';
-    const tipoLabel = this.tipo === 'INGRESO' ? 'Abono a Cuenta' : 'Pago a Cuenta';
+    const tipoLabel =
+      this.tipo === 'INGRESO' ? 'Abono a Cuenta' : 'Pago a Cuenta';
 
     this.concepto = `Movimiento de caja (${nombreCaja}), ${tipoLabel}: ${numeroCuenta} - ${nombreTercero}`;
     this.cdr.markForCheck();
@@ -160,9 +167,10 @@ export class ModalMovimientoCajaComponent implements OnChanges {
   get cuentaLabel(): string {
     if (!this.cuentaSeleccionada) return '';
     const numero = this.cuentaSeleccionada.numeroCuenta;
-    const nombre = 'clienteNombre' in this.cuentaSeleccionada
-      ? this.cuentaSeleccionada.clienteNombre
-      : this.cuentaSeleccionada.proveedorNombre;
+    const nombre =
+      'clienteNombre' in this.cuentaSeleccionada
+        ? this.cuentaSeleccionada.clienteNombre
+        : this.cuentaSeleccionada.proveedorNombre;
     return `${numero} - ${nombre}`;
   }
 

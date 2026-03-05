@@ -36,11 +36,11 @@
       </div>
     </div>
 
-    <!-- Cuenta关联 -->
+    <!-- Cuenta -->
     <div class="form-group">
       <label class="form-label">
         <i class="pi pi-credit-card"></i>
-        {{ tipo === 'INGRESO' ? 'Cuenta por cobrar' : 'Cuenta por pagar' }}
+        {{ tipo === "INGRESO" ? "Cuenta por cobrar" : "Cuenta por pagar" }}
         <span class="text-muted">(opcional)</span>
       </label>
       <p-autoComplete
@@ -48,10 +48,9 @@
         [suggestions]="cuentasSugeridas"
         (completeMethod)="buscarCuentas($event)"
         (onSelect)="onSelectCuenta($event)"
-        [field]="cuentaLabel"
+        optionLabel="numeroCuenta"
         [dropdown]="false"
         [forceSelection]="true"
-        [loading]="loadingCuentas"
         placeholder="Buscar por número, nombre o documento..."
         styleClass="w-full"
         inputStyleClass="w-full"
@@ -60,11 +59,20 @@
           <div class="cuenta-suggestion">
             <div class="cuenta-numero">{{ cuenta.numeroCuenta }}</div>
             <div class="cuenta-info">
-              {{ tipo === 'INGRESO' ? (cuenta as any).clienteNombre : (cuenta as any).proveedorNombre }} |
-              {{ tipo === 'INGRESO' ? (cuenta as any).clienteDocumento : (cuenta as any).proveedorDocumento }}
+              {{
+                tipo === "INGRESO"
+                  ? cuenta.clienteNombre
+                  : cuenta.proveedorNombre
+              }}
+              |
+              {{
+                tipo === "INGRESO"
+                  ? cuenta.clienteDocumento
+                  : cuenta.proveedorDocumento
+              }}
             </div>
             <div class="cuenta-saldo">
-              Saldo: {{ formatCOP((cuenta as any).saldoPendiente) }}
+              Saldo: {{ cuenta.saldoPendiente | currency: "COP" }}
             </div>
           </div>
         </ng-template>
@@ -100,6 +108,7 @@
         [min]="1"
         placeholder="$ 0"
         styleClass="w-full"
+        [max]="cuentaSeleccionada?.saldoPendiente || null"
       />
     </div>
 
@@ -110,10 +119,16 @@
       [class.preview-egreso]="tipo === 'EGRESO'"
       *ngIf="monto && monto > 0 && concepto.trim()"
     >
-      <i [class]="tipo === 'INGRESO' ? 'pi pi-arrow-circle-down' : 'pi pi-arrow-circle-up'"></i>
+      <i
+        [class]="
+          tipo === 'INGRESO'
+            ? 'pi pi-arrow-circle-down'
+            : 'pi pi-arrow-circle-up'
+        "
+      ></i>
       <span>
-        {{ tipo === 'INGRESO' ? '+' : '-' }}{{ formatCOP(monto) }}
-        &mdash; {{ concepto }}
+        {{ tipo === "INGRESO" ? "+" : "-" }}{{ formatCOP(monto) }} &mdash;
+        {{ concepto }}
       </span>
     </div>
   </div>
@@ -133,8 +148,16 @@
         pButton
         type="button"
         [label]="tipo === 'INGRESO' ? 'Registrar ingreso' : 'Registrar egreso'"
-        [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : (tipo === 'INGRESO' ? 'pi pi-arrow-circle-down' : 'pi pi-arrow-circle-up')"
-        [class]="tipo === 'INGRESO' ? 'btn-aura btn-ingreso' : 'btn-aura btn-egreso'"
+        [icon]="
+          isSubmitting
+            ? 'pi pi-spin pi-spinner'
+            : tipo === 'INGRESO'
+              ? 'pi pi-arrow-circle-down'
+              : 'pi pi-arrow-circle-up'
+        "
+        [class]="
+          tipo === 'INGRESO' ? 'btn-aura btn-ingreso' : 'btn-aura btn-egreso'
+        "
         [disabled]="isSubmitting || formInvalid"
         (click)="confirmar()"
       ></button>
