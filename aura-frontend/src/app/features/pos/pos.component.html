@@ -533,6 +533,8 @@
 <app-modal-pago
   [displayModal]="showPago"
   [total]="total"
+  [subtotal]="subtotal - descTotal"
+  [impuestosTotal]="impTotal"
   [pagosPrev]="pagosPrev"
   (modalClosed)="showPago = false"
   (ventaConfirmada)="onVentaConfirmada($event)"
@@ -691,12 +693,14 @@
 }
 
 <!-- Modal nuevo cliente -->
-<app-form-tercero
-  [displayModal]="showNuevoCliente"
-  slug="create"
-  [soloCliente]="true"
-  (terceroSaved)="onClienteCreado($event)"
-  (modalClosed)="showNuevoCliente = false"
-/>
+@if (showNuevoCliente) {
+  <app-form-tercero
+    [displayModal]="showNuevoCliente"
+    slug="create"
+    [soloCliente]="true"
+    (terceroSaved)="onClienteCreado($event)"
+    (modalClosed)="showNuevoCliente = false"
+  />
+}
 
 <p-toast />

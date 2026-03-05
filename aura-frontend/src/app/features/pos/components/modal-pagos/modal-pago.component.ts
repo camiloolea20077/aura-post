@@ -42,12 +42,19 @@ import {
 export class ModalPagoComponent implements OnChanges {
   @Input() displayModal = false;
   @Input() total = 0;
+  @Input() subtotal = 0;
+  @Input() impuestosTotal = 0;
   @Input() pagosPrev: PagoUI[] = [];
+
   @Output() modalClosed = new EventEmitter<void>();
-  @Output() ventaConfirmada = new EventEmitter<CreateVentaPagoDto[]>();
+  @Output() ventaConfirmada = new EventEmitter<{
+    pagos: CreateVentaPagoDto[];
+    descuentoGeneral: number;
+  }>();
 
   public pagos: PagoUI[] = [];
   public isSubmitting = false;
+  public descuentoGeneral = 0;
 
   readonly metodos = METODOS_PAGO;
 
@@ -60,17 +67,22 @@ export class ModalPagoComponent implements OnChanges {
     }
   }
 
+  get totalConDescuento(): number {
+    return Math.max(0, this.total - (this.descuentoGeneral ?? 0));
+  }
+
   get totalPagado(): number {
     return this.pagos.reduce((s, p) => s + (p.monto ?? 0), 0);
   }
   get faltante(): number {
-    return this.total - this.totalPagado;
+    return this.totalConDescuento - this.totalPagado;
   }
   get vuelto(): number {
-    return this.totalPagado - this.total;
+    return Math.max(0, this.totalPagado - this.totalConDescuento);
   }
+
   get cuadra(): boolean {
-    return this.totalPagado >= this.total;
+    return this.totalPagado >= this.totalConDescuento;
   }
 
   get tieneCredito(): boolean {
@@ -100,7 +112,7 @@ export class ModalPagoComponent implements OnChanges {
     const otros = this.pagos
       .filter((p) => p !== pago)
       .reduce((s, p) => s + (p.monto ?? 0), 0);
-    pago.monto = Math.max(this.total - otros, 0);
+    pago.monto = Math.max(this.totalConDescuento - otros, 0);
   }
 
   formatCOP = (v: number) =>
@@ -120,11 +132,15 @@ export class ModalPagoComponent implements OnChanges {
         referencia: p.referencia || null,
       }));
     this.isSubmitting = true;
-    this.ventaConfirmada.emit(dtos);
+    this.ventaConfirmada.emit({
+      pagos: dtos,
+      descuentoGeneral: this.descuentoGeneral,
+    });
   }
 
   closeModal(): void {
     this.modalClosed.emit();
+    this.descuentoGeneral = 0;
   }
 
   metodoInfo(m: MetodoPago) {

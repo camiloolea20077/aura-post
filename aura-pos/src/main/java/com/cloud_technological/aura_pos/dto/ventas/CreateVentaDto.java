@@ -22,4 +22,6 @@ public class CreateVentaDto {
     private List<CreateVentaDetalleDto> detalles;
     @NotEmpty(message = "Debe agregar al menos un método de pago")
     private List<CreateVentaPagoDto> pagos;
+    private java.math.BigDecimal descuentoGeneral;
 }
+
