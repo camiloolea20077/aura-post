@@ -27,4 +27,12 @@ public class CreateCuentaPagarDto {
     private String numeroFacturaExterno;
 
     private String observaciones;
+
+    public String getNumeroFacturaExterno() {
+        return numeroFacturaExterno;
+    }
+
+    public void setNumeroFacturaExterno(String numeroFacturaExterno) {
+        this.numeroFacturaExterno = numeroFacturaExterno;
+    }
 }
