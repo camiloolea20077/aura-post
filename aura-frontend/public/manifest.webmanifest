@@ -1,6 +1,6 @@
 {
-  "name": "aura-frontend",
-  "short_name": "aura-frontend",
+  "name": "Sistema de punto de venta - Aura Pos",
+  "short_name": "Aura Pos",
   "theme_color": "#1976d2",
   "background_color": "#fafafa",
   "display": "standalone",
