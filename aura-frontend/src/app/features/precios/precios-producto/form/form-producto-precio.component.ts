@@ -160,20 +160,29 @@ export class FormProductoPrecioComponent implements OnInit, OnChanges {
   // ─── Dropdowns ────────────────────────────────────────────
   private async loadDropdowns(): Promise<void> {
     try {
-      const [listas, productos] = await Promise.all([
-        lastValueFrom(this.listaPreciosService.list()),
-        lastValueFrom(this.productoService.list()),
-      ]);
+      const listas = await lastValueFrom(this.listaPreciosService.list());
       if (listas?.data)
         this.listasOpts = listas.data.map((l) => ({
           label: l.nombre,
           value: l.id,
         }));
-      if (productos?.data)
-        this.productosOpts = productos.data.map((p) => ({
-          label: p.nombre,
-          value: p.id,
-        }));
+    } catch {
+      /* no bloquear */
+    }
+  }
+
+  async onFiltroProducto(event: { filter: string }): Promise<void> {
+    const q = event.filter?.trim();
+    if (!q || q.length < 2) {
+      this.productosOpts = [];
+      return;
+    }
+    try {
+      const res = await lastValueFrom(this.productoService.search(q));
+      this.productosOpts = (res?.data ?? []).map((p: any) => ({
+        label: p.nombre + (p.sku ? ` [${p.sku}]` : ''),
+        value: p.id,
+      }));
     } catch {
       /* no bloquear */
     }
@@ -210,16 +219,22 @@ export class FormProductoPrecioComponent implements OnInit, OnChanges {
       const res = await lastValueFrom(this.productoPrecioService.getById(id));
       if (res?.data) {
         const d = res.data;
-        // Cargar presentaciones del producto antes de patchear
-        await this.loadPresentaciones(
-          // Necesitamos encontrar el productoId a partir de la presentación
-          // El backend devuelve productoNombre pero no productoId en el DTO de precio
-          // Buscamos en la lista de productos
-          this.productosOpts.find((p) => p.label === d.productoNombre)?.value ??
-            0,
+        // Buscar el producto por nombre para obtener su ID y pre-poblar el dropdown
+        const searchRes = await lastValueFrom(
+          this.productoService.search(d.productoNombre),
         );
+        const match = searchRes?.data?.find(
+          (p: any) => p.nombre === d.productoNombre,
+        );
+        let productoId = 0;
+        if (match) {
+          productoId = match.id;
+          this.productosOpts = [{ label: match.nombre, value: match.id }];
+        }
+        await this.loadPresentaciones(productoId);
         this.frmPrecio.patchValue({
           listaPrecioId: d.listaPrecioId,
+          productoId,
           productoPresentacionId: d.productoPresentacionId,
           precio: d.precio,
           utilidadEsperada: d.utilidadEsperada,

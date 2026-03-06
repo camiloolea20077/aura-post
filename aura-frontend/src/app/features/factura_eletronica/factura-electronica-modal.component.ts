@@ -46,6 +46,8 @@ export class FacturaElectronicaModalComponent implements OnChanges {
   // ── Inputs ────────────────────────────────────────────────────────
   @Input() visible = false;
   @Input() ventaId: number | null = null;
+  /** Si true, salta el paso PREGUNTA y arranca GENERANDO directamente */
+  @Input() autoGenerar = false;
 
   // Datos del cliente ya vinculado a la venta (los pasa el componente padre)
   @Input() clienteNombre = '';
@@ -77,6 +79,9 @@ export class FacturaElectronicaModalComponent implements OnChanges {
     // Resetear cuando se abre el modal
     if (changes['visible'] && this.visible) {
       this.reset();
+      if (this.autoGenerar) {
+        this.generarFactura();
+      }
     }
   }
 
@@ -131,7 +136,8 @@ export class FacturaElectronicaModalComponent implements OnChanges {
   // ── Cerrar ────────────────────────────────────────────────────────
   onCerrar(): void {
     if (this.isLoading) return;
-    if (this.estado === 'PREGUNTA') this.omitida.emit();
+    // Si no se generó exitosamente, avisar al padre para que abra la tirilla sin FE
+    if (this.estado !== 'EMITIDA') this.omitida.emit();
     this.visible = false;
     this.visibleChange.emit(false);
   }

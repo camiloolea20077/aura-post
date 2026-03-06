@@ -63,11 +63,16 @@ export class FormComposicionComponent implements OnInit, OnChanges {
   public isLoading = false;
 
   public tipoOptions = TIPO_COMPOSICION_OPTIONS;
-  public productosOpts: { label: string; value: number }[] = [];
+  public productosOptsP: { label: string; value: number }[] = [];
+  public productosOptsH: { label: string; value: number }[] = [];
 
   // Selección actual para validación padre ≠ hijo
   get padreIdValue(): number | null {
     return this.frmComposicion?.get('productoPadreId')?.value ?? null;
+  }
+
+  get hijoFilteredOpts(): { label: string; value: number }[] {
+    return this.productosOptsH.filter((p) => p.value !== this.padreIdValue);
   }
 
   constructor(
@@ -79,7 +84,6 @@ export class FormComposicionComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.initForm();
-    this.loadProductos();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -130,28 +134,44 @@ export class FormComposicionComponent implements OnInit, OnChanges {
     return !!(ctrl?.invalid && ctrl?.touched);
   }
 
-  get hijoOptions(): { label: string; value: number }[] {
-    // Excluir el producto padre de las opciones del hijo
-    return this.productosOpts.filter((p) => p.value !== this.padreIdValue);
-  }
-
   get tipoSeleccionado() {
     const val = this.frmComposicion?.get('tipo')?.value;
     return this.tipoOptions.find((t) => t.value === val);
   }
 
-  private async loadProductos(): Promise<void> {
+  async onFiltroPadre(event: { filter: string }): Promise<void> {
+    const q = event.filter?.trim();
+    if (!q || q.length < 2) { this.productosOptsP = []; return; }
     try {
-      const response = await lastValueFrom(this.productoService.list());
-      if (response?.data) {
-        this.productosOpts = response.data.map((p) => ({
-          label: p.nombre,
-          value: p.id,
-        }));
-      }
-    } catch {
-      /* no bloquear */
-    }
+      const res = await lastValueFrom(this.productoService.search(q));
+      this.productosOptsP = (res?.data ?? []).map((p: any) => ({
+        label: p.nombre + (p.sku ? ` [${p.sku}]` : ''),
+        value: p.id,
+      }));
+    } catch { /* no bloquear */ }
+  }
+
+  async onFiltroHijo(event: { filter: string }): Promise<void> {
+    const q = event.filter?.trim();
+    if (!q || q.length < 2) { this.productosOptsH = []; return; }
+    try {
+      const res = await lastValueFrom(this.productoService.search(q));
+      this.productosOptsH = (res?.data ?? []).map((p: any) => ({
+        label: p.nombre + (p.sku ? ` [${p.sku}]` : ''),
+        value: p.id,
+      }));
+    } catch { /* no bloquear */ }
+  }
+
+  private async precargarProductos(padreId: number, hijoId: number): Promise<void> {
+    try {
+      const [padre, hijo] = await Promise.all([
+        lastValueFrom(this.productoService.getById(padreId)),
+        lastValueFrom(this.productoService.getById(hijoId)),
+      ]);
+      if (padre?.data) this.productosOptsP = [{ label: padre.data.nombre, value: padre.data.id }];
+      if (hijo?.data) this.productosOptsH = [{ label: hijo.data.nombre, value: hijo.data.id }];
+    } catch { /* silencioso */ }
   }
 
   private async loadData(id: number): Promise<void> {
@@ -160,6 +180,7 @@ export class FormComposicionComponent implements OnInit, OnChanges {
       const response = await lastValueFrom(this.composicionService.getById(id));
       if (response?.status === 200 && response?.data) {
         const d = response.data;
+        await this.precargarProductos(d.productoPadreId, d.productoHijoId);
         this.frmComposicion.patchValue({
           productoPadreId: d.productoPadreId,
           productoHijoId: d.productoHijoId,

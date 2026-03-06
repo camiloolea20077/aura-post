@@ -138,6 +138,16 @@
               tooltipPosition="left"
               (onClick)="verFactura(item, $event)"
             />
+            <button
+              pButton
+              *ngIf="item.estadoVenta === 'COMPLETADA' && !item.estadoDian"
+              icon="pi pi-bolt"
+              class="p-button-text p-button-sm"
+              style="color: #f59e0b"
+              pTooltip="Generar factura electrónica"
+              tooltipPosition="left"
+              (click)="generarFE(item, $event)"
+            ></button>
           </td>
         </tr>
       </ng-template>
@@ -207,3 +217,10 @@
   [numero]="facturaSeleccionada?.facturaNumero"
 >
 </app-factura-viewer-modal>
+<app-factura-electronica-modal
+  [(visible)]="mostrarModalFE"
+  [ventaId]="ventaParaFE?.id ?? null"
+  [autoGenerar]="true"
+  (facturaEmitida)="onFEEmitida($event)"
+  (omitida)="onFEModalClosed()"
+/>

@@ -162,17 +162,19 @@
           <!-- Producto -->
           <div class="col-producto">
             <p-dropdown
-              appendTo="body"
+              inputId="productoId"
               [ngModel]="l.productoId"
               (ngModelChange)="onProductoChange(i, $event)"
               [options]="productosOpts"
               optionLabel="label"
               optionValue="value"
-              placeholder="Selecciona producto..."
+              placeholder="Escribe para buscar..."
               [filter]="true"
-              filterPlaceholder="Buscar..."
-              styleClass="w-full dropdown-prod"
+              filterPlaceholder="Escribe 2+ letras..."
+              (onFilter)="onFiltroProducto($event)"
+              styleClass="w-full"
               [class.sin-seleccion]="!l.productoId"
+              appendTo="body"
             />
           </div>
 

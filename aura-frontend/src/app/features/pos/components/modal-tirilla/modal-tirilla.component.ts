@@ -1,11 +1,13 @@
 import {
   Component,
+  ElementRef,
   Input,
   Output,
   EventEmitter,
   OnChanges,
   SimpleChanges,
   ChangeDetectionStrategy,
+  ViewChild,
 } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -19,6 +21,7 @@ import {
 } from '../../../../core/models/venta-response.model';
 import { VentaModel } from '../../../../core/models/venta.model';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { QRCodeModule } from 'angularx-qrcode';
 
 type AnchoTirilla = 58 | 80;
 
@@ -33,6 +36,7 @@ type AnchoTirilla = 58 | 80;
     ButtonModule,
     DialogModule,
     SelectButtonModule,
+    QRCodeModule,
   ],
   templateUrl: './modal-tirilla.component.html',
   styleUrls: ['./modal-tirilla.component.scss'],
@@ -40,7 +44,10 @@ type AnchoTirilla = 58 | 80;
 export class ModalTirillaComponent implements OnChanges {
   @Input() displayModal = false;
   @Input() venta: VentaModel | null = null;
+  @Input() qrData: string | null = null;
+  @Input() cufeCode: string | null = null;
   @Output() modalClosed = new EventEmitter<void>();
+  @ViewChild('qrWrap', { read: ElementRef }) qrWrapRef?: ElementRef;
   logoSafeUrl: SafeUrl | null = null;
   ancho: AnchoTirilla = 80;
 
@@ -159,6 +166,26 @@ export class ModalTirillaComponent implements OnChanges {
         ? `<div style="display:flex;justify-content:space-between;padding:1px 0;">
            <span>Descuento</span><span>-${this.formatCOP(v.descuentoTotal)}</span>
          </div>`
+        : '';
+
+    // ── QR y CUFE ─────────────────────────────────────────────────
+    let qrImageData = '';
+    if (this.qrData && this.qrWrapRef) {
+      const canvas = this.qrWrapRef.nativeElement.querySelector('canvas') as HTMLCanvasElement | null;
+      if (canvas) qrImageData = canvas.toDataURL('image/png');
+    }
+    const feHtml =
+      this.qrData || this.cufeCode
+        ? `<hr class="dash"/>
+           <div style="text-align:center;font-size:0.8em;font-weight:bold;letter-spacing:1px;margin-bottom:3px;">FACTURA ELECTRÓNICA</div>
+           ${qrImageData ? `<div style="text-align:center;margin:4px 0;"><img src="${qrImageData}" style="width:110px;height:110px;" /></div>` : ''}
+           ${
+             this.cufeCode
+               ? `<div style="font-size:0.65em;text-align:center;word-break:break-all;line-height:1.3;margin-top:2px;">
+                    <span style="font-weight:bold;">CUFE:</span> ${this.cufeCode}
+                  </div>`
+               : ''
+           }`
         : '';
 
     // ── Cajero / cliente ──────────────────────────────────────────
@@ -281,6 +308,8 @@ export class ModalTirillaComponent implements OnChanges {
     Esta factura se asimila a los efectos legales de las facturas de cambio ART. 744 del Código del Comercio.
   </div>
 
+  ${feHtml}
+
   <hr class="solid"/>
 
   <div style="text-align:center;margin-top:6px;">
@@ -304,12 +333,14 @@ export class ModalTirillaComponent implements OnChanges {
   }
 
   formatCOP(v: number | null | undefined): string {
-    if (v === null || v === undefined) return '$ 0';
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      maximumFractionDigits: 0,
-    }).format(v);
+    if (v === null || v === undefined) return '$0';
+    return (
+      '$' +
+      new Intl.NumberFormat('es-CO', {
+        style: 'decimal',
+        maximumFractionDigits: 0,
+      }).format(v)
+    );
   }
 
   formatFecha(iso: string): string {
