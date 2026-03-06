@@ -17,6 +17,7 @@ public class CuentaPagarDto {
     private String proveedorNombre;
     private String proveedorDocumento;
     private String numeroCuenta;
+    private String numeroFacturaExterno;
     private LocalDateTime fechaEmision;
     private LocalDateTime fechaVencimiento;
     private BigDecimal totalDeuda;

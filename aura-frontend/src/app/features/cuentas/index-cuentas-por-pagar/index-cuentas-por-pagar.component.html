@@ -113,6 +113,9 @@
         <th pSortableColumn="numeroCuenta">
           Número <p-sortIcon field="numeroCuenta"></p-sortIcon>
         </th>
+        <th pSortableColumn="numeroFacturaExterno">
+          N° Fact. Ext. <p-sortIcon field="numeroFacturaExterno"></p-sortIcon>
+        </th>
         <th pSortableColumn="proveedorNombre">
           Proveedor <p-sortIcon field="proveedorNombre"></p-sortIcon>
         </th>
@@ -144,6 +147,9 @@
       <tr class="clickable-row" (click)="verDetalle(c)">
         <td>
           <span class="mono fw-600">{{ c.numeroCuenta }}</span>
+        </td>
+        <td>
+          <span class="mono">{{ c.numeroFacturaExterno || "---" }}</span>
         </td>
         <td>{{ c.proveedorNombre }}</td>
         <td class="mono">{{ c.proveedorDocumento }}</td>

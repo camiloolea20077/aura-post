@@ -24,5 +24,7 @@ public class CreateCuentaPagarDto {
 
     private LocalDateTime fechaVencimiento;
 
+    private String numeroFacturaExterno;
+
     private String observaciones;
 }

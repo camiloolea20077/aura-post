@@ -52,6 +52,9 @@ public class CuentaPagarEntity {
     @Column(name = "numero_cuenta", length = 20, unique = true)
     private String numeroCuenta;
 
+    @Column(name = "numero_factura_externo", length = 50)
+    private String numeroFacturaExterno;
+
     @Column(name = "fecha_emision")
     private LocalDateTime fechaEmision;
 
