@@ -48,6 +48,7 @@ public class CuentaPagarQueryRepository {
             SELECT
                 cp.id,
                 cp.numero_cuenta,
+                cp.numero_factura_externo,
                 COALESCE(NULLIF(t.razon_social, ''), CONCAT(t.nombres, ' ', t.apellidos), 'Consumidor Final') AS proveedor_nombre,
                 t.numero_documento AS proveedor_documento,
                 cp.fecha_emision,
@@ -122,6 +123,7 @@ public class CuentaPagarQueryRepository {
             SELECT
                 cp.id,
                 cp.numero_cuenta,
+                cp.numero_factura_externo,
                 COALESCE(NULLIF(t.razon_social, ''), CONCAT(t.nombres, ' ', t.apellidos), 'Consumidor Final') AS proveedor_nombre,
                 t.numero_documento AS proveedor_documento,
                 cp.fecha_emision,
@@ -272,6 +274,7 @@ public class CuentaPagarQueryRepository {
             SELECT
                 cp.id,
                 cp.numero_cuenta,
+                cp.numero_factura_externo,
                 COALESCE(NULLIF(t.razon_social, ''), CONCAT(t.nombres, ' ', t.apellidos), 'Consumidor Final') AS proveedor_nombre,
                 t.numero_documento AS proveedor_documento,
                 cp.fecha_emision,

@@ -16,12 +16,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.cloud_technological.aura_pos.dto.error_log.ErrorLogDetalleDto;
+import com.cloud_technological.aura_pos.dto.error_log.ErrorLogGrupoDto;
+import com.cloud_technological.aura_pos.dto.error_log.ErrorLogPageParamsDto;
+import com.cloud_technological.aura_pos.dto.error_log.ErrorLogTableDto;
 import com.cloud_technological.aura_pos.dto.super_admin.CreateEmpresaPlataformaDto;
 import com.cloud_technological.aura_pos.dto.super_admin.DashboardPlataformaDto;
 import com.cloud_technological.aura_pos.dto.super_admin.EmpresaPlataformaDto;
 import com.cloud_technological.aura_pos.dto.super_admin.EmpresaTableDto;
 import com.cloud_technological.aura_pos.dto.super_admin.UpdateEmpresaPlataformaDto;
 import com.cloud_technological.aura_pos.services.EmpresaPlataformaService;
+import com.cloud_technological.aura_pos.services.ErrorLogService;
 import com.cloud_technological.aura_pos.utils.ApiResponse;
 import com.cloud_technological.aura_pos.utils.GlobalException;
 import com.cloud_technological.aura_pos.utils.PageableDto;
@@ -33,6 +38,9 @@ public class PlatformAdminController {
 
     @Autowired
     private EmpresaPlataformaService empresaService;
+
+    @Autowired
+    private ErrorLogService errorLogService;
 
     @GetMapping("/dashboard")
     public ResponseEntity<ApiResponse<DashboardPlataformaDto>> dashboard() {
@@ -80,5 +88,27 @@ public class PlatformAdminController {
     public ResponseEntity<ApiResponse<Boolean>> activar(@PathVariable Integer id) {
         empresaService.activar(id);
         return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "Empresa activada correctamente", false, true), HttpStatus.OK);
+    }
+
+    // ─── Error Logs ───────────────────────────────────────────
+
+    @PostMapping("/error-logs/page")
+    public ResponseEntity<ApiResponse<PageImpl<ErrorLogTableDto>>> errorLogs(
+            @RequestBody PageableDto<ErrorLogPageParamsDto> pageable) {
+        var result = errorLogService.listar(pageable);
+        return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "Listado exitoso", false, result), HttpStatus.OK);
+    }
+
+    @PostMapping("/error-logs/grupos")
+    public ResponseEntity<ApiResponse<PageImpl<ErrorLogGrupoDto>>> errorLogGrupos(
+            @RequestBody PageableDto<ErrorLogPageParamsDto> pageable) {
+        var result = errorLogService.listarGrupos(pageable);
+        return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "Grupos obtenidos", false, result), HttpStatus.OK);
+    }
+
+    @GetMapping("/error-logs/{id}")
+    public ResponseEntity<ApiResponse<ErrorLogDetalleDto>> errorLogDetalle(@PathVariable Long id) {
+        ErrorLogDetalleDto result = errorLogService.obtenerPorId(id);
+        return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "Detalle obtenido", false, result), HttpStatus.OK);
     }
 }

@@ -5,6 +5,8 @@ import {
   CreateEmpresaDto,
   EmpresaPageableDto,
   UpdateEmpresaDto,
+  ErrorLogPageableDto,
+  ErrorLogGrupoPageableDto,
 } from '../models/platform.model';
 import { environment } from '../../../environments/environment';
 
@@ -40,5 +42,22 @@ export class PlatformService {
 
   activar(id: number): Observable<any> {
     return this.http.patch<any>(`${this.base}/empresas/${id}/activar`, {});
+  }
+
+  // ─── Error Logs ───────────────────────────────────────────────
+  errorLogs(dto: ErrorLogPageableDto): Observable<any> {
+    return this.http.post<any>(`${this.base}/error-logs/page`, dto);
+  }
+
+  errorLogGrupos(dto: ErrorLogGrupoPageableDto): Observable<any> {
+    return this.http.post<any>(`${this.base}/error-logs/grupos`, dto);
+  }
+
+  errorLogDetalle(id: number): Observable<any> {
+    return this.http.get<any>(`${this.base}/error-logs/${id}`);
+  }
+
+  errorLogsPorGrupo(grupoHash: string, page: number, rows: number): Observable<any> {
+    return this.http.post<any>(`${this.base}/error-logs/page`, { grupoHash, page, rows });
   }
 }

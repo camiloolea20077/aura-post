@@ -112,7 +112,8 @@ public class ProductoQueryRepository {
             SELECT
                 p.id,
                 p.sku,
-                p.nombre
+                p.nombre,
+                p.precio
             FROM producto p
             WHERE p.empresa_id = :empresaId
               AND p.deleted_at IS NULL

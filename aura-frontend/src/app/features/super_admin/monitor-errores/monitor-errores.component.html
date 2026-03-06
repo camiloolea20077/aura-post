@@ -1,0 +1,400 @@
+<div class="me-wrapper">
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <div class="me-header">
+    <div class="header-left">
+      <div class="header-icon"><i class="pi pi-shield"></i></div>
+      <div>
+        <h2 class="header-title">Monitor de errores</h2>
+        <p class="header-sub">Seguimiento de fallos en endpoints por empresa</p>
+      </div>
+    </div>
+
+    <p-selectButton
+      [(ngModel)]="vista"
+      [options]="vistaOpciones"
+      optionLabel="label"
+      optionValue="value"
+      (onChange)="onVistaChange()"
+      styleClass="vista-toggle"
+    />
+  </div>
+
+  <!-- ── Tabs de categoría ────────────────────────────────────── -->
+  <div class="cat-tabs">
+    <button
+      *ngFor="let cat of categorias"
+      class="cat-tab"
+      [class.active]="categoriaActiva === cat.value"
+      [class.tab-info]="cat.value === 'info'"
+      [class.tab-warn]="cat.value === 'warn'"
+      [class.tab-danger]="cat.value === 'danger'"
+      (click)="seleccionarCategoria(cat.value)"
+    >
+      <i [class]="cat.icon"></i>
+      <span>{{ cat.label }}</span>
+    </button>
+  </div>
+
+  <!-- ── Filtros ──────────────────────────────────────────────── -->
+  <div class="filters-bar">
+    <div class="filter-group" *ngIf="vista === 'lista'">
+      <i class="pi pi-search filter-icon"></i>
+      <input
+        pInputText
+        [(ngModel)]="endpointSearch"
+        placeholder="Filtrar por endpoint..."
+        class="filter-input"
+        (keyup.enter)="aplicarFiltros()"
+      />
+    </div>
+
+    <div class="filter-group" *ngIf="vista === 'lista'" style="max-width: 130px;">
+      <i class="pi pi-hashtag filter-icon"></i>
+      <input
+        pInputText
+        [(ngModel)]="statusCodeSearch"
+        placeholder="Status code"
+        class="filter-input"
+        (keyup.enter)="aplicarFiltros()"
+      />
+    </div>
+
+    <div class="filter-group">
+      <i class="pi pi-calendar filter-icon"></i>
+      <input
+        type="date"
+        [(ngModel)]="desde"
+        class="filter-input filter-date"
+        title="Desde"
+      />
+    </div>
+
+    <div class="filter-group">
+      <i class="pi pi-calendar filter-icon"></i>
+      <input
+        type="date"
+        [(ngModel)]="hasta"
+        class="filter-input filter-date"
+        title="Hasta"
+      />
+    </div>
+
+    <button pButton icon="pi pi-filter" label="Aplicar" class="btn-platform btn-primary btn-sm" (click)="aplicarFiltros()"></button>
+    <button pButton icon="pi pi-times" class="p-button-text p-button-sm" pTooltip="Limpiar filtros" (click)="limpiarFiltros()"></button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- VISTA: LISTA                                              -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <div class="table-card" *ngIf="vista === 'lista'">
+    <div class="table-toolbar">
+      <span class="total-badge">{{ totalRows }} registros</span>
+    </div>
+
+    <p-table
+      [value]="rows"
+      [lazy]="true"
+      (onLazyLoad)="loadLista($event)"
+      [paginator]="true"
+      [rows]="rowSize"
+      [totalRecords]="totalRows"
+      [loading]="loadingLista"
+      [rowHover]="true"
+      dataKey="id"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 44px">#</th>
+          <th style="width: 80px">Método</th>
+          <th>Endpoint</th>
+          <th style="width: 90px; text-align: center">Status</th>
+          <th style="width: 90px; text-align: center">Categoría</th>
+          <th style="width: 180px">Empresa</th>
+          <th style="width: 140px">Usuario</th>
+          <th style="width: 145px">Fecha</th>
+          <th style="width: 56px; text-align: center">Ver</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-e>
+        <tr class="log-row" [class.row-danger]="e.categoria === 'danger'" [class.row-warn]="e.categoria === 'warn'" [class.row-info]="e.categoria === 'info'">
+          <td><span class="id-badge">{{ e.id }}</span></td>
+          <td><span [class]="'method-badge ' + metodoClass(e.metodo)">{{ e.metodo }}</span></td>
+          <td><span class="endpoint-text" [pTooltip]="e.endpoint">{{ e.endpoint }}</span></td>
+          <td class="text-center">
+            <span [class]="'status-badge ' + statusClass(e.statusCode)">{{ e.statusCode }}</span>
+          </td>
+          <td class="text-center">
+            <p-tag
+              [value]="categoriaLabel(e.categoria)"
+              [severity]="categoriaSeverity(e.categoria)"
+            />
+          </td>
+          <td>
+            <span class="empresa-cell" *ngIf="e.empresaNombre; else sinEmpresa">{{ e.empresaNombre }}</span>
+            <ng-template #sinEmpresa><span class="text-muted">—</span></ng-template>
+          </td>
+          <td>
+            <span class="text-muted" *ngIf="e.usuarioNombre; else sinUsuario">{{ e.usuarioNombre }}</span>
+            <ng-template #sinUsuario><span class="text-muted">—</span></ng-template>
+          </td>
+          <td class="text-muted mono-date">{{ formatFecha(e.createdAt) }}</td>
+          <td class="text-center">
+            <button
+              pButton
+              icon="pi pi-eye"
+              class="p-button-text p-button-sm"
+              pTooltip="Ver detalle"
+              (click)="verItem(e.id)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9">
+            <div class="empty-row">
+              <i class="pi pi-check-circle"></i>
+              <p>Sin errores para los filtros seleccionados</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr *ngFor="let i of [1,2,3,4,5]">
+          <td *ngFor="let j of [1,2,3,4,5,6,7,8,9]"><p-skeleton /></td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- VISTA: AGRUPADO                                           -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <div class="table-card" *ngIf="vista === 'agrupado'">
+    <div class="table-toolbar">
+      <div class="grupo-legend">
+        <i class="pi pi-info-circle"></i>
+        <span>Errores agrupados por método + endpoint + status. Haz clic en un grupo para ver sus ocurrencias.</span>
+      </div>
+      <span class="total-badge">{{ totalGrupos }} grupos</span>
+    </div>
+
+    <p-table
+      [value]="grupos"
+      [lazy]="true"
+      (onLazyLoad)="loadGrupos($event)"
+      [paginator]="true"
+      [rows]="rowSize"
+      [totalRecords]="totalGrupos"
+      [loading]="loadingGrupos"
+      [rowHover]="true"
+      dataKey="grupoHash"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 90px">Hash</th>
+          <th style="width: 80px">Método</th>
+          <th>Endpoint</th>
+          <th style="width: 90px; text-align: center">Status</th>
+          <th style="width: 90px; text-align: center">Categoría</th>
+          <th style="width: 110px; text-align: center">Ocurrencias</th>
+          <th style="width: 110px; text-align: center">Empresas afectadas</th>
+          <th style="width: 155px">Última vez</th>
+          <th style="width: 56px; text-align: center">Ver</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-g>
+        <tr class="log-row clickable-row" [class.row-danger]="g.categoria === 'danger'" [class.row-warn]="g.categoria === 'warn'" [class.row-info]="g.categoria === 'info'" (click)="verGrupo(g)">
+          <td>
+            <span class="hash-badge" [pTooltip]="g.grupoHash">{{ hashCorto(g.grupoHash) }}</span>
+          </td>
+          <td><span [class]="'method-badge ' + metodoClass(g.metodo)">{{ g.metodo }}</span></td>
+          <td><span class="endpoint-text" [pTooltip]="g.endpoint">{{ g.endpoint }}</span></td>
+          <td class="text-center">
+            <span [class]="'status-badge ' + statusClass(g.statusCode)">{{ g.statusCode }}</span>
+          </td>
+          <td class="text-center">
+            <p-tag
+              [value]="categoriaLabel(g.categoria)"
+              [severity]="categoriaSeverity(g.categoria)"
+            />
+          </td>
+          <td class="text-center">
+            <span class="ocurrencias-pill" [class.pill-danger]="g.categoria === 'danger'" [class.pill-warn]="g.categoria === 'warn'">
+              <i class="pi pi-bolt"></i>
+              {{ g.totalOcurrencias }}
+            </span>
+          </td>
+          <td class="text-center">
+            <span class="stat-pill">{{ g.empresasAfectadas }}</span>
+          </td>
+          <td class="text-muted mono-date">{{ formatFecha(g.ultimaOcurrencia) }}</td>
+          <td class="text-center" (click)="$event.stopPropagation()">
+            <button
+              pButton
+              icon="pi pi-list"
+              class="p-button-text p-button-sm"
+              pTooltip="Ver ocurrencias"
+              (click)="verGrupo(g)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9">
+            <div class="empty-row">
+              <i class="pi pi-check-circle"></i>
+              <p>Sin grupos de errores para los filtros seleccionados</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr *ngFor="let i of [1,2,3,4,5]">
+          <td *ngFor="let j of [1,2,3,4,5,6,7,8,9]"><p-skeleton /></td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- DIALOG: Ocurrencias del grupo                                  -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<p-dialog
+  [header]="'Ocurrencias · ' + (grupoSeleccionado ? grupoSeleccionado.metodo + ' ' + grupoSeleccionado.endpoint : '')"
+  [(visible)]="showDetalleDialog"
+  [modal]="true"
+  [style]="{ width: '900px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="detalle-meta" *ngIf="grupoSeleccionado">
+    <span [class]="'method-badge ' + metodoClass(grupoSeleccionado.metodo)">{{ grupoSeleccionado.metodo }}</span>
+    <span [class]="'status-badge ' + statusClass(grupoSeleccionado.statusCode)">{{ grupoSeleccionado.statusCode }}</span>
+    <p-tag [value]="categoriaLabel(grupoSeleccionado.categoria)" [severity]="categoriaSeverity(grupoSeleccionado.categoria)" />
+    <span class="hash-badge" [pTooltip]="grupoSeleccionado.grupoHash">{{ hashCorto(grupoSeleccionado.grupoHash) }}</span>
+    <span class="detalle-count"><i class="pi pi-bolt"></i> {{ grupoSeleccionado.totalOcurrencias }} ocurrencias</span>
+    <span class="detalle-count"><i class="pi pi-building"></i> {{ grupoSeleccionado.empresasAfectadas }} empresas</span>
+  </div>
+
+  <p-table
+    [value]="detalleRows"
+    [lazy]="true"
+    (onLazyLoad)="loadDetalle($event)"
+    [paginator]="true"
+    [rows]="detalleSize"
+    [totalRecords]="totalDetalle"
+    [loading]="loadingDetalle"
+    dataKey="id"
+    styleClass="p-datatable-sm"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 44px">#</th>
+        <th style="width: 170px">Empresa</th>
+        <th style="width: 150px">Usuario</th>
+        <th style="width: 120px">IP</th>
+        <th>Mensaje</th>
+        <th style="width: 145px">Fecha</th>
+        <th style="width: 56px">Ver</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-e>
+      <tr>
+        <td><span class="id-badge">{{ e.id }}</span></td>
+        <td>{{ e.empresaNombre ?? '—' }}</td>
+        <td class="text-muted">{{ e.usuarioNombre ?? '—' }}</td>
+        <td class="mono-date text-muted">{{ e.ipOrigen ?? '—' }}</td>
+        <td><span class="mensaje-cell" [pTooltip]="e.mensaje">{{ e.mensaje }}</span></td>
+        <td class="text-muted mono-date">{{ formatFecha(e.createdAt) }}</td>
+        <td>
+          <button pButton icon="pi pi-eye" class="p-button-text p-button-sm" pTooltip="Ver detalle" (click)="verItem(e.id)"></button>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="loadingbody">
+      <tr *ngFor="let i of [1,2,3]">
+        <td *ngFor="let j of [1,2,3,4,5,6,7]"><p-skeleton /></td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-dialog>
+
+<!-- ══════════════════════════════════════════════════════════════ -->
+<!-- DIALOG: Detalle individual                                     -->
+<!-- ══════════════════════════════════════════════════════════════ -->
+<p-dialog
+  header="Detalle del error"
+  [(visible)]="showItemDialog"
+  [modal]="true"
+  [style]="{ width: '680px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div *ngIf="loadingItem" class="item-loading">
+    <p-skeleton height="2rem" styleClass="mb-2" />
+    <p-skeleton height="2rem" styleClass="mb-2" />
+    <p-skeleton height="4rem" />
+  </div>
+
+  <div *ngIf="!loadingItem && itemSeleccionado" class="item-detalle">
+    <div class="item-row">
+      <span class="item-label">ID</span>
+      <span class="id-badge">{{ itemSeleccionado.id }}</span>
+    </div>
+    <div class="item-row">
+      <span class="item-label">Categoría</span>
+      <p-tag [value]="categoriaLabel(itemSeleccionado.categoria)" [severity]="categoriaSeverity(itemSeleccionado.categoria)" />
+    </div>
+    <div class="item-row">
+      <span class="item-label">Método / Endpoint</span>
+      <span [class]="'method-badge ' + metodoClass(itemSeleccionado.metodo)">{{ itemSeleccionado.metodo }}</span>
+      <span class="endpoint-text">{{ itemSeleccionado.endpoint }}</span>
+    </div>
+    <div class="item-row">
+      <span class="item-label">Status code</span>
+      <span [class]="'status-badge ' + statusClass(itemSeleccionado.statusCode)">{{ itemSeleccionado.statusCode }}</span>
+    </div>
+    <div class="item-row">
+      <span class="item-label">Empresa</span>
+      <span>{{ itemSeleccionado.empresaNombre ?? '—' }}</span>
+    </div>
+    <div class="item-row">
+      <span class="item-label">Usuario</span>
+      <span>{{ itemSeleccionado.usuarioNombre ?? '—' }}</span>
+    </div>
+    <div class="item-row">
+      <span class="item-label">IP origen</span>
+      <span class="mono-date">{{ itemSeleccionado.ipOrigen ?? '—' }}</span>
+    </div>
+    <div class="item-row">
+      <span class="item-label">Fecha</span>
+      <span class="mono-date">{{ formatFecha(itemSeleccionado.createdAt) }}</span>
+    </div>
+    <div class="item-row">
+      <span class="item-label">Grupo hash</span>
+      <span class="hash-badge">{{ itemSeleccionado.grupoHash }}</span>
+    </div>
+    <div class="item-block">
+      <span class="item-label">Mensaje</span>
+      <pre class="item-pre">{{ itemSeleccionado.mensaje }}</pre>
+    </div>
+    <div class="item-block" *ngIf="itemSeleccionado.detalle">
+      <span class="item-label">Detalle / Stack</span>
+      <pre class="item-pre item-pre-stack">{{ itemSeleccionado.detalle }}</pre>
+    </div>
+  </div>
+</p-dialog>

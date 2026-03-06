@@ -112,6 +112,7 @@ public class CuentaPagarServiceImpl implements CuentaPagarService {
         entity.setEmpresa(empresa);
         entity.setTercero(tercero);
         entity.setNumeroCuenta(numeroCuenta);
+        entity.setNumeroFacturaExterno(dto.getNumeroFacturaExterno());
         entity.setTotalDeuda(dto.getTotalDeuda());
         entity.setTotalAbonado(BigDecimal.ZERO);
         entity.setSaldoPendiente(dto.getTotalDeuda());
@@ -242,6 +243,7 @@ public class CuentaPagarServiceImpl implements CuentaPagarService {
         CuentaPagarDto dto = new CuentaPagarDto();
         dto.setId(entity.getId());
         dto.setNumeroCuenta(entity.getNumeroCuenta());
+        dto.setNumeroFacturaExterno(entity.getNumeroFacturaExterno());
         dto.setFechaEmision(entity.getFechaEmision());
         dto.setFechaVencimiento(entity.getFechaVencimiento());
         dto.setTotalDeuda(entity.getTotalDeuda());

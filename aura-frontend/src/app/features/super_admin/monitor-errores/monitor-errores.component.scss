@@ -1,0 +1,446 @@
+// ─── monitor-errores.component.scss ──────────────────────────
+$indigo: #6366f1;
+$border: #e2e8f0;
+$text: #1e293b;
+$muted: #94a3b8;
+$bg: #f8fafc;
+$mono: 'JetBrains Mono', monospace;
+
+// categorías
+$danger: #ef4444;
+$danger-bg: #fef2f2;
+$danger-border: #fecaca;
+$warn: #f59e0b;
+$warn-bg: #fffbeb;
+$warn-border: #fde68a;
+$info: #6366f1;
+$info-bg: #eef2ff;
+$info-border: #c7d2fe;
+
+.me-wrapper {
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+// ── Header ────────────────────────────────────────────────────
+.me-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(239, 68, 68, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    i {
+      font-size: 1.1rem;
+      color: $danger;
+    }
+  }
+
+  .header-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: $text;
+    margin: 0;
+  }
+
+  .header-sub {
+    font-size: 0.78rem;
+    color: $muted;
+    margin: 0;
+  }
+}
+
+::ng-deep .vista-toggle {
+  .p-selectbutton .p-button {
+    font-size: 0.78rem;
+    padding: 0.4rem 0.85rem;
+  }
+}
+
+// ── Tabs de categoría ─────────────────────────────────────────
+.cat-tabs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.cat-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 1rem;
+  border-radius: 20px;
+  border: 1.5px solid $border;
+  background: white;
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: $muted;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: #cbd5e1;
+    color: $text;
+  }
+
+  &.active {
+    color: white;
+    border-color: transparent;
+    background: #475569;
+  }
+
+  &.active.tab-info {
+    background: $info;
+  }
+
+  &.active.tab-warn {
+    background: $warn;
+  }
+
+  &.active.tab-danger {
+    background: $danger;
+  }
+
+  i {
+    font-size: 0.75rem;
+  }
+}
+
+// ── Filtros ───────────────────────────────────────────────────
+.filters-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  background: white;
+  border: 1.5px solid $border;
+  border-radius: 14px;
+  padding: 0.75rem 1rem;
+}
+
+.filter-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 150px;
+}
+
+.filter-icon {
+  position: absolute;
+  left: 0.65rem;
+  font-size: 0.78rem;
+  color: $muted;
+  pointer-events: none;
+}
+
+.filter-input {
+  width: 100%;
+  height: 36px;
+  padding-left: 2rem;
+  padding-right: 0.75rem;
+  border: 1.5px solid $border;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: $text;
+  outline: none;
+  background: $bg;
+
+  &:focus {
+    border-color: $indigo;
+    background: white;
+  }
+}
+
+.filter-date {
+  cursor: pointer;
+}
+
+.btn-sm.p-button {
+  font-size: 0.78rem !important;
+  padding: 0.4rem 0.85rem !important;
+}
+
+// ── Tabla card ────────────────────────────────────────────────
+.table-card {
+  background: white;
+  border: 1.5px solid $border;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid $border;
+}
+
+.grupo-legend {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: $muted;
+  i {
+    color: $indigo;
+  }
+}
+
+.total-badge {
+  white-space: nowrap;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: $muted;
+  background: $bg;
+  border: 1px solid $border;
+  padding: 0.2rem 0.65rem;
+  border-radius: 20px;
+}
+
+// ── Filas con color por categoría ─────────────────────────────
+.log-row {
+  &.row-danger {
+    border-left: 3px solid $danger !important;
+    td:first-child { padding-left: calc(0.75rem - 3px); }
+  }
+  &.row-warn {
+    border-left: 3px solid $warn !important;
+    td:first-child { padding-left: calc(0.75rem - 3px); }
+  }
+  &.row-info {
+    border-left: 3px solid $info !important;
+    td:first-child { padding-left: calc(0.75rem - 3px); }
+  }
+}
+
+.clickable-row {
+  cursor: pointer;
+  &:hover { background: #fafbff !important; }
+}
+
+// ── Badges ────────────────────────────────────────────────────
+.id-badge {
+  font-family: $mono;
+  font-size: 0.7rem;
+  color: $muted;
+}
+
+.hash-badge {
+  font-family: $mono;
+  font-size: 0.72rem;
+  background: #f1f5f9;
+  border: 1px solid $border;
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  color: #475569;
+  cursor: default;
+}
+
+.method-badge {
+  display: inline-block;
+  font-family: $mono;
+  font-size: 0.66rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 5px;
+  letter-spacing: 0.5px;
+
+  &.badge-get    { background: #dcfce7; color: #166534; }
+  &.badge-post   { background: #dbeafe; color: #1e40af; }
+  &.badge-put    { background: #fef9c3; color: #92400e; }
+  &.badge-delete { background: #fee2e2; color: #991b1b; }
+  &.badge-other  { background: #f1f5f9; color: #475569; }
+}
+
+.status-badge {
+  display: inline-block;
+  font-family: $mono;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.15rem 0.55rem;
+  border-radius: 6px;
+
+  &.status-danger { background: $danger-bg; color: $danger; border: 1px solid $danger-border; }
+  &.status-warn   { background: $warn-bg;   color: #92400e; border: 1px solid $warn-border; }
+  &.status-ok     { background: #dcfce7;    color: #166534; border: 1px solid #bbf7d0; }
+}
+
+.endpoint-text {
+  font-family: $mono;
+  font-size: 0.75rem;
+  color: #334155;
+  max-width: 320px;
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.empresa-cell {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: $text;
+}
+
+.mono-date {
+  font-family: $mono;
+  font-size: 0.72rem;
+}
+
+.stat-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: $bg;
+  border: 1px solid $border;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.15rem 0.65rem;
+  color: $text;
+}
+
+.ocurrencias-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.2rem 0.65rem;
+  border-radius: 20px;
+  background: $bg;
+  border: 1px solid $border;
+  color: $text;
+
+  &.pill-danger { background: $danger-bg; border-color: $danger-border; color: $danger; }
+  &.pill-warn   { background: $warn-bg;   border-color: $warn-border;   color: #92400e; }
+
+  i { font-size: 0.7rem; }
+}
+
+.text-muted {
+  color: $muted;
+  font-size: 0.75rem;
+}
+
+.text-center { text-align: center; }
+
+.empty-row {
+  text-align: center;
+  color: $muted;
+  padding: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  i { font-size: 2rem; opacity: 0.2; }
+  p { margin: 0; font-size: 0.85rem; }
+}
+
+// ── Dialog detalle de grupo ───────────────────────────────────
+.detalle-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0 0 0.85rem;
+  border-bottom: 1px solid $border;
+  margin-bottom: 0.85rem;
+}
+
+.detalle-count {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: $muted;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  i { font-size: 0.72rem; }
+}
+
+.mensaje-cell {
+  font-size: 0.78rem;
+  max-width: 260px;
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+// ── Dialog detalle individual ─────────────────────────────────
+.item-loading {
+  padding: 0.5rem 0;
+}
+
+.item-detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.item-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+  color: $text;
+}
+
+.item-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.item-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: $muted;
+  min-width: 115px;
+}
+
+.item-pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: $mono;
+  font-size: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  overflow-x: auto;
+  margin: 0;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.item-pre-stack {
+  max-height: 220px;
+  overflow-y: auto;
+  color: #fca5a5;
+}
+
+::ng-deep .btn-primary.p-button {
+  background: linear-gradient(135deg, $indigo, #818cf8) !important;
+  border: none !important;
+  font-weight: 600 !important;
+}
