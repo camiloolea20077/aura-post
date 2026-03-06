@@ -5,6 +5,7 @@ export interface AuthResponse {
   username: string;
   nombreCompleto: string;
   rol: string;
+  logo_url?: string;
   facturaElectronica?: boolean;
   sucursales: SucursalAuth[];
 }

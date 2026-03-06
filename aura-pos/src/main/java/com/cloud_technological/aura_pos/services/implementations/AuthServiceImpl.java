@@ -146,11 +146,10 @@ public class AuthServiceImpl implements AuthService{
                     new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword())
             );
             SecurityContextHolder.getContext().setAuthentication(authentication);
-
             // 2. Obtener Entidad Usuario (JPA) para datos críticos
             UsuarioEntity usuario = usuarioJPARepository.findByUsername(loginDto.getUsername())
                     .orElseThrow(() -> new GlobalException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
-
+            EmpresaEntity empresa = usuario.getEmpresa();
             if (Boolean.FALSE.equals(usuario.getActivo())) {
                 throw new GlobalException(HttpStatus.UNAUTHORIZED, "El usuario está inactivo");
             }
@@ -183,7 +182,6 @@ public class AuthServiceImpl implements AuthService{
                 usuario.getRol(),
                 Long.valueOf(usuario.getId())
             );
-
             // 6. Construir Respuesta
             String nombreCompleto = (usuario.getTercero() != null) 
                     ? usuario.getTercero().getNombres() + " " + usuario.getTercero().getApellidos() 
@@ -195,6 +193,7 @@ public class AuthServiceImpl implements AuthService{
                     .usuarioId(usuario.getId())
                     .username(usuario.getUsername())
                     .nombreCompleto(nombreCompleto)
+                    .logo_url(empresa.getLogoUrl())
                     .rol(usuario.getRol())
                     .facturaElectronica(usuario.getEmpresa().isFacturaElectronica())
                     .sucursales(sucursales) // El front usará esto para pintar el selector de sedes
