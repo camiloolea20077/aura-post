@@ -9,7 +9,8 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { MessageService } from 'primeng/api';
+import { SplitButtonModule } from 'primeng/splitbutton';
+import { MessageService, MenuItem } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 import { ProductoSinCodigo } from '../../../../core/models/etiquetas.model';
 import { ProductoService } from '../../../../core/services/producto.service';
@@ -30,6 +31,7 @@ import { filterTable } from '../../../../shared/utils/filter-post.model';
     TooltipModule,
     TagModule,
     ProgressSpinnerModule,
+    SplitButtonModule,
   ],
   providers: [MessageService],
   templateUrl: './etiquetas.component.html',
@@ -39,6 +41,7 @@ export class EtiquetasComponent implements OnInit {
   public productos: ProductoSinCodigo[] = [];
   public isLoading = false;
   public busqueda = '';
+  public printItems: MenuItem[] = [];
 
   public get productosFiltrados(): ProductoSinCodigo[] {
     return filterTable(this.productos, this.busqueda, 0, 20);
@@ -66,8 +69,24 @@ export class EtiquetasComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.initPrintItems();
     this.cargarJsBarcode();
     this.cargarProductos();
+  }
+
+  private initPrintItems(): void {
+    this.printItems = [
+      {
+        label: 'Opción 1: Malla (3 col)',
+        icon: 'pi pi-table',
+        command: () => this.imprimirOp1Canvas(),
+      },
+      {
+        label: 'Opción 2: Térmica (1 col)',
+        icon: 'pi pi-print',
+        command: () => this.imprimirOp2HTML(),
+      },
+    ];
   }
 
   private cargarJsBarcode(): void {
@@ -160,7 +179,7 @@ export class EtiquetasComponent implements OnInit {
     }
   }
 
-  async imprimirSeleccionados(): Promise<void> {
+  async imprimirOp1Canvas(): Promise<void> {
     const paraPrint = this.seleccionados.filter(
       (p) => p.guardado || p.codigoGenerado,
     );
@@ -350,6 +369,127 @@ export class EtiquetasComponent implements OnInit {
   <script>
     window.onload = function() {
       setTimeout(function() { window.print(); }, 300);
+    };
+  </script>
+</body>
+</html>`);
+    ventana.document.close();
+  }
+
+  async imprimirOp2HTML(): Promise<void> {
+    const paraPrint = this.seleccionados.filter(
+      (p) => p.guardado || p.codigoGenerado,
+    );
+    if (!paraPrint.length) {
+      this.alertService.showWarn(
+        'Sin etiquetas',
+        'Genera primero los códigos de los productos seleccionados.',
+      );
+      return;
+    }
+
+    await this.cargarJsBarcodePromise();
+
+    const lista: { nombre: string; codigo: string }[] = [];
+    for (const p of paraPrint) {
+      const copias = Math.max(1, Math.floor(Number(p.copias) || 1));
+      for (let i = 0; i < copias; i++) {
+        lista.push({
+          nombre: this.truncarNombre(p.nombre, 45),
+          codigo: p.codigoGenerado ?? p.codigoBarras ?? '',
+        });
+      }
+    }
+
+    const ventana = window.open('', '_blank', 'width=400,height=600');
+    if (!ventana) return;
+
+    ventana.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Imprimir Etiquetas (Térmica)</title>
+  <style>
+    @page { margin: 0; size: auto; }
+    body { margin: 0; font-family: Arial, sans-serif; background: #fff; }
+    .label-container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 0;
+      border-bottom: 1px dashed #ccc;
+      page-break-after: always;
+    }
+    .nombre {
+      font-size: 14px;
+      font-weight: bold;
+      text-align: center;
+      margin-bottom: 5px;
+      width: 90%;
+      overflow: hidden;
+    }
+    .barcode-img {
+      max-width: 95%;
+      height: auto;
+    }
+    .codigo-texto {
+      font-size: 12px;
+      font-family: "Courier New", Courier, monospace;
+      margin-top: 2px;
+    }
+    @media print {
+      .label-container { border-bottom: none; }
+    }
+  </style>
+</head>
+<body>
+  <div id="labels"></div>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script>
+    const labels = ${JSON.stringify(lista)};
+    const container = document.getElementById('labels');
+    
+    labels.forEach((item, index) => {
+      const div = document.createElement('div');
+      div.className = 'label-container';
+      
+      const nombre = document.createElement('div');
+      nombre.className = 'nombre';
+      nombre.innerText = item.nombre;
+      
+      const canvas = document.createElement('canvas');
+      canvas.id = 'bc-' + index;
+      canvas.className = 'barcode-img';
+      
+      const codigo = document.createElement('div');
+      codigo.className = 'codigo-texto';
+      codigo.innerText = item.codigo;
+      
+      div.appendChild(nombre);
+      div.appendChild(canvas);
+      div.appendChild(codigo);
+      container.appendChild(div);
+      
+      try {
+        JsBarcode('#bc-' + index, item.codigo, {
+          format: 'EAN13',
+          width: 2,
+          height: 60,
+          displayValue: false,
+          margin: 0
+        });
+      } catch(e) {
+        console.error(e);
+      }
+    });
+
+    window.onload = function() {
+      setTimeout(() => {
+        window.print();
+        // window.close(); // Opcional
+      }, 500);
     };
   </script>
 </body>

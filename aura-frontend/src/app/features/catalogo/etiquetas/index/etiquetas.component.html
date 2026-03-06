@@ -71,14 +71,13 @@
         class="p-button-outlined p-button-sm btn-generar"
         (click)="generarTodosSeleccionados()"
       ></button>
-      <button
-        pButton
-        type="button"
-        icon="pi pi-print"
+      <p-splitButton
         label="Imprimir"
-        class="p-button-sm btn-imprimir"
-        (click)="imprimirSeleccionados()"
-      ></button>
+        icon="pi pi-print"
+        [model]="printItems"
+        styleClass="p-button-sm btn-imprimir"
+        (onClick)="imprimirOp1Canvas()"
+      ></p-splitButton>
     </div>
   </div>
 
@@ -198,7 +197,7 @@
               class="p-button-sm p-button-outlined btn-print-row"
               pTooltip="Imprimir esta etiqueta"
               tooltipPosition="left"
-              (click)="p.seleccionado = true; imprimirSeleccionados()"
+              (click)="p.seleccionado = true; imprimirOp1Canvas()"
             ></button>
           </td>
         </tr>
