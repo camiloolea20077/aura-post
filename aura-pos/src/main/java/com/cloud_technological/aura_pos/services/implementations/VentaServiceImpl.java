@@ -3,6 +3,7 @@ package com.cloud_technological.aura_pos.services.implementations;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -198,7 +199,8 @@ public class VentaServiceImpl implements VentaService{
          * * consecutivo
          */
         venta.setConsecutivo(ventaRepository.obtenerSiguienteConsecutivo(Long.valueOf(sucursal.getId())));
-        venta.setFechaEmision(LocalDateTime.now());
+        venta.setFechaEmision(LocalDateTime.now(ZoneId.of("America/Bogota")));
+        // venta.setFechaEmision(LocalDateTime.now(ZoneOffset.UTC)); TODO: revisar zona horaria
         venta.setObservaciones(dto.getObservaciones());
         venta.setEstadoVenta("COMPLETADA");
 
