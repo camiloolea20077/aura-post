@@ -5,6 +5,7 @@ import { TooltipModule } from 'primeng/tooltip';
 
 import { SIDEBAR_MENU, SidebarMenuGroup } from './sidebar.config';
 import { IndexDBService } from '../../core/services/index-db.service';
+import { SafeUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-sidebar',
@@ -16,7 +17,7 @@ import { IndexDBService } from '../../core/services/index-db.service';
 export class SidebarComponent implements OnInit {
   @Input() collapsed = false;
   @Output() toggleCollapse = new EventEmitter<void>();
-
+  logoSafeUrl: string | null = null;
   public menuGroups: SidebarMenuGroup[] = [];
   public userName = '';
   public userRole = '';
@@ -35,6 +36,7 @@ export class SidebarComponent implements OnInit {
   private async loadUserInfo(): Promise<void> {
     const auth = await this.indexDBService.loadDataAuthDB();
     if (auth) {
+      this.logoSafeUrl = auth.logo_url ?? 'assets/icons/icono.jpeg';
       this.userName = auth.nombreCompleto;
       this.userRole = auth.rol;
       this.empresaNombre = auth.username;

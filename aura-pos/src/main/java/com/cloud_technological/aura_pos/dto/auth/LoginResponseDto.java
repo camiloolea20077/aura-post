@@ -21,5 +21,6 @@ public class LoginResponseDto {
     private String nombreCompleto;
     private boolean facturaElectronica;
     private String rol;
+    private String logo_url;
     private List<SucursalSimpleDto> sucursales;
 }

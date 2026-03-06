@@ -4,7 +4,8 @@
     <div class="logo-brand" *ngIf="!collapsed">
       <div class="logo-icon-box">
         <img
-          src="assets/icons/icono.jpeg"
+          *ngIf="logoSafeUrl"
+          [src]="logoSafeUrl"
           alt="Logo AURA POS"
           class="logo-img"
         />
