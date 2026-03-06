@@ -86,3 +86,53 @@ export interface EmpresaPageableDto {
   order_by?: string | null;
   order?: string | null;
 }
+
+// ─── Error Logs ───────────────────────────────────────────────
+export type ErrorCategoria = 'info' | 'warn' | 'danger';
+
+export interface ErrorLogModel {
+  id: number;
+  empresaId: number | null;
+  empresaNombre: string | null;
+  metodo: string;
+  endpoint: string;
+  statusCode: number;
+  categoria: ErrorCategoria;
+  mensaje: string;
+  detalle: string | null;
+  usuarioId: number | null;
+  usuarioNombre: string | null;
+  ipOrigen: string | null;
+  grupoHash: string;
+  createdAt: string;
+}
+
+export interface ErrorLogGrupoModel {
+  grupoHash: string;
+  metodo: string;
+  endpoint: string;
+  statusCode: number;
+  categoria: ErrorCategoria;
+  totalOcurrencias: number;
+  ultimaOcurrencia: string;
+  empresasAfectadas: number;
+}
+
+export interface ErrorLogPageableDto {
+  page: number;
+  rows: number;
+  categoria?: ErrorCategoria | null;
+  empresaId?: number | null;
+  statusCode?: number | null;
+  endpoint?: string | null;
+  desde?: string | null;
+  hasta?: string | null;
+}
+
+export interface ErrorLogGrupoPageableDto {
+  page: number;
+  rows: number;
+  categoria?: ErrorCategoria | null;
+  desde?: string | null;
+  hasta?: string | null;
+}
