@@ -93,10 +93,14 @@
     <!-- Aviso de resultados limitados -->
     <div
       class="search-result-info"
-      *ngIf="searchProduct.trim() && productosFiltrados.length > searchResultLimit"
+      *ngIf="
+        searchProduct.trim() && productosFiltrados.length > searchResultLimit
+      "
     >
       <i class="pi pi-info-circle"></i>
-      Mostrando {{ searchResultLimit }} de {{ productosFiltrados.length }} resultados. Refina la búsqueda para ver más.
+      Mostrando {{ searchResultLimit }} de
+      {{ productosFiltrados.length }} resultados. Refina la búsqueda para ver
+      más.
     </div>
 
     <!-- Grid productos -->
@@ -575,6 +579,7 @@
   [empresaTelefono]="empresaConfig?.telefono ?? ''"
   [empresaEmail]="empresaConfig?.correo ?? ''"
   [municipio]="empresaConfig?.municipio ?? ''"
+  [logoUrl]="empresaConfig?.logoUrl ?? ''"
   (modalClosed)="onTirillaCotizacionClose()"
 />
 
@@ -656,7 +661,7 @@
         <span class="opt-label">(opcional)</span>
       </label>
       <textarea
-        pInputTextarea
+        pTextarea
         [(ngModel)]="cotizacionObservaciones"
         rows="3"
         placeholder="Notas adicionales para el cliente..."
