@@ -118,6 +118,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   public categorias: { id: number; nombre: string }[] = [];
   private searchSubject$ = new Subject<string>();
   private destroy$ = new Subject<void>();
+  private _barcodeTimer: ReturnType<typeof setTimeout> | null = null;
   tempCantidad: number = 0;
   // ── Carrito ───────────────────────────────────────────────
   public cart: CartItem[] = [];
@@ -249,6 +250,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    if (this._barcodeTimer) clearTimeout(this._barcodeTimer);
   }
 
   aplicarPrecio(item: CartItem): void {
@@ -326,24 +328,109 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       });
   }
 
+  private parsearCodigoBalanza(codigo: string): { skuNumerico: number; pesoKg: number } | null {
+    if (!/^\d+$/.test(codigo)) return null;
+    let skuRaw: string, pesoRaw: string;
+    if (codigo.length === 12) {
+      // Formato real balanza: [PPPPPP][WWWWWW]
+      skuRaw = codigo.substring(0, 6);
+      pesoRaw = codigo.substring(6, 12);
+    } else if (codigo.length === 13 && codigo[0] === '0') {
+      // Formato alternativo con prefijo: [0][PPPPPP][WWWWWW]
+      skuRaw = codigo.substring(1, 7);
+      pesoRaw = codigo.substring(7, 13);
+    } else {
+      return null;
+    }
+    const skuNumerico = parseInt(skuRaw, 10);
+    const pesoKg = parseInt(pesoRaw, 10) / 10000;
+    if (isNaN(skuNumerico) || isNaN(pesoKg) || pesoKg <= 0) return null;
+    return { skuNumerico, pesoKg };
+  }
+
+  addToCartConPeso(p: ProductoPOS, pesoKg: number): void {
+    const existing = this.cart.find((c) => c.productoId === p.id);
+    if (existing) {
+      existing.cantidad = round2(existing.cantidad + pesoKg);
+      this.calcLine(existing);
+    } else {
+      const item: CartItem = {
+        _id: uuid(),
+        productoId: p.id,
+        productoNombre: p.nombre,
+        productoSku: p.sku,
+        precio: p.precioFinal ?? p.precio,
+        cantidad: pesoKg,
+        descuento: 0,
+        descuentoAutomatico: p.descuentoNombre ?? null,
+        impuesto: p.ivaPorcentaje ?? 0,
+        impuestoValor: 0,
+        subtotal: 0,
+        esPesable: true,
+        unidadMedida: 'kg',
+        showDescuento: false,
+      };
+      this.calcLine(item);
+      this.cart = [item, ...this.cart];
+    }
+    this.alertService.showSuccess(
+      p.nombre,
+      `${pesoKg.toFixed(3)} kg agregados al carrito`,
+    );
+    this.cdr.markForCheck();
+  }
+
   onSearch(): void {
     const query = this.searchProduct.trim();
-    const matchBarcode = this.productos.find(
-      (p) =>
-        (p.codigoBarras && p.codigoBarras === query) ||
-        (p.sku && p.sku === query),
-    );
 
-    if (matchBarcode) {
-      this.addToCart(matchBarcode);
-      this.searchProduct = '';
-      this.filtrar();
-      this.focusSearch();
-      this.cdr.markForCheck();
-      return;
-    }
-
+    // Filtrado visual inmediato (sin espera)
     this.searchSubject$.next(query);
+
+    // Detección de barcode/balanza con debounce para evitar
+    // que los estados intermedios del scanner disparen addToCart
+    if (this._barcodeTimer) clearTimeout(this._barcodeTimer);
+    if (!query) return;
+
+    this._barcodeTimer = setTimeout(() => {
+      this._barcodeTimer = null;
+      const q = this.searchProduct.trim();
+      if (!q) return;
+
+      // Intento de lectura de código de balanza
+      const balanza = this.parsearCodigoBalanza(q);
+      if (balanza) {
+        const prod = this.productos.find(
+          (p) =>
+            p.tipoProducto === 'PESABLE' &&
+            p.sku != null &&
+            parseInt(p.sku, 10) === balanza.skuNumerico,
+        );
+        if (prod) {
+          this.addToCartConPeso(prod, balanza.pesoKg);
+          this.searchProduct = '';
+          this.filtrar();
+          this.focusSearch();
+          this.cdr.markForCheck();
+          return;
+        }
+        // Si no se encuentra producto PESABLE, cae al flujo normal de barcode
+      }
+
+      // Flujo normal existente — sin modificaciones
+      const matchBarcode = this.productos.find(
+        (p) =>
+          (p.codigoBarras && p.codigoBarras === q) ||
+          (p.sku && p.sku === q),
+      );
+
+      if (matchBarcode) {
+        this.addToCart(matchBarcode);
+        this.searchProduct = '';
+        this.filtrar();
+        this.focusSearch();
+        this.cdr.markForCheck();
+      }
+    }, 150);
   }
 
   clearSearch(): void {
