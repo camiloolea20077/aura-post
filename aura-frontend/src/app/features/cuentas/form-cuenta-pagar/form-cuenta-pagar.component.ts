@@ -8,7 +8,12 @@ import {
   ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -19,8 +24,13 @@ import { DropdownModule } from 'primeng/dropdown';
 import { lastValueFrom } from 'rxjs';
 
 import { AlertService } from '../../../shared/pipes/alert.service';
-import { CreateCuentaPagarDto, UpdateCuentaPagarDto } from '../models/cuenta-pagar.model';
+import {
+  CreateCuentaPagarDto,
+  UpdateCuentaPagarDto,
+} from '../models/cuenta-pagar.model';
 import { CuentaPagarService } from '../services/cuenta-pagar.service';
+import { TerceroService } from '../../../core/services/tercero.service';
+import { OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-form-cuenta-pagar',
@@ -40,7 +50,7 @@ import { CuentaPagarService } from '../services/cuenta-pagar.service';
   templateUrl: './form-cuenta-pagar.component.html',
   styleUrls: ['./form-cuenta-pagar.component.scss'],
 })
-export class FormCuentaPagarComponent implements OnChanges {
+export class FormCuentaPagarComponent implements OnChanges, OnInit {
   @Input() visible = false;
   @Input() cuenta: any = null;
   @Output() visibleChange = new EventEmitter<boolean>();
@@ -64,11 +74,13 @@ export class FormCuentaPagarComponent implements OnChanges {
   constructor(
     private readonly fb: FormBuilder,
     private readonly service: CuentaPagarService,
+    private readonly terceroService: TerceroService,
     private readonly alert: AlertService,
     private readonly cdr: ChangeDetectorRef,
   ) {
     this.form = this.fb.group({
       proveedorId: [null, Validators.required],
+      numeroFacturaExterno: [null],
       totalDeuda: [null, [Validators.required, Validators.min(1)]],
       fechaEmision: [new Date(), Validators.required],
       fechaVencimiento: [null],
@@ -76,19 +88,37 @@ export class FormCuentaPagarComponent implements OnChanges {
     });
   }
 
+  ngOnInit(): void {
+    this.cargarProveedores();
+  }
+
+  async cargarProveedores(): Promise<void> {
+    try {
+      const resp = await lastValueFrom(this.terceroService.proveedores());
+      this.proveedores = resp.data || [];
+      this.cdr.markForCheck();
+    } catch (err: any) {
+      console.error('Error cargando proveedores', err);
+    }
+  }
+
   ngOnChanges(): void {
     if (this.visible) {
       if (this.cuenta) {
         this.form.patchValue({
           proveedorId: this.cuenta.terceroId,
+          numeroFacturaExterno: this.cuenta.numeroFacturaExterno,
           totalDeuda: this.cuenta.totalDeuda,
           fechaEmision: new Date(this.cuenta.fechaEmision),
-          fechaVencimiento: this.cuenta.fechaVencimiento ? new Date(this.cuenta.fechaVencimiento) : null,
+          fechaVencimiento: this.cuenta.fechaVencimiento
+            ? new Date(this.cuenta.fechaVencimiento)
+            : null,
           observaciones: this.cuenta.observaciones,
         });
       } else {
         this.form.reset({
           proveedorId: null,
+          numeroFacturaExterno: null,
           totalDeuda: null,
           fechaEmision: new Date(),
           fechaVencimiento: null,
@@ -110,6 +140,7 @@ export class FormCuentaPagarComponent implements OnChanges {
 
     const dto: CreateCuentaPagarDto = {
       proveedorId: formValue.proveedorId,
+      numeroFacturaExterno: formValue.numeroFacturaExterno,
       totalDeuda: formValue.totalDeuda,
       fechaEmision: formValue.fechaEmision.toISOString(),
       fechaVencimiento: formValue.fechaVencimiento?.toISOString() || null,
@@ -123,7 +154,10 @@ export class FormCuentaPagarComponent implements OnChanges {
           observaciones: dto.observaciones,
         };
         await lastValueFrom(this.service.update(this.cuenta.id, updateDto));
-        this.alert.showSuccess('Actualizado', 'La cuenta por pagar ha sido actualizada');
+        this.alert.showSuccess(
+          'Actualizado',
+          'La cuenta por pagar ha sido actualizada',
+        );
       } else {
         await lastValueFrom(this.service.create(dto));
         this.alert.showSuccess('Creado', 'La cuenta por pagar ha sido creada');
@@ -131,7 +165,10 @@ export class FormCuentaPagarComponent implements OnChanges {
       this.saved.emit();
       this.close();
     } catch (err: any) {
-      this.alert.showError('Error', err?.error?.message || 'No se pudo guardar');
+      this.alert.showError(
+        'Error',
+        err?.error?.message || 'No se pudo guardar',
+      );
     } finally {
       this.loading = false;
       this.cdr.markForCheck();

@@ -17,8 +17,8 @@
         placeholder="Seleccione un proveedor"
         [filter]="true"
         filterPlaceholder="Buscar proveedor..."
-        optionLabel="label"
-        optionValue="value"
+        optionLabel="nombreCompleto"
+        optionValue="id"
         [class.ng-invalid]="isInvalid('proveedorId')"
         styleClass="w-full"
       ></p-dropdown>
@@ -28,7 +28,20 @@
     </div>
 
     <div class="form-field">
-      <label for="totalDeuda">Total Deuda <span class="required">*</span></label>
+      <label for="numeroFacturaExterno">N° Factura Externo</label>
+      <input
+        pInputText
+        id="numeroFacturaExterno"
+        formControlName="numeroFacturaExterno"
+        placeholder="Ej: FAC-12345"
+        class="w-full"
+      />
+    </div>
+
+    <div class="form-field">
+      <label for="totalDeuda"
+        >Total Deuda <span class="required">*</span></label
+      >
       <p-inputNumber
         id="totalDeuda"
         formControlName="totalDeuda"
@@ -46,7 +59,9 @@
 
     <div class="form-row">
       <div class="form-field">
-        <label for="fechaEmision">Fecha de Emisión <span class="required">*</span></label>
+        <label for="fechaEmision"
+          >Fecha de Emisión <span class="required">*</span></label
+        >
         <p-calendar
           id="fechaEmision"
           formControlName="fechaEmision"

@@ -17,6 +17,7 @@ public class CuentaPagarDto {
     private String proveedorNombre;
     private String proveedorDocumento;
     private String numeroCuenta;
+    private String numeroFacturaExterno;
     private LocalDateTime fechaEmision;
     private LocalDateTime fechaVencimiento;
     private BigDecimal totalDeuda;
@@ -26,4 +27,12 @@ public class CuentaPagarDto {
     private String observaciones;
     private LocalDateTime createdAt;
     private List<AbonoPagarDto> abonos;
+
+    public String getNumeroFacturaExterno() {
+        return numeroFacturaExterno;
+    }
+
+    public void setNumeroFacturaExterno(String numeroFacturaExterno) {
+        this.numeroFacturaExterno = numeroFacturaExterno;
+    }
 }

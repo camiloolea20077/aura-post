@@ -9,12 +9,19 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { TagModule } from 'primeng/tag';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { MessageService } from 'primeng/api';
+import { SplitButtonModule } from 'primeng/splitbutton';
+import { DialogModule } from 'primeng/dialog';
+import { SliderModule } from 'primeng/slider';
+import { ToggleButtonModule } from 'primeng/togglebutton';
+import { SelectButtonModule } from 'primeng/selectbutton';
+import { MessageService, MenuItem } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 import { ProductoSinCodigo } from '../../../../core/models/etiquetas.model';
 import { ProductoService } from '../../../../core/services/producto.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 import { filterTable } from '../../../../shared/utils/filter-post.model';
+
+const STORAGE_KEY = 'aura_pos_print_settings';
 
 @Component({
   selector: 'app-etiquetas',
@@ -30,6 +37,11 @@ import { filterTable } from '../../../../shared/utils/filter-post.model';
     TooltipModule,
     TagModule,
     ProgressSpinnerModule,
+    SplitButtonModule,
+    DialogModule,
+    SliderModule,
+    ToggleButtonModule,
+    SelectButtonModule,
   ],
   providers: [MessageService],
   templateUrl: './etiquetas.component.html',
@@ -39,6 +51,22 @@ export class EtiquetasComponent implements OnInit {
   public productos: ProductoSinCodigo[] = [];
   public isLoading = false;
   public busqueda = '';
+  public showSettings = false;
+  public settings = {
+    columnas: 1,
+    fontSizeTitulo: 14,
+    fontSizeCodigo: 12,
+    mostrarPrecio: true,
+    espaciado: 10,
+    anchoEtiqueta: 100, // porcentaje
+  };
+
+  public opcionesColumnas = [
+    { label: '1 Col', value: 1 },
+    { label: '2 Col', value: 2 },
+    { label: '3 Col', value: 3 },
+    { label: '4 Col', value: 4 },
+  ];
 
   public get productosFiltrados(): ProductoSinCodigo[] {
     return filterTable(this.productos, this.busqueda, 0, 20);
@@ -66,8 +94,20 @@ export class EtiquetasComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.cargarSettings();
     this.cargarJsBarcode();
     this.cargarProductos();
+  }
+
+  private cargarSettings(): void {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        this.settings = { ...this.settings, ...JSON.parse(saved) };
+      } catch (e) {
+        console.error('Error al cargar settings:', e);
+      }
+    }
   }
 
   private cargarJsBarcode(): void {
@@ -141,9 +181,9 @@ export class EtiquetasComponent implements OnInit {
         'Código generado',
         `${p.nombre} → ${codigo}`,
       );
-      setTimeout(() => {
-        this.productos = this.productos.filter((x) => x.id !== p.id);
-      }, 1500);
+      // setTimeout(() => {
+      //   this.productos = this.productos.filter((x) => x.id !== p.id);
+      // }, 1500);
     } catch {
       this.alertService.showError('Error', 'No se pudo guardar el código.');
     } finally {
@@ -160,7 +200,7 @@ export class EtiquetasComponent implements OnInit {
     }
   }
 
-  async imprimirSeleccionados(): Promise<void> {
+  abrirConfiguracion(): void {
     const paraPrint = this.seleccionados.filter(
       (p) => p.guardado || p.codigoGenerado,
     );
@@ -171,185 +211,165 @@ export class EtiquetasComponent implements OnInit {
       );
       return;
     }
+    this.showSettings = true;
+  }
+
+  imprimir(): void {
+    this.showSettings = false;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.settings));
+    this.imprimirOpPersonalizada();
+  }
+
+  async imprimirOpPersonalizada(): Promise<void> {
+    const paraPrint = this.seleccionados.filter(
+      (p) => p.guardado || p.codigoGenerado,
+    );
 
     await this.cargarJsBarcodePromise();
 
-    // Expandir copias correctamente
-    const lista: { nombre: string; codigo: string }[] = [];
+    const lista: { nombre: string; codigo: string; precio: number }[] = [];
     for (const p of paraPrint) {
       const copias = Math.max(1, Math.floor(Number(p.copias) || 1));
       for (let i = 0; i < copias; i++) {
         lista.push({
-          nombre: this.truncarNombre(p.nombre),
+          nombre: this.truncarNombre(p.nombre, 50),
           codigo: p.codigoGenerado ?? p.codigoBarras ?? '',
+          precio: p.precio,
         });
       }
     }
 
-    // ── Dimensiones a 300 DPI para alta calidad ─────────────────────────
-    // Etiqueta física: 1.25" × 0.98"
-    // Papel total (3 cols): 4.09" × 0.98"
-    //
-    // A 300 DPI:
-    //   ETQ_W  = 1.25  × 300 = 375px
-    //   ETQ_H  = 0.98  × 300 = 294px
-    //   GAP    = 0.12  × 300 = 36px
-    //   MARG   = 0.05  × 300 = 15px
-    //   FILA_W = 15 + 375×3 + 36×2 + 15 = 1227px  (= 4.09" × 300)
-    //
-    // Al imprimir la imagen indicamos que tiene 300 DPI vía CSS:
-    //   image-resolution o width fijado en pulgadas → el browser/driver
-    //   sabe que 1227px = 4.09" y NO reescala el papel.
-
-    const DPI = 300;
-    const ETQ_W = Math.round(1.25 * DPI); // 375
-    const ETQ_H = Math.round(0.98 * DPI); // 294
-    const GAP = Math.round(0.12 * DPI); // 36
-    const MARG = Math.round(0.05 * DPI); // 15
-    const COLS = 3;
-    const FILA_W = MARG + ETQ_W * COLS + GAP * (COLS - 1) + MARG; // 1227
-
-    // Agrupar en filas de 3
-    const filas: { nombre: string; codigo: string }[][] = [];
-    for (let i = 0; i < lista.length; i += COLS) {
-      filas.push(lista.slice(i, i + COLS));
-    }
-
-    const canvas = document.createElement('canvas');
-    canvas.width = FILA_W;
-    canvas.height = ETQ_H * filas.length;
-    const ctx = canvas.getContext('2d')!;
-
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    for (let fi = 0; fi < filas.length; fi++) {
-      const fila = filas[fi];
-      const filaY = fi * ETQ_H;
-
-      // Línea separadora entre filas
-      if (fi > 0) {
-        ctx.strokeStyle = '#cccccc';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(0, filaY);
-        ctx.lineTo(FILA_W, filaY);
-        ctx.stroke();
-      }
-
-      for (let col = 0; col < fila.length; col++) {
-        const etq = fila[col];
-        const etqX = MARG + col * (ETQ_W + GAP);
-
-        // Línea separadora entre columnas
-        if (col > 0) {
-          ctx.strokeStyle = '#cccccc';
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(etqX - GAP / 2, filaY);
-          ctx.lineTo(etqX - GAP / 2, filaY + ETQ_H);
-          ctx.stroke();
-        }
-
-        // ── Nombre ────────────────────────────────────────────────
-        ctx.fillStyle = '#000000';
-        ctx.font = `bold ${Math.round(18 * (DPI / 96))}px Arial`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'top';
-        ctx.fillText(
-          etq.nombre,
-          etqX + ETQ_W / 2,
-          filaY + Math.round(10 * (DPI / 96)),
-          ETQ_W - Math.round(10 * (DPI / 96)),
-        );
-
-        // ── Barcode en canvas temporal ────────────────────────────
-        try {
-          const bcCanvas = document.createElement('canvas');
-          (window as any).JsBarcode(bcCanvas, etq.codigo, {
-            format: 'EAN13',
-            width: 3, // px por barra — grueso para 300 DPI
-            height: Math.round(100 * (DPI / 96)), // ~312px de alto neto
-            displayValue: false,
-            margin: 0,
-            background: '#ffffff',
-            lineColor: '#000000',
-          });
-
-          const bW = ETQ_W - Math.round(20 * (DPI / 96));
-          const bH = Math.round(130 * (DPI / 96));
-          const bX = etqX + Math.round(10 * (DPI / 96));
-          const bY = filaY + Math.round(38 * (DPI / 96));
-          ctx.drawImage(bcCanvas, bX, bY, bW, bH);
-        } catch (e) {
-          console.error('Barcode error:', etq.codigo, e);
-          ctx.fillStyle = '#ff0000';
-          ctx.font = `${Math.round(14 * (DPI / 96))}px Arial`;
-          ctx.fillText('ERROR', etqX + ETQ_W / 2, filaY + ETQ_H / 2);
-        }
-
-        // ── Texto código ──────────────────────────────────────────
-        ctx.fillStyle = '#000000';
-        ctx.font = `${Math.round(14 * (DPI / 96))}px "Courier New"`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'alphabetic';
-        ctx.fillText(
-          etq.codigo,
-          etqX + ETQ_W / 2,
-          filaY + ETQ_H - Math.round(10 * (DPI / 96)),
-        );
-      }
-    }
-
-    // ── Abrir ventana de impresión con tamaño de papel fijo ──────────────
-    // La imagen se muestra con width/height en pulgadas exactas usando CSS.
-    // Así el driver de la JALTECH recibe exactamente 4.09" × (0.98" × filas)
-    // sin importar la resolución de pantalla.
-    const dataUrl = canvas.toDataURL('image/png');
-    const filaHeightIn = (ETQ_H / DPI).toFixed(4); // 0.98"
-    const totalHeightIn = ((ETQ_H * filas.length) / DPI).toFixed(4);
-    const filaWidthIn = (FILA_W / DPI).toFixed(4); // 4.09"
-
-    const ventana = window.open('', '_blank', 'width=900,height=400');
+    const ventana = window.open('', '_blank', 'width=800,height=600');
     if (!ventana) return;
+
+    const gridTemplateCols = `repeat(${this.settings.columnas}, 1fr)`;
 
     ventana.document.write(`<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Etiquetas</title>
+  <title>Imprimir Etiquetas Personalizadas</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    @page {
-      /* Tamaño exacto del papel configurado en el driver JALTECH */
-      size: ${filaWidthIn}in ${totalHeightIn}in;
-      margin: 0;
-    }
-
-    html, body {
-      width:  ${filaWidthIn}in;
-      height: ${totalHeightIn}in;
-      overflow: hidden;
+    @page { margin: 0; size: auto; }
+    body { margin: 0; font-family: Arial, sans-serif; background: #eee; padding: 20px; }
+    
+    .grid-container {
+      display: grid;
+      grid-template-columns: ${gridTemplateCols};
+      gap: ${this.settings.espaciado}px;
+      width: 100%;
+      max-width: 1000px;
+      margin: 0 auto;
       background: #fff;
+      padding: 10px;
     }
 
-    img {
-      /* Forzar que la imagen ocupe exactamente el tamaño físico real.
-         Al fijar width/height en pulgadas + DPI correcto, el driver
-         no reescala ni cambia el tamaño del papel. */
-      display: block;
-      width:  ${filaWidthIn}in;
-      height: ${totalHeightIn}in;
-      image-rendering: crisp-edges;
+    .label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #eee;
+      padding: 10px;
+      box-sizing: border-box;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .nombre {
+      font-size: ${this.settings.fontSizeTitulo}px;
+      font-weight: bold;
+      margin-bottom: 5px;
+      width: 100%;
+      word-wrap: break-word;
+    }
+
+    .barcode-container {
+      width: ${this.settings.anchoEtiqueta}%;
+      margin: 5px 0;
+    }
+
+    .barcode-img {
+      width: 100%;
+      height: auto;
+    }
+
+    .codigo-texto {
+      font-size: ${this.settings.fontSizeCodigo}px;
+      font-family: "Courier New", Courier, monospace;
+      margin-top: 2px;
+    }
+
+    .precio {
+      font-size: ${this.settings.fontSizeTitulo + 2}px;
+      font-weight: 800;
+      margin-top: 5px;
+      color: #000;
+    }
+
+    @media print {
+      body { padding: 0; background: #fff; }
+      .grid-container { padding: 0; border: none; max-width: none; }
+      .label { border: none; page-break-inside: avoid; }
     }
   </style>
 </head>
 <body>
-  <img src="${dataUrl}" />
+  <div class="grid-container" id="labels"></div>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
   <script>
+    const labels = ${JSON.stringify(lista)};
+    const settings = ${JSON.stringify(this.settings)};
+    const container = document.getElementById('labels');
+    
+    labels.forEach((item, index) => {
+      const div = document.createElement('div');
+      div.className = 'label';
+      
+      const nombre = document.createElement('div');
+      nombre.className = 'nombre';
+      nombre.innerText = item.nombre;
+      div.appendChild(nombre);
+
+      if (settings.mostrarPrecio) {
+        const precio = document.createElement('div');
+        precio.className = 'precio';
+        precio.innerText = '$' + new Intl.NumberFormat('es-CO').format(item.precio);
+        div.appendChild(precio);
+      }
+      
+      const bcContainer = document.createElement('div');
+      bcContainer.className = 'barcode-container';
+      const canvas = document.createElement('canvas');
+      canvas.id = 'bc-' + index;
+      canvas.className = 'barcode-img';
+      bcContainer.appendChild(canvas);
+      div.appendChild(bcContainer);
+      
+      const codigo = document.createElement('div');
+      codigo.className = 'codigo-texto';
+      codigo.innerText = item.codigo;
+      div.appendChild(codigo);
+
+      container.appendChild(div);
+      
+      try {
+        JsBarcode('#bc-' + index, item.codigo, {
+          format: 'EAN13',
+          width: 2,
+          height: 50,
+          displayValue: false,
+          margin: 0
+        });
+      } catch(e) {
+        console.error(e);
+      }
+    });
+
     window.onload = function() {
-      setTimeout(function() { window.print(); }, 300);
+      setTimeout(() => {
+        window.print();
+      }, 500);
     };
   </script>
 </body>

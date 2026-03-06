@@ -11,6 +11,7 @@ import lombok.Setter;
 public class CuentaPagarTableDto {
     private Long id;
     private String numeroCuenta;
+    private String numeroFacturaExterno;
     private String proveedorNombre;
     private String proveedorDocumento;
     private LocalDateTime fechaEmision;
@@ -20,4 +21,12 @@ public class CuentaPagarTableDto {
     private BigDecimal saldoPendiente;
     private String estado;
     private Long totalRows;
+
+    public String getNumeroFacturaExterno() {
+        return numeroFacturaExterno;
+    }
+
+    public void setNumeroFacturaExterno(String numeroFacturaExterno) {
+        this.numeroFacturaExterno = numeroFacturaExterno;
+    }
 }

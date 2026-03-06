@@ -27,6 +27,7 @@ export interface CuentaPagarModel {
   proveedorDocumento: string;
   compraId: number | null;
   numeroCuenta: string;
+  numeroFacturaExterno: string | null;
   fechaEmision: string;
   fechaVencimiento: string | null;
   totalDeuda: number;
@@ -41,6 +42,7 @@ export interface CuentaPagarModel {
 export interface CuentaPagarTableModel {
   id: number;
   numeroCuenta: string;
+  numeroFacturaExterno: string | null;
   proveedorNombre: string;
   proveedorDocumento: string;
   fechaEmision: string;
@@ -55,6 +57,7 @@ export interface CuentaPagarTableModel {
 export interface CreateCuentaPagarDto {
   proveedorId: number;
   compraId?: number | null;
+  numeroFacturaExterno?: string | null;
   totalDeuda: number;
   fechaEmision: string;
   fechaVencimiento?: string | null;

@@ -24,5 +24,15 @@ public class CreateCuentaPagarDto {
 
     private LocalDateTime fechaVencimiento;
 
+    private String numeroFacturaExterno;
+
     private String observaciones;
+
+    public String getNumeroFacturaExterno() {
+        return numeroFacturaExterno;
+    }
+
+    public void setNumeroFacturaExterno(String numeroFacturaExterno) {
+        this.numeroFacturaExterno = numeroFacturaExterno;
+    }
 }
