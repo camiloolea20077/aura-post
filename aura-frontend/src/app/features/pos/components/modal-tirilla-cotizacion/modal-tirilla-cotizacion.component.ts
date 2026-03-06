@@ -13,7 +13,7 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { CotizacionModel } from '../../../../core/models/cotizacion.model';
-import { SafeUrl } from '@angular/platform-browser';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 
 type AnchoTirilla = 58 | 80;
 
@@ -41,6 +41,7 @@ export class ModalTirillaCotizacionComponent implements OnChanges {
   @Input() empresaTelefono = '';
   @Input() empresaEmail = '';
   @Input() municipio = '';
+  @Input() logoUrl = '';
   @Output() modalClosed = new EventEmitter<void>();
 
   ancho: AnchoTirilla = 80;
@@ -49,12 +50,17 @@ export class ModalTirillaCotizacionComponent implements OnChanges {
     { label: '80 mm', value: 80 },
   ];
   logoSafeUrl: SafeUrl | null = null;
+
+  constructor(private sanitizer: DomSanitizer) {}
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['cotizacion'] && this.cotizacion) {
       this.ancho = 58;
-      // this.logoSafeUrl = this.venta.logoUrl
-      //   ? this.sanitizer.bypassSecurityTrustUrl(this.venta.logoUrl)
-      //   : null;
+    }
+    if (changes['logoUrl']) {
+      this.logoSafeUrl = this.logoUrl
+        ? this.sanitizer.bypassSecurityTrustUrl(this.logoUrl)
+        : null;
     }
   }
 
@@ -63,7 +69,7 @@ export class ModalTirillaCotizacionComponent implements OnChanges {
     if (!contenido) return;
 
     const anchoPage = this.ancho === 58 ? '58mm' : '80mm';
-    const fontSize = this.ancho === 58 ? '9px' : '11px';
+    const fontSize = this.ancho === 58 ? '11px' : '13px';
     const html = contenido.innerHTML;
 
     const ventana = window.open('', '_blank', 'width=400,height=700');
@@ -76,7 +82,7 @@ export class ModalTirillaCotizacionComponent implements OnChanges {
           <meta charset="utf-8" />
           <title>Cotización</title>
           <style>
-            * { margin: 0; padding: 0; box-sizing: border-box; }
+            * { margin: 0; padding: 0; box-sizing: border-box; font-weight: bold; }
             @page { size: ${anchoPage} auto; margin: 0; }
             body {
               font-family: 'Courier New', Courier, monospace;
