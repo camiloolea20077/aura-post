@@ -109,7 +109,7 @@ export class ModalTirillaComponent implements OnChanges {
           d.cantidad % 1 === 0
             ? String(Math.round(d.cantidad))
             : d.cantidad.toFixed(3);
-        const total = d.subtotalLinea + d.impuestoValor - d.montoDescuento;
+        const total = d.subtotalLinea;
         const descRow =
           d.montoDescuento > 0
             ? `<div style="display:flex;justify-content:space-between;font-size:0.85em;padding-left:4px;">
