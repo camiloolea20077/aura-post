@@ -71,13 +71,14 @@
         class="p-button-outlined p-button-sm btn-generar"
         (click)="generarTodosSeleccionados()"
       ></button>
-      <p-splitButton
-        label="Imprimir"
-        icon="pi pi-print"
-        [model]="printItems"
-        styleClass="p-button-sm btn-imprimir"
-        (onClick)="imprimirOp1Canvas()"
-      ></p-splitButton>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-cog"
+        label="Configurar e Imprimir"
+        class="p-button-sm btn-imprimir"
+        (click)="abrirConfiguracion()"
+      ></button>
     </div>
   </div>
 
@@ -197,13 +198,107 @@
               class="p-button-sm p-button-outlined btn-print-row"
               pTooltip="Imprimir esta etiqueta"
               tooltipPosition="left"
-              (click)="p.seleccionado = true; imprimirOp1Canvas()"
+              (click)="p.seleccionado = true; abrirConfiguracion()"
             ></button>
           </td>
         </tr>
       </tbody>
     </table>
   </div>
+
+  <!-- ══ DIÁLOGO DE CONFIGURACIÓN ══════════════════════════════════════ -->
+  <p-dialog
+    header="Configuración de impresión"
+    [(visible)]="showSettings"
+    [modal]="true"
+    [style]="{ width: '450px' }"
+    [draggable]="false"
+    [resizable]="false"
+    styleClass="dialog-config"
+  >
+    <div class="config-form">
+      <!-- Layout -->
+      <div class="config-section">
+        <label>Número de columnas</label>
+        <p-selectButton
+          [options]="opcionesColumnas"
+          [(ngModel)]="settings.columnas"
+          optionLabel="label"
+          optionValue="value"
+        />
+      </div>
+
+      <!-- Mostrar Precio -->
+      <div
+        class="config-section flex align-items-center justify-content-between"
+      >
+        <label>Mostrar precio del producto</label>
+        <p-toggleButton
+          [(ngModel)]="settings.mostrarPrecio"
+          onLabel="SÍ"
+          offLabel="NO"
+          onIcon="pi pi-check"
+          offIcon="pi pi-times"
+        />
+      </div>
+
+      <!-- Tamaños de fuente -->
+      <div class="config-section">
+        <div class="flex justify-content-between mb-2">
+          <label
+            >Tamaño título: <b>{{ settings.fontSizeTitulo }}px</b></label
+          >
+        </div>
+        <p-slider [(ngModel)]="settings.fontSizeTitulo" [min]="8" [max]="32" />
+      </div>
+
+      <div class="config-section">
+        <div class="flex justify-content-between mb-2">
+          <label
+            >Tamaño código: <b>{{ settings.fontSizeCodigo }}px</b></label
+          >
+        </div>
+        <p-slider [(ngModel)]="settings.fontSizeCodigo" [min]="8" [max]="24" />
+      </div>
+
+      <!-- Espaciado -->
+      <div class="config-section">
+        <div class="flex justify-content-between mb-2">
+          <label
+            >Espaciado entre etiquetas: <b>{{ settings.espaciado }}px</b></label
+          >
+        </div>
+        <p-slider [(ngModel)]="settings.espaciado" [min]="0" [max]="50" />
+      </div>
+
+      <!-- Ancho Barcode -->
+      <div class="config-section">
+        <div class="flex justify-content-between mb-2">
+          <label
+            >Ancho del código: <b>{{ settings.anchoEtiqueta }}%</b></label
+          >
+        </div>
+        <p-slider [(ngModel)]="settings.anchoEtiqueta" [min]="50" [max]="100" />
+      </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <button
+        pButton
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-text p-button-secondary"
+        (click)="showSettings = false"
+      ></button>
+      <button
+        pButton
+        label="Imprimir ahora"
+        icon="pi pi-print"
+        class="p-button-primary"
+        (click)="imprimir()"
+      ></button>
+    </ng-template>
+  </p-dialog>
 
   <p-toast />
 </div>

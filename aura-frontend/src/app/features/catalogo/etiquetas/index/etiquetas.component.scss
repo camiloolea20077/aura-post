@@ -275,18 +275,23 @@
 .col-chk {
   width: 44px;
 }
+
 .col-nombre {
   min-width: 220px;
 }
+
 .col-sku {
   width: 110px;
 }
+
 .col-codigo {
   width: 200px;
 }
+
 .col-copias {
   width: 130px;
 }
+
 .col-acc {
   width: 130px;
   text-align: right;
@@ -402,4 +407,79 @@
   border-color: var(--color-success) !important;
   color: var(--color-success) !important;
   background: transparent !important;
+}
+
+// ── Config Dialog ───────────────────────────────────────────────────
+.config-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 10px 0;
+}
+
+.config-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-text);
+
+    b {
+      color: var(--color-primary);
+    }
+  }
+}
+
+::ng-deep .dialog-config {
+  .p-dialog-content {
+    padding-bottom: 30px !important;
+  }
+
+  .p-slider {
+    background: #f3f4f6;
+    height: 6px;
+    border: none;
+
+    .p-slider-range {
+      background: var(--color-primary);
+    }
+
+    .p-slider-handle {
+      border: 2px solid var(--color-primary);
+      background: #fff;
+      width: 16px;
+      height: 16px;
+      margin-top: -6px;
+      margin-left: -8px;
+
+      &:focus {
+        box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+      }
+    }
+  }
+
+  .p-togglebutton {
+    width: 60px;
+    height: 32px;
+
+    &.p-highlight {
+      background: var(--color-primary) !important;
+      border-color: var(--color-primary) !important;
+    }
+  }
+
+  .p-selectbutton {
+    .p-button {
+      font-size: 0.85rem;
+      padding: 8px 12px;
+
+      &.p-highlight {
+        background: var(--color-primary) !important;
+        border-color: var(--color-primary) !important;
+      }
+    }
+  }
 }
