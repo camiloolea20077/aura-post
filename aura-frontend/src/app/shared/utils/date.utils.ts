@@ -1,4 +1,30 @@
-type Operations = 'ADD' | 'SUBTRACT'
+type Operations = 'ADD' | 'SUBTRACT';
+
+export const LOCALE = 'es-CO';
+
+const parseDate = (date: Date | string): Date => {
+  const parsed = date instanceof Date ? new Date(date) : new Date(date);
+
+  if (isNaN(parsed.getTime())) {
+    throw new Error('La fecha proporcionada no es válida.');
+  }
+
+  return parsed;
+};
+
+export const getLocaleDateString = (date: Date | string): string => {
+  return parseDate(date).toLocaleDateString(LOCALE);
+};
+
+export const getLocaleTimeString = (date: Date | string): string => {
+  return parseDate(date).toLocaleTimeString(LOCALE);
+};
+
+export const getLocaleDateTimeString = (date: Date | string): string => {
+  return parseDate(date).toLocaleString(LOCALE);
+};
+
+// new Date('5/3/2026 23:52:22')
 /**
  * Formatear una fecha con un fotmato desde params
  * @param dateInput > fecha tipo `String` | `Date`
@@ -16,50 +42,39 @@ type Operations = 'ADD' | 'SUBTRACT'
  */
 export const formatDate = (
   dateInput: Date | string,
-  format: string
+  format: string,
 ): string => {
-  let date: Date
-  if (typeof dateInput === 'string') {
-    date = new Date(dateInput)
-  } else {
-    date = dateInput
-  }
+  const date = parseDate(dateInput);
 
-  const padZero = (num: number, length: number = 2): string => {
-    return num.toString().padStart(length, '0')
-  }
+  const pad = (num: number, size = 2) => num.toString().padStart(size, '0');
 
-  const dateParts: { [key: string]: string } = {
+  const tokens: Record<string, string> = {
     yyyy: date.getFullYear().toString(),
+    YYYY: date.getFullYear().toString(),
+
     yy: date.getFullYear().toString().slice(-2),
-    MM: padZero(date.getMonth() + 1),
-    dd: padZero(date.getDate()),
-    HH: padZero(date.getHours()),
+    YY: date.getFullYear().toString().slice(-2),
+
+    MM: pad(date.getMonth() + 1),
+    dd: pad(date.getDate()),
+
+    HH: pad(date.getHours()),
     H: date.getHours().toString(),
-    hh: padZero(date.getHours() % 12 || 12),
+
+    hh: pad(date.getHours() % 12 || 12),
     h: (date.getHours() % 12 || 12).toString(),
-    mm: padZero(date.getMinutes()),
-    ss: padZero(date.getSeconds()),
+
+    mm: pad(date.getMinutes()),
+    ss: pad(date.getSeconds()),
+
     ampm: date.getHours() < 12 ? 'am' : 'pm',
-  }
+  };
 
-  let formattedDate = format
-  formattedDate = formattedDate.replace(/yyyy/g, dateParts['yyyy'])
-  formattedDate = formattedDate.replace(/YYYY/g, dateParts['yyyy'])
-  formattedDate = formattedDate.replace(/YY/g, dateParts['yy'])
-  formattedDate = formattedDate.replace(/yy/g, dateParts['yy'])
-  formattedDate = formattedDate.replace(/MM/g, dateParts['MM'])
-  formattedDate = formattedDate.replace(/dd/g, dateParts['dd'])
-  formattedDate = formattedDate.replace(/HH/g, dateParts['HH'])
-  formattedDate = formattedDate.replace(/H/g, dateParts['H'])
-  formattedDate = formattedDate.replace(/hh/g, dateParts['hh'])
-  formattedDate = formattedDate.replace(/h/g, dateParts['h'])
-  formattedDate = formattedDate.replace(/mm/g, dateParts['mm'])
-  formattedDate = formattedDate.replace(/ss/g, dateParts['ss'])
-  formattedDate = formattedDate.replace(/ampm/g, dateParts['ampm'])
-
-  return formattedDate
-}
+  return format.replace(
+    /yyyy|YYYY|yy|YY|MM|dd|HH|H|hh|h|mm|ss|ampm/g,
+    (match) => tokens[match],
+  );
+};
 
 /**
  * AGREGA O RESTA DIAS A UNA FECHA
@@ -79,21 +94,15 @@ export const formatDate = (
 export const addOrSubtractDaysDate = (
   date: string | Date,
   days: number,
-  operation: Operations = 'ADD'
+  operation: Operations = 'ADD',
 ): Date => {
-  const dateOrigin =
-    date instanceof Date ? date : date !== '' ? new Date(date) : new Date()
+  const base = parseDate(date);
 
-  if (isNaN(dateOrigin.getTime())) {
-    throw new Error('La fecha proporcionada no es válida.')
-  }
+  const result = new Date(base);
 
-  const resultDate = new Date(dateOrigin)
-  if (operation === 'ADD') {
-    resultDate.setDate(dateOrigin.getDate() + days)
-  } else {
-    resultDate.setDate(dateOrigin.getDate() - days)
-  }
+  result.setDate(
+    operation === 'ADD' ? base.getDate() + days : base.getDate() - days,
+  );
 
-  return resultDate
-}
+  return result;
+};

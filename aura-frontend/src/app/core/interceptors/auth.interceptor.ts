@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { from, switchMap, catchError, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { IndexDBService } from '../services/index-db.service';
+import { LOCALE } from '../../shared/utils/date.utils';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const indexDBService = inject(IndexDBService);
@@ -12,11 +13,17 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
 
   return from(indexDBService.getToken()).pipe(
-    switchMap(token => {
+    switchMap((token) => {
       // Adjuntar token si existe y no está expirado
-      const cloned = token && !authService.isTokenExpired(token)
-        ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
-        : req;
+      const cloned =
+        token && !authService.isTokenExpired(token)
+          ? req.clone({
+              setHeaders: {
+                Authorization: `Bearer ${token}`,
+                'X-locale': LOCALE,
+              },
+            })
+          : req;
 
       return next(cloned).pipe(
         catchError((error: HttpErrorResponse) => {
@@ -27,8 +34,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             });
           }
           return throwError(() => error);
-        })
+        }),
       );
-    })
+    }),
   );
 };
