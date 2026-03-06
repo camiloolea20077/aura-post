@@ -21,6 +21,8 @@ import { ProductoService } from '../../../../core/services/producto.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 import { filterTable } from '../../../../shared/utils/filter-post.model';
 
+const STORAGE_KEY = 'aura_pos_print_settings';
+
 @Component({
   selector: 'app-etiquetas',
   standalone: true,
@@ -92,8 +94,20 @@ export class EtiquetasComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.cargarSettings();
     this.cargarJsBarcode();
     this.cargarProductos();
+  }
+
+  private cargarSettings(): void {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      try {
+        this.settings = { ...this.settings, ...JSON.parse(saved) };
+      } catch (e) {
+        console.error('Error al cargar settings:', e);
+      }
+    }
   }
 
   private cargarJsBarcode(): void {
@@ -202,6 +216,7 @@ export class EtiquetasComponent implements OnInit {
 
   imprimir(): void {
     this.showSettings = false;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(this.settings));
     this.imprimirOpPersonalizada();
   }
 
