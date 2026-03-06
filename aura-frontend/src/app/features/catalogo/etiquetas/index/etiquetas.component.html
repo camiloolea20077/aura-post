@@ -228,6 +228,28 @@
         />
       </div>
 
+      <!-- Mostrar Nombre -->
+      <div
+        class="config-section flex align-items-center justify-content-between"
+      >
+        <label>Mostrar nombre del producto</label>
+        <p-toggleButton
+          [(ngModel)]="settings.mostrarNombre"
+          onLabel="SÍ"
+          offLabel="NO"
+          onIcon="pi pi-check"
+          offIcon="pi pi-times"
+        />
+      </div>
+
+      <!-- Max caracteres nombre -->
+      <div class="config-section" *ngIf="settings.mostrarNombre">
+        <div class="flex justify-content-between mb-2">
+          <label>Máx. caracteres del nombre: <b>{{ settings.maxCaracteresNombre }}</b></label>
+        </div>
+        <p-slider [(ngModel)]="settings.maxCaracteresNombre" [min]="5" [max]="100" />
+      </div>
+
       <!-- Mostrar Precio -->
       <div
         class="config-section flex align-items-center justify-content-between"

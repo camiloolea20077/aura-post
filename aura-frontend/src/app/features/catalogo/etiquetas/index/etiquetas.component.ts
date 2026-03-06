@@ -57,6 +57,8 @@ export class EtiquetasComponent implements OnInit {
     fontSizeTitulo: 14,
     fontSizeCodigo: 12,
     mostrarPrecio: true,
+    mostrarNombre: true,
+    maxCaracteresNombre: 50,
     espaciado: 10,
     anchoEtiqueta: 100, // porcentaje
   };
@@ -232,7 +234,7 @@ export class EtiquetasComponent implements OnInit {
       const copias = Math.max(1, Math.floor(Number(p.copias) || 1));
       for (let i = 0; i < copias; i++) {
         lista.push({
-          nombre: this.truncarNombre(p.nombre, 50),
+          nombre: this.truncarNombre(p.nombre, this.settings.maxCaracteresNombre),
           codigo: p.codigoGenerado ?? p.codigoBarras ?? '',
           precio: p.precio,
         });
@@ -326,10 +328,12 @@ export class EtiquetasComponent implements OnInit {
       const div = document.createElement('div');
       div.className = 'label';
       
-      const nombre = document.createElement('div');
-      nombre.className = 'nombre';
-      nombre.innerText = item.nombre;
-      div.appendChild(nombre);
+      if (settings.mostrarNombre) {
+        const nombre = document.createElement('div');
+        nombre.className = 'nombre';
+        nombre.innerText = item.nombre;
+        div.appendChild(nombre);
+      }
 
       if (settings.mostrarPrecio) {
         const precio = document.createElement('div');
