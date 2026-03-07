@@ -171,7 +171,9 @@ export class ModalTirillaComponent implements OnChanges {
     // ── QR y CUFE ─────────────────────────────────────────────────
     let qrImageData = '';
     if (this.qrData && this.qrWrapRef) {
-      const canvas = this.qrWrapRef.nativeElement.querySelector('canvas') as HTMLCanvasElement | null;
+      const canvas = this.qrWrapRef.nativeElement.querySelector(
+        'canvas',
+      ) as HTMLCanvasElement | null;
       if (canvas) qrImageData = canvas.toDataURL('image/png');
     }
     const feHtml =
@@ -215,7 +217,7 @@ export class ModalTirillaComponent implements OnChanges {
       size: ${anchoPage} auto;
       margin: 0 !important;
     }
-    * { margin:0; padding:0; box-sizing:border-box; font-weight:bold; }
+    * { margin:0; padding:0; box-sizing:border-box; }
     html {
       width: ${anchoPage};
       max-width: ${anchoPage};
@@ -226,95 +228,122 @@ export class ModalTirillaComponent implements OnChanges {
       overflow: hidden;
       font-family: 'Courier New', Courier, monospace;
       font-size: ${fontSize};
-      line-height: 1.5;
+      line-height: 1.4;
       color: #000;
       background: #fff;
-      -webkit-font-smoothing: none;
-      font-smooth: never;
-      padding: 1mm 1.5mm;
+      padding: 2mm 2.5mm;
+      font-weight: 600;
     }
-    img { -webkit-print-color-adjust:exact; print-color-adjust:exact; max-width:100%; }
-    hr.dash  { border:none; border-top:2px dashed #000; margin:4px 0; }
-    hr.solid { border:none; border-top:1px solid #000; margin:2px 0; }
-    /* Todo el contenido se adapta al ancho */
-    div, span { max-width: 100%; }
-    .fila { display:table; width:100%; table-layout:fixed; }
-    .fila span { display:table-cell; overflow:hidden; }
+    img { -webkit-print-color-adjust:exact; print-color-adjust:exact; max-width:100%; display: block; margin: 0 auto; }
+    .dash  { border:none; border-top:1.5px dashed #333; margin:6px 0; }
+    .solid { border:none; border-top:1px solid #000; margin:3px 0; }
+    
+    .header-text { text-align:center; margin-bottom:10px; }
+    .company-name { font-size:1.25em; text-transform:uppercase; font-weight: 800; margin-bottom: 2px; }
+    .company-info { font-size:0.95em; font-weight: 600; line-height: 1.2; }
+    
+    .doc-info { display:flex; justify-content:space-between; font-size:1em; font-weight: 700; margin: 8px 0; }
+    
+    .table-header { display:table; width:100%; table-layout:fixed; font-size:0.9em; font-weight: 700; border-bottom: 1.5px solid #000; padding-bottom: 2px; margin-bottom: 4px; }
+    .product-row { margin: 4px 0; font-size: 0.95em; }
+    .product-grid { display:table; width:100%; table-layout:fixed; }
+    .cell { display:table-cell; overflow:hidden; vertical-align: top; }
+    
+    .totals-area { margin: 10px 0; border-top: 1px solid #000; padding-top: 5px; }
+    .total-row { display:flex; justify-content:space-between; padding:2px 0; }
+    .grand-total { 
+      display:flex; justify-content:space-between; 
+      font-size:1.35em; font-weight: 800; 
+      border-top:2px solid #000; border-bottom:2px solid #000; 
+      padding:6px 0; margin:8px 0; 
+    }
+    
+    .footer { text-align:center; margin-top:15px; font-size: 0.9em; }
+    .thanks { font-weight: 800; font-size: 1.1em; margin-bottom: 5px; }
+    
+    /* Utility for table columns */
+    .col-cant { width:${colCant}; text-align:center; }
+    .col-val { width:${colVal}; text-align:right; }
+    .col-tot { width:${colTot}; text-align:right; }
   </style>
 </head>
 <body>
 
   ${logoHtml}
 
-  <div style="text-align:center;margin-bottom:3px;">
-    <div style="font-size:1.15em;text-transform:uppercase;">${v.razonSocial ?? ''}</div>
-    ${v.empresaNit ? `<div style="font-size:0.92em;">Nit ${v.empresaNit}</div>` : ''}
-    ${v.empresaDireccion ? `<div style="font-size:0.92em;">${v.empresaDireccion}</div>` : ''}
-    ${v.empresaEmail ? `<div style="font-size:0.92em;">${v.empresaEmail}</div>` : ''}
-    ${v.empresaTelefono ? `<div style="font-size:0.92em;">Cel. ${v.empresaTelefono}</div>` : ''}
-    ${v.municipio ? `<div style="font-size:0.92em;">${v.municipio}</div>` : ''}
+  <div class="header-text">
+    <div class="company-name">${v.razonSocial ?? ''}</div>
+    <div class="company-info">
+      ${v.empresaNit ? `<div>Nit ${v.empresaNit}</div>` : ''}
+      ${v.empresaDireccion ? `<div>${v.empresaDireccion}</div>` : ''}
+      ${v.empresaEmail ? `<div>${v.empresaEmail}</div>` : ''}
+      ${v.empresaTelefono ? `<div>Cel. ${v.empresaTelefono}</div>` : ''}
+      ${v.municipio ? `<div>${v.municipio}</div>` : ''}
+    </div>
   </div>
 
-  <hr class="dash"/>
+  <div class="dash"></div>
 
-  <div style="display:flex;justify-content:space-between;font-size:0.92em;padding:2px 0;">
+  <div class="doc-info">
     <span style="text-transform:uppercase;">${v.tipoDocumento ?? 'D.E POS'}</span>
     <span>${numeroVenta}</span>
-    <span style="font-size:0.88em;">${this.formatFecha(v.fechaEmision)}</span>
+  </div>
+  <div style="text-align:center; font-size: 0.9em; margin-bottom: 8px;">
+    ${this.formatFecha(v.fechaEmision)}
   </div>
 
   <hr class="solid"/>
 
-  ${cajeroHtml}
-  ${clienteHtml}
-  <div style="display:flex;gap:3px;padding:1px 0;">
-    <span style="white-space:nowrap;">Pago :</span>
-    <span>${this.metodoPagoLabel(v.pagos[0]?.metodoPago || '')}</span>
+  <div style="font-size: 0.95em; line-height: 1.4; margin: 5px 0;">
+    ${cajeroHtml}
+    ${clienteHtml}
+    <div style="display:flex;gap:5px;">
+      <span style="white-space:nowrap;">FORMA PAGO:</span>
+      <span style="font-weight: 800;">${this.metodoPagoLabel(v.pagos[0]?.metodoPago || '')}</span>
+    </div>
   </div>
 
-  <hr class="dash"/>
+  <div class="dash"></div>
 
-  <div style="display:table;width:100%;table-layout:fixed;font-size:0.88em;padding:2px 0;">
-    <span style="display:table-cell;">Artículo</span>
-    <span style="display:table-cell;width:${colCant};text-align:center;">Cant</span>
-    <span style="display:table-cell;width:${colVal};text-align:right;">Valor</span>
-    <span style="display:table-cell;width:${colTot};text-align:right;">Total</span>
+  <div class="table-header">
+    <span class="cell">ARTÍCULO</span>
+    <span class="cell col-cant">CANT</span>
+    <span class="cell col-val">VALOR</span>
+    <span class="cell col-tot">TOTAL</span>
   </div>
-  <hr class="solid"/>
 
-  ${filasProductos}
+  <div style="margin-bottom: 8px;">
+    ${filasProductos}
+  </div>
 
-  <hr class="solid"/>
-
-  <div style="margin:2px 0;">
-    <div style="display:flex;justify-content:space-between;padding:1px 0;">
-      <span>Sub Total</span><span>${this.formatCOP(v.subtotal - v.descuentoTotal)}</span>
+  <div class="totals-area">
+    <div class="total-row">
+      <span>SUBTOTAL</span><span>${this.formatCOP(v.subtotal - v.descuentoTotal)}</span>
     </div>
     ${impuestoHtml}
     ${descuentoHtml}
   </div>
 
-  <div style="display:flex;justify-content:space-between;font-size:1.2em;border-top:2px solid #000;border-bottom:2px solid #000;padding:3px 0;margin:3px 0;">
-    <span>Total Pedido</span><span>${this.formatCOP(v.totalPagar)}</span>
+  <div class="grand-total">
+    <span>TOTAL</span><span>${this.formatCOP(v.totalPagar)}</span>
   </div>
 
-  <hr class="solid"/>
+  <div class="payments-area" style="font-size: 0.95em;">
+    ${filasPagos}
+  </div>
 
-  ${filasPagos}
+  <div class="dash"></div>
 
-  <hr class="dash"/>
-
-  <div style="font-size:0.78em;text-align:justify;margin:4px 0;line-height:1.35;">
+  <div style="font-size:0.75em; text-align:center; margin:10px 0; line-height:1.4; font-style: italic;">
     Esta factura se asimila a los efectos legales de las facturas de cambio ART. 744 del Código del Comercio.
   </div>
 
   ${feHtml}
 
-  <hr class="solid"/>
-
-  <div style="text-align:center;margin-top:6px;">
-    <div>*** GRACIAS POR SU COMPRA ***</div>
-    <div style="font-size:0.82em;margin-top:2px;">Conserve su comprobante</div>
+  <div class="footer">
+    <div class="thanks">*** GRACIAS POR SU COMPRA ***</div>
+    <div style="font-size: 0.85em;">Conserve su comprobante para cualquier trámite.</div>
+    <div style="font-size: 0.75em; margin-top: 5px; color: #444;">Powered by Aura POS</div>
   </div>
 
 </body>

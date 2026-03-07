@@ -188,7 +188,7 @@ export class ReporteVentasComponent implements OnInit {
     this.reporteService
       .ventasPdf(this.fmtDate(this.desde), this.fmtDate(this.hasta))
       .subscribe({
-        next: (b) => this.reporteService.descargar(b, 'reporte_ventas.pdf'),
+        next: (b) => this.reporteService.visualizarPdf(b),
         complete: () => (this.loadingPdf = false),
         error: () => (this.loadingPdf = false),
       });

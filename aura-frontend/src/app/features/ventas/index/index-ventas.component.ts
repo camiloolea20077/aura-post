@@ -26,7 +26,10 @@ import { FacturaViewerModalComponent } from '../../pos/components/factura-viewer
 import { EmpresaService } from '../../../core/services/empresa.service';
 import { IndexDBService } from '../../../core/services/index-db.service';
 import { ConfirmDialog } from 'primeng/confirmdialog';
-import { FacturaElectronicaModalComponent, FacturaElectronicaResult } from '../../factura_eletronica/factura-electronica-modal.component';
+import {
+  FacturaElectronicaModalComponent,
+  FacturaElectronicaResult,
+} from '../../factura_eletronica/factura-electronica-modal.component';
 
 type TagSeverity =
   | 'success'
@@ -271,11 +274,27 @@ export class IndexVentasComponent implements OnInit {
   verFactura(item: VentaTableModel, event: Event): void {
     event.stopPropagation();
     this.facturaSeleccionada = {
-      id: item.id, // ← FALTABA, sin esto ventaId llega null
+      id: item.id,
       factusUrl: (item as any).factusUrl ?? null,
       cufe: (item as any).cufe ?? null,
       facturaNumero: (item as any).factusNumero ?? item.numeroVenta ?? null,
     };
     this.mostrarViewerFE = true;
+  }
+
+  async verPdfFE(item: VentaTableModel, event: Event): Promise<void> {
+    event.stopPropagation();
+    try {
+      const blob = await lastValueFrom(
+        this.ventaService.descargarFacturaPdf(item.id),
+      );
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch {
+      this.alertService.showError(
+        'Error',
+        'No se pudo cargar el PDF de la factura',
+      );
+    }
   }
 }

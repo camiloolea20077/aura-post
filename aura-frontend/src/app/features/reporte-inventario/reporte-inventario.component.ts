@@ -162,7 +162,7 @@ export class ReporteInventarioComponent implements OnInit {
   descargarPdf(): void {
     this.loadingPdf = true;
     this.reporteService.inventarioPdf().subscribe({
-      next: (b) => this.reporteService.descargar(b, 'reporte_inventario.pdf'),
+      next: (b) => this.reporteService.visualizarPdf(b),
       complete: () => (this.loadingPdf = false),
       error: () => (this.loadingPdf = false),
     });
