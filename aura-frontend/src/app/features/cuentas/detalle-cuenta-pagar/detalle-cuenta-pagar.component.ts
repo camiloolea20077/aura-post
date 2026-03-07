@@ -111,6 +111,34 @@ export class DetalleCuentaPagarComponent implements OnInit {
       fechaPago: [new Date(), Validators.required],
     });
   }
+
+  async imprimirFactura(): Promise<void> {
+    if (!this.cuenta) return;
+    try {
+      const blob = await lastValueFrom(
+        this.service.descargarPdf(this.cuenta.id),
+      );
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch (err: any) {
+      this.alert.showError('Error', 'No se pudo generar la factura');
+    }
+  }
+
+  async imprimirRecibo(abono: AbonoPagarModel): Promise<void> {
+    try {
+      const blob = await lastValueFrom(
+        this.service.descargarAbonoPdf(abono.id),
+      );
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank', 'width=800,height=600');
+    } catch (err: any) {
+      this.alert.showError(
+        'Error',
+        'No se pudo generar el comprobante de pago',
+      );
+    }
+  }
   ngOnInit(): void {
     this.loadTurnoActivo();
   }

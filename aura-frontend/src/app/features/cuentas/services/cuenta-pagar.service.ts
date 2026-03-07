@@ -44,9 +44,7 @@ export class CuentaPagarService {
     return this.http.post<any>(`${this.base}/page`, pageable);
   }
 
-  getById(
-    id: number,
-  ): Observable<{
+  getById(id: number): Observable<{
     status: number;
     message: string;
     error: boolean;
@@ -55,9 +53,7 @@ export class CuentaPagarService {
     return this.http.get<any>(`${this.base}/${id}`);
   }
 
-  create(
-    dto: CreateCuentaPagarDto,
-  ): Observable<{
+  create(dto: CreateCuentaPagarDto): Observable<{
     status: number;
     message: string;
     error: boolean;
@@ -90,9 +86,7 @@ export class CuentaPagarService {
     return this.http.post<any>(`${this.base}/${cuentaId}/abonos`, dto);
   }
 
-  getAbonos(
-    cuentaId: number,
-  ): Observable<{
+  getAbonos(cuentaId: number): Observable<{
     status: number;
     message: string;
     error: boolean;
@@ -113,9 +107,7 @@ export class CuentaPagarService {
     return this.http.delete<any>(`${this.base}/${cuentaId}/abonos/${abonoId}`);
   }
 
-  getResumen(
-    params?: Partial<CuentaPagarFilters>,
-  ): Observable<{
+  getResumen(params?: Partial<CuentaPagarFilters>): Observable<{
     status: number;
     message: string;
     error: boolean;
@@ -137,5 +129,15 @@ export class CuentaPagarService {
     data: CuentaPagarTableModel[];
   }> {
     return this.http.get<any>(`${this.base}/vencidas`);
+  }
+
+  descargarPdf(id: number): Observable<Blob> {
+    return this.http.get(`${this.base}/${id}/pdf`, { responseType: 'blob' });
+  }
+
+  descargarAbonoPdf(abonoId: number): Observable<Blob> {
+    return this.http.get(`${this.base}/abonos/${abonoId}/pdf`, {
+      responseType: 'blob',
+    });
   }
 }

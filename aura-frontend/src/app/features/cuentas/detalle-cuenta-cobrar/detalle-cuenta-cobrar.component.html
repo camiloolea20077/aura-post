@@ -38,6 +38,14 @@
               [severity]="getSeverity(cuenta.estado)"
             ></p-tag>
           </div>
+          &nbsp; &nbsp; &nbsp;
+          <button
+            pButton
+            icon="pi pi-print"
+            label="Imprimir Factura"
+            class="p-button-outlined p-button-sm"
+            (click)="imprimirFactura()"
+          ></button>
         </div>
       </div>
     </div>
@@ -136,7 +144,7 @@
               <th>Referencia</th>
               <th class="text-right">Monto</th>
               <th>Usuario</th>
-              <th style="width: 60px"></th>
+              <th style="width: 100px"></th>
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-abono>
@@ -147,6 +155,13 @@
               <td class="text-right mono">{{ formatCOP(abono.monto) }}</td>
               <td>{{ abono.usuarioNombre }}</td>
               <td>
+                <button
+                  pButton
+                  icon="pi pi-print"
+                  class="p-button-text p-button-secondary p-button-sm"
+                  (click)="imprimirRecibo(abono)"
+                  pTooltip="Imprimir recibo"
+                ></button>
                 <button
                   *ngIf="isAbonoFromToday(abono.fechaPago)"
                   pButton
