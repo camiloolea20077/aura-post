@@ -27,6 +27,7 @@ import { DividerModule } from 'primeng/divider';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
+import { StorageService } from '../../../../core/services/storage.service';
 import {
   CreateProductoDto,
   ProductoModel,
@@ -104,6 +105,7 @@ export class FormProductosComponent implements OnInit, OnChanges {
   public isLoading = false;
   public activeTab = 0;
   public imageError = false;
+  public uploadingImage = false;
 
   // ─── Opciones de dropdowns ───────────────────────────────────────
   public tipoOptions = TIPO_PRODUCTO_OPTIONS;
@@ -124,6 +126,7 @@ export class FormProductosComponent implements OnInit, OnChanges {
     private readonly marcaService: MarcaService,
     private readonly unidadMedidaService: UnidadMedidaService,
     private readonly alertService: AlertService,
+    private readonly storageService: StorageService,
   ) {}
 
   ngOnInit(): void {
@@ -710,6 +713,43 @@ export class FormProductosComponent implements OnInit, OnChanges {
   }
   onImageError(_event: Event): void {
     this.imageError = true;
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!input.files) return;
+    input.value = ''; // reset para permitir seleccionar el mismo archivo
+
+    if (!file) return;
+
+    const tiposPermitidos = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
+    if (!tiposPermitidos.includes(file.type)) {
+      this.alertService.showError('Formato inválido', 'Solo se permiten imágenes JPG, PNG, WebP, GIF o AVIF.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      this.alertService.showError('Archivo muy grande', 'La imagen no puede superar los 10 MB.');
+      return;
+    }
+
+    this.uploadingImage = true;
+    this.imageError = false;
+    this.storageService.uploadImagen(file, 'productos').subscribe({
+      next: (res) => {
+        this.frmProducto.patchValue({ imagenUrl: res.url });
+        this.uploadingImage = false;
+      },
+      error: () => {
+        this.alertService.showError('Error', 'No se pudo subir la imagen. Intenta de nuevo.');
+        this.uploadingImage = false;
+      },
+    });
+  }
+
+  quitarImagen(): void {
+    this.frmProducto.patchValue({ imagenUrl: null });
+    this.imageError = false;
   }
   onImageLoad(_event: Event): void {
     this.imageError = false;
