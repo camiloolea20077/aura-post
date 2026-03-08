@@ -100,3 +100,32 @@ export interface MunicipioDto {
   label: string;
   codigoDane: string | null;
 }
+
+// ─── Estado de cuenta ────────────────────────────────────────
+export interface MovimientoCuentaModel {
+  tipo: 'VENTA' | 'ABONO' | 'NOTA_CREDITO' | 'NOTA_DEBITO';
+  fecha: string;
+  referencia: string;
+  descripcion: string;
+  cargo: number;
+  abono: number;
+  saldoAcumulado: number;
+  esCredito: boolean;
+}
+
+export interface EstadoCuentaClienteModel {
+  clienteId: number;
+  nombreCliente: string;
+  tipoDocumento: string;
+  numeroDocumento: string;
+  email: string | null;
+  telefono: string | null;
+  municipio: string | null;
+  totalVentas: number;
+  totalDeuda: number;
+  totalAbonado: number;
+  saldoPendiente: number;
+  cuentasActivas: number;
+  cuentasVencidas: number;
+  movimientos: MovimientoCuentaModel[];
+}

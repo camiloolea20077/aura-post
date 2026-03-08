@@ -40,7 +40,7 @@ export const routes: Routes = [
           ),
       },
 
-      // POS — libre para todos
+      // POS
       {
         path: 'pos',
         loadComponent: () =>
@@ -130,7 +130,8 @@ export const routes: Routes = [
             (m) => m.IndexDescuentosComponent,
           ),
       },
-      // CUENTAS POR COBRAR Y PAGAR
+
+      // Cuentas por cobrar / pagar
       {
         path: 'cuentas/cuentas-por-cobrar',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
@@ -145,6 +146,16 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/cuentas/index-cuentas-por-pagar/index-cuentas-por-pagar.component').then(
             (m) => m.IndexCuentasPorPagarComponent,
+          ),
+      },
+
+      // Contabilidad
+      {
+        path: 'contabilidad/estado-cuenta',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/estado-cuenta/estado-cuenta.component').then(
+            (m) => m.EstadoCuentaComponent,
           ),
       },
 
@@ -224,7 +235,7 @@ export const routes: Routes = [
           ),
       },
 
-      // Terceros
+      // Terceros (solo gestión, sin estado de cuenta)
       {
         path: 'terceros',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
@@ -245,7 +256,6 @@ export const routes: Routes = [
       },
       {
         path: 'caja/turnos',
-        // libre — CAJERO necesita acceder para abrir/cerrar turno
         loadComponent: () =>
           import('./features/caja/turnos/index/index-turnos.component').then(
             (m) => m.IndexTurnosComponent,
@@ -267,6 +277,8 @@ export const routes: Routes = [
             (m) => m.IndexUsuariosComponent,
           ),
       },
+
+      // Reportes
       {
         path: 'reportes/ventas',
         loadComponent: () =>
