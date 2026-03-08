@@ -1,0 +1,292 @@
+<div class="page-container">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="page-title-area">
+      <div class="page-icon"><i class="pi pi-file-edit"></i></div>
+      <div>
+        <h3 class="page-title">Estado de cuenta</h3>
+        <p class="page-sub">
+          Consulta el historial de movimientos de un cliente
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra de búsqueda y filtros -->
+  <div class="search-bar card">
+    <div class="search-grid">
+      <!-- Selector de cliente -->
+      <div class="field-group field-cliente">
+        <label>Cliente</label>
+        <p-dropdown
+          appendTo="body"
+          [options]="clientes"
+          [(ngModel)]="clienteSeleccionado"
+          [filter]="true"
+          filterBy="nombreCompleto,numeroDocumento"
+          placeholder="Buscar cliente..."
+          [showClear]="true"
+          styleClass="w-full"
+          [loading]="loadingClientes"
+          (onChange)="onClienteChange()"
+        >
+          <ng-template pTemplate="selectedItem" let-c>
+            <div class="cliente-selected" *ngIf="c">
+              <span class="cliente-nombre">{{ c.nombreCompleto }}</span>
+              <span class="cliente-doc text-muted"
+                >{{ c.tipoDocumento }} {{ c.numeroDocumento }}</span
+              >
+            </div>
+          </ng-template>
+          <ng-template pTemplate="item" let-c>
+            <div class="cliente-option">
+              <span class="cliente-nombre">{{ c.nombreCompleto }}</span>
+              <span class="cliente-doc text-muted"
+                >{{ c.tipoDocumento }} {{ c.numeroDocumento }}</span
+              >
+            </div>
+          </ng-template>
+        </p-dropdown>
+      </div>
+
+      <!-- Fecha desde -->
+      <div class="field-group">
+        <label>Desde</label>
+        <p-calendar
+          [(ngModel)]="fechaDesde"
+          placeholder="Fecha inicio"
+          dateFormat="yy-mm-dd"
+          [showIcon]="true"
+          styleClass="w-full"
+        />
+      </div>
+
+      <!-- Fecha hasta -->
+      <div class="field-group">
+        <label>Hasta</label>
+        <p-calendar
+          [(ngModel)]="fechaHasta"
+          placeholder="Fecha fin"
+          dateFormat="yy-mm-dd"
+          [showIcon]="true"
+          styleClass="w-full"
+        />
+      </div>
+
+      <!-- Acciones -->
+      <div class="field-group field-actions">
+        <label>&nbsp;</label>
+        <div class="btn-row">
+          <button
+            pButton
+            type="button"
+            label="Consultar"
+            icon="pi pi-search"
+            class="btn-aura btn-indigo"
+            (click)="cargar()"
+            [disabled]="!clienteSeleccionado || loading"
+          ></button>
+          <button
+            pButton
+            type="button"
+            label="PDF"
+            icon="pi pi-file-pdf"
+            class="btn-aura p-button-outlined"
+            pTooltip="Descargar estado de cuenta en PDF"
+            (click)="descargarPdf()"
+            [disabled]="!estado || loadingPdf"
+            [loading]="loadingPdf"
+          ></button>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-times"
+            class="p-button-text p-button-sm"
+            pTooltip="Limpiar fechas"
+            (click)="limpiarFiltros()"
+            *ngIf="fechaDesde || fechaHasta"
+          ></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado vacío: sin cliente seleccionado -->
+  <div class="empty-placeholder" *ngIf="!clienteSeleccionado && !loading">
+    <i class="pi pi-search"></i>
+    <p>Selecciona un cliente para ver su estado de cuenta</p>
+  </div>
+
+  <!-- Cargando -->
+  <ng-container *ngIf="loading">
+    <div class="resumen-grid mt-4">
+      <div class="resumen-card" *ngFor="let s of [1, 2, 3, 4]">
+        <p-skeleton height="80px" />
+      </div>
+    </div>
+    <div class="card mt-4"><p-skeleton height="300px" /></div>
+  </ng-container>
+
+  <!-- Contenido -->
+  <ng-container *ngIf="!loading && estado">
+    <!-- Info del cliente -->
+    <div class="cliente-info-bar mt-4">
+      <div class="cliente-avatar">
+        {{ estado.nombreCliente.charAt(0).toUpperCase() }}
+      </div>
+      <div class="cliente-data">
+        <span class="cliente-nombre-big">{{ estado.nombreCliente }}</span>
+        <span class="cliente-detalle text-muted">
+          {{ estado.tipoDocumento }} {{ estado.numeroDocumento }}
+          <ng-container *ngIf="estado.email">
+            · {{ estado.email }}</ng-container
+          >
+          <ng-container *ngIf="estado.telefono">
+            · {{ estado.telefono }}</ng-container
+          >
+        </span>
+      </div>
+    </div>
+
+    <!-- Tarjetas resumen -->
+    <div class="resumen-grid mt-3">
+      <div class="resumen-card">
+        <div class="resumen-icon blue"><i class="pi pi-shopping-cart"></i></div>
+        <div class="resumen-body">
+          <span class="resumen-label">Total ventas</span>
+          <span class="resumen-valor">{{ formatCOP(estado.totalVentas) }}</span>
+        </div>
+      </div>
+
+      <div class="resumen-card">
+        <div class="resumen-icon orange"><i class="pi pi-credit-card"></i></div>
+        <div class="resumen-body">
+          <span class="resumen-label">Deuda en crédito</span>
+          <span class="resumen-valor">{{ formatCOP(estado.totalDeuda) }}</span>
+          <span class="resumen-sub">
+            {{ estado.cuentasActivas }} activa(s) ·
+            {{ estado.cuentasVencidas }} vencida(s)
+          </span>
+        </div>
+      </div>
+
+      <div class="resumen-card">
+        <div class="resumen-icon green"><i class="pi pi-check-circle"></i></div>
+        <div class="resumen-body">
+          <span class="resumen-label">Total abonado</span>
+          <span class="resumen-valor text-success">{{
+            formatCOP(estado.totalAbonado)
+          }}</span>
+        </div>
+      </div>
+
+      <div class="resumen-card" [class.card-alerta]="estado.saldoPendiente > 0">
+        <div
+          class="resumen-icon"
+          [class.red]="estado.saldoPendiente > 0"
+          [class.green]="estado.saldoPendiente === 0"
+        >
+          <i
+            class="pi"
+            [class.pi-exclamation-triangle]="estado.saldoPendiente > 0"
+            [class.pi-check]="estado.saldoPendiente === 0"
+          ></i>
+        </div>
+        <div class="resumen-body">
+          <span class="resumen-label">Saldo pendiente</span>
+          <span
+            class="resumen-valor"
+            [class.text-danger]="estado.saldoPendiente > 0"
+            [class.text-success]="estado.saldoPendiente === 0"
+          >
+            {{ formatCOP(estado.saldoPendiente) }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla movimientos -->
+    <div class="card mt-4">
+      <div class="card-header-row">
+        <h4 class="section-title"><i class="pi pi-list"></i> Movimientos</h4>
+        <span class="total-badge"
+          >{{ estado.movimientos.length }} registros</span
+        >
+      </div>
+
+      <p-table
+        [value]="estado.movimientos"
+        styleClass="aura-table"
+        [tableStyle]="{ 'min-width': '700px' }"
+        [paginator]="estado.movimientos.length > 15"
+        [rows]="15"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 130px">Tipo</th>
+            <th style="width: 120px">Fecha</th>
+            <th style="min-width: 200px">Descripción</th>
+            <th style="width: 130px" class="text-right">Cargo</th>
+            <th style="width: 130px" class="text-right">Abono</th>
+            <th style="width: 140px" class="text-right">Saldo acum.</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-m>
+          <tr>
+            <td>
+              <div class="tipo-cell">
+                <p-tag
+                  [value]="getTipoLabel(m.tipo)"
+                  [severity]="getTipoSeverity(m.tipo)"
+                  [rounded]="true"
+                />
+                <span
+                  *ngIf="m.tipo === 'VENTA'"
+                  class="badge-pago"
+                  [class.badge-credito]="m.esCredito"
+                  [class.badge-contado]="!m.esCredito"
+                >{{ m.esCredito ? 'Crédito' : 'Contado' }}</span>
+              </div>
+            </td>
+            <td class="mono text-muted">{{ formatFecha(m.fecha) }}</td>
+            <td>
+              <div class="cell-desc">
+                <span class="desc-ref">{{ m.referencia }}</span>
+                <span class="desc-texto text-muted">{{ m.descripcion }}</span>
+              </div>
+            </td>
+            <td class="text-right mono">
+              <span *ngIf="m.cargo > 0" class="text-danger">{{
+                formatCOP(m.cargo)
+              }}</span>
+              <span *ngIf="m.cargo === 0" class="text-muted">—</span>
+            </td>
+            <td class="text-right mono">
+              <span *ngIf="m.abono > 0" class="text-success">{{
+                formatCOP(m.abono)
+              }}</span>
+              <span *ngIf="m.abono === 0" class="text-muted">—</span>
+            </td>
+            <td class="text-right mono fw-600" [ngClass]="getSaldoClass(m)">
+              {{ formatCOP(m.saldoAcumulado) }}
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <i class="pi pi-inbox"></i>
+                <p>No hay movimientos en el período seleccionado</p>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </ng-container>
+</div>
+
+<p-toast />

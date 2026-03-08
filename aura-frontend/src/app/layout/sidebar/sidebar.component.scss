@@ -18,12 +18,18 @@
   &.collapsed {
     width: 72px;
 
-    .nav-group-label,
     .nav-label,
     .nav-badge,
     .logo-texts,
-    .user-details {
+    .user-details,
+    .nav-group-label,
+    .group-chevron {
       display: none;
+    }
+
+    .nav-group-header {
+      justify-content: center;
+      padding: 0.6rem;
     }
 
     .nav-item {
@@ -77,6 +83,7 @@
     object-fit: cover;
   }
 }
+
 .logo-texts {
   display: flex;
   flex-direction: column;
@@ -126,61 +133,118 @@
     border-color: #2e6cf6;
   }
 
-  i {
-    font-size: 0.65rem;
-  }
+  i { font-size: 0.65rem; }
 }
 
 // ─── Nav ─────────────────────────────────────────────────────
 .sidebar-nav {
   flex: 1;
   overflow-y: auto;
-  padding: 0.75rem;
+  padding: 0.5rem 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 0.2rem;
 
-  &::-webkit-scrollbar {
-    width: 3px;
-  }
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: #e0e3eb;
-    border-radius: 2px;
-  }
+  &::-webkit-scrollbar { width: 3px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb { background: #e0e3eb; border-radius: 2px; }
 }
 
+// ─── Grupo ───────────────────────────────────────────────────
 .nav-group {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+}
+
+// Header del grupo — botón colapsable
+.nav-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  margin-top: 0.2rem;
+  border-radius: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  font-family: "Outfit", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  transition: all 0.15s;
+  text-align: left;
+
+  &:hover {
+    background: #f1f5f9;
+    color: #374151;
+  }
+
+  &.always-open {
+    cursor: default;
+    &:hover {
+      background: none;
+      color: #6b7280;
+    }
+  }
+}
+
+.group-icon {
+  font-size: 0.88rem;
+  min-width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+  color: #9ca3af;
 }
 
 .nav-group-label {
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  flex: 1;
+}
+
+.group-chevron {
+  font-size: 0.6rem;
   color: #9ca3af;
-  padding: 0 0.5rem;
-  margin-bottom: 0.3rem;
-  display: block;
+  transition: transform 0.2s ease;
+  margin-left: auto;
+  flex-shrink: 0;
+
+  &.rotated {
+    transform: rotate(0deg);
+  }
+
+  &:not(.rotated) {
+    transform: rotate(-90deg);
+  }
+}
+
+// ─── Items del grupo ─────────────────────────────────────────
+.nav-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.open {
+    max-height: 600px; // suficiente para cualquier grupo
+  }
 }
 
 .nav-item {
   display: flex;
   align-items: center;
   gap: 0.7rem;
-  padding: 0.6rem 0.75rem;
+  padding: 0.55rem 0.75rem 0.55rem 2rem;
   border-radius: 10px;
   color: #6b7280;
   text-decoration: none;
-  font-size: 0.85rem;
+  font-size: 0.84rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: all 0.15s ease;
   position: relative;
   white-space: nowrap;
 
@@ -188,22 +252,17 @@
     background: rgba(46, 108, 246, 0.07);
     color: #2e6cf6;
 
-    .nav-icon {
-      color: #2e6cf6;
-    }
+    .nav-icon { color: #2e6cf6; }
   }
 
   &.active {
     background: linear-gradient(135deg, #2e6cf6 0%, #7b4dff 100%);
     color: white;
     box-shadow: 0 4px 14px rgba(46, 108, 246, 0.28);
+    font-weight: 600;
 
-    .nav-icon {
-      color: white;
-    }
-    .nav-label {
-      color: white;
-    }
+    .nav-icon { color: white; }
+    .nav-label { color: white; }
   }
 
   &.highlight:not(.active) {
@@ -211,16 +270,20 @@
     color: #2e6cf6;
     border: 1px solid rgba(46, 108, 246, 0.18);
     font-weight: 600;
+    padding-left: 0.75rem;
 
-    .nav-icon {
-      color: #2e6cf6;
-    }
+    .nav-icon { color: #2e6cf6; }
   }
 }
 
+// Cuando collapsed, quitar el indent
+.aura-sidebar.collapsed .nav-item {
+  padding-left: 0.65rem;
+}
+
 .nav-icon {
-  font-size: 0.95rem;
-  min-width: 18px;
+  font-size: 0.9rem;
+  min-width: 16px;
   text-align: center;
   flex-shrink: 0;
 }
@@ -323,13 +386,8 @@
   flex-shrink: 0;
   transition: all 0.2s;
 
-  &.centered {
-    margin: 0 auto;
-  }
-
-  i {
-    font-size: 0.8rem;
-  }
+  &.centered { margin: 0 auto; }
+  i { font-size: 0.8rem; }
 
   &:hover {
     color: #ef4444;
