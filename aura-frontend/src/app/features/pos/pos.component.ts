@@ -343,7 +343,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       return null;
     }
     const skuNumerico = parseInt(skuRaw, 10);
-    const pesoKg = parseInt(pesoRaw, 10) / 10000;
+    const pesoKg = Math.floor(parseInt(pesoRaw, 10) / 10) / 1000;
     if (isNaN(skuNumerico) || isNaN(pesoKg) || pesoKg <= 0) return null;
     return { skuNumerico, pesoKg };
   }

@@ -71,13 +71,12 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
   {
     label: 'Operaciones',
     icon: 'pi pi-receipt',
-    roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [
-      { label: 'Compras',      icon: 'pi pi-truck',       route: '/compras' },
-      { label: 'Ventas',       icon: 'pi pi-receipt',     route: '/ventas' },
-      { label: 'Mermas',       icon: 'pi pi-trash',       route: '/mermas' },
-      { label: 'Traslados',    icon: 'pi pi-arrows-h',    route: '/traslados' },
-      { label: 'Cotizaciones', icon: 'pi pi-file',        route: '/cotizaciones' },
+      { label: 'Compras',      icon: 'pi pi-truck',       route: '/compras',       roles: ['SUPER_ADMIN', 'ADMIN'] },
+      { label: 'Ventas',       icon: 'pi pi-receipt',     route: '/ventas',        roles: ['SUPER_ADMIN', 'ADMIN', 'CAJERO'] },
+      { label: 'Mermas',       icon: 'pi pi-trash',       route: '/mermas',        roles: ['SUPER_ADMIN', 'ADMIN'] },
+      { label: 'Traslados',    icon: 'pi pi-arrows-h',    route: '/traslados',     roles: ['SUPER_ADMIN', 'ADMIN'] },
+      { label: 'Cotizaciones', icon: 'pi pi-file',        route: '/cotizaciones',  roles: ['SUPER_ADMIN', 'ADMIN', 'CAJERO'] },
     ],
   },
   {

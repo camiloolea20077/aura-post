@@ -93,10 +93,14 @@ export class SidebarComponent implements OnInit {
 
   // ── Filtra grupos e ítems según el rol ────────────────────
   private filtrarMenu(rol: string): SidebarMenuGroup[] {
+    const gruposDefaultOpenCajero = ['Operaciones', 'Administración'];
     return SIDEBAR_MENU.filter((group) => this.tieneAcceso(group.roles, rol))
       .map((group) => ({
         ...group,
         items: group.items.filter((item) => this.tieneAcceso(item.roles, rol)),
+        defaultOpen:
+          group.defaultOpen ||
+          (rol === 'CAJERO' && gruposDefaultOpenCajero.includes(group.label)),
       }))
       .filter((group) => group.items.length > 0);
   }

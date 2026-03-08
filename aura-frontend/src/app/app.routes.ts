@@ -204,7 +204,7 @@ export const routes: Routes = [
       },
       {
         path: 'ventas',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN', 'CAJERO'])],
         loadComponent: () =>
           import('./features/ventas/index/index-ventas.component').then(
             (m) => m.IndexVentasComponent,
@@ -212,7 +212,7 @@ export const routes: Routes = [
       },
       {
         path: 'cotizaciones',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN', 'CAJERO'])],
         loadComponent: () =>
           import('./features/cotizaciones/index/index-cotizaciones.component').then(
             (m) => m.IndexCotizacionesComponent,
