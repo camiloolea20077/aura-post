@@ -683,6 +683,9 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         this.feClienteEmail = clienteEmailParaFE;
         this.qrDataActual = null;
         this.cufeActual = null;
+        this.searchProduct = '';
+        this.filtrar();
+        this.alertService.showSuccess('Venta registrada', `Venta #${(res.data as any).numero ?? this.ventaCompletadaId} completada exitosamente`);
 
         if (this.empresaFacturaElec && this.ventaCompletadaId) {
           // Preguntar si desea factura electrónica → modal FE primero

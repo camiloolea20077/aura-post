@@ -2,6 +2,8 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { TooltipModule } from 'primeng/tooltip';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService } from 'primeng/api';
 import { filter } from 'rxjs/operators';
 
 import { SIDEBAR_MENU, SidebarMenuGroup, SidebarMenuItem } from './sidebar.config';
@@ -10,7 +12,8 @@ import { IndexDBService } from '../../core/services/index-db.service';
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule, TooltipModule],
+  imports: [CommonModule, RouterModule, TooltipModule, ConfirmDialogModule],
+  providers: [ConfirmationService],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss'],
 })
@@ -31,6 +34,7 @@ export class SidebarComponent implements OnInit {
   constructor(
     private readonly indexDBService: IndexDBService,
     private readonly router: Router,
+    private readonly confirmationService: ConfirmationService,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -111,8 +115,18 @@ export class SidebarComponent implements OnInit {
       .toUpperCase();
   }
 
-  async logout(): Promise<void> {
-    await this.indexDBService.deleteDataAuthDB();
-    this.router.navigate(['/login']);
+  confirmLogout(): void {
+    this.confirmationService.confirm({
+      message: '¿Estás seguro de que deseas cerrar sesión?',
+      header: 'Cerrar sesión',
+      icon: 'pi pi-sign-out',
+      acceptLabel: 'Sí, cerrar sesión',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: async () => {
+        await this.indexDBService.deleteDataAuthDB();
+        this.router.navigate(['/login']);
+      },
+    });
   }
 }

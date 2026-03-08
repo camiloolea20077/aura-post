@@ -29,7 +29,6 @@ import { IndexDBService } from '../../../../core/services/index-db.service';
     ToastModule,
     PasswordModule,
   ],
-  providers: [MessageService],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss'],
 })
@@ -79,12 +78,20 @@ export class LoginComponent implements OnInit {
 
       if (response?.status === 200 && response?.data?.token) {
         await this.indexDBService.saveAuthData(response.data);
+        const nombre =
+          response.data.nombreCompleto ?? response.data.username ?? '';
+        this.alertService.showSuccess(
+          '¡Bienvenido!',
+          `Hola${nombre ? ', ' + nombre : ''}. Sesión iniciada correctamente.`,
+        );
         const rol = response.data.rol;
-        if (rol === 'PLATFORM_ADMIN') {
-          this.router.navigate(['/platform/dashboard']);
-        } else {
-          this.router.navigate(['/dashboard']);
-        }
+        setTimeout(() => {
+          if (rol === 'PLATFORM_ADMIN') {
+            this.router.navigate(['/platform/dashboard']);
+          } else {
+            this.router.navigate(['/dashboard']);
+          }
+        }, 1000);
       } else {
         this.alertService.showError(
           'Error',
