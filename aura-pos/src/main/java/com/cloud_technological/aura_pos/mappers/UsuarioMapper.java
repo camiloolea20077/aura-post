@@ -21,6 +21,7 @@ public interface UsuarioMapper {
     @Mapping(target = "sucursalesAsignadas", ignore = true)
     UsuarioEntity toEntity(CreateUsuarioDto dto);
 
+    
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "empresa", ignore = true)
     @Mapping(target = "tercero", ignore = true)
