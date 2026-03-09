@@ -116,13 +116,16 @@ public class EmpresaPlataformaServiceImpl implements EmpresaPlataformaService {
                 .build();
         sucursal = sucursalRepo.save(sucursal);
 
-        // 3. Tercero
+        // 3. Tercero — datos del admin + datos de contacto de la empresa
         TerceroEntity tercero = TerceroEntity.builder()
                 .empresa(empresa)
                 .nombres(dto.getNombresAdmin())
                 .apellidos(dto.getApellidosAdmin())
                 .numeroDocumento(dto.getDocumentoAdmin())
                 .email(dto.getEmailAdmin())
+                .telefono(dto.getTelefono())
+                .municipio(dto.getMunicipio())
+                .municipioId(dto.getMunicipioId() != null ? dto.getMunicipioId().longValue() : null)
                 .esEmpleado(true)
                 .activo(true)
                 .build();
