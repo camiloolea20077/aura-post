@@ -181,6 +181,7 @@ export class FormProductosComponent implements OnInit, OnChanges {
       manejaInventario: [true, Validators.required],
       manejaLotes: [false, Validators.required],
       manejaSerial: [false, Validators.required],
+      permitirStockNegativo: [false, Validators.required],
       visibleEnPos: [true, Validators.required],
     });
 
@@ -214,6 +215,7 @@ export class FormProductosComponent implements OnInit, OnChanges {
       manejaInventario: true,
       manejaLotes: false,
       manejaSerial: false,
+      permitirStockNegativo: false,
       visibleEnPos: true,
     });
   }
@@ -593,6 +595,7 @@ export class FormProductosComponent implements OnInit, OnChanges {
           manejaInventario: d.manejaInventario,
           manejaLotes: d.manejaLotes,
           manejaSerial: d.manejaSerial,
+          permitirStockNegativo: d.permitirStockNegativo,
           visibleEnPos: d.visibleEnPos,
         },
         { emitEvent: false },
@@ -685,6 +688,7 @@ export class FormProductosComponent implements OnInit, OnChanges {
       manejaInventario: v.manejaInventario,
       manejaLotes: v.manejaLotes,
       manejaSerial: v.manejaSerial,
+      permitirStockNegativo: v.permitirStockNegativo ?? false,
       visibleEnPos: v.visibleEnPos ?? true,
     };
   }

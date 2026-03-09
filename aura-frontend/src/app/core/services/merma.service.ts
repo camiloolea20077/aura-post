@@ -24,11 +24,11 @@ export class MermaService {
   }
 
   getAllMotivos(): Observable<any> {
-    return this.http.get<any>(`${this.base}motivos-merma`);
+    return this.http.get<any>(`${this.base}motivos-merma/list`);
   }
 
   createMotivo(dto: CreateMotivoMermaDto): Observable<any> {
-    return this.http.post<any>(`${this.base}motivos-merma`, dto);
+    return this.http.post<any>(`${this.base}motivos-merma/create`, dto);
   }
 
   updateMotivo(id: number, dto: CreateMotivoMermaDto): Observable<any> {
@@ -49,7 +49,7 @@ export class MermaService {
   }
 
   create(dto: CreateMermaDto): Observable<any> {
-    return this.http.post<any>(`${this.base}mermas`, dto);
+    return this.http.post<any>(`${this.base}mermas/create`, dto);
   }
 
   anular(id: number): Observable<any> {

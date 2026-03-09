@@ -400,6 +400,37 @@ $mono: "JetBrains Mono", monospace;
   }
 }
 
+// ── Stock central (modo grid) ─────────────────────────────────
+.prod-stock-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.08rem;
+  padding: 0.2rem 0;
+}
+
+.prod-stock-numero {
+  font-size: 1.4rem;
+  font-weight: 900;
+  font-family: $mono;
+  line-height: 1;
+  letter-spacing: -0.04em;
+
+  &.ok    { color: $emerald; }
+  &.low   { color: $orange; }
+  &.empty { color: $red; }
+  &.negativo { color: #8b5cf6; }
+}
+
+.prod-stock-unit {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: $muted;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 .prod-body {
   display: flex;
   flex-direction: column;
@@ -541,6 +572,12 @@ $mono: "JetBrains Mono", monospace;
     color: $red;
   }
 
+  &.negativo {
+    background: rgba(139, 92, 246, 0.1);
+    color: #8b5cf6;
+    border: 1px solid rgba(139, 92, 246, 0.25);
+  }
+
   &.servicio {
     background: rgba(99, 102, 241, 0.08);
     color: #6366f1;
@@ -612,6 +649,40 @@ $mono: "JetBrains Mono", monospace;
   }
 }
 
+// ── Modo grid: ajustes visuales ──────────────────────────────
+.product-grid:not(.list-mode) {
+  .product-card {
+    .prod-body {
+      align-items: center;
+    }
+
+    .prod-nombre {
+      text-align: center;
+      font-size: 0.78rem;
+    }
+
+    .prod-sku {
+      text-align: center;
+    }
+
+    .prod-footer {
+      justify-content: center;
+      border-top: none;
+      padding-top: 0.1rem;
+      padding-bottom: 0.1rem;
+      min-height: unset;
+
+      .precio-wrap {
+        align-items: center;
+      }
+
+      .prod-stock-pill {
+        display: none;
+      }
+    }
+  }
+}
+
 // ── Modo lista (cuando hay búsqueda activa) ──────────────────
 .product-grid.list-mode {
   grid-template-columns: 1fr;
@@ -626,6 +697,14 @@ $mono: "JetBrains Mono", monospace;
     padding: 0.85rem 1.1rem;
     border-radius: 14px;
     min-height: 70px;
+
+    .prod-stock-center {
+      display: none;
+    }
+
+    .prod-avatar { order: 1; }
+    .prod-footer { order: 3; }
+    .prod-body   { order: 2; }
 
     &:hover { transform: none; }
 
@@ -664,9 +743,15 @@ $mono: "JetBrains Mono", monospace;
       align-items: flex-end;
       justify-content: center;
       padding-top: 0;
+      border-top: none;
       gap: 0.4rem;
       flex-shrink: 0;
       min-width: 110px;
+      min-height: unset;
+
+      .prod-stock-pill {
+        display: flex;
+      }
     }
 
     .precio-wrap {

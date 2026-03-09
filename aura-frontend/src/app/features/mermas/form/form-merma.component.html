@@ -15,15 +15,26 @@
           <label class="field-label"
             >Motivo <span class="required">*</span></label
           >
-          <p-dropdown
-            formControlName="motivoId"
-            [options]="motivos"
-            optionLabel="nombre"
-            optionValue="id"
-            placeholder="Selecciona un motivo"
-            styleClass="w-full"
-            [class.ng-invalid]="isInvalid('motivoId')"
-          />
+          <div class="field-with-action">
+            <p-dropdown
+              formControlName="motivoId"
+              [options]="motivos"
+              optionLabel="nombre"
+              optionValue="id"
+              placeholder="Selecciona un motivo"
+              styleClass="w-full"
+              [class.ng-invalid]="isInvalid('motivoId')"
+            />
+            <button
+              pButton
+              type="button"
+              icon="pi pi-plus"
+              class="p-button-outlined p-button-secondary btn-add-motivo"
+              pTooltip="Crear nuevo motivo"
+              tooltipPosition="top"
+              (click)="showMotivoDialog = true"
+            ></button>
+          </div>
           <small class="field-error" *ngIf="isInvalid('motivoId')"
             >El motivo es obligatorio</small
           >
@@ -78,18 +89,20 @@
         <div class="line-row" *ngFor="let l of lineas; trackBy: trackById">
           <!-- Producto -->
           <div class="col-producto">
-            <p-autoComplete
+            <p-dropdown
               appendTo="body"
-              [(ngModel)]="l.productoNombre"
+              [ngModel]="l.productoId"
               [ngModelOptions]="{ standalone: true }"
-              [suggestions]="productoSugerencias"
-              field="label"
-              placeholder="Buscar producto..."
+              (ngModelChange)="onProductoChange(l, $event)"
+              [options]="productosOpts"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Escribe para buscar..."
+              [filter]="true"
+              filterPlaceholder="Nombre o SKU (2+ letras)..."
+              (onFilter)="onFiltroProducto($event)"
               styleClass="w-full"
-              inputStyleClass="line-ac-input"
-              (completeMethod)="buscarProductos($event)"
-              (onSelect)="seleccionarProducto($event, l)"
-              [minLength]="2"
+              [class.sin-seleccion]="!l.productoId"
             />
           </div>
 
@@ -201,3 +214,9 @@
     </div>
   </ng-template>
 </p-dialog>
+
+<app-form-motivo
+  [(visible)]="showMotivoDialog"
+  [motivo]="null"
+  (saved)="onMotivoCreado($event)"
+/>

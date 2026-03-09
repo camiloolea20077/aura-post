@@ -17,6 +17,7 @@ export interface ProductoModel {
   manejaInventario: boolean;
   manejaLotes: boolean;
   manejaSerial: boolean;
+  permitirStockNegativo: boolean;
   costo: number;
   precio: number;
   ivaPorcentaje: number;
@@ -62,6 +63,7 @@ export interface CreateProductoDto {
   manejaInventario: boolean;
   manejaLotes: boolean;
   manejaSerial: boolean;
+  permitirStockNegativo: boolean;
   costo: number;
   precio: number;
   ivaPorcentaje: number;

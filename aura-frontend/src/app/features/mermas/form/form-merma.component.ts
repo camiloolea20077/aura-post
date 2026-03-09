@@ -21,7 +21,6 @@ import { DropdownModule } from 'primeng/dropdown';
 import { DialogModule } from 'primeng/dialog';
 import { TextareaModule } from 'primeng/textarea';
 import { TooltipModule } from 'primeng/tooltip';
-import { AutoCompleteModule } from 'primeng/autocomplete';
 import { lastValueFrom } from 'rxjs';
 import { v4 as uuid } from 'uuid';
 import { HttpClient } from '@angular/common/http';
@@ -33,11 +32,24 @@ import {
   MotivoMermaModel,
 } from '../../../core/models/merma.model';
 import { MermaService } from '../../../core/services/merma.service';
+import { FormMotivoComponent } from '../motivos/form/form-motivo.component';
 import { environment } from '../../../../environments/environment';
+import { AutoCompleteModule } from 'primeng/autocomplete';
+import { IndexDBService } from '../../../core/services/index-db.service';
 
+interface ProductoOpcionMerma {
+  label: string;
+  value: number;
+  sku: string | null;
+  stockActual: number;
+  costo: number;
+  manejaLotes: boolean;
+}
 @Component({
   selector: 'app-form-merma',
   standalone: true,
+  templateUrl: './form-merma.component.html',
+  styleUrls: ['./form-merma.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
@@ -50,9 +62,8 @@ import { environment } from '../../../../environments/environment';
     TextareaModule,
     TooltipModule,
     AutoCompleteModule,
+    FormMotivoComponent,
   ],
-  templateUrl: './form-merma.component.html',
-  styleUrls: ['./form-merma.component.scss'],
 })
 export class FormMermaComponent implements OnChanges {
   @Input() visible = false;
@@ -62,9 +73,12 @@ export class FormMermaComponent implements OnChanges {
   form: FormGroup;
   loading = false;
   motivos: MotivoMermaModel[] = [];
+  showMotivoDialog = false;
 
   lineas: MermaLineaUI[] = [];
-  productoSugerencias: any[] = [];
+  productosOpts: ProductoOpcionMerma[] = [];
+
+  private sucursalId: number | null = null;
 
   constructor(
     private readonly fb: FormBuilder,
@@ -72,6 +86,7 @@ export class FormMermaComponent implements OnChanges {
     private readonly alert: AlertService,
     private readonly http: HttpClient,
     private readonly cdr: ChangeDetectorRef,
+    private readonly indexDB: IndexDBService,
   ) {
     this.form = this.fb.group({
       motivoId: [null, Validators.required],
@@ -83,7 +98,12 @@ export class FormMermaComponent implements OnChanges {
     if (this.visible) {
       this.form.reset({ motivoId: null, observacion: null });
       this.lineas = [];
+      this.productosOpts = [];
       this.loadMotivos();
+      this.indexDB.getSucursalDefault().then((id) => {
+        this.sucursalId = id;
+        console.log('Sucursal ID cargada:', this.sucursalId);
+      });
     }
   }
 
@@ -97,38 +117,55 @@ export class FormMermaComponent implements OnChanges {
     this.cdr.markForCheck();
   }
 
-  async buscarProductos(event: any): Promise<void> {
-    const q = event.query?.trim();
+  async onMotivoCreado(motivo: MotivoMermaModel): Promise<void> {
+    await this.loadMotivos();
+    if (motivo?.id) {
+      this.form.patchValue({ motivoId: motivo.id });
+    }
+  }
+
+  async onFiltroProducto(event: { filter: string }): Promise<void> {
+    const q = event.filter?.trim();
     if (!q || q.length < 2) {
-      this.productoSugerencias = [];
+      this.productosOpts = [];
+      this.cdr.markForCheck();
       return;
     }
     try {
       const res: any = await lastValueFrom(
-        this.http.get<any>(`${environment.apiUrl}productos/pos?search=${q}`),
+        this.http.get<any>(
+          `${environment.apiUrl}productos/pos?search=${encodeURIComponent(q)}`,
+        ),
       );
-      this.productoSugerencias = (res?.data ?? []).map((p: any) => ({
-        ...p,
-        label: `${p.nombre}${p.sku ? ' — ' + p.sku : ''}`,
-      }));
+      this.productosOpts = (res?.data ?? []).map(
+        (p: any): ProductoOpcionMerma => ({
+          label: p.nombre + (p.sku ? ` [${p.sku}]` : ''),
+          value: p.id,
+          sku: p.sku ?? null,
+          stockActual: p.stockActual ?? 0,
+          costo: p.costo ?? 0,
+          manejaLotes: !!p.manejaLotes,
+        }),
+      );
     } catch {
-      this.productoSugerencias = [];
+      this.productosOpts = [];
     }
     this.cdr.markForCheck();
   }
 
-  seleccionarProducto(event: any, linea: MermaLineaUI): void {
-    const p = event.value ?? event;
-    linea.productoId = p.id;
-    linea.productoNombre = p.nombre;
+  onProductoChange(linea: MermaLineaUI, productoId: number | null): void {
+    const p = this.productosOpts.find((o) => o.value === productoId);
+    if (!p) return;
+    linea.productoId = p.value;
+    linea.productoNombre = p.label;
     linea.productoSku = p.sku ?? '';
-    linea.stockActual = p.stockActual ?? 0;
-    linea.costoUnitario = p.costo ?? 0;
-    linea.manejaLotes = p.manejaLotes ?? false;
+    linea.stockActual = p.stockActual;
+    linea.costoUnitario = p.costo;
+    linea.manejaLotes = p.manejaLotes;
     linea.loteId = null;
     linea.codigoLote = null;
     linea.lotesDisponibles = [];
-    if (p.manejaLotes) this.cargarLotes(linea, p.id);
+    if (p.manejaLotes) this.cargarLotes(linea, p.value);
     this.calcLinea(linea);
     this.cdr.markForCheck();
   }
@@ -237,7 +274,7 @@ export class FormMermaComponent implements OnChanges {
     const dto: CreateMermaDto = {
       motivoId: this.form.value.motivoId,
       observacion: this.form.value.observacion || null,
-      sucursalId: 0,
+      sucursalId: this.sucursalId ?? 0,
       detalles: this.lineas.map((l) => ({
         productoId: l.productoId!,
         loteId: l.loteId ?? undefined,

@@ -163,6 +163,7 @@ export interface ProductoPOS {
   descuentoNombre: string | null; // ← nuevo
   descuentoValor: number | null; // ← nuevo
   manejaInventario: boolean;
+  permitirStockNegativo: boolean;
   stockActual: number;
   codigoBarras: string | null;
   presentacionId: number | null;

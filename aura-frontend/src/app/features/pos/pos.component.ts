@@ -445,7 +445,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     const cat = this.categoriaActiva;
     this.productosFiltrados = this.productos.filter((p) => {
       if (cat && p.categoriaId !== cat) return false;
-      if (p.tipoProducto !== 'SERVICIO' && p.manejaInventario && p.stockActual <= 0) return false;
+      if (p.tipoProducto !== 'SERVICIO' && p.manejaInventario && p.stockActual <= 0 && !p.permitirStockNegativo) return false;
       if (!q) return true;
       return (
         p.nombre.toLowerCase().includes(q) ||
@@ -465,7 +465,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   addToCart(p: ProductoPOS): void {
     const tieneInventario = p.tipoProducto !== 'SERVICIO';
 
-    if (tieneInventario && p.stockActual <= 0) {
+    if (tieneInventario && p.stockActual <= 0 && !p.permitirStockNegativo) {
       this.alertService.showWarn(
         'Sin stock',
         `${p.nombre} no tiene stock disponible.`,
@@ -475,7 +475,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const existing = this.cart.find((c) => c.productoId === p.id);
     if (existing) {
-      if (tieneInventario && existing.cantidad >= p.stockActual) {
+      if (tieneInventario && !p.permitirStockNegativo && existing.cantidad >= p.stockActual) {
         this.alertService.showWarn(
           'Stock insuficiente',
           `Solo hay ${p.stockActual} unidades.`,

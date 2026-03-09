@@ -115,7 +115,7 @@
           let p of productosFiltrados | filterProducts: searchProduct : page;
           trackBy: trackByProd
         "
-        [class.sin-stock]="p.stockActual <= 0 && p.tipoProducto !== 'SERVICIO'"
+        [class.sin-stock]="p.stockActual <= 0 && p.tipoProducto !== 'SERVICIO' && !p.permitirStockNegativo"
         [class.low-stock]="p.stockActual > 0 && p.stockActual < 5"
         (click)="addToCart(p)"
       >
@@ -138,7 +138,7 @@
           <i class="pi pi-tag"></i> {{ p.descuentoNombre }}
         </span>
 
-        <!-- Avatar / imagen -->
+        <!-- 1. Imagen -->
         <div class="prod-avatar">
           <img
             *ngIf="p.imagenUrl"
@@ -153,24 +153,12 @@
           <div class="prod-overlay"><i class="pi pi-plus"></i></div>
         </div>
 
-        <!-- Nombre + SKU -->
-        <div class="prod-body">
-          <span class="prod-nombre">{{ p.nombre }}</span>
-          <span class="prod-sku" *ngIf="p.sku">{{ p.sku }}</span>
-          <!-- Unidad de medida para pesables -->
-          <span class="prod-unidad" *ngIf="p.tipoProducto === 'PESABLE'">
-            {{ p.unidadMedidaNombre | lowercase }}
-          </span>
-        </div>
-
-        <!-- Footer: precio + stock -->
+        <!-- 2. Precio -->
         <div class="prod-footer">
           <div class="precio-wrap">
-            <!-- Precio original tachado si hay descuento automático -->
             <span class="precio-original" *ngIf="p.descuentoValor">
               {{ formatCOP(p.precio) }}
             </span>
-            <!-- Precio final (con IVA incluido para mostrar) -->
             <span class="prod-precio">
               {{
                 formatCOP(
@@ -180,28 +168,56 @@
               }}
             </span>
           </div>
+          <!-- Stock pill: solo visible en modo lista -->
           <span
             class="prod-stock-pill"
             *ngIf="p.tipoProducto !== 'SERVICIO'"
             [class.ok]="p.stockActual >= 5"
             [class.low]="p.stockActual > 0 && p.stockActual < 5"
-            [class.empty]="p.stockActual <= 0"
+            [class.empty]="p.stockActual <= 0 && !p.permitirStockNegativo"
+            [class.negativo]="p.stockActual <= 0 && p.permitirStockNegativo"
           >
-            {{ p.stockActual <= 0 ? "0" : p.stockActual }}
+            {{ p.stockActual }}
             <span class="stock-unit">{{
               p.tipoProducto === "PESABLE"
                 ? (p.unidadMedidaNombre | lowercase)
                 : "uds"
             }}</span>
           </span>
-
-          <!-- Pill especial para servicios -->
           <span
             class="prod-stock-pill servicio"
             *ngIf="p.tipoProducto === 'SERVICIO'"
           >
             <span class="stock-unit">servicio</span>
           </span>
+        </div>
+
+        <!-- 3. Nombre + SKU -->
+        <div class="prod-body">
+          <span class="prod-nombre">{{ p.nombre }}</span>
+          <span class="prod-sku" *ngIf="p.sku">{{ p.sku }}</span>
+          <span class="prod-unidad" *ngIf="p.tipoProducto === 'PESABLE'">
+            {{ p.unidadMedidaNombre | lowercase }}
+          </span>
+        </div>
+
+        <!-- 4. Cantidad (solo modo grid) -->
+        <div
+          class="prod-stock-center"
+          *ngIf="p.tipoProducto !== 'SERVICIO'"
+        >
+          <span
+            class="prod-stock-numero"
+            [class.ok]="p.stockActual >= 5"
+            [class.low]="p.stockActual > 0 && p.stockActual < 5"
+            [class.empty]="p.stockActual <= 0 && !p.permitirStockNegativo"
+            [class.negativo]="p.stockActual <= 0 && p.permitirStockNegativo"
+          >{{ p.stockActual }}</span>
+          <span class="prod-stock-unit">{{
+            p.tipoProducto === "PESABLE"
+              ? (p.unidadMedidaNombre | lowercase)
+              : "uds"
+          }}</span>
         </div>
       </div>
 
