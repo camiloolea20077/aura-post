@@ -18,6 +18,7 @@ import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 import {
+  CreateEmpresaResponseDto,
   EmpresaPlataformaModel,
   EmpresaTableModel,
 } from '../../../core/models/platform.model';
@@ -58,6 +59,8 @@ export class IndexEmpresasComponent implements OnInit {
 
   showForm = false;
   editTarget: EmpresaPlataformaModel | null = null;
+  credenciales: CreateEmpresaResponseDto | null = null;
+  showCredenciales = false;
 
   constructor(
     private readonly platformService: PlatformService,
@@ -160,6 +163,19 @@ export class IndexEmpresasComponent implements OnInit {
   onSaved(): void {
     this.showForm = false;
     this.reload();
+  }
+
+  onCredencialesCreadas(data: CreateEmpresaResponseDto): void {
+    this.credenciales = data;
+    this.showForm = false;
+    this.showCredenciales = true;
+    this.reload();
+    this.cdr.markForCheck();
+  }
+
+  copiar(texto: string): void {
+    navigator.clipboard.writeText(texto);
+    this.alertService.showSuccess('Copiado', 'Texto copiado al portapapeles');
   }
 
   formatFecha(iso: string): string {

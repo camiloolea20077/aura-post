@@ -20,9 +20,13 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { ToggleButtonModule } from 'primeng/togglebutton';
 import { DividerModule } from 'primeng/divider';
+import { AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { lastValueFrom } from 'rxjs';
-import { EmpresaPlataformaModel } from '../../../core/models/platform.model';
+import { CreateEmpresaResponseDto, EmpresaPlataformaModel } from '../../../core/models/platform.model';
+import { MunicipioDto } from '../../../core/models/tercero.model';
 import { PlatformService } from '../../../core/services/platform.service';
+import { TerceroService } from '../../../core/services/tercero.service';
+import { StorageService } from '../../../core/services/storage.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
 
 @Component({
@@ -37,6 +41,7 @@ import { AlertService } from '../../../shared/pipes/alert.service';
     PasswordModule,
     ToggleButtonModule,
     DividerModule,
+    AutoCompleteModule,
   ],
   templateUrl: './form-empresa.component.html',
   styleUrls: ['./form-empresa.component.scss'],
@@ -44,10 +49,14 @@ import { AlertService } from '../../../shared/pipes/alert.service';
 export class FormEmpresaComponent implements OnChanges {
   @Input() empresa: EmpresaPlataformaModel | null = null;
   @Output() saved = new EventEmitter<void>();
+  @Output() credencialesCreadas = new EventEmitter<CreateEmpresaResponseDto>();
   @Output() cancelled = new EventEmitter<void>();
 
   frmEmpresa: FormGroup;
   loading = false;
+  uploadingLogo = false;
+  logoPreview: string | null = null;
+  municipioSugerencias: MunicipioDto[] = [];
 
   get isEdit(): boolean {
     return !!this.empresa;
@@ -56,6 +65,8 @@ export class FormEmpresaComponent implements OnChanges {
   constructor(
     private readonly fb: FormBuilder,
     private readonly service: PlatformService,
+    private readonly terceroService: TerceroService,
+    private readonly storageService: StorageService,
     private readonly alert: AlertService,
     private readonly cdr: ChangeDetectorRef,
   ) {
@@ -65,6 +76,11 @@ export class FormEmpresaComponent implements OnChanges {
       nombreComercial: [null],
       nit: ['', [Validators.required, Validators.maxLength(20)]],
       dv: [null, Validators.maxLength(2)],
+      logoUrl: [null],
+      telefono: [null],
+      municipioObj: [null],
+      municipio: [null],
+      municipioId: [null],
       activa: [true],
       // Admin — solo en creación
       emailAdmin: ['', [Validators.email]],
@@ -101,11 +117,19 @@ export class FormEmpresaComponent implements OnChanges {
         this.frmEmpresa.get(f)?.clearValidators();
         this.frmEmpresa.get(f)?.updateValueAndValidity();
       });
+      this.logoPreview = this.empresa!.logoUrl ?? null;
       this.frmEmpresa.patchValue({
         razonSocial: this.empresa!.razonSocial,
         nombreComercial: this.empresa!.nombreComercial,
         nit: this.empresa!.nit,
         dv: this.empresa!.dv,
+        logoUrl: this.empresa!.logoUrl,
+        telefono: this.empresa!.telefono,
+        municipio: this.empresa!.municipio,
+        municipioId: this.empresa!.municipioId,
+        municipioObj: this.empresa!.municipio
+          ? { id: this.empresa!.municipioId, label: this.empresa!.municipio }
+          : null,
         activa: this.empresa!.activa,
         facturaElectronica: this.empresa!.facturaElectronica,
         factusClientId: this.empresa!.factusClientId,
@@ -136,11 +160,17 @@ export class FormEmpresaComponent implements OnChanges {
       adminFields.forEach((f) =>
         this.frmEmpresa.get(f)?.updateValueAndValidity(),
       );
+      this.logoPreview = null;
       this.frmEmpresa.reset({
         razonSocial: '',
         nombreComercial: null,
         nit: '',
         dv: null,
+        logoUrl: null,
+        telefono: null,
+        municipioObj: null,
+        municipio: null,
+        municipioId: null,
         activa: true,
         emailAdmin: '',
         passwordAdmin: '',
@@ -192,6 +222,10 @@ export class FormEmpresaComponent implements OnChanges {
           razonSocial,
           nombreComercial,
           dv,
+          logoUrl,
+          telefono,
+          municipio,
+          municipioId,
           activa,
           facturaElectronica,
           factusClientId,
@@ -206,6 +240,10 @@ export class FormEmpresaComponent implements OnChanges {
             razonSocial,
             nombreComercial,
             dv,
+            logoUrl,
+            telefono,
+            municipio,
+            municipioId,
             activa,
             facturaElectronica,
             factusClientId,
@@ -218,11 +256,55 @@ export class FormEmpresaComponent implements OnChanges {
         );
         this.alert.showSuccess('Actualizada', 'Empresa actualizada');
       } else {
-        await lastValueFrom(this.service.crear(this.frmEmpresa.value));
-        this.alert.showSuccess(
-          'Creada',
-          'Empresa y usuario administrador creados',
+        const {
+          razonSocial,
+          nombreComercial,
+          nit,
+          dv,
+          logoUrl,
+          telefono,
+          municipio,
+          municipioId,
+          emailAdmin,
+          passwordAdmin,
+          nombresAdmin,
+          apellidosAdmin,
+          documentoAdmin,
+          nombreSucursal,
+          facturaElectronica,
+          factusClientId,
+          factusClientSecret,
+          factusUsername,
+          factusPassword,
+          factusNumberingRangeId,
+          factusPrefijo,
+        } = this.frmEmpresa.value;
+        const response = await lastValueFrom(
+          this.service.crear({
+            razonSocial,
+            nombreComercial,
+            nit,
+            dv,
+            logoUrl,
+            telefono,
+            municipio,
+            municipioId,
+            emailAdmin,
+            passwordAdmin,
+            nombresAdmin,
+            apellidosAdmin,
+            documentoAdmin,
+            nombreSucursal,
+            facturaElectronica,
+            factusClientId,
+            factusClientSecret,
+            factusUsername,
+            factusPassword,
+            factusNumberingRangeId,
+            factusPrefijo,
+          }),
         );
+        this.credencialesCreadas.emit(response?.data);
       }
       this.saved.emit();
     } catch (err: any) {
@@ -231,6 +313,53 @@ export class FormEmpresaComponent implements OnChanges {
       this.loading = false;
       this.cdr.markForCheck();
     }
+  }
+
+  async onLogoSelect(event: Event): Promise<void> {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.uploadingLogo = true;
+    this.cdr.markForCheck();
+    try {
+      const res = await lastValueFrom(
+        this.storageService.uploadImagen(file, 'empresas'),
+      );
+      this.logoPreview = res.url;
+      this.frmEmpresa.patchValue({ logoUrl: res.url });
+    } catch {
+      this.alert.showError('Error', 'No se pudo subir el logo');
+    } finally {
+      this.uploadingLogo = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  removeLogo(): void {
+    this.logoPreview = null;
+    this.frmEmpresa.patchValue({ logoUrl: null });
+  }
+
+  async buscarMunicipios(event: { query: string }): Promise<void> {
+    try {
+      const res = await lastValueFrom(
+        this.terceroService.buscarMunicipios(event.query),
+      );
+      this.municipioSugerencias = res?.data ?? [];
+    } catch {
+      this.municipioSugerencias = [];
+    }
+  }
+
+  onMunicipioSelect(event: AutoCompleteSelectEvent): void {
+    const municipio = event.value as MunicipioDto;
+    this.frmEmpresa.patchValue({
+      municipio: municipio.label,
+      municipioId: municipio.id,
+    });
+  }
+
+  onMunicipioClear(): void {
+    this.frmEmpresa.patchValue({ municipio: null, municipioId: null });
   }
 
   isInvalid(f: string): boolean {

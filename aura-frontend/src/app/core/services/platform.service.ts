@@ -3,11 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import {
   CreateEmpresaDto,
+  CreateEmpresaResponseDto,
   EmpresaPageableDto,
   UpdateEmpresaDto,
   ErrorLogPageableDto,
   ErrorLogGrupoPageableDto,
 } from '../models/platform.model';
+import { ResponseModel } from '../../shared/utils/responde.models';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -28,8 +30,8 @@ export class PlatformService {
     return this.http.get<any>(`${this.base}/empresas/${id}`);
   }
 
-  crear(dto: CreateEmpresaDto): Observable<any> {
-    return this.http.post<any>(`${this.base}/empresas`, dto);
+  crear(dto: CreateEmpresaDto): Observable<ResponseModel<CreateEmpresaResponseDto>> {
+    return this.http.post<ResponseModel<CreateEmpresaResponseDto>>(`${this.base}/empresas`, dto);
   }
 
   actualizar(id: number, dto: UpdateEmpresaDto): Observable<any> {
