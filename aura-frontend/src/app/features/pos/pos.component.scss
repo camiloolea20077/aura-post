@@ -541,6 +541,12 @@ $mono: "JetBrains Mono", monospace;
     color: $red;
   }
 
+  &.negativo {
+    background: rgba(139, 92, 246, 0.1);
+    color: #8b5cf6;
+    border: 1px solid rgba(139, 92, 246, 0.25);
+  }
+
   &.servicio {
     background: rgba(99, 102, 241, 0.08);
     color: #6366f1;

@@ -520,6 +520,25 @@
                 [disabled]="!manejaInventarioValue"
               />
             </div>
+
+            <!-- Permitir stock negativo -->
+            <div class="field-inline inv-switch">
+              <div class="switch-label">
+                <span class="label-text">
+                  <i class="pi pi-arrow-down-left"></i>
+                  Permitir stock negativo
+                </span>
+                <span class="label-sub">
+                  Permite vender aunque no haya stock. El inventario quedará en
+                  negativo hasta que se registre la compra. Útil para carnicerías
+                  y negocios que reciben y venden antes de registrar la compra.
+                </span>
+              </div>
+              <p-inputSwitch
+                formControlName="permitirStockNegativo"
+                [disabled]="!manejaInventarioValue"
+              />
+            </div>
           </div>
 
           <!-- Resumen configuración -->
@@ -565,6 +584,20 @@
                 "
               ></i>
               <span>Trazabilidad por serial</span>
+            </div>
+            <div
+              class="inv-sum-item"
+              [class.active]="frmProducto.get('permitirStockNegativo')?.value"
+            >
+              <i
+                class="pi"
+                [class]="
+                  frmProducto.get('permitirStockNegativo')?.value
+                    ? 'pi-check-circle'
+                    : 'pi-times-circle'
+                "
+              ></i>
+              <span>Venta con stock negativo</span>
             </div>
           </div>
         </div>

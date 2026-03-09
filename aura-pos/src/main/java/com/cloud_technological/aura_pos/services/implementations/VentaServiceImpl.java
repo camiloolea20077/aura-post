@@ -240,7 +240,8 @@ public class VentaServiceImpl implements VentaService{
                         .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST,
                             "El componente '" + hijo.getNombre() + "' no tiene inventario en esta sucursal"));
 
-                    if (invHijo.getStockActual().compareTo(cantidadRequerida) < 0)
+                    if (!Boolean.TRUE.equals(hijo.getPermitirStockNegativo())
+                            && invHijo.getStockActual().compareTo(cantidadRequerida) < 0)
                         throw new GlobalException(HttpStatus.BAD_REQUEST,
                             "Stock insuficiente del componente: " + hijo.getNombre()
                             + ". Disponible: " + invHijo.getStockActual()
@@ -253,7 +254,8 @@ public class VentaServiceImpl implements VentaService{
                     .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST,
                         "El producto " + producto.getNombre() + " no tiene inventario en esta sucursal"));
 
-                if (inventario.getStockActual().compareTo(item.getCantidad()) < 0)
+                if (!Boolean.TRUE.equals(producto.getPermitirStockNegativo())
+                        && inventario.getStockActual().compareTo(item.getCantidad()) < 0)
                     throw new GlobalException(HttpStatus.BAD_REQUEST,
                         "Stock insuficiente para: " + producto.getNombre()
                         + ". Disponible: " + inventario.getStockActual());
@@ -340,7 +342,8 @@ public class VentaServiceImpl implements VentaService{
                         .orElseThrow(() -> new GlobalException(HttpStatus.BAD_REQUEST,
                             "El componente '" + hijo.getNombre() + "' no tiene inventario en esta sucursal"));
 
-                    if (invHijo.getStockActual().compareTo(cantidadDescontar) < 0)
+                    if (!Boolean.TRUE.equals(hijo.getPermitirStockNegativo())
+                            && invHijo.getStockActual().compareTo(cantidadDescontar) < 0)
                         throw new GlobalException(HttpStatus.BAD_REQUEST,
                             "Stock insuficiente del componente: " + hijo.getNombre()
                             + ". Disponible: " + invHijo.getStockActual()

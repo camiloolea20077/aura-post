@@ -115,7 +115,7 @@
           let p of productosFiltrados | filterProducts: searchProduct : page;
           trackBy: trackByProd
         "
-        [class.sin-stock]="p.stockActual <= 0 && p.tipoProducto !== 'SERVICIO'"
+        [class.sin-stock]="p.stockActual <= 0 && p.tipoProducto !== 'SERVICIO' && !p.permitirStockNegativo"
         [class.low-stock]="p.stockActual > 0 && p.stockActual < 5"
         (click)="addToCart(p)"
       >
@@ -185,9 +185,10 @@
             *ngIf="p.tipoProducto !== 'SERVICIO'"
             [class.ok]="p.stockActual >= 5"
             [class.low]="p.stockActual > 0 && p.stockActual < 5"
-            [class.empty]="p.stockActual <= 0"
+            [class.empty]="p.stockActual <= 0 && !p.permitirStockNegativo"
+            [class.negativo]="p.stockActual <= 0 && p.permitirStockNegativo"
           >
-            {{ p.stockActual <= 0 ? "0" : p.stockActual }}
+            {{ p.stockActual }}
             <span class="stock-unit">{{
               p.tipoProducto === "PESABLE"
                 ? (p.unidadMedidaNombre | lowercase)
