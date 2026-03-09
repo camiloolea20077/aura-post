@@ -1,7 +1,7 @@
 # Etapa de compilación (Asegúrate de que esta línea también sea válida)
 FROM maven:3.8.5-eclipse-temurin-17 AS build
 WORKDIR aura-pos/app
-COPY . .
+COPY aura-pos/. .
 RUN mvn clean package -DskipTests
 
 # Etapa de ejecución (La que te está fallando)
