@@ -6,6 +6,9 @@ export interface EmpresaPlataformaModel {
   nit: string;
   dv: string | null;
   logoUrl: string | null;
+  telefono: string | null;
+  municipio: string | null;
+  municipioId: number | null;
   activa: boolean;
   createdAt: string;
   totalSucursales: number;
@@ -33,11 +36,22 @@ export interface EmpresaTableModel {
   totalRows: number;
 }
 
+export interface CreateEmpresaResponseDto {
+  empresa: EmpresaPlataformaModel;
+  emailAdmin: string;
+  passwordTemporal: string;
+  resetLink: string;
+}
+
 export interface CreateEmpresaDto {
   razonSocial: string;
   nombreComercial?: string | null;
   nit: string;
   dv?: string | null;
+  logoUrl?: string | null;
+  telefono?: string | null;
+  municipio?: string | null;
+  municipioId?: number | null;
   emailAdmin: string;
   passwordAdmin: string;
   nombresAdmin: string;
@@ -58,6 +72,10 @@ export interface UpdateEmpresaDto {
   razonSocial?: string;
   nombreComercial?: string | null;
   dv?: string | null;
+  logoUrl?: string | null;
+  telefono?: string | null;
+  municipio?: string | null;
+  municipioId?: number | null;
   activa?: boolean;
   // Facturación electrónica (Factus)
   facturaElectronica?: boolean;

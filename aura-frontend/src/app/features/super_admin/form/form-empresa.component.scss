@@ -55,6 +55,54 @@ $green: #10b981;
   }
 }
 
+.logo-upload-area {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo-preview {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border: 1px solid $border;
+  border-radius: 8px;
+  background: #f8fafc;
+  padding: 4px;
+}
+
+.logo-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid $indigo;
+  color: $indigo;
+  background: transparent;
+  transition: background 0.15s;
+  &:hover:not(.p-disabled) {
+    background: rgba($indigo, 0.06);
+  }
+  &.p-disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.field-hint {
+  color: $muted;
+  font-size: 0.72rem;
+}
+
 .fe-footer {
   display: flex;
   justify-content: flex-end;

@@ -45,20 +45,24 @@ export class GlobalInterceptor implements HttpInterceptor {
           request = request.clone({ headers });
         }
 
+        const isLoginRequest = request.url.includes('auth/login');
+
         return next.handle(request).pipe(
           catchError((error: HttpErrorResponse) => {
-            if (error.status === 401) {
-              this.alertService.showError(
-                'Sesión expirada',
-                error.error?.message ?? 'Por favor, vuelva a iniciar sesión.'
-              );
-              this.indexDBService.deleteDataAuthDB();
-              this.router.navigate(['/login']);
-            } else if (error.status >= 400) {
-              this.alertService.showError(
-                'Error',
-                error.error?.message ?? error.message ?? 'Ocurrió un error en el servidor'
-              );
+            if (!isLoginRequest) {
+              if (error.status === 401) {
+                this.alertService.showError(
+                  'Sesión expirada',
+                  error.error?.message ?? 'Por favor, vuelva a iniciar sesión.'
+                );
+                this.indexDBService.deleteDataAuthDB();
+                this.router.navigate(['/login']);
+              } else if (error.status >= 400) {
+                this.alertService.showError(
+                  'Error',
+                  error.error?.message ?? error.message ?? 'Ocurrió un error en el servidor'
+                );
+              }
             }
             return throwError(() => error.error || error);
           })

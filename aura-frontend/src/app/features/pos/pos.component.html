@@ -333,11 +333,9 @@
 
           <div class="qty-pesable" *ngIf="item.esPesable">
             <input
-              type="number"
-              step="0.1"
-              min="0.1"
-              [ngModel]="item.cantidad"
-              (ngModelChange)="updateCantidad(item, $event)"
+              type="text"
+              [ngModel]="item.cantidad.toFixed(3)"
+              (ngModelChange)="updateCantidad(item, +$event)"
               class="qty-input-pesable"
             />
             <span class="unidad-label">{{

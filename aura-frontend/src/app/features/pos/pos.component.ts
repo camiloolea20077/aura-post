@@ -343,7 +343,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       return null;
     }
     const skuNumerico = parseInt(skuRaw, 10);
-    const pesoKg = parseInt(pesoRaw, 10) / 10000;
+    const pesoKg = Math.floor(parseInt(pesoRaw, 10) / 10) / 1000;
     if (isNaN(skuNumerico) || isNaN(pesoKg) || pesoKg <= 0) return null;
     return { skuNumerico, pesoKg };
   }
@@ -683,6 +683,9 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         this.feClienteEmail = clienteEmailParaFE;
         this.qrDataActual = null;
         this.cufeActual = null;
+        this.searchProduct = '';
+        this.filtrar();
+        this.alertService.showSuccess('Venta registrada', `Venta #${(res.data as any).numero ?? this.ventaCompletadaId} completada exitosamente`);
 
         if (this.empresaFacturaElec && this.ventaCompletadaId) {
           // Preguntar si desea factura electrónica → modal FE primero

@@ -118,7 +118,7 @@
     </div>
 
     <!-- Zona anular -->
-    <div class="anular-zone" *ngIf="venta.estadoVenta === 'COMPLETADA'">
+    <div class="anular-zone" *ngIf="venta.estadoVenta === 'COMPLETADA' && puedeAnular">
       <div class="anular-warn">
         <i class="pi pi-exclamation-triangle"></i>
         <div>

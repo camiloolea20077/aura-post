@@ -19,6 +19,7 @@ import { lastValueFrom } from 'rxjs';
 import { METODOS_PAGO, VentaModel } from '../../../core/models/venta.model';
 import { VentaService } from '../../../core/services/venta.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
+import { IndexDBService } from '../../../core/services/index-db.service';
 
 @Component({
   selector: 'app-detalle-venta',
@@ -45,13 +46,19 @@ export class DetalleVentaComponent implements OnChanges {
   public venta: VentaModel | null = null;
   public isLoading = false;
   public isAnulando = false;
+  public puedeAnular = false;
   private ventaIdToAnular: number | null = null;
 
   constructor(
     private readonly ventaService: VentaService,
     private readonly alertService: AlertService,
     private readonly confirmationService: ConfirmationService,
-  ) {}
+    private readonly indexDBService: IndexDBService,
+  ) {
+    this.indexDBService.loadDataAuthDB().then((auth) => {
+      this.puedeAnular = auth?.rol !== 'CAJERO';
+    });
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['visible'] && this.visible && this.ventaId) {
