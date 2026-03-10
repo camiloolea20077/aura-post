@@ -315,29 +315,31 @@ public class TurnoCajaServiceImpl implements TurnoCajaService {
         BigDecimal ingresosBD    = totalIngresos != null ? totalIngresos : BigDecimal.ZERO;
         BigDecimal egresosBD     = totalEgresos  != null ? totalEgresos  : BigDecimal.ZERO;
 
-        if ("ABIERTA".equals(entity.getEstado())) {
-            BigDecimal efectivoSistema = turnoRepository.calcularTotalEfectivoSistema(turnoId);
-            resumen.setTotalEfectivoSistema(efectivoSistema);
-        // Comisiones generadas en el turno (antes de calcular totalEsperado)
         var comisionesList = turnoRepository.comisionesPorTurno(turnoId);
         BigDecimal totalComisiones = comisionesList.stream()
                 .map(c -> c.getTotalComision() != null ? c.getTotalComision() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        BigDecimal efectivoSistema;
         if ("ABIERTA".equals(entity.getEstado())) {
-            BigDecimal efectivoSistema = turnoRepository.calcularTotalEfectivoSistema(turnoId);
+            efectivoSistema = turnoRepository.calcularTotalEfectivoSistema(turnoId);
             resumen.setTotalEfectivoSistema(efectivoSistema);
-            resumen.setTotalEsperado(entity.getBaseInicial().add(efectivoSistema).add(ingresosBD).subtract(egresosBD).subtract(totalComisiones));
             resumen.setTotalEfectivoReal(null);
             resumen.setDiferencia(null);
         } else {
-            BigDecimal efectivoSistema = entity.getTotalEfectivoSistema() != null
+            efectivoSistema = entity.getTotalEfectivoSistema() != null
                     ? entity.getTotalEfectivoSistema() : BigDecimal.ZERO;
             resumen.setTotalEfectivoSistema(entity.getTotalEfectivoSistema());
             resumen.setTotalEfectivoReal(entity.getTotalEfectivoReal());
             resumen.setDiferencia(entity.getDiferencia());
-            resumen.setTotalEsperado(entity.getBaseInicial().add(efectivoSistema).add(ingresosBD).subtract(egresosBD).subtract(totalComisiones));
         }
+
+        BigDecimal totalEsperado = entity.getBaseInicial()
+                .add(efectivoSistema)
+                .add(ingresosBD)
+                .subtract(egresosBD)
+                .subtract(totalComisiones);
+        resumen.setTotalEsperado(totalEsperado);
 
         resumen.setMovimientos(movimientos);
         resumen.setTotalIngresos(ingresosBD);

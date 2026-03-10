@@ -79,10 +79,12 @@ export type TipoMovimiento = 'INGRESO' | 'EGRESO';
 export interface MovimientoCajaDto {
   id: number;
   tipo: TipoMovimiento;
-  concepto: string;
+  concepto: string | null;
   monto: number;
   fecha: string;
   usuarioNombre?: string;
+  cuentaNumero?: string | null;
+  terceroNombre?: string | null;
 }
 
 export interface CreateMovimientoCajaDto {
