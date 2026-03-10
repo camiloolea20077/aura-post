@@ -1,0 +1,143 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="module-wrapper">
+  <!-- ─── Header ─────────────────────────────────────────────── -->
+  <div class="module-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="pi pi-wallet"></i>
+      </div>
+      <div>
+        <h2 class="header-title">Liquidaciones de Técnicos</h2>
+        <p class="header-sub">Pagos de comisiones por servicios realizados</p>
+      </div>
+    </div>
+    <button
+      pButton
+      icon="pi pi-plus"
+      label="Nueva liquidación"
+      class="btn-aura btn-primary"
+      (click)="nueva()"
+    ></button>
+  </div>
+
+  <!-- ─── Tabla ───────────────────────────────────────────────── -->
+  <div class="table-card">
+    <div class="table-toolbar">
+      <div class="filter-wrap">
+        <label class="filter-label">Estado:</label>
+        <p-dropdown
+          [(ngModel)]="filtroEstado"
+          [options]="estadoOptions"
+          optionLabel="label"
+          optionValue="value"
+          (onChange)="onFiltroChange()"
+          styleClass="filter-dropdown"
+        />
+      </div>
+      <span class="total-badge">{{ totalRows }} registros</span>
+    </div>
+
+    <p-table
+      [value]="rows"
+      [lazy]="true"
+      (onLazyLoad)="loadTable($event)"
+      [paginator]="true"
+      [rows]="rowSize"
+      [totalRecords]="totalRows"
+      [loading]="loadingTable"
+      [rowHover]="true"
+      [sortField]="'id'"
+      [sortOrder]="-1"
+      dataKey="id"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="tecnicoNombre">
+            Técnico <p-sortIcon field="tecnicoNombre" />
+          </th>
+          <th style="width: 130px">Desde</th>
+          <th style="width: 130px">Hasta</th>
+          <th style="width: 100px; text-align: center">Servicios</th>
+          <th style="width: 150px; text-align: right">Total técnico</th>
+          <th style="width: 100px; text-align: center">Estado</th>
+          <th style="width: 110px; text-align: center">Fecha pago</th>
+          <th style="width: 100px; text-align: center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-liq>
+        <tr class="clickable-row" (click)="verDetalle(liq.id, $event)">
+          <td class="fw-600">{{ liq.tecnicoNombre }}</td>
+          <td class="text-muted mono">{{ liq.fechaDesde }}</td>
+          <td class="text-muted mono">{{ liq.fechaHasta }}</td>
+          <td style="text-align: center">
+            <span class="badge-count">{{ liq.totalServicios }}</span>
+          </td>
+          <td style="text-align: right">
+            <span class="valor-total">{{ formatCOP(liq.valorTotal) }}</span>
+          </td>
+          <td style="text-align: center">
+            <p-tag
+              [value]="liq.estado === 'PAGADA' ? 'Pagada' : 'Pendiente'"
+              [severity]="getEstadoSeverity(liq.estado)"
+            />
+          </td>
+          <td style="text-align: center" class="text-muted mono">
+            {{ liq.fechaPago ?? "—" }}
+          </td>
+          <td style="text-align: center" (click)="$event.stopPropagation()">
+            <button
+              pButton
+              icon="pi pi-eye"
+              class="p-button-text p-button-sm"
+              pTooltip="Ver detalle"
+              tooltipPosition="left"
+              (click)="verDetalle(liq.id, $event)"
+            ></button>
+            <button
+              pButton
+              icon="pi pi-check"
+              class="p-button-text p-button-sm p-button-success"
+              pTooltip="Marcar como pagada"
+              tooltipPosition="left"
+              *ngIf="liq.estado === 'PENDIENTE'"
+              (click)="confirmarPagar(liq, $event)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8" class="empty-row">
+            <i class="pi pi-wallet" style="font-size: 2rem; opacity: 0.2"></i>
+            <p>No hay liquidaciones registradas</p>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr *ngFor="let i of [1, 2, 3, 4, 5]">
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<app-form-liquidacion [(visible)]="showForm" (saved)="onSaved()" />
+
+<app-detalle-liquidacion
+  [(visible)]="showDetalle"
+  [liquidacionId]="detalleId"
+/>

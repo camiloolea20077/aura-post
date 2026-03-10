@@ -1,0 +1,114 @@
+$indigo: #6366f1;
+$border: #e2e8f0;
+$text: #1e293b;
+$muted: #94a3b8;
+$red: #ef4444;
+$green: #10b981;
+$bg: #f8fafc;
+$font: "Outfit", sans-serif;
+$mono: "JetBrains Mono", monospace;
+
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.25rem 0;
+}
+
+.form-row.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: $text;
+
+  &.required::after {
+    content: ' *';
+    color: $red;
+  }
+}
+
+.field-error {
+  font-size: 0.75rem;
+  color: $red;
+}
+
+// ── Panel pendientes ──────────────────────────────────────────
+.pendientes-panel {
+  border: 1.5px solid $border;
+  border-radius: 12px;
+  overflow: hidden;
+  background: $bg;
+}
+
+.pendientes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.85rem;
+  border-bottom: 1px solid $border;
+  background: #fff;
+}
+
+.pendientes-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: $text;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pendientes-total {
+  font-size: 0.8rem;
+  color: $muted;
+
+  strong {
+    color: $green;
+    font-family: $mono;
+  }
+}
+
+.pendientes-loading,
+.pendientes-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  color: $muted;
+  font-size: 0.82rem;
+  i { font-size: 0.9rem; }
+}
+
+::ng-deep .pendientes-table {
+  .p-datatable-tbody > tr > td {
+    font-size: 0.78rem;
+    padding: 0.3rem 0.6rem;
+  }
+  .p-datatable-thead > tr > th {
+    font-size: 0.72rem;
+    padding: 0.3rem 0.6rem;
+    background: $bg;
+  }
+}
+
+.fw-500 { font-weight: 500; }
+.fw-600 { font-weight: 600; }
+.mono { font-family: $mono; }
+.color-tecnico { color: $indigo; }
+
+::ng-deep .btn-primary.p-button {
+  background: linear-gradient(135deg, $indigo, #818cf8) !important;
+  border: none !important;
+  font-weight: 600 !important;
+}

@@ -52,6 +52,7 @@ import com.cloud_technological.aura_pos.repositories.venta_detalle_serial.VentaD
 import com.cloud_technological.aura_pos.repositories.venta_pago.VentaPagoJPARepository;
 import com.cloud_technological.aura_pos.repositories.ventas.VentaJPARepository;
 import com.cloud_technological.aura_pos.repositories.ventas.VentaQueryRepository;
+import com.cloud_technological.aura_pos.services.ComisionService;
 import com.cloud_technological.aura_pos.services.CuentaCobrarService;
 import com.cloud_technological.aura_pos.services.FacturaService;
 import com.cloud_technological.aura_pos.services.VentaService;
@@ -83,6 +84,7 @@ public class VentaServiceImpl implements VentaService{
     private final ProductoComposicionJPARepository composicionJPARepository;
     private final FacturaService facturaService;
     private final CuentaCobrarService cuentaCobrarService;
+    private final ComisionService comisionService;
 
     @Autowired
     public VentaServiceImpl(VentaQueryRepository ventaRepository,
@@ -105,7 +107,8 @@ public class VentaServiceImpl implements VentaService{
             VentaDetalleMapper detalleMapper,
             VentaPagoMapper pagoMapper,
             FacturaService facturaService,
-            CuentaCobrarService cuentaCobrarService) {
+            CuentaCobrarService cuentaCobrarService,
+            ComisionService comisionService) {
         this.ventaRepository = ventaRepository;
         this.ventaJPARepository = ventaJPARepository;
         this.detalleJPARepository = detalleJPARepository;
@@ -127,6 +130,7 @@ public class VentaServiceImpl implements VentaService{
         this.pagoMapper = pagoMapper;
         this.facturaService = facturaService;
         this.cuentaCobrarService = cuentaCobrarService;
+        this.comisionService = comisionService;
     }
 
     @Override
@@ -300,6 +304,9 @@ public class VentaServiceImpl implements VentaService{
             }
 
             detalleJPARepository.save(detalle);
+
+            // 4.4.1 Registrar comisión si el producto es SERVICIO
+            comisionService.procesarComisionVenta(detalle, empresaId);
 
             // 4.5 Manejar seriales
             if (Boolean.TRUE.equals(producto.getManejaSerial()) && item.getSerialIds() != null) {

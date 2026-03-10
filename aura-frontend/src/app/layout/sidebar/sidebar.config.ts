@@ -101,6 +101,15 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
     ],
   },
   {
+    label: 'Comisiones',
+    icon: 'pi pi-percentage',
+    roles: ['SUPER_ADMIN', 'ADMIN'],
+    items: [
+      { label: 'Configuración',  icon: 'pi pi-cog',    route: '/comisiones/configuracion', roles: ['SUPER_ADMIN', 'ADMIN'] },
+      { label: 'Liquidaciones',  icon: 'pi pi-wallet', route: '/comisiones/liquidaciones', roles: ['SUPER_ADMIN', 'ADMIN'] },
+    ],
+  },
+  {
     label: 'Reportes',
     icon: 'pi pi-chart-bar',
     roles: ['SUPER_ADMIN', 'ADMIN'],

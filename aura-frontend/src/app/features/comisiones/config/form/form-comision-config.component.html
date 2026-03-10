@@ -1,0 +1,134 @@
+<p-dialog
+  [header]="isEdit ? 'Editar comisión' : 'Nueva configuración de comisión'"
+  [(visible)]="visible"
+  (onHide)="close()"
+  [modal]="true"
+  [style]="{ width: '560px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <form [formGroup]="frm" class="dialog-form">
+
+    <!-- Servicio (búsqueda server-side, igual que compras) -->
+    <div class="field">
+      <label class="field-label required">Servicio</label>
+      <p-dropdown
+        formControlName="productoId"
+        [options]="servicioOpts"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Escribe 2+ letras para buscar..."
+        [filter]="true"
+        filterPlaceholder="Buscar servicio por nombre o SKU..."
+        (onFilter)="onFiltroServicio($event)"
+        [emptyFilterMessage]="'Sin resultados — escribe más letras'"
+        [emptyMessage]="'Escribe para buscar un servicio'"
+        styleClass="w-full"
+        appendTo="body"
+        [class.ng-invalid]="isInvalid('productoId')"
+      />
+      <small class="field-hint" *ngIf="!isEdit">
+        <i class="pi pi-info-circle"></i>
+        Solo aparecen productos de tipo <strong>SERVICIO</strong>
+      </small>
+      <small class="field-error" *ngIf="isInvalid('productoId')">Requerido</small>
+    </div>
+
+    <!-- Técnico -->
+    <div class="field">
+      <label class="field-label">Técnico asignado por defecto</label>
+      <p-dropdown
+        formControlName="tecnicoId"
+        [options]="tecnicos"
+        optionLabel="nombreCompleto"
+        optionValue="id"
+        placeholder="— Se asigna en caja —"
+        [filter]="true"
+        filterPlaceholder="Buscar técnico..."
+        [showClear]="true"
+        styleClass="w-full"
+        [loading]="loadingTecnicos"
+        appendTo="body"
+      />
+      <small class="field-hint">
+        Opcional. Si se deja vacío, el cajero selecciona el técnico al momento de vender.
+      </small>
+    </div>
+
+    <!-- Tipo -->
+    <div class="field">
+      <label class="field-label required">Tipo de comisión</label>
+      <p-dropdown
+        formControlName="tipo"
+        [options]="tipoOptions"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+
+    <!-- Porcentajes -->
+    <div class="form-row two-col">
+      <div class="field">
+        <label class="field-label required">% Técnico</label>
+        <p-inputNumber
+          formControlName="porcentajeTecnico"
+          [min]="0.01"
+          [max]="99.99"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+          suffix="%"
+          styleClass="w-full"
+          [class.ng-invalid]="isInvalid('porcentajeTecnico')"
+        />
+        <small class="field-error" *ngIf="isInvalid('porcentajeTecnico')">
+          Debe ser entre 0.01 y 99.99
+        </small>
+      </div>
+      <div class="field">
+        <label class="field-label">% Negocio <span class="auto-tag">auto</span></label>
+        <p-inputNumber
+          formControlName="porcentajeNegocio"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+          suffix="%"
+          styleClass="w-full negocio-field"
+          [readonly]="true"
+        />
+      </div>
+    </div>
+
+    <!-- Estado (solo en edición) -->
+    <div class="field" *ngIf="isEdit">
+      <label class="field-label">Estado</label>
+      <p-toggleButton
+        formControlName="activo"
+        onLabel="Activo"
+        offLabel="Inactivo"
+        onIcon="pi pi-check"
+        offIcon="pi pi-times"
+        styleClass="toggle-estado"
+      />
+    </div>
+
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="close()"
+    ></button>
+    <button
+      pButton
+      [label]="isEdit ? 'Actualizar' : 'Guardar'"
+      icon="pi pi-check"
+      class="btn-aura btn-primary"
+      [loading]="loading"
+      (click)="save()"
+    ></button>
+  </ng-template>
+</p-dialog>
