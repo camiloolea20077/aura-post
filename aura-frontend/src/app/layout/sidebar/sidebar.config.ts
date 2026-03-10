@@ -84,6 +84,7 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
     icon: 'pi pi-wallet',
     roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [
+      { label: 'Cierre Contable',     icon: 'pi pi-book',        route: '/contabilidad/cierre' },
       { label: 'Estado de Cuenta',    icon: 'pi pi-file-edit',   route: '/contabilidad/estado-cuenta' },
       { label: 'Cuentas por Cobrar',  icon: 'pi pi-money-bill',  route: '/cuentas/cuentas-por-cobrar' },
       { label: 'Cuentas por Pagar',   icon: 'pi pi-credit-card', route: '/cuentas/cuentas-por-pagar' },
