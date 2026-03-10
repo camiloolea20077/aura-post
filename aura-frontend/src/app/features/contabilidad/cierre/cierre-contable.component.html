@@ -19,6 +19,8 @@
         [showIcon]="true" placeholder="Hasta" styleClass="cal-sm" />
       <button pButton icon="pi pi-refresh" label="Actualizar"
         class="btn-aura btn-primary" [loading]="loading" (click)="cargar()"></button>
+      <button pButton icon="pi pi-file-excel" label="Exportar Excel"
+        class="btn-aura btn-success" [disabled]="!data" (click)="exportarExcel()"></button>
     </div>
   </div>
 

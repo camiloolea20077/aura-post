@@ -43,6 +43,11 @@ $font:    "Outfit", sans-serif;
 
 ::ng-deep .cal-sm .p-inputtext { font-size:.82rem; padding:.4rem .6rem; }
 
+::ng-deep .btn-aura.btn-success.p-button {
+  background: $green; border-color: $green;
+  &:hover { background: darken(#10b981, 8%); border-color: darken(#10b981, 8%); }
+}
+
 // ── Skeletons ──────────────────────────────────────────────
 .skeleton-grid {
   display:grid; grid-template-columns:repeat(4,1fr); gap:1rem;
