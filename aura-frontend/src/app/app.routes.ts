@@ -158,6 +158,14 @@ export const routes: Routes = [
 
       // Contabilidad
       {
+        path: 'contabilidad/cierre',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/cierre/cierre-contable.component').then(
+            (m) => m.CierreContableComponent,
+          ),
+      },
+      {
         path: 'contabilidad/estado-cuenta',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>

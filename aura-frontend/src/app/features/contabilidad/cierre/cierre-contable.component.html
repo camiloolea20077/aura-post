@@ -1,0 +1,247 @@
+<p-toast />
+
+<div class="module-wrapper">
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <div class="module-header">
+    <div class="header-left">
+      <div class="header-icon"><i class="pi pi-book"></i></div>
+      <div>
+        <h2 class="header-title">Cierre Contable</h2>
+        <p class="header-sub">Resumen financiero del período seleccionado</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <p-calendar [(ngModel)]="fechaDesde" dateFormat="yy-mm-dd"
+        [showIcon]="true" placeholder="Desde" styleClass="cal-sm" />
+      <span class="sep-label">→</span>
+      <p-calendar [(ngModel)]="fechaHasta" dateFormat="yy-mm-dd"
+        [showIcon]="true" placeholder="Hasta" styleClass="cal-sm" />
+      <button pButton icon="pi pi-refresh" label="Actualizar"
+        class="btn-aura btn-primary" [loading]="loading" (click)="cargar()"></button>
+      <button pButton icon="pi pi-file-excel" label="Exportar Excel"
+        class="btn-aura btn-success" [disabled]="!data" (click)="exportarExcel()"></button>
+    </div>
+  </div>
+
+  <!-- ── Skeletons ──────────────────────────────────────────── -->
+  <div class="skeleton-grid" *ngIf="loading">
+    <div class="sk-card" *ngFor="let i of [1,2,3,4]"><p-skeleton height="90px" /></div>
+  </div>
+
+  <ng-container *ngIf="!loading && data">
+
+    <!-- ── KPIs ───────────────────────────────────────────────── -->
+    <div class="kpi-grid">
+
+      <div class="kpi-card kpi-ventas">
+        <div class="kpi-icon"><i class="pi pi-receipt"></i></div>
+        <div class="kpi-body">
+          <span class="kpi-label">Ventas del período</span>
+          <span class="kpi-val">{{ formatCOP(data.totalVentasNeto) }}</span>
+          <span class="kpi-sub">{{ data.cantidadVentas }} transacciones · bruto {{ formatCOP(data.totalVentasBruto) }}</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-compras">
+        <div class="kpi-icon"><i class="pi pi-truck"></i></div>
+        <div class="kpi-body">
+          <span class="kpi-label">Compras del período</span>
+          <span class="kpi-val">{{ formatCOP(data.totalComprasNeto) }}</span>
+          <span class="kpi-sub">{{ data.cantidadCompras }} órdenes de compra</span>
+        </div>
+      </div>
+
+      <div class="kpi-card" [ngClass]="'kpi-util-bruta kpi-' + utilClass(data.utilidadBruta)">
+        <div class="kpi-icon"><i class="pi pi-chart-line"></i></div>
+        <div class="kpi-body">
+          <span class="kpi-label">Utilidad bruta</span>
+          <span class="kpi-val">{{ formatCOP(data.utilidadBruta) }}</span>
+          <span class="kpi-sub">Margen {{ pct(data.margenBruto) }} sobre ventas</span>
+        </div>
+      </div>
+
+      <div class="kpi-card" [ngClass]="'kpi-util-neta kpi-' + utilClass(data.utilidadNeta)">
+        <div class="kpi-icon"><i class="pi pi-star"></i></div>
+        <div class="kpi-body">
+          <span class="kpi-label">Utilidad neta aprox.</span>
+          <span class="kpi-val">{{ formatCOP(data.utilidadNeta) }}</span>
+          <span class="kpi-sub">Margen {{ pct(data.margenNeto) }} · inc. comisiones</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── Cuerpo principal ───────────────────────────────────── -->
+    <div class="body-grid">
+
+      <!-- Estado de Resultados -->
+      <div class="panel panel-pl">
+        <div class="panel-header">
+          <i class="pi pi-file-edit"></i>
+          <span>Estado de resultados (simplificado)</span>
+          <span class="panel-badge">{{ data.fechaDesde }} → {{ data.fechaHasta }}</span>
+        </div>
+
+        <div class="pl-table">
+
+          <div class="pl-section-title">Ingresos</div>
+          <div class="pl-row">
+            <span>Ventas brutas</span>
+            <span class="pl-val">{{ formatCOP(data.totalVentasBruto) }}</span>
+          </div>
+          <div class="pl-row pl-descuento" *ngIf="data.totalDescuentos > 0">
+            <span>(−) Descuentos</span>
+            <span class="pl-val negativo">({{ formatCOP(data.totalDescuentos) }})</span>
+          </div>
+          <div class="pl-row">
+            <span>Impuestos incluidos</span>
+            <span class="pl-val muted">{{ formatCOP(data.totalImpuestos) }}</span>
+          </div>
+          <div class="pl-row pl-subtotal">
+            <span><strong>= Ventas netas</strong></span>
+            <span class="pl-val"><strong>{{ formatCOP(data.totalVentasNeto) }}</strong></span>
+          </div>
+
+          <div class="pl-divider"></div>
+          <div class="pl-section-title">Costos y gastos</div>
+
+          <div class="pl-row">
+            <span>(−) Costo de compras</span>
+            <span class="pl-val negativo">({{ formatCOP(data.totalComprasNeto) }})</span>
+          </div>
+          <div class="pl-row pl-subtotal">
+            <span><strong>= Utilidad bruta</strong></span>
+            <span class="pl-val" [ngClass]="utilClass(data.utilidadBruta)">
+              <strong>{{ formatCOP(data.utilidadBruta) }}</strong>
+              <small class="pl-pct">{{ pct(data.margenBruto) }}</small>
+            </span>
+          </div>
+
+          <div class="pl-divider"></div>
+          <div class="pl-row" *ngIf="data.totalComisionesTecnicos > 0">
+            <span>(−) Comisiones técnicos</span>
+            <span class="pl-val negativo">({{ formatCOP(data.totalComisionesTecnicos) }})</span>
+          </div>
+          <div class="pl-row pl-total">
+            <span><strong>= Utilidad neta aprox.</strong></span>
+            <span class="pl-val pl-total-val" [ngClass]="utilClass(data.utilidadNeta)">
+              <strong>{{ formatCOP(data.utilidadNeta) }}</strong>
+              <small class="pl-pct">{{ pct(data.margenNeto) }}</small>
+            </span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Posición financiera + CxC/CxP -->
+      <div class="panel-right-col">
+
+        <!-- Posición neta -->
+        <div class="panel panel-posicion">
+          <div class="panel-header">
+            <i class="pi pi-balance-scale"></i>
+            <span>Posición de cartera</span>
+          </div>
+          <div class="posicion-body">
+            <div class="posicion-item pos-cobrar">
+              <div class="posicion-label">
+                <i class="pi pi-arrow-circle-down"></i> Te deben (CxC)
+              </div>
+              <div class="posicion-val">{{ formatCOP(data.cxcSaldoPendiente) }}</div>
+              <div class="posicion-sub">{{ data.cxcCantidadActivas }} cuentas activas
+                <span class="vencida-badge" *ngIf="data.cxcCantidadVencidas > 0">
+                  · {{ data.cxcCantidadVencidas }} vencidas
+                </span>
+              </div>
+            </div>
+            <div class="posicion-sep"><i class="pi pi-minus"></i></div>
+            <div class="posicion-item pos-pagar">
+              <div class="posicion-label">
+                <i class="pi pi-arrow-circle-up"></i> Debes (CxP)
+              </div>
+              <div class="posicion-val">{{ formatCOP(data.cxpSaldoPendiente) }}</div>
+              <div class="posicion-sub">{{ data.cxpCantidadActivas }} cuentas activas
+                <span class="vencida-badge" *ngIf="data.cxpCantidadVencidas > 0">
+                  · {{ data.cxpCantidadVencidas }} vencidas
+                </span>
+              </div>
+            </div>
+            <div class="posicion-sep"><i class="pi pi-equals"></i></div>
+            <div class="posicion-item pos-neta">
+              <div class="posicion-label">Posición neta</div>
+              <div class="posicion-val-neta" [ngClass]="utilClass(data.posicionNeta)">
+                {{ formatCOP(data.posicionNeta) }}
+              </div>
+              <p-tag
+                [value]="data.posicionNeta > 0 ? 'Favorable' : data.posicionNeta < 0 ? 'Desfavorable' : 'Neutro'"
+                [severity]="posNeta(data.posicionNeta)"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Detalle CxC -->
+        <div class="panel panel-cxc">
+          <div class="panel-header">
+            <i class="pi pi-money-bill"></i>
+            <span>Cuentas por cobrar</span>
+          </div>
+          <div class="cuenta-rows">
+            <div class="cuenta-row">
+              <span class="cuenta-label">Total facturado</span>
+              <span class="cuenta-val">{{ formatCOP(data.cxcTotalDeuda) }}</span>
+            </div>
+            <div class="cuenta-row cuenta-pendiente">
+              <span class="cuenta-label"><i class="pi pi-clock"></i> Saldo pendiente</span>
+              <span class="cuenta-val pendiente">{{ formatCOP(data.cxcSaldoPendiente) }}</span>
+            </div>
+            <div class="cuenta-row" *ngIf="data.cxcCantidadVencidas > 0">
+              <span class="cuenta-label"><i class="pi pi-exclamation-triangle" style="color:#ef4444"></i> Cuentas vencidas</span>
+              <span class="cuenta-val vencido">{{ data.cxcCantidadVencidas }}</span>
+            </div>
+            <div class="cuenta-row">
+              <span class="cuenta-label">Cuentas activas</span>
+              <span class="cuenta-val">{{ data.cxcCantidadActivas }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detalle CxP -->
+        <div class="panel panel-cxp">
+          <div class="panel-header">
+            <i class="pi pi-credit-card"></i>
+            <span>Cuentas por pagar</span>
+          </div>
+          <div class="cuenta-rows">
+            <div class="cuenta-row">
+              <span class="cuenta-label">Total comprometido</span>
+              <span class="cuenta-val">{{ formatCOP(data.cxpTotalDeuda) }}</span>
+            </div>
+            <div class="cuenta-row cuenta-pendiente">
+              <span class="cuenta-label"><i class="pi pi-clock"></i> Saldo pendiente</span>
+              <span class="cuenta-val pendiente">{{ formatCOP(data.cxpSaldoPendiente) }}</span>
+            </div>
+            <div class="cuenta-row" *ngIf="data.cxpCantidadVencidas > 0">
+              <span class="cuenta-label"><i class="pi pi-exclamation-triangle" style="color:#ef4444"></i> Cuentas vencidas</span>
+              <span class="cuenta-val vencido">{{ data.cxpCantidadVencidas }}</span>
+            </div>
+            <div class="cuenta-row">
+              <span class="cuenta-label">Cuentas activas</span>
+              <span class="cuenta-val">{{ data.cxpCantidadActivas }}</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </ng-container>
+
+  <!-- ── Empty ─────────────────────────────────────────────── -->
+  <div class="empty-state" *ngIf="!loading && !data">
+    <i class="pi pi-book"></i>
+    <p>No se pudo cargar el cierre contable</p>
+  </div>
+
+</div>

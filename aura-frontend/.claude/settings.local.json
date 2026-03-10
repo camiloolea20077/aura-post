@@ -14,7 +14,9 @@
       "Bash(powershell -Command \"Set-Location 'D:\\\\Proyectos Camilo\\\\aura-post\\\\aura-pos'; .\\\\mvnw.cmd compile 2>&1 | Select-String -Pattern 'ERROR|WARNING|BUILD|error|cannot find' | Select-Object -Last 30\")",
       "Bash(cd \"D:/Proyectos Camilo/aura-post/aura-frontend\" && npx tsc --noEmit 2>&1 | head -20)",
       "Bash(powershell -Command \"Set-Location 'D:\\\\Proyectos Camilo\\\\aura-post\\\\aura-pos'; .\\\\mvnw.cmd compile 2>&1 | Select-String -Pattern 'ERROR|BUILD' | Select-Object -Last 5\")",
-      "Bash(grep -rn \"currency\\\\|totalPagar\\\\|\\\\$ \" \"D:/Proyectos Camilo/aura-post/aura-frontend/src/app/features/ventas\" --include=\"*.html\" | head -8)"
+      "Bash(grep -rn \"currency\\\\|totalPagar\\\\|\\\\$ \" \"D:/Proyectos Camilo/aura-post/aura-frontend/src/app/features/ventas\" --include=\"*.html\" | head -8)",
+      "Bash(cd \"D:\\\\Proyectos Camilo\\\\aura-post\\\\aura-frontend\" && npm install xlsx --save 2>&1)",
+      "Bash(cd \"D:\\\\Proyectos Camilo\\\\aura-post\\\\aura-frontend\" && npm uninstall xlsx && npm install exceljs file-saver --save && npm install @types/file-saver --save-dev 2>&1)"
     ]
   }
 }
