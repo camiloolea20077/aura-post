@@ -130,6 +130,61 @@
       </div>
     </div>
 
+    <!-- ── Comisiones del turno ── -->
+    <div *ngIf="!loadingResumen && resumen && resumen.comisiones?.length">
+      <div class="section-title">
+        <i class="pi pi-percentage"></i>
+        Comisiones de servicios
+      </div>
+
+      <!-- Aviso: hay comisiones sin liquidar o sin pagar -->
+      <div class="com-alerta" *ngIf="hayComisionesSinLiquidar">
+        <div class="com-alerta-icon"><i class="pi pi-exclamation-triangle"></i></div>
+        <div class="com-alerta-body">
+          <p class="com-alerta-titulo">Comisiones pendientes de liquidar</p>
+          <p class="com-alerta-sub">
+            Antes de entregar el efectivo, genera la liquidación de los técnicos marcados
+            como <strong>Sin liquidar</strong> o realiza el pago de las que están
+            <strong>Pendiente pago</strong>.
+          </p>
+        </div>
+      </div>
+
+      <div class="comisiones-list">
+        <div class="com-header">
+          <span>Técnico</span>
+          <span>Serv.</span>
+          <span>Comisión</span>
+          <span>Estado</span>
+        </div>
+        <div class="com-row" *ngFor="let c of resumen.comisiones">
+          <span class="com-tecnico">
+            <i class="pi pi-user"></i>
+            {{ c.tecnicoNombre }}
+          </span>
+          <span class="com-servicios">{{ c.totalServicios }}</span>
+          <span class="com-monto" [class.com-monto-pagada]="c.estadoLiquidacion === 'PAGADA'">
+            {{ formatCOP(c.totalComision) }}
+          </span>
+          <span class="com-estado">
+            <p-tag
+              [value]="comisionLabel(c.estadoLiquidacion)"
+              [severity]="comisionSeverity(c.estadoLiquidacion)"
+            />
+          </span>
+        </div>
+        <div class="com-total-row">
+          <span class="com-total-label">
+            <i class="pi pi-minus-circle"></i>
+            Total comisiones (se descuentan de caja)
+          </span>
+          <span></span>
+          <span class="com-total-val">-{{ formatCOP(resumen.totalComisiones) }}</span>
+          <span></span>
+        </div>
+      </div>
+    </div>
+
     <!-- ── Resumen de efectivo ── -->
     <div class="resumen-grid">
       <div class="res-item">

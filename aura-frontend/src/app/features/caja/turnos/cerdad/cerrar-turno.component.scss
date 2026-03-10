@@ -317,6 +317,79 @@ $muted: #64748b;
   }
 }
 
+// ── Comisiones del turno ───────────────────────────────────
+$purple: #7c3aed;
+
+.comisiones-list {
+  border: 1px solid $border;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.com-header {
+  display: grid;
+  grid-template-columns: 1fr 80px 130px;
+  padding: 0.5rem 0.85rem;
+  background: $bg-light;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: $muted;
+  border-bottom: 1px solid $border;
+}
+
+.com-row {
+  display: grid;
+  grid-template-columns: 1fr 80px 130px;
+  padding: 0.6rem 0.85rem;
+  align-items: center;
+  border-bottom: 1px solid #f1f5f9;
+  &:last-child { border-bottom: none; }
+  &:hover { background: #fafbff; }
+}
+
+.com-tecnico {
+  font-size: 0.82rem;
+  color: $text;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  i { color: $purple; font-size: 0.7rem; }
+}
+
+.com-servicios {
+  font-size: 0.78rem;
+  color: $muted;
+  text-align: center;
+}
+
+.com-monto {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: $purple;
+  text-align: right;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.com-total-row {
+  display: grid;
+  grid-template-columns: 1fr 80px 130px;
+  padding: 0.6rem 0.85rem;
+  background: $bg-light;
+  border-top: 2px solid $border;
+  font-size: 0.82rem;
+  align-items: center;
+}
+
+.com-total-val {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: $purple;
+  text-align: right;
+}
+
 // ── Resumen efectivo ───────────────────────────────────────
 .resumen-grid {
   display: flex;

@@ -108,6 +108,15 @@ export interface VentaMetodoPagoDto {
   totalMonto: number;
 }
 
+export type EstadoLiquidacionTurno = 'SIN_LIQUIDAR' | 'PENDIENTE' | 'PAGADA';
+
+export interface ComisionTurnoDto {
+  tecnicoNombre: string;
+  totalServicios: number;
+  totalComision: number;
+  estadoLiquidacion: EstadoLiquidacionTurno;
+}
+
 export interface ResumenTurnoDto {
   turnoId: number;
   cajaNombre: string;
@@ -135,4 +144,8 @@ export interface ResumenTurnoDto {
   movimientos: MovimientoCajaDto[];
   totalIngresos: number;
   totalEgresos: number;
+
+  // Comisiones generadas en el turno
+  comisiones: ComisionTurnoDto[];
+  totalComisiones: number;
 }
