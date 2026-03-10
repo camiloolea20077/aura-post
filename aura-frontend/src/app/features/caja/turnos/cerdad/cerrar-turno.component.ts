@@ -21,6 +21,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { DividerModule } from 'primeng/divider';
 import { ToastModule } from 'primeng/toast';
 import { SkeletonModule } from 'primeng/skeleton';
+import { TagModule } from 'primeng/tag';
 import { MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 import {
@@ -29,6 +30,8 @@ import {
   ResumenTurnoDto,
   VentaCategoriaDto,
   VentaMetodoPagoDto,
+  ComisionTurnoDto,
+  EstadoLiquidacionTurno,
 } from '../../../../core/models/caja.model';
 import { TurnoCajaService } from '../../../../core/services/caja.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
@@ -46,6 +49,7 @@ import { AlertService } from '../../../../shared/pipes/alert.service';
     ButtonModule,
     ToastModule,
     SkeletonModule,
+    TagModule,
   ],
   providers: [MessageService],
   templateUrl: './cerrar-turno.component.html',
@@ -158,6 +162,23 @@ export class CerrarTurnoComponent implements OnChanges {
       hour: '2-digit',
       minute: '2-digit',
     });
+  }
+
+  // ── Helpers comisiones ────────────────────────────────────
+  get hayComisionesSinLiquidar(): boolean {
+    return !!this.resumen?.comisiones?.some(c => c.estadoLiquidacion !== 'PAGADA');
+  }
+
+  comisionSeverity(estado: EstadoLiquidacionTurno): 'success' | 'warn' | 'danger' {
+    if (estado === 'PAGADA') return 'success';
+    if (estado === 'PENDIENTE') return 'warn';
+    return 'danger';
+  }
+
+  comisionLabel(estado: EstadoLiquidacionTurno): string {
+    if (estado === 'PAGADA') return 'Pagada';
+    if (estado === 'PENDIENTE') return 'Pendiente pago';
+    return 'Sin liquidar';
   }
 
   // ── Cerrar turno ──────────────────────────────────────────

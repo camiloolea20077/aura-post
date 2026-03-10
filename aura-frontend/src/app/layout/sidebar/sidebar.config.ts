@@ -84,6 +84,7 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
     icon: 'pi pi-wallet',
     roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [
+      { label: 'Cierre Contable',     icon: 'pi pi-book',        route: '/contabilidad/cierre' },
       { label: 'Estado de Cuenta',    icon: 'pi pi-file-edit',   route: '/contabilidad/estado-cuenta' },
       { label: 'Cuentas por Cobrar',  icon: 'pi pi-money-bill',  route: '/cuentas/cuentas-por-cobrar' },
       { label: 'Cuentas por Pagar',   icon: 'pi pi-credit-card', route: '/cuentas/cuentas-por-pagar' },
@@ -98,6 +99,15 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
       { label: 'Turnos',                 icon: 'pi pi-clock',   route: '/caja/turnos' },
       { label: 'Sucursales',             icon: 'pi pi-building', route: '/admin/sucursales', roles: ['SUPER_ADMIN', 'ADMIN'] },
       { label: 'Usuarios',               icon: 'pi pi-user',    route: '/admin/usuarios', roles: ['SUPER_ADMIN', 'ADMIN'] },
+    ],
+  },
+  {
+    label: 'Comisiones',
+    icon: 'pi pi-percentage',
+    roles: ['SUPER_ADMIN', 'ADMIN'],
+    items: [
+      { label: 'Configuración',  icon: 'pi pi-cog',    route: '/comisiones/configuracion', roles: ['SUPER_ADMIN', 'ADMIN'] },
+      { label: 'Liquidaciones',  icon: 'pi pi-wallet', route: '/comisiones/liquidaciones', roles: ['SUPER_ADMIN', 'ADMIN'] },
     ],
   },
   {

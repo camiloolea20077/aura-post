@@ -81,7 +81,7 @@ export class EstadoCuentaComponent implements OnInit {
   private async cargarClientes(): Promise<void> {
     this.loadingClientes = true;
     try {
-      const res = await lastValueFrom(this.terceroService.clientes(''));
+      const res = await lastValueFrom(this.terceroService.terceros(''));
       this.clientes = res?.data ?? [];
     } catch {
       this.clientes = [];

@@ -82,6 +82,14 @@ public class TerceroController {
         return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "", false, result), HttpStatus.OK);
     }
 
+    @GetMapping("/todos")
+    public ResponseEntity<ApiResponse<List<TerceroTableDto>>> listarTodos(
+            @RequestParam(defaultValue = "") String search) {
+        Integer empresaId = securityUtils.getEmpresaId();
+        List<TerceroTableDto> result = terceroService.listarTodos(search, empresaId);
+        return new ResponseEntity<>(new ApiResponse<>(HttpStatus.OK.value(), "", false, result), HttpStatus.OK);
+    }
+
     @PostMapping("/create")
     public ResponseEntity<ApiResponse<TerceroDto>> crear(@Valid @RequestBody CreateTerceroDto dto) {
         Integer empresaId = securityUtils.getEmpresaId();

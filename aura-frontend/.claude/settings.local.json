@@ -4,7 +4,19 @@
       "mcp__ide__getDiagnostics",
       "Bash(python:*)",
       "Bash(xargs grep:*)",
-      "Bash(xargs head:*)"
+      "Bash(xargs head:*)",
+      "Bash(grep -rn \"InputNumberModule\\\\|p-inputnumber\\\\|p-inputNumber\" \"D:/Proyectos Camilo/aura-post/aura-frontend/src/app/features\" --include=\"*.ts\" -l 2>/dev/null | head -3)",
+      "Bash(find \"D:\\\\Proyectos Camilo\\\\aura-post\\\\aura-pos\\\\src\\\\main\\\\java\\\\com\\\\cloud_technological\\\\aura_pos\\\\dto\" -type f -name \"*Filter*\" -o -name \"*Pageable*\" -o -name \"*Page*\" 2>/dev/null | head -10)",
+      "Bash(grep -r \"comision\\\\|commission\" \"D:\\\\Proyectos Camilo\\\\aura-post\\\\aura-pos\\\\src\\\\main\\\\java\" --include=\"*.java\" 2>/dev/null | head -5)",
+      "Bash(cd \"D:/Proyectos Camilo/aura-post/aura-pos\" && ./mvnw compile -q 2>&1 | tail -30)",
+      "Bash(cd \"D:/Proyectos Camilo/aura-post/aura-pos\" && ./mvnw.cmd compile -q 2>&1 | tail -40)",
+      "Bash(cmd /c \"cd /d \\\\\"D:\\\\Proyectos Camilo\\\\aura-post\\\\aura-pos\\\\\" && mvnw.cmd compile -q 2>&1\")",
+      "Bash(powershell -Command \"Set-Location 'D:\\\\Proyectos Camilo\\\\aura-post\\\\aura-pos'; .\\\\mvnw.cmd compile 2>&1 | Select-String -Pattern 'ERROR|WARNING|BUILD|error|cannot find' | Select-Object -Last 30\")",
+      "Bash(cd \"D:/Proyectos Camilo/aura-post/aura-frontend\" && npx tsc --noEmit 2>&1 | head -20)",
+      "Bash(powershell -Command \"Set-Location 'D:\\\\Proyectos Camilo\\\\aura-post\\\\aura-pos'; .\\\\mvnw.cmd compile 2>&1 | Select-String -Pattern 'ERROR|BUILD' | Select-Object -Last 5\")",
+      "Bash(grep -rn \"currency\\\\|totalPagar\\\\|\\\\$ \" \"D:/Proyectos Camilo/aura-post/aura-frontend/src/app/features/ventas\" --include=\"*.html\" | head -8)",
+      "Bash(cd \"D:\\\\Proyectos Camilo\\\\aura-post\\\\aura-frontend\" && npm install xlsx --save 2>&1)",
+      "Bash(cd \"D:\\\\Proyectos Camilo\\\\aura-post\\\\aura-frontend\" && npm uninstall xlsx && npm install exceljs file-saver --save && npm install @types/file-saver --save-dev 2>&1)"
     ]
   }
 }

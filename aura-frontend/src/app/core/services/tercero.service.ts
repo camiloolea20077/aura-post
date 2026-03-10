@@ -51,6 +51,15 @@ export class TerceroService {
     );
   }
 
+  /** Selector estado de cuenta — clientes y proveedores activos */
+  terceros(search = ''): Observable<ResponseModel<TerceroTableModel[]>> {
+    const params = new HttpParams().set('search', search);
+    return this.http.get<ResponseModel<TerceroTableModel[]>>(
+      `${this.apiUrl}/todos`,
+      { params },
+    );
+  }
+
   create(dto: CreateTerceroDto): Observable<ResponseModel<TerceroModel>> {
     return this.http.post<ResponseModel<TerceroModel>>(
       `${this.apiUrl}/create`,

@@ -89,6 +89,11 @@ public class TerceroServiceImpl implements ITerceroService {
     }
 
     @Override
+    public List<TerceroTableDto> listarTodos(String search, Integer empresaId) {
+        return terceroRepository.listarTodos(search, empresaId);
+    }
+
+    @Override
     @Transactional
     public TerceroDto crear(CreateTerceroDto dto, Integer empresaId) {
         if (terceroRepository.existeDocumento(dto.getNumeroDocumento(), empresaId))

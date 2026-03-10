@@ -158,6 +158,14 @@ export const routes: Routes = [
 
       // Contabilidad
       {
+        path: 'contabilidad/cierre',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/cierre/cierre-contable.component').then(
+            (m) => m.CierreContableComponent,
+          ),
+      },
+      {
         path: 'contabilidad/estado-cuenta',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
@@ -282,6 +290,24 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/usuarios/index/index-usuarios.component').then(
             (m) => m.IndexUsuariosComponent,
+          ),
+      },
+
+      // Comisiones
+      {
+        path: 'comisiones/configuracion',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/comisiones/config/index/index-comision-config.component').then(
+            (m) => m.IndexComisionConfigComponent,
+          ),
+      },
+      {
+        path: 'comisiones/liquidaciones',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/comisiones/liquidaciones/index/index-liquidaciones.component').then(
+            (m) => m.IndexLiquidacionesComponent,
           ),
       },
 

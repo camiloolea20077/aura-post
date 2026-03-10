@@ -1,0 +1,139 @@
+<p-dialog
+  header="Nueva liquidación de comisiones"
+  [(visible)]="visible"
+  (onHide)="close()"
+  [modal]="true"
+  [style]="{ width: '680px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <form [formGroup]="frm" class="dialog-form">
+
+    <!-- Técnico -->
+    <div class="field">
+      <label class="field-label required">Técnico</label>
+      <p-dropdown
+        formControlName="tecnicoId"
+        [options]="tecnicos"
+        optionLabel="nombreCompleto"
+        optionValue="id"
+        placeholder="Selecciona un técnico..."
+        [filter]="true"
+        filterPlaceholder="Buscar..."
+        styleClass="w-full"
+        [loading]="loadingTecnicos"
+        [class.ng-invalid]="isInvalid('tecnicoId')"
+      />
+      <small class="field-error" *ngIf="isInvalid('tecnicoId')">Requerido</small>
+    </div>
+
+    <!-- Rango de fechas -->
+    <div class="form-row two-col">
+      <div class="field">
+        <label class="field-label required">Fecha desde</label>
+        <p-calendar
+          formControlName="fechaDesde"
+          [showIcon]="true"
+          dateFormat="yy-mm-dd"
+          placeholder="AAAA-MM-DD"
+          styleClass="w-full"
+          [class.ng-invalid]="isInvalid('fechaDesde')"
+        />
+        <small class="field-error" *ngIf="isInvalid('fechaDesde')">Requerido</small>
+      </div>
+      <div class="field">
+        <label class="field-label required">Fecha hasta</label>
+        <p-calendar
+          formControlName="fechaHasta"
+          [showIcon]="true"
+          dateFormat="yy-mm-dd"
+          placeholder="AAAA-MM-DD"
+          styleClass="w-full"
+          [class.ng-invalid]="isInvalid('fechaHasta')"
+        />
+        <small class="field-error" *ngIf="isInvalid('fechaHasta')">Requerido</small>
+      </div>
+    </div>
+
+    <!-- Observaciones -->
+    <div class="field">
+      <label class="field-label">Observaciones</label>
+      <textarea
+        pTextarea
+        formControlName="observaciones"
+        rows="2"
+        placeholder="Notas adicionales..."
+        class="w-full"
+      ></textarea>
+    </div>
+
+    <!-- Preview comisiones pendientes -->
+    <div class="pendientes-panel" *ngIf="frm.get('tecnicoId')?.value">
+      <div class="pendientes-header">
+        <span class="pendientes-title">Comisiones pendientes</span>
+        <span class="pendientes-total" *ngIf="!loadingPendientes">
+          {{ ventasPendientes.length }} servicios —
+          <strong>{{ formatCOP(totalPendiente) }}</strong>
+        </span>
+      </div>
+
+      <div *ngIf="loadingPendientes" class="pendientes-loading">
+        <i class="pi pi-spin pi-spinner"></i> Cargando...
+      </div>
+
+      <div *ngIf="!loadingPendientes && ventasPendientes.length === 0" class="pendientes-empty">
+        <i class="pi pi-inbox"></i>
+        <span>No hay comisiones pendientes para este técnico</span>
+      </div>
+
+      <p-table
+        *ngIf="!loadingPendientes && ventasPendientes.length > 0"
+        [value]="ventasPendientes"
+        styleClass="p-datatable-sm pendientes-table"
+        [scrollable]="true"
+        scrollHeight="200px"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Servicio</th>
+            <th style="width: 110px; text-align: right">Venta</th>
+            <th style="width: 80px; text-align: center">%</th>
+            <th style="width: 120px; text-align: right">Técnico</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-v>
+          <tr>
+            <td class="fw-500">{{ v.productoNombre }}</td>
+            <td style="text-align: right" class="mono">
+              {{ formatCOP(v.valorTotal) }}
+            </td>
+            <td style="text-align: center" class="mono">{{ v.porcentajeTecnico }}%</td>
+            <td style="text-align: right" class="mono fw-600 color-tecnico">
+              {{ formatCOP(v.valorTecnico) }}
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="close()"
+    ></button>
+    <button
+      pButton
+      label="Generar liquidación"
+      icon="pi pi-check"
+      class="btn-aura btn-primary"
+      [loading]="loading"
+      [disabled]="ventasPendientes.length === 0"
+      (click)="save()"
+    ></button>
+  </ng-template>
+</p-dialog>
