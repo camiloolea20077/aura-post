@@ -14,6 +14,13 @@ export const routes: Routes = [
     canActivate: [AuthGuard],
   },
   {
+    path: 'reset-password',
+    loadComponent: () =>
+      import('./features/auth/pages/reset-password/reset-password.component').then(
+        (m) => m.ResetPasswordComponent,
+      ),
+  },
+  {
     path: 'platform',
     canActivate: [platformGuard],
     loadChildren: () =>
@@ -40,7 +47,7 @@ export const routes: Routes = [
           ),
       },
 
-      // POS — libre para todos
+      // POS
       {
         path: 'pos',
         loadComponent: () =>
@@ -130,7 +137,8 @@ export const routes: Routes = [
             (m) => m.IndexDescuentosComponent,
           ),
       },
-      // CUENTAS POR COBRAR Y PAGAR
+
+      // Cuentas por cobrar / pagar
       {
         path: 'cuentas/cuentas-por-cobrar',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
@@ -145,6 +153,16 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/cuentas/index-cuentas-por-pagar/index-cuentas-por-pagar.component').then(
             (m) => m.IndexCuentasPorPagarComponent,
+          ),
+      },
+
+      // Contabilidad
+      {
+        path: 'contabilidad/estado-cuenta',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/estado-cuenta/estado-cuenta.component').then(
+            (m) => m.EstadoCuentaComponent,
           ),
       },
 
@@ -193,7 +211,7 @@ export const routes: Routes = [
       },
       {
         path: 'ventas',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN', 'CAJERO'])],
         loadComponent: () =>
           import('./features/ventas/index/index-ventas.component').then(
             (m) => m.IndexVentasComponent,
@@ -201,7 +219,7 @@ export const routes: Routes = [
       },
       {
         path: 'cotizaciones',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN', 'CAJERO'])],
         loadComponent: () =>
           import('./features/cotizaciones/index/index-cotizaciones.component').then(
             (m) => m.IndexCotizacionesComponent,
@@ -224,7 +242,7 @@ export const routes: Routes = [
           ),
       },
 
-      // Terceros
+      // Terceros (solo gestión, sin estado de cuenta)
       {
         path: 'terceros',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
@@ -245,7 +263,6 @@ export const routes: Routes = [
       },
       {
         path: 'caja/turnos',
-        // libre — CAJERO necesita acceder para abrir/cerrar turno
         loadComponent: () =>
           import('./features/caja/turnos/index/index-turnos.component').then(
             (m) => m.IndexTurnosComponent,
@@ -267,6 +284,26 @@ export const routes: Routes = [
             (m) => m.IndexUsuariosComponent,
           ),
       },
+
+      // Comisiones
+      {
+        path: 'comisiones/configuracion',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/comisiones/config/index/index-comision-config.component').then(
+            (m) => m.IndexComisionConfigComponent,
+          ),
+      },
+      {
+        path: 'comisiones/liquidaciones',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/comisiones/liquidaciones/index/index-liquidaciones.component').then(
+            (m) => m.IndexLiquidacionesComponent,
+          ),
+      },
+
+      // Reportes
       {
         path: 'reportes/ventas',
         loadComponent: () =>

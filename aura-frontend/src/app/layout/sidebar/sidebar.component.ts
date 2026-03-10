@@ -1,22 +1,26 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterModule } from '@angular/router';
+import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { TooltipModule } from 'primeng/tooltip';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService } from 'primeng/api';
+import { filter } from 'rxjs/operators';
 
-import { SIDEBAR_MENU, SidebarMenuGroup } from './sidebar.config';
+import { SIDEBAR_MENU, SidebarMenuGroup, SidebarMenuItem } from './sidebar.config';
 import { IndexDBService } from '../../core/services/index-db.service';
-import { SafeUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule, TooltipModule],
+  imports: [CommonModule, RouterModule, TooltipModule, ConfirmDialogModule],
+  providers: [ConfirmationService],
   templateUrl: './sidebar.component.html',
   styleUrls: ['./sidebar.component.scss'],
 })
 export class SidebarComponent implements OnInit {
   @Input() collapsed = false;
   @Output() toggleCollapse = new EventEmitter<void>();
+
   logoSafeUrl: string | null = null;
   public menuGroups: SidebarMenuGroup[] = [];
   public userName = '';
@@ -24,13 +28,24 @@ export class SidebarComponent implements OnInit {
   public userInitials = '';
   public empresaNombre = '';
 
+  /** Grupos abiertos por label */
+  public openGroups = new Set<string>();
+
   constructor(
     private readonly indexDBService: IndexDBService,
     private readonly router: Router,
+    private readonly confirmationService: ConfirmationService,
   ) {}
 
   async ngOnInit(): Promise<void> {
     await this.loadUserInfo();
+
+    // Cuando navega, abrir el grupo de la ruta activa
+    this.router.events
+      .pipe(filter((e) => e instanceof NavigationEnd))
+      .subscribe(() => this.abrirGrupoActivo());
+
+    this.abrirGrupoActivo();
   }
 
   private async loadUserInfo(): Promise<void> {
@@ -42,20 +57,54 @@ export class SidebarComponent implements OnInit {
       this.empresaNombre = auth.username;
       this.userInitials = this.getInitials(auth.nombreCompleto);
       this.menuGroups = this.filtrarMenu(auth.rol);
+
+      // Abrir grupos marcados como defaultOpen
+      this.menuGroups
+        .filter((g) => g.defaultOpen)
+        .forEach((g) => this.openGroups.add(g.label));
     }
+  }
+
+  /** Abre el grupo que contiene la ruta activa */
+  private abrirGrupoActivo(): void {
+    const url = this.router.url;
+    for (const group of this.menuGroups) {
+      const tieneActivo = group.items.some(
+        (item) => item.route && url.startsWith(item.route),
+      );
+      if (tieneActivo) {
+        this.openGroups.add(group.label);
+      }
+    }
+  }
+
+  toggleGroup(group: SidebarMenuGroup): void {
+    if (this.collapsed || group.alwaysOpen) return;
+    if (this.openGroups.has(group.label)) {
+      this.openGroups.delete(group.label);
+    } else {
+      this.openGroups.add(group.label);
+    }
+  }
+
+  isOpen(group: SidebarMenuGroup): boolean {
+    return this.collapsed || group.alwaysOpen || this.openGroups.has(group.label);
   }
 
   // ── Filtra grupos e ítems según el rol ────────────────────
   private filtrarMenu(rol: string): SidebarMenuGroup[] {
+    const gruposDefaultOpenCajero = ['Operaciones', 'Administración'];
     return SIDEBAR_MENU.filter((group) => this.tieneAcceso(group.roles, rol))
       .map((group) => ({
         ...group,
         items: group.items.filter((item) => this.tieneAcceso(item.roles, rol)),
+        defaultOpen:
+          group.defaultOpen ||
+          (rol === 'CAJERO' && gruposDefaultOpenCajero.includes(group.label)),
       }))
-      .filter((group) => group.items.length > 0); // eliminar grupos vacíos
+      .filter((group) => group.items.length > 0);
   }
 
-  // undefined en roles = todos los roles tienen acceso
   private tieneAcceso(roles: string[] | undefined, rol: string): boolean {
     if (!roles || roles.length === 0) return true;
     return roles.includes(rol);
@@ -70,8 +119,18 @@ export class SidebarComponent implements OnInit {
       .toUpperCase();
   }
 
-  async logout(): Promise<void> {
-    await this.indexDBService.deleteDataAuthDB();
-    this.router.navigate(['/login']);
+  confirmLogout(): void {
+    this.confirmationService.confirm({
+      message: '¿Estás seguro de que deseas cerrar sesión?',
+      header: 'Cerrar sesión',
+      icon: 'pi pi-sign-out',
+      acceptLabel: 'Sí, cerrar sesión',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: async () => {
+        await this.indexDBService.deleteDataAuthDB();
+        this.router.navigate(['/login']);
+      },
+    });
   }
 }

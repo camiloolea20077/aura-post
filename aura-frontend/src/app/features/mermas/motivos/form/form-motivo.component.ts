@@ -39,7 +39,7 @@ export class FormMotivoComponent implements OnChanges {
   @Input() visible = false;
   @Input() motivo: MotivoMermaModel | null = null;
   @Output() visibleChange = new EventEmitter<boolean>();
-  @Output() saved = new EventEmitter<void>();
+  @Output() saved = new EventEmitter<MotivoMermaModel>();
 
   form: FormGroup;
   loading = false;
@@ -79,18 +79,16 @@ export class FormMotivoComponent implements OnChanges {
     this.loading = true;
     try {
       if (this.isEdit) {
-        await lastValueFrom(
+        const res = await lastValueFrom(
           this.service.updateMotivo(this.motivo!.id, this.form.value),
         );
-        this.alert.showSuccess(
-          'Actualizado',
-          'Motivo actualizado correctamente',
-        );
+        this.alert.showSuccess('Actualizado', 'Motivo actualizado correctamente');
+        this.saved.emit(res?.data);
       } else {
-        await lastValueFrom(this.service.createMotivo(this.form.value));
+        const res = await lastValueFrom(this.service.createMotivo(this.form.value));
         this.alert.showSuccess('Creado', 'Motivo creado correctamente');
+        this.saved.emit(res?.data);
       }
-      this.saved.emit();
       this.close();
     } catch (err: any) {
       this.alert.showError(

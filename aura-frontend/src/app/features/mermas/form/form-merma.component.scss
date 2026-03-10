@@ -8,6 +8,24 @@ $muted: #94a3b8;
 $bg: #f8fafc;
 $mono: "JetBrains Mono", monospace;
 
+.field-with-action {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+
+  p-dropdown {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .btn-add-motivo {
+    flex-shrink: 0;
+    width: 2.4rem;
+    height: 2.4rem;
+    padding: 0;
+  }
+}
+
 // ── Cuerpo del dialog ─────────────────────────────────────────
 .dialog-body {
   display: flex;
@@ -98,47 +116,65 @@ $mono: "JetBrains Mono", monospace;
 }
 
 // ── Tabla líneas ──────────────────────────────────────────────
+$grid-cols: 2fr 1.2fr 68px 76px 126px 100px 36px;
+
 .lines-wrap {
   display: flex;
   flex-direction: column;
 }
 
-// Columnas
+.lines-header,
+.line-row {
+  display: grid;
+  grid-template-columns: $grid-cols;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+// Columnas — solo comportamiento, el grid controla el ancho
 .col-producto {
-  flex: 2;
+  min-width: 0;
+  overflow: hidden;
 }
 .col-lote {
-  flex: 1.2;
+  min-width: 0;
+  overflow: hidden;
 }
 .col-stock {
-  width: 72px;
-  flex-shrink: 0;
   text-align: center;
 }
 .col-cantidad {
-  width: 100px;
-  flex-shrink: 0;
+  min-width: 0;
+  position: relative;
+  z-index: 2;
+  isolation: isolate;
+
+  // ← AGREGAR ESTO:
+  ::ng-deep .p-inputnumber,
+  ::ng-deep .p-inputnumber-input {
+    width: 100% !important;
+    max-width: 76px;
+  }
 }
 .col-costo {
-  width: 130px;
-  flex-shrink: 0;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
 }
 .col-subtotal {
-  width: 110px;
-  flex-shrink: 0;
   text-align: right;
 }
 .col-accion {
-  width: 38px;
-  flex-shrink: 0;
   display: flex;
   justify-content: center;
 }
 
+::ng-deep .sin-seleccion .p-dropdown-label {
+  color: #94a3b8 !important;
+  font-style: italic;
+}
+
 .lines-header {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
   padding: 0.45rem 0.75rem;
   background: $bg;
   border: 1.5px solid $border;
@@ -152,14 +188,12 @@ $mono: "JetBrains Mono", monospace;
 }
 
 .line-row {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
   padding: 0.55rem 0.75rem;
   border: 1.5px solid $border;
   border-top: none;
   background: #fff;
   transition: background 0.1s;
+  isolation: isolate;
 
   &:last-child {
     border-radius: 0 0 10px 10px;
@@ -173,10 +207,6 @@ $mono: "JetBrains Mono", monospace;
     font-size: 0.82rem;
     font-family: $mono;
     padding: 0 0.5rem;
-  }
-  ::ng-deep .line-ac-input {
-    height: 32px !important;
-    font-size: 0.82rem;
   }
   ::ng-deep .text-center input {
     text-align: center;

@@ -55,6 +55,81 @@
     </div>
   </div>
 
+  <div class="form-row two-col">
+    <div class="field">
+      <label class="field-label">Teléfono</label>
+      <input
+        pInputText
+        formControlName="telefono"
+        placeholder="3001234567"
+        class="w-full"
+      />
+    </div>
+    <div class="field">
+      <label class="field-label">Municipio</label>
+      <p-autoComplete
+        formControlName="municipioObj"
+        [suggestions]="municipioSugerencias"
+        (completeMethod)="buscarMunicipios($event)"
+        (onSelect)="onMunicipioSelect($event)"
+        (onClear)="onMunicipioClear()"
+        field="label"
+        [dropdown]="false"
+        placeholder="Buscar municipio..."
+        [showClear]="true"
+        styleClass="w-full"
+      />
+    </div>
+  </div>
+
+  <!-- Logo -->
+  <div class="field">
+    <label class="field-label">Logo de la empresa</label>
+    <div class="logo-upload-area">
+      <img
+        *ngIf="logoPreview"
+        [src]="logoPreview"
+        alt="Logo"
+        class="logo-preview"
+      />
+      <div class="logo-actions">
+        <label
+          class="p-button p-button-outlined p-button-sm logo-btn"
+          [class.p-disabled]="uploadingLogo"
+        >
+          <i
+            class="pi"
+            [class.pi-upload]="!uploadingLogo"
+            [class.pi-spin]="uploadingLogo"
+            [class.pi-spinner]="uploadingLogo"
+          ></i>
+          {{
+            uploadingLogo
+              ? "Subiendo..."
+              : logoPreview
+                ? "Cambiar logo"
+                : "Subir logo"
+          }}
+          <input
+            type="file"
+            accept="image/*"
+            (change)="onLogoSelect($event)"
+            [disabled]="uploadingLogo"
+            hidden
+          />
+        </label>
+        <button
+          *ngIf="logoPreview"
+          pButton
+          type="button"
+          icon="pi pi-trash"
+          class="p-button-text p-button-danger p-button-sm"
+          (click)="removeLogo()"
+        ></button>
+      </div>
+    </div>
+  </div>
+
   <!-- Estado solo en edición -->
   <div class="field" *ngIf="isEdit">
     <label class="field-label">Estado</label>
@@ -164,7 +239,6 @@
       formControlName="facturaElectronica"
       onLabel="Habilitada"
       offLabel="Deshabilitada"
-      onIcon="pi pi-check"
       offIcon="pi pi-times"
       styleClass="toggle-estado"
     />

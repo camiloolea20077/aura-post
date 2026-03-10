@@ -129,12 +129,18 @@ public class TurnoCajaServiceImpl implements TurnoCajaService {
         if (turno.getEstado().equals("CERRADA"))
             throw new GlobalException(HttpStatus.BAD_REQUEST, "El turno ya está cerrado");
 
-        BigDecimal totalSistema = turnoRepository.calcularTotalEfectivoSistema(id);
+        BigDecimal totalSistema  = turnoRepository.calcularTotalEfectivoSistema(id);
+        BigDecimal sumIngresos   = abonoCobrarRepository.sumMontoByTurnoCajaId(id);
+        BigDecimal sumEgresos    = abonoPagarRepository.sumMontoByTurnoCajaId(id);
+        BigDecimal ingresos      = sumIngresos != null ? sumIngresos : BigDecimal.ZERO;
+        BigDecimal egresos       = sumEgresos  != null ? sumEgresos  : BigDecimal.ZERO;
+        BigDecimal comisiones    = turnoRepository.totalComisionesTurno(id);
+        BigDecimal totalEsperado = turno.getBaseInicial().add(totalSistema).add(ingresos).subtract(egresos).subtract(comisiones);
 
         turno.setFechaCierre(LocalDateTime.now());
         turno.setTotalEfectivoSistema(totalSistema);
         turno.setTotalEfectivoReal(dto.getTotalEfectivoReal());
-        turno.setDiferencia(dto.getTotalEfectivoReal().subtract(turno.getBaseInicial().add(totalSistema)));
+        turno.setDiferencia(dto.getTotalEfectivoReal().subtract(totalEsperado));
         turno.setEstado("CERRADA");
         turnoJPARepository.save(turno);
 
@@ -294,49 +300,52 @@ public class TurnoCajaServiceImpl implements TurnoCajaService {
         resumen.setTotalNeto(toBD(totales.get("total_neto")));
         resumen.setTotalTransacciones(toInt(totales.get("total_transacciones")));
 
-        if ("ABIERTA".equals(entity.getEstado())) {
-            BigDecimal efectivoSistema = turnoRepository.calcularTotalEfectivoSistema(turnoId);
-            resumen.setTotalEfectivoSistema(efectivoSistema);
-            resumen.setTotalEsperado(entity.getBaseInicial().add(efectivoSistema));
-            resumen.setTotalEfectivoReal(null);
-            resumen.setDiferencia(null);
-        } else {
-            resumen.setTotalEfectivoSistema(entity.getTotalEfectivoSistema());
-            resumen.setTotalEfectivoReal(entity.getTotalEfectivoReal());
-            resumen.setDiferencia(entity.getDiferencia());
-            resumen.setTotalEsperado(
-                entity.getBaseInicial().add(
-                    entity.getTotalEfectivoSistema() != null
-                        ? entity.getTotalEfectivoSistema()
-                        : BigDecimal.ZERO
-                )
-            );
-        }
-
-        // Construir lista unificada de movimientos desde abonos a cobrar y a pagar
+        // Movimientos (se calculan primero para incluirlos en totalEsperado)
         List<MovimientoCajaDto> movimientos = new ArrayList<>();
-
         abonoCobrarRepository.findByTurnoCajaIdOrderByFechaPagoAsc(turnoId)
-                .stream()
-                .map(this::abonoCobrarToDto)
-                .forEach(movimientos::add);
-
+                .stream().map(this::abonoCobrarToDto).forEach(movimientos::add);
         abonoPagarRepository.findByTurnoCajaIdOrderByFechaPagoAsc(turnoId)
-                .stream()
-                .map(this::abonoPagarToDto)
-                .forEach(movimientos::add);
-
-        // Ordenar la lista combinada por fecha ascendente
+                .stream().map(this::abonoPagarToDto).forEach(movimientos::add);
         movimientos.sort(Comparator.comparing(
                 m -> m.getFecha() != null ? m.getFecha() : "",
                 Comparator.naturalOrder()));
 
         BigDecimal totalIngresos = abonoCobrarRepository.sumMontoByTurnoCajaId(turnoId);
         BigDecimal totalEgresos  = abonoPagarRepository.sumMontoByTurnoCajaId(turnoId);
+        BigDecimal ingresosBD    = totalIngresos != null ? totalIngresos : BigDecimal.ZERO;
+        BigDecimal egresosBD     = totalEgresos  != null ? totalEgresos  : BigDecimal.ZERO;
+
+        var comisionesList = turnoRepository.comisionesPorTurno(turnoId);
+        BigDecimal totalComisiones = comisionesList.stream()
+                .map(c -> c.getTotalComision() != null ? c.getTotalComision() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal efectivoSistema;
+        if ("ABIERTA".equals(entity.getEstado())) {
+            efectivoSistema = turnoRepository.calcularTotalEfectivoSistema(turnoId);
+            resumen.setTotalEfectivoSistema(efectivoSistema);
+            resumen.setTotalEfectivoReal(null);
+            resumen.setDiferencia(null);
+        } else {
+            efectivoSistema = entity.getTotalEfectivoSistema() != null
+                    ? entity.getTotalEfectivoSistema() : BigDecimal.ZERO;
+            resumen.setTotalEfectivoSistema(entity.getTotalEfectivoSistema());
+            resumen.setTotalEfectivoReal(entity.getTotalEfectivoReal());
+            resumen.setDiferencia(entity.getDiferencia());
+        }
+
+        BigDecimal totalEsperado = entity.getBaseInicial()
+                .add(efectivoSistema)
+                .add(ingresosBD)
+                .subtract(egresosBD)
+                .subtract(totalComisiones);
+        resumen.setTotalEsperado(totalEsperado);
 
         resumen.setMovimientos(movimientos);
-        resumen.setTotalIngresos(totalIngresos != null ? totalIngresos : BigDecimal.ZERO);
-        resumen.setTotalEgresos(totalEgresos   != null ? totalEgresos  : BigDecimal.ZERO);
+        resumen.setTotalIngresos(ingresosBD);
+        resumen.setTotalEgresos(egresosBD);
+        resumen.setComisiones(comisionesList);
+        resumen.setTotalComisiones(totalComisiones);
 
         return resumen;
     }

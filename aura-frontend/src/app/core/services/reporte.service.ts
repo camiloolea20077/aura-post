@@ -47,6 +47,11 @@ export class ReporteService {
     URL.revokeObjectURL(url);
   }
 
+  visualizarPdf(blob: Blob): void {
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+  }
+
   private params(desde?: string, hasta?: string): Record<string, string> {
     const p: Record<string, string> = {};
     if (desde) p['desde'] = desde;

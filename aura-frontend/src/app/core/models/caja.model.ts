@@ -79,10 +79,12 @@ export type TipoMovimiento = 'INGRESO' | 'EGRESO';
 export interface MovimientoCajaDto {
   id: number;
   tipo: TipoMovimiento;
-  concepto: string;
+  concepto: string | null;
   monto: number;
   fecha: string;
   usuarioNombre?: string;
+  cuentaNumero?: string | null;
+  terceroNombre?: string | null;
 }
 
 export interface CreateMovimientoCajaDto {
@@ -106,6 +108,15 @@ export interface VentaMetodoPagoDto {
   metodoPago: string; // EFECTIVO | NEQUI | TARJETA
   totalPagos: number;
   totalMonto: number;
+}
+
+export type EstadoLiquidacionTurno = 'SIN_LIQUIDAR' | 'PENDIENTE' | 'PAGADA';
+
+export interface ComisionTurnoDto {
+  tecnicoNombre: string;
+  totalServicios: number;
+  totalComision: number;
+  estadoLiquidacion: EstadoLiquidacionTurno;
 }
 
 export interface ResumenTurnoDto {
@@ -135,4 +146,8 @@ export interface ResumenTurnoDto {
   movimientos: MovimientoCajaDto[];
   totalIngresos: number;
   totalEgresos: number;
+
+  // Comisiones generadas en el turno
+  comisiones: ComisionTurnoDto[];
+  totalComisiones: number;
 }

@@ -65,6 +65,7 @@ export class IndexTercerosComponent implements OnInit {
     { label: 'Proveedores', value: 'PROVEEDORES' },
     { label: 'Empleados', value: 'EMPLEADOS' },
   ];
+
   constructor(
     private readonly terceroService: TerceroService,
     private readonly alertService: AlertService,
@@ -96,7 +97,6 @@ export class IndexTercerosComponent implements OnInit {
       const res = await lastValueFrom(this.terceroService.page(dto));
       let items: TerceroTableModel[] = res?.data?.content ?? [];
 
-      // Filtro rol — se hace en cliente porque la API no tiene ese parámetro
       if (this.filtroRol === 'CLIENTES')
         items = items.filter((i) => i.esCliente);
       if (this.filtroRol === 'PROVEEDORES')
@@ -151,11 +151,6 @@ export class IndexTercerosComponent implements OnInit {
     if (this.lastLazyEvent) this.loadTable(this.lastLazyEvent);
   }
 
-  // ─── UI helpers ───────────────────────────────────────────
-  getDocLabel(item: TerceroTableModel): string {
-    return `${item.tipoDocumento} ${item.numeroDocumento}`;
-  }
-
   getInitial(nombre: string): string {
     return nombre.charAt(0).toUpperCase();
   }
@@ -178,7 +173,6 @@ export class IndexTercerosComponent implements OnInit {
     );
   }
 
-  // ─── Eliminar ─────────────────────────────────────────────
   confirmDelete(item: TerceroTableModel): void {
     this.confirmationService.confirm({
       message: `¿Desactivar a <strong>${item.nombreCompleto}</strong>?`,

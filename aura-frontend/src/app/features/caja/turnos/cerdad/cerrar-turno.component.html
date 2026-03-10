@@ -4,225 +4,228 @@
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
-  [style]="{ width: '520px' }"
+  [style]="{ width: '900px' }"
   styleClass="aura-dialog"
   (onHide)="closeModal()"
 >
   <div class="cierre-container" *ngIf="turno">
-    <!-- Cabecera turno -->
+
+    <!-- ── Cabecera ────────────────────────────────────────── -->
     <div class="turno-header">
       <div class="turno-icon"><i class="pi pi-desktop"></i></div>
       <div class="turno-meta">
         <span class="turno-caja">{{ turno.cajaNombre }}</span>
-        <span class="turno-apertura"
-          >Apertura: {{ formatFecha(turno.fechaApertura) }}</span
-        >
+        <span class="turno-apertura">Apertura: {{ formatFecha(turno.fechaApertura) }}</span>
       </div>
       <div class="turno-badge"><i class="pi pi-circle-fill"></i> ABIERTA</div>
     </div>
 
-    <!-- ── Desglose por categorías ── -->
-    <div class="section-title">
-      <i class="pi pi-chart-bar"></i>
-      Ventas por categoría
-    </div>
+    <!-- ── Layout dos columnas ────────────────────────────── -->
+    <div class="layout-cols">
 
-    <!-- Skeleton mientras carga -->
-    <div class="categorias-list" *ngIf="loadingResumen">
-      <div class="cat-row skeleton-row" *ngFor="let i of [1, 2, 3]">
-        <p-skeleton width="40%" height="14px" />
-        <p-skeleton width="20%" height="14px" />
-        <p-skeleton width="25%" height="14px" />
-      </div>
-    </div>
+      <!-- ════ Columna izquierda: ventas / movimientos ════ -->
+      <div class="col-left">
 
-    <!-- Lista real -->
-    <div class="categorias-list" *ngIf="!loadingResumen && resumen">
-      <div class="cat-header">
-        <span>Categoría</span>
-        <span>Unidades</span>
-        <span>Total</span>
-      </div>
-      <div class="cat-row" *ngFor="let cat of resumen.ventasPorCategoria">
-        <span class="cat-nombre">
-          <i class="pi pi-tag"></i>
-          {{ cat.categoriaNombre }}
-        </span>
-        <span class="cat-unidades">{{ cat.totalProductosVendidos }}</span>
-        <span class="cat-total">{{ formatCOP(cat.totalNeto) }}</span>
-      </div>
-      <div
-        class="cat-row cat-total-row"
-        *ngIf="resumen.ventasPorCategoria.length > 1"
-      >
-        <span class="cat-nombre"><strong>Total ventas</strong></span>
-        <span class="cat-unidades"
-          >{{ resumen.totalTransacciones }} transacc.</span
-        >
-        <span class="cat-total total-highlight">{{
-          formatCOP(resumen.totalNeto)
-        }}</span>
-      </div>
-      <!-- Sin ventas -->
-      <div class="sin-ventas" *ngIf="resumen.ventasPorCategoria.length === 0">
-        <i class="pi pi-inbox"></i>
-        Sin ventas registradas en este turno
-      </div>
-    </div>
-
-    <!-- ── Métodos de pago ── -->
-    <div
-      class="metodos-pago"
-      *ngIf="
-        !loadingResumen && resumen && resumen.ventasPorMetodoPago.length > 0
-      "
-    >
-      <div class="section-title">
-        <i class="pi pi-wallet"></i>
-        Ingresos por método de pago
-      </div>
-      <div class="metodos-grid">
-        <div class="metodo-item" *ngFor="let mp of resumen.ventasPorMetodoPago">
-          <i [class]="metodoPagoIcon(mp.metodoPago)"></i>
-          <span class="metodo-nombre">{{ mp.metodoPago }}</span>
-          <span class="metodo-monto">{{ formatCOP(mp.totalMonto) }}</span>
+        <!-- Ventas por categoría -->
+        <div class="section-title">
+          <i class="pi pi-chart-bar"></i> Ventas por categoría
         </div>
-      </div>
-    </div>
 
-    <!-- ── Movimientos manuales (ingresos / egresos) ── -->
-    <div
-      *ngIf="!loadingResumen && resumen && resumen.movimientos?.length"
-    >
-      <div class="section-title">
-        <i class="pi pi-arrows-v"></i>
-        Ingresos y egresos manuales
+        <div class="categorias-list" *ngIf="loadingResumen">
+          <div class="cat-row skeleton-row" *ngFor="let i of [1,2,3]">
+            <p-skeleton width="40%" height="13px" />
+            <p-skeleton width="18%" height="13px" />
+            <p-skeleton width="22%" height="13px" />
+          </div>
+        </div>
+
+        <div class="categorias-list" *ngIf="!loadingResumen && resumen">
+          <div class="cat-header">
+            <span>Categoría</span><span>Uds.</span><span>Total</span>
+          </div>
+          <div class="cat-row" *ngFor="let cat of resumen.ventasPorCategoria">
+            <span class="cat-nombre"><i class="pi pi-tag"></i>{{ cat.categoriaNombre }}</span>
+            <span class="cat-unidades">{{ cat.totalProductosVendidos }}</span>
+            <span class="cat-total">{{ formatCOP(cat.totalNeto) }}</span>
+          </div>
+          <div class="cat-row cat-total-row" *ngIf="resumen.ventasPorCategoria.length > 1">
+            <span class="cat-nombre"><strong>Total ventas</strong></span>
+            <span class="cat-unidades">{{ resumen.totalTransacciones }} tr.</span>
+            <span class="cat-total total-highlight">{{ formatCOP(resumen.totalNeto) }}</span>
+          </div>
+          <div class="sin-ventas" *ngIf="resumen.ventasPorCategoria.length === 0">
+            <i class="pi pi-inbox"></i> Sin ventas en este turno
+          </div>
+        </div>
+
+        <!-- Métodos de pago -->
+        <div *ngIf="!loadingResumen && resumen && resumen.ventasPorMetodoPago.length > 0">
+          <div class="section-title" style="margin-top:0.85rem">
+            <i class="pi pi-wallet"></i> Por método de pago
+          </div>
+          <div class="metodos-grid">
+            <div class="metodo-item" *ngFor="let mp of resumen.ventasPorMetodoPago">
+              <i [class]="metodoPagoIcon(mp.metodoPago)"></i>
+              <span class="metodo-nombre">{{ mp.metodoPago }}</span>
+              <span class="metodo-monto">{{ formatCOP(mp.totalMonto) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Movimientos manuales -->
+        <div *ngIf="!loadingResumen && resumen && resumen.movimientos?.length">
+          <div class="section-title" style="margin-top:0.85rem">
+            <i class="pi pi-arrows-v"></i> Ingresos y egresos manuales
+          </div>
+          <div class="movimientos-list">
+            <div class="mov-header">
+              <span>Concepto</span><span>Tipo</span><span>Monto</span>
+            </div>
+            <div class="mov-row" *ngFor="let m of resumen.movimientos">
+              <span class="mov-concepto">
+                <i [class]="m.tipo === 'INGRESO' ? 'pi pi-arrow-circle-down mov-ingreso-icon' : 'pi pi-arrow-circle-up mov-egreso-icon'"></i>
+                {{ m.terceroNombre ?? m.concepto ?? m.cuentaNumero ?? '—' }}
+              </span>
+              <span class="mov-tipo" [class.mov-ingreso]="m.tipo==='INGRESO'" [class.mov-egreso]="m.tipo==='EGRESO'">
+                {{ m.tipo === 'INGRESO' ? 'Ingreso' : 'Egreso' }}
+              </span>
+              <span class="mov-monto" [class.mov-ingreso]="m.tipo==='INGRESO'" [class.mov-egreso]="m.tipo==='EGRESO'">
+                {{ m.tipo === 'INGRESO' ? '+' : '-' }}{{ formatCOP(m.monto) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
       </div>
-      <div class="movimientos-list">
-        <div class="mov-header">
-          <span>Concepto</span>
-          <span>Tipo</span>
-          <span>Monto</span>
+      <!-- ════════════════════════════════════════════════════ -->
+
+      <!-- ════ Columna derecha: resumen + form ════ -->
+      <div class="col-right">
+
+        <!-- Comisiones del turno -->
+        <div *ngIf="!loadingResumen && resumen && resumen.comisiones?.length">
+          <div class="section-title">
+            <i class="pi pi-percentage"></i> Comisiones de servicios
+          </div>
+
+          <div class="com-alerta" *ngIf="hayComisionesSinLiquidar">
+            <i class="pi pi-exclamation-triangle"></i>
+            <div>
+              <p class="com-alerta-titulo">Comisiones pendientes</p>
+              <p class="com-alerta-sub">Genera la liquidación antes de entregar el efectivo.</p>
+            </div>
+          </div>
+
+          <div class="comisiones-list">
+            <div class="com-header">
+              <span>Técnico</span><span>Sv.</span><span>Comisión</span><span>Estado</span>
+            </div>
+            <div class="com-row" *ngFor="let c of resumen.comisiones">
+              <span class="com-tecnico"><i class="pi pi-user"></i>{{ c.tecnicoNombre }}</span>
+              <span class="com-servicios">{{ c.totalServicios }}</span>
+              <span class="com-monto" [class.com-monto-pagada]="c.estadoLiquidacion === 'PAGADA'">
+                {{ formatCOP(c.totalComision) }}
+              </span>
+              <span class="com-estado">
+                <p-tag [value]="comisionLabel(c.estadoLiquidacion)" [severity]="comisionSeverity(c.estadoLiquidacion)" />
+              </span>
+            </div>
+          </div>
         </div>
-        <div class="mov-row" *ngFor="let m of resumen.movimientos">
-          <span class="mov-concepto">
-            <i [class]="m.tipo === 'INGRESO' ? 'pi pi-arrow-circle-down mov-ingreso-icon' : 'pi pi-arrow-circle-up mov-egreso-icon'"></i>
-            {{ m.concepto }}
-          </span>
-          <span class="mov-tipo" [class.mov-ingreso]="m.tipo === 'INGRESO'" [class.mov-egreso]="m.tipo === 'EGRESO'">
-            {{ m.tipo === 'INGRESO' ? 'Ingreso' : 'Egreso' }}
-          </span>
-          <span class="mov-monto" [class.mov-ingreso]="m.tipo === 'INGRESO'" [class.mov-egreso]="m.tipo === 'EGRESO'">
-            {{ m.tipo === 'INGRESO' ? '+' : '-' }}{{ formatCOP(m.monto) }}
-          </span>
+
+        <!-- Resumen de caja (ticket) -->
+        <div class="section-title" [style.marginTop]="resumen?.comisiones?.length ? '0.85rem' : '0'">
+          <i class="pi pi-calculator"></i> Resumen de caja
         </div>
-        <!-- Totales movimientos -->
-        <div class="mov-totales" *ngIf="resumen.totalIngresos || resumen.totalEgresos">
-          <div class="mov-tot-item mov-ingreso" *ngIf="resumen.totalIngresos">
-            <span>Total ingresos</span>
+
+        <div class="ticket-box" *ngIf="!loadingResumen">
+          <div class="ticket-row">
+            <span>Base inicial</span>
+            <span>{{ formatCOP(turno.baseInicial) }}</span>
+          </div>
+          <div class="ticket-row">
+            <span>Ventas en efectivo</span>
+            <span>{{ formatCOP(resumen?.totalEfectivoSistema) }}</span>
+          </div>
+          <div class="ticket-row ticket-ingreso" *ngIf="resumen && resumen.totalIngresos > 0">
+            <span><i class="pi pi-plus-circle"></i> Ingresos manuales</span>
             <span>+{{ formatCOP(resumen.totalIngresos) }}</span>
           </div>
-          <div class="mov-tot-item mov-egreso" *ngIf="resumen.totalEgresos">
-            <span>Total egresos</span>
+          <div class="ticket-row ticket-egreso" *ngIf="resumen && resumen.totalEgresos > 0">
+            <span><i class="pi pi-minus-circle"></i> Egresos manuales</span>
             <span>-{{ formatCOP(resumen.totalEgresos) }}</span>
           </div>
+          <div class="ticket-row ticket-comision" *ngIf="resumen && resumen.totalComisiones > 0">
+            <span><i class="pi pi-percentage"></i> Comisiones técnicos</span>
+            <span>-{{ formatCOP(resumen.totalComisiones) }}</span>
+          </div>
+          <div class="ticket-separator"></div>
+          <div class="ticket-total">
+            <span>Total esperado en caja</span>
+            <span class="ticket-total-val">{{ formatCOP(resumen?.totalEsperado ?? turno.baseInicial) }}</span>
+          </div>
         </div>
-      </div>
-    </div>
 
-    <!-- ── Resumen de efectivo ── -->
-    <div class="resumen-grid">
-      <div class="res-item">
-        <span class="res-label">Base inicial</span>
-        <span class="res-val">{{ formatCOP(turno.baseInicial) }}</span>
-      </div>
-      <div class="res-item">
-        <span class="res-label">Ventas en efectivo (sistema)</span>
-        <span class="res-val">{{ formatCOP(turno.totalEfectivoSistema) }}</span>
-      </div>
-      <div class="res-item sistema-total">
-        <span class="res-label">Total esperado en caja</span>
-        <span class="res-val sistema" *ngIf="!loadingResumen">
-          {{ formatCOP(resumen?.totalEsperado ?? turno.baseInicial) }}
-        </span>
-      </div>
-    </div>
-
-    <p-divider align="left">
-      <span class="div-label">Conteo real</span>
-    </p-divider>
-
-    <!-- ── Formulario efectivo real ── -->
-    <form [formGroup]="frmCerrar">
-      <div class="field">
-        <label>Efectivo real contado <span class="required">*</span></label>
-        <p-inputNumber
-          formControlName="totalEfectivoReal"
-          mode="currency"
-          currency="COP"
-          locale="es-CO"
-          [minFractionDigits]="0"
-          [min]="0"
-          placeholder="$ 0"
-          styleClass="w-full input-real"
-          [class.ng-invalid]="isInvalid('totalEfectivoReal')"
-        />
-        <small class="p-error" *ngIf="isInvalid('totalEfectivoReal')">
-          Ingresa el efectivo contado.
-        </small>
-      </div>
-
-      <!-- Diferencia en tiempo real -->
-      <div
-        class="diferencia-card"
-        *ngIf="diferencia !== null"
-        [ngClass]="diferenciaClass"
-      >
-        <div class="dif-row">
-          <span class="dif-label">{{ diferenciaLabel }}</span>
-          <span class="dif-val">
-            {{ formatCOP(diferencia < 0 ? -diferencia : diferencia) }}
-          </span>
+        <div class="ticket-skeleton" *ngIf="loadingResumen">
+          <p-skeleton height="16px" styleClass="mb-2" />
+          <p-skeleton height="16px" width="80%" styleClass="mb-2" />
+          <p-skeleton height="16px" width="60%" styleClass="mb-2" />
+          <p-skeleton height="24px" />
         </div>
-        <div class="dif-bar" *ngIf="diferencia !== 0">
-          <div
-            class="dif-fill"
-            [style.width.%]="diferencia < 0 ? 100 : 40"
-          ></div>
-        </div>
-      </div>
-    </form>
 
-    <!-- Advertencia diferencia grande -->
-    <div
-      class="warn-diferencia"
-      *ngIf="diferencia !== null && Math.abs(diferencia) > 50000"
-    >
-      <i class="pi pi-exclamation-triangle"></i>
-      Diferencia superior a $50.000. Verifica el conteo antes de cerrar.
+        <!-- Divider -->
+        <p-divider align="left"><span class="div-label">Conteo real</span></p-divider>
+
+        <!-- Formulario efectivo real -->
+        <form [formGroup]="frmCerrar">
+          <div class="field">
+            <label>Efectivo contado <span class="required">*</span></label>
+            <p-inputNumber
+              formControlName="totalEfectivoReal"
+              mode="currency"
+              currency="COP"
+              locale="es-CO"
+              [minFractionDigits]="0"
+              [min]="0"
+              placeholder="$ 0"
+              styleClass="w-full input-real"
+              [class.ng-invalid]="isInvalid('totalEfectivoReal')"
+            />
+            <small class="p-error" *ngIf="isInvalid('totalEfectivoReal')">Ingresa el efectivo contado.</small>
+          </div>
+
+          <div class="diferencia-card" *ngIf="diferencia !== null" [ngClass]="diferenciaClass">
+            <div class="dif-row">
+              <span class="dif-label">{{ diferenciaLabel }}</span>
+              <span class="dif-val">{{ formatCOP(diferencia < 0 ? -diferencia : diferencia) }}</span>
+            </div>
+            <div class="dif-bar" *ngIf="diferencia !== 0">
+              <div class="dif-fill" [style.width.%]="diferencia < 0 ? 100 : 40"></div>
+            </div>
+          </div>
+        </form>
+
+        <div class="warn-diferencia" *ngIf="diferencia !== null && Math.abs(diferencia) > 50000">
+          <i class="pi pi-exclamation-triangle"></i>
+          Diferencia superior a $50.000. Verifica el conteo antes de cerrar.
+        </div>
+
+      </div>
+      <!-- ════════════════════════════════════════════════════ -->
+
     </div>
   </div>
 
   <ng-template pTemplate="footer">
     <div class="dialog-footer">
-      <button
-        pButton
-        type="button"
-        label="Cancelar"
-        icon="pi pi-times"
+      <button pButton type="button" label="Cancelar" icon="pi pi-times"
         class="p-button-outlined p-button-secondary"
-        [disabled]="isSubmitting"
-        (click)="closeModal()"
-      ></button>
-      <button
-        pButton
-        type="button"
-        label="Cerrar turno"
+        [disabled]="isSubmitting" (click)="closeModal()"></button>
+      <button pButton type="button" label="Cerrar turno"
         [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-lock'"
         class="btn-aura btn-cierre"
         [disabled]="isSubmitting || frmCerrar.invalid"
-        (click)="cerrarTurno()"
-      ></button>
+        (click)="cerrarTurno()"></button>
     </div>
   </ng-template>
 </p-dialog>

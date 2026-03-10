@@ -1,0 +1,315 @@
+$indigo: #6366f1;
+$blue: #3b82f6;
+$red: #ef4444;
+$emerald: #10b981;
+$orange: #f59e0b;
+$border: #e2e8f0;
+$text: #1e293b;
+$muted: #94a3b8;
+$font: 'Outfit', sans-serif;
+$mono: 'JetBrains Mono', monospace;
+
+.page-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: $font;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.page-title-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.page-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, $indigo, #818cf8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 20px;
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: $text;
+  margin: 0;
+}
+
+.page-sub {
+  font-size: 13px;
+  color: $muted;
+  margin: 2px 0 0;
+}
+
+// ─── Card ────────────────────────────────────────────────────
+.card {
+  background: #fff;
+  border: 1px solid $border;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.search-bar { padding: 16px 20px; }
+
+.mt-3 { margin-top: 12px; }
+.mt-4 { margin-top: 20px; }
+
+// ─── Barra de búsqueda ───────────────────────────────────────
+.search-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+  gap: 16px;
+  align-items: end;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr 1fr;
+  }
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    font-size: 12px;
+    font-weight: 600;
+    color: $muted;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+
+.field-actions .btn-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+:host ::ng-deep .w-full {
+  width: 100% !important;
+}
+
+// Dropdown items
+.cliente-option,
+.cliente-selected {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cliente-nombre { font-weight: 600; font-size: 13px; }
+.cliente-doc    { font-size: 11px; }
+
+// ─── Info cliente ─────────────────────────────────────────────
+.cliente-info-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #f8fafc;
+  border: 1px solid $border;
+  border-radius: 12px;
+  padding: 14px 18px;
+}
+
+.cliente-avatar {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, $indigo, #818cf8);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cliente-data {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cliente-nombre-big {
+  font-size: 15px;
+  font-weight: 700;
+  color: $text;
+}
+
+.cliente-detalle {
+  font-size: 12px;
+}
+
+// ─── Resumen cards ────────────────────────────────────────────
+.resumen-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+}
+
+.resumen-card {
+  background: #fff;
+  border: 1px solid $border;
+  border-radius: 14px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+
+  &.card-alerta {
+    border-color: lighten($red, 30%);
+    background: lighten($red, 47%);
+  }
+}
+
+.resumen-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+
+  &.blue   { background: lighten($blue,   38%); color: $blue; }
+  &.orange { background: lighten($orange, 36%); color: darken($orange, 10%); }
+  &.green  { background: lighten($emerald,48%); color: $emerald; }
+  &.red    { background: lighten($red,    38%); color: $red; }
+}
+
+.resumen-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.resumen-label {
+  font-size: 11px;
+  color: $muted;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.resumen-valor {
+  font-size: 19px;
+  font-weight: 700;
+  color: $text;
+  font-family: $mono;
+}
+
+.resumen-sub { font-size: 11px; color: $muted; }
+
+// ─── Tabla ───────────────────────────────────────────────────
+.card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: $text;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  i { color: $indigo; }
+}
+
+.total-badge {
+  background: #f1f5f9;
+  border: 1px solid $border;
+  border-radius: 20px;
+  padding: 3px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: $muted;
+}
+
+.text-right  { text-align: right !important; }
+.text-muted  { color: $muted; }
+.text-danger { color: $red; }
+.text-success{ color: $emerald; }
+.fw-600      { font-weight: 600; }
+.mono        { font-family: $mono; font-size: 13px; }
+
+.tipo-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.badge-pago {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 20px;
+  letter-spacing: 0.03em;
+
+  &.badge-credito {
+    background: lighten($orange, 36%);
+    color: darken($orange, 15%);
+  }
+
+  &.badge-contado {
+    background: lighten($emerald, 48%);
+    color: $emerald;
+  }
+}
+
+.cell-desc {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.desc-ref   { font-weight: 600; font-size: 13px; color: $text; }
+.desc-texto { font-size: 12px; }
+
+// ─── Empty states ─────────────────────────────────────────────
+.empty-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 64px 24px;
+  color: $muted;
+  i    { font-size: 56px; opacity: 0.2; }
+  p    { font-size: 15px; }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 40px;
+  color: $muted;
+  i { font-size: 40px; opacity: 0.25; }
+  p { font-size: 14px; }
+}

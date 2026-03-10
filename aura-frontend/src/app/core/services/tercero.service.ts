@@ -9,6 +9,7 @@ import {
   UpdateTerceroDto,
   TerceroPageableDto,
   MunicipioDto,
+  EstadoCuentaClienteModel,
 } from '../models/tercero.model';
 import { environment } from '../../../environments/environment';
 import { ResponseTableModel } from '../../shared/utils/response-table.model';
@@ -50,6 +51,15 @@ export class TerceroService {
     );
   }
 
+  /** Selector estado de cuenta — clientes y proveedores activos */
+  terceros(search = ''): Observable<ResponseModel<TerceroTableModel[]>> {
+    const params = new HttpParams().set('search', search);
+    return this.http.get<ResponseModel<TerceroTableModel[]>>(
+      `${this.apiUrl}/todos`,
+      { params },
+    );
+  }
+
   create(dto: CreateTerceroDto): Observable<ResponseModel<TerceroModel>> {
     return this.http.post<ResponseModel<TerceroModel>>(
       `${this.apiUrl}/create`,
@@ -82,6 +92,34 @@ export class TerceroService {
   getMunicipioById(id: number): Observable<ResponseModel<MunicipioDto>> {
     return this.http.get<ResponseModel<MunicipioDto>>(
       `${environment.apiUrl}municipios/${id}`,
+    );
+  }
+
+  getEstadoCuenta(
+    clienteId: number,
+    fechaDesde?: string,
+    fechaHasta?: string,
+  ): Observable<ResponseModel<EstadoCuentaClienteModel>> {
+    let params = new HttpParams();
+    if (fechaDesde) params = params.set('fechaDesde', fechaDesde);
+    if (fechaHasta) params = params.set('fechaHasta', fechaHasta);
+    return this.http.get<ResponseModel<EstadoCuentaClienteModel>>(
+      `${this.apiUrl}/${clienteId}/estado-cuenta`,
+      { params },
+    );
+  }
+
+  getEstadoCuentaPdf(
+    clienteId: number,
+    fechaDesde?: string,
+    fechaHasta?: string,
+  ): Observable<Blob> {
+    let params = new HttpParams();
+    if (fechaDesde) params = params.set('fechaDesde', fechaDesde);
+    if (fechaHasta) params = params.set('fechaHasta', fechaHasta);
+    return this.http.get(
+      `${this.apiUrl}/${clienteId}/estado-cuenta/pdf`,
+      { params, responseType: 'blob' },
     );
   }
 }

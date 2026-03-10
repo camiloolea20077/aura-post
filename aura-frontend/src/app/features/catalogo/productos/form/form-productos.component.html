@@ -29,6 +29,8 @@
         <div class="form-container">
           <!-- ── Imagen superior ──────────────────────────── -->
           <div class="imagen-top">
+
+            <!-- Preview -->
             <div class="imagen-box-top">
               <img
                 *ngIf="frmProducto.get('imagenUrl')?.value && !imageError"
@@ -47,21 +49,45 @@
               </div>
             </div>
 
-            <div class="field imagen-url-field">
+            <!-- Controles de upload -->
+            <div class="imagen-upload-area">
+              <!-- Input oculto -->
               <input
-                id="imagenUrl"
-                type="text"
-                pInputText
-                formControlName="imagenUrl"
-                placeholder="https://ejemplo.com/img.jpg"
-                maxlength="500"
-                autocomplete="off"
-                (input)="onImageUrlChange()"
+                #fileInput
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                style="display:none"
+                (change)="onFileSelected($event)"
               />
+
+              <div class="imagen-upload-btns">
+                <button
+                  pButton
+                  type="button"
+                  [label]="uploadingImage ? 'Subiendo...' : (frmProducto.get('imagenUrl')?.value ? 'Cambiar imagen' : 'Subir imagen')"
+                  [icon]="uploadingImage ? 'pi pi-spin pi-spinner' : 'pi pi-upload'"
+                  class="p-button-outlined p-button-sm"
+                  [disabled]="uploadingImage"
+                  (click)="fileInput.click()"
+                ></button>
+
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-trash"
+                  class="p-button-text p-button-danger p-button-sm"
+                  pTooltip="Quitar imagen"
+                  *ngIf="frmProducto.get('imagenUrl')?.value && !uploadingImage"
+                  (click)="quitarImagen()"
+                ></button>
+              </div>
+
               <small class="field-hint">
-                <i class="pi pi-info-circle"></i> URL pública de la imagen
+                <i class="pi pi-info-circle"></i>
+                JPG, PNG, WebP, GIF o AVIF · máx. 10 MB
               </small>
             </div>
+
           </div>
 
           <!-- ── Estado ─────────────────────────────────────── -->
@@ -494,6 +520,25 @@
                 [disabled]="!manejaInventarioValue"
               />
             </div>
+
+            <!-- Permitir stock negativo -->
+            <div class="field-inline inv-switch">
+              <div class="switch-label">
+                <span class="label-text">
+                  <i class="pi pi-arrow-down-left"></i>
+                  Permitir stock negativo
+                </span>
+                <span class="label-sub">
+                  Permite vender aunque no haya stock. El inventario quedará en
+                  negativo hasta que se registre la compra. Útil para carnicerías
+                  y negocios que reciben y venden antes de registrar la compra.
+                </span>
+              </div>
+              <p-inputSwitch
+                formControlName="permitirStockNegativo"
+                [disabled]="!manejaInventarioValue"
+              />
+            </div>
           </div>
 
           <!-- Resumen configuración -->
@@ -539,6 +584,20 @@
                 "
               ></i>
               <span>Trazabilidad por serial</span>
+            </div>
+            <div
+              class="inv-sum-item"
+              [class.active]="frmProducto.get('permitirStockNegativo')?.value"
+            >
+              <i
+                class="pi"
+                [class]="
+                  frmProducto.get('permitirStockNegativo')?.value
+                    ? 'pi-check-circle'
+                    : 'pi-times-circle'
+                "
+              ></i>
+              <span>Venta con stock negativo</span>
             </div>
           </div>
         </div>
