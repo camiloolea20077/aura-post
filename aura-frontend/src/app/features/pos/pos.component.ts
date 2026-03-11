@@ -366,28 +366,38 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       existing.cantidad = round2(existing.cantidad + pesoKg);
       this.calcLine(existing);
     } else {
-      const precioBase = p.precioFinal ?? p.precio;
-      let precioPOS = precioBase;
+      const precioBase = (p.precioFinal ?? p.precio) ?? 0;
+      const precioValido = isFinite(precioBase) ? precioBase : 0;
+      
+      if (precioValido <= 0) {
+        this.alertService.showWarn(
+          'Precio inválido',
+          `${p.nombre} no tiene un precio válido.`,
+        );
+        return;
+      }
+
+      let precioPOS = precioValido;
       let listaNombre: string | undefined;
       if (this.listaSeleccionada) {
         const listaPrice = p.presentacionId != null
           ? (this.preciosPorLista.get(p.presentacionId) ?? this.preciosPorLista.get(-p.id))
           : this.preciosPorLista.get(-p.id);
-        if (listaPrice != null) { precioPOS = listaPrice; listaNombre = this.listaSeleccionada.nombre; }
+        if (listaPrice != null && isFinite(listaPrice)) { precioPOS = listaPrice; listaNombre = this.listaSeleccionada.nombre; }
       }
       const item: CartItem = {
         _id: uuid(),
         productoId: p.id,
         presentacionId: p.presentacionId,
-        productoNombre: p.nombre,
+        productoNombre: p.nombre || 'Producto sin nombre',
         productoSku: p.sku,
         precio: precioPOS,
-        precioCatalogo: precioBase,
+        precioCatalogo: precioValido,
         listaPrecioNombre: listaNombre,
         cantidad: pesoKg,
         descuento: 0,
         descuentoAutomatico: p.descuentoNombre ?? null,
-        impuesto: p.ivaPorcentaje ?? 0,
+        impuesto: (p.ivaPorcentaje ?? 0) || 0,
         impuestoValor: 0,
         subtotal: 0,
         esPesable: true,
@@ -574,15 +584,24 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       existing.cantidad++;
       this.calcLine(existing);
     } else {
-      const precioBase = p.precioFinal ?? p.precio;
-      // Si hay una lista activa, buscar precio por presentación o por producto
-      let precioPOS = precioBase;
+      const precioBase = (p.precioFinal ?? p.precio) ?? 0;
+      const precioValido = isFinite(precioBase) ? precioBase : 0;
+      
+      if (precioValido <= 0) {
+        this.alertService.showWarn(
+          'Precio inválido',
+          `${p.nombre} no tiene un precio válido.`,
+        );
+        return;
+      }
+
+      let precioPOS = precioValido;
       let listaNombre: string | undefined;
       if (this.listaSeleccionada) {
         const listaPrice = p.presentacionId != null
           ? (this.preciosPorLista.get(p.presentacionId) ?? this.preciosPorLista.get(-p.id))
           : this.preciosPorLista.get(-p.id);
-        if (listaPrice != null) {
+        if (listaPrice != null && isFinite(listaPrice)) {
           precioPOS = listaPrice;
           listaNombre = this.listaSeleccionada.nombre;
         }
@@ -591,15 +610,15 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         _id: uuid(),
         productoId: p.id,
         presentacionId: p.presentacionId,
-        productoNombre: p.nombre,
+        productoNombre: p.nombre || 'Producto sin nombre',
         productoSku: p.sku,
         precio: precioPOS,
-        precioCatalogo: precioBase,
+        precioCatalogo: precioValido,
         listaPrecioNombre: listaNombre,
         cantidad: 1,
         descuento: 0,
         descuentoAutomatico: p.descuentoNombre ?? null,
-        impuesto: p.ivaPorcentaje ?? 0,
+        impuesto: (p.ivaPorcentaje ?? 0) || 0,
         impuestoValor: 0,
         subtotal: 0,
         esPesable: p.tipoProducto === 'PESABLE',
@@ -630,10 +649,21 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private calcLine(item: CartItem): void {
-    const base = round2(item.precio * item.cantidad);
-    const desc = round2(item.descuento);
+    const precio = item.precio ?? 0;
+    const cantidad = item.cantidad ?? 0;
+    const descuento = item.descuento ?? 0;
+    const impuesto = item.impuesto ?? 0;
+    
+    if (!isFinite(precio) || !isFinite(cantidad) || !isFinite(descuento) || !isFinite(impuesto)) {
+      item.impuestoValor = 0;
+      item.subtotal = 0;
+      return;
+    }
+    
+    const base = round2(precio * cantidad);
+    const desc = round2(descuento);
     const baseNeta = round2(Math.max(0, base - desc));
-    const iva = round2(baseNeta * (item.impuesto / 100));
+    const iva = round2(baseNeta * (impuesto / 100));
     item.impuestoValor = iva;
     item.subtotal = round2(baseNeta + iva);
   }
@@ -654,18 +684,27 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ── Getters de totales ────────────────────────────────────
   get subtotal(): number {
-    return round2(
-      this.cart.reduce((s, c) => s + round2(c.precio * c.cantidad), 0),
-    );
+    const val = this.cart.reduce((s, c) => {
+      const precio = c.precio ?? 0;
+      const cantidad = c.cantidad ?? 0;
+      return s + (isFinite(precio) && isFinite(cantidad) ? round2(precio * cantidad) : 0);
+    }, 0);
+    return isFinite(val) ? round2(val) : 0;
   }
   get descTotal(): number {
-    return round2(this.cart.reduce((s, c) => s + c.descuento, 0));
+    const val = this.cart.reduce((s, c) => s + (isFinite(c.descuento) ? c.descuento : 0), 0);
+    return isFinite(val) ? round2(val) : 0;
   }
   get impTotal(): number {
-    return round2(this.cart.reduce((s, c) => s + c.impuestoValor, 0));
+    const val = this.cart.reduce((s, c) => s + (isFinite(c.impuestoValor) ? c.impuestoValor : 0), 0);
+    return isFinite(val) ? round2(val) : 0;
   }
   get total(): number {
-    return round2(this.subtotal - this.descTotal + this.impTotal);
+    const sub = this.subtotal;
+    const desc = this.descTotal;
+    const imp = this.impTotal;
+    const val = sub - desc + imp;
+    return isFinite(val) ? round2(val) : 0;
   }
   get itemCount(): number {
     return this.cart.reduce((s, c) => s + c.cantidad, 0);
@@ -954,5 +993,6 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 }
 function round2(n: number): number {
-  return Math.round(n * 100) / 100;
+  if (!Number.isFinite(n)) return 0;
+  return Math.round((n + Number.EPSILON) * 100) / 100;
 }
