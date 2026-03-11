@@ -174,95 +174,101 @@
   </div>
 </div>
 
-<!-- ─── Sidebar: precios de la lista ──────────────────────── -->
-<p-sidebar
+<!-- ─── Modal: precios de la lista ───────────────────────── -->
+<p-dialog
   [(visible)]="showSidebar"
-  position="right"
-  [style]="{ width: '520px' }"
-  styleClass="aura-sidebar"
+  [header]="listaSeleccionada?.nombre ?? 'Precios'"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '640px' }"
+  styleClass="aura-dialog precios-dialog"
   (onHide)="closeSidebar()"
 >
-  <ng-template pTemplate="header">
-    <div class="sidebar-header">
-      <div class="sidebar-title-area">
-        <div class="sidebar-icon"><i class="pi pi-dollar"></i></div>
-        <div>
-          <h4 class="sidebar-title">{{ listaSeleccionada?.nombre }}</h4>
-          <p class="sidebar-sub">Precios asignados a esta lista</p>
-        </div>
-      </div>
-      <button
-        pButton
-        type="button"
-        label="Agregar precio"
-        icon="pi pi-plus"
-        class="btn-aura p-button-sm"
-        (click)="openCrearPrecio()"
-      ></button>
-    </div>
-  </ng-template>
-
   <!-- Loading -->
-  <div class="sidebar-loading" *ngIf="loadingPrecios">
+  <div class="dialog-loading" *ngIf="loadingPrecios">
     <i class="pi pi-spin pi-spinner"></i>
     <span>Cargando precios...</span>
   </div>
 
   <!-- Lista vacía -->
   <div
-    class="sidebar-empty"
+    class="dialog-empty"
     *ngIf="!loadingPrecios && preciosLista.length === 0"
   >
     <i class="pi pi-dollar"></i>
     <p>No hay precios en esta lista todavía</p>
-    <button
-      pButton
-      type="button"
-      label="Agregar primer precio"
-      icon="pi pi-plus"
-      class="btn-aura p-button-sm"
-      (click)="openCrearPrecio()"
-    ></button>
   </div>
 
-  <!-- Tabla de precios en sidebar -->
+  <!-- Tabla de precios -->
   <div class="precios-list" *ngIf="!loadingPrecios && preciosLista.length > 0">
-    <div class="precio-row" *ngFor="let p of preciosLista">
-      <div class="precio-info">
-        <span class="precio-producto">{{ p.productoNombre }}</span>
-        <span class="precio-presentacion">
-          <i class="pi pi-box"></i> {{ p.productoPresentacionNombre }}
-        </span>
+    <div class="precio-card" *ngFor="let p of preciosLista">
+      <div class="precio-card-left">
+        <div class="precio-icon">
+          <i class="pi pi-box"></i>
+        </div>
+        <div class="precio-info">
+          <span class="precio-producto">{{ p.productoNombre }}</span>
+          <span class="precio-presentacion" *ngIf="p.productoPresentacionNombre">
+            <i class="pi pi-layers"></i> {{ p.productoPresentacionNombre }}
+          </span>
+          <span class="precio-directo" *ngIf="!p.productoPresentacionNombre">
+            <i class="pi pi-tag"></i> Producto directo
+          </span>
+        </div>
       </div>
-      <div class="precio-values">
-        <span class="precio-monto">
-          {{ p.precio | currency: "COP" : "symbol-narrow" : "1.0-0" }}
-        </span>
-        <span class="precio-utilidad" *ngIf="p.utilidadEsperada !== null">
-          <i class="pi pi-percentage"></i> {{ p.utilidadEsperada }}%
-        </span>
-      </div>
-      <div class="precio-actions">
-        <button
-          pButton
-          type="button"
-          icon="pi pi-pencil"
-          class="p-button-text p-button-sm action-edit"
-          pTooltip="Editar precio"
-          (click)="openEditarPrecio(p)"
-        ></button>
-        <button
-          pButton
-          type="button"
-          icon="pi pi-trash"
-          class="p-button-text p-button-danger p-button-sm"
-          pTooltip="Eliminar precio"
-          (click)="confirmDeletePrecio(p)"
-        ></button>
+      <div class="precio-card-right">
+        <div class="precio-values">
+          <span class="precio-monto">
+            {{ p.precio | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+          </span>
+          <span class="precio-utilidad" *ngIf="p.utilidadEsperada !== null">
+            <i class="pi pi-percentage"></i> {{ p.utilidadEsperada }}%
+          </span>
+        </div>
+        <div class="precio-actions">
+          <button
+            pButton
+            type="button"
+            icon="pi pi-pencil"
+            class="p-button-text p-button-sm action-edit"
+            pTooltip="Editar precio"
+            (click)="openEditarPrecio(p)"
+          ></button>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-trash"
+            class="p-button-text p-button-danger p-button-sm"
+            pTooltip="Eliminar precio"
+            (click)="confirmDeletePrecio(p)"
+          ></button>
+        </div>
       </div>
     </div>
   </div>
-</p-sidebar>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer-precios">
+      <button
+        pButton
+        type="button"
+        label="Agregar precio"
+        icon="pi pi-plus"
+        class="btn-aura"
+        (click)="openCrearPrecio()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        label="Cerrar"
+        icon="pi pi-times"
+        class="p-button-outlined p-button-secondary"
+        (click)="closeSidebar()"
+      ></button>
+    </div>
+  </ng-template>
+</p-dialog>
 
 <!-- Modales -->
 <app-form-lista-precios

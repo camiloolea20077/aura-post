@@ -9,7 +9,7 @@ import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
-import { SidebarModule } from 'primeng/sidebar';
+import { DialogModule } from 'primeng/dialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
@@ -39,7 +39,7 @@ import { FormProductoPrecioComponent } from '../../precios-producto/form/form-pr
     ConfirmDialogModule,
     TooltipModule,
     SkeletonModule,
-    SidebarModule,
+    DialogModule,
     FormListaPreciosComponent,
     FormProductoPrecioComponent,
   ],

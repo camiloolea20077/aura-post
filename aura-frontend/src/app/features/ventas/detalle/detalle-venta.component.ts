@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
-import { SidebarModule } from 'primeng/sidebar';
+import { DialogModule } from 'primeng/dialog';
 import { TagModule } from 'primeng/tag';
 import { DividerModule } from 'primeng/divider';
 import { ToastModule } from 'primeng/toast';
@@ -26,7 +26,7 @@ import { IndexDBService } from '../../../core/services/index-db.service';
   standalone: true,
   imports: [
     CommonModule,
-    SidebarModule,
+    DialogModule,
     ButtonModule,
     TagModule,
     DividerModule,

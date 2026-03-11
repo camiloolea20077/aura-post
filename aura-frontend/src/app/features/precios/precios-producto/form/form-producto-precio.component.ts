@@ -108,8 +108,8 @@ export class FormProductoPrecioComponent implements OnInit, OnChanges {
   private initForm(): void {
     this.frmPrecio = this.fb.group({
       listaPrecioId: [null, Validators.required],
-      productoId: [null, Validators.required], // helper — no va al DTO
-      productoPresentacionId: [null, Validators.required],
+      productoId: [null, Validators.required], // helper — también va al DTO si no hay presentación
+      productoPresentacionId: [null], // opcional
       precio: [0, [Validators.required, Validators.min(0.01)]],
       utilidadEsperada: [null],
     });
@@ -277,7 +277,8 @@ export class FormProductoPrecioComponent implements OnInit, OnChanges {
       } else {
         const dto: CreateProductoPrecioDto = {
           listaPrecioId: v.listaPrecioId,
-          productoPresentacionId: v.productoPresentacionId,
+          productoPresentacionId: v.productoPresentacionId ?? null,
+          productoId: v.productoPresentacionId ? null : v.productoId,
           precio: v.precio,
           utilidadEsperada: v.utilidadEsperada ?? null,
         };

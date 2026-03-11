@@ -40,6 +40,8 @@ import { CotizacionService } from '../../core/services/cotizacion.service';
 import { TurnoCajaService } from '../../core/services/caja.service';
 import { TerceroService } from '../../core/services/tercero.service';
 import { AlertService } from '../../shared/pipes/alert.service';
+import { ListaPreciosService } from '../../core/services/lista-precios.service';
+import { ProductoPrecioService } from '../../core/services/producto-precio.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { ModalPagoComponent } from './components/modal-pagos/modal-pago.component';
@@ -148,6 +150,11 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   // ── Movimiento de caja (ingreso / egreso) ─────────────────
   public showMovimiento = false;
 
+  // ── Lista de precios ──────────────────────────────────────
+  public listaPreciosOpts: { label: string; value: number }[] = [];
+  public listaSeleccionada: { id: number; nombre: string } | null = null;
+  private preciosPorLista = new Map<number, number>(); // presentacionId → precio
+
   // ── Cotización ────────────────────────────────────────────
   public showCotizacion = false;
   public showTirillaCotizacion = false;
@@ -170,12 +177,15 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly indexDBService: IndexDBService,
     private readonly http: HttpClient,
     private readonly cdr: ChangeDetectorRef,
+    private readonly listaPreciosService: ListaPreciosService,
+    private readonly productoPrecioService: ProductoPrecioService,
   ) {}
 
   ngOnInit(): void {
     this.checkTurno();
     this.setupSearch();
     this.loadEmpresaConfig();
+    this.loadListaPrecios();
     this.cargarCotizacionDesdeNavegacion();
   }
 
@@ -199,9 +209,11 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       const item: CartItem = {
         _id: uuid(),
         productoId: d.productoId,
+        presentacionId: null,
         productoNombre: d.productoNombre,
         productoSku: d.productoSku ?? null,
         precio: d.precioUnitario,
+        precioCatalogo: d.precioUnitario,
         cantidad: d.cantidad,
         descuento: d.descuentoValor ?? 0,
         descuentoAutomatico: null,
@@ -354,12 +366,24 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       existing.cantidad = round2(existing.cantidad + pesoKg);
       this.calcLine(existing);
     } else {
+      const precioBase = p.precioFinal ?? p.precio;
+      let precioPOS = precioBase;
+      let listaNombre: string | undefined;
+      if (this.listaSeleccionada) {
+        const listaPrice = p.presentacionId != null
+          ? (this.preciosPorLista.get(p.presentacionId) ?? this.preciosPorLista.get(-p.id))
+          : this.preciosPorLista.get(-p.id);
+        if (listaPrice != null) { precioPOS = listaPrice; listaNombre = this.listaSeleccionada.nombre; }
+      }
       const item: CartItem = {
         _id: uuid(),
         productoId: p.id,
+        presentacionId: p.presentacionId,
         productoNombre: p.nombre,
         productoSku: p.sku,
-        precio: p.precioFinal ?? p.precio,
+        precio: precioPOS,
+        precioCatalogo: precioBase,
+        listaPrecioNombre: listaNombre,
         cantidad: pesoKg,
         descuento: 0,
         descuentoAutomatico: p.descuentoNombre ?? null,
@@ -461,6 +485,71 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
+  // ── Lista de precios ──────────────────────────────────────
+  private async loadListaPrecios(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.listaPreciosService.list());
+      this.listaPreciosOpts = (res?.data ?? []).map((l) => ({
+        label: l.nombre,
+        value: l.id,
+      }));
+      this.cdr.markForCheck();
+    } catch { /* silent */ }
+  }
+
+  async seleccionarListaPrecios(opt: { label: string; value: number }): Promise<void> {
+    if (this.listaSeleccionada?.id === opt.value) return;
+    this.listaSeleccionada = { id: opt.value, nombre: opt.label };
+    try {
+      const res = await lastValueFrom(
+        this.productoPrecioService.listByLista(opt.value),
+      );
+      this.preciosPorLista.clear();
+      for (const p of res?.data ?? []) {
+        // Indexar por presentacionId si tiene, o por productoId si no
+        if (p.productoPresentacionId != null) {
+          this.preciosPorLista.set(p.productoPresentacionId, p.precio);
+        } else if (p.productoId != null) {
+          // Usar clave negativa para distinguir de presentacionId
+          this.preciosPorLista.set(-p.productoId, p.precio);
+        }
+      }
+      this.aplicarListaAlCarrito();
+    } catch { /* silent */ }
+  }
+
+  clearListaPrecios(): void {
+    this.listaSeleccionada = null;
+    this.preciosPorLista.clear();
+    for (const item of this.cart) {
+      item.precio = item.precioCatalogo;
+      item.listaPrecioNombre = undefined;
+      this.calcLine(item);
+    }
+    this.cdr.markForCheck();
+  }
+
+  private aplicarListaAlCarrito(): void {
+    for (const item of this.cart) {
+      const listaPrice = this.getPrecioDeListaParaItem(item);
+      item.precio = listaPrice ?? item.precioCatalogo;
+      item.listaPrecioNombre = listaPrice != null ? this.listaSeleccionada?.nombre : undefined;
+      this.calcLine(item);
+    }
+    this.cdr.markForCheck();
+  }
+
+  private getPrecioDeListaParaItem(item: CartItem): number | undefined {
+    // 1. Buscar por presentacionId
+    if (item.presentacionId != null) {
+      const p = this.preciosPorLista.get(item.presentacionId);
+      if (p != null) return p;
+    }
+    // 2. Fallback: buscar por productoId (clave negativa)
+    const pProd = this.preciosPorLista.get(-item.productoId);
+    return pProd != null ? pProd : undefined;
+  }
+
   // ── Carrito ───────────────────────────────────────────────
   addToCart(p: ProductoPOS): void {
     const tieneInventario = p.tipoProducto !== 'SERVICIO';
@@ -486,12 +575,27 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       this.calcLine(existing);
     } else {
       const precioBase = p.precioFinal ?? p.precio;
+      // Si hay una lista activa, buscar precio por presentación o por producto
+      let precioPOS = precioBase;
+      let listaNombre: string | undefined;
+      if (this.listaSeleccionada) {
+        const listaPrice = p.presentacionId != null
+          ? (this.preciosPorLista.get(p.presentacionId) ?? this.preciosPorLista.get(-p.id))
+          : this.preciosPorLista.get(-p.id);
+        if (listaPrice != null) {
+          precioPOS = listaPrice;
+          listaNombre = this.listaSeleccionada.nombre;
+        }
+      }
       const item: CartItem = {
         _id: uuid(),
         productoId: p.id,
+        presentacionId: p.presentacionId,
         productoNombre: p.nombre,
         productoSku: p.sku,
-        precio: precioBase,
+        precio: precioPOS,
+        precioCatalogo: precioBase,
+        listaPrecioNombre: listaNombre,
         cantidad: 1,
         descuento: 0,
         descuentoAutomatico: p.descuentoNombre ?? null,
@@ -543,6 +647,8 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cart = [];
     this.clienteId = null;
     this.clienteNombre = null;
+    this.listaSeleccionada = null;
+    this.preciosPorLista.clear();
     this.cdr.markForCheck();
   }
 

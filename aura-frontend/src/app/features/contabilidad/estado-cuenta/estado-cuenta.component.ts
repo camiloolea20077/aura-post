@@ -58,6 +58,7 @@ export class EstadoCuentaComponent implements OnInit {
   clientes: TerceroTableModel[] = [];
   clienteSeleccionado: TerceroTableModel | null = null;
   loadingClientes = false;
+  private _searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
   // ── Filtros fecha ───────────────────────────────────────────
   fechaDesde: Date | null = null;
@@ -74,21 +75,35 @@ export class EstadoCuentaComponent implements OnInit {
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
-  async ngOnInit(): Promise<void> {
-    await this.cargarClientes();
-  }
+  ngOnInit(): void {}
 
-  private async cargarClientes(): Promise<void> {
-    this.loadingClientes = true;
-    try {
-      const res = await lastValueFrom(this.terceroService.terceros(''));
-      this.clientes = res?.data ?? [];
-    } catch {
-      this.clientes = [];
-    } finally {
-      this.loadingClientes = false;
+  onFiltroCliente(event: { filter: string }): void {
+    const q = event.filter?.trim() ?? '';
+    if (this._searchTimeout) clearTimeout(this._searchTimeout);
+    if (q.length < 2) {
+      this.clientes = this.clienteSeleccionado ? [this.clienteSeleccionado] : [];
       this.cdr.markForCheck();
+      return;
     }
+    this._searchTimeout = setTimeout(async () => {
+      this.loadingClientes = true;
+      this.cdr.markForCheck();
+      try {
+        const res = await lastValueFrom(this.terceroService.terceros(q));
+        const resultados = res?.data ?? [];
+        // mantener el seleccionado en la lista aunque no esté en los resultados
+        if (this.clienteSeleccionado && !resultados.find(c => c.id === this.clienteSeleccionado!.id)) {
+          this.clientes = [this.clienteSeleccionado, ...resultados];
+        } else {
+          this.clientes = resultados;
+        }
+      } catch {
+        this.clientes = [];
+      } finally {
+        this.loadingClientes = false;
+        this.cdr.markForCheck();
+      }
+    }, 300);
   }
 
   async onClienteChange(): Promise<void> {
