@@ -224,7 +224,6 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         unidadMedida: 'UND',
         showDescuento: false,
       };
-      // recalcular línea
       const base = round2(item.precio * item.cantidad);
       const desc = round2(item.descuento);
       const baseNeta = round2(Math.max(0, base - desc));
@@ -237,6 +236,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       this.clienteId = cotizacion.terceroId;
       this.clienteNombre = cotizacion.terceroNombre ?? null;
     }
+    this.recalcularTotales();
     this.alertService.showSuccess(
       'Cotización cargada',
       `${cotizacion.numero} lista para procesar`,
@@ -404,9 +404,10 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         unidadMedida: 'kg',
         showDescuento: false,
       };
-      this.calcLine(item);
       this.cart = [item, ...this.cart];
+      this.calcLine(item);
     }
+    this.recalcularTotales();
     this.alertService.showSuccess(
       p.nombre,
       `${pesoKg.toFixed(3)} kg agregados al carrito`,
@@ -625,9 +626,10 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         unidadMedida: p.unidadMedidaNombre ?? 'UND',
         showDescuento: false,
       };
-      this.calcLine(item);
       this.cart = [item, ...this.cart];
+      this.calcLine(item);
     }
+    this.recalcularTotales();
     this.cdr.markForCheck();
   }
 
@@ -657,6 +659,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!isFinite(precio) || !isFinite(cantidad) || !isFinite(descuento) || !isFinite(impuesto)) {
       item.impuestoValor = 0;
       item.subtotal = 0;
+      this.recalcularTotales();
       return;
     }
     
@@ -666,10 +669,12 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     const iva = round2(baseNeta * (impuesto / 100));
     item.impuestoValor = iva;
     item.subtotal = round2(baseNeta + iva);
+    this.recalcularTotales();
   }
 
   removeItem(id: string): void {
     this.cart = this.cart.filter((c) => c._id !== id);
+    this.recalcularTotales();
     this.cdr.markForCheck();
   }
 
@@ -679,35 +684,42 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.clienteNombre = null;
     this.listaSeleccionada = null;
     this.preciosPorLista.clear();
+    this.recalcularTotales();
     this.cdr.markForCheck();
   }
 
-  // ── Getters de totales ────────────────────────────────────
-  get subtotal(): number {
-    const val = this.cart.reduce((s, c) => {
-      const precio = c.precio ?? 0;
-      const cantidad = c.cantidad ?? 0;
-      return s + (isFinite(precio) && isFinite(cantidad) ? round2(precio * cantidad) : 0);
-    }, 0);
-    return isFinite(val) ? round2(val) : 0;
-  }
-  get descTotal(): number {
-    const val = this.cart.reduce((s, c) => s + (isFinite(c.descuento) ? c.descuento : 0), 0);
-    return isFinite(val) ? round2(val) : 0;
-  }
-  get impTotal(): number {
-    const val = this.cart.reduce((s, c) => s + (isFinite(c.impuestoValor) ? c.impuestoValor : 0), 0);
-    return isFinite(val) ? round2(val) : 0;
-  }
-  get total(): number {
-    const sub = this.subtotal;
-    const desc = this.descTotal;
-    const imp = this.impTotal;
-    const val = sub - desc + imp;
-    return isFinite(val) ? round2(val) : 0;
-  }
-  get itemCount(): number {
-    return this.cart.reduce((s, c) => s + c.cantidad, 0);
+  // ── Totales ───────────────────────────────────────────────
+  subtotal = 0;
+  descTotal = 0;
+  impTotal = 0;
+  total = 0;
+
+  private recalcularTotales(): void {
+    let sub = 0;
+    let desc = 0;
+    let imp = 0;
+    
+    for (const c of this.cart) {
+      const precio = (c.precio ?? 0);
+      const cantidad = (c.cantidad ?? 0);
+      const descuento = (c.descuento ?? 0);
+      const impuestoValor = (c.impuestoValor ?? 0);
+      
+      if (isFinite(precio) && isFinite(cantidad)) {
+        sub += round2(precio * cantidad);
+      }
+      if (isFinite(descuento)) {
+        desc += descuento;
+      }
+      if (isFinite(impuestoValor)) {
+        imp += impuestoValor;
+      }
+    }
+    
+    this.subtotal = round2(sub);
+    this.descTotal = round2(desc);
+    this.impTotal = round2(imp);
+    this.total = round2(this.subtotal - this.descTotal + this.impTotal);
   }
 
   // ── Cliente ───────────────────────────────────────────────
