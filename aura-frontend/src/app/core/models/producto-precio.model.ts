@@ -3,8 +3,9 @@ export interface ProductoPrecioModel {
   id: number;
   listaPrecioId: number;
   listaPrecioNombre: string;
-  productoPresentacionId: number;
-  productoPresentacionNombre: string;
+  productoId: number;
+  productoPresentacionId: number | null;
+  productoPresentacionNombre: string | null;
   productoNombre: string;
   precio: number;
   utilidadEsperada: number | null;
@@ -15,8 +16,9 @@ export interface ProductoPrecioTableModel {
   id: number;
   listaPrecioId: number;
   listaPrecioNombre: string;
-  productoPresentacionId: number;
-  productoPresentacionNombre: string;
+  productoId: number;
+  productoPresentacionId: number | null;
+  productoPresentacionNombre: string | null;
   productoNombre: string;
   precio: number;
   utilidadEsperada: number | null;
@@ -25,7 +27,8 @@ export interface ProductoPrecioTableModel {
 // ─── DTOs ────────────────────────────────────────────────────
 export interface CreateProductoPrecioDto {
   listaPrecioId: number;
-  productoPresentacionId: number;
+  productoPresentacionId: number | null;
+  productoId: number | null;
   precio: number;
   utilidadEsperada: number | null;
 }

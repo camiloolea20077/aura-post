@@ -71,7 +71,6 @@ export class TerceroService {
     id: number,
     dto: UpdateTerceroDto,
   ): Observable<ResponseModel<TerceroModel>> {
-    console.log('DTO recibido para update:', dto);
     return this.http.put<ResponseModel<TerceroModel>>(
       `${this.apiUrl}/${id}`,
       dto,
@@ -117,9 +116,9 @@ export class TerceroService {
     let params = new HttpParams();
     if (fechaDesde) params = params.set('fechaDesde', fechaDesde);
     if (fechaHasta) params = params.set('fechaHasta', fechaHasta);
-    return this.http.get(
-      `${this.apiUrl}/${clienteId}/estado-cuenta/pdf`,
-      { params, responseType: 'blob' },
-    );
+    return this.http.get(`${this.apiUrl}/${clienteId}/estado-cuenta/pdf`, {
+      params,
+      responseType: 'blob',
+    });
   }
 }

@@ -891,6 +891,105 @@ $mono: "JetBrains Mono", monospace;
   align-items: center;
 }
 
+// ── Lista de precios selector ─────────────────────────────────
+.lista-area {
+  padding: 0.5rem 0.9rem;
+  border-bottom: 1px solid $border;
+  flex-shrink: 0;
+}
+
+.lista-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  background: rgba(16, 185, 129, 0.07);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 9px;
+
+  i { font-size: 0.85rem; color: $emerald; }
+
+  .lista-nombre {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: $text;
+    flex: 1;
+  }
+
+  .chip-clear {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: $muted;
+    padding: 0.2rem;
+    display: flex;
+    align-items: center;
+    i { font-size: 0.72rem; }
+    &:hover { color: $red; }
+  }
+}
+
+.btn-lista-empty {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  background: transparent;
+  border: 1px dashed $border;
+  border-radius: 9px;
+  cursor: pointer;
+  color: $muted;
+  font-size: 0.82rem;
+  transition: border-color 0.15s, color 0.15s;
+
+  i:first-child { color: $muted; }
+  span { flex: 1; text-align: left; }
+  i:last-child { font-size: 0.7rem; }
+
+  &:hover {
+    border-color: $emerald;
+    color: $emerald;
+  }
+}
+
+.lista-options {
+  min-width: 200px;
+  padding: 0.25rem 0;
+
+  .lista-option {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: $text;
+    transition: background 0.12s;
+
+    i { color: $emerald; font-size: 0.85rem; }
+
+    &:hover { background: rgba(16, 185, 129, 0.07); }
+  }
+}
+
+// Badge lista en línea del carrito
+.badge-lista {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: $emerald;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-left: 4px;
+  vertical-align: middle;
+  i { font-size: 0.65rem; }
+}
+
 .btn-nuevo-cliente {
   flex-shrink: 0;
   height: 44px;

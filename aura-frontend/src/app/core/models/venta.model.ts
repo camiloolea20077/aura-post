@@ -124,10 +124,13 @@ export interface VentaPageableDto {
 export interface CartItem {
   _id: string; // UUID local
   productoId: number;
+  presentacionId: number | null; // para aplicar precios de lista
   productoNombre: string;
   productoSku: string | null;
   precio: number;
+  precioCatalogo: number; // precio original del catálogo, nunca cambia
   precioOriginal?: number; // precio del catálogo antes de override manual
+  listaPrecioNombre?: string; // nombre de la lista activa al agregar el item
   cantidad: number;
   descuento: number; // valor absoluto
   impuesto: number;
