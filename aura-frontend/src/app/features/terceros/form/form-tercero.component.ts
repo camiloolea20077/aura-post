@@ -218,7 +218,6 @@ export class FormTerceroComponent implements OnInit, OnChanges {
       const res = await lastValueFrom(this.terceroService.getById(id));
       if (res?.data) {
         const d = res.data;
-        console.log('Tercero cargado:', d);
         this.esJuridica = esPersonaJuridica(d.tipoDocumento);
 
         setTimeout(() => {
@@ -298,7 +297,6 @@ export class FormTerceroComponent implements OnInit, OnChanges {
       esEmpleado: v.esEmpleado,
       activo: v.activo,
     };
-    console.log('DTO a enviar:', v);
     this.isSubmitting = true;
     try {
       const obs = this.isEditMode

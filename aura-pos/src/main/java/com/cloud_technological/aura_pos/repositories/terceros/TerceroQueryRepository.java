@@ -160,6 +160,9 @@ public class TerceroQueryRepository {
 
     // Para selector en estado de cuenta - clientes y proveedores
     public List<TerceroTableDto> listarTodos(String search, Integer empresaId) {
+        if (search == null || search.trim().length() < 2)
+            return java.util.Collections.emptyList();
+
         String sql = """
             SELECT
                 t.id,
@@ -180,12 +183,12 @@ public class TerceroQueryRepository {
             AND (LOWER(t.numero_documento) LIKE :search
                 OR LOWER(t.razon_social) LIKE :search
                 OR LOWER(t.nombres) LIKE :search)
-            ORDER BY t.id DESC
-            LIMIT 20
+            ORDER BY nombre_completo ASC
+            LIMIT 50
         """;
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("empresaId", empresaId);
-        params.addValue("search", "%" + search.toLowerCase() + "%");
+        params.addValue("search", "%" + search.trim().toLowerCase() + "%");
         return jdbcTemplate.query(sql, params, new BeanPropertyRowMapper<>(TerceroTableDto.class));
     }
 }

@@ -24,10 +24,13 @@
           [(ngModel)]="clienteSeleccionado"
           [filter]="true"
           filterBy="nombreCompleto,numeroDocumento"
-          placeholder="Buscar cliente..."
+          filterPlaceholder="Escribe 2+ letras..."
+          [resetFilterOnHide]="false"
+          placeholder="Buscar cliente o proveedor..."
           [showClear]="true"
           styleClass="w-full"
           [loading]="loadingClientes"
+          (onFilter)="onFiltroCliente($event)"
           (onChange)="onClienteChange()"
         >
           <ng-template pTemplate="selectedItem" let-c>

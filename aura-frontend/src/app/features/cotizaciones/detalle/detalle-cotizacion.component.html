@@ -1,8 +1,11 @@
-<p-sidebar
+<p-dialog
   [(visible)]="visible"
-  position="right"
-  [style]="{ width: '540px' }"
-  styleClass="aura-sidebar"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '600px' }"
+  [contentStyle]="{ 'overflow-y': 'auto', 'max-height': '75vh' }"
+  styleClass="aura-dialog"
   (onHide)="closePanel()"
 >
   <ng-template pTemplate="header">
@@ -146,7 +149,7 @@
       </div>
     </div>
   </div>
-</p-sidebar>
+</p-dialog>
 
 <app-modal-tirilla-cotizacion
   [displayModal]="showTirilla"

@@ -299,17 +299,51 @@
       </div>
     </div>
 
+    <!-- ── Lista de precios ───────────────────────────────── -->
+    <div class="lista-area" *ngIf="listaPreciosOpts.length > 0">
+      <!-- Lista activa -->
+      <div class="lista-chip" *ngIf="listaSeleccionada">
+        <i class="pi pi-tag"></i>
+        <span class="lista-nombre">{{ listaSeleccionada.nombre }}</span>
+        <button class="chip-clear" (click)="clearListaPrecios()">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+      <!-- Selector cuando no hay lista activa -->
+      <button
+        *ngIf="!listaSeleccionada"
+        class="btn-lista-empty"
+        (click)="opLista.toggle($event)"
+      >
+        <i class="pi pi-tag"></i>
+        <span>Precio lista / tipo cliente</span>
+        <i class="pi pi-chevron-down"></i>
+      </button>
+      <p-popover #opLista>
+        <div class="lista-options">
+          <div
+            class="lista-option"
+            *ngFor="let l of listaPreciosOpts"
+            (click)="seleccionarListaPrecios(l); opLista.hide()"
+          >
+            <i class="pi pi-tag"></i>
+            <span>{{ l.label }}</span>
+          </div>
+        </div>
+      </p-popover>
+    </div>
+
     <!-- ── Líneas del carrito ─────────────────────────────── -->
     <div class="cart-lines" *ngIf="cart.length > 0">
       <div class="cart-line" *ngFor="let item of cart; trackBy: trackById">
         <div class="line-header">
           <span class="line-nombre">
             {{ item.productoNombre }}
-            <span
-              class="badge-desc"
-              *ngIf="item.descuento > 0 || item.descuentoAutomatico"
-            >
+            <span class="badge-desc" *ngIf="item.descuento > 0 || item.descuentoAutomatico">
               <i class="pi pi-tag"></i> Desc. aplicado
+            </span>
+            <span class="badge-lista" *ngIf="item.listaPrecioNombre">
+              <i class="pi pi-tag"></i> {{ item.listaPrecioNombre }}
             </span>
           </span>
           <span class="line-subtotal">{{ formatCOP(item.subtotal) }}</span>

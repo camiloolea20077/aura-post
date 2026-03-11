@@ -9,7 +9,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import { SidebarModule } from 'primeng/sidebar';
+import { DialogModule } from 'primeng/dialog';
 import { TagModule } from 'primeng/tag';
 import { DividerModule } from 'primeng/divider';
 import { ToastModule } from 'primeng/toast';
@@ -31,7 +31,7 @@ import { ModalTirillaCotizacionComponent } from '../../pos/components/modal-tiri
   standalone: true,
   imports: [
     CommonModule,
-    SidebarModule,
+    DialogModule,
     ButtonModule,
     TagModule,
     DividerModule,

@@ -102,7 +102,6 @@ export class FormMermaComponent implements OnChanges {
       this.loadMotivos();
       this.indexDB.getSucursalDefault().then((id) => {
         this.sucursalId = id;
-        console.log('Sucursal ID cargada:', this.sucursalId);
       });
     }
   }
