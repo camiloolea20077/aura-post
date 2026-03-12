@@ -314,6 +314,9 @@ export class CierreContableComponent implements OnInit {
       addEmpty(ws);
       addPlRow('(−) Comisiones técnicos', n(d.totalComisionesTecnicos), '', false, false, true, false);
     }
+    if (n(d.totalMermas) > 0) {
+      addPlRow('(−) Mermas aprobadas',    n(d.totalMermas), '', false, false, true, true);
+    }
     addPlRow('= Utilidad neta aprox.',    n(d.utilidadNeta), `${this.pct(d.margenNeto)} sobre ventas`, false, true);
 
     addEmpty(ws);
@@ -339,9 +342,12 @@ export class CierreContableComponent implements OnInit {
       r.getCell('D').font = { size: 9, color: { argb: C.muted }, name: 'Calibri' };
     };
 
-    addOpRow('Ventas',              n(d.cantidadVentas),    n(d.totalVentasNeto));
-    addOpRow('Compras',             n(d.cantidadCompras),   n(d.totalComprasNeto),          true);
-    addOpRow('Comisiones técnicos', n(d.cantidadComisiones),n(d.totalComisionesTecnicos));
+    addOpRow('Ventas',              n(d.cantidadVentas),     n(d.totalVentasNeto));
+    addOpRow('Compras',             n(d.cantidadCompras),    n(d.totalComprasNeto),          true);
+    addOpRow('Comisiones técnicos', n(d.cantidadComisiones), n(d.totalComisionesTecnicos));
+    addOpRow('Mermas aprobadas',    n(d.cantidadMermas),     n(d.totalMermas),               true);
+    addOpRow('Ingresos de caja',    n(d.cantidadIngresos),   n(d.totalIngresos));
+    addOpRow('Egresos de caja',     n(d.cantidadEgresos),    n(d.totalEgresos),              true);
 
     addEmpty(ws);
 

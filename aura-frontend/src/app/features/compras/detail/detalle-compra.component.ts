@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
-import { SidebarModule } from 'primeng/sidebar';
+import { DialogModule } from 'primeng/dialog';
 import { TagModule } from 'primeng/tag';
 import { DividerModule } from 'primeng/divider';
 import { TooltipModule } from 'primeng/tooltip';
@@ -25,7 +25,7 @@ import { AlertService } from '../../../shared/pipes/alert.service';
   standalone: true,
   imports: [
     CommonModule,
-    SidebarModule,
+    DialogModule,
     ButtonModule,
     TagModule,
     DividerModule,

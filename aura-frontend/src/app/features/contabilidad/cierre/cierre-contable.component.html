@@ -123,6 +123,10 @@
             <span>(−) Comisiones técnicos</span>
             <span class="pl-val negativo">({{ formatCOP(data.totalComisionesTecnicos) }})</span>
           </div>
+          <div class="pl-row" *ngIf="data.totalMermas > 0">
+            <span>(−) Mermas aprobadas</span>
+            <span class="pl-val negativo">({{ formatCOP(data.totalMermas) }})</span>
+          </div>
           <div class="pl-row pl-total">
             <span><strong>= Utilidad neta aprox.</strong></span>
             <span class="pl-val pl-total-val" [ngClass]="utilClass(data.utilidadNeta)">
@@ -229,6 +233,32 @@
             <div class="cuenta-row">
               <span class="cuenta-label">Cuentas activas</span>
               <span class="cuenta-val">{{ data.cxpCantidadActivas }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Movimientos de caja -->
+        <div class="panel panel-movimientos">
+          <div class="panel-header">
+            <i class="pi pi-wallet"></i>
+            <span>Movimientos de caja del período</span>
+          </div>
+          <div class="cuenta-rows">
+            <div class="cuenta-row">
+              <span class="cuenta-label"><i class="pi pi-arrow-down" style="color:#10b981"></i> Ingresos a caja</span>
+              <span class="cuenta-val" style="color:#10b981">{{ formatCOP(data.totalIngresos) }}</span>
+            </div>
+            <div class="cuenta-row">
+              <span class="cuenta-label">Cantidad de ingresos</span>
+              <span class="cuenta-val">{{ data.cantidadIngresos }}</span>
+            </div>
+            <div class="cuenta-row cuenta-pendiente">
+              <span class="cuenta-label"><i class="pi pi-arrow-up" style="color:#ef4444"></i> Egresos de caja</span>
+              <span class="cuenta-val" style="color:#ef4444">{{ formatCOP(data.totalEgresos) }}</span>
+            </div>
+            <div class="cuenta-row">
+              <span class="cuenta-label">Cantidad de egresos</span>
+              <span class="cuenta-val">{{ data.cantidadEgresos }}</span>
             </div>
           </div>
         </div>
