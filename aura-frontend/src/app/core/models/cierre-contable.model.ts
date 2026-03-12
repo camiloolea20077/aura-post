@@ -17,6 +17,10 @@ export interface CierreContableDto {
   cantidadComisiones: number;
   totalComisionesTecnicos: number;
 
+  // Mermas
+  cantidadMermas: number;
+  totalMermas: number;
+
   // Resultados
   utilidadBruta: number;
   utilidadNeta: number;
@@ -37,4 +41,10 @@ export interface CierreContableDto {
 
   // Posición neta
   posicionNeta: number;
+
+  // Movimientos de caja
+  totalIngresos: number;
+  totalEgresos: number;
+  cantidadIngresos: number;
+  cantidadEgresos: number;
 }

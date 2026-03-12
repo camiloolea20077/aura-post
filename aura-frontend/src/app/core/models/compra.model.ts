@@ -102,6 +102,7 @@ export interface CompraLineaUI {
 
   cantidad: number | null;
   costoUnitario: number | null;
+  ivaPorcentaje: number;
   impuestoValor: number;
   subtotal: number;
 }
@@ -112,4 +113,5 @@ export interface ProductoOpcion {
   value: number;
   manejaLotes: boolean;
   sku: string | null;
+  ivaPorcentaje: number;
 }

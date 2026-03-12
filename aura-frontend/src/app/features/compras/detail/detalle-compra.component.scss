@@ -1,12 +1,16 @@
-::ng-deep .compra-sidebar .p-sidebar-header {
+::ng-deep .compra-dialog .p-dialog-header {
   padding: 0;
   border-bottom: 1px solid #e2e8f0;
 }
-::ng-deep .compra-sidebar .p-sidebar-content {
+::ng-deep .compra-dialog .p-dialog-content {
   padding: 0;
 }
+::ng-deep .compra-dialog .p-dialog-footer {
+  padding: 0;
+  border-top: 1px solid #e2e8f0;
+}
 
-.sidebar-header {
+.dialog-header {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -29,9 +33,7 @@
   }
   &.loading {
     background: #e2e8f0;
-    i {
-      color: #94a3b8;
-    }
+    i { color: #94a3b8; }
   }
 }
 
@@ -56,7 +58,7 @@
   flex-shrink: 0;
 }
 
-.sidebar-loading {
+.dialog-loading {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -69,11 +71,11 @@
   }
 }
 
-.sidebar-content {
+.dialog-content {
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding-bottom: 1.5rem;
+  padding-bottom: 1rem;
 }
 
 // ─── Info general ─────────────────────────────────────────────
@@ -137,9 +139,7 @@
   gap: 0.75rem;
   padding: 0.75rem 0;
   border-bottom: 1px solid #f1f5f9;
-  &:last-child {
-    border-bottom: none;
-  }
+  &:last-child { border-bottom: none; }
 }
 
 .det-num {
@@ -193,9 +193,7 @@
   background: rgba(245, 158, 11, 0.08);
   padding: 0.1rem 0.35rem;
   border-radius: 5px;
-  i {
-    font-size: 0.6rem;
-  }
+  i { font-size: 0.6rem; }
 }
 
 .det-nums {
@@ -243,9 +241,7 @@
     font-weight: 600;
     color: #374151;
   }
-  .imp {
-    color: #d97706;
-  }
+  .imp { color: #d97706; }
   &.final {
     font-size: 0.95rem;
     font-weight: 700;
@@ -260,35 +256,35 @@
   }
 }
 
-// ─── Anular ───────────────────────────────────────────────────
-.anular-zone {
+// ─── Footer ───────────────────────────────────────────────────
+.dialog-footer {
   display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin: 0.75rem 1.25rem 0;
-  padding: 0.85rem 1rem;
-  border-radius: 11px;
-  background: #fff1f2;
-  border: 1px solid #fecaca;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.25rem;
 }
 
 .anular-warn {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.5rem;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   color: #dc2626;
-  line-height: 1.45;
+  flex: 1;
   i {
     font-size: 0.85rem;
-    margin-top: 0.05rem;
     flex-shrink: 0;
   }
 }
 
+.footer-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
 ::ng-deep .btn-anular.p-button {
-  width: 100%;
-  justify-content: center;
   border-radius: 9px !important;
   font-size: 0.83rem !important;
 }
