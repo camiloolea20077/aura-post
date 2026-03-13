@@ -10,6 +10,7 @@ export interface VentaDetalleResponse {
   montoDescuento: number;
   impuestoValor: number;
   subtotalLinea: number;
+  unidadMedidaNombre: string | null;
 }
 
 export interface VentaPagoResponse {

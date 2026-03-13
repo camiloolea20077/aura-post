@@ -22,6 +22,7 @@ export interface VentaDetalleModel {
   impuestoValor: number;
   subtotalLinea: number;
   montoDescuento: number;
+  unidadMedidaNombre: string | null;
 }
 
 // ─── Pago ─────────────────────────────────────────────────────
