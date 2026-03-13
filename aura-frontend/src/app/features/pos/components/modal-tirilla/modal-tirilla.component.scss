@@ -138,30 +138,44 @@ $muted: #64748b;
   flex: 1;
 }
 
-// Tabla productos con layout fijo para evitar desbordamiento
-table.t-productos {
-  table-layout: fixed;
-  width: 100%;
-  border-collapse: collapse;
-
-  .col-cant  { width: 22px; }
-  .col-precio { width: 46px; }
-  .col-total  { width: 46px; }
-
-  th, td {
-    vertical-align: top;
-    padding: 0;
-  }
+// Encabezado tabla productos
+.t-prod-header {
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+  border-bottom: 1.5px solid #000;
+  padding-bottom: 2px;
+  margin-bottom: 3px;
 }
-.t-art-cell {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+
+// Lista de productos — formato 2 líneas
+.t-prod-list {
+  margin-bottom: 4px;
 }
-.t-num-cell {
-  text-align: right;
+.t-prod-item {
+  margin: 3px 0;
+}
+.t-prod-nombre {
+  word-break: break-word;
+  white-space: normal;
+}
+.t-prod-detalle {
+  display: flex;
+  justify-content: space-between;
+  padding-left: 6px;
+}
+.t-prod-cant-val {
+  flex: 1;
   white-space: nowrap;
   overflow: hidden;
+}
+.t-prod-total {
+  white-space: nowrap;
+  padding-left: 4px;
+}
+.t-sub-label {
+  font-size: 0.8em;
+  color: #555;
 }
 
 // Sección Factura Electrónica

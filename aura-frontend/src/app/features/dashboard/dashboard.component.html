@@ -1,5 +1,6 @@
 <div class="dash">
-  <!-- Header -->
+
+  <!-- ══ HEADER ═══════════════════════════════════════════════════ -->
   <div class="dash-header">
     <div class="dh-left">
       <div class="dh-title">
@@ -23,12 +24,10 @@
         <i class="pi pi-shopping-cart"></i>
         Ir al POS
       </a>
-
       <a routerLink="/compras" class="btn btn-soft">
         <i class="pi pi-truck"></i>
         Compras
       </a>
-
       <a routerLink="/mermas" class="btn btn-soft">
         <i class="pi pi-minus-circle"></i>
         Mermas
@@ -36,16 +35,15 @@
     </div>
   </div>
 
-  <!-- Loading skeleton -->
+  <!-- ══ SKELETON ══════════════════════════════════════════════════ -->
   <ng-container *ngIf="loading">
     <div class="kpi-grid">
       <div class="kpi-card skeleton-card" *ngFor="let s of skeletons">
-        <p-skeleton width="60%" height="14px" styleClass="mb-3" />
-        <p-skeleton width="80%" height="34px" styleClass="mb-2" />
-        <p-skeleton width="45%" height="12px" />
+        <p-skeleton width="55%" height="13px" styleClass="mb-3" />
+        <p-skeleton width="75%" height="36px" styleClass="mb-3" />
+        <p-skeleton width="40%" height="12px" />
       </div>
     </div>
-
     <div class="grid-2">
       <div class="card chart-card">
         <p-skeleton width="40%" height="16px" styleClass="mb-4" />
@@ -58,135 +56,136 @@
     </div>
   </ng-container>
 
-  <!-- Content -->
+  <!-- ══ CONTENT ═══════════════════════════════════════════════════ -->
   <ng-container *ngIf="!loading && dashboard">
-    <!-- KPIs -->
+
+    <!-- KPIs ──────────────────────────────────────────────────────── -->
     <div class="kpi-grid">
+
+      <!-- Ventas hoy -->
       <div class="kpi-card kpi-hero">
-        <div class="kpi-head">
-          <div class="kpi-label">Ventas hoy</div>
-          <div class="kpi-pill pill-blue"><i class="pi pi-sun"></i> Hoy</div>
-        </div>
-        <div class="kpi-main">
-          <div class="kpi-value">
-            {{ formatCOP(dashboard.ventasHoy.total) }}
+        <div class="kpi-accent-bar kpi-bar-blue"></div>
+        <div class="kpi-inner">
+          <div class="kpi-head">
+            <div class="kpi-label">Ventas hoy</div>
+            <div class="kpi-pill pill-blue"><i class="pi pi-sun"></i> Hoy</div>
           </div>
+          <div class="kpi-value">{{ formatCOP(dashboard.ventasHoy.total) }}</div>
           <div class="kpi-mini">
             <span class="mini-chip">
-              <i class="pi pi-receipt"></i>
-              {{ dashboard.ventasHoy.cantidad }} ventas
+              <i class="pi pi-receipt"></i>{{ dashboard.ventasHoy.cantidad }} ventas
             </span>
             <span class="mini-chip mono">
-              Ticket: {{ formatCOP(dashboard.ventasHoy.promedio) }}
+              Ticket {{ formatCOP(dashboard.ventasHoy.promedio) }}
             </span>
           </div>
         </div>
       </div>
 
+      <!-- Ventas mes -->
       <div class="kpi-card">
-        <div class="kpi-head">
-          <div class="kpi-label">Ventas del mes</div>
-          <div class="kpi-pill pill-purple">
-            <i class="pi pi-chart-line"></i> Mes
+        <div class="kpi-accent-bar kpi-bar-purple"></div>
+        <div class="kpi-inner">
+          <div class="kpi-head">
+            <div class="kpi-label">Ventas del mes</div>
+            <div class="kpi-pill pill-purple"><i class="pi pi-chart-line"></i> Mes</div>
           </div>
-        </div>
-        <div class="kpi-value">{{ formatCOP(dashboard.ventasMes.total) }}</div>
-        <div class="kpi-sub">
-          <span class="muted">{{ dashboard.ventasMes.cantidad }} ventas</span>
-          <span class="muted mono"
-            >Ticket: {{ formatCOP(dashboard.ventasMes.promedio) }}</span
-          >
+          <div class="kpi-value">{{ formatCOP(dashboard.ventasMes.total) }}</div>
+          <div class="kpi-sub">
+            <span class="muted">{{ dashboard.ventasMes.cantidad }} ventas</span>
+            <span class="muted mono">Ticket {{ formatCOP(dashboard.ventasMes.promedio) }}</span>
+          </div>
         </div>
       </div>
 
+      <!-- Compras mes -->
       <div class="kpi-card">
-        <div class="kpi-head">
-          <div class="kpi-label">Compras del mes</div>
-          <div class="kpi-pill pill-green">
-            <i class="pi pi-truck"></i> Abasto
+        <div class="kpi-accent-bar kpi-bar-green"></div>
+        <div class="kpi-inner">
+          <div class="kpi-head">
+            <div class="kpi-label">Compras del mes</div>
+            <div class="kpi-pill pill-green"><i class="pi pi-truck"></i> Abasto</div>
           </div>
-        </div>
-        <div class="kpi-value">{{ formatCOP(dashboard.totalComprasMes) }}</div>
-        <div class="kpi-sub">
-          <span class="muted">Movimiento de inventario</span>
+          <div class="kpi-value">{{ formatCOP(dashboard.totalComprasMes) }}</div>
+          <div class="kpi-sub">
+            <span class="muted">Movimiento de inventario</span>
+          </div>
         </div>
       </div>
 
-      <div class="kpi-card" [class.alert]="dashboard.stockBajo.length > 0">
-        <div class="kpi-head">
-          <div class="kpi-label">Stock bajo</div>
-          <div class="kpi-pill pill-orange">
-            <i class="pi pi-exclamation-triangle"></i> Alerta
+      <!-- Stock bajo -->
+      <div class="kpi-card" [class.kpi-alert]="dashboard.stockBajo.length > 0">
+        <div class="kpi-accent-bar" [ngClass]="dashboard.stockBajo.length > 0 ? 'kpi-bar-orange' : 'kpi-bar-slate'"></div>
+        <div class="kpi-inner">
+          <div class="kpi-head">
+            <div class="kpi-label">Stock bajo</div>
+            <div class="kpi-pill pill-orange"><i class="pi pi-exclamation-triangle"></i> Alerta</div>
+          </div>
+          <div class="kpi-value big">{{ dashboard.stockBajo.length }}</div>
+          <div class="kpi-sub">
+            <span class="muted" *ngIf="dashboard.stockBajo.length === 0">
+              <i class="pi pi-check-circle" style="color:#10b981"></i> Todo en orden
+            </span>
+            <span class="warn" *ngIf="dashboard.stockBajo.length > 0">
+              <i class="pi pi-exclamation-triangle"></i> Requiere reposición
+            </span>
           </div>
         </div>
-        <div class="kpi-value big">{{ dashboard.stockBajo.length }}</div>
-        <div class="kpi-sub">
-          <span class="muted" *ngIf="dashboard.stockBajo.length === 0"
-            >Todo OK</span
-          >
-          <span class="warn" *ngIf="dashboard.stockBajo.length > 0"
-            >Requiere reposición</span
-          >
-        </div>
       </div>
+
     </div>
 
-    <!-- Insights (rápidos) -->
+    <!-- Insights ────────────────────────────────────────────────── -->
     <div class="insights">
+
       <div class="ins-card">
         <div class="ins-icon blue"><i class="pi pi-wallet"></i></div>
         <div class="ins-body">
-          <div class="ins-title">Método de pago líder</div>
+          <div class="ins-title">Método líder</div>
           <div class="ins-value">{{ metodoPagoLider || "Sin datos" }}</div>
           <div class="ins-sub">Más usado en el mes</div>
         </div>
+        <div class="ins-arrow"><i class="pi pi-arrow-up-right"></i></div>
       </div>
 
       <div class="ins-card">
         <div class="ins-icon purple"><i class="pi pi-tags"></i></div>
         <div class="ins-body">
           <div class="ins-title">Top producto</div>
-          <div class="ins-value">
-            {{ dashboard.topProductos[0]?.productoNombre || "Sin datos" }}
-          </div>
-          <div class="ins-sub">
-            {{
-              formatCOP(dashboard.topProductos[0]?.totalIngresos ?? 0) || "—"
-            }}
-          </div>
+          <div class="ins-value">{{ dashboard.topProductos[0]?.productoNombre || "Sin datos" }}</div>
+          <div class="ins-sub">{{ formatCOP(dashboard.topProductos[0]?.totalIngresos ?? 0) }}</div>
         </div>
+        <div class="ins-arrow"><i class="pi pi-arrow-up-right"></i></div>
       </div>
 
       <div class="ins-card">
         <div class="ins-icon green"><i class="pi pi-bolt"></i></div>
         <div class="ins-body">
           <div class="ins-title">Ticket promedio hoy</div>
-          <div class="ins-value mono">
-            {{ formatCOP(dashboard.ventasHoy.promedio) }}
-          </div>
+          <div class="ins-value mono">{{ formatCOP(dashboard.ventasHoy.promedio) }}</div>
           <div class="ins-sub">Útil para metas diarias</div>
         </div>
+        <div class="ins-arrow"><i class="pi pi-arrow-up-right"></i></div>
       </div>
+
     </div>
 
-    <!-- Charts -->
+    <!-- Charts ─────────────────────────────────────────────────── -->
     <div class="grid-2">
+
       <div class="card chart-card">
         <div class="card-head">
-          <div>
-            <h4>Ventas por día</h4>
-            <p>Semana actual</p>
+          <div class="card-head-left">
+            <div class="card-head-icon icon-blue"><i class="pi pi-chart-line"></i></div>
+            <div>
+              <h4>Ventas por día</h4>
+              <p>Semana actual</p>
+            </div>
           </div>
         </div>
-
         <div class="chart-wrap">
-          <p-chart
-            *ngIf="chartVentasSemana"
-            type="line"
-            [data]="chartVentasSemana"
-            [options]="chartOptions"
-            height="240"
-          />
+          <p-chart *ngIf="chartVentasSemana" type="line"
+            [data]="chartVentasSemana" [options]="chartOptions" height="240" />
           <div class="empty" *ngIf="!chartVentasSemana">
             <i class="pi pi-chart-line"></i>
             <span>Sin datos esta semana</span>
@@ -196,63 +195,54 @@
 
       <div class="card chart-card">
         <div class="card-head">
-          <div>
-            <h4>Métodos de pago</h4>
-            <p>Distribución del mes</p>
+          <div class="card-head-left">
+            <div class="card-head-icon icon-purple"><i class="pi pi-chart-pie"></i></div>
+            <div>
+              <h4>Métodos de pago</h4>
+              <p>Distribución del mes</p>
+            </div>
           </div>
         </div>
-
         <div class="chart-wrap">
-          <p-chart
-            *ngIf="chartMetodoPago"
-            type="doughnut"
-            [data]="chartMetodoPago"
-            [options]="doughnutOptions"
-            height="240"
-          />
+          <p-chart *ngIf="chartMetodoPago" type="doughnut"
+            [data]="chartMetodoPago" [options]="doughnutOptions" height="240" />
           <div class="empty" *ngIf="!chartMetodoPago">
             <i class="pi pi-chart-pie"></i>
             <span>Sin datos del mes</span>
           </div>
         </div>
       </div>
+
     </div>
 
-    <!-- Lists -->
+    <!-- Lists ──────────────────────────────────────────────────── -->
     <div class="grid-2">
+
       <!-- Top productos -->
       <div class="card">
         <div class="card-head">
-          <div>
-            <h4>Top productos</h4>
-            <p>Por ingresos del mes</p>
+          <div class="card-head-left">
+            <div class="card-head-icon icon-amber"><i class="pi pi-star"></i></div>
+            <div>
+              <h4>Top productos</h4>
+              <p>Por ingresos del mes</p>
+            </div>
           </div>
         </div>
-
         <div class="card-body">
           <div class="top-list" *ngIf="dashboard.topProductos.length > 0">
-            <div
-              class="top-item"
-              *ngFor="let item of dashboard.topProductos; let i = index"
-            >
+            <div class="top-item" *ngFor="let item of dashboard.topProductos; let i = index">
               <div class="rank" [ngClass]="getRankClass(i)">{{ i + 1 }}</div>
-
               <div class="top-info">
                 <div class="name">{{ item.productoNombre }}</div>
                 <div class="sku mono">{{ item.productoSku }}</div>
               </div>
-
               <div class="top-right">
-                <div class="money mono">
-                  {{ formatCOP(item.totalIngresos) }}
-                </div>
-                <div class="qty muted">
-                  {{ item.totalVendido | number: "1.0-2" }} uds
-                </div>
+                <div class="money mono">{{ formatCOP(item.totalIngresos) }}</div>
+                <div class="qty muted">{{ item.totalVendido | number: "1.0-2" }} uds</div>
               </div>
             </div>
           </div>
-
           <div class="empty" *ngIf="dashboard.topProductos.length === 0">
             <i class="pi pi-box"></i>
             <span>Sin ventas este mes</span>
@@ -263,93 +253,75 @@
       <!-- Últimas ventas -->
       <div class="card">
         <div class="card-head">
-          <div>
-            <h4>Últimas ventas</h4>
-            <p>Las más recientes</p>
+          <div class="card-head-left">
+            <div class="card-head-icon icon-blue"><i class="pi pi-receipt"></i></div>
+            <div>
+              <h4>Últimas ventas</h4>
+              <p>Las más recientes</p>
+            </div>
           </div>
-          <a routerLink="/ventas" class="link">Ver todas</a>
+          <a routerLink="/ventas" class="link">Ver todas <i class="pi pi-arrow-right"></i></a>
         </div>
-
         <div class="card-body no-pad">
           <div class="sale-row" *ngFor="let v of dashboard.ultimasVentas">
             <div class="sale-ico"><i class="pi pi-receipt"></i></div>
-
             <div class="sale-mid">
-              <div class="sale-id mono">
-                {{ v.prefijo || "" }}{{ v.prefijo ? "-" : ""
-                }}{{ v.consecutivo }}
-              </div>
-              <div class="sale-client">
-                {{
-                  (v.clienteNombre || "").trim()
-                    ? v.clienteNombre
-                    : "Cliente general"
-                }}
-              </div>
+              <div class="sale-id mono">{{ v.prefijo || "" }}{{ v.prefijo ? "-" : "" }}{{ v.consecutivo }}</div>
+              <div class="sale-client">{{ (v.clienteNombre || "").trim() ? v.clienteNombre : "Cliente general" }}</div>
             </div>
-
             <div class="sale-right">
               <div class="sale-total mono">{{ formatCOP(v.totalPagar) }}</div>
-              <p-tag
-                [value]="v.estadoVenta"
-                [severity]="getVentaEstadoSeverity(v.estadoVenta)"
-              />
+              <p-tag [value]="v.estadoVenta" [severity]="getVentaEstadoSeverity(v.estadoVenta)" />
             </div>
           </div>
-
           <div class="empty" *ngIf="dashboard.ultimasVentas.length === 0">
             <i class="pi pi-receipt"></i>
             <span>Sin ventas registradas</span>
           </div>
         </div>
       </div>
+
     </div>
 
-    <!-- Movimientos -->
+    <!-- Kardex ─────────────────────────────────────────────────── -->
     <div class="card">
       <div class="card-head">
-        <div>
-          <h4>Kardex reciente</h4>
-          <p>Últimos movimientos de inventario</p>
+        <div class="card-head-left">
+          <div class="card-head-icon icon-slate"><i class="pi pi-history"></i></div>
+          <div>
+            <h4>Kardex reciente</h4>
+            <p>Últimos movimientos de inventario</p>
+          </div>
         </div>
-        <a routerLink="/inventario/kardex" class="link">Ver Kardex</a>
+        <a routerLink="/inventario/kardex" class="link">Ver Kardex <i class="pi pi-arrow-right"></i></a>
       </div>
-
       <div class="card-body no-pad">
-        <div
-          class="mov-row"
-          *ngFor="let m of dashboard.ultimosMovimientos"
-          [ngClass]="getMovimientoClass(m.tipoMovimiento)"
-        >
+        <div class="mov-row" *ngFor="let m of dashboard.ultimosMovimientos"
+          [ngClass]="getMovimientoClass(m.tipoMovimiento)">
           <div class="mov-badge">
             <i [class]="getMovimientoIcon(m.tipoMovimiento)"></i>
           </div>
-
           <div class="mov-mid">
             <div class="mov-title">
               <span class="mov-type">{{ m.tipoMovimiento }}</span>
-              <span class="mov-dot">•</span>
+              <span class="mov-dot">·</span>
               <span class="mov-prod">{{ m.productoNombre }}</span>
             </div>
             <div class="mov-sub">
-              {{ m.sucursalNombre }} ·
-              {{ m.createdAt | date: "dd/MM/yyyy HH:mm" }}
+              {{ m.sucursalNombre }} · {{ m.createdAt | date: "dd/MM/yy HH:mm" }}
             </div>
           </div>
-
           <div class="mov-right">
             <div class="mov-qty mono">{{ m.cantidad | number: "1.0-4" }}</div>
-            <div class="mov-stock muted mono">
-              Stock: {{ m.saldoNuevo | number: "1.0-2" }}
-            </div>
+            <div class="mov-stock muted mono">→ {{ m.saldoNuevo | number: "1.0-2" }}</div>
           </div>
         </div>
-
         <div class="empty" *ngIf="dashboard.ultimosMovimientos.length === 0">
           <i class="pi pi-history"></i>
           <span>Sin movimientos recientes</span>
         </div>
       </div>
     </div>
+
   </ng-container>
 </div>

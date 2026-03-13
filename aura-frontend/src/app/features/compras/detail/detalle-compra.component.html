@@ -1,12 +1,15 @@
-<p-sidebar
+<p-dialog
   [(visible)]="visible"
-  position="right"
-  [style]="{ width: '560px' }"
-  styleClass="aura-sidebar compra-sidebar"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [maximizable]="true"
+  [style]="{ width: '620px' }"
+  styleClass="aura-dialog compra-dialog"
   (onHide)="close()"
 >
   <ng-template pTemplate="header">
-    <div class="sidebar-header" *ngIf="compra && !isLoading">
+    <div class="dialog-header" *ngIf="compra && !isLoading">
       <div class="compra-icon"><i class="pi pi-shopping-bag"></i></div>
       <div class="header-info">
         <h4 class="compra-num">
@@ -21,7 +24,7 @@
         styleClass="estado-tag"
       />
     </div>
-    <div class="sidebar-header" *ngIf="isLoading">
+    <div class="dialog-header" *ngIf="isLoading">
       <div class="compra-icon loading">
         <i class="pi pi-spin pi-spinner"></i>
       </div>
@@ -29,11 +32,11 @@
     </div>
   </ng-template>
 
-  <div class="sidebar-loading" *ngIf="isLoading">
+  <div class="dialog-loading" *ngIf="isLoading">
     <i class="pi pi-spin pi-spinner"></i><span>Cargando detalle...</span>
   </div>
 
-  <div class="sidebar-content" *ngIf="compra && !isLoading">
+  <div class="dialog-content" *ngIf="compra && !isLoading">
     <!-- Info general -->
     <div class="info-grid">
       <div class="info-item">
@@ -110,26 +113,37 @@
         }}</span>
       </div>
     </div>
-
-    <!-- Anular -->
-    <div class="anular-zone" *ngIf="compra.estado === 'RECIBIDA'">
-      <div class="anular-warn">
-        <i class="pi pi-exclamation-triangle"></i>
-        <span
-          >Anular esta compra revertirá el stock y los lotes afectados.</span
-        >
-      </div>
-      <button
-        pButton
-        type="button"
-        label="Anular compra"
-        icon="pi pi-ban"
-        class="p-button-danger p-button-outlined btn-anular"
-        [loading]="isAnulando"
-        (click)="confirmarAnular()"
-      ></button>
-    </div>
   </div>
-</p-sidebar>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer" *ngIf="compra && !isLoading">
+      <div class="anular-warn" *ngIf="compra.estado === 'RECIBIDA'">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>Anular revertirá el stock y los lotes afectados.</span>
+      </div>
+      <div class="footer-actions">
+        <button
+          pButton
+          type="button"
+          label="Cerrar"
+          icon="pi pi-times"
+          class="p-button-outlined p-button-secondary"
+          (click)="close()"
+        ></button>
+        <button
+          *ngIf="compra.estado === 'RECIBIDA'"
+          pButton
+          type="button"
+          label="Anular compra"
+          icon="pi pi-ban"
+          class="p-button-danger btn-anular"
+          [loading]="isAnulando"
+          (click)="confirmarAnular()"
+        ></button>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>
+
 <p-toast />
 <p-confirmDialog />

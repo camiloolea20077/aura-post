@@ -158,8 +158,10 @@ export class FormCompraComponent implements OnInit, OnChanges {
           value: p.id,
           manejaLotes: !!p.manejaLotes,
           sku: p.sku ?? null,
+          ivaPorcentaje: p.ivaPorcentaje ?? 0,
         }),
       );
+      console.log('[COMPRAS] Productos buscados:', this.productoSugerencias.length, 'Ejemplo:', this.productoSugerencias[0]);
     } catch {
       this.productoSugerencias = [];
     }
@@ -205,6 +207,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
       presentacionesOpts: [],
       cantidad: null,
       costoUnitario: null,
+      ivaPorcentaje: 0,
       impuestoValor: 0,
       subtotal: 0,
     };
@@ -219,19 +222,59 @@ export class FormCompraComponent implements OnInit, OnChanges {
 
   // ─── Selección de producto → cargar presentaciones ───────────────
   async onProductoChange(idx: number, productoId: number): Promise<void> {
-    const prod = this.productosOpts.find((p) => p.value === productoId);
-    if (!prod) return;
+    console.log('[COMPRAS] onProductoChange - idx:', idx, 'productoId:', productoId);
+    
+    // Buscar en las opciones disponibles
+    let prod = this.productosOpts.find((p) => p.value === productoId);
+    
+    // Si no está en opciones, intentar buscar en las sugerencias del autocomplete
+    if (!prod) {
+      prod = this.productoSugerencias.find((p) => p.value === productoId);
+    }
+    
+    if (!prod) {
+      console.log('[COMPRAS] PRODUCTO NO ENCONTRADO, intentando obtener del backend...');
+      // Hacer llamada adicional para obtener datos completos del producto
+      try {
+        const res = await lastValueFrom(this.productoService.getById(productoId));
+        const p = res?.data;
+        if (p) {
+          prod = {
+            label: p.nombre + (p.sku ? ` [${p.sku}]` : ''),
+            value: p.id,
+            manejaLotes: !!p.manejaLotes,
+            sku: p.sku ?? null,
+            ivaPorcentaje: p.ivaPorcentaje ?? 0,
+          };
+          // También necesitamos el costo del producto
+          console.log('[COMPRAS] Datos completos del producto:', prod, 'costo:', p.costo);
+        }
+      } catch (e) {
+        console.error('[COMPRAS] Error al obtener producto:', e);
+      }
+    }
+    
+    if (!prod) {
+      console.log('[COMPRAS] PRODUCTO NO ENCONTRADO en ningún lado!');
+      return;
+    }
 
+    console.log('[COMPRAS] Producto encontrado:', prod);
+    console.log('[COMPRAS] IVA %:', prod.ivaPorcentaje);
+
+    const ivaPorcentaje = prod.ivaPorcentaje ?? 0;
     let presentacionesOpts: PresentacionOpcion[] = [];
     let presentacionId: number | null = null;
     let factorConversion = 1;
     let costoUnitario: number | null = null;
+    
+    // Guardar el costo base del producto para usarlo si no hay presentaciones
+    let costoBaseProducto: number | null = null;
 
     try {
       const res = await lastValueFrom(
         this.presentacionService.listByProducto(productoId),
       );
-      // Tratar res.data como any[] para no depender del modelo exacto del servicio
       const data: any[] = res?.data ?? [];
       if (data.length) {
         presentacionesOpts = data.map(
@@ -244,17 +287,43 @@ export class FormCompraComponent implements OnInit, OnChanges {
           }),
         );
 
-        // Preseleccionar la presentación marcada como default compra
         const defaultCompra = data.find((p: any) => !!p.esDefaultCompra);
         if (defaultCompra) {
           presentacionId = Number(defaultCompra.id);
           factorConversion = Number(defaultCompra.factorConversion ?? 1);
           costoUnitario = Number(defaultCompra.costo ?? 0);
         }
+        
+        // Guardar el costo de la primera presentación como fallback
+        if (!costoUnitario && data[0]) {
+          costoBaseProducto = Number(data[0].costo ?? 0);
+        }
+      } else {
+        // No hay presentaciones, intentar obtener el costo del producto directamente
+        try {
+          const prodRes = await lastValueFrom(this.productoService.getById(productoId));
+          if (prodRes?.data) {
+            costoBaseProducto = Number(prodRes.data.costo ?? 0);
+            console.log('[COMPRAS] Costo del producto (sin presentaciones):', costoBaseProducto);
+          }
+        } catch {
+          // silencioso
+        }
       }
     } catch {
       /* sin presentaciones → compra en unidad base */
     }
+    
+    // Si no hay presentaciones con costo, usar el costo base del producto
+    if (costoUnitario === null && costoBaseProducto !== null) {
+      costoUnitario = costoBaseProducto;
+    }
+
+    const cantidad = this.lineas[idx].cantidad ?? 0;
+    const subtotal = (cantidad * (costoUnitario ?? 0));
+    const impuestoValor = subtotal * (ivaPorcentaje / 100);
+    
+    console.log('[COMPRAS] Datos para la línea -> costoUnitario:', costoUnitario, 'iva:', ivaPorcentaje);
 
     this.lineas = this.lineas.map(
       (l, i): CompraLineaUI =>
@@ -274,9 +343,22 @@ export class FormCompraComponent implements OnInit, OnChanges {
               factorConversion,
               presentacionesOpts,
               costoUnitario,
-              subtotal: (l.cantidad ?? 0) * (costoUnitario ?? 0),
+              ivaPorcentaje,
+              impuestoValor: Math.round(impuestoValor * 100) / 100,
+              subtotal: Math.round(subtotal * 100) / 100,
             },
     );
+  }
+
+  private calcLinea(l: CompraLineaUI): { subtotal: number; impuestoValor: number } {
+    const cantidad = l.cantidad ?? 0;
+    const costo = l.costoUnitario ?? 0;
+    const subtotal = cantidad * costo;
+    const impuestoValor = subtotal * ((l.ivaPorcentaje ?? 0) / 100);
+    return {
+      subtotal: Math.round(subtotal * 100) / 100,
+      impuestoValor: Math.round(impuestoValor * 100) / 100,
+    };
   }
 
   // ─── Cambio de presentación ───────────────────────────────────────
@@ -302,6 +384,8 @@ export class FormCompraComponent implements OnInit, OnChanges {
     );
     if (!pres) return;
 
+    const calc = this.calcLinea({ ...linea, cantidad: linea.cantidad ?? 0, costoUnitario: pres.costo });
+
     this.lineas = this.lineas.map(
       (l, i): CompraLineaUI =>
         i !== idx
@@ -312,13 +396,17 @@ export class FormCompraComponent implements OnInit, OnChanges {
               presentacionNombre: pres.label,
               factorConversion: pres.factor,
               costoUnitario: pres.costo,
-              subtotal: (l.cantidad ?? 0) * pres.costo,
+              subtotal: calc.subtotal,
+              impuestoValor: calc.impuestoValor,
             },
     );
   }
 
   // ─── Cambios en campos numéricos ─────────────────────────────────
   onCantidadChange(idx: number, val: number | null): void {
+    const linea = this.lineas[idx];
+    const calc = this.calcLinea({ ...linea, cantidad: val ?? 0 });
+    
     this.lineas = this.lineas.map(
       (l, i): CompraLineaUI =>
         i !== idx
@@ -326,12 +414,16 @@ export class FormCompraComponent implements OnInit, OnChanges {
           : {
               ...l,
               cantidad: val,
-              subtotal: (val ?? 0) * (l.costoUnitario ?? 0),
+              subtotal: calc.subtotal,
+              impuestoValor: calc.impuestoValor,
             },
     );
   }
 
   onCostoChange(idx: number, val: number | null): void {
+    const linea = this.lineas[idx];
+    const calc = this.calcLinea({ ...linea, costoUnitario: val });
+
     this.lineas = this.lineas.map(
       (l, i): CompraLineaUI =>
         i !== idx
@@ -339,15 +431,19 @@ export class FormCompraComponent implements OnInit, OnChanges {
           : {
               ...l,
               costoUnitario: val,
-              subtotal: (l.cantidad ?? 0) * (val ?? 0),
+              subtotal: calc.subtotal,
+              impuestoValor: calc.impuestoValor,
             },
     );
   }
 
   onImpuestoChange(idx: number, val: number): void {
+    const linea = this.lineas[idx];
+    const calc = this.calcLinea({ ...linea, ivaPorcentaje: val });
+
     this.lineas = this.lineas.map(
       (l, i): CompraLineaUI =>
-        i !== idx ? l : { ...l, impuestoValor: val ?? 0 },
+        i !== idx ? l : { ...l, ivaPorcentaje: val, impuestoValor: calc.impuestoValor },
     );
   }
 
@@ -484,6 +580,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
         value: p.id,
         manejaLotes: !!p.manejaLotes,
         sku: p.sku ?? null,
+        ivaPorcentaje: p.ivaPorcentaje ?? 0,
       }));
     } catch {
       /* no bloquear */
