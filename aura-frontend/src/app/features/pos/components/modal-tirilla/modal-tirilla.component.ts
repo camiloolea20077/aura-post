@@ -16,7 +16,6 @@ import { DialogModule } from 'primeng/dialog';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import {
   VentaDetalleResponse,
-  VentaPagoResponse,
 } from '../../../../core/models/venta-response.model';
 import { VentaModel } from '../../../../core/models/venta.model';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
@@ -77,16 +76,6 @@ export class ModalTirillaComponent implements OnChanges {
   }
 
   // Calcula % IVA estimado de la línea
-  getPctIva(d: VentaDetalleResponse): number {
-    if (!d.subtotalLinea || d.subtotalLinea === 0) return 0;
-    return Math.round((d.impuestoValor / d.subtotalLinea) * 100);
-  }
-
-  // Cambio por cada pago EFECTIVO
-  getCambio(p: VentaPagoResponse): number {
-    if (!this.venta || p.metodoPago !== 'EFECTIVO') return 0;
-    return Math.max(0, p.monto - this.venta.totalPagar);
-  }
 
   imprimir(): void {
     if (!this.venta) return;
@@ -124,17 +113,10 @@ export class ModalTirillaComponent implements OnChanges {
     // ── Construir filas de pagos ──────────────────────────────────
     const filasPagos = v.pagos
       .map((p) => {
-        const cambio =
-          p.metodoPago === 'EFECTIVO' ? Math.max(0, p.monto - v.totalPagar) : 0;
-        const cambioHtml =
-          cambio > 0
-            ? `<span style="text-align:right;">Cambio: ${this.formatCOP(cambio)}</span>`
-            : '';
         return `
         <div style="display:flex;gap:4px;font-size:0.92em;padding:1px 0;">
           <span style="flex:1;">${this.metodoPagoLabel(p.metodoPago)}</span>
           <span style="text-align:right;">${this.formatCOP(p.monto)}</span>
-          ${cambioHtml}
         </div>`;
       })
       .join('');

@@ -154,9 +154,6 @@
         <div class="t-pago-row" *ngFor="let p of venta.pagos">
           <span class="t-pago-metodo">{{ metodoPagoLabel(p.metodoPago) }}</span>
           <span class="t-pago-monto">{{ formatCOP(p.monto) }}</span>
-          <span class="t-pago-cambio" *ngIf="getCambio(p) > 0">
-            Cambio: {{ formatCOP(getCambio(p)) }}
-          </span>
         </div>
 
         <!-- Sección Factura Electrónica (QR + CUFE) -->
