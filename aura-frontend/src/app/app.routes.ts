@@ -207,6 +207,14 @@ export const routes: Routes = [
             (m) => m.IndexKardexComponent,
           ),
       },
+      {
+        path: 'inventario/reconteos',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/inventario/reconteos/index/index-reconteos.component').then(
+            (m) => m.IndexReconeosComponent,
+          ),
+      },
 
       // Operaciones
       {

@@ -66,6 +66,7 @@ export class FormInventarioComponent implements OnInit, OnChanges {
 
   public productosOpts: { label: string; value: number }[] = [];
   public sucursalesOpts: { label: string; value: number }[] = [];
+  private defaultSucursalId: number | null = null;
 
   // Datos del producto seleccionado para preview
   public productoPreview: { sku: string | null; tipo: string } | null = null;
@@ -111,7 +112,7 @@ export class FormInventarioComponent implements OnInit, OnChanges {
     this.productoPreview = null;
     this.frmInv?.reset({
       productoId: null,
-      sucursalId: null,
+      sucursalId: this.isEditMode ? null : this.defaultSucursalId,
       stockMinimo: 0,
       stockActual: 0,
       ubicacion: null,
@@ -137,7 +138,10 @@ export class FormInventarioComponent implements OnInit, OnChanges {
         }));
         const def =
           auth.sucursales.find((s) => s.esDefault) ?? auth.sucursales[0];
-        if (def) this.frmInv.patchValue({ sucursalId: def.id });
+        if (def) {
+          this.defaultSucursalId = def.id;
+          this.frmInv.patchValue({ sucursalId: def.id });
+        }
       }
     } catch {
       /* no bloquear */
