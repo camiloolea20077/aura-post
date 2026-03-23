@@ -21,6 +21,7 @@ import { lastValueFrom } from 'rxjs';
 import { AlertService } from '../../../shared/pipes/alert.service';
 import { CreateCuentaCobrarDto, UpdateCuentaCobrarDto, MetodoPago } from '../models/cuenta-cobrar.model';
 import { CuentaCobrarService } from '../services/cuenta-cobrar.service';
+import { TerceroService } from '../../../core/services/tercero.service';
 
 @Component({
   selector: 'app-form-cuenta-cobrar',
@@ -64,6 +65,7 @@ export class FormCuentaCobrarComponent implements OnChanges {
   constructor(
     private readonly fb: FormBuilder,
     private readonly service: CuentaCobrarService,
+    private readonly terceroService: TerceroService,
     private readonly alert: AlertService,
     private readonly cdr: ChangeDetectorRef,
   ) {
@@ -95,6 +97,7 @@ export class FormCuentaCobrarComponent implements OnChanges {
           observaciones: null,
         });
       }
+      this.loadClientes();
       this.cdr.markForCheck();
     }
   }
@@ -134,6 +137,20 @@ export class FormCuentaCobrarComponent implements OnChanges {
       this.alert.showError('Error', err?.error?.message || 'No se pudo guardar');
     } finally {
       this.loading = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  async loadClientes(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.terceroService.clientes());
+      this.clientes = (res?.data ?? []).map((t) => ({
+        label: t.nombreCompleto,
+        value: t.id,
+      }));
+    } catch (err) {
+      this.clientes = [];
+    } finally {
       this.cdr.markForCheck();
     }
   }
