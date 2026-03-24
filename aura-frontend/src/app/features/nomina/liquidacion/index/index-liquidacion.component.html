@@ -1,0 +1,150 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="page-title-area">
+      <div class="page-icon"><i class="pi pi-calculator"></i></div>
+      <div>
+        <h3 class="page-title">Liquidación de Nómina</h3>
+        <p class="page-sub">Liquidación, novedades y aprobación de pagos</p>
+      </div>
+    </div>
+    <!-- Barra de liquidación rápida -->
+    <div class="liquidar-bar">
+      <p-dropdown
+        [options]="periodos"
+        [(ngModel)]="periodoSeleccionado"
+        [optionLabel]="'id'"
+        placeholder="Seleccionar período"
+        [style]="{ minWidth: '220px' }"
+        [loading]="loadingPeriodos"
+      >
+        <ng-template pTemplate="selectedItem" let-p>
+          <span *ngIf="p">{{ periodoLabel(p) }}</span>
+        </ng-template>
+        <ng-template pTemplate="item" let-p>
+          <div class="periodo-opt">
+            <span>{{ periodoLabel(p) }}</span>
+            <span class="periodo-estado" [class]="'estado-' + p.estado.toLowerCase()">{{ p.estado }}</span>
+          </div>
+        </ng-template>
+      </p-dropdown>
+      <button pButton type="button" label="Liquidar todos" icon="pi pi-bolt"
+        class="btn-nomina" [loading]="liquidandoTodos"
+        [disabled]="!periodoSeleccionado || liquidandoTodos"
+        pTooltip="Liquida la nómina para todos los empleados activos del período seleccionado"
+        tooltipPosition="bottom"
+        (click)="liquidarTodos()"></button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="table-toolbar">
+      <div class="toolbar-left">
+        <span class="p-input-icon-left search-wrap">
+          <i class="pi pi-search"></i>
+          <input type="text" pInputText class="search-input"
+            placeholder="Buscar por empleado o estado..."
+            [(ngModel)]="searchQuery" (input)="onSearch()" (keydown.escape)="clearSearch()" />
+          <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">
+            <i class="pi pi-times"></i>
+          </button>
+        </span>
+        <span class="total-badge" *ngIf="!loadingTable">
+          {{ totalRecords }} {{ totalRecords === 1 ? 'nómina' : 'nóminas' }}
+        </span>
+      </div>
+    </div>
+
+    <p-table [value]="items" [lazy]="true" (onLazyLoad)="loadTable($event)"
+      [paginator]="true" [rows]="rowSize" [totalRecords]="totalRecords"
+      [loading]="loadingTable" [rowsPerPageOptions]="[10,15,25,50]"
+      [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} de {totalRecords}"
+      styleClass="aura-table" [tableStyle]="{'min-width':'750px'}">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width:70px">#</th>
+          <th style="min-width:180px">Empleado</th>
+          <th style="min-width:150px">Período</th>
+          <th style="width:90px" class="text-center">Días</th>
+          <th style="min-width:130px" class="text-right">Devengado</th>
+          <th style="min-width:120px" class="text-right">Deducciones</th>
+          <th style="min-width:130px" class="text-right">Neto a pagar</th>
+          <th style="width:100px" class="text-center">Estado</th>
+          <th style="width:70px" class="text-center">Ver</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item>
+        <tr [class.row-anulado]="item.estado === 'ANULADO'">
+          <td><span class="id-badge">#{{ item.id }}</span></td>
+          <td>
+            <div class="cell-empleado">
+              <div class="emp-avatar">{{ item.empleadoNombre.charAt(0) }}</div>
+              <div>
+                <div class="emp-nombre">{{ item.empleadoNombre }}</div>
+                <div class="emp-doc">{{ item.empleadoDocumento }}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="periodo-cell">
+              <span class="periodo-fecha">{{ formatFecha(item.periodoFechaInicio) }}</span>
+              <i class="pi pi-arrow-right" style="font-size:0.6rem;color:#94a3b8"></i>
+              <span class="periodo-fecha">{{ formatFecha(item.periodoFechaFin) }}</span>
+            </div>
+          </td>
+          <td class="text-center">
+            <span class="dias-badge">{{ item.diasTrabajados }}d</span>
+          </td>
+          <td class="text-right"><span class="monto-dev">{{ formatMonto(item.totalDevengado) }}</span></td>
+          <td class="text-right"><span class="monto-ded">{{ formatMonto(item.totalDeducciones) }}</span></td>
+          <td class="text-right"><span class="monto-neto">{{ formatMonto(item.netoPagar) }}</span></td>
+          <td class="text-center">
+            <p-tag [value]="estadoLabel(item.estado)"
+              [severity]="estadoSeverity(item.estado)" [rounded]="true" />
+          </td>
+          <td class="text-center">
+            <button pButton type="button" icon="pi pi-eye"
+              class="p-button-text p-button-sm action-view"
+              pTooltip="Ver detalle" tooltipPosition="top"
+              (click)="verDetalle(item)"></button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9">
+            <div class="empty-state">
+              <i class="pi pi-calculator"></i>
+              <p>{{ searchQuery ? 'Sin resultados para "' + searchQuery + '"' : 'No hay nóminas liquidadas. Selecciona un período y haz clic en "Liquidar todos".' }}</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr *ngFor="let s of [1,2,3,4,5]">
+          <td><p-skeleton width="40px"/></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td class="text-center"><p-skeleton width="40px" styleClass="mx-auto"/></td>
+          <td class="text-right"><p-skeleton width="100px" styleClass="ml-auto"/></td>
+          <td class="text-right"><p-skeleton width="100px" styleClass="ml-auto"/></td>
+          <td class="text-right"><p-skeleton width="110px" styleClass="ml-auto"/></td>
+          <td class="text-center"><p-skeleton width="70px" styleClass="mx-auto"/></td>
+          <td class="text-center"><p-skeleton width="36px" styleClass="mx-auto"/></td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<app-detalle-nomina
+  [visible]="showDetalle"
+  [nominaId]="selectedNominaId"
+  (closed)="onDetalleClosed()"
+  (actualizada)="onNominaActualizada()"
+/>
+
+<p-toast />

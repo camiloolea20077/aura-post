@@ -1,0 +1,331 @@
+<p-sidebar
+  [(visible)]="visible"
+  position="right"
+  [style]="{ width: '520px' }"
+  (onHide)="close()"
+  styleClass="nomina-sidebar"
+>
+  <ng-template pTemplate="header">
+    <div class="sidebar-header">
+      <div class="sidebar-title">
+        <i class="pi pi-calculator"></i>
+        <span>Comprobante de nómina</span>
+      </div>
+      <p-tag
+        *ngIf="nomina"
+        [value]="nomina.estado"
+        [severity]="estadoSeverity(nomina.estado)"
+        [rounded]="true"
+      />
+    </div>
+  </ng-template>
+
+  <!-- Skeleton -->
+  <div *ngIf="loading" style="padding: 1rem">
+    <p-skeleton height="80px" styleClass="mb-3" />
+    <p-skeleton height="200px" styleClass="mb-3" />
+    <p-skeleton height="150px" />
+  </div>
+
+  <ng-container *ngIf="!loading && nomina">
+    <!-- Empleado -->
+    <div class="emp-card">
+      <div class="emp-avatar">{{ nomina.empleadoNombre.charAt(0) }}</div>
+      <div class="emp-info">
+        <div class="emp-nombre">{{ nomina.empleadoNombre }}</div>
+        <div class="emp-meta">
+          {{ nomina.empleadoDocumento }} · {{ nomina.cargo ?? "Sin cargo" }}
+        </div>
+        <div class="emp-meta">{{ nomina.tipoContrato }}</div>
+      </div>
+      <div class="periodo-info">
+        <div class="periodo-label">Período</div>
+        <div class="periodo-fechas">
+          {{ nomina.periodoFechaInicio | date: "dd MMM" : "" : "es-CO" }} –
+          {{ nomina.periodoFechaFin | date: "dd MMM yy" : "" : "es-CO" }}
+        </div>
+        <div class="dias-badge">{{ nomina.diasTrabajados }} días</div>
+      </div>
+    </div>
+
+    <!-- Resumen financiero -->
+    <div class="comprobante">
+      <!-- DEVENGADOS -->
+      <div class="comp-section">
+        <div class="comp-section-title devengado">Devengados</div>
+        <div class="comp-row">
+          <span>Salario base</span>
+          <span class="monto">{{ formatMonto(nomina.salarioBase) }}</span>
+        </div>
+        <div class="comp-row" *ngIf="nomina.diasTrabajados < 30">
+          <span>Salario proporcional ({{ nomina.diasTrabajados }}d)</span>
+          <span class="monto">{{
+            formatMonto(nomina.salarioProporcional)
+          }}</span>
+        </div>
+        <div class="comp-row" *ngIf="nomina.auxilioTransporte > 0">
+          <span>Auxilio de transporte</span>
+          <span class="monto">{{ formatMonto(nomina.auxilioTransporte) }}</span>
+        </div>
+        <div class="comp-row" *ngIf="nomina.totalNovedadesDev > 0">
+          <span>Novedades (horas extras, bonos...)</span>
+          <span class="monto">{{ formatMonto(nomina.totalNovedadesDev) }}</span>
+        </div>
+        <div class="comp-row total-row">
+          <span>Total devengado</span>
+          <span class="monto total">{{
+            formatMonto(nomina.totalDevengado)
+          }}</span>
+        </div>
+      </div>
+
+      <!-- DEDUCCIONES -->
+      <div class="comp-section" *ngIf="nomina.totalDeducciones > 0">
+        <div class="comp-section-title deduccion">Deducciones empleado</div>
+        <div class="comp-row" *ngIf="nomina.deduccionSalud > 0">
+          <span>Salud ({{ nomina.deduccionSalud > 0 ? "4%" : "" }})</span>
+          <span class="monto red">{{
+            formatMonto(nomina.deduccionSalud)
+          }}</span>
+        </div>
+        <div class="comp-row" *ngIf="nomina.deduccionPension > 0">
+          <span>Pensión (4%)</span>
+          <span class="monto red">{{
+            formatMonto(nomina.deduccionPension)
+          }}</span>
+        </div>
+        <div class="comp-row" *ngIf="nomina.deduccionOtros > 0">
+          <span>Otros descuentos</span>
+          <span class="monto red">{{
+            formatMonto(nomina.deduccionOtros)
+          }}</span>
+        </div>
+        <div class="comp-row total-row">
+          <span>Total deducciones</span>
+          <span class="monto total red">{{
+            formatMonto(nomina.totalDeducciones)
+          }}</span>
+        </div>
+      </div>
+
+      <!-- NETO -->
+      <div class="neto-row">
+        <span>NETO A PAGAR</span>
+        <span class="neto-val">{{ formatMonto(nomina.netoPagar) }}</span>
+      </div>
+
+      <!-- APORTES EMPLEADOR -->
+      <div
+        class="comp-section"
+        *ngIf="nomina.aporteSalud > 0 || nomina.aporteArl > 0"
+      >
+        <div class="comp-section-title empleador">
+          Aportes empleador (no afectan neto)
+        </div>
+        <div class="comp-row" *ngIf="nomina.aporteSalud > 0">
+          <span>Salud (8.5%)</span>
+          <span class="monto blue">{{ formatMonto(nomina.aporteSalud) }}</span>
+        </div>
+        <div class="comp-row" *ngIf="nomina.aportePension > 0">
+          <span>Pensión (12%)</span>
+          <span class="monto blue">{{
+            formatMonto(nomina.aportePension)
+          }}</span>
+        </div>
+        <div class="comp-row" *ngIf="nomina.aporteArl > 0">
+          <span>ARL</span>
+          <span class="monto blue">{{ formatMonto(nomina.aporteArl) }}</span>
+        </div>
+        <div class="comp-row" *ngIf="nomina.aporteCaja > 0">
+          <span>Caja de compensación (4%)</span>
+          <span class="monto blue">{{ formatMonto(nomina.aporteCaja) }}</span>
+        </div>
+        <div class="comp-row" *ngIf="nomina.aporteIcbf > 0">
+          <span>ICBF (3%)</span>
+          <span class="monto blue">{{ formatMonto(nomina.aporteIcbf) }}</span>
+        </div>
+        <div class="comp-row" *ngIf="nomina.aporteSena > 0">
+          <span>SENA (2%)</span>
+          <span class="monto blue">{{ formatMonto(nomina.aporteSena) }}</span>
+        </div>
+      </div>
+
+      <!-- PROVISIONES -->
+      <div class="comp-section" *ngIf="nomina.provisionPrima > 0">
+        <div class="comp-section-title provision">Provisiones mensuales</div>
+        <div class="comp-row">
+          <span>Prima de servicios (8.33%)</span>
+          <span class="monto purple">{{
+            formatMonto(nomina.provisionPrima)
+          }}</span>
+        </div>
+        <div class="comp-row">
+          <span>Cesantías (8.33%)</span>
+          <span class="monto purple">{{
+            formatMonto(nomina.provisionCesantias)
+          }}</span>
+        </div>
+        <div class="comp-row">
+          <span>Intereses cesantías</span>
+          <span class="monto purple">{{
+            formatMonto(nomina.provisionIntCesantias)
+          }}</span>
+        </div>
+        <div class="comp-row">
+          <span>Vacaciones (4.17%)</span>
+          <span class="monto purple">{{
+            formatMonto(nomina.provisionVacaciones)
+          }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Novedades -->
+    <div class="novedades-section">
+      <div class="novedades-header">
+        <span class="novedades-title"
+          >Novedades ({{ nomina.novedades.length }})</span
+        >
+        <button
+          *ngIf="puedeEditar"
+          pButton
+          type="button"
+          icon="pi pi-plus"
+          label="Agregar"
+          class="p-button-text p-button-sm btn-add-nov"
+          (click)="showFormNovedad = !showFormNovedad"
+        ></button>
+      </div>
+
+      <!-- Form agregar novedad -->
+      <div class="novedad-form" *ngIf="showFormNovedad && puedeEditar">
+        <div class="nf-row">
+          <div class="field">
+            <label>Tipo</label>
+            <p-dropdown
+              [options]="tipoNovedadOpts"
+              [(ngModel)]="novedad.tipo"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Tipo"
+              [style]="{ width: '100%' }"
+            />
+          </div>
+          <div class="field">
+            <label>Cantidad</label>
+            <input
+              type="number"
+              pInputText
+              [(ngModel)]="novedad.cantidad"
+              min="1"
+            />
+          </div>
+          <div class="field">
+            <label>Valor unitario</label>
+            <input
+              type="number"
+              pInputText
+              [(ngModel)]="novedad.valorUnitario"
+              min="0"
+            />
+          </div>
+        </div>
+        <div class="field" style="margin-top: 0.5rem">
+          <label>Descripción (opcional)</label>
+          <input
+            pInputText
+            [(ngModel)]="novedad.descripcion"
+            placeholder="Ej: horas del sábado"
+          />
+        </div>
+        <div class="nf-actions">
+          <button
+            pButton
+            type="button"
+            label="Cancelar"
+            icon="pi pi-times"
+            class="p-button-text p-button-secondary p-button-sm"
+            (click)="showFormNovedad = false"
+          ></button>
+          <button
+            pButton
+            type="button"
+            label="Agregar"
+            icon="pi pi-check"
+            class="btn-nomina p-button-sm"
+            [loading]="agregando"
+            (click)="agregarNovedad()"
+          ></button>
+        </div>
+      </div>
+
+      <!-- Lista de novedades -->
+      <div *ngIf="nomina.novedades.length === 0" class="sin-novedades">
+        Sin novedades registradas
+      </div>
+      <div
+        *ngFor="let nov of nomina.novedades"
+        class="novedad-item"
+        [class.deduccion]="nov.esDeduccion"
+      >
+        <div class="nov-info">
+          <span class="nov-tipo">{{ tipoNovedadLabel(nov.tipo) }}</span>
+          <span class="nov-desc" *ngIf="nov.descripcion">{{
+            nov.descripcion
+          }}</span>
+          <span class="nov-cant">× {{ nov.cantidad }}</span>
+        </div>
+        <div class="nov-right">
+          <span class="nov-valor" [class.red]="nov.esDeduccion">
+            {{ nov.esDeduccion ? "-" : "+" }}{{ formatMonto(nov.valorTotal) }}
+          </span>
+          <button
+            *ngIf="puedeEditar"
+            pButton
+            type="button"
+            icon="pi pi-trash"
+            class="p-button-text p-button-danger p-button-sm"
+            pTooltip="Eliminar"
+            tooltipPosition="top"
+            (click)="eliminarNovedad(nov.id)"
+          ></button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-template pTemplate="footer">
+    <div class="sidebar-footer" *ngIf="nomina && !loading">
+      <button
+        pButton
+        type="button"
+        label="Cerrar"
+        icon="pi pi-times"
+        class="p-button-text p-button-secondary"
+        (click)="close()"
+      ></button>
+      <div class="footer-actions">
+        <button
+          *ngIf="nomina.estado !== 'ANULADO' && nomina.estado !== 'PAGADO'"
+          pButton
+          type="button"
+          label="Anular"
+          icon="pi pi-ban"
+          class="p-button-outlined p-button-danger"
+          [loading]="anulando"
+          (click)="anular()"
+        ></button>
+        <button
+          *ngIf="puedeAprobar"
+          pButton
+          type="button"
+          label="Aprobar nómina"
+          icon="pi pi-check"
+          class="btn-nomina"
+          [loading]="aprobando"
+          (click)="aprobar()"
+        ></button>
+      </div>
+    </div>
+  </ng-template>
+</p-sidebar>

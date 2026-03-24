@@ -227,6 +227,37 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
     ],
   },
   {
+    label: 'Nómina',
+    icon: 'pi pi-id-card',
+    roles: ['SUPER_ADMIN', 'ADMIN'],
+    items: [
+      {
+        label: 'Empleados',
+        icon: 'pi pi-users',
+        route: '/nomina/empleados',
+        roles: ['SUPER_ADMIN', 'ADMIN'],
+      },
+      {
+        label: 'Períodos',
+        icon: 'pi pi-calendar',
+        route: '/nomina/periodos',
+        roles: ['SUPER_ADMIN', 'ADMIN'],
+      },
+      {
+        label: 'Liquidación',
+        icon: 'pi pi-calculator',
+        route: '/nomina/liquidacion',
+        roles: ['SUPER_ADMIN', 'ADMIN'],
+      },
+      {
+        label: 'Configuración',
+        icon: 'pi pi-cog',
+        route: '/nomina/config',
+        roles: ['SUPER_ADMIN', 'ADMIN'],
+      },
+    ],
+  },
+  {
     label: 'Reportes',
     icon: 'pi pi-chart-bar',
     roles: ['SUPER_ADMIN', 'ADMIN'],

@@ -1,0 +1,171 @@
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges,
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { DialogModule } from 'primeng/dialog';
+import { DropdownModule } from 'primeng/dropdown';
+import { CalendarModule } from 'primeng/calendar';
+import { lastValueFrom } from 'rxjs';
+
+import { NominaService } from '../../../../core/services/nomina.service';
+import {
+  CreateEmpleadoDto,
+  EmpleadoModel,
+} from '../../../../core/models/nomina.model';
+import { AlertService } from '../../../../shared/pipes/alert.service';
+
+@Component({
+  selector: 'app-form-empleado',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    DialogModule,
+    ButtonModule,
+    InputTextModule,
+    DropdownModule,
+    CalendarModule,
+  ],
+  templateUrl: './form-empleado.component.html',
+  styleUrls: ['./form-empleado.component.scss'],
+})
+export class FormEmpleadoComponent implements OnChanges {
+  @Input() displayModal = false;
+  @Input() empleadoEdit: EmpleadoModel | null = null;
+  @Output() modalClosed = new EventEmitter<void>();
+  @Output() empleadoSaved = new EventEmitter<void>();
+
+  public saving = false;
+
+  public form: CreateEmpleadoDto = this.emptyForm();
+
+  public tipoDocOpts = [
+    { label: 'Cédula de Ciudadanía', value: 'CC' },
+    { label: 'Cédula de Extranjería', value: 'CE' },
+    { label: 'Pasaporte', value: 'PASAPORTE' },
+    { label: 'NIT', value: 'NIT' },
+  ];
+
+  public tipoContratoOpts = [
+    { label: 'Término indefinido', value: 'INDEFINIDO' },
+    { label: 'Término fijo', value: 'FIJO' },
+    { label: 'Obra o labor', value: 'OBRA_LABOR' },
+    { label: 'Prestación de servicios', value: 'PRESTACION_SERVICIOS' },
+  ];
+
+  public tipoCuentaOpts = [
+    { label: 'Ahorros', value: 'AHORROS' },
+    { label: 'Corriente', value: 'CORRIENTE' },
+  ];
+
+  public arlOpts = [
+    { label: 'Nivel I - 0.522%', value: 1 },
+    { label: 'Nivel II - 1.044%', value: 2 },
+    { label: 'Nivel III - 2.436%', value: 3 },
+    { label: 'Nivel IV - 4.350%', value: 4 },
+    { label: 'Nivel V - 6.960%', value: 5 },
+  ];
+
+  public fechaIngreso: Date | null = null;
+
+  constructor(
+    private readonly nominaService: NominaService,
+    private readonly alertService: AlertService,
+  ) {}
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['displayModal']?.currentValue) {
+      if (this.empleadoEdit) {
+        this.form = {
+          nombres: this.empleadoEdit.nombres,
+          apellidos: this.empleadoEdit.apellidos,
+          tipoDocumento: this.empleadoEdit.tipoDocumento,
+          numeroDocumento: this.empleadoEdit.numeroDocumento,
+          cargo: this.empleadoEdit.cargo,
+          fechaIngreso: this.empleadoEdit.fechaIngreso,
+          salarioBase: this.empleadoEdit.salarioBase,
+          tipoContrato: this.empleadoEdit.tipoContrato,
+          banco: this.empleadoEdit.banco,
+          numeroCuenta: this.empleadoEdit.numeroCuenta,
+          tipoCuenta: this.empleadoEdit.tipoCuenta as any,
+          nivelRiesgoArl: this.empleadoEdit.nivelRiesgoArl,
+        };
+        this.fechaIngreso = this.empleadoEdit.fechaIngreso
+          ? new Date(this.empleadoEdit.fechaIngreso)
+          : null;
+      } else {
+        this.form = this.emptyForm();
+        this.fechaIngreso = null;
+      }
+    }
+  }
+
+  async save(): Promise<void> {
+    if (
+      !this.form.nombres ||
+      !this.form.apellidos ||
+      !this.form.numeroDocumento ||
+      !this.form.salarioBase
+    ) {
+      this.alertService.showWarn(
+        'Campos requeridos',
+        'Completa nombres, apellidos, documento y salario',
+      );
+      return;
+    }
+
+    if (this.fechaIngreso) {
+      this.form.fechaIngreso = this.fechaIngreso.toISOString().split('T')[0];
+    }
+
+    this.saving = true;
+    try {
+      if (this.empleadoEdit) {
+        await lastValueFrom(
+          this.nominaService.updateEmpleado(this.empleadoEdit.id, this.form),
+        );
+        this.alertService.showSuccess(
+          'Actualizado',
+          'Empleado actualizado correctamente',
+        );
+      } else {
+        await lastValueFrom(this.nominaService.createEmpleado(this.form));
+        this.alertService.showSuccess('Creado', 'Empleado creado exitosamente');
+      }
+      this.empleadoSaved.emit();
+    } catch {
+      this.alertService.showError('Error', 'No se pudo guardar el empleado');
+    } finally {
+      this.saving = false;
+    }
+  }
+
+  close(): void {
+    this.modalClosed.emit();
+  }
+
+  private emptyForm(): CreateEmpleadoDto {
+    return {
+      nombres: '',
+      apellidos: '',
+      tipoDocumento: 'CC',
+      numeroDocumento: '',
+      cargo: null,
+      fechaIngreso: '',
+      salarioBase: 0,
+      tipoContrato: 'INDEFINIDO',
+      banco: null,
+      numeroCuenta: null,
+      tipoCuenta: null,
+      nivelRiesgoArl: 1,
+    };
+  }
+}

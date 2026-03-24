@@ -1,0 +1,159 @@
+<p-dialog
+  [header]="empleadoEdit ? 'Editar empleado' : 'Nuevo empleado'"
+  [visible]="displayModal"
+  [modal]="true"
+  [style]="{ width: '680px' }"
+  [closable]="true"
+  (onHide)="close()"
+  styleClass="nomina-dialog"
+>
+  <div class="form-body">
+    <!-- Datos personales -->
+    <div class="form-section-title">Datos personales</div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Nombres *</label>
+        <input
+          pInputText
+          [(ngModel)]="form.nombres"
+          placeholder="Ej: Juan Carlos"
+        />
+      </div>
+      <div class="field">
+        <label>Apellidos *</label>
+        <input
+          pInputText
+          [(ngModel)]="form.apellidos"
+          placeholder="Ej: García López"
+        />
+      </div>
+      <div class="field">
+        <label>Tipo documento</label>
+        <p-dropdown
+          [options]="tipoDocOpts"
+          [(ngModel)]="form.tipoDocumento"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Selecciona"
+          [style]="{ width: '100%' }"
+        />
+      </div>
+      <div class="field">
+        <label>Número documento *</label>
+        <input
+          pInputText
+          [(ngModel)]="form.numeroDocumento"
+          placeholder="Ej: 1234567890"
+        />
+      </div>
+    </div>
+
+    <!-- Datos laborales -->
+    <div class="form-section-title" style="margin-top: 1rem">
+      Datos laborales
+    </div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Cargo</label>
+        <input pInputText [(ngModel)]="form.cargo" placeholder="Ej: Vendedor" />
+      </div>
+      <div class="field">
+        <label>Fecha de ingreso *</label>
+        <p-calendar
+          [(ngModel)]="fechaIngreso"
+          dateFormat="dd/mm/yy"
+          placeholder="dd/mm/aaaa"
+          [showIcon]="true"
+          [style]="{ width: '100%' }"
+        />
+      </div>
+      <div class="field">
+        <label>Salario base *</label>
+        <div class="input-prefix">
+          <span>$</span>
+          <input
+            type="number"
+            pInputText
+            [(ngModel)]="form.salarioBase"
+            min="0"
+            placeholder="0"
+          />
+        </div>
+      </div>
+      <div class="field">
+        <label>Tipo de contrato</label>
+        <p-dropdown
+          [options]="tipoContratoOpts"
+          [(ngModel)]="form.tipoContrato"
+          optionLabel="label"
+          optionValue="value"
+          [style]="{ width: '100%' }"
+        />
+      </div>
+      <div class="field">
+        <label>Nivel de riesgo ARL</label>
+        <p-dropdown
+          [options]="arlOpts"
+          [(ngModel)]="form.nivelRiesgoArl"
+          optionLabel="label"
+          optionValue="value"
+          [style]="{ width: '100%' }"
+        />
+      </div>
+    </div>
+
+    <!-- Datos bancarios -->
+    <div class="form-section-title" style="margin-top: 1rem">
+      Datos bancarios (opcional)
+    </div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Banco</label>
+        <input
+          pInputText
+          [(ngModel)]="form.banco"
+          placeholder="Ej: Bancolombia"
+        />
+      </div>
+      <div class="field">
+        <label>Tipo de cuenta</label>
+        <p-dropdown
+          [options]="tipoCuentaOpts"
+          [(ngModel)]="form.tipoCuenta"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Selecciona"
+          [style]="{ width: '100%' }"
+        />
+      </div>
+      <div class="field span-2">
+        <label>Número de cuenta</label>
+        <input
+          pInputText
+          [(ngModel)]="form.numeroCuenta"
+          placeholder="Ej: 1234567890"
+        />
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text p-button-secondary"
+      (click)="close()"
+    ></button>
+    <button
+      pButton
+      type="button"
+      [label]="empleadoEdit ? 'Actualizar' : 'Crear empleado'"
+      icon="pi pi-check"
+      class="btn-nomina"
+      [loading]="saving"
+      (click)="save()"
+    ></button>
+  </ng-template>
+</p-dialog>
