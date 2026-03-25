@@ -207,6 +207,14 @@ export const routes: Routes = [
             (m) => m.IndexKardexComponent,
           ),
       },
+      {
+        path: 'inventario/reconteos',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/inventario/reconteos/index/index-reconteos.component').then(
+            (m) => m.IndexReconeosComponent,
+          ),
+      },
 
       // Operaciones
       {
@@ -308,6 +316,40 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/comisiones/liquidaciones/index/index-liquidaciones.component').then(
             (m) => m.IndexLiquidacionesComponent,
+          ),
+      },
+
+      // Nómina
+      {
+        path: 'nomina/config',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/nomina/config/nomina-config.component').then(
+            (m) => m.NominaConfigComponent,
+          ),
+      },
+      {
+        path: 'nomina/empleados',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/nomina/empleados/index/index-empleados.component').then(
+            (m) => m.IndexEmpleadosComponent,
+          ),
+      },
+      {
+        path: 'nomina/periodos',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/nomina/periodos/index/index-periodos.component').then(
+            (m) => m.IndexPeriodosComponent,
+          ),
+      },
+      {
+        path: 'nomina/liquidacion',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/nomina/liquidacion/index/index-liquidacion.component').then(
+            (m) => m.IndexLiquidacionComponent,
           ),
       },
 

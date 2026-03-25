@@ -16,6 +16,8 @@ export interface VentaDetalleModel {
   productoId: number;
   productoNombre: string;
   productoSku: string | null;
+  productoPresentacionId: number | null;
+  presentacionNombre: string | null;
   cantidad: number;
   precioUnitario: number;
   descuentoValor: number;
@@ -70,6 +72,13 @@ export interface VentaModel {
   cajeroNombre?: string;
   clienteDocumento?: string;
   logoUrl?: string;
+  // Resolución de facturación electrónica
+  resolucionNumero?: string;
+  resolucionPrefijo?: string;
+  resolucionDesde?: number;
+  resolucionHasta?: number;
+  resolucionFechaDesde?: string;
+  resolucionFechaHasta?: string;
 }
 
 // ─── Tabla ───────────────────────────────────────────────────
@@ -90,6 +99,7 @@ export interface VentaTableModel {
 // ─── DTOs ─────────────────────────────────────────────────────
 export interface CreateVentaDetalleDto {
   productoId: number;
+  productoPresentacionId?: number | null;
   cantidad: number;
   precioUnitario: number;
   descuentoValor: number;

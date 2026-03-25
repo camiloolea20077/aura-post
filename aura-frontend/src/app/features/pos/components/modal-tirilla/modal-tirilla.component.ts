@@ -16,6 +16,7 @@ import { DialogModule } from 'primeng/dialog';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import {
   VentaDetalleResponse,
+  VentaPagoResponse,
 } from '../../../../core/models/venta-response.model';
 import { VentaModel } from '../../../../core/models/venta.model';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
@@ -76,6 +77,22 @@ export class ModalTirillaComponent implements OnChanges {
   }
 
   // Calcula % IVA estimado de la línea
+  getPctIva(d: VentaDetalleResponse): number {
+    if (!d.subtotalLinea || d.subtotalLinea === 0) return 0;
+    return Math.round((d.impuestoValor / d.subtotalLinea) * 100);
+  }
+
+  // Cambio total = lo que el cliente dio de más (suma de todos los pagos - total)
+  get cambioTotal(): number {
+    if (!this.venta?.pagos?.length) return 0;
+    const totalTendido = this.venta.pagos.reduce((s, p) => s + p.monto, 0);
+    return Math.max(0, totalTendido - this.venta.totalPagar);
+  }
+
+  // Mantener para compatibilidad con template existente
+  getCambio(p: VentaPagoResponse): number {
+    return 0; // reemplazado por cambioTotal
+  }
 
   imprimir(): void {
     if (!this.venta) return;
@@ -90,7 +107,9 @@ export class ModalTirillaComponent implements OnChanges {
       .map((d) => {
         const cantStr = this.formatCantidad(d);
         const unidad = this.abreviarUnidad(d.unidadMedidaNombre);
-        const vunit = this.formatCOP(d.precioUnitario + d.impuestoValor / d.cantidad);
+        const vunit = this.formatCOP(
+          d.precioUnitario + d.impuestoValor / d.cantidad,
+        );
         const total = this.formatCOP(d.subtotalLinea);
         const descRow =
           d.montoDescuento > 0
@@ -111,15 +130,26 @@ export class ModalTirillaComponent implements OnChanges {
       .join('');
 
     // ── Construir filas de pagos ──────────────────────────────────
+    const totalTendido = v.pagos.reduce((s, p) => s + p.monto, 0);
+    const cambioTotal = Math.max(0, totalTendido - v.totalPagar);
+
     const filasPagos = v.pagos
-      .map((p) => {
-        return `
+      .map(
+        (p) => `
         <div style="display:flex;gap:4px;font-size:0.92em;padding:1px 0;">
           <span style="flex:1;">${this.metodoPagoLabel(p.metodoPago)}</span>
           <span style="text-align:right;">${this.formatCOP(p.monto)}</span>
-        </div>`;
-      })
+        </div>`,
+      )
       .join('');
+
+    const cambioHtml =
+      cambioTotal > 0
+        ? `<div style="display:flex;gap:4px;font-size:0.92em;padding:2px 0;font-weight:bold;">
+           <span style="flex:1;">Cambio entregado</span>
+           <span style="text-align:right;">${this.formatCOP(cambioTotal)}</span>
+         </div>`
+        : '';
 
     // ── Logo ──────────────────────────────────────────────────────
     const logoHtml = v.logoUrl
@@ -150,10 +180,19 @@ export class ModalTirillaComponent implements OnChanges {
       ) as HTMLCanvasElement | null;
       if (canvas) qrImageData = canvas.toDataURL('image/png');
     }
+    const resolucionHtml = v.resolucionNumero
+      ? `<div style="font-size:0.7em;color:#444;line-height:1.5;text-align:center;margin-bottom:3px;">
+           <div>Resolución DIAN No. ${v.resolucionNumero}${v.resolucionPrefijo ? ` - Prefijo ${v.resolucionPrefijo}` : ''}</div>
+           ${v.resolucionDesde && v.resolucionHasta ? `<div>Rango ${v.resolucionDesde} al ${v.resolucionHasta}</div>` : ''}
+           ${v.resolucionFechaDesde && v.resolucionFechaHasta ? `<div>Vigencia: ${v.resolucionFechaDesde} al ${v.resolucionFechaHasta}</div>` : ''}
+         </div>`
+      : '';
+
     const feHtml =
       this.qrData || this.cufeCode
         ? `<hr class="dash"/>
            <div style="text-align:center;font-size:0.8em;font-weight:bold;letter-spacing:1px;margin-bottom:3px;">FACTURA ELECTRÓNICA</div>
+           ${resolucionHtml}
            ${qrImageData ? `<div style="text-align:center;margin:4px 0;"><img src="${qrImageData}" style="width:110px;height:110px;" /></div>` : ''}
            ${
              this.cufeCode
@@ -310,14 +349,17 @@ export class ModalTirillaComponent implements OnChanges {
 
   <div class="payments-area" style="font-size: 0.95em;">
     ${filasPagos}
+    ${cambioHtml}
   </div>
 
   <div class="dash"></div>
 
   <div style="font-size:0.75em; text-align:center; margin:10px 0; line-height:1.4; font-style: italic;">
-    ${this.qrData || this.cufeCode
-      ? 'Factura electrónica válida ante la DIAN. Esta factura se asimila a los efectos legales de las facturas de cambio ART. 744 C.Co.'
-      : 'Este documento equivalente POS no es una factura de venta. Para factura electrónica, solicítela al cajero.'}
+    ${
+      this.qrData || this.cufeCode
+        ? 'Factura electrónica válida ante la DIAN. Esta factura se asimila a los efectos legales de las facturas de cambio ART. 744 C.Co.'
+        : 'Este documento equivalente POS no es una factura de venta. Para factura electrónica, solicítela al cajero.'
+    }
   </div>
 
   ${feHtml}
@@ -366,9 +408,16 @@ export class ModalTirillaComponent implements OnChanges {
   }
 
   formatCantidad(d: VentaDetalleResponse): string {
-    const esPeso = ['KILOGRAMO', 'KILOGRAMOS', 'GRAMO', 'GRAMOS',
-                    'LIBRA', 'LIBRAS', 'TONELADA', 'TONELADAS']
-                    .includes((d.unidadMedidaNombre ?? '').toUpperCase());
+    const esPeso = [
+      'KILOGRAMO',
+      'KILOGRAMOS',
+      'GRAMO',
+      'GRAMOS',
+      'LIBRA',
+      'LIBRAS',
+      'TONELADA',
+      'TONELADAS',
+    ].includes((d.unidadMedidaNombre ?? '').toUpperCase());
 
     if (d.cantidad % 1 === 0) return String(Math.round(d.cantidad));
     if (esPeso) return d.cantidad.toFixed(3);

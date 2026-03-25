@@ -1,0 +1,67 @@
+.form-body {
+  padding: 0.5rem 0;
+}
+
+.form-section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #7c3aed;
+  margin-bottom: 0.9rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  .span-2 {
+    grid-column: span 2;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  label {
+    font-size: 0.81rem;
+    font-weight: 600;
+    color: #475569;
+  }
+  input {
+    height: 38px;
+    font-size: 0.85rem;
+  }
+}
+
+.input-prefix {
+  display: flex;
+  align-items: center;
+  span {
+    background: #f8fafc;
+    border: 1.5px solid #e0e3eb;
+    border-right: none;
+    border-radius: 10px 0 0 10px;
+    padding: 0 0.75rem;
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 600;
+    height: 38px;
+    display: flex;
+    align-items: center;
+  }
+  input {
+    flex: 1;
+    border-radius: 0 10px 10px 0 !important;
+    height: 38px;
+  }
+}
+
+::ng-deep .btn-nomina.p-button {
+  background: linear-gradient(135deg, #7c3aed, #a78bfa) !important;
+  border: none !important;
+  &:hover {
+    opacity: 0.9;
+  }
+}

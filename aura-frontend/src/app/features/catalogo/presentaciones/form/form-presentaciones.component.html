@@ -135,6 +135,29 @@
       </span>
     </div>
 
+    <!-- Precio de venta -->
+    <div class="field">
+      <label for="precio">
+        Precio de venta <span class="required">*</span>
+      </label>
+      <p-inputNumber
+        inputId="precio"
+        formControlName="precio"
+        mode="currency"
+        currency="COP"
+        locale="es-CO"
+        [min]="0.01"
+        [maxFractionDigits]="2"
+        placeholder="Ej: 600.00"
+        styleClass="w-full"
+        [class.ng-invalid]="isInvalid('precio')"
+        [class.ng-dirty]="frmPresentacion.get('precio')?.touched"
+      />
+      <small class="p-error" *ngIf="isInvalid('precio')">
+        El precio debe ser mayor a 0.
+      </small>
+    </div>
+
     <!-- Activo -->
     <div class="field-inline">
       <div class="switch-label">

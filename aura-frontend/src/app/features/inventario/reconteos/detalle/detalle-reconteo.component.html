@@ -1,0 +1,197 @@
+<p-dialog
+  header="Reconteo de Inventario"
+  [(visible)]="visible"
+  (onHide)="close()"
+  [modal]="true"
+  [style]="{ width: '90vw', maxWidth: '1200px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <!-- Skeleton -->
+  <div *ngIf="loading" class="skeleton-wrap">
+    <p-skeleton height="20px" styleClass="mb-2" />
+    <p-skeleton height="20px" width="60%" styleClass="mb-3" />
+    <p-skeleton height="200px" />
+  </div>
+
+  <!-- Contenido -->
+  <div *ngIf="!loading && reconteo" class="detalle-wrap">
+    <!-- Cabecera info -->
+    <div class="detalle-header">
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">Sucursal</span>
+          <span class="info-value fw-700">
+            <i class="pi pi-building"></i> {{ reconteo.sucursalNombre }}
+          </span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Estado</span>
+          <p-tag
+            [value]="reconteo.estado"
+            [severity]="getSeverity(reconteo.estado)"
+          />
+        </div>
+        <div class="info-item">
+          <span class="info-label">Tipo</span>
+          <span class="info-value">{{ reconteo.tipo }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Creado por</span>
+          <span class="info-value">{{ reconteo.creadoPorNombre }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Fecha inicio</span>
+          <span class="info-value mono">{{
+            reconteo.fechaInicio | date: "dd/MM/yyyy HH:mm"
+          }}</span>
+        </div>
+        <div class="info-item" *ngIf="reconteo.fechaCierre">
+          <span class="info-label">Fecha cierre</span>
+          <span class="info-value mono">{{
+            reconteo.fechaCierre | date: "dd/MM/yyyy HH:mm"
+          }}</span>
+        </div>
+        <div class="info-item" *ngIf="reconteo.aprobadoPorNombre">
+          <span class="info-label">Aprobado por</span>
+          <span class="info-value">{{ reconteo.aprobadoPorNombre }}</span>
+        </div>
+        <div class="info-item span-full" *ngIf="reconteo.observaciones">
+          <span class="info-label">Observaciones</span>
+          <span class="info-value text-muted">{{
+            reconteo.observaciones
+          }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resumen -->
+    <div class="resumen-bar">
+      <div class="resumen-item">
+        <span class="resumen-num">{{ reconteo.detalles.length }}</span>
+        <span class="resumen-label">Total líneas</span>
+      </div>
+      <div class="resumen-item">
+        <span class="resumen-num">{{ totalContadas }}</span>
+        <span class="resumen-label">Contadas</span>
+      </div>
+      <div class="resumen-item text-success">
+        <span class="resumen-num">{{ diferenciasPositivas }}</span>
+        <span class="resumen-label">Sobrantes</span>
+      </div>
+      <div class="resumen-item text-danger">
+        <span class="resumen-num">{{ diferenciasNegativas }}</span>
+        <span class="resumen-label">Faltantes</span>
+      </div>
+    </div>
+
+    <!-- Tabla de detalles -->
+    <p-table
+      [value]="reconteo.detalles"
+      [rowTrackBy]="trackById"
+      styleClass="p-datatable-sm p-datatable-gridlines"
+      class="mt-3"
+      [scrollable]="true"
+      scrollHeight="400px"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Producto</th>
+          <th style="width: 100px">SKU</th>
+          <th style="width: 120px">Lote</th>
+          <th style="width: 130px; text-align: right">Stock sistema</th>
+          <th style="width: 160px; text-align: right">Stock contado</th>
+          <th style="width: 130px; text-align: right">Diferencia</th>
+          <th style="width: 130px; text-align: right">Stock final</th>
+          <th style="width: 100px; text-align: center">Estado</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-d>
+        <tr>
+          <td class="fw-600">{{ d.productoNombre }}</td>
+          <td class="mono text-muted">{{ d.productoSku || "—" }}</td>
+          <td class="mono text-muted">{{ d.codigoLote || "—" }}</td>
+          <td class="mono text-right">{{ d.stockSistema }}</td>
+
+          <!-- Stock contado: editable si canEdit -->
+          <td class="text-right">
+            <p-inputNumber
+              *ngIf="canEdit"
+              [(ngModel)]="d.stockContado"
+              (onBlur)="saveDetalle(d, d.stockContado)"
+              [min]="0"
+              [maxFractionDigits]="4"
+              inputStyleClass="line-input text-right"
+              styleClass="w-full"
+              [disabled]="savingDetalleId === d.id"
+            />
+            <span *ngIf="!canEdit" class="mono">
+              {{ d.stockContado !== null ? d.stockContado : "—" }}
+            </span>
+          </td>
+
+          <!-- Diferencia -->
+          <td
+            class="mono text-right fw-600"
+            [ngClass]="getDiferenciaSeverity(d.diferencia)"
+          >
+            <ng-container *ngIf="d.diferencia !== null">
+              <span *ngIf="d.diferencia > 0">+{{ d.diferencia }}</span>
+              <span *ngIf="d.diferencia <= 0">{{ d.diferencia }}</span>
+            </ng-container>
+            <span *ngIf="d.diferencia === null" class="text-muted">—</span>
+          </td>
+
+          <!-- Stock final -->
+          <td class="mono text-right fw-600">
+            <span *ngIf="d.stockContado !== null">{{ d.stockContado }}</span>
+            <span *ngIf="d.stockContado === null" class="text-muted">—</span>
+          </td>
+
+          <!-- Estado conteo -->
+          <td class="text-center">
+            <p-tag
+              *ngIf="d.stockContado !== null"
+              value="Contado"
+              severity="success"
+            />
+            <p-tag
+              *ngIf="d.stockContado === null"
+              value="Pendiente"
+              severity="secondary"
+            />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cerrar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="close()"
+    ></button>
+    <button
+      pButton
+      label="Anular"
+      icon="pi pi-ban"
+      class="p-button-danger p-button-outlined"
+      *ngIf="canAnular"
+      (click)="confirmAnular()"
+    ></button>
+    <button
+      pButton
+      label="Aprobar y aplicar ajustes"
+      icon="pi pi-check"
+      class="p-button-success"
+      *ngIf="canAprobar"
+      (click)="confirmAprobar()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast />

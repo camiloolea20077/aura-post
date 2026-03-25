@@ -15,6 +15,12 @@ export interface EmpresaConfig {
   direccion?: string;
   municipio?: string;
   facturaElectronica?: boolean;
+  resolucionNumero?: string;
+  resolucionPrefijo?: string;
+  resolucionDesde?: number;
+  resolucionHasta?: number;
+  resolucionFechaDesde?: string;
+  resolucionFechaHasta?: string;
   sucursalId?: number;
   sucursalNombre?: string;
   sucursalDireccion?: string;

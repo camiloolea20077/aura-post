@@ -65,6 +65,7 @@ export class CerrarTurnoComponent implements OnChanges {
   isSubmitting = false;
   loadingResumen = false;
   resumen: ResumenTurnoDto | null = null;
+  mostrarDetalleEfectivo = false;
   readonly Math = Math;
 
   constructor(
@@ -217,6 +218,7 @@ export class CerrarTurnoComponent implements OnChanges {
   closeModal(): void {
     this.frmCerrar.reset({ totalEfectivoReal: null });
     this.resumen = null;
+    this.mostrarDetalleEfectivo = false;
     this.modalClosed.emit();
   }
 }

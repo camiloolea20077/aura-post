@@ -161,9 +161,12 @@ $muted:   #64748b;
   border-bottom:1px solid $border; align-items:center;
   &:last-child { border-bottom:none; }
 }
-.mov-concepto { display:flex; align-items:center; gap:.35rem; color:$text; font-weight:500; font-size:.76rem; }
-.mov-ingreso-icon { color:#16a34a; }
-.mov-egreso-icon  { color:#dc2626; }
+.mov-concepto { display:flex; align-items:flex-start; gap:.35rem; color:$text; font-weight:500; font-size:.76rem; }
+.mov-detalle  { display:flex; flex-direction:column; gap:1px; }
+.mov-nombre   { font-weight:600; }
+.mov-sub      { font-size:.7rem; color:$muted; font-weight:400; }
+.mov-ingreso-icon { color:#16a34a; margin-top:2px; }
+.mov-egreso-icon  { color:#dc2626; margin-top:2px; }
 .mov-tipo {
   font-size:.7rem; font-weight:700; text-transform:uppercase;
   &.mov-ingreso { color:#16a34a; }
@@ -318,6 +321,52 @@ $muted:   #64748b;
   padding:.45rem .7rem; border-radius:8px; margin-top:.3rem;
   i { font-size:.76rem; }
 }
+
+// ── Diagnóstico efectivo ────────────────────────────────────
+.detalle-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: 1px dashed $border;
+  border-radius: 8px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.78rem;
+  color: $muted;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 0.5rem;
+  &:hover { background: $bg-light; }
+}
+.detalle-efectivo-list {
+  margin-top: 0.4rem;
+  border: 1px solid $border;
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 0.75rem;
+}
+.de-header {
+  display: grid;
+  grid-template-columns: 24px 60px 1fr 1fr 90px;
+  gap: 4px;
+  padding: 0.3rem 0.5rem;
+  background: $bg-light;
+  font-weight: 700;
+  color: $muted;
+  border-bottom: 1px solid $border;
+}
+.de-row {
+  display: grid;
+  grid-template-columns: 24px 60px 1fr 1fr 90px;
+  gap: 4px;
+  padding: 0.28rem 0.5rem;
+  border-bottom: 1px solid $border;
+  &:last-child { border-bottom: none; }
+  &.de-row-alerta { background: #fff7ed; }
+}
+.de-num { color: $muted; }
+.de-efectivo { font-weight: 600; color: $green; }
+.de-total { color: $text; }
 
 // ── Footer ─────────────────────────────────────────────────
 .dialog-footer {

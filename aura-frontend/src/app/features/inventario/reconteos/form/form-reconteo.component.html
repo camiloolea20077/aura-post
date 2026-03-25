@@ -1,0 +1,84 @@
+<p-dialog
+  header="Nuevo Reconteo de Inventario"
+  [(visible)]="visible"
+  (onHide)="close()"
+  [modal]="true"
+  [style]="{ width: '520px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="dialog-body" [formGroup]="form">
+    <div class="dialog-section">
+      <div class="form-grid-1">
+        <div class="field">
+          <label class="field-label"
+            >Sucursal <span class="required">*</span></label
+          >
+          <p-dropdown
+            formControlName="sucursalId"
+            [options]="sucursales"
+            optionLabel="nombre"
+            optionValue="id"
+            placeholder="Selecciona la sucursal"
+            styleClass="w-full"
+            [class.ng-invalid]="isInvalid('sucursalId')"
+          />
+          <small class="field-error" *ngIf="isInvalid('sucursalId')"
+            >Obligatorio</small
+          >
+        </div>
+
+        <div class="field">
+          <label class="field-label"
+            >Tipo de reconteo <span class="required">*</span></label
+          >
+          <p-dropdown
+            formControlName="tipo"
+            [options]="tiposReconteo"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Selecciona el tipo"
+            styleClass="w-full"
+            [class.ng-invalid]="isInvalid('tipo')"
+          />
+          <small class="field-error" *ngIf="isInvalid('tipo')"
+            >Obligatorio</small
+          >
+        </div>
+
+        <div class="field">
+          <label class="field-label">Observaciones</label>
+          <textarea
+            pTextarea
+            formControlName="observaciones"
+            placeholder="Opcional..."
+            rows="3"
+            class="w-full"
+          ></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <div class="footer-actions">
+        <button
+          pButton
+          label="Cancelar"
+          icon="pi pi-times"
+          class="p-button-text"
+          (click)="close()"
+        ></button>
+        <button
+          pButton
+          label="Crear reconteo"
+          icon="pi pi-check"
+          class="btn-aura btn-primary"
+          [loading]="loading"
+          (click)="guardar()"
+        ></button>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>

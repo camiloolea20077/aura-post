@@ -1,0 +1,149 @@
+.page-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.page-title-area {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+.page-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  i {
+    font-size: 1.15rem;
+    color: white;
+  }
+}
+.page-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.15rem;
+}
+.page-sub {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0;
+}
+::ng-deep .btn-nomina.p-button {
+  background: linear-gradient(135deg, #7c3aed, #a78bfa) !important;
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3) !important;
+  &:hover {
+    opacity: 0.92;
+  }
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.periodo-list {
+  display: flex;
+  flex-direction: column;
+}
+.periodo-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #f8fafc;
+  transition: background 0.12s;
+  &:last-child {
+    border-bottom: none;
+  }
+  &:hover {
+    background: rgba(124, 58, 237, 0.02);
+  }
+  &.anulado {
+    opacity: 0.5;
+  }
+}
+.periodo-left {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+.periodo-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgba(124, 58, 237, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  i {
+    color: #7c3aed;
+    font-size: 1rem;
+  }
+}
+.periodo-fechas {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #1e293b;
+}
+.periodo-id {
+  font-size: 0.73rem;
+  color: #94a3b8;
+  margin-top: 0.15rem;
+}
+.periodo-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3.5rem 1rem;
+  i {
+    font-size: 2.5rem;
+    color: #cbd5e1;
+  }
+  p {
+    font-size: 0.875rem;
+    color: #64748b;
+    text-align: center;
+    max-width: 320px;
+  }
+}
+
+.modal-body {
+  padding: 0.5rem 0;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  label {
+    font-size: 0.81rem;
+    font-weight: 600;
+    color: #475569;
+  }
+}

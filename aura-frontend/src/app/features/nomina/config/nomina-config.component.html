@@ -1,0 +1,223 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="page-title-area">
+      <div class="page-icon"><i class="pi pi-cog"></i></div>
+      <div>
+        <h3 class="page-title">Configuración de Nómina</h3>
+        <p class="page-sub">
+          Define el modo de liquidación y los porcentajes de aportes
+        </p>
+      </div>
+    </div>
+    <button
+      pButton
+      type="button"
+      label="Guardar cambios"
+      icon="pi pi-save"
+      class="btn-nomina"
+      [loading]="saving"
+      [disabled]="loading || saving"
+      (click)="save()"
+    ></button>
+  </div>
+
+  <!-- Skeleton -->
+  <ng-container *ngIf="loading">
+    <div class="card">
+      <div style="padding: 2rem"><p-skeleton height="300px" /></div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="!loading && config">
+    <!-- Modo y periodicidad -->
+    <div class="card">
+      <div class="section-title">
+        <i class="pi pi-sliders-h"></i> Modo de nómina
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Modo de liquidación</label>
+          <p-selectButton
+            [options]="modoOpts"
+            [(ngModel)]="config.modoNomina"
+            optionLabel="label"
+            optionValue="value"
+          />
+          <small
+            class="field-hint"
+            *ngIf="config.modoNomina === 'SIMPLIFICADO'"
+          >
+            Solo salario + novedades. Sin EPS, ARL ni pensiones.
+          </small>
+          <small
+            class="field-hint completo"
+            *ngIf="config.modoNomina === 'COMPLETO'"
+          >
+            Calcula EPS, pensión, ARL, cesantías, prima y vacaciones
+            automáticamente.
+          </small>
+        </div>
+        <div class="field">
+          <label>Periodicidad de pago</label>
+          <p-selectButton
+            [options]="periodicidadOpts"
+            [(ngModel)]="config.periodicidad"
+            optionLabel="label"
+            optionValue="value"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Valores legales -->
+    <div class="card">
+      <div class="section-title">
+        <i class="pi pi-dollar"></i> Valores legales
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label>SMMLV (Salario mínimo)</label>
+          <div class="input-prefix">
+            <span>$</span>
+            <input
+              type="number"
+              pInputText
+              [(ngModel)]="config.smmlv"
+              min="0"
+            />
+          </div>
+        </div>
+        <div class="field">
+          <label>Auxilio de transporte</label>
+          <div class="input-prefix">
+            <span>$</span>
+            <input
+              type="number"
+              pInputText
+              [(ngModel)]="config.auxilioTransporte"
+              min="0"
+            />
+          </div>
+          <small class="field-hint">Se aplica si el salario es ≤ 2 SMMLV</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Aportes (solo visibles en modo COMPLETO) -->
+    <div class="card" *ngIf="esCompleto">
+      <div class="section-title">
+        <i class="pi pi-users"></i> Aportes del empleado (%)
+      </div>
+      <div class="form-grid four-cols">
+        <div class="field">
+          <label>Salud</label>
+          <div class="input-suffix">
+            <input
+              type="number"
+              pInputText
+              [(ngModel)]="config.pctSaludEmpleado"
+              min="0"
+              max="100"
+              step="0.01"
+            />
+            <span>%</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Pensión</label>
+          <div class="input-suffix">
+            <input
+              type="number"
+              pInputText
+              [(ngModel)]="config.pctPensionEmpleado"
+              min="0"
+              max="100"
+              step="0.01"
+            />
+            <span>%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" *ngIf="esCompleto">
+      <div class="section-title">
+        <i class="pi pi-building"></i> Aportes del empleador (%)
+      </div>
+      <div class="form-grid four-cols">
+        <div class="field">
+          <label>Salud</label>
+          <div class="input-suffix">
+            <input
+              type="number"
+              pInputText
+              [(ngModel)]="config.pctSaludEmpleador"
+              min="0"
+              max="100"
+              step="0.01"
+            />
+            <span>%</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Pensión</label>
+          <div class="input-suffix">
+            <input
+              type="number"
+              pInputText
+              [(ngModel)]="config.pctPensionEmpleador"
+              min="0"
+              max="100"
+              step="0.01"
+            />
+            <span>%</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>Caja de Compensación</label>
+          <div class="input-suffix">
+            <input
+              type="number"
+              pInputText
+              [(ngModel)]="config.pctCajaCompensacion"
+              min="0"
+              max="100"
+              step="0.01"
+            />
+            <span>%</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>ICBF</label>
+          <div class="input-suffix">
+            <input
+              type="number"
+              pInputText
+              [(ngModel)]="config.pctIcbf"
+              min="0"
+              max="100"
+              step="0.01"
+            />
+            <span>%</span>
+          </div>
+        </div>
+        <div class="field">
+          <label>SENA</label>
+          <div class="input-suffix">
+            <input
+              type="number"
+              pInputText
+              [(ngModel)]="config.pctSena"
+              min="0"
+              max="100"
+              step="0.01"
+            />
+            <span>%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>
+
+<p-toast />
