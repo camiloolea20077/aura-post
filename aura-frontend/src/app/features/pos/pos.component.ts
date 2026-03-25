@@ -50,7 +50,10 @@ import { VentaResponse } from '../../core/models/venta-response.model';
 import { ModalTirillaComponent } from './components/modal-tirilla/modal-tirilla.component';
 import { ModalTirillaCotizacionComponent } from './components/modal-tirilla-cotizacion/modal-tirilla-cotizacion.component';
 import { CotizacionModel } from '../../core/models/cotizacion.model';
-import { FilterProductsPipe, SEARCH_RESULT_LIMIT } from '../../shared/pipes/filter-products.pipe';
+import {
+  FilterProductsPipe,
+  SEARCH_RESULT_LIMIT,
+} from '../../shared/pipes/filter-products.pipe';
 import { FormTerceroComponent } from '../terceros/form/form-tercero.component';
 import { TerceroModel } from '../../core/models/tercero.model';
 import {
@@ -340,7 +343,9 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       });
   }
 
-  private parsearCodigoBalanza(codigo: string): { skuNumerico: number; pesoKg: number } | null {
+  private parsearCodigoBalanza(
+    codigo: string,
+  ): { skuNumerico: number; pesoKg: number } | null {
     if (!/^\d+$/.test(codigo)) return null;
     let skuRaw: string, pesoRaw: string;
     if (codigo.length === 12) {
@@ -366,9 +371,9 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       existing.cantidad = round2(existing.cantidad + pesoKg);
       this.calcLine(existing);
     } else {
-      const precioBase = (p.precioFinal ?? p.precio) ?? 0;
+      const precioBase = p.precioFinal ?? p.precio ?? 0;
       const precioValido = isFinite(precioBase) ? precioBase : 0;
-      
+
       if (precioValido <= 0) {
         this.alertService.showWarn(
           'Precio inválido',
@@ -380,10 +385,15 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       let precioPOS = precioValido;
       let listaNombre: string | undefined;
       if (this.listaSeleccionada) {
-        const listaPrice = p.presentacionId != null
-          ? (this.preciosPorLista.get(p.presentacionId) ?? this.preciosPorLista.get(-p.id))
-          : this.preciosPorLista.get(-p.id);
-        if (listaPrice != null && isFinite(listaPrice)) { precioPOS = listaPrice; listaNombre = this.listaSeleccionada.nombre; }
+        const listaPrice =
+          p.presentacionId != null
+            ? (this.preciosPorLista.get(p.presentacionId) ??
+              this.preciosPorLista.get(-p.id))
+            : this.preciosPorLista.get(-p.id);
+        if (listaPrice != null && isFinite(listaPrice)) {
+          precioPOS = listaPrice;
+          listaNombre = this.listaSeleccionada.nombre;
+        }
       }
       const item: CartItem = {
         _id: uuid(),
@@ -481,14 +491,22 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     const cat = this.categoriaActiva;
     this.productosFiltrados = this.productos.filter((p) => {
       if (cat && p.categoriaId !== cat) return false;
-      if (p.tipoProducto !== 'SERVICIO' && p.manejaInventario && p.stockActual <= 0 && !p.permitirStockNegativo) return false;
+      if (
+        p.tipoProducto !== 'SERVICIO' &&
+        p.manejaInventario &&
+        p.stockActual <= 0 &&
+        !p.permitirStockNegativo
+      )
+        return false;
       if (!q) return true;
       return (
         p.nombre.toLowerCase().includes(q) ||
         (p.sku != null && p.sku.toLowerCase().includes(q)) ||
         (p.codigoBarras != null && p.codigoBarras.toLowerCase().includes(q)) ||
-        (p.presentacionNombre != null && p.presentacionNombre.toLowerCase().includes(q)) ||
-        (p.presentacionCodigoBarras != null && p.presentacionCodigoBarras.toLowerCase().includes(q))
+        (p.presentacionNombre != null &&
+          p.presentacionNombre.toLowerCase().includes(q)) ||
+        (p.presentacionCodigoBarras != null &&
+          p.presentacionCodigoBarras.toLowerCase().includes(q))
       );
     });
   }
@@ -508,10 +526,15 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         value: l.id,
       }));
       this.cdr.markForCheck();
-    } catch { /* silent */ }
+    } catch {
+      /* silent */
+    }
   }
 
-  async seleccionarListaPrecios(opt: { label: string; value: number }): Promise<void> {
+  async seleccionarListaPrecios(opt: {
+    label: string;
+    value: number;
+  }): Promise<void> {
     if (this.listaSeleccionada?.id === opt.value) return;
     this.listaSeleccionada = { id: opt.value, nombre: opt.label };
     try {
@@ -529,7 +552,9 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       }
       this.aplicarListaAlCarrito();
-    } catch { /* silent */ }
+    } catch {
+      /* silent */
+    }
   }
 
   clearListaPrecios(): void {
@@ -547,7 +572,8 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     for (const item of this.cart) {
       const listaPrice = this.getPrecioDeListaParaItem(item);
       item.precio = listaPrice ?? item.precioCatalogo;
-      item.listaPrecioNombre = listaPrice != null ? this.listaSeleccionada?.nombre : undefined;
+      item.listaPrecioNombre =
+        listaPrice != null ? this.listaSeleccionada?.nombre : undefined;
       this.calcLine(item);
     }
     this.cdr.markForCheck();
@@ -580,7 +606,11 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       (c) => c.productoId === p.id && c.presentacionId === p.presentacionId,
     );
     if (existing) {
-      if (tieneInventario && !p.permitirStockNegativo && existing.cantidad >= p.stockActual) {
+      if (
+        tieneInventario &&
+        !p.permitirStockNegativo &&
+        existing.cantidad >= p.stockActual
+      ) {
         this.alertService.showWarn(
           'Stock insuficiente',
           `Solo hay ${p.stockActual} unidades.`,
@@ -595,9 +625,12 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       let precioBase: number;
       if (p.presentacionPrecio != null && p.presentacionPrecio > 0) {
         const ivaFactor = 1 + (p.ivaPorcentaje ?? 0) / 100;
-        precioBase = ivaFactor > 0 ? round2(p.presentacionPrecio / ivaFactor) : p.presentacionPrecio;
+        precioBase =
+          ivaFactor > 0
+            ? round2(p.presentacionPrecio / ivaFactor)
+            : p.presentacionPrecio;
       } else {
-        precioBase = (p.precioFinal ?? p.precio) ?? 0;
+        precioBase = p.precioFinal ?? p.precio ?? 0;
       }
       const precioValido = isFinite(precioBase) ? precioBase : 0;
 
@@ -612,15 +645,18 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       let precioPOS = precioValido;
       let listaNombre: string | undefined;
       if (this.listaSeleccionada) {
-        const listaPrice = p.presentacionId != null
-          ? (this.preciosPorLista.get(p.presentacionId) ?? this.preciosPorLista.get(-p.id))
-          : this.preciosPorLista.get(-p.id);
+        const listaPrice =
+          p.presentacionId != null
+            ? (this.preciosPorLista.get(p.presentacionId) ??
+              this.preciosPorLista.get(-p.id))
+            : this.preciosPorLista.get(-p.id);
         if (listaPrice != null && isFinite(listaPrice)) {
           precioPOS = listaPrice;
           listaNombre = this.listaSeleccionada.nombre;
         }
       }
-      const nombreEnCarrito = p.presentacionNombre ?? p.nombre ?? 'Producto sin nombre';
+      const nombreEnCarrito =
+        p.presentacionNombre ?? p.nombre ?? 'Producto sin nombre';
       const item: CartItem = {
         _id: uuid(),
         productoId: p.id,
@@ -669,14 +705,19 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     const cantidad = item.cantidad ?? 0;
     const descuento = item.descuento ?? 0;
     const impuesto = item.impuesto ?? 0;
-    
-    if (!isFinite(precio) || !isFinite(cantidad) || !isFinite(descuento) || !isFinite(impuesto)) {
+
+    if (
+      !isFinite(precio) ||
+      !isFinite(cantidad) ||
+      !isFinite(descuento) ||
+      !isFinite(impuesto)
+    ) {
       item.impuestoValor = 0;
       item.subtotal = 0;
       this.recalcularTotales();
       return;
     }
-    
+
     const base = round2(precio * cantidad);
     const desc = round2(descuento);
     const baseNeta = round2(Math.max(0, base - desc));
@@ -712,13 +753,13 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     let sub = 0;
     let desc = 0;
     let imp = 0;
-    
+
     for (const c of this.cart) {
-      const precio = (c.precio ?? 0);
-      const cantidad = (c.cantidad ?? 0);
-      const descuento = (c.descuento ?? 0);
-      const impuestoValor = (c.impuestoValor ?? 0);
-      
+      const precio = c.precio ?? 0;
+      const cantidad = c.cantidad ?? 0;
+      const descuento = c.descuento ?? 0;
+      const impuestoValor = c.impuestoValor ?? 0;
+
       if (isFinite(precio) && isFinite(cantidad)) {
         sub += round2(precio * cantidad);
       }
@@ -729,7 +770,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         imp += impuestoValor;
       }
     }
-    
+
     this.subtotal = round2(sub);
     this.descTotal = round2(desc);
     this.impTotal = round2(imp);
@@ -847,12 +888,13 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
           resolucionPrefijo: this.empresaConfig?.resolucionPrefijo ?? null,
           resolucionDesde: this.empresaConfig?.resolucionDesde ?? null,
           resolucionHasta: this.empresaConfig?.resolucionHasta ?? null,
-          resolucionFechaDesde: this.empresaConfig?.resolucionFechaDesde ?? null,
-          resolucionFechaHasta: this.empresaConfig?.resolucionFechaHasta ?? null,
+          resolucionFechaDesde:
+            this.empresaConfig?.resolucionFechaDesde ?? null,
+          resolucionFechaHasta:
+            this.empresaConfig?.resolucionFechaHasta ?? null,
         } as unknown as VentaModel;
         this.showPago = false;
         this.clearCart();
-        this.loadProductos();
         const clienteIdRespuesta = (res.data as any)?.clienteId;
         const ventaTieneCliente = (res.data as any)?.clienteId != null;
 
@@ -864,7 +906,10 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         this.cufeActual = null;
         this.searchProduct = '';
         this.filtrar();
-        this.alertService.showSuccess('Venta registrada', `Venta #${(res.data as any).numero ?? this.ventaCompletadaId} completada exitosamente`);
+        this.alertService.showSuccess(
+          'Venta registrada',
+          `Venta #${(res.data as any).numero ?? this.ventaCompletadaId} completada exitosamente`,
+        );
 
         if (this.empresaFacturaElec && this.ventaCompletadaId) {
           // Preguntar si desea factura electrónica → modal FE primero
