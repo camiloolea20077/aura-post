@@ -83,11 +83,15 @@
         </div>
         <div class="t-info-row">
           <span class="t-info-label">Cliente :</span>
-          <span class="t-info-val">{{ venta.clienteNombre ?? "CONSUMIDOR FINAL" }}</span>
+          <span class="t-info-val">{{
+            venta.clienteNombre ?? "CONSUMIDOR FINAL"
+          }}</span>
         </div>
         <div class="t-info-row">
           <span class="t-info-label">CC/NIT :</span>
-          <span class="t-info-val">{{ venta.clienteDocumento ?? "222.222.222-2" }}</span>
+          <span class="t-info-val">{{
+            venta.clienteDocumento ?? "222.222.222-2"
+          }}</span>
         </div>
         <div class="t-info-row">
           <span class="t-info-label">Pago :</span>
@@ -113,9 +117,14 @@
                 <span class="t-prod-cant-val">
                   {{ formatCantidad(d) }}
                   {{ abreviarUnidad(d.unidadMedidaNombre) }}
-                  x {{ formatCOP(d.precioUnitario + d.impuestoValor / d.cantidad) }}
+                  x
+                  {{
+                    formatCOP(d.precioUnitario + d.impuestoValor / d.cantidad)
+                  }}
                 </span>
-                <span class="t-prod-total">{{ formatCOP(d.subtotalLinea) }}</span>
+                <span class="t-prod-total">{{
+                  formatCOP(d.subtotalLinea)
+                }}</span>
               </div>
               @if (d.montoDescuento > 0) {
                 <div class="t-prod-detalle t-sub-label">
@@ -159,24 +168,35 @@
         </div>
         <div class="t-pago-row t-cambio-row" *ngIf="cambioTotal > 0">
           <span class="t-pago-metodo t-cambio-label">Cambio entregado</span>
-          <span class="t-pago-monto t-cambio-val">{{ formatCOP(cambioTotal) }}</span>
+          <span class="t-pago-monto t-cambio-val">{{
+            formatCOP(cambioTotal)
+          }}</span>
         </div>
 
         <!-- Sección Factura Electrónica (QR + CUFE) -->
         <ng-container *ngIf="qrData || cufeCode">
           <div class="t-separator"></div>
           <div class="t-fe-section">
-            <div class="t-fe-title">✓ FACTURA ELECTRÓNICA</div>
+            <div class="t-fe-title">FACTURA ELECTRÓNICA</div>
             <ng-container *ngIf="venta.resolucionNumero">
               <div class="t-resolucion">
                 Resolución DIAN No. {{ venta.resolucionNumero }}
-                <span *ngIf="venta.resolucionPrefijo"> - Prefijo {{ venta.resolucionPrefijo }}</span>
+                <span *ngIf="venta.resolucionPrefijo">
+                  - Prefijo {{ venta.resolucionPrefijo }}</span
+                >
               </div>
-              <div class="t-resolucion" *ngIf="venta.resolucionDesde && venta.resolucionHasta">
+              <div
+                class="t-resolucion"
+                *ngIf="venta.resolucionDesde && venta.resolucionHasta"
+              >
                 Rango {{ venta.resolucionDesde }} al {{ venta.resolucionHasta }}
               </div>
-              <div class="t-resolucion" *ngIf="venta.resolucionFechaDesde && venta.resolucionFechaHasta">
-                Vigencia: {{ venta.resolucionFechaDesde }} al {{ venta.resolucionFechaHasta }}
+              <div
+                class="t-resolucion"
+                *ngIf="venta.resolucionFechaDesde && venta.resolucionFechaHasta"
+              >
+                Vigencia: {{ venta.resolucionFechaDesde }} al
+                {{ venta.resolucionFechaHasta }}
               </div>
             </ng-container>
             <div #qrWrap class="t-fe-qr" *ngIf="qrData">
@@ -199,12 +219,12 @@
 
         <!-- Texto legal -->
         <div class="t-legal" *ngIf="!qrData && !cufeCode">
-          Este documento equivalente POS no es una factura de venta.
-          Para factura electrónica, solicítela al cajero.
+          Este documento equivalente POS no es una factura de venta. Para
+          factura electrónica, solicítela al cajero.
         </div>
         <div class="t-legal" *ngIf="qrData || cufeCode">
-          Factura electrónica válida ante la DIAN. Esta factura se asimila
-          a los efectos legales de las facturas de cambio ART. 744 C.Co.
+          Factura electrónica válida ante la DIAN. Esta factura se asimila a los
+          efectos legales de las facturas de cambio ART. 744 C.Co.
         </div>
 
         <div class="t-separator-thin"></div>

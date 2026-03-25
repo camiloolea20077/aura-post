@@ -107,7 +107,9 @@ export class ModalTirillaComponent implements OnChanges {
       .map((d) => {
         const cantStr = this.formatCantidad(d);
         const unidad = this.abreviarUnidad(d.unidadMedidaNombre);
-        const vunit = this.formatCOP(d.precioUnitario + d.impuestoValor / d.cantidad);
+        const vunit = this.formatCOP(
+          d.precioUnitario + d.impuestoValor / d.cantidad,
+        );
         const total = this.formatCOP(d.subtotalLinea);
         const descRow =
           d.montoDescuento > 0
@@ -129,22 +131,25 @@ export class ModalTirillaComponent implements OnChanges {
 
     // ── Construir filas de pagos ──────────────────────────────────
     const totalTendido = v.pagos.reduce((s, p) => s + p.monto, 0);
-    const cambioTotal  = Math.max(0, totalTendido - v.totalPagar);
+    const cambioTotal = Math.max(0, totalTendido - v.totalPagar);
 
     const filasPagos = v.pagos
-      .map((p) => `
+      .map(
+        (p) => `
         <div style="display:flex;gap:4px;font-size:0.92em;padding:1px 0;">
           <span style="flex:1;">${this.metodoPagoLabel(p.metodoPago)}</span>
           <span style="text-align:right;">${this.formatCOP(p.monto)}</span>
-        </div>`)
+        </div>`,
+      )
       .join('');
 
-    const cambioHtml = cambioTotal > 0
-      ? `<div style="display:flex;gap:4px;font-size:0.92em;padding:2px 0;font-weight:bold;">
+    const cambioHtml =
+      cambioTotal > 0
+        ? `<div style="display:flex;gap:4px;font-size:0.92em;padding:2px 0;font-weight:bold;">
            <span style="flex:1;">Cambio entregado</span>
            <span style="text-align:right;">${this.formatCOP(cambioTotal)}</span>
          </div>`
-      : '';
+        : '';
 
     // ── Logo ──────────────────────────────────────────────────────
     const logoHtml = v.logoUrl
@@ -350,9 +355,11 @@ export class ModalTirillaComponent implements OnChanges {
   <div class="dash"></div>
 
   <div style="font-size:0.75em; text-align:center; margin:10px 0; line-height:1.4; font-style: italic;">
-    ${this.qrData || this.cufeCode
-      ? 'Factura electrónica válida ante la DIAN. Esta factura se asimila a los efectos legales de las facturas de cambio ART. 744 C.Co.'
-      : 'Este documento equivalente POS no es una factura de venta. Para factura electrónica, solicítela al cajero.'}
+    ${
+      this.qrData || this.cufeCode
+        ? 'Factura electrónica válida ante la DIAN. Esta factura se asimila a los efectos legales de las facturas de cambio ART. 744 C.Co.'
+        : 'Este documento equivalente POS no es una factura de venta. Para factura electrónica, solicítela al cajero.'
+    }
   </div>
 
   ${feHtml}
@@ -401,9 +408,16 @@ export class ModalTirillaComponent implements OnChanges {
   }
 
   formatCantidad(d: VentaDetalleResponse): string {
-    const esPeso = ['KILOGRAMO', 'KILOGRAMOS', 'GRAMO', 'GRAMOS',
-                    'LIBRA', 'LIBRAS', 'TONELADA', 'TONELADAS']
-                    .includes((d.unidadMedidaNombre ?? '').toUpperCase());
+    const esPeso = [
+      'KILOGRAMO',
+      'KILOGRAMOS',
+      'GRAMO',
+      'GRAMOS',
+      'LIBRA',
+      'LIBRAS',
+      'TONELADA',
+      'TONELADAS',
+    ].includes((d.unidadMedidaNombre ?? '').toUpperCase());
 
     if (d.cantidad % 1 === 0) return String(Math.round(d.cantidad));
     if (esPeso) return d.cantidad.toFixed(3);
