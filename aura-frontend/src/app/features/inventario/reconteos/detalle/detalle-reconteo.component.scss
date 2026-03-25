@@ -1,0 +1,111 @@
+$indigo: #6366f1;
+$red:    #ef4444;
+$green:  #22c55e;
+$border: #e2e8f0;
+$text:   #1e293b;
+$muted:  #94a3b8;
+$mono:   "JetBrains Mono", monospace;
+
+// ── Skeleton ───────────────────────────────────────────────────
+.skeleton-wrap {
+  padding: 0.5rem 0;
+}
+
+// ── Cabecera info ──────────────────────────────────────────────
+.detalle-header {
+  border-bottom: 1.5px solid $border;
+  padding-bottom: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.85rem;
+  align-items: start;
+}
+
+.span-full {
+  grid-column: 1 / -1;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+
+  .info-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: $muted;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .info-value {
+    font-size: 0.85rem;
+    color: $text;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    i { font-size: 0.8rem; }
+  }
+}
+
+// ── Resumen ────────────────────────────────────────────────────
+.resumen-bar {
+  display: flex;
+  gap: 2rem;
+  padding: 0.85rem 1.25rem;
+  background: #f8fafc;
+  border: 1.5px solid $border;
+  border-radius: 10px;
+  margin: 0.75rem 0;
+}
+
+.resumen-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+
+  .resumen-num {
+    font-size: 1.4rem;
+    font-weight: 800;
+    line-height: 1;
+    font-family: $mono;
+    color: $text;
+  }
+
+  .resumen-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $muted;
+  }
+
+  &.text-success .resumen-num { color: $green; }
+  &.text-danger  .resumen-num { color: $red; }
+}
+
+// ── Tabla ──────────────────────────────────────────────────────
+.detalle-wrap .mt-3 {
+  margin-top: 0.75rem;
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+.fw-600     { font-weight: 600; }
+.fw-700     { font-weight: 700; }
+.mono       { font-family: $mono; }
+.text-muted { color: $muted; }
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+
+.text-success { color: $green !important; }
+.text-danger  { color: $red  !important; }
+
+.line-input {
+  width: 100%;
+  text-align: right;
+}

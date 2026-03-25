@@ -637,6 +637,53 @@ $shadow-md : 0 10px 15px -3px rgba(0,0,0,.07), 0 4px 6px -2px rgba(0,0,0,.04);
   flex-shrink: 0;
 }
 
+// ── Detalle movimientos ────────────────────────────────────────
+.cc-mov-table {
+  margin-top: .6rem;
+  margin-top: .4rem;
+  border: 1px solid $slate-200;
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: .75rem;
+}
+.cc-mov-header {
+  display: grid;
+  grid-template-columns: 72px 1fr 100px 100px;
+  padding: .3rem .6rem;
+  background: $slate-100;
+  font-weight: 700;
+  color: $slate-400;
+  border-bottom: 1px solid $slate-200;
+  gap: 6px;
+}
+.cc-mov-row {
+  display: grid;
+  grid-template-columns: 72px 1fr 100px 100px;
+  padding: .32rem .6rem;
+  border-bottom: 1px solid $slate-200;
+  align-items: center;
+  gap: 6px;
+  &:last-child { border-bottom: none; }
+  &.cc-mov-ingreso { background: #f0fdf4; }
+  &.cc-mov-egreso  { background: #fff7f7; }
+}
+.cc-mov-tipo {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.cc-mov-concepto {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.cc-mov-concepto-txt { font-weight: 500; color: $slate-700; }
+.cc-mov-usuario      { font-size: .68rem; color: $slate-400; }
+.cc-mov-caja         { font-size: .72rem; color: $slate-500; }
+.cc-mov-monto        { font-weight: 700; text-align: right; font-family: "JetBrains Mono", monospace; }
+
 // ══════════════════════════════════════════════════════════════
 //  EMPTY STATE
 // ══════════════════════════════════════════════════════════════

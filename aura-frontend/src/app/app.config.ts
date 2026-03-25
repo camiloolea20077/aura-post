@@ -1,4 +1,9 @@
-import { ApplicationConfig, provideZoneChangeDetection, isDevMode } from '@angular/core';
+import {
+  ApplicationConfig,
+  provideZoneChangeDetection,
+  isDevMode,
+  LOCALE_ID,
+} from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { providePrimeNG } from 'primeng/config';
@@ -11,6 +16,8 @@ import {
   withInterceptors,
   withInterceptorsFromDi,
 } from '@angular/common/http';
+import { registerLocaleData } from '@angular/common';
+import localeEsCO from '@angular/common/locales/es-CO';
 import { MessageService } from 'primeng/api';
 import { GlobalInterceptor } from './core/interceptors/global.interceptor';
 import {
@@ -19,16 +26,17 @@ import {
 } from './core/interceptors/';
 import { provideServiceWorker } from '@angular/service-worker';
 
+registerLocaleData(localeEsCO);
 export const appConfig: ApplicationConfig = {
   providers: [
+    { provide: LOCALE_ID, useValue: 'es-CO' },
     MessageService,
-    provideHttpClient(withInterceptorsFromDi()),
     provideHttpClient(
+      withInterceptorsFromDi(),
       withInterceptors([authInterceptor, DateInterceptorInterceptor]),
     ),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(),
     provideAnimationsAsync(),
     providePrimeNG({
       theme: {
@@ -42,9 +50,10 @@ export const appConfig: ApplicationConfig = {
       provide: HTTP_INTERCEPTORS,
       useClass: GlobalInterceptor,
       multi: true,
-    }, provideServiceWorker('ngsw-worker.js', {
-            enabled: !isDevMode(),
-            registrationStrategy: 'registerWhenStable:30000'
-          }),
+    },
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000',
+    }),
   ],
 };

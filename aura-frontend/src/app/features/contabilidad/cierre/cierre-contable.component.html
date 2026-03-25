@@ -323,6 +323,34 @@
               </div>
             </div>
           </div>
+
+          <!-- Detalle movimientos -->
+          <div class="cc-mov-table" *ngIf="data.detalleMovimientos?.length">
+            <div class="cc-mov-header">
+              <span>Tipo</span>
+              <span>Concepto</span>
+              <span>Caja</span>
+              <span>Monto</span>
+            </div>
+            <div class="cc-mov-row" *ngFor="let m of data.detalleMovimientos"
+                 [class.cc-mov-ingreso]="m.tipo === 'INGRESO'"
+                 [class.cc-mov-egreso]="m.tipo === 'EGRESO'">
+              <span class="cc-mov-tipo">
+                <i [class]="m.tipo === 'INGRESO' ? 'pi pi-arrow-circle-down' : 'pi pi-arrow-circle-up'"></i>
+                {{ m.tipo === 'INGRESO' ? 'Ingreso' : 'Egreso' }}
+              </span>
+              <span class="cc-mov-concepto">
+                <span class="cc-mov-concepto-txt">{{ m.concepto ?? '—' }}</span>
+                <span class="cc-mov-usuario">{{ m.usuarioNombre }}</span>
+              </span>
+              <span class="cc-mov-caja">{{ m.cajaNombre }}</span>
+              <span class="cc-mov-monto"
+                [class.green]="m.tipo === 'INGRESO'"
+                [class.red]="m.tipo === 'EGRESO'">
+                {{ m.tipo === 'INGRESO' ? '+' : '-' }}{{ formatCOP(m.monto) }}
+              </span>
+            </div>
+          </div>
         </div>
 
       </div>

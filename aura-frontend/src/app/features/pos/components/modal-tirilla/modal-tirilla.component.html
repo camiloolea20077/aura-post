@@ -74,89 +74,73 @@
 
         <!-- Cajero / cliente / pago -->
         <div class="t-info-row" *ngIf="venta.cajeroNombre">
-          <span class="t-info-label">Atendido Por :</span>
+          <span class="t-info-label">Cajero :</span>
           <span class="t-info-val">{{ venta.cajeroNombre }}</span>
         </div>
-        <div class="t-info-row" *ngIf="venta.clienteNombre">
-          <span class="t-info-label">Cliente</span>
-          <span class="t-info-val">
-            {{ venta.clienteDocumento ? venta.clienteDocumento + " - " : ""
-            }}{{ venta.clienteNombre }}
-          </span>
+        <div class="t-info-row" *ngIf="venta.sucursalNombre">
+          <span class="t-info-label">Sucursal :</span>
+          <span class="t-info-val">{{ venta.sucursalNombre }}</span>
+        </div>
+        <div class="t-info-row">
+          <span class="t-info-label">Cliente :</span>
+          <span class="t-info-val">{{ venta.clienteNombre ?? "CONSUMIDOR FINAL" }}</span>
+        </div>
+        <div class="t-info-row">
+          <span class="t-info-label">CC/NIT :</span>
+          <span class="t-info-val">{{ venta.clienteDocumento ?? "222.222.222-2" }}</span>
         </div>
         <div class="t-info-row">
           <span class="t-info-label">Pago :</span>
-          <span class="t-info-val">{{
-            metodoPagoLabel(venta.pagos[0]?.metodoPago || "")
-          }}</span>
+          <span class="t-info-val">{{ pagosResumen }}</span>
         </div>
 
         <div class="t-separator"></div>
 
-        <table class="t-productos">
-          <colgroup>
-            <col />
-            <col class="col-cant" />
-            <col class="col-precio" />
-            <col class="col-total" />
-          </colgroup>
-          <thead>
-            <tr>
-              <th style="text-align: left">Artículo</th>
-              <th style="text-align: center">Cant</th>
-              <th style="text-align: right">Valor</th>
-              <th style="text-align: right">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (d of venta.detalles; track d.productoId) {
-              <tr>
-                <td class="t-art-cell">{{ d.productoNombre }}</td>
-                <td style="text-align: center">
-                  {{
-                    d.cantidad % 1 === 0
-                      ? (d.cantidad | number: "1.0-0")
-                      : (d.cantidad | number)
-                  }}
-                </td>
-                <td class="t-num-cell">
-                  {{ formatCOP(d.precioUnitario) }}
-                </td>
-                <td class="t-num-cell">
-                  {{ formatCOP(d.subtotalLinea) }}
-                </td>
-              </tr>
+        <!-- Encabezado tabla -->
+        <div class="t-prod-header">
+          <span>PRODUCTO</span>
+          <span>TOTAL</span>
+        </div>
+
+        <!-- Filas de productos — formato 2 líneas -->
+        <div class="t-prod-list">
+          @for (d of venta.detalles; track d.productoId) {
+            <div class="t-prod-item">
+              <div class="t-prod-nombre">
+                {{ d.presentacionNombre ?? d.productoNombre }}
+              </div>
+              <div class="t-prod-detalle">
+                <span class="t-prod-cant-val">
+                  {{ formatCantidad(d) }}
+                  {{ abreviarUnidad(d.unidadMedidaNombre) }}
+                  x {{ formatCOP(d.precioUnitario + d.impuestoValor / d.cantidad) }}
+                </span>
+                <span class="t-prod-total">{{ formatCOP(d.subtotalLinea) }}</span>
+              </div>
               @if (d.montoDescuento > 0) {
-                <tr>
-                  <td colspan="3">DESCUENTO:</td>
-                  <td class="t-num-cell">
-                    -{{ formatCOP(d.montoDescuento) }}
-                  </td>
-                </tr>
+                <div class="t-prod-detalle t-sub-label">
+                  <span>DESCUENTO:</span>
+                  <span>-{{ formatCOP(d.montoDescuento) }}</span>
+                </div>
               }
-            }
-          </tbody>
-        </table>
+            </div>
+          }
+        </div>
         <div class="t-separator-thin"></div>
 
         <!-- Totales -->
         <div class="t-totales">
           <div class="t-tot-row">
             <span>Sub Total</span>
-            <span>{{ formatCOP(venta.subtotal - venta.descuentoTotal) }}</span>
+            <span>{{ formatCOP(venta.subtotal) }}</span>
+          </div>
+          <div class="t-tot-row" *ngIf="venta.descuentoTotal > 0">
+            <span>Descuento</span>
+            <span>-{{ formatCOP(venta.descuentoTotal) }}</span>
           </div>
           <div class="t-tot-row" *ngIf="venta.impuestosTotal > 0">
-            <span>Impuesto (Impo + Iva)</span>
+            <span>IVA</span>
             <span>{{ formatCOP(venta.impuestosTotal) }}</span>
-          </div>
-          <div class="t-tot-row" *ngIf="descuentoTotal > 0">
-            <span>Descuentos total</span>
-            <span>-{{ formatCOP(descuentoTotal) }}</span>
-          </div>
-
-          <div class="t-tot-row" *ngIf="descuentoAdicional > 0">
-            <span>Descuento Adicional</span>
-            <span>-{{ formatCOP(descuentoAdicional) }}</span>
           </div>
         </div>
 
@@ -169,19 +153,32 @@
         <div class="t-separator-thin"></div>
 
         <!-- Pagos -->
-        <!-- <div class="t-pago-row" *ngFor="let p of venta.pagos">
+        <div class="t-pago-row" *ngFor="let p of venta.pagos">
           <span class="t-pago-metodo">{{ metodoPagoLabel(p.metodoPago) }}</span>
           <span class="t-pago-monto">{{ formatCOP(p.monto) }}</span>
-          <span class="t-pago-cambio" *ngIf="getCambio(p) > 0">
-            Cambio: {{ formatCOP(getCambio(p)) }}
-          </span>
-        </div> -->
+        </div>
+        <div class="t-pago-row t-cambio-row" *ngIf="cambioTotal > 0">
+          <span class="t-pago-metodo t-cambio-label">Cambio entregado</span>
+          <span class="t-pago-monto t-cambio-val">{{ formatCOP(cambioTotal) }}</span>
+        </div>
 
         <!-- Sección Factura Electrónica (QR + CUFE) -->
         <ng-container *ngIf="qrData || cufeCode">
           <div class="t-separator"></div>
           <div class="t-fe-section">
             <div class="t-fe-title">✓ FACTURA ELECTRÓNICA</div>
+            <ng-container *ngIf="venta.resolucionNumero">
+              <div class="t-resolucion">
+                Resolución DIAN No. {{ venta.resolucionNumero }}
+                <span *ngIf="venta.resolucionPrefijo"> - Prefijo {{ venta.resolucionPrefijo }}</span>
+              </div>
+              <div class="t-resolucion" *ngIf="venta.resolucionDesde && venta.resolucionHasta">
+                Rango {{ venta.resolucionDesde }} al {{ venta.resolucionHasta }}
+              </div>
+              <div class="t-resolucion" *ngIf="venta.resolucionFechaDesde && venta.resolucionFechaHasta">
+                Vigencia: {{ venta.resolucionFechaDesde }} al {{ venta.resolucionFechaHasta }}
+              </div>
+            </ng-container>
             <div #qrWrap class="t-fe-qr" *ngIf="qrData">
               <qrcode
                 [qrdata]="qrData"
@@ -201,9 +198,13 @@
         <div class="t-separator"></div>
 
         <!-- Texto legal -->
-        <div class="t-legal">
-          Esta factura se asimila a los efectos legales de las facturas de
-          cambio ART. 744 del Código del Comercio.
+        <div class="t-legal" *ngIf="!qrData && !cufeCode">
+          Este documento equivalente POS no es una factura de venta.
+          Para factura electrónica, solicítela al cajero.
+        </div>
+        <div class="t-legal" *ngIf="qrData || cufeCode">
+          Factura electrónica válida ante la DIAN. Esta factura se asimila
+          a los efectos legales de las facturas de cambio ART. 744 C.Co.
         </div>
 
         <div class="t-separator-thin"></div>

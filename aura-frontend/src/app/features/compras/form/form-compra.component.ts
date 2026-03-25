@@ -78,6 +78,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
   public proveedoresSugerencias: TerceroTableModel[] = [];
   public sucursalId: number | null = null;
   public sucursalesOpts: { label: string; value: number }[] = [];
+  private defaultSucursalId: number | null = null;
   public numeroCompra = '';
   public fechaCompra: Date = new Date();
   public observaciones = '';
@@ -128,15 +129,17 @@ export class FormCompraComponent implements OnInit, OnChanges {
   // ─── Carga datos ──────────────────────────────────────────────────
   private async loadDropdowns(): Promise<void> {
     try {
-      const auth = await this.indexDBService.loadDataAuthDB();
-      if (auth?.sucursales) {
-        this.sucursalesOpts = auth.sucursales.map((s) => ({
-          label: s.nombre,
-          value: s.id,
-        }));
-        if (this.sucursalesOpts.length === 1) {
-          this.sucursalId = this.sucursalesOpts[0].value;
-        }
+      const [sucursales, defaultId] = await Promise.all([
+        this.indexDBService.getSucursales(),
+        this.indexDBService.getSucursalDefault(),
+      ]);
+      this.sucursalesOpts = sucursales.map((s) => ({
+        label: s.nombre,
+        value: s.id,
+      }));
+      if (defaultId) {
+        this.defaultSucursalId = defaultId;
+        this.sucursalId = defaultId;
       }
     } catch {
       /* silencioso */
@@ -554,7 +557,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
     this.proveedorQuery = '';
     this.proveedorSeleccionado = null;
     this.proveedoresSugerencias = [];
-    this.sucursalId = null;
+    this.sucursalId = this.defaultSucursalId;
     this.numeroCompra = '';
     this.fechaCompra = new Date();
     this.observaciones = '';

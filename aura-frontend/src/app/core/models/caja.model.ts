@@ -150,4 +150,15 @@ export interface ResumenTurnoDto {
   // Comisiones generadas en el turno
   comisiones: ComisionTurnoDto[];
   totalComisiones: number;
+
+  // Diagnóstico: detalle de cada pago en efectivo del turno
+  detalleEfectivo: DetalleEfectivoItem[];
+}
+
+export interface DetalleEfectivoItem {
+  ventaId: number;
+  consecutivo: number;
+  montoEfectivo: number;
+  totalVenta: number;
+  estadoVenta: string;
 }

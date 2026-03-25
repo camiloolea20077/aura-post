@@ -208,6 +208,13 @@ export class IndexVentasComponent implements OnInit {
         municipio: empresa?.municipio ?? '',
         // Cajero del usuario logueado
         cajeroNombre: auth?.nombreCompleto ?? '',
+        // Resolución FE
+        resolucionNumero: empresa?.resolucionNumero ?? null,
+        resolucionPrefijo: empresa?.resolucionPrefijo ?? null,
+        resolucionDesde: empresa?.resolucionDesde ?? null,
+        resolucionHasta: empresa?.resolucionHasta ?? null,
+        resolucionFechaDesde: empresa?.resolucionFechaDesde ?? null,
+        resolucionFechaHasta: empresa?.resolucionFechaHasta ?? null,
       } as unknown as VentaModel;
       this.showTirilla = true;
       this.cdr.markForCheck();

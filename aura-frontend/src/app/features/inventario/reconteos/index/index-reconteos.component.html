@@ -1,0 +1,125 @@
+<div class="module-container">
+  <!-- Header -->
+  <div class="module-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="pi pi-list-check"></i>
+      </div>
+      <div>
+        <h2 class="header-title">Reconteo de Inventario</h2>
+        <p class="header-sub">Conteo físico y ajuste de stock por sucursal</p>
+      </div>
+    </div>
+    <button
+      pButton
+      label="Nuevo reconteo"
+      icon="pi pi-plus"
+      class="btn-aura btn-primary"
+      (click)="nuevo()"
+    ></button>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="table-toolbar">
+    <span class="search-wrap">
+      <i class="pi pi-search"></i>
+      <input
+        type="text"
+        pInputText
+        placeholder="Buscar por sucursal..."
+        [(ngModel)]="search"
+        (input)="onSearch()"
+        class="search-input"
+      />
+    </span>
+  </div>
+
+  <!-- Tabla -->
+  <div class="table-card">
+    <p-table
+      [value]="rows"
+      [lazy]="true"
+      [loading]="loading"
+      [totalRecords]="totalRows"
+      [rows]="pageSize"
+      [paginator]="true"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      (onPage)="onPage($event)"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords}"
+      styleClass="p-datatable-sm p-datatable-gridlines"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 80px">#</th>
+          <th>Sucursal</th>
+          <th style="width: 100px">Tipo</th>
+          <th style="width: 130px">Estado</th>
+          <th style="width: 160px">Fecha inicio</th>
+          <th style="width: 160px">Fecha cierre</th>
+          <th style="width: 110px; text-align: center">Productos</th>
+          <th style="width: 110px; text-align: center">Diferencias</th>
+          <th style="width: 110px">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-r>
+        <tr class="clickable-row" (click)="verDetalle(r)">
+          <td class="mono text-muted">{{ r.id }}</td>
+          <td class="fw-600">{{ r.sucursalNombre }}</td>
+          <td class="mono text-muted">{{ r.tipo }}</td>
+          <td>
+            <p-tag [value]="r.estado" [severity]="getSeverity(r.estado)" />
+          </td>
+          <td class="mono text-muted">
+            {{ r.fechaInicio | date: 'dd/MM/yyyy HH:mm' }}
+          </td>
+          <td class="mono text-muted">
+            {{ r.fechaCierre ? (r.fechaCierre | date: 'dd/MM/yyyy HH:mm') : '—' }}
+          </td>
+          <td class="mono text-center fw-600">{{ r.totalProductos }}</td>
+          <td class="mono text-center" [class.text-danger]="r.diferenciasEncontradas > 0">
+            {{ r.diferenciasEncontradas }}
+          </td>
+          <td (click)="$event.stopPropagation()">
+            <div class="actions">
+              <button
+                pButton
+                icon="pi pi-eye"
+                class="p-button-text p-button-sm"
+                pTooltip="Ver / contar"
+                (click)="verDetalle(r)"
+              ></button>
+              <button
+                pButton
+                icon="pi pi-ban"
+                class="p-button-text p-button-danger p-button-sm"
+                pTooltip="Anular"
+                [disabled]="!canAnular(r.estado)"
+                (click)="confirmAnular(r)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9" class="empty-row">No hay reconteos registrados</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- Dialogs -->
+<app-form-reconteo [(visible)]="showForm" (saved)="onSaved()" />
+
+<app-detalle-reconteo
+  [(visible)]="showDetalle"
+  [reconteo]="reconteoDetalle"
+  [loading]="loadingDetalle"
+  (aprobado)="onAprobado()"
+  (anulado)="onAnulado()"
+/>
+
+<p-confirmDialog />
+<p-toast />

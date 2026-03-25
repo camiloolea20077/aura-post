@@ -47,4 +47,14 @@ export interface CierreContableDto {
   totalEgresos: number;
   cantidadIngresos: number;
   cantidadEgresos: number;
+  detalleMovimientos: MovimientoCierreItem[];
+}
+
+export interface MovimientoCierreItem {
+  tipo: 'INGRESO' | 'EGRESO';
+  concepto: string | null;
+  monto: number;
+  fecha: string;
+  cajaNombre: string;
+  usuarioNombre: string;
 }

@@ -1,0 +1,294 @@
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+.sidebar-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  i {
+    color: #7c3aed;
+  }
+}
+
+.emp-card {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  background: linear-gradient(
+    135deg,
+    rgba(124, 58, 237, 0.05),
+    rgba(167, 139, 250, 0.08)
+  );
+  border: 1px solid rgba(124, 58, 237, 0.15);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.25rem;
+}
+.emp-avatar {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: white;
+}
+.emp-info {
+  flex: 1;
+}
+.emp-nombre {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #1e293b;
+}
+.emp-meta {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 0.15rem;
+}
+.periodo-info {
+  text-align: right;
+}
+.periodo-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  font-weight: 700;
+}
+.periodo-fechas {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0.1rem 0;
+}
+.dias-badge {
+  display: inline-flex;
+  padding: 0.1rem 0.45rem;
+  border-radius: 5px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(124, 58, 237, 0.1);
+  color: #7c3aed;
+}
+
+.comprobante {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 1.25rem;
+}
+
+.comp-section {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+.comp-section-title {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 0.65rem;
+  &.devengado {
+    color: #16a34a;
+  }
+  &.deduccion {
+    color: #ef4444;
+  }
+  &.empleador {
+    color: #2563eb;
+  }
+  &.provision {
+    color: #7c3aed;
+  }
+}
+
+.comp-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.25rem 0;
+  font-size: 0.82rem;
+  color: #475569;
+  &.total-row {
+    border-top: 1px dashed #e2e8f0;
+    margin-top: 0.35rem;
+    padding-top: 0.5rem;
+    font-weight: 700;
+    color: #1e293b;
+  }
+}
+.monto {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1e293b;
+  &.total {
+    font-size: 0.88rem;
+  }
+  &.red {
+    color: #ef4444;
+  }
+  &.blue {
+    color: #2563eb;
+  }
+  &.purple {
+    color: #7c3aed;
+  }
+}
+
+.neto-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  padding: 0.9rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: white;
+}
+.neto-val {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.novedades-section {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.novedades-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: #fafbfe;
+  border-bottom: 1px solid #f1f5f9;
+}
+.novedades-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+::ng-deep .btn-add-nov {
+  color: #7c3aed !important;
+  &:hover {
+    background: rgba(124, 58, 237, 0.08) !important;
+  }
+}
+
+.novedad-form {
+  padding: 0.85rem 1rem;
+  background: #fafbfe;
+  border-bottom: 1px solid #f1f5f9;
+}
+.nf-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1.5fr;
+  gap: 0.5rem;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #475569;
+  }
+  input {
+    height: 36px;
+    font-size: 0.82rem;
+  }
+}
+.nf-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+::ng-deep .btn-nomina.p-button {
+  background: linear-gradient(135deg, #7c3aed, #a78bfa) !important;
+  border: none !important;
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+.sin-novedades {
+  padding: 1.25rem 1rem;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.novedad-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid #f8fafc;
+  font-size: 0.82rem;
+  &:last-child {
+    border-bottom: none;
+  }
+  &.deduccion {
+    background: rgba(239, 68, 68, 0.02);
+  }
+}
+.nov-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+}
+.nov-tipo {
+  font-weight: 600;
+  color: #1e293b;
+}
+.nov-desc {
+  font-size: 0.73rem;
+  color: #94a3b8;
+}
+.nov-cant {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+.nov-right {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.nov-valor {
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 700;
+  color: #16a34a;
+  &.red {
+    color: #ef4444;
+  }
+}
+
+.sidebar-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding-top: 0.5rem;
+}
+.footer-actions {
+  display: flex;
+  gap: 0.5rem;
+}
