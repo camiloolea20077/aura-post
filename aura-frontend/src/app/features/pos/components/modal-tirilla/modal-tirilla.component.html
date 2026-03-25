@@ -106,7 +106,9 @@
         <div class="t-prod-list">
           @for (d of venta.detalles; track d.productoId) {
             <div class="t-prod-item">
-              <div class="t-prod-nombre">{{ d.productoNombre }}</div>
+              <div class="t-prod-nombre">
+                {{ d.presentacionNombre ?? d.productoNombre }}
+              </div>
               <div class="t-prod-detalle">
                 <span class="t-prod-cant-val">
                   {{ formatCantidad(d) }}
@@ -154,9 +156,10 @@
         <div class="t-pago-row" *ngFor="let p of venta.pagos">
           <span class="t-pago-metodo">{{ metodoPagoLabel(p.metodoPago) }}</span>
           <span class="t-pago-monto">{{ formatCOP(p.monto) }}</span>
-          <span class="t-pago-cambio" *ngIf="getCambio(p) > 0">
-            Cambio: {{ formatCOP(getCambio(p)) }}
-          </span>
+        </div>
+        <div class="t-pago-row t-cambio-row" *ngIf="cambioTotal > 0">
+          <span class="t-pago-metodo t-cambio-label">Cambio entregado</span>
+          <span class="t-pago-monto t-cambio-val">{{ formatCOP(cambioTotal) }}</span>
         </div>
 
         <!-- Sección Factura Electrónica (QR + CUFE) -->
@@ -164,6 +167,18 @@
           <div class="t-separator"></div>
           <div class="t-fe-section">
             <div class="t-fe-title">✓ FACTURA ELECTRÓNICA</div>
+            <ng-container *ngIf="venta.resolucionNumero">
+              <div class="t-resolucion">
+                Resolución DIAN No. {{ venta.resolucionNumero }}
+                <span *ngIf="venta.resolucionPrefijo"> - Prefijo {{ venta.resolucionPrefijo }}</span>
+              </div>
+              <div class="t-resolucion" *ngIf="venta.resolucionDesde && venta.resolucionHasta">
+                Rango {{ venta.resolucionDesde }} al {{ venta.resolucionHasta }}
+              </div>
+              <div class="t-resolucion" *ngIf="venta.resolucionFechaDesde && venta.resolucionFechaHasta">
+                Vigencia: {{ venta.resolucionFechaDesde }} al {{ venta.resolucionFechaHasta }}
+              </div>
+            </ng-container>
             <div #qrWrap class="t-fe-qr" *ngIf="qrData">
               <qrcode
                 [qrdata]="qrData"

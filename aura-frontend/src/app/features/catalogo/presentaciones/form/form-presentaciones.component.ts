@@ -107,6 +107,7 @@ export class FormPresentacionesComponent implements OnInit, OnChanges {
       ],
       codigoBarras: [null, [Validators.maxLength(50)]],
       factorConversion: [1, [Validators.required, Validators.min(0.0001)]],
+      precio: [null, [Validators.required, Validators.min(0.01)]],
       activo: [true, Validators.required],
     });
   }
@@ -117,6 +118,7 @@ export class FormPresentacionesComponent implements OnInit, OnChanges {
       nombre: null,
       codigoBarras: null,
       factorConversion: 1,
+      precio: null,
       activo: true,
     });
   }
@@ -161,6 +163,7 @@ export class FormPresentacionesComponent implements OnInit, OnChanges {
             nombre: d.nombre,
             codigoBarras: d.codigoBarras,
             factorConversion: d.factorConversion,
+            precio: d.precio,
             activo: d.activo,
           });
         });
@@ -198,9 +201,9 @@ export class FormPresentacionesComponent implements OnInit, OnChanges {
           nombre: v.nombre?.trim(),
           codigoBarras: v.codigoBarras?.trim() || null,
           factorConversion: v.factorConversion,
-          esDefaultCompra: false, // Por ahora no se editan estos campos desde el formulario
+          esDefaultCompra: false,
           esDefaultVenta: false,
-          precio: 0,
+          precio: v.precio,
           costo: 0,
           activo: v.activo,
         };
@@ -208,9 +211,9 @@ export class FormPresentacionesComponent implements OnInit, OnChanges {
       } else {
         const dto: CreateProductoPresentacionDto = {
           productoId: v.productoId,
-          esDefaultCompra: false, // Por ahora no se editan estos campos desde el formulario
+          esDefaultCompra: false,
           esDefaultVenta: false,
-          precio: 0,
+          precio: v.precio,
           costo: 0,
           nombre: v.nombre?.trim(),
           codigoBarras: v.codigoBarras?.trim() || null,

@@ -455,7 +455,8 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       const matchBarcode = this.productos.find(
         (p) =>
           (p.codigoBarras && p.codigoBarras === q) ||
-          (p.sku && p.sku === q),
+          (p.sku && p.sku === q) ||
+          (p.presentacionCodigoBarras && p.presentacionCodigoBarras === q),
       );
 
       if (matchBarcode) {
@@ -485,7 +486,9 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       return (
         p.nombre.toLowerCase().includes(q) ||
         (p.sku != null && p.sku.toLowerCase().includes(q)) ||
-        (p.codigoBarras != null && p.codigoBarras.toLowerCase().includes(q))
+        (p.codigoBarras != null && p.codigoBarras.toLowerCase().includes(q)) ||
+        (p.presentacionNombre != null && p.presentacionNombre.toLowerCase().includes(q)) ||
+        (p.presentacionCodigoBarras != null && p.presentacionCodigoBarras.toLowerCase().includes(q))
       );
     });
   }
@@ -573,7 +576,9 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    const existing = this.cart.find((c) => c.productoId === p.id);
+    const existing = this.cart.find(
+      (c) => c.productoId === p.id && c.presentacionId === p.presentacionId,
+    );
     if (existing) {
       if (tieneInventario && !p.permitirStockNegativo && existing.cantidad >= p.stockActual) {
         this.alertService.showWarn(
@@ -585,9 +590,17 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       existing.cantidad++;
       this.calcLine(existing);
     } else {
-      const precioBase = (p.precioFinal ?? p.precio) ?? 0;
+      // presentacionPrecio viene CON IVA incluido → dividimos para obtener el base
+      // calcLine luego le suma el IVA y el subtotal coincide con el precio configurado
+      let precioBase: number;
+      if (p.presentacionPrecio != null && p.presentacionPrecio > 0) {
+        const ivaFactor = 1 + (p.ivaPorcentaje ?? 0) / 100;
+        precioBase = ivaFactor > 0 ? round2(p.presentacionPrecio / ivaFactor) : p.presentacionPrecio;
+      } else {
+        precioBase = (p.precioFinal ?? p.precio) ?? 0;
+      }
       const precioValido = isFinite(precioBase) ? precioBase : 0;
-      
+
       if (precioValido <= 0) {
         this.alertService.showWarn(
           'Precio inválido',
@@ -607,11 +620,12 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
           listaNombre = this.listaSeleccionada.nombre;
         }
       }
+      const nombreEnCarrito = p.presentacionNombre ?? p.nombre ?? 'Producto sin nombre';
       const item: CartItem = {
         _id: uuid(),
         productoId: p.id,
         presentacionId: p.presentacionId,
-        productoNombre: p.nombre || 'Producto sin nombre',
+        productoNombre: nombreEnCarrito,
         productoSku: p.sku,
         precio: precioPOS,
         precioCatalogo: precioValido,
@@ -801,6 +815,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       clienteId: this.clienteId,
       detalles: this.cart.map((c) => ({
         productoId: c.productoId,
+        productoPresentacionId: c.presentacionId ?? null,
         cantidad: c.cantidad,
         precioUnitario: c.precio,
         descuentoValor: c.descuento,
@@ -828,9 +843,16 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
           empresaEmail: this.empresaConfig?.correo ?? '',
           empresaTelefono: this.empresaConfig?.telefono ?? '',
           municipio: this.empresaConfig?.municipio ?? '',
+          resolucionNumero: this.empresaConfig?.resolucionNumero ?? null,
+          resolucionPrefijo: this.empresaConfig?.resolucionPrefijo ?? null,
+          resolucionDesde: this.empresaConfig?.resolucionDesde ?? null,
+          resolucionHasta: this.empresaConfig?.resolucionHasta ?? null,
+          resolucionFechaDesde: this.empresaConfig?.resolucionFechaDesde ?? null,
+          resolucionFechaHasta: this.empresaConfig?.resolucionFechaHasta ?? null,
         } as unknown as VentaModel;
         this.showPago = false;
         this.clearCart();
+        this.loadProductos();
         const clienteIdRespuesta = (res.data as any)?.clienteId;
         const ventaTieneCliente = (res.data as any)?.clienteId != null;
 
@@ -873,6 +895,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   onTirillaCotizacionClose(): void {
     this.showTirillaCotizacion = false;
     this.cotizacionCreada = null;
+    this.clearCart();
     this.cdr.markForCheck();
   }
 
@@ -892,8 +915,8 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   trackById(_: number, item: CartItem): string {
     return item._id;
   }
-  trackByProd(_: number, p: ProductoPOS): number {
-    return p.id;
+  trackByProd(_: number, p: ProductoPOS): string {
+    return `${p.id}-${p.presentacionId ?? 'base'}`;
   }
 
   formatCOP = (v: number): string =>

@@ -84,7 +84,11 @@
             <div class="mov-row" *ngFor="let m of resumen.movimientos">
               <span class="mov-concepto">
                 <i [class]="m.tipo === 'INGRESO' ? 'pi pi-arrow-circle-down mov-ingreso-icon' : 'pi pi-arrow-circle-up mov-egreso-icon'"></i>
-                {{ m.terceroNombre ?? m.concepto ?? m.cuentaNumero ?? '—' }}
+                <span class="mov-detalle">
+                  <span class="mov-nombre">{{ m.terceroNombre ?? m.concepto ?? m.cuentaNumero ?? '—' }}</span>
+                  <span class="mov-sub" *ngIf="m.terceroNombre && m.concepto">{{ m.concepto }}</span>
+                  <span class="mov-sub" *ngIf="m.cuentaNumero">Cta. {{ m.cuentaNumero }}</span>
+                </span>
               </span>
               <span class="mov-tipo" [class.mov-ingreso]="m.tipo==='INGRESO'" [class.mov-egreso]="m.tipo==='EGRESO'">
                 {{ m.tipo === 'INGRESO' ? 'Ingreso' : 'Egreso' }}
@@ -171,6 +175,30 @@
           <p-skeleton height="16px" width="80%" styleClass="mb-2" />
           <p-skeleton height="16px" width="60%" styleClass="mb-2" />
           <p-skeleton height="24px" />
+        </div>
+
+        <!-- Diagnóstico efectivo -->
+        <div *ngIf="!loadingResumen && resumen && resumen.detalleEfectivo?.length">
+          <button class="detalle-toggle" type="button" (click)="mostrarDetalleEfectivo = !mostrarDetalleEfectivo">
+            <i class="pi" [class.pi-chevron-down]="!mostrarDetalleEfectivo" [class.pi-chevron-up]="mostrarDetalleEfectivo"></i>
+            Ver detalle efectivo ({{ resumen.detalleEfectivo.length }} registros)
+          </button>
+          <div class="detalle-efectivo-list" *ngIf="mostrarDetalleEfectivo">
+            <div class="de-header">
+              <span>#</span><span>Venta</span><span>Total venta</span><span>Efectivo</span><span>Estado</span>
+            </div>
+            <div class="de-row" *ngFor="let d of resumen.detalleEfectivo; let i = index"
+                 [class.de-row-alerta]="d.estadoVenta !== 'COMPLETADA'">
+              <span class="de-num">{{ i + 1 }}</span>
+              <span class="de-venta">#{{ d.consecutivo }}</span>
+              <span class="de-total">{{ formatCOP(d.totalVenta) }}</span>
+              <span class="de-efectivo">{{ formatCOP(d.montoEfectivo) }}</span>
+              <span class="de-estado">
+                <p-tag [value]="d.estadoVenta"
+                       [severity]="d.estadoVenta === 'COMPLETADA' ? 'success' : 'warn'" />
+              </span>
+            </div>
+          </div>
         </div>
 
         <!-- Divider -->

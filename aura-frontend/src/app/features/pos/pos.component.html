@@ -156,14 +156,15 @@
         <!-- 2. Precio -->
         <div class="prod-footer">
           <div class="precio-wrap">
-            <span class="precio-original" *ngIf="p.descuentoValor">
+            <span class="precio-original" *ngIf="!p.presentacionNombre && p.descuentoValor">
               {{ formatCOP(p.precio) }}
             </span>
             <span class="prod-precio">
               {{
                 formatCOP(
-                  (p.precioFinal || p.precio) *
-                    (1 + (p.ivaPorcentaje || 0) / 100)
+                  p.presentacionPrecio != null && p.presentacionPrecio > 0
+                    ? p.presentacionPrecio
+                    : (p.precioFinal || p.precio) * (1 + (p.ivaPorcentaje || 0) / 100)
                 )
               }}
             </span>
@@ -181,7 +182,9 @@
             <span class="stock-unit">{{
               p.tipoProducto === "PESABLE"
                 ? (p.unidadMedidaNombre | lowercase)
-                : "uds"
+                : p.presentacionNombre
+                  ? (p.presentacionNombre | lowercase)
+                  : "uds"
             }}</span>
           </span>
           <span
@@ -194,9 +197,12 @@
 
         <!-- 3. Nombre + SKU -->
         <div class="prod-body">
-          <span class="prod-nombre">{{ p.nombre }}</span>
+          <span class="prod-nombre">{{ p.presentacionNombre ?? p.nombre }}</span>
           <span class="prod-sku" *ngIf="p.sku">{{ p.sku }}</span>
-          <span class="prod-unidad" *ngIf="p.tipoProducto === 'PESABLE'">
+          <span class="prod-presentacion" *ngIf="p.presentacionNombre">
+            <i class="pi pi-box"></i> {{ p.presentacionNombre }}
+          </span>
+          <span class="prod-unidad" *ngIf="p.tipoProducto === 'PESABLE' && !p.presentacionNombre">
             {{ p.unidadMedidaNombre | lowercase }}
           </span>
         </div>
@@ -216,7 +222,9 @@
           <span class="prod-stock-unit">{{
             p.tipoProducto === "PESABLE"
               ? (p.unidadMedidaNombre | lowercase)
-              : "uds"
+              : p.presentacionNombre
+                ? (p.presentacionNombre | lowercase)
+                : "uds"
           }}</span>
         </div>
       </div>

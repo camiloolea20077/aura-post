@@ -189,6 +189,12 @@ $muted: #64748b;
   letter-spacing: 0.5px;
   margin-bottom: 4px;
 }
+.t-resolucion {
+  font-size: 0.68em;
+  color: #444;
+  line-height: 1.4;
+  margin-bottom: 1px;
+}
 .t-fe-qr {
   display: flex;
   justify-content: center;
@@ -291,6 +297,13 @@ $muted: #64748b;
   text-align: right;
   font-weight: bold;
 }
+.t-cambio-row {
+  border-top: 1px dashed #999;
+  margin-top: 2px;
+  padding-top: 2px;
+}
+.t-cambio-label { font-weight: bold; }
+.t-cambio-val   { font-weight: bold; }
 
 // Legal
 .t-legal {

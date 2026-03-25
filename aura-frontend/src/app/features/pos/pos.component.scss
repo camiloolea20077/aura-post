@@ -476,6 +476,19 @@ $mono: "JetBrains Mono", monospace;
   font-family: $mono;
 }
 
+.prod-presentacion {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #6366f1;
+  background: #ede9fe;
+  border-radius: 4px;
+  padding: 1px 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  width: fit-content;
+}
+
 .prod-footer {
   display: flex;
   align-items: flex-end;

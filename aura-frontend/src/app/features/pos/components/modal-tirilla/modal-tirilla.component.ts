@@ -82,10 +82,16 @@ export class ModalTirillaComponent implements OnChanges {
     return Math.round((d.impuestoValor / d.subtotalLinea) * 100);
   }
 
-  // Cambio por cada pago EFECTIVO
+  // Cambio total = lo que el cliente dio de más (suma de todos los pagos - total)
+  get cambioTotal(): number {
+    if (!this.venta?.pagos?.length) return 0;
+    const totalTendido = this.venta.pagos.reduce((s, p) => s + p.monto, 0);
+    return Math.max(0, totalTendido - this.venta.totalPagar);
+  }
+
+  // Mantener para compatibilidad con template existente
   getCambio(p: VentaPagoResponse): number {
-    if (!this.venta || p.metodoPago !== 'EFECTIVO') return 0;
-    return Math.max(0, p.monto - this.venta.totalPagar);
+    return 0; // reemplazado por cambioTotal
   }
 
   imprimir(): void {
@@ -122,22 +128,23 @@ export class ModalTirillaComponent implements OnChanges {
       .join('');
 
     // ── Construir filas de pagos ──────────────────────────────────
+    const totalTendido = v.pagos.reduce((s, p) => s + p.monto, 0);
+    const cambioTotal  = Math.max(0, totalTendido - v.totalPagar);
+
     const filasPagos = v.pagos
-      .map((p) => {
-        const cambio =
-          p.metodoPago === 'EFECTIVO' ? Math.max(0, p.monto - v.totalPagar) : 0;
-        const cambioHtml =
-          cambio > 0
-            ? `<span style="text-align:right;">Cambio: ${this.formatCOP(cambio)}</span>`
-            : '';
-        return `
+      .map((p) => `
         <div style="display:flex;gap:4px;font-size:0.92em;padding:1px 0;">
           <span style="flex:1;">${this.metodoPagoLabel(p.metodoPago)}</span>
           <span style="text-align:right;">${this.formatCOP(p.monto)}</span>
-          ${cambioHtml}
-        </div>`;
-      })
+        </div>`)
       .join('');
+
+    const cambioHtml = cambioTotal > 0
+      ? `<div style="display:flex;gap:4px;font-size:0.92em;padding:2px 0;font-weight:bold;">
+           <span style="flex:1;">Cambio entregado</span>
+           <span style="text-align:right;">${this.formatCOP(cambioTotal)}</span>
+         </div>`
+      : '';
 
     // ── Logo ──────────────────────────────────────────────────────
     const logoHtml = v.logoUrl
@@ -168,10 +175,19 @@ export class ModalTirillaComponent implements OnChanges {
       ) as HTMLCanvasElement | null;
       if (canvas) qrImageData = canvas.toDataURL('image/png');
     }
+    const resolucionHtml = v.resolucionNumero
+      ? `<div style="font-size:0.7em;color:#444;line-height:1.5;text-align:center;margin-bottom:3px;">
+           <div>Resolución DIAN No. ${v.resolucionNumero}${v.resolucionPrefijo ? ` - Prefijo ${v.resolucionPrefijo}` : ''}</div>
+           ${v.resolucionDesde && v.resolucionHasta ? `<div>Rango ${v.resolucionDesde} al ${v.resolucionHasta}</div>` : ''}
+           ${v.resolucionFechaDesde && v.resolucionFechaHasta ? `<div>Vigencia: ${v.resolucionFechaDesde} al ${v.resolucionFechaHasta}</div>` : ''}
+         </div>`
+      : '';
+
     const feHtml =
       this.qrData || this.cufeCode
         ? `<hr class="dash"/>
            <div style="text-align:center;font-size:0.8em;font-weight:bold;letter-spacing:1px;margin-bottom:3px;">FACTURA ELECTRÓNICA</div>
+           ${resolucionHtml}
            ${qrImageData ? `<div style="text-align:center;margin:4px 0;"><img src="${qrImageData}" style="width:110px;height:110px;" /></div>` : ''}
            ${
              this.cufeCode
@@ -328,6 +344,7 @@ export class ModalTirillaComponent implements OnChanges {
 
   <div class="payments-area" style="font-size: 0.95em;">
     ${filasPagos}
+    ${cambioHtml}
   </div>
 
   <div class="dash"></div>
