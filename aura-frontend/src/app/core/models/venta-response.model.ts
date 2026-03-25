@@ -17,6 +17,7 @@ export interface VentaPagoResponse {
   id: number;
   metodoPago: string;
   monto: number;
+  montoRecibido: number | null;
   referencia: string | null;
 }
 

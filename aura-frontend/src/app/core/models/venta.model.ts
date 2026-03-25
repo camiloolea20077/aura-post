@@ -32,6 +32,7 @@ export interface VentaPagoModel {
   id: number;
   metodoPago: MetodoPago;
   monto: number;
+  montoRecibido: number | null;
   referencia: string | null;
 }
 

@@ -392,9 +392,13 @@
           <div class="qty-pesable" *ngIf="item.esPesable">
             <input
               type="text"
-              [ngModel]="item.cantidad.toFixed(3)"
-              (ngModelChange)="updateCantidad(item, +$event)"
+              inputmode="decimal"
               class="qty-input-pesable"
+              [value]="item.cantidad.toFixed(3)"
+              (focus)="tempCantidad = item.cantidad; $any($event.target).select()"
+              (input)="tempCantidad = +$any($event.target).value.replace(',', '.')"
+              (blur)="updateCantidad(item, tempCantidad > 0 ? tempCantidad : item.cantidad)"
+              (keydown.enter)="updateCantidad(item, tempCantidad > 0 ? tempCantidad : item.cantidad); $any($event.target).blur()"
             />
             <span class="unidad-label">{{
               item.unidadMedida | lowercase
