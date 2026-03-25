@@ -245,6 +245,31 @@
 
   <!-- ══ PANEL DERECHO — Carrito ═══════════════════════════════ -->
   <div class="cart-panel">
+    <!-- Pestañas de órdenes -->
+    <div class="cart-tabs">
+      <button
+        class="cart-tab"
+        *ngFor="let tab of tabs; let i = index"
+        [class.active]="i === tabActivo"
+        (click)="switchTab(i)"
+      >
+        <span class="tab-label">{{ tab.label }}</span>
+        <span class="tab-badge" *ngIf="tab.cart.length">{{ tab.cart.length }}</span>
+        <span class="tab-close" (click)="closeTab(i, $event)">
+          <i class="pi pi-times"></i>
+        </span>
+      </button>
+      <button
+        class="cart-tab-add"
+        *ngIf="tabs.length < MAX_TABS"
+        (click)="addTab()"
+        pTooltip="Nueva orden"
+        tooltipPosition="bottom"
+      >
+        <i class="pi pi-plus"></i>
+      </button>
+    </div>
+
     <!-- Header carrito -->
     <div class="cart-header">
       <div class="cart-title">

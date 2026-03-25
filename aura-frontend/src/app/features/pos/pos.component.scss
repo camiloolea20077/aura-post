@@ -1560,3 +1560,88 @@ $mono: "JetBrains Mono", monospace;
     color: #1e293b;
   }
 }
+
+// ── Pestañas de órdenes ───────────────────────────────────────
+.cart-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem 0;
+  background: $card;
+  border-bottom: 1px solid $border;
+  overflow-x: auto;
+  flex-shrink: 0;
+
+  &::-webkit-scrollbar { height: 3px; }
+}
+
+.cart-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 8px 8px 0 0;
+  border: 1.5px solid $border;
+  border-bottom: none;
+  background: $bg;
+  font-family: $font;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: $muted;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+
+  &:hover { background: rgba(99, 102, 241, 0.05); color: $indigo; }
+
+  &.active {
+    background: $card;
+    color: $indigo;
+    border-color: $indigo;
+    border-bottom-color: $card;
+    margin-bottom: -1px;
+  }
+
+  .tab-badge {
+    background: $indigo;
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 0.1rem 0.35rem;
+    border-radius: 10px;
+    line-height: 1.4;
+  }
+
+  .tab-close {
+    display: flex;
+    align-items: center;
+    padding: 0.1rem 0.15rem;
+    border-radius: 4px;
+    color: $muted;
+    transition: all 0.12s;
+
+    i { font-size: 0.6rem; }
+
+    &:hover { background: rgba(239, 68, 68, 0.1); color: $red; }
+  }
+}
+
+.cart-tab-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1.5px dashed $border;
+  background: transparent;
+  color: $muted;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  margin-left: 0.1rem;
+
+  i { font-size: 0.7rem; }
+
+  &:hover { border-color: $indigo; color: $indigo; background: rgba(99, 102, 241, 0.05); }
+}
