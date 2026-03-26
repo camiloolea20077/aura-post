@@ -67,6 +67,16 @@ import {
   EmpresaService,
 } from '../../core/services/empresa.service';
 
+interface CartTab {
+  id: string;
+  label: string;
+  cart: CartItem[];
+  clienteId: number | null;
+  clienteNombre: string | null;
+  listaSeleccionada: { id: number; nombre: string } | null;
+  preciosPorLista: Array<[number, number]>;
+}
+
 @Component({
   selector: 'app-pos',
   standalone: true,
@@ -125,6 +135,12 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private _barcodeTimer: ReturnType<typeof setTimeout> | null = null;
   tempCantidad: number = 0;
+  // ── Órdenes múltiples ─────────────────────────────────────
+  readonly MAX_TABS = 5;
+  tabs: CartTab[] = [];
+  tabActivo = 0;
+  private _loadingTab = false;
+
   // ── Carrito ───────────────────────────────────────────────
   public cart: CartItem[] = [];
   public clienteId: number | null = null;
@@ -299,7 +315,10 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       const res = await lastValueFrom(this.turnoCajaService.turnoActivo());
       this.turnoActivo = res?.data ?? null;
       this.turnoError = !this.turnoActivo;
-      if (this.turnoActivo) this.loadProductos();
+      if (this.turnoActivo) {
+        this.initTabs();
+        this.loadProductos();
+      }
     } catch {
       this.turnoError = true;
     } finally {
@@ -743,6 +762,97 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
+  // ── Pestañas ───────────────────────────────────────────────
+  private storageKey(): string {
+    return `pos_tabs_${this.turnoActivo?.id ?? 'default'}`;
+  }
+
+  private newTab(n: number): CartTab {
+    return { id: uuid(), label: `Orden ${n}`, cart: [], clienteId: null, clienteNombre: null, listaSeleccionada: null, preciosPorLista: [] };
+  }
+
+  private initTabs(): void {
+    try {
+      const saved = localStorage.getItem(this.storageKey());
+      if (saved) {
+        const parsed: CartTab[] = JSON.parse(saved);
+        if (parsed?.length) {
+          this.tabs = parsed;
+          this.tabActivo = 0;
+          this._loadingTab = true;
+          this.loadStateFromTab(this.tabs[0]);
+          this._loadingTab = false;
+          return;
+        }
+      }
+    } catch { /* ignore */ }
+    this.tabs = [this.newTab(1)];
+    this.tabActivo = 0;
+  }
+
+  private saveState(): void {
+    if (this._loadingTab || !this.tabs[this.tabActivo]) return;
+    this.tabs[this.tabActivo] = {
+      ...this.tabs[this.tabActivo],
+      cart: [...this.cart],
+      clienteId: this.clienteId,
+      clienteNombre: this.clienteNombre,
+      listaSeleccionada: this.listaSeleccionada,
+      preciosPorLista: Array.from(this.preciosPorLista.entries()),
+    };
+    try { localStorage.setItem(this.storageKey(), JSON.stringify(this.tabs)); } catch { /* ignore */ }
+  }
+
+  private loadStateFromTab(tab: CartTab): void {
+    this.cart = tab.cart ? [...tab.cart] : [];
+    this.clienteId = tab.clienteId;
+    this.clienteNombre = tab.clienteNombre;
+    this.listaSeleccionada = tab.listaSeleccionada;
+    this.preciosPorLista = new Map(tab.preciosPorLista ?? []);
+    this.recalcularTotales();
+  }
+
+  switchTab(i: number): void {
+    if (i === this.tabActivo) return;
+    this.saveState();
+    this.tabActivo = i;
+    this._loadingTab = true;
+    this.loadStateFromTab(this.tabs[i]);
+    this._loadingTab = false;
+    this.cdr.markForCheck();
+  }
+
+  addTab(): void {
+    if (this.tabs.length >= this.MAX_TABS) return;
+    this.saveState();
+    this.tabs = [...this.tabs, this.newTab(this.tabs.length + 1)];
+    this.tabActivo = this.tabs.length - 1;
+    this._loadingTab = true;
+    this.loadStateFromTab(this.tabs[this.tabActivo]);
+    this._loadingTab = false;
+    this.cdr.markForCheck();
+  }
+
+  closeTab(i: number, event: Event): void {
+    event.stopPropagation();
+    if (this.tabs.length === 1) { this.clearCart(); return; }
+    const newTabs = this.tabs.filter((_, idx) => idx !== i);
+    newTabs.forEach((t, idx) => (t.label = `Orden ${idx + 1}`));
+    this.tabs = newTabs;
+    const newIdx = Math.min(i, this.tabs.length - 1);
+    this.tabActivo = newIdx;
+    this._loadingTab = true;
+    this.loadStateFromTab(this.tabs[newIdx]);
+    this._loadingTab = false;
+    try { localStorage.setItem(this.storageKey(), JSON.stringify(this.tabs)); } catch { /* ignore */ }
+    this.cdr.markForCheck();
+  }
+
+  private cerrarTabActivo(): void {
+    if (this.tabs.length === 1) { this.clearCart(); return; }
+    this.closeTab(this.tabActivo, new Event(''));
+  }
+
   // ── Totales ───────────────────────────────────────────────
   subtotal = 0;
   descTotal = 0;
@@ -775,6 +885,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.descTotal = round2(desc);
     this.impTotal = round2(imp);
     this.total = round2(this.subtotal - this.descTotal + this.impTotal);
+    this.saveState();
   }
 
   // ── Cliente ───────────────────────────────────────────────
@@ -800,16 +911,17 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.clienteId = c.id;
     this.clienteNombre =
       c.nombreCompleto ?? `${c.nombres ?? ''} ${c.apellidos ?? ''}`.trim();
-    // Guardar para el modal FE
     this.feClienteDocumento = c.numeroDocumento ?? '';
     this.feClienteEmail = c.emailFe ?? c.email ?? '';
     this.clienteSugerencias = [];
+    this.saveState();
     this.cdr.markForCheck();
   }
 
   clearCliente(): void {
     this.clienteId = null;
     this.clienteNombre = null;
+    this.saveState();
     this.cdr.markForCheck();
   }
 
@@ -894,7 +1006,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
             this.empresaConfig?.resolucionFechaHasta ?? null,
         } as unknown as VentaModel;
         this.showPago = false;
-        this.clearCart();
+        this.cerrarTabActivo();
         const clienteIdRespuesta = (res.data as any)?.clienteId;
         const ventaTieneCliente = (res.data as any)?.clienteId != null;
 

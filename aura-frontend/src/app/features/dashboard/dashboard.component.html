@@ -44,22 +44,32 @@
         <p-skeleton width="40%" height="12px" />
       </div>
     </div>
-    <div class="grid-2">
-      <div class="card chart-card">
-        <p-skeleton width="40%" height="16px" styleClass="mb-4" />
-        <p-skeleton width="100%" height="240px" />
+    <div class="main-grid">
+      <div class="main-left">
+        <div class="card chart-card">
+          <p-skeleton width="40%" height="16px" styleClass="mb-4" />
+          <p-skeleton width="100%" height="240px" />
+        </div>
+        <div class="grid-2">
+          <div class="card"><p-skeleton width="100%" height="200px" /></div>
+          <div class="card"><p-skeleton width="100%" height="200px" /></div>
+        </div>
       </div>
-      <div class="card chart-card">
-        <p-skeleton width="40%" height="16px" styleClass="mb-4" />
-        <p-skeleton width="100%" height="240px" />
+      <div class="main-right">
+        <div class="card chart-card">
+          <p-skeleton width="40%" height="16px" styleClass="mb-4" />
+          <p-skeleton width="100%" height="220px" />
+        </div>
+        <div class="card"><p-skeleton width="100%" height="180px" /></div>
       </div>
     </div>
+    <div class="card"><p-skeleton width="100%" height="220px" /></div>
   </ng-container>
 
   <!-- ══ CONTENT ═══════════════════════════════════════════════════ -->
   <ng-container *ngIf="!loading && dashboard">
 
-    <!-- KPIs ──────────────────────────────────────────────────────── -->
+    <!-- ── KPIs ─────────────────────────────────────────────────── -->
     <div class="kpi-grid">
 
       <!-- Ventas hoy -->
@@ -72,12 +82,8 @@
           </div>
           <div class="kpi-value">{{ formatCOP(dashboard.ventasHoy.total) }}</div>
           <div class="kpi-mini">
-            <span class="mini-chip">
-              <i class="pi pi-receipt"></i>{{ dashboard.ventasHoy.cantidad }} ventas
-            </span>
-            <span class="mini-chip mono">
-              Ticket {{ formatCOP(dashboard.ventasHoy.promedio) }}
-            </span>
+            <span class="mini-chip"><i class="pi pi-receipt"></i>{{ dashboard.ventasHoy.cantidad }} ventas</span>
+            <span class="mini-chip mono">Ticket {{ formatCOP(dashboard.ventasHoy.promedio) }}</span>
           </div>
         </div>
       </div>
@@ -108,7 +114,22 @@
           </div>
           <div class="kpi-value">{{ formatCOP(dashboard.totalComprasMes) }}</div>
           <div class="kpi-sub">
-            <span class="muted">Movimiento de inventario</span>
+            <span class="muted">Mercancía recibida</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inventario a costo -->
+      <div class="kpi-card">
+        <div class="kpi-accent-bar kpi-bar-teal"></div>
+        <div class="kpi-inner">
+          <div class="kpi-head">
+            <div class="kpi-label">Inventario (costo)</div>
+            <div class="kpi-pill pill-teal"><i class="pi pi-box"></i> Stock</div>
+          </div>
+          <div class="kpi-value">{{ formatCOP(dashboard.totalInventarioCosto) }}</div>
+          <div class="kpi-sub">
+            <span class="muted">Valor total a precio de costo</span>
           </div>
         </div>
       </div>
@@ -134,156 +155,206 @@
       </div>
 
     </div>
+    <!-- /kpi-grid -->
 
-    <!-- Insights ────────────────────────────────────────────────── -->
-    <div class="insights">
+    <!-- ── MAIN GRID ─────────────────────────────────────────────── -->
+    <div class="main-grid">
 
-      <div class="ins-card">
-        <div class="ins-icon blue"><i class="pi pi-wallet"></i></div>
-        <div class="ins-body">
-          <div class="ins-title">Método líder</div>
-          <div class="ins-value">{{ metodoPagoLider || "Sin datos" }}</div>
-          <div class="ins-sub">Más usado en el mes</div>
-        </div>
-        <div class="ins-arrow"><i class="pi pi-arrow-up-right"></i></div>
-      </div>
+      <!-- Left column ─────────────────────────────────────────── -->
+      <div class="main-left">
 
-      <div class="ins-card">
-        <div class="ins-icon purple"><i class="pi pi-tags"></i></div>
-        <div class="ins-body">
-          <div class="ins-title">Top producto</div>
-          <div class="ins-value">{{ dashboard.topProductos[0]?.productoNombre || "Sin datos" }}</div>
-          <div class="ins-sub">{{ formatCOP(dashboard.topProductos[0]?.totalIngresos ?? 0) }}</div>
-        </div>
-        <div class="ins-arrow"><i class="pi pi-arrow-up-right"></i></div>
-      </div>
-
-      <div class="ins-card">
-        <div class="ins-icon green"><i class="pi pi-bolt"></i></div>
-        <div class="ins-body">
-          <div class="ins-title">Ticket promedio hoy</div>
-          <div class="ins-value mono">{{ formatCOP(dashboard.ventasHoy.promedio) }}</div>
-          <div class="ins-sub">Útil para metas diarias</div>
-        </div>
-        <div class="ins-arrow"><i class="pi pi-arrow-up-right"></i></div>
-      </div>
-
-    </div>
-
-    <!-- Charts ─────────────────────────────────────────────────── -->
-    <div class="grid-2">
-
-      <div class="card chart-card">
-        <div class="card-head">
-          <div class="card-head-left">
-            <div class="card-head-icon icon-blue"><i class="pi pi-chart-line"></i></div>
-            <div>
-              <h4>Ventas por día</h4>
-              <p>Semana actual</p>
-            </div>
-          </div>
-        </div>
-        <div class="chart-wrap">
-          <p-chart *ngIf="chartVentasSemana" type="line"
-            [data]="chartVentasSemana" [options]="chartOptions" height="240" />
-          <div class="empty" *ngIf="!chartVentasSemana">
-            <i class="pi pi-chart-line"></i>
-            <span>Sin datos esta semana</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="card chart-card">
-        <div class="card-head">
-          <div class="card-head-left">
-            <div class="card-head-icon icon-purple"><i class="pi pi-chart-pie"></i></div>
-            <div>
-              <h4>Métodos de pago</h4>
-              <p>Distribución del mes</p>
-            </div>
-          </div>
-        </div>
-        <div class="chart-wrap">
-          <p-chart *ngIf="chartMetodoPago" type="doughnut"
-            [data]="chartMetodoPago" [options]="doughnutOptions" height="240" />
-          <div class="empty" *ngIf="!chartMetodoPago">
-            <i class="pi pi-chart-pie"></i>
-            <span>Sin datos del mes</span>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- Lists ──────────────────────────────────────────────────── -->
-    <div class="grid-2">
-
-      <!-- Top productos -->
-      <div class="card">
-        <div class="card-head">
-          <div class="card-head-left">
-            <div class="card-head-icon icon-amber"><i class="pi pi-star"></i></div>
-            <div>
-              <h4>Top productos</h4>
-              <p>Por ingresos del mes</p>
-            </div>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="top-list" *ngIf="dashboard.topProductos.length > 0">
-            <div class="top-item" *ngFor="let item of dashboard.topProductos; let i = index">
-              <div class="rank" [ngClass]="getRankClass(i)">{{ i + 1 }}</div>
-              <div class="top-info">
-                <div class="name">{{ item.productoNombre }}</div>
-                <div class="sku mono">{{ item.productoSku }}</div>
-              </div>
-              <div class="top-right">
-                <div class="money mono">{{ formatCOP(item.totalIngresos) }}</div>
-                <div class="qty muted">{{ item.totalVendido | number: "1.0-2" }} uds</div>
+        <!-- Chart ventas semana -->
+        <div class="card chart-card">
+          <div class="card-head">
+            <div class="card-head-left">
+              <div class="card-head-icon icon-blue"><i class="pi pi-chart-line"></i></div>
+              <div>
+                <h4>Ventas por día</h4>
+                <p>Semana actual</p>
               </div>
             </div>
           </div>
-          <div class="empty" *ngIf="dashboard.topProductos.length === 0">
-            <i class="pi pi-box"></i>
-            <span>Sin ventas este mes</span>
+          <div class="chart-wrap">
+            <p-chart *ngIf="chartVentasSemana" type="line"
+              [data]="chartVentasSemana" [options]="chartOptions" height="220" />
+            <div class="empty" *ngIf="!chartVentasSemana">
+              <i class="pi pi-chart-line"></i>
+              <span>Sin datos esta semana</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Últimas ventas -->
-      <div class="card">
-        <div class="card-head">
-          <div class="card-head-left">
-            <div class="card-head-icon icon-blue"><i class="pi pi-receipt"></i></div>
-            <div>
-              <h4>Últimas ventas</h4>
-              <p>Las más recientes</p>
+        <!-- Top productos + Últimas ventas -->
+        <div class="grid-2">
+
+          <!-- Top productos -->
+          <div class="card">
+            <div class="card-head">
+              <div class="card-head-left">
+                <div class="card-head-icon icon-amber"><i class="pi pi-star"></i></div>
+                <div>
+                  <h4>Top productos</h4>
+                  <p>Por ingresos del mes</p>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="top-list" *ngIf="dashboard.topProductos.length > 0">
+                <div class="top-item" *ngFor="let item of dashboard.topProductos; let i = index">
+                  <div class="rank" [ngClass]="getRankClass(i)">{{ i + 1 }}</div>
+                  <div class="top-info">
+                    <div class="name">{{ item.productoNombre }}</div>
+                    <div class="sku mono">{{ item.productoSku }}</div>
+                  </div>
+                  <div class="top-right">
+                    <div class="money mono">{{ formatCOP(item.totalIngresos) }}</div>
+                    <div class="qty muted">{{ item.totalVendido | number: "1.0-2" }} uds</div>
+                  </div>
+                </div>
+              </div>
+              <div class="empty" *ngIf="dashboard.topProductos.length === 0">
+                <i class="pi pi-box"></i>
+                <span>Sin ventas este mes</span>
+              </div>
             </div>
           </div>
-          <a routerLink="/ventas" class="link">Ver todas <i class="pi pi-arrow-right"></i></a>
+
+          <!-- Últimas ventas -->
+          <div class="card">
+            <div class="card-head">
+              <div class="card-head-left">
+                <div class="card-head-icon icon-blue"><i class="pi pi-receipt"></i></div>
+                <div>
+                  <h4>Últimas ventas</h4>
+                  <p>Las más recientes</p>
+                </div>
+              </div>
+              <a routerLink="/ventas" class="link">Ver todas <i class="pi pi-arrow-right"></i></a>
+            </div>
+            <div class="card-body no-pad">
+              <div class="sale-row" *ngFor="let v of dashboard.ultimasVentas">
+                <div class="sale-ico"><i class="pi pi-receipt"></i></div>
+                <div class="sale-mid">
+                  <div class="sale-id mono">{{ v.prefijo || "" }}{{ v.prefijo ? "-" : "" }}{{ v.consecutivo }}</div>
+                  <div class="sale-client">{{ (v.clienteNombre || "").trim() ? v.clienteNombre : "Cliente general" }}</div>
+                </div>
+                <div class="sale-right">
+                  <div class="sale-total mono">{{ formatCOP(v.totalPagar) }}</div>
+                  <p-tag [value]="v.estadoVenta" [severity]="getVentaEstadoSeverity(v.estadoVenta)" />
+                </div>
+              </div>
+              <div class="empty" *ngIf="dashboard.ultimasVentas.length === 0">
+                <i class="pi pi-receipt"></i>
+                <span>Sin ventas registradas</span>
+              </div>
+            </div>
+          </div>
+
         </div>
-        <div class="card-body no-pad">
-          <div class="sale-row" *ngFor="let v of dashboard.ultimasVentas">
-            <div class="sale-ico"><i class="pi pi-receipt"></i></div>
-            <div class="sale-mid">
-              <div class="sale-id mono">{{ v.prefijo || "" }}{{ v.prefijo ? "-" : "" }}{{ v.consecutivo }}</div>
-              <div class="sale-client">{{ (v.clienteNombre || "").trim() ? v.clienteNombre : "Cliente general" }}</div>
-            </div>
-            <div class="sale-right">
-              <div class="sale-total mono">{{ formatCOP(v.totalPagar) }}</div>
-              <p-tag [value]="v.estadoVenta" [severity]="getVentaEstadoSeverity(v.estadoVenta)" />
-            </div>
-          </div>
-          <div class="empty" *ngIf="dashboard.ultimasVentas.length === 0">
-            <i class="pi pi-receipt"></i>
-            <span>Sin ventas registradas</span>
-          </div>
-        </div>
+        <!-- /grid-2 -->
+
       </div>
+      <!-- /main-left -->
+
+      <!-- Right sidebar ───────────────────────────────────────── -->
+      <div class="main-right">
+
+        <!-- Chart métodos de pago -->
+        <div class="card chart-card">
+          <div class="card-head">
+            <div class="card-head-left">
+              <div class="card-head-icon icon-purple"><i class="pi pi-chart-pie"></i></div>
+              <div>
+                <h4>Métodos de pago</h4>
+                <p>Distribución del mes</p>
+              </div>
+            </div>
+          </div>
+          <div class="chart-wrap chart-wrap-sm">
+            <p-chart *ngIf="chartMetodoPago" type="doughnut"
+              [data]="chartMetodoPago" [options]="doughnutOptions" height="200" />
+            <div class="empty" *ngIf="!chartMetodoPago">
+              <i class="pi pi-chart-pie"></i>
+              <span>Sin datos del mes</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel de alertas -->
+        <div class="card alerts-card">
+          <div class="card-head">
+            <div class="card-head-left">
+              <div class="card-head-icon icon-amber"><i class="pi pi-bell"></i></div>
+              <div>
+                <h4>Alertas de inventario</h4>
+                <p>Stock y vencimientos</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stock bajo -->
+          <div class="alert-section">
+            <div class="alert-section-title">
+              <i class="pi pi-arrow-down-circle"></i>
+              Stock bajo
+              <span class="alert-badge" [class.badge-danger]="dashboard.stockBajo.length > 0">
+                {{ dashboard.stockBajo.length }}
+              </span>
+            </div>
+            <div class="alert-list" *ngIf="dashboard.stockBajo.length > 0">
+              <div class="alert-item" *ngFor="let s of dashboard.stockBajo">
+                <div class="alert-item-info">
+                  <span class="alert-item-name">{{ s.productoNombre }}</span>
+                  <span class="alert-item-sub">{{ s.sucursalNombre }}</span>
+                </div>
+                <div class="alert-item-stock">
+                  <span class="stock-actual" [class.stock-danger]="s.stockActual <= s.stockMinimo * 0.5">
+                    {{ s.stockActual | number: "1.0-2" }}
+                  </span>
+                  <span class="stock-min">/{{ s.stockMinimo | number: "1.0-0" }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="alert-ok" *ngIf="dashboard.stockBajo.length === 0">
+              <i class="pi pi-check-circle"></i> Todos los productos en nivel normal
+            </div>
+          </div>
+
+          <!-- Lotes próximos a vencer -->
+          <div class="alert-section">
+            <div class="alert-section-title">
+              <i class="pi pi-clock"></i>
+              Lotes por vencer
+              <span class="alert-badge" [class.badge-danger]="dashboard.lotesProximosVencer.length > 0">
+                {{ dashboard.lotesProximosVencer.length }}
+              </span>
+            </div>
+            <div class="alert-list" *ngIf="dashboard.lotesProximosVencer.length > 0">
+              <div class="alert-item" *ngFor="let l of dashboard.lotesProximosVencer">
+                <div class="alert-item-info">
+                  <span class="alert-item-name">{{ l.productoNombre }}</span>
+                  <span class="alert-item-sub">Lote {{ l.codigoLote }} · {{ l.stockActual | number: "1.0-0" }} uds</span>
+                </div>
+                <div class="dias-badge" [ngClass]="'dias-' + getLoteUrgencia(l.diasRestantes)">
+                  {{ l.diasRestantes }}d
+                </div>
+              </div>
+            </div>
+            <div class="alert-ok" *ngIf="dashboard.lotesProximosVencer.length === 0">
+              <i class="pi pi-check-circle"></i> Sin vencimientos en los próximos 30 días
+            </div>
+          </div>
+
+        </div>
+        <!-- /alerts-card -->
+
+      </div>
+      <!-- /main-right -->
 
     </div>
+    <!-- /main-grid -->
 
-    <!-- Kardex ─────────────────────────────────────────────────── -->
+    <!-- ── KARDEX ─────────────────────────────────────────────── -->
     <div class="card">
       <div class="card-head">
         <div class="card-head-left">
@@ -295,7 +366,7 @@
         </div>
         <a routerLink="/inventario/kardex" class="link">Ver Kardex <i class="pi pi-arrow-right"></i></a>
       </div>
-      <div class="card-body no-pad">
+      <div class="card-body no-pad kardex-grid">
         <div class="mov-row" *ngFor="let m of dashboard.ultimosMovimientos"
           [ngClass]="getMovimientoClass(m.tipoMovimiento)">
           <div class="mov-badge">
@@ -307,9 +378,7 @@
               <span class="mov-dot">·</span>
               <span class="mov-prod">{{ m.productoNombre }}</span>
             </div>
-            <div class="mov-sub">
-              {{ m.sucursalNombre }} · {{ m.createdAt | date: "dd/MM/yy HH:mm" }}
-            </div>
+            <div class="mov-sub">{{ m.sucursalNombre }} · {{ m.createdAt | date: "dd/MM/yy HH:mm" }}</div>
           </div>
           <div class="mov-right">
             <div class="mov-qty mono">{{ m.cantidad | number: "1.0-4" }}</div>
