@@ -353,6 +353,16 @@ export const routes: Routes = [
           ),
       },
 
+      // Ventas de campo
+      {
+        path: 'ventas-campo',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/ventas-campo/index/index-ventas-campo.component').then(
+            (m) => m.IndexVentasCampoComponent,
+          ),
+      },
+
       // Reportes
       {
         path: 'reportes/ventas',

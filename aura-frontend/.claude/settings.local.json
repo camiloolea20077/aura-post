@@ -18,7 +18,8 @@
       "Bash(cd \"D:\\\\Proyectos Camilo\\\\aura-post\\\\aura-frontend\" && npm install xlsx --save 2>&1)",
       "Bash(cd \"D:\\\\Proyectos Camilo\\\\aura-post\\\\aura-frontend\" && npm uninstall xlsx && npm install exceljs file-saver --save && npm install @types/file-saver --save-dev 2>&1)",
       "Bash(grep -E \"\\\\.\\(java\\)$\")",
-      "Bash(grep -i \"\\\\.java$\")"
+      "Bash(grep -i \"\\\\.java$\")",
+      "Bash(ls:*)"
     ]
   }
 }

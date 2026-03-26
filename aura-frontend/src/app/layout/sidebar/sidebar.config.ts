@@ -130,6 +130,12 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         roles: ['SUPER_ADMIN', 'ADMIN', 'CAJERO'],
       },
       {
+        label: 'Ventas de Campo',
+        icon: 'pi pi-car',
+        route: '/ventas-campo',
+        roles: ['SUPER_ADMIN', 'ADMIN'],
+      },
+      {
         label: 'Mermas',
         icon: 'pi pi-trash',
         route: '/mermas',
