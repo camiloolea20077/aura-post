@@ -278,6 +278,6 @@ export class DashboardComponent implements OnInit {
   }
 
   get skeletons(): number[] {
-    return [1, 2, 3, 4];
+    return [1, 2, 3, 4, 5];
   }
 }
