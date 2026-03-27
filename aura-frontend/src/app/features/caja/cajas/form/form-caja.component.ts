@@ -79,6 +79,7 @@ export class FormCajaComponent implements OnInit, OnChanges {
     if (changes['displayModal'] && this.displayModal) {
       this.isEditMode = this.slug === 'edit' && !!this.cajaId;
       this.isEditMode ? this.loadData(this.cajaId!) : this.resetForm();
+      console.log(this.isEditMode);
     }
   }
 
