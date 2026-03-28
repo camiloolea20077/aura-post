@@ -379,6 +379,16 @@ export const routes: Routes = [
           ),
       },
 
+      // Cartera
+      {
+        path: 'cartera',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/cartera/index/index-cartera.component').then(
+            (m) => m.IndexCarteraComponent,
+          ),
+      },
+
       // Reportes
       {
         path: 'reportes/ventas',

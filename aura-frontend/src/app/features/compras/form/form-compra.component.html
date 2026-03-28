@@ -143,6 +143,36 @@
           </div>
         </div>
 
+        <!-- Método de pago (solo contado) -->
+        <div class="field field-metodopago" *ngIf="formaPago === 'CONTADO'">
+          <label>Método de pago</label>
+          <div class="metodo-pago-btns">
+            <button
+              *ngFor="let m of metodosPagoOpts"
+              type="button"
+              class="mp-btn"
+              [class.active]="metodoPago === m.value"
+              (click)="metodoPago = m.value"
+            >
+              <i class="pi {{ m.icon }}"></i> {{ m.label }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Banco / referencia -->
+        <div class="field field-banco" *ngIf="formaPago === 'CONTADO' && requiereBanco">
+          <label>Banco / Referencia <span class="optional">(opc.)</span></label>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="banco"
+            placeholder="Ej: Bancolombia · ref. 123456"
+            maxlength="200"
+            autocomplete="off"
+            class="w-full"
+          />
+        </div>
+
         <!-- Plazo (solo crédito) -->
         <div class="field field-plazo" *ngIf="formaPago === 'CREDITO'">
           <label>Plazo <span class="optional">(días)</span></label>

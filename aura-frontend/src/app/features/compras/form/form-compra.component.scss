@@ -166,6 +166,23 @@ $cols: 1.6fr 0.4fr 0.85fr 0.7fr 0.7fr 0.65fr 0.75fr 0.8fr 0.8fr 0.8fr 52px;
   &.active { border-color: #6366f1; background: #eef2ff; color: #6366f1; font-weight: 600; }
 }
 
+// ─── Método de pago ────────────────────────────────────────────────
+.metodo-pago-btns { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+.mp-btn {
+  display: flex; align-items: center; gap: 0.3rem;
+  padding: 0.3rem 0.75rem; border-radius: 7px;
+  border: 1.5px solid #e2e8f0; background: #fff;
+  color: #64748b; font-size: 0.78rem; font-weight: 500; cursor: pointer;
+  transition: all 0.15s ease;
+  i { font-size: 0.72rem; }
+  &:hover { border-color: #374151; color: #374151; }
+  &.active {
+    border-color: #374151; background: #1e293b; color: #fff; font-weight: 600;
+    box-shadow: 0 2px 6px rgba(30,41,59,0.25);
+  }
+}
+.field-banco { min-width: 220px; }
+
 // ─── Plazo ────────────────────────────────────────────────────────
 ::ng-deep .plazo-inp {
   .p-inputnumber-input { height: 32px !important; border-radius: 8px !important; font-size: 0.82rem; }

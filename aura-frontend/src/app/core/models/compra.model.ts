@@ -19,6 +19,14 @@ export interface CompraDetalleModel {
   precioVenta3: number | null;
 }
 
+// ─── Pago de compra ───────────────────────────────────────────
+export interface CompraPagoModel {
+  id: number;
+  metodoPago: string; // EFECTIVO | TARJETA | TRANSFERENCIA | CREDITO
+  monto: number;
+  banco: string | null;
+}
+
 // ─── Modelo completo ──────────────────────────────────────────
 export type FormaPago = 'CONTADO' | 'CREDITO';
 
@@ -50,6 +58,7 @@ export interface CompraModel {
   totalRetenciones: number | null;
   netaAPagar: number | null;
   detalles: CompraDetalleModel[];
+  pagos: CompraPagoModel[];
 }
 
 // ─── Tabla ───────────────────────────────────────────────────
@@ -75,6 +84,12 @@ export interface CreateCompraDetalleDto {
   precioVenta3: number | null;
 }
 
+export interface CreateCompraPagoDto {
+  metodoPago: string; // EFECTIVO | TRANSFERENCIA | NEQUI | TARJETA | CHEQUE
+  monto: number;
+  banco?: string | null;
+}
+
 export interface CreateCompraDto {
   proveedorId: number;
   sucursalId: number;
@@ -89,6 +104,7 @@ export interface CreateCompraDto {
   formaPago?: FormaPago | null;
   tipoDocumento?: TipoDocumentoCompra | null;
   fletes?: number | null;
+  pagos?: CreateCompraPagoDto[] | null;
 }
 
 // ─── Pageable ─────────────────────────────────────────────────

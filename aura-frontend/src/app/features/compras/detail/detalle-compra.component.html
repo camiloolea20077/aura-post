@@ -72,9 +72,6 @@
             <span class="det-sku" *ngIf="d.productoSku">{{
               d.productoSku
             }}</span>
-            <span class="det-lote" *ngIf="d.codigoLote">
-              <i class="pi pi-tag"></i> {{ d.codigoLote }}
-            </span>
           </div>
         </div>
         <div class="det-nums">
@@ -129,6 +126,18 @@
           icon="pi pi-times"
           class="p-button-outlined p-button-secondary"
           (click)="close()"
+        ></button>
+        <button
+          *ngIf="compra.formaPago === 'CONTADO' && compra.estado === 'RECIBIDA'"
+          pButton
+          type="button"
+          label="Ver PDF"
+          icon="pi pi-file-pdf"
+          class="btn-pdf"
+          [loading]="generandoPDF"
+          pTooltip="Generar documento de compra en PDF"
+          tooltipPosition="top"
+          (click)="generarPDF()"
         ></button>
         <button
           *ngIf="compra.estado === 'RECIBIDA'"

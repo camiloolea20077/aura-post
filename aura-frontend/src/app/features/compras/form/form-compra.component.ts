@@ -100,6 +100,20 @@ export class FormCompraComponent implements OnInit, OnChanges {
   // ─── Forma de pago ───────────────────────────────────────────────
   public formaPago: FormaPago = 'CONTADO';
   public plazoDias: number = 30;
+  public metodoPago: string = 'EFECTIVO';
+  public banco: string = '';
+
+  readonly metodosPagoOpts = [
+    { label: 'Efectivo',      value: 'EFECTIVO',      icon: 'pi-wallet' },
+    { label: 'Transferencia', value: 'TRANSFERENCIA',  icon: 'pi-send' },
+    { label: 'Nequi',         value: 'NEQUI',          icon: 'pi-mobile' },
+    { label: 'Tarjeta',       value: 'TARJETA',        icon: 'pi-credit-card' },
+    { label: 'Cheque',        value: 'CHEQUE',         icon: 'pi-file' },
+  ];
+
+  get requiereBanco(): boolean {
+    return ['TRANSFERENCIA', 'NEQUI', 'TARJETA', 'CHEQUE'].includes(this.metodoPago);
+  }
 
   // ─── Tipo de documento ────────────────────────────────────────────
   public tipoDocumento: TipoDocumentoCompra = 'FACTURA_COMPRA';
@@ -545,6 +559,9 @@ export class FormCompraComponent implements OnInit, OnChanges {
         formaPago: this.formaPago,
         tipoDocumento: this.tipoDocumento,
         fletes: this.fletes || null,
+        pagos: this.formaPago === 'CONTADO'
+          ? [{ metodoPago: this.metodoPago, monto: this.totalRetenciones > 0 ? this.netaAPagar : this.total, banco: this.banco.trim() || null }]
+          : null,
       };
 
       let res;
@@ -597,6 +614,8 @@ export class FormCompraComponent implements OnInit, OnChanges {
     this.reteicaPct = 0;
     this.formaPago = 'CONTADO';
     this.plazoDias = 30;
+    this.metodoPago = 'EFECTIVO';
+    this.banco = '';
     this.tipoDocumento = 'FACTURA_COMPRA';
     this.fletes = 0;
   }
