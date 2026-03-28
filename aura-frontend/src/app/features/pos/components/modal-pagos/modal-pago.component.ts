@@ -12,7 +12,6 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
-import { DividerModule } from 'primeng/divider';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import {
@@ -32,7 +31,6 @@ import {
     ButtonModule,
     InputNumberModule,
     InputTextModule,
-    DividerModule,
     ToastModule,
   ],
   providers: [MessageService],

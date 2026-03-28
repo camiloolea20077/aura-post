@@ -1,0 +1,112 @@
+<p-dialog
+  [(visible)]="visible"
+  header="Comprobante de Egreso"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '420px' }"
+  styleClass="aura-dialog"
+  (onHide)="close()"
+>
+  <ng-container *ngIf="compra">
+
+    <!-- Selector de ancho -->
+    <div class="ancho-selector">
+      <span class="ancho-label">Ancho de tirilla:</span>
+      <p-selectButton
+        [options]="anchoOptions"
+        [(ngModel)]="ancho"
+        optionLabel="label"
+        optionValue="value"
+      />
+    </div>
+
+    <!-- Preview de tirilla -->
+    <div class="tirilla-preview" [class.tirilla-58]="ancho === 58" [class.tirilla-80]="ancho === 80">
+
+      <div class="t-center t-bold">{{ compra.sucursalNombre }}</div>
+      <div class="t-center t-title">COMPROBANTE DE EGRESO</div>
+
+      <div class="t-divider-solid"></div>
+
+      <div class="t-row">
+        <span>N° {{ numeroDisplay }}</span>
+        <span>{{ fechaFormateada }}</span>
+      </div>
+
+      <div class="t-divider-solid"></div>
+
+      <div class="t-info-row"><span class="t-lbl">Proveedor</span><span>{{ compra.proveedorNombre }}</span></div>
+      <div class="t-info-row">
+        <span class="t-lbl">Forma pago</span>
+        <span class="t-bold">{{ compra.formaPago === 'CONTADO' ? 'CONTADO' : 'CRÉDITO' }}</span>
+      </div>
+
+      <div class="t-divider-dash"></div>
+
+      <div class="t-col-header">
+        <span>PRODUCTO</span><span>TOTAL</span>
+      </div>
+
+      <div class="t-product" *ngFor="let d of compra.detalles">
+        <div>{{ d.productoNombre }}</div>
+        <div class="t-product-row">
+          <span>{{ d.cantidad }} und × {{ formatCOP(d.costoUnitario) }}</span>
+          <span>{{ formatCOP(d.subtotalLinea) }}</span>
+        </div>
+        <div class="t-product-row t-small" *ngIf="d.impuestoValor > 0">
+          <span>IVA</span><span>{{ formatCOP(d.impuestoValor) }}</span>
+        </div>
+      </div>
+
+      <div class="t-divider-solid"></div>
+
+      <div class="t-row t-small">
+        <span>Subtotal</span><span>{{ formatCOP(compra.subtotal) }}</span>
+      </div>
+      <div class="t-row t-small" *ngIf="compra.impuestosTotal > 0">
+        <span>IVA</span><span>{{ formatCOP(compra.impuestosTotal) }}</span>
+      </div>
+      <div class="t-row t-small" *ngIf="compra.descuentoTotal > 0">
+        <span>Descuento</span><span>-{{ formatCOP(compra.descuentoTotal) }}</span>
+      </div>
+      <div class="t-row t-small" *ngIf="(compra.retefuenteValor ?? 0) > 0">
+        <span>Retefuente ({{ compra.retefuentePct }}%)</span>
+        <span>-{{ formatCOP(compra.retefuenteValor) }}</span>
+      </div>
+      <div class="t-row t-small" *ngIf="(compra.reteivaValor ?? 0) > 0">
+        <span>ReteIVA ({{ compra.reteivaPct }}%)</span>
+        <span>-{{ formatCOP(compra.reteivaValor) }}</span>
+      </div>
+      <div class="t-row t-small" *ngIf="(compra.reteicaValor ?? 0) > 0">
+        <span>ReteICA ({{ compra.reteicaPct }}%)</span>
+        <span>-{{ formatCOP(compra.reteicaValor) }}</span>
+      </div>
+
+      <div class="t-grand-total">
+        <span>TOTAL EGRESO</span><span>{{ formatCOP(montoEgreso) }}</span>
+      </div>
+
+      <div class="t-obs" *ngIf="compra.observaciones">
+        <div class="t-divider-dash"></div>
+        <div class="t-lbl">Observaciones:</div>
+        <div>{{ compra.observaciones }}</div>
+      </div>
+
+      <div class="t-footer">Powered by Aura POS</div>
+    </div>
+
+  </ng-container>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      icon="pi pi-print"
+      label="Imprimir"
+      class="btn-aura btn-primary"
+      (click)="imprimir()"
+      [disabled]="!compra"
+    ></button>
+    <button pButton icon="pi pi-times" label="Cerrar" class="p-button-text" (click)="close()"></button>
+  </ng-template>
+</p-dialog>

@@ -37,6 +37,10 @@ export class CompraService {
     );
   }
 
+  update(id: number, dto: CreateCompraDto): Observable<ResponseModel<CompraModel>> {
+    return this.http.put<ResponseModel<CompraModel>>(`${this.apiUrl}/${id}`, dto);
+  }
+
   anular(id: number): Observable<ResponseModel<boolean>> {
     return this.http.patch<ResponseModel<boolean>>(
       `${this.apiUrl}/${id}/anular`,

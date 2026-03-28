@@ -31,6 +31,7 @@ import {
   CartItem,
   CreateVentaDto,
   PagoUI,
+  PrecioDisponible,
   ProductoPOS,
   VentaModel,
 } from '../../core/models/venta.model';
@@ -75,6 +76,7 @@ interface CartTab {
   clienteNombre: string | null;
   listaSeleccionada: { id: number; nombre: string } | null;
   preciosPorLista: Array<[number, number]>;
+  exentoIva?: boolean;
 }
 
 @Component({
@@ -169,10 +171,15 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   // ── Movimiento de caja (ingreso / egreso) ─────────────────
   public showMovimiento = false;
 
+  // ── Exento de IVA (ONG / entidades sin ánimo de lucro) ───
+  public exentoIva = false;
+
   // ── Lista de precios ──────────────────────────────────────
   public listaPreciosOpts: { label: string; value: number }[] = [];
   public listaSeleccionada: { id: number; nombre: string } | null = null;
   private preciosPorLista = new Map<number, number>(); // presentacionId → precio
+  // Todas las listas precargadas: listaPrecioId → { nombre, precios: Map<productKey, precio> }
+  private todasListasPrecio = new Map<number, { nombre: string; precios: Map<number, number> }>();
 
   // ── Cotización ────────────────────────────────────────────
   public showCotizacion = false;
@@ -414,6 +421,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
           listaNombre = this.listaSeleccionada.nombre;
         }
       }
+      const ivaOriginalPeso = (p.ivaPorcentaje ?? 0) || 0;
       const item: CartItem = {
         _id: uuid(),
         productoId: p.id,
@@ -423,15 +431,20 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         precio: precioPOS,
         precioCatalogo: precioValido,
         listaPrecioNombre: listaNombre,
+        listaPrecioId: listaNombre ? this.listaSeleccionada?.id : undefined,
         cantidad: pesoKg,
         descuento: 0,
         descuentoAutomatico: p.descuentoNombre ?? null,
-        impuesto: (p.ivaPorcentaje ?? 0) || 0,
+        impuesto: this.exentoIva ? 0 : ivaOriginalPeso,
+        impuestoOriginal: this.exentoIva ? ivaOriginalPeso : undefined,
         impuestoValor: 0,
         subtotal: 0,
         esPesable: true,
         unidadMedida: 'kg',
         showDescuento: false,
+        precio2: p.precio2 ?? null,
+        precio3: p.precio3 ?? null,
+        preciosDisponibles: this.buildPreciosDisponibles(p.id, p.presentacionId),
       };
       this.cart = [item, ...this.cart];
       this.calcLine(item);
@@ -540,14 +553,92 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   private async loadListaPrecios(): Promise<void> {
     try {
       const res = await lastValueFrom(this.listaPreciosService.list());
-      this.listaPreciosOpts = (res?.data ?? []).map((l) => ({
-        label: l.nombre,
-        value: l.id,
-      }));
+      const listas = res?.data ?? [];
+      this.listaPreciosOpts = listas.map((l) => ({ label: l.nombre, value: l.id }));
+      // Precargar precios de todas las listas en paralelo
+      await Promise.all(
+        listas.map(async (l) => {
+          try {
+            const pr = await lastValueFrom(this.productoPrecioService.listByLista(l.id));
+            const precios = new Map<number, number>();
+            for (const p of pr?.data ?? []) {
+              if (p.productoPresentacionId != null) {
+                precios.set(p.productoPresentacionId, p.precio);
+              } else if (p.productoId != null) {
+                precios.set(-p.productoId, p.precio);
+              }
+            }
+            this.todasListasPrecio.set(l.id, { nombre: l.nombre, precios });
+          } catch { /* silent */ }
+        }),
+      );
+      // Una vez cargadas todas las listas, actualizar los ítems ya en carrito/tabs
+      this.refreshPreciosDisponiblesEnTodos();
       this.cdr.markForCheck();
     } catch {
       /* silent */
     }
+  }
+
+  /** Actualiza preciosDisponibles en todos los ítems del carrito activo y todos los tabs */
+  private refreshPreciosDisponiblesEnTodos(): void {
+    // Carrito activo (this.cart es copia independiente del tab)
+    for (const item of this.cart) {
+      item.preciosDisponibles = this.buildPreciosDisponibles(item.productoId, item.presentacionId);
+    }
+    // Resto de tabs guardados
+    for (const tab of this.tabs) {
+      for (const item of tab.cart) {
+        item.preciosDisponibles = this.buildPreciosDisponibles(item.productoId, item.presentacionId);
+      }
+    }
+  }
+
+  /** Construye los precios disponibles de todas las listas para un producto/presentación */
+  private buildPreciosDisponibles(productoId: number, presentacionId: number | null): PrecioDisponible[] {
+    const result: PrecioDisponible[] = [];
+    for (const [listaId, { nombre, precios }] of this.todasListasPrecio) {
+      const precio = presentacionId != null
+        ? (precios.get(presentacionId) ?? precios.get(-productoId))
+        : precios.get(-productoId);
+      if (precio != null && isFinite(precio)) {
+        result.push({ listaId, listaNombre: nombre, precio });
+      }
+    }
+    return result;
+  }
+
+  /** Aplica el precio de una lista específica a una línea del carrito */
+  cambiarPrecioPorLinea(item: CartItem, opt: PrecioDisponible): void {
+    if (item.precioOriginal === undefined) item.precioOriginal = item.precioCatalogo;
+    item.precio = opt.precio;
+    item.listaPrecioNombre = opt.listaNombre;
+    item.listaPrecioId = opt.listaId;
+    item.descuento = 0;
+    this.calcLine(item);
+    this.cdr.markForCheck();
+  }
+
+  /** Selecciona P2 o P3 del producto como precio de la línea */
+  seleccionarPrecioProducto(item: CartItem, precio: number, label: string): void {
+    if (item.precioOriginal === undefined) item.precioOriginal = item.precioCatalogo;
+    item.precio = precio;
+    item.listaPrecioNombre = label;
+    item.listaPrecioId = undefined;
+    item.descuento = 0;
+    this.calcLine(item);
+    this.cdr.markForCheck();
+  }
+
+  /** Restaura el precio de catálogo en una línea */
+  resetPrecioLinea(item: CartItem): void {
+    item.precio = item.precioCatalogo;
+    item.listaPrecioNombre = undefined;
+    item.listaPrecioId = undefined;
+    item.precioOriginal = undefined;
+    item.descuento = 0;
+    this.calcLine(item);
+    this.cdr.markForCheck();
   }
 
   async seleccionarListaPrecios(opt: {
@@ -582,6 +673,21 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     for (const item of this.cart) {
       item.precio = item.precioCatalogo;
       item.listaPrecioNombre = undefined;
+      this.calcLine(item);
+    }
+    this.cdr.markForCheck();
+  }
+
+  toggleExentoIva(): void {
+    this.exentoIva = !this.exentoIva;
+    for (const item of this.cart) {
+      if (this.exentoIva) {
+        item.impuestoOriginal = item.impuesto;
+        item.impuesto = 0;
+      } else {
+        item.impuesto = item.impuestoOriginal ?? item.impuesto;
+        item.impuestoOriginal = undefined;
+      }
       this.calcLine(item);
     }
     this.cdr.markForCheck();
@@ -676,6 +782,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       }
       const nombreEnCarrito =
         p.presentacionNombre ?? p.nombre ?? 'Producto sin nombre';
+      const ivaOriginal = (p.ivaPorcentaje ?? 0) || 0;
       const item: CartItem = {
         _id: uuid(),
         productoId: p.id,
@@ -685,15 +792,20 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         precio: precioPOS,
         precioCatalogo: precioValido,
         listaPrecioNombre: listaNombre,
+        listaPrecioId: listaNombre ? this.listaSeleccionada?.id : undefined,
         cantidad: 1,
         descuento: 0,
         descuentoAutomatico: p.descuentoNombre ?? null,
-        impuesto: (p.ivaPorcentaje ?? 0) || 0,
+        impuesto: this.exentoIva ? 0 : ivaOriginal,
+        impuestoOriginal: this.exentoIva ? ivaOriginal : undefined,
         impuestoValor: 0,
         subtotal: 0,
         esPesable: p.tipoProducto === 'PESABLE',
         unidadMedida: p.unidadMedidaNombre ?? 'UND',
         showDescuento: false,
+        precio2: p.precio2 ?? null,
+        precio3: p.precio3 ?? null,
+        preciosDisponibles: this.buildPreciosDisponibles(p.id, p.presentacionId),
       };
       this.cart = [item, ...this.cart];
       this.calcLine(item);
@@ -758,6 +870,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.clienteNombre = null;
     this.listaSeleccionada = null;
     this.preciosPorLista.clear();
+    this.exentoIva = false;
     this.recalcularTotales();
     this.cdr.markForCheck();
   }
@@ -799,6 +912,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       clienteNombre: this.clienteNombre,
       listaSeleccionada: this.listaSeleccionada,
       preciosPorLista: Array.from(this.preciosPorLista.entries()),
+      exentoIva: this.exentoIva,
     };
     try { localStorage.setItem(this.storageKey(), JSON.stringify(this.tabs)); } catch { /* ignore */ }
   }
@@ -809,6 +923,13 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.clienteNombre = tab.clienteNombre;
     this.listaSeleccionada = tab.listaSeleccionada;
     this.preciosPorLista = new Map(tab.preciosPorLista ?? []);
+    this.exentoIva = tab.exentoIva ?? false;
+    // Refrescar precios disponibles (pueden venir vacíos desde localStorage)
+    if (this.todasListasPrecio.size > 0) {
+      for (const item of this.cart) {
+        item.preciosDisponibles = this.buildPreciosDisponibles(item.productoId, item.presentacionId);
+      }
+    }
     this.recalcularTotales();
   }
 
@@ -1080,7 +1201,8 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP',
-      maximumFractionDigits: 0,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
     }).format(v ?? 0);
   onFacturaEmitida(result: FacturaElectronicaResult): void {
     this.mostrarModalFE = false;

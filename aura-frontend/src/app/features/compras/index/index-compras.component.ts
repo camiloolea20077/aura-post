@@ -13,6 +13,7 @@ import { lastValueFrom } from 'rxjs';
 
 import { FormCompraComponent } from '../form/form-compra.component';
 import {
+  CompraModel,
   CompraPageableDto,
   CompraTableModel,
   EstadoCompra,
@@ -20,6 +21,7 @@ import {
 import { CompraService } from '../../../core/services/compra.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
 import { DetalleCompraComponent } from '../detail/detalle-compra.component';
+import { ComprobanteEgresoComponent } from '../comprobante-egreso/comprobante-egreso.component';
 
 type TagSeverity =
   | 'success'
@@ -44,14 +46,20 @@ type TagSeverity =
     SkeletonModule,
     FormCompraComponent,
     DetalleCompraComponent,
+    ComprobanteEgresoComponent,
   ],
   providers: [MessageService],
   templateUrl: './index-compras.component.html',
   styleUrls: ['./index-compras.component.scss'],
 })
 export class IndexComprasComponent implements OnInit {
-  // Modal nueva compra
+  // Modal nueva/editar compra
   public showFormModal = false;
+  public compraEnEdicion: CompraModel | null = null;
+
+  // Comprobante de egreso
+  public showComprobante = false;
+  public compraComprobante: CompraModel | null = null;
 
   // Sidebar detalle
   public showDetalle = false;
@@ -121,14 +129,50 @@ export class IndexComprasComponent implements OnInit {
 
   // ─── Nueva compra ─────────────────────────────────────────
   openForm(): void {
+    this.compraEnEdicion = null;
     this.showFormModal = true;
   }
+
+  async editarCompra(item: CompraTableModel): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.compraService.getById(item.id));
+      this.compraEnEdicion = res?.data ?? null;
+      this.showFormModal = true;
+    } catch {
+      this.alertService.showError(
+        'Error',
+        'No se pudo cargar la compra para editar.',
+      );
+    }
+  }
+
   onFormClosed(): void {
     this.showFormModal = false;
+    this.compraEnEdicion = null;
   }
-  onCompraSaved(): void {
+  onCompraSaved(compra: CompraModel): void {
     this.showFormModal = false;
+    this.compraEnEdicion = null;
     this.reloadTable();
+    // Auto-abrir comprobante si fue CONTADO y es compra nueva (no edición)
+    if (compra.formaPago === 'CONTADO') {
+      this.compraComprobante = compra;
+      this.showComprobante = true;
+    }
+  }
+
+  verComprobante(item: CompraTableModel): void {
+    this.compraService.getById(item.id).subscribe({
+      next: (res) => {
+        this.compraComprobante = res?.data ?? null;
+        this.showComprobante = true;
+      },
+      error: () =>
+        this.alertService.showError(
+          'Error',
+          'No se pudo cargar el comprobante.',
+        ),
+    });
   }
 
   // ─── Detalle ──────────────────────────────────────────────

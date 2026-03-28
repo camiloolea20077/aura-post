@@ -1,4 +1,6 @@
 import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   EventEmitter,
   Input,
@@ -28,24 +30,26 @@ import { MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import {
+  CompraDetalleModel,
   CompraLineaUI,
   CompraModel,
   CreateCompraDetalleDto,
   CreateCompraDto,
-  PresentacionOpcion,
+  FormaPago,
   ProductoOpcion,
+  TipoDocumentoCompra,
 } from '../../../core/models/compra.model';
 import { TerceroTableModel } from '../../../core/models/tercero.model';
 import { CompraService } from '../../../core/services/compra.service';
 import { TerceroService } from '../../../core/services/tercero.service';
 import { ProductoService } from '../../../core/services/producto.service';
-import { ProductoPresentacionService } from '../../../core/services/producto-presentacion.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
 import { IndexDBService } from '../../../core/services/index-db.service';
 
 @Component({
   selector: 'app-form-compra',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     FormsModule,
@@ -69,8 +73,13 @@ import { IndexDBService } from '../../../core/services/index-db.service';
 })
 export class FormCompraComponent implements OnInit, OnChanges {
   @Input() displayModal = false;
+  @Input() compraToEdit: CompraModel | null = null;
   @Output() modalClosed = new EventEmitter<void>();
   @Output() compraSaved = new EventEmitter<CompraModel>();
+
+  get modoEdicion(): boolean {
+    return this.compraToEdit != null;
+  }
 
   // ─── Cabecera ─────────────────────────────────────────────────────
   public proveedorQuery = '';
@@ -88,34 +97,81 @@ export class FormCompraComponent implements OnInit, OnChanges {
   public productoSelAC: (ProductoOpcion | null)[] = [];
   public productoSugerencias: ProductoOpcion[] = [];
 
+  // ─── Forma de pago ───────────────────────────────────────────────
+  public formaPago: FormaPago = 'CONTADO';
+  public plazoDias: number = 30;
+
+  // ─── Tipo de documento ────────────────────────────────────────────
+  public tipoDocumento: TipoDocumentoCompra = 'FACTURA_COMPRA';
+  public readonly tipoDocumentoOpts: {
+    label: string;
+    value: TipoDocumentoCompra;
+  }[] = [
+    { label: 'Factura de Compra', value: 'FACTURA_COMPRA' },
+    { label: 'Nota Débito', value: 'NOTA_DEBITO' },
+    { label: 'Nota Crédito', value: 'NOTA_CREDITO' },
+    { label: 'Recibo', value: 'RECIBO' },
+  ];
+
+  // ─── Fletes ───────────────────────────────────────────────────────
+  public fletes: number = 0;
+
+  // ─── Retenciones ─────────────────────────────────────────────────
+  public retefuentePct: number = 0;
+  public reteivaPct: number = 0;
+  public reteicaPct: number = 0;
+
+  get retefuenteValor(): number {
+    return Math.round(this.subtotal * (this.retefuentePct / 100) * 100) / 100;
+  }
+  get reteivaValor(): number {
+    return (
+      Math.round(this.impuestosTotal * (this.reteivaPct / 100) * 100) / 100
+    );
+  }
+  get reteicaValor(): number {
+    return Math.round(this.subtotal * (this.reteicaPct / 100) * 100) / 100;
+  }
+  get totalRetenciones(): number {
+    return this.retefuenteValor + this.reteivaValor + this.reteicaValor;
+  }
+  get netaAPagar(): number {
+    return this.total - this.totalRetenciones;
+  }
+
   // ─── Estado ───────────────────────────────────────────────────────
   public isSubmitting = false;
 
   // ─── Totales ──────────────────────────────────────────────────────
+  get subtotalBruto(): number {
+    return this.lineas.reduce(
+      (a, l) => a + (l.cantidad ?? 0) * (l.costoUnitario ?? 0),
+      0,
+    );
+  }
+  get descuentoTotal(): number {
+    return this.lineas.reduce((a, l) => a + (l.descuentoValor || 0), 0);
+  }
   get subtotal(): number {
-    return this.lineas.reduce((a, l) => a + (l.subtotal || 0), 0);
+    return this.subtotalBruto - this.descuentoTotal;
   }
   get impuestosTotal(): number {
     return this.lineas.reduce((a, l) => a + (l.impuestoValor || 0), 0);
   }
   get total(): number {
-    return this.subtotal + this.impuestosTotal;
+    return this.subtotal + this.impuestosTotal + (this.fletes || 0);
   }
-  // Total unidades BASE (cantidad × factor) para el resumen
   get totalUnidades(): number {
-    return this.lineas.reduce(
-      (a, l) => a + (l.cantidad ?? 0) * (l.factorConversion ?? 1),
-      0,
-    );
+    return this.lineas.reduce((a, l) => a + (l.cantidad ?? 0), 0);
   }
 
   constructor(
     private readonly compraService: CompraService,
     private readonly terceroService: TerceroService,
     private readonly productoService: ProductoService,
-    private readonly presentacionService: ProductoPresentacionService,
     private readonly alertService: AlertService,
     private readonly indexDBService: IndexDBService,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -123,7 +179,48 @@ export class FormCompraComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['displayModal'] && this.displayModal) this.resetForm();
+    if (changes['displayModal'] && this.displayModal) {
+      this.resetForm();
+      if (this.compraToEdit) this.cargarEdicion(this.compraToEdit);
+    }
+  }
+
+  private cargarEdicion(compra: CompraModel): void {
+    this.proveedorSeleccionado = {
+      id: compra.proveedorId,
+      nombreCompleto: compra.proveedorNombre,
+      tipoDocumento: '',
+      numeroDocumento: '',
+      tipoTercero: '',
+    } as any;
+    this.proveedorQuery = compra.proveedorNombre;
+    this.sucursalId = compra.sucursalId;
+    this.numeroCompra = compra.numeroCompra ?? '';
+    this.fechaCompra = new Date(compra.fecha);
+    this.observaciones = compra.observaciones ?? '';
+
+    this.lineas = compra.detalles.map(
+      (d: CompraDetalleModel): CompraLineaUI => ({
+        _id: uuidv4(),
+        productoId: d.productoId,
+        productoNombre: d.productoNombre,
+        cantidad: d.cantidad,
+        costoUnitario: d.costoUnitario,
+        descuentoPct: d.descuentoPct ?? 0,
+        descuentoValor: d.descuentoValor ?? 0,
+        ivaPorcentaje: 0,
+        impuestoValor: d.impuestoValor,
+        subtotal: d.subtotalLinea,
+        precioVenta1: d.precioVenta1 ?? null,
+        precioVenta2: d.precioVenta2 ?? null,
+        precioVenta3: d.precioVenta3 ?? null,
+      }),
+    );
+    this.productoSelAC = this.lineas.map(() => null);
+    this.formaPago = compra.formaPago ?? 'CONTADO';
+    this.tipoDocumento = compra.tipoDocumento ?? 'FACTURA_COMPRA';
+    this.fletes = compra.fletes ?? 0;
+    this.cdr.markForCheck();
   }
 
   // ─── Carga datos ──────────────────────────────────────────────────
@@ -159,12 +256,14 @@ export class FormCompraComponent implements OnInit, OnChanges {
         (p: any): ProductoOpcion => ({
           label: p.nombre + (p.sku ? ` [${p.sku}]` : ''),
           value: p.id,
-          manejaLotes: !!p.manejaLotes,
           sku: p.sku ?? null,
           ivaPorcentaje: p.ivaPorcentaje ?? 0,
+          costo: p.costo ?? null,
+          precio: p.precio ?? null,
+          precio2: p.precio2 ?? null,
+          precio3: p.precio3 ?? null,
         }),
       );
-      console.log('[COMPRAS] Productos buscados:', this.productoSugerencias.length, 'Ejemplo:', this.productoSugerencias[0]);
     } catch {
       this.productoSugerencias = [];
     }
@@ -201,18 +300,16 @@ export class FormCompraComponent implements OnInit, OnChanges {
       _id: uuidv4(),
       productoId: null,
       productoNombre: '',
-      manejaLotes: false,
-      codigoLote: null,
-      fechaVencimiento: null,
-      presentacionId: null,
-      presentacionNombre: '',
-      factorConversion: 1,
-      presentacionesOpts: [],
       cantidad: null,
       costoUnitario: null,
+      descuentoPct: 0,
+      descuentoValor: 0,
       ivaPorcentaje: 0,
       impuestoValor: 0,
       subtotal: 0,
+      precioVenta1: null,
+      precioVenta2: null,
+      precioVenta3: null,
     };
     this.lineas = [...this.lineas, nueva];
     this.productoSelAC = [...this.productoSelAC, null];
@@ -223,110 +320,43 @@ export class FormCompraComponent implements OnInit, OnChanges {
     this.productoSelAC = this.productoSelAC.filter((_, i) => i !== idx);
   }
 
-  // ─── Selección de producto → cargar presentaciones ───────────────
+  // ─── Selección de producto ────────────────────────────────────────
   async onProductoChange(idx: number, productoId: number): Promise<void> {
-    console.log('[COMPRAS] onProductoChange - idx:', idx, 'productoId:', productoId);
-    
-    // Buscar en las opciones disponibles
-    let prod = this.productosOpts.find((p) => p.value === productoId);
-    
-    // Si no está en opciones, intentar buscar en las sugerencias del autocomplete
+    let prod =
+      this.productosOpts.find((p) => p.value === productoId) ??
+      this.productoSugerencias.find((p) => p.value === productoId);
+
     if (!prod) {
-      prod = this.productoSugerencias.find((p) => p.value === productoId);
-    }
-    
-    if (!prod) {
-      console.log('[COMPRAS] PRODUCTO NO ENCONTRADO, intentando obtener del backend...');
-      // Hacer llamada adicional para obtener datos completos del producto
       try {
-        const res = await lastValueFrom(this.productoService.getById(productoId));
+        const res = await lastValueFrom(
+          this.productoService.getById(productoId),
+        );
         const p = res?.data;
         if (p) {
           prod = {
             label: p.nombre + (p.sku ? ` [${p.sku}]` : ''),
             value: p.id,
-            manejaLotes: !!p.manejaLotes,
             sku: p.sku ?? null,
             ivaPorcentaje: p.ivaPorcentaje ?? 0,
+            costo: p.costo ?? null,
+            precio: p.precio ?? null,
+            precio2: p.precio2 ?? null,
+            precio3: p.precio3 ?? null,
           };
-          // También necesitamos el costo del producto
-          console.log('[COMPRAS] Datos completos del producto:', prod, 'costo:', p.costo);
         }
-      } catch (e) {
-        console.error('[COMPRAS] Error al obtener producto:', e);
+      } catch {
+        /* silencioso */
       }
     }
-    
-    if (!prod) {
-      console.log('[COMPRAS] PRODUCTO NO ENCONTRADO en ningún lado!');
-      return;
-    }
 
-    console.log('[COMPRAS] Producto encontrado:', prod);
-    console.log('[COMPRAS] IVA %:', prod.ivaPorcentaje);
+    if (!prod) return;
 
+    const costoUnitario: number | null = prod.costo ?? null;
     const ivaPorcentaje = prod.ivaPorcentaje ?? 0;
-    let presentacionesOpts: PresentacionOpcion[] = [];
-    let presentacionId: number | null = null;
-    let factorConversion = 1;
-    let costoUnitario: number | null = null;
-    
-    // Guardar el costo base del producto para usarlo si no hay presentaciones
-    let costoBaseProducto: number | null = null;
-
-    try {
-      const res = await lastValueFrom(
-        this.presentacionService.listByProducto(productoId),
-      );
-      const data: any[] = res?.data ?? [];
-      if (data.length) {
-        presentacionesOpts = data.map(
-          (p: any): PresentacionOpcion => ({
-            label: `${p.nombre} (×${p.factorConversion})`,
-            value: Number(p.id),
-            factor: Number(p.factorConversion ?? 1),
-            costo: Number(p.costo ?? 0),
-            esDefaultCompra: !!p.esDefaultCompra,
-          }),
-        );
-
-        const defaultCompra = data.find((p: any) => !!p.esDefaultCompra);
-        if (defaultCompra) {
-          presentacionId = Number(defaultCompra.id);
-          factorConversion = Number(defaultCompra.factorConversion ?? 1);
-          costoUnitario = Number(defaultCompra.costo ?? 0);
-        }
-        
-        // Guardar el costo de la primera presentación como fallback
-        if (!costoUnitario && data[0]) {
-          costoBaseProducto = Number(data[0].costo ?? 0);
-        }
-      } else {
-        // No hay presentaciones, intentar obtener el costo del producto directamente
-        try {
-          const prodRes = await lastValueFrom(this.productoService.getById(productoId));
-          if (prodRes?.data) {
-            costoBaseProducto = Number(prodRes.data.costo ?? 0);
-            console.log('[COMPRAS] Costo del producto (sin presentaciones):', costoBaseProducto);
-          }
-        } catch {
-          // silencioso
-        }
-      }
-    } catch {
-      /* sin presentaciones → compra en unidad base */
-    }
-    
-    // Si no hay presentaciones con costo, usar el costo base del producto
-    if (costoUnitario === null && costoBaseProducto !== null) {
-      costoUnitario = costoBaseProducto;
-    }
-
     const cantidad = this.lineas[idx].cantidad ?? 0;
-    const subtotal = (cantidad * (costoUnitario ?? 0));
-    const impuestoValor = subtotal * (ivaPorcentaje / 100);
-    
-    console.log('[COMPRAS] Datos para la línea -> costoUnitario:', costoUnitario, 'iva:', ivaPorcentaje);
+    const subtotal = cantidad * (costoUnitario ?? 0);
+    const impuestoValor =
+      Math.round(subtotal * (ivaPorcentaje / 100) * 100) / 100;
 
     this.lineas = this.lineas.map(
       (l, i): CompraLineaUI =>
@@ -335,81 +365,41 @@ export class FormCompraComponent implements OnInit, OnChanges {
           : {
               ...l,
               productoId,
-              productoNombre: prod.label,
-              manejaLotes: prod.manejaLotes,
-              codigoLote: null,
-              fechaVencimiento: null,
-              presentacionId,
-              presentacionNombre:
-                presentacionesOpts.find((p) => p.value === presentacionId)
-                  ?.label ?? '',
-              factorConversion,
-              presentacionesOpts,
+              productoNombre: prod!.label,
               costoUnitario,
               ivaPorcentaje,
-              impuestoValor: Math.round(impuestoValor * 100) / 100,
+              impuestoValor,
               subtotal: Math.round(subtotal * 100) / 100,
+              precioVenta1: prod!.precio ?? null,
+              precioVenta2: prod!.precio2 ?? null,
+              precioVenta3: prod!.precio3 ?? null,
             },
     );
+    this.cdr.markForCheck();
   }
 
-  private calcLinea(l: CompraLineaUI): { subtotal: number; impuestoValor: number } {
+  private calcLinea(l: CompraLineaUI): {
+    subtotal: number;
+    descuentoValor: number;
+    impuestoValor: number;
+  } {
     const cantidad = l.cantidad ?? 0;
     const costo = l.costoUnitario ?? 0;
-    const subtotal = cantidad * costo;
-    const impuestoValor = subtotal * ((l.ivaPorcentaje ?? 0) / 100);
+    const bruto = cantidad * costo;
+    const descuentoValor =
+      Math.round(bruto * ((l.descuentoPct ?? 0) / 100) * 100) / 100;
+    const neto = bruto - descuentoValor;
     return {
-      subtotal: Math.round(subtotal * 100) / 100,
-      impuestoValor: Math.round(impuestoValor * 100) / 100,
+      subtotal: Math.round(neto * 100) / 100,
+      descuentoValor,
+      impuestoValor: l.impuestoValor ?? 0,
     };
-  }
-
-  // ─── Cambio de presentación ───────────────────────────────────────
-  onPresentacionChange(idx: number, presentacionId: number | null): void {
-    if (!presentacionId) {
-      this.lineas = this.lineas.map(
-        (l, i): CompraLineaUI =>
-          i !== idx
-            ? l
-            : {
-                ...l,
-                presentacionId: null,
-                presentacionNombre: '',
-                factorConversion: 1,
-              },
-      );
-      return;
-    }
-
-    const linea = this.lineas[idx];
-    const pres = linea.presentacionesOpts.find(
-      (p) => p.value === presentacionId,
-    );
-    if (!pres) return;
-
-    const calc = this.calcLinea({ ...linea, cantidad: linea.cantidad ?? 0, costoUnitario: pres.costo });
-
-    this.lineas = this.lineas.map(
-      (l, i): CompraLineaUI =>
-        i !== idx
-          ? l
-          : {
-              ...l,
-              presentacionId,
-              presentacionNombre: pres.label,
-              factorConversion: pres.factor,
-              costoUnitario: pres.costo,
-              subtotal: calc.subtotal,
-              impuestoValor: calc.impuestoValor,
-            },
-    );
   }
 
   // ─── Cambios en campos numéricos ─────────────────────────────────
   onCantidadChange(idx: number, val: number | null): void {
     const linea = this.lineas[idx];
     const calc = this.calcLinea({ ...linea, cantidad: val ?? 0 });
-    
     this.lineas = this.lineas.map(
       (l, i): CompraLineaUI =>
         i !== idx
@@ -417,6 +407,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
           : {
               ...l,
               cantidad: val,
+              descuentoValor: calc.descuentoValor,
               subtotal: calc.subtotal,
               impuestoValor: calc.impuestoValor,
             },
@@ -426,7 +417,6 @@ export class FormCompraComponent implements OnInit, OnChanges {
   onCostoChange(idx: number, val: number | null): void {
     const linea = this.lineas[idx];
     const calc = this.calcLinea({ ...linea, costoUnitario: val });
-
     this.lineas = this.lineas.map(
       (l, i): CompraLineaUI =>
         i !== idx
@@ -434,36 +424,57 @@ export class FormCompraComponent implements OnInit, OnChanges {
           : {
               ...l,
               costoUnitario: val,
+              descuentoValor: calc.descuentoValor,
               subtotal: calc.subtotal,
               impuestoValor: calc.impuestoValor,
             },
     );
   }
 
-  onImpuestoChange(idx: number, val: number): void {
+  onDescuentoValorChange(idx: number, val: number | null): void {
     const linea = this.lineas[idx];
-    const calc = this.calcLinea({ ...linea, ivaPorcentaje: val });
-
+    const bruto = (linea.cantidad ?? 0) * (linea.costoUnitario ?? 0);
+    const descVal = Math.min(val ?? 0, bruto);
+    const pct = bruto > 0 ? (descVal / bruto) * 100 : 0;
+    const neto = bruto - descVal;
     this.lineas = this.lineas.map(
       (l, i): CompraLineaUI =>
-        i !== idx ? l : { ...l, ivaPorcentaje: val, impuestoValor: calc.impuestoValor },
+        i !== idx ? l : {
+          ...l,
+          descuentoPct: pct,
+          descuentoValor: descVal,
+          subtotal: Math.round(neto * 100) / 100,
+        },
     );
   }
 
-  onCodigoLoteChange(idx: number, val: string): void {
+  onImpuestoChange(idx: number, val: number): void {
     this.lineas = this.lineas.map(
       (l, i): CompraLineaUI =>
-        i !== idx ? l : { ...l, codigoLote: val?.toUpperCase() || null },
+        i !== idx ? l : { ...l, impuestoValor: val ?? 0 },
+    );
+  }
+
+  onPrecioVenta1Change(idx: number, val: number | null): void {
+    this.lineas = this.lineas.map(
+      (l, i): CompraLineaUI => (i !== idx ? l : { ...l, precioVenta1: val }),
+    );
+  }
+
+  onPrecioVenta2Change(idx: number, val: number | null): void {
+    this.lineas = this.lineas.map(
+      (l, i): CompraLineaUI => (i !== idx ? l : { ...l, precioVenta2: val }),
+    );
+  }
+
+  onPrecioVenta3Change(idx: number, val: number | null): void {
+    this.lineas = this.lineas.map(
+      (l, i): CompraLineaUI => (i !== idx ? l : { ...l, precioVenta3: val }),
     );
   }
 
   duplicarLinea(idx: number): void {
-    const l: CompraLineaUI = {
-      ...this.lineas[idx],
-      _id: uuidv4(),
-      codigoLote: null,
-      fechaVencimiento: null,
-    };
+    const l: CompraLineaUI = { ...this.lineas[idx], _id: uuidv4() };
     const nuevo = [...this.lineas];
     nuevo.splice(idx + 1, 0, l);
     this.lineas = nuevo;
@@ -474,11 +485,6 @@ export class FormCompraComponent implements OnInit, OnChanges {
 
   trackByLinea(_: number, l: CompraLineaUI): string {
     return l._id;
-  }
-
-  // ─── Helper para el template ──────────────────────────────────────
-  unidadesBaseLinea(l: CompraLineaUI): number {
-    return (l.cantidad ?? 0) * (l.factorConversion ?? 1);
   }
 
   // ─── Validación ───────────────────────────────────────────────────
@@ -494,8 +500,6 @@ export class FormCompraComponent implements OnInit, OnChanges {
         return `Línea ${n}: la cantidad debe ser mayor a 0.`;
       if (!l.costoUnitario || l.costoUnitario <= 0)
         return `Línea ${n}: el costo debe ser mayor a 0.`;
-      if (l.manejaLotes && !l.codigoLote)
-        return `Línea ${n}: el producto maneja lotes, ingresa el código de lote.`;
     }
     return null;
   }
@@ -507,21 +511,23 @@ export class FormCompraComponent implements OnInit, OnChanges {
 
     this.isSubmitting = true;
     try {
-      const detalles: CreateCompraDetalleDto[] = this.lineas.map((l) => {
-        const fv = l.fechaVencimiento;
-        return {
-          productoId: l.productoId!,
-          presentacionId: l.presentacionId ?? null,
-          factorConversion: l.factorConversion ?? 1,
-          codigoLote: l.manejaLotes ? l.codigoLote || null : null,
-          fechaVencimiento: fv
-            ? `${fv.getFullYear()}-${String(fv.getMonth() + 1).padStart(2, '0')}-${String(fv.getDate()).padStart(2, '0')}`
-            : null,
-          cantidad: l.cantidad!,
-          costoUnitario: l.costoUnitario!,
-          impuestoValor: l.impuestoValor || 0,
-        };
-      });
+      const detalles: CreateCompraDetalleDto[] = this.lineas.map((l) => ({
+        productoId: l.productoId!,
+        cantidad: l.cantidad!,
+        costoUnitario: l.costoUnitario!,
+        descuentoPct: l.descuentoPct ?? 0,
+        impuestoValor: l.impuestoValor || 0,
+        precioVenta1: l.precioVenta1 ?? null,
+        precioVenta2: l.precioVenta2 ?? null,
+        precioVenta3: l.precioVenta3 ?? null,
+      }));
+
+      let fechaVencimientoStr: string | null = null;
+      if (this.formaPago === 'CREDITO' && this.plazoDias > 0) {
+        const fv = new Date(this.fechaCompra);
+        fv.setDate(fv.getDate() + this.plazoDias);
+        fechaVencimientoStr = fv.toISOString().split('T')[0];
+      }
 
       const dto: CreateCompraDto = {
         proveedorId: this.proveedorSeleccionado!.id,
@@ -530,18 +536,40 @@ export class FormCompraComponent implements OnInit, OnChanges {
         fecha: this.fechaCompra
           ? this.fechaCompra.toISOString().split('.')[0]
           : null,
+        fechaVencimiento: fechaVencimientoStr,
         observaciones: this.observaciones.trim() || null,
         detalles,
+        retefuentePct: this.retefuentePct || null,
+        reteivaPct: this.reteivaPct || null,
+        reteicaPct: this.reteicaPct || null,
+        formaPago: this.formaPago,
+        tipoDocumento: this.tipoDocumento,
+        fletes: this.fletes || null,
       };
 
-      const res = await lastValueFrom(this.compraService.create(dto));
-      if (res?.status === 201) {
-        this.alertService.showSuccess(
-          'Compra registrada',
-          `Compra #${res.data?.id} creada. Stock actualizado.`,
+      let res;
+      if (this.modoEdicion && this.compraToEdit) {
+        res = await lastValueFrom(
+          this.compraService.update(this.compraToEdit.id, dto),
         );
-        this.compraSaved.emit(res.data);
-        this.closeModal();
+        if (res?.data) {
+          this.alertService.showSuccess(
+            'Compra actualizada',
+            `Compra #${res.data.id} actualizada. Stock recalculado.`,
+          );
+          this.compraSaved.emit(res.data);
+          this.closeModal();
+        }
+      } else {
+        res = await lastValueFrom(this.compraService.create(dto));
+        if (res?.status === 201) {
+          this.alertService.showSuccess(
+            'Compra registrada',
+            `Compra #${res.data?.id} creada. Stock actualizado.`,
+          );
+          this.compraSaved.emit(res.data);
+          this.closeModal();
+        }
       }
     } catch (err: any) {
       this.alertService.showError(
@@ -564,6 +592,13 @@ export class FormCompraComponent implements OnInit, OnChanges {
     this.lineas = [];
     this.productoSelAC = [];
     this.productoSugerencias = [];
+    this.retefuentePct = 0;
+    this.reteivaPct = 0;
+    this.reteicaPct = 0;
+    this.formaPago = 'CONTADO';
+    this.plazoDias = 30;
+    this.tipoDocumento = 'FACTURA_COMPRA';
+    this.fletes = 0;
   }
 
   closeModal(): void {
@@ -578,13 +613,18 @@ export class FormCompraComponent implements OnInit, OnChanges {
     }
     try {
       const res = await lastValueFrom(this.productoService.search(q));
-      this.productosOpts = (res?.data ?? []).map((p: any): ProductoOpcion => ({
-        label: p.nombre + (p.sku ? ` [${p.sku}]` : ''),
-        value: p.id,
-        manejaLotes: !!p.manejaLotes,
-        sku: p.sku ?? null,
-        ivaPorcentaje: p.ivaPorcentaje ?? 0,
-      }));
+      this.productosOpts = (res?.data ?? []).map(
+        (p: any): ProductoOpcion => ({
+          label: p.nombre + (p.sku ? ` [${p.sku}]` : ''),
+          value: p.id,
+          sku: p.sku ?? null,
+          ivaPorcentaje: p.ivaPorcentaje ?? 0,
+          costo: p.costo ?? null,
+          precio: p.precio ?? null,
+          precio2: p.precio2 ?? null,
+          precio3: p.precio3 ?? null,
+        }),
+      );
     } catch {
       /* no bloquear */
     }

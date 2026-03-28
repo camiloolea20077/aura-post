@@ -173,6 +173,22 @@ export const routes: Routes = [
             (m) => m.EstadoCuentaComponent,
           ),
       },
+      {
+        path: 'contabilidad/reporte-iva',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/reporte-iva/reporte-iva.component').then(
+            (m) => m.ReporteIvaComponent,
+          ),
+      },
+      {
+        path: 'gastos',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/gastos/index/index-gastos.component').then(
+            (m) => m.IndexGastosComponent,
+          ),
+      },
 
       // Inventario
       {

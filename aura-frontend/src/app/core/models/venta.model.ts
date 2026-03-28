@@ -132,6 +132,13 @@ export interface VentaPageableDto {
   order?: string | null;
 }
 
+// ─── Precio disponible por lista (para selector por línea) ────
+export interface PrecioDisponible {
+  listaId: number;
+  listaNombre: string;
+  precio: number; // base sin IVA
+}
+
 // ─── UI — carrito ─────────────────────────────────────────────
 export interface CartItem {
   _id: string; // UUID local
@@ -141,17 +148,22 @@ export interface CartItem {
   productoSku: string | null;
   precio: number;
   precioCatalogo: number; // precio original del catálogo, nunca cambia
+  precio2?: number | null; // precio de venta 2 del producto
+  precio3?: number | null; // precio de venta 3 del producto
   precioOriginal?: number; // precio del catálogo antes de override manual
   listaPrecioNombre?: string; // nombre de la lista activa al agregar el item
+  listaPrecioId?: number; // id de la lista activa al agregar el item
   cantidad: number;
   descuento: number; // valor absoluto
   impuesto: number;
+  impuestoOriginal?: number; // respaldo cuando la venta es exenta de IVA
   subtotal: number;
   showDescuento?: boolean;
   esPesable: boolean;
   descuentoAutomatico: string | null;
   unidadMedida: string | null;
   impuestoValor: number;
+  preciosDisponibles?: PrecioDisponible[]; // precios de todas las listas para este producto
 }
 
 // ─── UI — pago en el modal ────────────────────────────────────
@@ -169,6 +181,8 @@ export interface ProductoPOS {
   nombre: string;
   sku: string | null;
   precio: number;
+  precio2?: number | null;
+  precio3?: number | null;
   unidadMedidaNombre: string | null;
   stock: number;
   categoriaId: number | null;
