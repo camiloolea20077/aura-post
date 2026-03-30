@@ -17,6 +17,7 @@ import {
   CompraPageableDto,
   CompraTableModel,
   EstadoCompra,
+  PrefilledCompraOC,
 } from '../../../core/models/compra.model';
 import { CompraService } from '../../../core/services/compra.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
@@ -56,6 +57,7 @@ export class IndexComprasComponent implements OnInit {
   // Modal nueva/editar compra
   public showFormModal = false;
   public compraEnEdicion: CompraModel | null = null;
+  public prefilledFromOC: PrefilledCompraOC | null = null;
 
   // Comprobante de egreso
   public showComprobante = false;
@@ -78,7 +80,14 @@ export class IndexComprasComponent implements OnInit {
     private readonly alertService: AlertService,
   ) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    const state = history.state;
+    if (state?.['fromOC']) {
+      this.prefilledFromOC = state['fromOC'] as PrefilledCompraOC;
+      this.compraEnEdicion = null;
+      this.showFormModal = true;
+    }
+  }
 
   async loadTable(event: TableLazyLoadEvent): Promise<void> {
     this.lastLazyEvent = event;
@@ -130,6 +139,7 @@ export class IndexComprasComponent implements OnInit {
   // ─── Nueva compra ─────────────────────────────────────────
   openForm(): void {
     this.compraEnEdicion = null;
+    this.prefilledFromOC = null;
     this.showFormModal = true;
   }
 
@@ -149,6 +159,7 @@ export class IndexComprasComponent implements OnInit {
   onFormClosed(): void {
     this.showFormModal = false;
     this.compraEnEdicion = null;
+    this.prefilledFromOC = null;
   }
   onCompraSaved(compra: CompraModel): void {
     this.showFormModal = false;

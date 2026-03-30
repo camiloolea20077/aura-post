@@ -9,6 +9,8 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { DropdownModule } from 'primeng/dropdown';
+import { DialogModule } from 'primeng/dialog';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
@@ -19,12 +21,13 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
 import { ComisionService } from '../../../../core/services/comision.service';
+import { CuentaBancariaService } from '../../../../core/services/cuenta-bancaria.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 import {
-  ComisionLiquidacionModel,
   ComisionLiquidacionTableModel,
   EstadoLiquidacion,
 } from '../../../../core/models/comision.model';
+import { CuentaBancariaModel } from '../../../../core/models/cuenta-bancaria.model';
 import { DetalleLiquidacionComponent } from '../detalle/detalle-liquidacion.component';
 import { FormLiquidacionComponent } from '../form/form-liquidacion.component';
 @Component({
@@ -38,6 +41,8 @@ import { FormLiquidacionComponent } from '../form/form-liquidacion.component';
     ButtonModule,
     InputTextModule,
     DropdownModule,
+    DialogModule,
+    SelectButtonModule,
     TagModule,
     ToastModule,
     TooltipModule,
@@ -63,6 +68,27 @@ export class IndexLiquidacionesComponent implements OnInit {
   showDetalle = false;
   detalleId: number | null = null;
 
+  // ── Diálogo de pago ──────────────────────────────────────────
+  showPagoDialog = false;
+  pagoItem: ComisionLiquidacionTableModel | null = null;
+  metodoPagoSel = 'EFECTIVO';
+  cuentaBancariaIdSel: number | null = null;
+  cuentasBancarias: CuentaBancariaModel[] = [];
+  loadingCuentas = false;
+  submittingPago = false;
+
+  readonly metodoPagoOptions = [
+    { label: 'Efectivo',      value: 'EFECTIVO' },
+    { label: 'Transferencia', value: 'TRANSFERENCIA' },
+    { label: 'Nequi',         value: 'NEQUI' },
+    { label: 'Daviplata',     value: 'DAVIPLATA' },
+    { label: 'Banco',         value: 'BANCO' },
+  ];
+
+  get requiereCuenta(): boolean {
+    return this.metodoPagoSel !== 'EFECTIVO';
+  }
+
   readonly estadoOptions = [
     { label: 'Todos', value: null },
     { label: 'Pendiente', value: 'PENDIENTE' },
@@ -71,12 +97,28 @@ export class IndexLiquidacionesComponent implements OnInit {
 
   constructor(
     private readonly comisionService: ComisionService,
+    private readonly cuentaBancariaService: CuentaBancariaService,
     private readonly alertService: AlertService,
     private readonly confirmationService: ConfirmationService,
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.loadCuentas();
+  }
+
+  private async loadCuentas(): Promise<void> {
+    this.loadingCuentas = true;
+    try {
+      const res = await lastValueFrom(this.cuentaBancariaService.list());
+      this.cuentasBancarias = (res?.data ?? []).filter((c) => c.activa);
+    } catch {
+      this.cuentasBancarias = [];
+    } finally {
+      this.loadingCuentas = false;
+      this.cdr.markForCheck();
+    }
+  }
 
   async loadTable(event: TableLazyLoadEvent): Promise<void> {
     this.lastEvent = event;
@@ -136,29 +178,43 @@ export class IndexLiquidacionesComponent implements OnInit {
 
   confirmarPagar(item: ComisionLiquidacionTableModel, event: Event): void {
     event.stopPropagation();
-    this.confirmationService.confirm({
-      target: event.target as EventTarget,
-      message: `¿Marcar la liquidación de <strong>${item.tecnicoNombre}</strong> por <strong>$${item.valorTotal.toLocaleString('es-CO')}</strong> como PAGADA?`,
-      header: 'Confirmar pago',
-      icon: 'pi pi-check-circle',
-      acceptLabel: 'Sí, marcar pagada',
-      rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: 'p-button-success',
-      accept: () => this.marcarPagada(item.id),
-    });
+    this.pagoItem = item;
+    this.metodoPagoSel = 'EFECTIVO';
+    this.cuentaBancariaIdSel = null;
+    this.showPagoDialog = true;
+    this.cdr.markForCheck();
   }
 
-  private async marcarPagada(id: number): Promise<void> {
+  closePagoDialog(): void {
+    this.showPagoDialog = false;
+    this.pagoItem = null;
+    this.cdr.markForCheck();
+  }
+
+  async confirmarPagoDialog(): Promise<void> {
+    if (!this.pagoItem) return;
+    if (this.requiereCuenta && !this.cuentaBancariaIdSel) {
+      this.alertService.showWarn('Campo requerido', 'Selecciona la cuenta bancaria');
+      return;
+    }
+    this.submittingPago = true;
     const fechaPago = new Date().toISOString().split('T')[0];
     try {
-      await lastValueFrom(this.comisionService.marcarPagada(id, fechaPago));
-      this.alertService.showSuccess(
-        'Pagada',
-        'Liquidación marcada como pagada',
+      await lastValueFrom(
+        this.comisionService.marcarPagada(this.pagoItem.id, {
+          fechaPago,
+          metodoPago: this.metodoPagoSel,
+          cuentaBancariaId: this.requiereCuenta ? this.cuentaBancariaIdSel : null,
+        }),
       );
+      this.alertService.showSuccess('Pagada', 'Liquidación marcada como pagada');
+      this.closePagoDialog();
       this.reloadTable();
-    } catch {
-      this.alertService.showError('Error', 'No se pudo registrar el pago');
+    } catch (err: any) {
+      this.alertService.showError('Error', err?.message ?? 'No se pudo registrar el pago');
+    } finally {
+      this.submittingPago = false;
+      this.cdr.markForCheck();
     }
   }
 

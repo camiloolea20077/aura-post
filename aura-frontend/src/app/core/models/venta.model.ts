@@ -112,6 +112,7 @@ export interface CreateVentaPagoDto {
   metodoPago: MetodoPago;
   monto: number;
   referencia?: string | null;
+  cuentaBancariaId?: number | null;
 }
 
 export interface CreateVentaDto {
@@ -171,6 +172,7 @@ export interface PagoUI {
   metodoPago: MetodoPago;
   monto: number | null;
   referencia: string | null;
+  cuentaBancariaId?: number | null;
 }
 
 // ─── UI — producto en el grid POS ────────────────────────────

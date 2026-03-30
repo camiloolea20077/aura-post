@@ -67,6 +67,10 @@ import {
   EmpresaConfig,
   EmpresaService,
 } from '../../core/services/empresa.service';
+import { CuentaBancariaService } from '../../core/services/cuenta-bancaria.service';
+import { CuentaBancariaModel } from '../../core/models/cuenta-bancaria.model';
+import { CarteraService } from '../../core/services/cartera.service';
+import { ValidacionCreditoModel } from '../../core/models/cartera.model';
 
 interface CartTab {
   id: string;
@@ -192,6 +196,10 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   public cotizacionSugerencias: any[] = [];
   public savingCotizacion = false;
 
+  // ── Tesorería / Crédito ──────────────────────────────────────────
+  public cuentasBancarias: CuentaBancariaModel[] = [];
+  public creditoInfo: ValidacionCreditoModel | null = null;
+
   constructor(
     private readonly ventaService: VentaService,
     private readonly cotizacionService: CotizacionService,
@@ -205,6 +213,8 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly cdr: ChangeDetectorRef,
     private readonly listaPreciosService: ListaPreciosService,
     private readonly productoPrecioService: ProductoPrecioService,
+    private readonly cuentaBancariaService: CuentaBancariaService,
+    private readonly carteraService: CarteraService,
   ) {}
 
   ngOnInit(): void {
@@ -213,6 +223,14 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.loadEmpresaConfig();
     this.loadListaPrecios();
     this.cargarCotizacionDesdeNavegacion();
+    this.cargarCuentasBancarias();
+  }
+
+  private async cargarCuentasBancarias(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.cuentaBancariaService.list());
+      this.cuentasBancarias = (res?.data ?? []).filter((c) => c.activa);
+    } catch { /* silencioso */ }
   }
 
   private cargarCotizacionDesdeNavegacion(): void {
@@ -1042,6 +1060,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   clearCliente(): void {
     this.clienteId = null;
     this.clienteNombre = null;
+    this.creditoInfo = null;
     this.saveState();
     this.cdr.markForCheck();
   }
@@ -1057,12 +1076,23 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // ── Pago ──────────────────────────────────────────────────
-  irAlPago(): void {
+  async irAlPago(): Promise<void> {
     if (!this.cart.length) return;
     this.pagosPrev = [
-      { metodoPago: 'EFECTIVO', monto: this.total, referencia: null },
+      { metodoPago: 'EFECTIVO', monto: this.total, referencia: null, cuentaBancariaId: null },
     ];
+    // Cargar info de crédito si hay cliente seleccionado
+    this.creditoInfo = null;
+    if (this.clienteId) {
+      try {
+        const res = await lastValueFrom(
+          this.carteraService.validarVenta(this.clienteId, this.total),
+        );
+        this.creditoInfo = res?.data ?? null;
+      } catch { /* silencioso */ }
+    }
     this.showPago = true;
+    this.cdr.markForCheck();
   }
 
   async onVentaConfirmada(event: {

@@ -242,6 +242,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'compras/ordenes',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/compras/ordenes/index-ordenes.component').then(
+            (m) => m.IndexOrdenesComponent,
+          ),
+      },
+      {
         path: 'ventas',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN', 'CAJERO'])],
         loadComponent: () =>
@@ -386,6 +394,40 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/cartera/index/index-cartera.component').then(
             (m) => m.IndexCarteraComponent,
+          ),
+      },
+
+      // Tesorería
+      {
+        path: 'tesoreria/cuentas-bancarias',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/tesoreria/cuentas-bancarias/index-cuentas-bancarias.component').then(
+            (m) => m.IndexCuentasBancariasComponent,
+          ),
+      },
+      {
+        path: 'tesoreria/egresos',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/tesoreria/egresos/index-egresos.component').then(
+            (m) => m.IndexEgresosComponent,
+          ),
+      },
+      {
+        path: 'tesoreria/recaudos',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/tesoreria/recaudos/index-recaudos.component').then(
+            (m) => m.IndexRecaudosComponent,
+          ),
+      },
+      {
+        path: 'tesoreria/conciliacion',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/tesoreria/conciliacion/index-conciliacion.component').then(
+            (m) => m.IndexConciliacionComponent,
           ),
       },
 

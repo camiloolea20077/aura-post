@@ -130,7 +130,10 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
     label: 'Compras',
     icon: 'pi pi-truck',
     roles: ['SUPER_ADMIN', 'ADMIN'],
-    items: [{ label: 'Compras', icon: 'pi pi-truck', route: '/compras' }],
+    items: [
+      { label: 'Compras', icon: 'pi pi-truck', route: '/compras' },
+      { label: 'Órdenes de Compra', icon: 'pi pi-file-edit', route: '/compras/ordenes' },
+    ],
   },
 
   // ── Ventas ──────────────────────────────────────────────────────────────────
@@ -189,6 +192,35 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         icon: 'pi pi-chart-line',
         route: '/cartera',
         highlight: true,
+      },
+    ],
+  },
+
+  // ── Tesorería ────────────────────────────────────────────────────────────────
+  {
+    label: 'Tesorería',
+    icon: 'pi pi-wallet',
+    roles: ['SUPER_ADMIN', 'ADMIN'],
+    items: [
+      {
+        label: 'Cuentas Bancarias',
+        icon: 'pi pi-credit-card',
+        route: '/tesoreria/cuentas-bancarias',
+      },
+      {
+        label: 'Egresos',
+        icon: 'pi pi-arrow-up-right',
+        route: '/tesoreria/egresos',
+      },
+      {
+        label: 'Recaudos',
+        icon: 'pi pi-arrow-down-left',
+        route: '/tesoreria/recaudos',
+      },
+      {
+        label: 'Conciliación',
+        icon: 'pi pi-check-square',
+        route: '/tesoreria/conciliacion',
       },
     ],
   },

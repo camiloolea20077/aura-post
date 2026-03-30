@@ -159,17 +159,16 @@
           </div>
         </div>
 
-        <!-- Banco / referencia -->
+        <!-- Cuenta bancaria (transferencia/nequi/tarjeta/cheque) -->
         <div class="field field-banco" *ngIf="formaPago === 'CONTADO' && requiereBanco">
-          <label>Banco / Referencia <span class="optional">(opc.)</span></label>
-          <input
-            type="text"
-            pInputText
-            [(ngModel)]="banco"
-            placeholder="Ej: Bancolombia · ref. 123456"
-            maxlength="200"
-            autocomplete="off"
-            class="w-full"
+          <label>Cuenta bancaria <span class="required">*</span></label>
+          <p-dropdown
+            [(ngModel)]="cuentaBancariaId"
+            [options]="cuentasBancarias"
+            optionLabel="nombre"
+            optionValue="id"
+            placeholder="Seleccionar cuenta..."
+            styleClass="w-full"
           />
         </div>
 

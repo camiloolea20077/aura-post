@@ -26,20 +26,126 @@
   overflow: hidden;
 }
 
-// ─── Alerta crédito ───────────────────────────────────────────────────────────
-.credito-banner {
+// ─── Panel crédito ────────────────────────────────────────────────────────────
+.credito-panel {
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.credito-panel-header {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
-  padding: 0.6rem 0.85rem;
-  border-radius: 10px;
-  background: #fef3c7;
-  border: 1px solid #fbbf24;
-  color: #92400e;
-  font-size: 0.78rem;
-  font-weight: 500;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1e293b;
+  i { color: #f59e0b; font-size: 0.9rem; }
+}
 
-  i { font-size: 0.9rem; flex-shrink: 0; }
+.credito-cliente {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: #475569;
+  font-weight: 600;
+  i { font-size: 0.75rem; color: #94a3b8; }
+}
+
+.credito-estado {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  i { font-size: 0.85rem; }
+}
+
+.credito-metricas {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.4rem;
+  margin-top: 0.2rem;
+}
+
+.credito-metrica {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.5rem 0.6rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+
+  &.highlight {
+    border-color: #cbd5e1;
+    &.ok { border-color: #86efac; background: #f0fdf4; }
+    &.warn { border-color: #fca5a5; background: #fff1f2; }
+  }
+}
+
+.cm-label {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.cm-valor {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1e293b;
+  &.red { color: #dc2626; }
+}
+
+.credito-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.76rem;
+  color: #dc2626;
+  font-weight: 600;
+  padding: 0.4rem 0.6rem;
+  background: #fff1f2;
+  border-radius: 8px;
+  i { font-size: 0.8rem; }
+}
+
+.credito-sin-info {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.76rem;
+  color: #94a3b8;
+  i { font-size: 0.8rem; }
+}
+
+// ─── Campo cuenta destino ─────────────────────────────────────────────────────
+.cuenta-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cuenta-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+  i { font-size: 0.75rem; color: #6366f1; }
+}
+
+::ng-deep .cuenta-drop.p-dropdown {
+  border-radius: 8px;
+  font-size: 0.82rem;
 }
 
 // ─── Tarjeta de pago ─────────────────────────────────────────────────────────
@@ -128,6 +234,12 @@
     color: var(--mcolor);
     font-weight: 700;
     box-shadow: 0 2px 8px color-mix(in srgb, var(--mcolor) 20%, transparent);
+  }
+
+  &.disabled-metodo, &:disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+    pointer-events: none;
   }
 }
 

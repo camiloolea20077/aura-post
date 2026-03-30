@@ -36,6 +36,7 @@ import {
   CreateCompraDetalleDto,
   CreateCompraDto,
   FormaPago,
+  PrefilledCompraOC,
   ProductoOpcion,
   TipoDocumentoCompra,
 } from '../../../core/models/compra.model';
@@ -45,6 +46,8 @@ import { TerceroService } from '../../../core/services/tercero.service';
 import { ProductoService } from '../../../core/services/producto.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
 import { IndexDBService } from '../../../core/services/index-db.service';
+import { CuentaBancariaService } from '../../../core/services/cuenta-bancaria.service';
+import { CuentaBancariaModel } from '../../../core/models/cuenta-bancaria.model';
 
 @Component({
   selector: 'app-form-compra',
@@ -74,6 +77,7 @@ import { IndexDBService } from '../../../core/services/index-db.service';
 export class FormCompraComponent implements OnInit, OnChanges {
   @Input() displayModal = false;
   @Input() compraToEdit: CompraModel | null = null;
+  @Input() prefilledFromOC: PrefilledCompraOC | null = null;
   @Output() modalClosed = new EventEmitter<void>();
   @Output() compraSaved = new EventEmitter<CompraModel>();
 
@@ -102,6 +106,8 @@ export class FormCompraComponent implements OnInit, OnChanges {
   public plazoDias: number = 30;
   public metodoPago: string = 'EFECTIVO';
   public banco: string = '';
+  public cuentaBancariaId: number | null = null;
+  public cuentasBancarias: CuentaBancariaModel[] = [];
 
   readonly metodosPagoOpts = [
     { label: 'Efectivo',      value: 'EFECTIVO',      icon: 'pi-wallet' },
@@ -183,6 +189,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
     private readonly compraService: CompraService,
     private readonly terceroService: TerceroService,
     private readonly productoService: ProductoService,
+    private readonly cuentaBancariaService: CuentaBancariaService,
     private readonly alertService: AlertService,
     private readonly indexDBService: IndexDBService,
     private readonly cdr: ChangeDetectorRef,
@@ -196,6 +203,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
     if (changes['displayModal'] && this.displayModal) {
       this.resetForm();
       if (this.compraToEdit) this.cargarEdicion(this.compraToEdit);
+      else if (this.prefilledFromOC) this.cargarDesdeOC(this.prefilledFromOC);
     }
   }
 
@@ -237,13 +245,56 @@ export class FormCompraComponent implements OnInit, OnChanges {
     this.cdr.markForCheck();
   }
 
+  private cargarDesdeOC(oc: PrefilledCompraOC): void {
+    this.proveedorSeleccionado = {
+      id: oc.proveedorId,
+      nombreCompleto: oc.proveedorNombre,
+      tipoDocumento: '',
+      numeroDocumento: '',
+      tipoTercero: '',
+    } as any;
+    this.proveedorQuery = oc.proveedorNombre;
+    this.sucursalId = oc.sucursalId;
+    this.observaciones = oc.observaciones ?? '';
+    // Populate options so the dropdowns can display the product names
+    this.productosOpts = oc.lineas.map((l): ProductoOpcion => ({
+      label: l.productoNombre,
+      value: l.productoId,
+      sku: null,
+      ivaPorcentaje: 0,
+      costo: l.costoUnitario,
+      precio: null,
+      precio2: null,
+      precio3: null,
+    }));
+    this.lineas = oc.lineas.map((l): CompraLineaUI => ({
+      _id: uuidv4(),
+      productoId: l.productoId,
+      productoNombre: l.productoNombre,
+      cantidad: l.cantidad,
+      costoUnitario: l.costoUnitario,
+      descuentoPct: 0,
+      descuentoValor: 0,
+      ivaPorcentaje: 0,
+      impuestoValor: 0,
+      subtotal: l.cantidad * l.costoUnitario,
+      precioVenta1: null,
+      precioVenta2: null,
+      precioVenta3: null,
+    }));
+    this.productoSelAC = this.lineas.map(() => null);
+    this.cdr.markForCheck();
+  }
+
   // ─── Carga datos ──────────────────────────────────────────────────
   private async loadDropdowns(): Promise<void> {
     try {
-      const [sucursales, defaultId] = await Promise.all([
+      const [sucursales, defaultId, cuentasRes] = await Promise.all([
         this.indexDBService.getSucursales(),
         this.indexDBService.getSucursalDefault(),
+        lastValueFrom(this.cuentaBancariaService.list()).catch(() => null),
       ]);
+      this.cuentasBancarias = (cuentasRes?.data ?? []).filter((c) => c.activa);
       this.sucursalesOpts = sucursales.map((s) => ({
         label: s.nombre,
         value: s.id,
@@ -365,12 +416,15 @@ export class FormCompraComponent implements OnInit, OnChanges {
 
     if (!prod) return;
 
-    const costoUnitario: number | null = prod.costo ?? null;
     const ivaPorcentaje = prod.ivaPorcentaje ?? 0;
+    // Cargar el costo ya con IVA incluido
+    const costoBase = prod.costo ?? null;
+    const costoUnitario: number | null =
+      costoBase != null
+        ? Math.round(costoBase * (1 + ivaPorcentaje / 100) * 100) / 100
+        : null;
     const cantidad = this.lineas[idx].cantidad ?? 0;
     const subtotal = cantidad * (costoUnitario ?? 0);
-    const impuestoValor =
-      Math.round(subtotal * (ivaPorcentaje / 100) * 100) / 100;
 
     this.lineas = this.lineas.map(
       (l, i): CompraLineaUI =>
@@ -381,8 +435,8 @@ export class FormCompraComponent implements OnInit, OnChanges {
               productoId,
               productoNombre: prod!.label,
               costoUnitario,
-              ivaPorcentaje,
-              impuestoValor,
+              ivaPorcentaje: 0,  // IVA ya incluido en el costo
+              impuestoValor: 0,
               subtotal: Math.round(subtotal * 100) / 100,
               precioVenta1: prod!.precio ?? null,
               precioVenta2: prod!.precio2 ?? null,
@@ -560,7 +614,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
         tipoDocumento: this.tipoDocumento,
         fletes: this.fletes || null,
         pagos: this.formaPago === 'CONTADO'
-          ? [{ metodoPago: this.metodoPago, monto: this.totalRetenciones > 0 ? this.netaAPagar : this.total, banco: this.banco.trim() || null }]
+          ? [{ metodoPago: this.metodoPago, monto: this.totalRetenciones > 0 ? this.netaAPagar : this.total, banco: this.banco.trim() || null, cuentaBancariaId: this.cuentaBancariaId }]
           : null,
       };
 
@@ -616,6 +670,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
     this.plazoDias = 30;
     this.metodoPago = 'EFECTIVO';
     this.banco = '';
+    this.cuentaBancariaId = null;
     this.tipoDocumento = 'FACTURA_COMPRA';
     this.fletes = 0;
   }

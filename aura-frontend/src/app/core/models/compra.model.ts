@@ -88,6 +88,7 @@ export interface CreateCompraPagoDto {
   metodoPago: string; // EFECTIVO | TRANSFERENCIA | NEQUI | TARJETA | CHEQUE
   monto: number;
   banco?: string | null;
+  cuentaBancariaId?: number | null;
 }
 
 export interface CreateCompraDto {
@@ -131,6 +132,20 @@ export interface CompraLineaUI {
   precioVenta1: number | null;
   precioVenta2: number | null;
   precioVenta3: number | null;
+}
+
+// ─── Pre-fill desde Orden de Compra ──────────────────────────
+export interface PrefilledCompraOC {
+  proveedorId: number;
+  proveedorNombre: string;
+  sucursalId: number;
+  observaciones: string | null;
+  lineas: {
+    productoId: number;
+    productoNombre: string;
+    cantidad: number;
+    costoUnitario: number;
+  }[];
 }
 
 // ─── Opciones de producto para el dropdown ────────────────────

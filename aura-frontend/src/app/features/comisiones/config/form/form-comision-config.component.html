@@ -3,40 +3,121 @@
   [(visible)]="visible"
   (onHide)="close()"
   [modal]="true"
-  [style]="{ width: '560px' }"
+  [style]="{ width: '580px' }"
   [draggable]="false"
   [resizable]="false"
 >
   <form [formGroup]="frm" class="dialog-form">
 
-    <!-- Servicio (búsqueda server-side, igual que compras) -->
-    <div class="field">
+    <!-- ── Modalidad ──────────────────────────────────────────── -->
+    <div class="field" *ngIf="!isEdit">
+      <label class="field-label required">Tipo de comisión</label>
+      <p-selectButton
+        formControlName="modalidad"
+        [options]="modalidadOptions"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full modalidad-btn"
+      />
+      <small class="field-hint" *ngIf="isServicio">
+        <i class="pi pi-wrench"></i>
+        El técnico recibe un % y el negocio el resto (deben sumar 100).
+      </small>
+      <small class="field-hint" *ngIf="!isServicio">
+        <i class="pi pi-tag"></i>
+        El vendedor recibe un % por cada venta del producto o categoría configurada.
+      </small>
+    </div>
+
+    <!-- ── SERVICIO: producto (solo tipo SERVICIO) ────────────── -->
+    <div class="field" *ngIf="isServicio">
       <label class="field-label required">Servicio</label>
       <p-dropdown
         formControlName="productoId"
-        [options]="servicioOpts"
+        [options]="productoOpts"
         optionLabel="label"
         optionValue="value"
         placeholder="Escribe 2+ letras para buscar..."
         [filter]="true"
-        filterPlaceholder="Buscar servicio por nombre o SKU..."
-        (onFilter)="onFiltroServicio($event)"
-        [emptyFilterMessage]="'Sin resultados — escribe más letras'"
-        [emptyMessage]="'Escribe para buscar un servicio'"
+        filterPlaceholder="Buscar servicio..."
+        (onFilter)="onFiltroProducto($event)"
+        [emptyFilterMessage]="'Sin resultados'"
+        [emptyMessage]="'Escribe para buscar'"
         styleClass="w-full"
         appendTo="body"
         [class.ng-invalid]="isInvalid('productoId')"
       />
       <small class="field-hint" *ngIf="!isEdit">
-        <i class="pi pi-info-circle"></i>
-        Solo aparecen productos de tipo <strong>SERVICIO</strong>
+        <i class="pi pi-info-circle"></i> Solo productos de tipo <strong>SERVICIO</strong>
       </small>
       <small class="field-error" *ngIf="isInvalid('productoId')">Requerido</small>
     </div>
 
-    <!-- Técnico -->
-    <div class="field">
-      <label class="field-label">Técnico asignado por defecto</label>
+    <!-- ── VENTA: objetivo (producto o categoría) ─────────────── -->
+    <ng-container *ngIf="!isServicio">
+
+      <!-- Selector de objetivo (solo en creación) -->
+      <div class="field" *ngIf="!isEdit">
+        <label class="field-label required">Aplicar comisión a</label>
+        <p-selectButton
+          formControlName="objetivo"
+          [options]="objetivoOptions"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full objetivo-btn"
+        />
+      </div>
+
+      <!-- Producto (cualquier tipo) -->
+      <div class="field" *ngIf="isVentaProducto">
+        <label class="field-label required">Producto</label>
+        <p-dropdown
+          formControlName="productoId"
+          [options]="productoOpts"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Escribe 2+ letras para buscar..."
+          [filter]="true"
+          filterPlaceholder="Buscar producto..."
+          (onFilter)="onFiltroProducto($event)"
+          [emptyFilterMessage]="'Sin resultados'"
+          [emptyMessage]="'Escribe para buscar'"
+          styleClass="w-full"
+          appendTo="body"
+        />
+        <small class="field-hint">
+          <i class="pi pi-info-circle"></i>
+          La comisión de producto tiene prioridad sobre la de categoría.
+        </small>
+      </div>
+
+      <!-- Categoría -->
+      <div class="field" *ngIf="isVentaCategoria">
+        <label class="field-label required">Categoría</label>
+        <p-dropdown
+          formControlName="categoriaId"
+          [options]="categorias"
+          optionLabel="nombre"
+          optionValue="id"
+          placeholder="Seleccionar categoría..."
+          [filter]="true"
+          filterPlaceholder="Buscar categoría..."
+          [showClear]="true"
+          styleClass="w-full"
+          appendTo="body"
+          [loading]="loadingCategorias"
+        />
+        <small class="field-hint">
+          <i class="pi pi-info-circle"></i>
+          Aplica a todos los productos de la categoría (si no tienen config propia).
+        </small>
+      </div>
+
+    </ng-container>
+
+    <!-- ── Técnico por defecto (solo SERVICIO) ───────────────── -->
+    <div class="field" *ngIf="isServicio">
+      <label class="field-label">Técnico por defecto</label>
       <p-dropdown
         formControlName="tecnicoId"
         [options]="tecnicos"
@@ -55,9 +136,16 @@
       </small>
     </div>
 
-    <!-- Tipo -->
+    <!-- ── Info VENTA: vendedor = usuario logueado ────────────── -->
+    <div class="venta-info-box" *ngIf="!isServicio">
+      <i class="pi pi-info-circle"></i>
+      <span>La comisión se asigna automáticamente al <strong>usuario que realiza la venta</strong>.
+      Los cajeros no generan comisión de venta.</span>
+    </div>
+
+    <!-- ── Tipo de cálculo ────────────────────────────────────── -->
     <div class="field">
-      <label class="field-label required">Tipo de comisión</label>
+      <label class="field-label required">Tipo de cálculo</label>
       <p-dropdown
         formControlName="tipo"
         [options]="tipoOptions"
@@ -68,14 +156,16 @@
       />
     </div>
 
-    <!-- Porcentajes -->
-    <div class="form-row two-col">
+    <!-- ── Porcentajes ────────────────────────────────────────── -->
+    <div class="form-row" [class.two-col]="isServicio">
+
+      <!-- % Técnico / Vendedor -->
       <div class="field">
-        <label class="field-label required">% Técnico</label>
+        <label class="field-label required">{{ isServicio ? '% Técnico' : '% Vendedor' }}</label>
         <p-inputNumber
           formControlName="porcentajeTecnico"
           [min]="0.01"
-          [max]="99.99"
+          [max]="isServicio ? 99.99 : 100"
           [minFractionDigits]="2"
           [maxFractionDigits]="2"
           suffix="%"
@@ -83,10 +173,12 @@
           [class.ng-invalid]="isInvalid('porcentajeTecnico')"
         />
         <small class="field-error" *ngIf="isInvalid('porcentajeTecnico')">
-          Debe ser entre 0.01 y 99.99
+          Debe ser entre 0.01 y {{ isServicio ? '99.99' : '100' }}
         </small>
       </div>
-      <div class="field">
+
+      <!-- % Negocio (solo SERVICIO) -->
+      <div class="field" *ngIf="isServicio">
         <label class="field-label">% Negocio <span class="auto-tag">auto</span></label>
         <p-inputNumber
           formControlName="porcentajeNegocio"
@@ -99,7 +191,7 @@
       </div>
     </div>
 
-    <!-- Estado (solo en edición) -->
+    <!-- ── Estado (solo edición) ─────────────────────────────── -->
     <div class="field" *ngIf="isEdit">
       <label class="field-label">Estado</label>
       <p-toggleButton

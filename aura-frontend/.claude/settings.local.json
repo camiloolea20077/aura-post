@@ -21,7 +21,11 @@
       "Bash(grep -i \"\\\\.java$\")",
       "Bash(ls:*)",
       "Bash(find 'D:/DOCUMENTOS CLOUD TECNOLOGY/REPOSITORIOS/aura-back-old' -name *.sql)",
-      "Bash(find 'D:/DOCUMENTOS CLOUD TECNOLOGY/REPOSITORIOS/aura-back-old/src' -name Compra*.java)"
+      "Bash(find 'D:/DOCUMENTOS CLOUD TECNOLOGY/REPOSITORIOS/aura-back-old/src' -name Compra*.java)",
+      "Bash(grep:*)",
+      "Bash(find 'D:/DOCUMENTOS CLOUD TECNOLOGY/REPOSITORIOS/aura-back-old/src/main/java/com/cloud_technological/aura_pos' -type f \\\\\\(-name *Cliente* -o -name *Tercero* -o -name *Credito* \\\\\\) -name *.java)",
+      "Bash(find 'D:/Proyectos Camilo/aura-post/aura-frontend/src/app/core/models' -type f -name *.model.ts)",
+      "Bash(find 'D:/DOCUMENTOS CLOUD TECNOLOGY/REPOSITORIOS/aura-back-old/src/main/java/com/cloud_technological/aura_pos/services/implementations' -type f -name *Cartera* -o -name *Venta*)"
     ]
   }
 }

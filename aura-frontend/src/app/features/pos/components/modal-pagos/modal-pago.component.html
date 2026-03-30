@@ -14,10 +14,49 @@
     <!-- ══ IZQUIERDA: métodos + monto ══ -->
     <div class="cobro-izq">
 
-      <!-- Alerta crédito -->
-      <div class="credito-banner" *ngIf="tieneCredito">
-        <i class="pi pi-info-circle"></i>
-        <span>Venta a CRÉDITO — el cliente completará los datos.</span>
+      <!-- Panel crédito (cuando se selecciona CREDITO) -->
+      <div class="credito-panel" *ngIf="tieneCredito">
+        <div class="credito-panel-header">
+          <i class="pi pi-file-invoice"></i>
+          <span>Venta a Crédito</span>
+        </div>
+        <div class="credito-cliente" *ngIf="clienteNombre">
+          <i class="pi pi-user"></i> {{ clienteNombre }}
+        </div>
+        <ng-container *ngIf="creditoInfo; else sinCreditoInfo">
+          <!-- Estado -->
+          <div class="credito-estado" [style.color]="getCreditoColor()">
+            <i class="pi" [class.pi-check-circle]="creditoInfo.permitido" [class.pi-times-circle]="!creditoInfo.permitido"></i>
+            <span *ngIf="creditoInfo.permitido">Crédito habilitado</span>
+            <span *ngIf="!creditoInfo.permitido">{{ creditoInfo.motivoBloqueo ?? 'Crédito bloqueado' }}</span>
+          </div>
+          <!-- Métricas -->
+          <div class="credito-metricas">
+            <div class="credito-metrica">
+              <span class="cm-label">Cupo total</span>
+              <span class="cm-valor">{{ formatCOP(creditoInfo.cupoActual ?? 0) }}</span>
+            </div>
+            <div class="credito-metrica">
+              <span class="cm-label">Deuda actual</span>
+              <span class="cm-valor red">{{ formatCOP(creditoInfo.saldoCartera ?? 0) }}</span>
+            </div>
+            <div class="credito-metrica highlight" [class.ok]="(creditoInfo.saldoDisponible ?? 0) >= 0" [class.warn]="(creditoInfo.saldoDisponible ?? 0) < 0">
+              <span class="cm-label">Disponible</span>
+              <span class="cm-valor">{{ formatCOP(creditoInfo.saldoDisponible ?? 0) }}</span>
+            </div>
+          </div>
+          <!-- Advertencia si no está permitido -->
+          <div class="credito-warning" *ngIf="!creditoInfo.permitido">
+            <i class="pi pi-exclamation-triangle"></i>
+            Este cliente no puede comprar a crédito en este momento.
+          </div>
+        </ng-container>
+        <ng-template #sinCreditoInfo>
+          <div class="credito-sin-info">
+            <i class="pi pi-info-circle"></i>
+            Sin historial de crédito para este cliente.
+          </div>
+        </ng-template>
       </div>
 
       <!-- Líneas de pago -->
@@ -41,12 +80,32 @@
               class="metodo-btn"
               *ngFor="let m of metodos"
               [class.active]="pago.metodoPago === m.value"
+              [class.disabled-metodo]="m.value === 'CREDITO' && !esCreditoSeleccionable()"
               [style.--mcolor]="m.color"
+              [disabled]="m.value === 'CREDITO' && !esCreditoSeleccionable()"
+              [title]="m.value === 'CREDITO' && !esCreditoSeleccionable() ? (creditoInfo?.motivoBloqueo ?? 'Crédito no disponible') : ''"
               (click)="setMetodo(pago, m.value)"
             >
               <i [class]="m.icon"></i>
               <span>{{ m.label }}</span>
             </button>
+          </div>
+
+          <!-- Cuenta destino (Transferencia / Nequi / Daviplata) -->
+          <div class="cuenta-field" *ngIf="requiereCuenta(pago.metodoPago) && cuentasOpts.length > 0">
+            <label class="cuenta-label">
+              <i class="pi pi-building"></i>
+              ¿A qué cuenta llega el pago?
+            </label>
+            <p-dropdown
+              [(ngModel)]="pago.cuentaBancariaId"
+              [options]="cuentasOpts"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Selecciona cuenta"
+              styleClass="w-full cuenta-drop"
+              [showClear]="true"
+            />
           </div>
 
           <!-- Monto -->
@@ -83,7 +142,7 @@
                 type="text"
                 pInputText
                 [(ngModel)]="pago.referencia"
-                [placeholder]="pago.metodoPago === 'CREDITO' ? 'Requerido' : 'Opcional'"
+                [placeholder]="pago.metodoPago === 'CREDITO' ? 'Opcional' : 'Opcional'"
                 class="ref-inp"
               />
             </div>
@@ -183,7 +242,7 @@
         <button
           class="btn-confirmar"
           [class.submitting]="isSubmitting"
-          [disabled]="!cuadra || isSubmitting"
+          [disabled]="!cuadra || isSubmitting || creditoBloqueado"
           (click)="confirmar()"
         >
           <i [class]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>
