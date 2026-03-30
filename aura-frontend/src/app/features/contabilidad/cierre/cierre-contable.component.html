@@ -329,6 +329,7 @@
             <div class="cc-mov-header">
               <span>Tipo</span>
               <span>Concepto</span>
+              <span>Fecha</span>
               <span>Caja</span>
               <span>Monto</span>
             </div>
@@ -343,6 +344,7 @@
                 <span class="cc-mov-concepto-txt">{{ m.concepto ?? '—' }}</span>
                 <span class="cc-mov-usuario">{{ m.usuarioNombre }}</span>
               </span>
+              <span class="cc-mov-fecha">{{ m.fecha | date:'dd/MM/yy' }}</span>
               <span class="cc-mov-caja">{{ m.cajaNombre }}</span>
               <span class="cc-mov-monto"
                 [class.green]="m.tipo === 'INGRESO'"
