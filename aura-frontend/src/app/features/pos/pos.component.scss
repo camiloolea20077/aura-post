@@ -904,6 +904,47 @@ $mono: "JetBrains Mono", monospace;
   align-items: center;
 }
 
+// ── Exento de IVA ────────────────────────────────────────────
+.exento-area {
+  padding: 0.4rem 0.9rem;
+  border-bottom: 1px solid $border;
+  flex-shrink: 0;
+}
+
+.btn-exento {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.45rem 0.75rem;
+  border-radius: 8px;
+  border: 1.5px dashed #cbd5e1;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  span { flex: 1; text-align: left; }
+
+  &:hover {
+    border-color: #f59e0b;
+    color: #d97706;
+    background: #fffbeb;
+  }
+
+  &.active {
+    border-color: #f59e0b;
+    border-style: solid;
+    background: #fffbeb;
+    color: #d97706;
+    font-weight: 600;
+
+    .pi-check-circle { color: #f59e0b; }
+  }
+}
+
 // ── Lista de precios selector ─────────────────────────────────
 .lista-area {
   padding: 0.5rem 0.9rem;
@@ -1001,6 +1042,7 @@ $mono: "JetBrains Mono", monospace;
   margin-left: 4px;
   vertical-align: middle;
   i { font-size: 0.65rem; }
+
 }
 
 .btn-nuevo-cliente {
@@ -1223,67 +1265,175 @@ $mono: "JetBrains Mono", monospace;
   text-transform: uppercase;
 }
 
-// ── Herramientas (Botones Icono) ──────────────────────────────
+// ── Herramientas (Botón "...") ────────────────────────────────
 .line-tools {
   display: flex;
-  gap: 0.4rem;
+  align-items: center;
 }
 
 .tool-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid $border;
   background: white;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.15s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
-  border: 1px solid $border;
+  color: #94a3b8;
+  font-size: 0.85rem;
+
+  &.btn-more {
+    &:hover {
+      background: #f1f5f9;
+      color: #475569;
+      border-color: #cbd5e1;
+    }
+  }
 
   &.btn-delete {
-    color: #94a3b8;
-
+    color: #f87171;
     &:hover {
-      background: rgba(239, 68, 68, 0.1);
-      color: $red;
-      border-color: rgba(239, 68, 68, 0.2);
+      background: #fef2f2;
+      color: #ef4444;
+      border-color: #fca5a5;
+    }
+    &:active {
+      background: #e2e8f0;
     }
   }
+}
 
-  &.btn-desc {
-    color: #94a3b8;
+// ── Menú desplegable de opciones por ítem ─────────────────────
+::ng-deep .item-menu-pop .p-popover-content {
+  padding: 0.35rem !important;
+}
 
-    &:hover {
-      background: rgba(249, 115, 22, 0.1);
-      color: $orange;
-      border-color: rgba(249, 115, 22, 0.2);
-    }
+.item-menu {
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  gap: 0.1rem;
+}
 
-    &.has-desc {
-      background: $orange;
-      color: white;
-      border-color: $orange;
-    }
+.item-menu-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.45rem 0.65rem;
+  border: none;
+  background: transparent;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  color: #374151;
+  font-family: 'Outfit', sans-serif;
+  transition: all 0.12s;
+  text-align: left;
+
+  i { font-size: 0.78rem; color: #6b7280; flex-shrink: 0; }
+
+  &:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+    i { color: #374151; }
   }
 
-  &.btn-price {
-    color: #94a3b8;
-
-    &:hover {
-      background: rgba(99, 102, 241, 0.1);
-      color: $indigo;
-      border-color: rgba(99, 102, 241, 0.2);
-    }
-
-    &.has-price-override {
-      background: $indigo;
-      color: white;
-      border-color: $indigo;
-    }
+  &.menu-active {
+    color: $indigo;
+    i { color: $indigo; }
+    &:hover { background: rgba(99, 102, 241, 0.06); }
   }
+
+  &.item-menu-danger {
+    color: #ef4444;
+    i { color: #ef4444; }
+    &:hover { background: rgba(239, 68, 68, 0.06); }
+  }
+
+  .menu-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: $orange;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+}
+
+.item-menu-sep {
+  height: 1px;
+  background: #f1f5f9;
+  margin: 0.2rem 0;
+}
+
+// ── Picker de lista por línea ─────────────────────────────────
+.lista-picker {
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+}
+
+.lista-picker-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0 0 0.5rem 0;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 0.35rem;
+
+  i { font-size: 0.72rem; }
+}
+
+.lista-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: none;
+  cursor: pointer;
+  font-family: "Outfit", sans-serif;
+  transition: all 0.12s;
+  text-align: left;
+  width: 100%;
+
+  &:hover {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+  }
+
+  &.active {
+    background: rgba(16, 185, 129, 0.07);
+    border-color: rgba(16, 185, 129, 0.25);
+
+    .lista-opt-nombre { color: #059669; font-weight: 700; }
+    .lista-opt-precio { color: #059669; font-weight: 800; }
+  }
+}
+
+.lista-opt-nombre {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.lista-opt-precio {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1e293b;
+  white-space: nowrap;
 }
 
 .precio-original-hint {

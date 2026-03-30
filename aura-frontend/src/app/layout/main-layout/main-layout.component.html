@@ -1,10 +1,14 @@
-<div class="aura-layout" [class.sidebar-collapsed]="sidebarCollapsed">
+<div class="aura-layout" [class.sidebar-collapsed]="sidebarCollapsed" [class.no-sidebar]="isCajero">
   <p-toast position="top-right" />
 
-  <!-- Sidebar -->
+  <!-- Backdrop para cerrar el drawer del cajero -->
+  <div class="sidebar-backdrop" *ngIf="isCajero && drawerOpen" (click)="closeDrawer()"></div>
+
+  <!-- Sidebar: siempre visible para roles normales; drawer overlay para cajero -->
   <app-sidebar
-    [collapsed]="sidebarCollapsed"
-    (toggleCollapse)="toggleSidebar()"
+    *ngIf="!isCajero || drawerOpen"
+    [collapsed]="isCajero ? false : sidebarCollapsed"
+    (toggleCollapse)="isCajero ? closeDrawer() : toggleSidebar()"
   />
 
   <!-- Main area -->

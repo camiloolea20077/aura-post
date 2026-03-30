@@ -1,0 +1,500 @@
+<p-toast />
+
+<div class="module-wrapper">
+  <!-- Header -->
+  <div class="module-header">
+    <div class="header-left">
+      <span class="header-icon"><i class="pi pi-file-edit"></i></span>
+      <div>
+        <h1>Órdenes de Compra</h1>
+        <p>Gestiona pedidos a proveedores con flujo de aprobación y recepción</p>
+      </div>
+    </div>
+    <button
+      pButton
+      label="Nueva Orden"
+      icon="pi pi-plus"
+      class="btn-aura btn-primary"
+      (click)="abrirNueva()"
+    ></button>
+  </div>
+
+  <!-- Tabla -->
+  <div class="table-card">
+    <div class="table-toolbar">
+      <div class="search-wrap">
+        <i class="pi pi-search"></i>
+        <input
+          pInputText
+          [(ngModel)]="searchText"
+          placeholder="Buscar por número, proveedor o sucursal..."
+        />
+      </div>
+      <span class="total-badge">{{ ordenesFiltradas.length }} órdenes</span>
+    </div>
+
+    <p-table
+      [value]="ordenesFiltradas"
+      [loading]="loading"
+      [paginator]="true"
+      [rows]="15"
+      [rowsPerPageOptions]="[10, 15, 25, 50]"
+      styleClass="p-datatable-sm"
+      rowHover
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Número</th>
+          <th>Estado</th>
+          <th>Proveedor</th>
+          <th>Sucursal</th>
+          <th>Fecha</th>
+          <th>Entrega Esperada</th>
+          <th style="text-align:right">Total</th>
+          <th style="width:160px"></th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-o>
+        <tr class="clickable-row" (click)="verDetalle(o.id)">
+          <td><strong>{{ o.numeroOrden }}</strong></td>
+          <td>
+            <p-tag
+              [value]="estadoLabel(o.estado)"
+              [severity]="estadoSeverity(o.estado)"
+            />
+          </td>
+          <td>{{ o.proveedorNombre }}</td>
+          <td>{{ o.sucursalNombre }}</td>
+          <td>{{ o.fecha | date:'dd/MM/yyyy' }}</td>
+          <td>{{ o.fechaEntregaEsperada ? (o.fechaEntregaEsperada | date:'dd/MM/yyyy') : '—' }}</td>
+          <td style="text-align:right"><strong>{{ formatCOP(o.total) }}</strong></td>
+          <td (click)="$event.stopPropagation()">
+            <div class="action-btns">
+              <button
+                pButton
+                icon="pi pi-send"
+                class="p-button-sm p-button-text p-button-info"
+                pTooltip="Enviar al proveedor"
+                *ngIf="puedeEnviar(o.estado)"
+                (click)="enviar(o.id)"
+              ></button>
+              <button
+                pButton
+                icon="pi pi-check"
+                class="p-button-sm p-button-text p-button-success"
+                pTooltip="Confirmar orden"
+                *ngIf="puedeConfirmar(o.estado)"
+                (click)="confirmar(o.id)"
+              ></button>
+              <button
+                pButton
+                icon="pi pi-pencil"
+                class="p-button-sm p-button-text p-button-secondary"
+                pTooltip="Editar"
+                *ngIf="puedeEditar(o.estado)"
+                (click)="abrirEditar(o.id)"
+              ></button>
+              <button
+                pButton
+                icon="pi pi-ban"
+                class="p-button-sm p-button-text p-button-danger"
+                pTooltip="Anular"
+                *ngIf="puedeAnular(o.estado)"
+                (click)="anular(o.id)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8" class="empty-row">No hay órdenes de compra registradas</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     Modal: Crear / Editar
+═══════════════════════════════════════════════════════════ -->
+<p-dialog
+  [(visible)]="showFormModal"
+  [header]="editingId ? 'Editar Orden de Compra' : 'Nueva Orden de Compra'"
+  [modal]="true"
+  [style]="{ width: '900px' }"
+  [draggable]="false"
+  [closable]="!saving"
+>
+  <div class="form-grid">
+    <div class="form-row-2">
+      <div class="form-field">
+        <label>Proveedor *</label>
+        <p-dropdown
+          [options]="proveedores"
+          [(ngModel)]="formOC.proveedorId"
+          placeholder="Seleccionar proveedor"
+          [filter]="true"
+          filterPlaceholder="Buscar..."
+          [style]="{ width: '100%' }"
+        />
+      </div>
+      <div class="form-field">
+        <label>Sucursal *</label>
+        <p-dropdown
+          [options]="sucursales"
+          [(ngModel)]="formOC.sucursalId"
+          placeholder="Seleccionar sucursal"
+          [style]="{ width: '100%' }"
+        />
+      </div>
+    </div>
+
+    <div class="form-row-2">
+      <div class="form-field">
+        <label>Fecha</label>
+        <p-calendar
+          [(ngModel)]="fechaForm"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          [style]="{ width: '100%' }"
+        />
+      </div>
+      <div class="form-field">
+        <label>Fecha Entrega Esperada</label>
+        <p-calendar
+          [(ngModel)]="fechaEntregaForm"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          [style]="{ width: '100%' }"
+        />
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label>Observaciones</label>
+      <textarea
+        pTextarea
+        [(ngModel)]="formOC.observaciones"
+        rows="2"
+        placeholder="Notas para el proveedor..."
+        style="width:100%"
+      ></textarea>
+    </div>
+
+    <p-divider align="left"><span class="divider-label">Productos</span></p-divider>
+
+    <!-- Líneas de productos -->
+    <div class="lineas-table">
+      <div class="lineas-header-row">
+        <span class="col-prod">Producto <small class="hint">— escribe 2+ letras para buscar</small></span>
+        <span class="col-cant" style="text-align:right">Cantidad</span>
+        <span class="col-costo" style="text-align:right">Costo Unit.</span>
+        <span class="col-sub" style="text-align:right">Subtotal</span>
+        <span class="col-del"></span>
+      </div>
+
+      <div class="linea-row" *ngFor="let linea of lineas; let i = index">
+        <!-- Producto — mismo patrón que form-compra -->
+        <div class="col-prod">
+          <p-dropdown
+            [ngModel]="linea.productoId"
+            (ngModelChange)="onProductoChange(i, $event)"
+            [options]="productosOpts"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Escribe para buscar..."
+            [filter]="true"
+            filterPlaceholder="Escribe 2+ letras..."
+            (onFilter)="onFiltroProducto($event)"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+
+        <!-- Cantidad -->
+        <div class="col-cant">
+          <p-inputNumber
+            [ngModel]="linea.cantidad"
+            (ngModelChange)="onCantidadChange(i, $event)"
+            [min]="0.001"
+            [minFractionDigits]="0"
+            [maxFractionDigits]="3"
+            styleClass="w-full input-num"
+            placeholder="0"
+          />
+        </div>
+
+        <!-- Costo unitario -->
+        <div class="col-costo">
+          <p-inputNumber
+            [ngModel]="linea.costoUnitario"
+            (ngModelChange)="onCostoChange(i, $event)"
+            mode="currency"
+            currency="COP"
+            locale="es-CO"
+            [minFractionDigits]="0"
+            styleClass="w-full input-num"
+          />
+        </div>
+
+        <!-- Subtotal -->
+        <div class="col-sub">
+          <strong>{{ formatCOP(linea.subtotal) }}</strong>
+        </div>
+
+        <!-- Eliminar -->
+        <div class="col-del">
+          <button
+            pButton
+            icon="pi pi-trash"
+            class="p-button-text p-button-danger p-button-sm"
+            (click)="eliminarLinea(i)"
+            [disabled]="lineas.length <= 1"
+          ></button>
+        </div>
+      </div>
+
+      <!-- Total + botón agregar -->
+      <div class="lineas-footer">
+        <button
+          pButton
+          label="Agregar línea"
+          icon="pi pi-plus"
+          class="p-button-text p-button-sm"
+          (click)="agregarLinea()"
+        ></button>
+        <span class="footer-total">
+          Total: <strong class="total-highlight">{{ formatCOP(totalLineas) }}</strong>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text p-button-secondary"
+      (click)="showFormModal = false"
+      [disabled]="saving"
+    ></button>
+    <button
+      pButton
+      label="Guardar"
+      icon="pi pi-save"
+      class="btn-aura btn-primary"
+      (click)="guardar()"
+      [loading]="saving"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ═══════════════════════════════════════════════════════════
+     Modal: Detalle
+═══════════════════════════════════════════════════════════ -->
+<p-dialog
+  [(visible)]="showDetalleModal"
+  [header]="ordenDetalle ? ordenDetalle.numeroOrden : 'Detalle'"
+  [modal]="true"
+  [style]="{ width: '800px' }"
+  [draggable]="false"
+>
+  <div *ngIf="loadingDetalle" class="loading-state">
+    <i class="pi pi-spin pi-spinner"></i> Cargando...
+  </div>
+
+  <div *ngIf="!loadingDetalle && ordenDetalle" class="detalle-body">
+    <!-- Info header -->
+    <div class="detalle-info-grid">
+      <div class="info-item">
+        <span class="info-label">Proveedor</span>
+        <span class="info-value">{{ ordenDetalle.proveedorNombre }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Sucursal</span>
+        <span class="info-value">{{ ordenDetalle.sucursalNombre }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Estado</span>
+        <p-tag
+          [value]="estadoLabel(ordenDetalle.estado)"
+          [severity]="estadoSeverity(ordenDetalle.estado)"
+        />
+      </div>
+      <div class="info-item">
+        <span class="info-label">Fecha</span>
+        <span class="info-value">{{ ordenDetalle.fecha | date:'dd/MM/yyyy' }}</span>
+      </div>
+      <div class="info-item" *ngIf="ordenDetalle.fechaEntregaEsperada">
+        <span class="info-label">Entrega esperada</span>
+        <span class="info-value">{{ ordenDetalle.fechaEntregaEsperada | date:'dd/MM/yyyy' }}</span>
+      </div>
+      <div class="info-item" *ngIf="ordenDetalle.compraId">
+        <span class="info-label">Compra generada</span>
+        <span class="info-value compra-link"># {{ ordenDetalle.compraId }}</span>
+      </div>
+    </div>
+
+    <div *ngIf="ordenDetalle.observaciones" class="observaciones-box">
+      <i class="pi pi-comment"></i> {{ ordenDetalle.observaciones }}
+    </div>
+
+    <!-- Tabla de detalles -->
+    <p-table [value]="ordenDetalle.detalles" styleClass="p-datatable-sm detalle-lines-table" [scrollable]="true">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Producto</th>
+          <th style="text-align:right">Pedido</th>
+          <th style="text-align:right">Recibido</th>
+          <th style="text-align:right">Pendiente</th>
+          <th style="text-align:right">Costo Unit.</th>
+          <th style="text-align:right">Subtotal</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-d>
+        <tr>
+          <td>{{ d.productoNombre }}</td>
+          <td style="text-align:right">{{ d.cantidad }}</td>
+          <td style="text-align:right" [class.text-success]="d.cantidadRecibida > 0">{{ d.cantidadRecibida }}</td>
+          <td style="text-align:right" [class.text-warning]="d.cantidadPendiente > 0">{{ d.cantidadPendiente }}</td>
+          <td style="text-align:right">{{ formatCOP(d.costoUnitario) }}</td>
+          <td style="text-align:right"><strong>{{ formatCOP(d.subtotalLinea) }}</strong></td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="footer">
+        <tr>
+          <td colspan="5" style="text-align:right"><strong>Total:</strong></td>
+          <td style="text-align:right"><strong>{{ formatCOP(ordenDetalle.total) }}</strong></td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <!-- Acciones dentro del detalle -->
+    <div class="detalle-actions">
+      <button
+        pButton
+        label="Enviar al proveedor"
+        icon="pi pi-send"
+        class="p-button-info p-button-sm"
+        *ngIf="puedeEnviar(ordenDetalle.estado)"
+        (click)="enviar(ordenDetalle.id)"
+      ></button>
+      <button
+        pButton
+        label="Confirmar"
+        icon="pi pi-check"
+        class="p-button-success p-button-sm"
+        *ngIf="puedeConfirmar(ordenDetalle.estado)"
+        (click)="confirmar(ordenDetalle.id)"
+      ></button>
+      <button
+        pButton
+        label="Recibir mercancía"
+        icon="pi pi-inbox"
+        class="btn-aura btn-primary p-button-sm"
+        *ngIf="puedeRecibir(ordenDetalle.estado)"
+        (click)="abrirRecepcion()"
+      ></button>
+      <button
+        pButton
+        label="Anular"
+        icon="pi pi-ban"
+        class="p-button-danger p-button-outlined p-button-sm"
+        *ngIf="puedeAnular(ordenDetalle.estado)"
+        (click)="anular(ordenDetalle.id)"
+      ></button>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- ═══════════════════════════════════════════════════════════
+     Modal: Recepción de mercancía
+═══════════════════════════════════════════════════════════ -->
+<p-dialog
+  [(visible)]="showRecepcionModal"
+  header="Recibir Mercancía"
+  [modal]="true"
+  [style]="{ width: '700px' }"
+  [draggable]="false"
+  [closable]="!savingRecepcion"
+>
+  <div *ngIf="ordenDetalle" class="recepcion-body">
+    <div class="form-row-2 mb-3">
+      <div class="form-field">
+        <label>Número de Factura del Proveedor</label>
+        <input
+          pInputText
+          [(ngModel)]="recepcionForm.numeroFactura"
+          placeholder="Ej: FAC-001234"
+          style="width:100%"
+        />
+      </div>
+      <div class="form-field">
+        <label>Observaciones de recepción</label>
+        <input
+          pInputText
+          [(ngModel)]="recepcionForm.observaciones"
+          placeholder="Notas..."
+          style="width:100%"
+        />
+      </div>
+    </div>
+
+    <p-divider align="left"><span class="divider-label">Cantidades recibidas</span></p-divider>
+
+    <table class="recepcion-table">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th style="text-align:right">Pendiente</th>
+          <th style="width:160px">Cantidad a Recibir</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let d of ordenDetalle.detalles; let i = index">
+          <td>{{ d.productoNombre }}</td>
+          <td style="text-align:right;color:var(--color-warning)">{{ d.cantidadPendiente }}</td>
+          <td>
+            <p-inputNumber
+              [(ngModel)]="cantidadesRecepcion[i]"
+              [min]="0"
+              [max]="d.cantidadPendiente"
+              [minFractionDigits]="0"
+              [maxFractionDigits]="3"
+              [style]="{ width: '100%' }"
+            />
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="recepcion-notice">
+      <i class="pi pi-info-circle"></i>
+      Al confirmar se creará una <strong>Compra</strong> automáticamente con los productos recibidos.
+      Si no recibe todo, la orden quedará en <strong>Recibida Parcialmente</strong>.
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text p-button-secondary"
+      (click)="showRecepcionModal = false"
+      [disabled]="savingRecepcion"
+    ></button>
+    <button
+      pButton
+      label="Confirmar recepción"
+      icon="pi pi-check"
+      class="btn-aura btn-primary"
+      (click)="guardarRecepcion()"
+      [loading]="savingRecepcion"
+    ></button>
+  </ng-template>
+</p-dialog>

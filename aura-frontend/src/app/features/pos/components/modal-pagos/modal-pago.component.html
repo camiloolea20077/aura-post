@@ -4,112 +4,176 @@
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
-  [style]="{ width: '480px' }"
-  styleClass="aura-dialog"
+  [style]="{ width: 'min(720px, 96vw)' }"
+  [contentStyle]="{ padding: '0', overflow: 'hidden' }"
+  styleClass="aura-dialog cobro-dialog"
   (onHide)="closeModal()"
 >
-  <div class="pago-container">
-    <!-- Total a pagar -->
-    <div class="total-banner">
-      <span class="banner-label">Total a cobrar</span>
-      <span class="banner-total">{{ formatCOP(total) }}</span>
-    </div>
+  <div class="cobro-layout">
 
-    <!-- ✅ NUEVO: Alerta si hay CREDITO -->
-    <div class="credito-info-banner" *ngIf="tieneCredito">
-      <i class="pi pi-info-circle"></i>
-      <span
-        >Esta venta se registrará como venta a CREDITO. El cliente deberá
-        completar estos datos.</span
-      >
-    </div>
+    <!-- ══ IZQUIERDA: métodos + monto ══ -->
+    <div class="cobro-izq">
 
-    <!-- Líneas de pago -->
-    <div class="pagos-list">
-      <div class="pago-line" *ngFor="let pago of pagos; let i = index">
-        <!-- Selector método -->
-        <div class="metodo-grid">
-          <button
-            class="metodo-btn"
-            *ngFor="let m of metodos"
-            [class.active]="pago.metodoPago === m.value"
-            [style.--mcolor]="m.color"
-            (click)="setMetodo(pago, m.value)"
-          >
-            <i [class]="m.icon"></i>
-            <span>{{ m.label }}</span>
-          </button>
+      <!-- Panel crédito (cuando se selecciona CREDITO) -->
+      <div class="credito-panel" *ngIf="tieneCredito">
+        <div class="credito-panel-header">
+          <i class="pi pi-file-invoice"></i>
+          <span>Venta a Crédito</span>
         </div>
+        <div class="credito-cliente" *ngIf="clienteNombre">
+          <i class="pi pi-user"></i> {{ clienteNombre }}
+        </div>
+        <ng-container *ngIf="creditoInfo; else sinCreditoInfo">
+          <!-- Estado -->
+          <div class="credito-estado" [style.color]="getCreditoColor()">
+            <i class="pi" [class.pi-check-circle]="creditoInfo.permitido" [class.pi-times-circle]="!creditoInfo.permitido"></i>
+            <span *ngIf="creditoInfo.permitido">Crédito habilitado</span>
+            <span *ngIf="!creditoInfo.permitido">{{ creditoInfo.motivoBloqueo ?? 'Crédito bloqueado' }}</span>
+          </div>
+          <!-- Métricas -->
+          <div class="credito-metricas">
+            <div class="credito-metrica">
+              <span class="cm-label">Cupo total</span>
+              <span class="cm-valor">{{ formatCOP(creditoInfo.cupoActual ?? 0) }}</span>
+            </div>
+            <div class="credito-metrica">
+              <span class="cm-label">Deuda actual</span>
+              <span class="cm-valor red">{{ formatCOP(creditoInfo.saldoCartera ?? 0) }}</span>
+            </div>
+            <div class="credito-metrica highlight" [class.ok]="(creditoInfo.saldoDisponible ?? 0) >= 0" [class.warn]="(creditoInfo.saldoDisponible ?? 0) < 0">
+              <span class="cm-label">Disponible</span>
+              <span class="cm-valor">{{ formatCOP(creditoInfo.saldoDisponible ?? 0) }}</span>
+            </div>
+          </div>
+          <!-- Advertencia si no está permitido -->
+          <div class="credito-warning" *ngIf="!creditoInfo.permitido">
+            <i class="pi pi-exclamation-triangle"></i>
+            Este cliente no puede comprar a crédito en este momento.
+          </div>
+        </ng-container>
+        <ng-template #sinCreditoInfo>
+          <div class="credito-sin-info">
+            <i class="pi pi-info-circle"></i>
+            Sin historial de crédito para este cliente.
+          </div>
+        </ng-template>
+      </div>
 
-        <!-- Monto + referencia -->
-        <div class="monto-row">
-          <div class="monto-field">
-            <label>{{
-              pago.metodoPago === "CREDITO"
-                ? "Total a CREDITO"
-                : "Monto recibido"
-            }}</label>
-            <p-inputNumber
-              [(ngModel)]="pago.monto"
-              mode="decimal"
-              [min]="0"
-              [maxFractionDigits]="0"
-              prefix="$ "
-              placeholder="$ 0"
-              styleClass="w-full monto-inp"
-              [disabled]="pago.metodoPago === 'CREDITO'"
-            />
-            <button
-              class="fill-btn"
-              (click)="distribuirRestante(pago)"
-              [disabled]="pago.metodoPago === 'CREDITO'"
-              pTooltip="Rellenar con el restante"
-            >
-              <i class="pi pi-arrow-down"></i>
+      <!-- Líneas de pago -->
+      <div class="pagos-list">
+        <div class="pago-card" *ngFor="let pago of pagos; let i = index">
+
+          <!-- Título + quitar -->
+          <div class="card-header">
+            <span class="card-title">
+              <i class="pi pi-wallet"></i>
+              Método {{ pagos.length > 1 ? (i + 1) : '' }}
+            </span>
+            <button class="remove-btn" *ngIf="pagos.length > 1" (click)="removePago(i)">
+              <i class="pi pi-times"></i> Quitar
             </button>
           </div>
-          <div class="ref-field" *ngIf="pago.metodoPago !== 'EFECTIVO'">
-            <label>{{
-              pago.metodoPago === "CREDITO"
-                ? "Contrato/Referencia"
-                : "Referencia / aprobación"
-            }}</label>
-            <input
-              type="text"
-              pInputText
-              [(ngModel)]="pago.referencia"
-              [placeholder]="
-                pago.metodoPago === 'CREDITO' ? 'Requerido' : 'Opcional'
-              "
-              class="ref-inp"
+
+          <!-- Métodos: grid 3×2 táctil -->
+          <div class="metodo-grid">
+            <button
+              class="metodo-btn"
+              *ngFor="let m of metodos"
+              [class.active]="pago.metodoPago === m.value"
+              [class.disabled-metodo]="m.value === 'CREDITO' && !esCreditoSeleccionable()"
+              [style.--mcolor]="m.color"
+              [disabled]="m.value === 'CREDITO' && !esCreditoSeleccionable()"
+              [title]="m.value === 'CREDITO' && !esCreditoSeleccionable() ? (creditoInfo?.motivoBloqueo ?? 'Crédito no disponible') : ''"
+              (click)="setMetodo(pago, m.value)"
+            >
+              <i [class]="m.icon"></i>
+              <span>{{ m.label }}</span>
+            </button>
+          </div>
+
+          <!-- Cuenta destino (Transferencia / Nequi / Daviplata) -->
+          <div class="cuenta-field" *ngIf="requiereCuenta(pago.metodoPago) && cuentasOpts.length > 0">
+            <label class="cuenta-label">
+              <i class="pi pi-building"></i>
+              ¿A qué cuenta llega el pago?
+            </label>
+            <p-dropdown
+              [(ngModel)]="pago.cuentaBancariaId"
+              [options]="cuentasOpts"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Selecciona cuenta"
+              styleClass="w-full cuenta-drop"
+              [showClear]="true"
             />
           </div>
-        </div>
 
-        <!-- Quitar pago -->
-        <button
-          class="remove-pago"
-          *ngIf="pagos.length > 1"
-          (click)="removePago(i)"
-        >
-          <i class="pi pi-times"></i> Quitar
-        </button>
+          <!-- Monto -->
+          <div class="monto-row">
+            <div class="monto-field">
+              <label>{{ pago.metodoPago === 'CREDITO' ? 'Total a CRÉDITO' : 'Monto recibido' }}</label>
+              <div class="monto-inp-wrap">
+                <p-inputNumber
+                  [(ngModel)]="pago.monto"
+                  mode="decimal"
+                  [min]="0"
+                  [maxFractionDigits]="2"
+                  prefix="$ "
+                  placeholder="$ 0"
+                  styleClass="w-full monto-inp"
+                  [disabled]="pago.metodoPago === 'CREDITO'"
+                />
+                <button
+                  class="fill-btn"
+                  (click)="distribuirRestante(pago)"
+                  [disabled]="pago.metodoPago === 'CREDITO'"
+                  title="Completar con el faltante"
+                >
+                  <i class="pi pi-arrow-down-left-and-arrow-up-right-to-center"></i>
+                  Exacto
+                </button>
+              </div>
+            </div>
+
+            <!-- Referencia (no efectivo) -->
+            <div class="ref-field" *ngIf="pago.metodoPago !== 'EFECTIVO'">
+              <label>{{ pago.metodoPago === 'CREDITO' ? 'Contrato/Referencia' : 'Referencia / aprobación' }}</label>
+              <input
+                type="text"
+                pInputText
+                [(ngModel)]="pago.referencia"
+                [placeholder]="pago.metodoPago === 'CREDITO' ? 'Opcional' : 'Opcional'"
+                class="ref-inp"
+              />
+            </div>
+          </div>
+
+        </div>
       </div>
+
+      <!-- Agregar método -->
+      <button
+        class="add-metodo-btn"
+        *ngIf="pagos.length < 4 && !tieneCredito"
+        (click)="addPago()"
+      >
+        <i class="pi pi-plus"></i> Agregar otro método
+      </button>
+
     </div>
 
-    <!-- Agregar método -->
-    <button
-      class="add-metodo-btn"
-      *ngIf="pagos.length < 4 && !tieneCredito"
-      (click)="addPago()"
-    >
-      <i class="pi pi-plus"></i> Agregar otro método de pago
-    </button>
+    <!-- ══ DERECHA: resumen + confirmar ══ -->
+    <div class="cobro-der">
 
-    <!-- Descuento General -->
-    <div class="descuento-global-section">
-      <div class="desc-field">
-        <label>Descuento General Adicional</label>
+      <!-- Total grande -->
+      <div class="total-block">
+        <span class="total-label">Total a cobrar</span>
+        <span class="total-monto">{{ formatCOP(totalConDescuento) }}</span>
+      </div>
+
+      <!-- Descuento general -->
+      <div class="descuento-block">
+        <label class="desc-label">Descuento adicional</label>
         <p-inputNumber
           [(ngModel)]="descuentoGeneral"
           mode="currency"
@@ -122,70 +186,74 @@
           styleClass="w-full desc-inp"
         />
       </div>
-    </div>
 
-    <p-divider />
+      <!-- Resumen desglose -->
+      <div class="resumen-block">
+        <div class="res-row">
+          <span>Subtotal</span>
+          <span>{{ formatCOP(subtotal) }}</span>
+        </div>
+        <div class="res-row" *ngIf="descuentoGeneral > 0">
+          <span>Descuento</span>
+          <span class="red">− {{ formatCOP(descuentoGeneral) }}</span>
+        </div>
+        <div class="res-row">
+          <span>IVA</span>
+          <span>{{ formatCOP(impuestosTotal) }}</span>
+        </div>
+        <div class="res-divider"></div>
+        <div class="res-row res-total-row">
+          <span>Total</span>
+          <span>{{ formatCOP(totalConDescuento) }}</span>
+        </div>
+        <div class="res-row">
+          <span>Recibido</span>
+          <span class="blue">{{ formatCOP(totalPagado) }}</span>
+        </div>
+      </div>
 
-    <!-- Resumen -->
-    <div class="resumen-pago">
-      <div class="res-row">
-        <span class="res-label">Total cobrado</span>
-        <span class="res-val">{{ formatCOP(totalPagado) }}</span>
+      <!-- Vuelto / Faltante -->
+      <div class="estado-pago" [class.vuelto]="vuelto > 0" [class.faltante]="faltante > 0" [class.cuadra]="cuadra && vuelto === 0">
+        <ng-container *ngIf="vuelto > 0">
+          <i class="pi pi-arrow-right-arrow-left"></i>
+          <div>
+            <div class="estado-label">Vuelto</div>
+            <div class="estado-val">{{ formatCOP(vuelto) }}</div>
+          </div>
+        </ng-container>
+        <ng-container *ngIf="faltante > 0">
+          <i class="pi pi-exclamation-triangle"></i>
+          <div>
+            <div class="estado-label">Faltante</div>
+            <div class="estado-val">{{ formatCOP(faltante) }}</div>
+          </div>
+        </ng-container>
+        <ng-container *ngIf="cuadra && vuelto === 0">
+          <i class="pi pi-check-circle"></i>
+          <div>
+            <div class="estado-label">Pago exacto</div>
+            <div class="estado-val">Listo</div>
+          </div>
+        </ng-container>
       </div>
-      <p-divider />
-      <div class="res-row">
-        <span class="res-label">Subtotal</span>
-        <span class="res-val">{{ formatCOP(subtotal) }}</span>
-      </div>
-      <div class="res-row" *ngIf="descuentoGeneral > 0">
-        <span class="res-label">Descuento General</span>
-        <span class="res-val desc-val"
-          >- {{ formatCOP(descuentoGeneral) }}</span
+
+      <!-- Acciones -->
+      <div class="acciones">
+        <button
+          class="btn-confirmar"
+          [class.submitting]="isSubmitting"
+          [disabled]="!cuadra || isSubmitting || creditoBloqueado"
+          (click)="confirmar()"
         >
-      </div>
-      <div class="res-row">
-        <span class="res-label">IVA (fijo)</span>
-        <span class="res-val">{{ formatCOP(impuestosTotal) }}</span>
-      </div>
-      <div class="res-row res-total">
-        <span class="res-label">Total Neto a cobrar</span>
-        <span class="res-val mono-val">{{ formatCOP(totalConDescuento) }}</span>
+          <i [class]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'"></i>
+          {{ isSubmitting ? 'Procesando...' : 'Confirmar venta' }}
+        </button>
+        <button class="btn-cancelar" (click)="closeModal()">
+          Cancelar
+        </button>
       </div>
 
-      <!-- Faltante -->
-      <div class="res-row alert-row faltante" *ngIf="faltante > 0">
-        <i class="pi pi-exclamation-triangle"></i>
-        <span>Faltante: {{ formatCOP(faltante) }}</span>
-      </div>
-
-      <!-- Vuelto -->
-      <div class="res-row vuelto-row" *ngIf="vuelto > 0">
-        <span class="vuelto-label">Vuelto a entregar</span>
-        <span class="vuelto-val">{{ formatCOP(vuelto) }}</span>
-      </div>
     </div>
   </div>
-
-  <ng-template pTemplate="footer">
-    <div class="dialog-footer">
-      <button
-        pButton
-        type="button"
-        label="Cancelar"
-        icon="pi pi-times"
-        class="p-button-outlined p-button-secondary"
-        (click)="closeModal()"
-      ></button>
-      <button
-        pButton
-        type="button"
-        [label]="isSubmitting ? 'Procesando...' : 'Confirmar venta'"
-        [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
-        class="btn-confirmar"
-        [disabled]="!cuadra || isSubmitting"
-        (click)="confirmar()"
-      ></button>
-    </div>
-  </ng-template>
 </p-dialog>
 <p-toast />

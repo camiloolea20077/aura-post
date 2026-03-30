@@ -130,3 +130,64 @@ $mono: "JetBrains Mono", monospace;
   border: none !important;
   font-weight: 600 !important;
 }
+
+// ── Diálogo de pago ──────────────────────────────────────────
+.pago-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.25rem 0;
+}
+
+.pago-resumen {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+
+  i { font-size: 1.2rem; color: $indigo; }
+
+  .pago-nombre { font-weight: 700; font-size: 0.9rem; color: $text; }
+  .pago-monto  { font-size: 0.82rem; color: $muted; font-weight: 600; }
+}
+
+.pago-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.pago-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: $text;
+
+  &.required::after { content: ' *'; color: $red; }
+}
+
+.cuenta-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 0.5rem;
+
+  .cuenta-nombre { font-weight: 600; font-size: 0.85rem; }
+  .cuenta-saldo  { font-size: 0.78rem; color: $green; font-weight: 700; }
+}
+
+::ng-deep .metodo-pago-btn .p-button {
+  flex: 1;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-family: $font;
+}
+::ng-deep .metodo-pago-btn .p-button.p-highlight {
+  background: $indigo !important;
+  border-color: $indigo !important;
+  color: #fff !important;
+}

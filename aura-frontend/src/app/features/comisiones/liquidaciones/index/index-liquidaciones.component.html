@@ -141,3 +141,80 @@
   [(visible)]="showDetalle"
   [liquidacionId]="detalleId"
 />
+
+<!-- ─── Diálogo: registrar pago ────────────────────────────── -->
+<p-dialog
+  header="Registrar pago"
+  [(visible)]="showPagoDialog"
+  (onHide)="closePagoDialog()"
+  [modal]="true"
+  [style]="{ width: '420px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="pago-dialog-body" *ngIf="pagoItem">
+    <!-- Resumen -->
+    <div class="pago-resumen">
+      <i class="pi pi-user"></i>
+      <div>
+        <div class="pago-nombre">{{ pagoItem.tecnicoNombre }}</div>
+        <div class="pago-monto">{{ formatCOP(pagoItem.valorTotal) }}</div>
+      </div>
+    </div>
+
+    <!-- Método de pago -->
+    <div class="pago-field">
+      <label class="pago-label">Método de pago</label>
+      <p-selectButton
+        [(ngModel)]="metodoPagoSel"
+        [options]="metodoPagoOptions"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full metodo-pago-btn"
+      />
+    </div>
+
+    <!-- Cuenta bancaria (si aplica) -->
+    <div class="pago-field" *ngIf="requiereCuenta">
+      <label class="pago-label required">Cuenta / Billetera</label>
+      <p-dropdown
+        [(ngModel)]="cuentaBancariaIdSel"
+        [options]="cuentasBancarias"
+        optionLabel="nombre"
+        optionValue="id"
+        placeholder="Seleccionar cuenta..."
+        [filter]="true"
+        filterPlaceholder="Buscar cuenta..."
+        [showClear]="true"
+        styleClass="w-full"
+        appendTo="body"
+        [loading]="loadingCuentas"
+      >
+        <ng-template let-c pTemplate="item">
+          <div class="cuenta-item">
+            <span class="cuenta-nombre">{{ c.nombre }}</span>
+            <span class="cuenta-saldo">{{ formatCOP(c.saldoActual) }}</span>
+          </div>
+        </ng-template>
+      </p-dropdown>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="closePagoDialog()"
+    ></button>
+    <button
+      pButton
+      label="Confirmar pago"
+      icon="pi pi-check"
+      class="btn-aura btn-primary"
+      [loading]="submittingPago"
+      (click)="confirmarPagoDialog()"
+    ></button>
+  </ng-template>
+</p-dialog>

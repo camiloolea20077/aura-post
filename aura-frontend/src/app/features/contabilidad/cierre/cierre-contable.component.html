@@ -353,6 +353,44 @@
           </div>
         </div>
 
+        <!-- Gastos del período -->
+        <div class="cc-panel" *ngIf="(data.cantidadGastos ?? 0) > 0">
+          <div class="cc-panel-header cc-panel-header-sm">
+            <div class="cc-panel-title">
+              <i class="pi pi-wallet"></i>
+              <span>Gastos del período</span>
+            </div>
+            <p-tag [value]="data.cantidadGastos + ' gastos'" severity="info" />
+          </div>
+          <div class="gastos-grid">
+            <div class="gasto-item gasto-deducible">
+              <div class="gasto-icon"><i class="pi pi-check-circle"></i></div>
+              <div class="gasto-body">
+                <span class="gasto-label">Deducibles</span>
+                <span class="gasto-val green">{{ formatCOP(data.totalGastosDeducibles) }}</span>
+                <small>Reducen la base gravable</small>
+              </div>
+            </div>
+            <div class="caja-divider"></div>
+            <div class="gasto-item gasto-no-deducible">
+              <div class="gasto-icon"><i class="pi pi-times-circle"></i></div>
+              <div class="gasto-body">
+                <span class="gasto-label">No deducibles</span>
+                <span class="gasto-val red">{{ formatCOP(data.totalGastosNoDeducibles) }}</span>
+                <small>Salarios, multas, personales</small>
+              </div>
+            </div>
+            <div class="caja-divider"></div>
+            <div class="gasto-item gasto-total">
+              <div class="gasto-icon"><i class="pi pi-equals"></i></div>
+              <div class="gasto-body">
+                <span class="gasto-label">Total gastos</span>
+                <span class="gasto-val">{{ formatCOP(data.totalGastos) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
 

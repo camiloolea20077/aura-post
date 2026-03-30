@@ -1,0 +1,226 @@
+<p-dialog
+  header="Nueva venta de campo"
+  [(visible)]="displayModal"
+  [modal]="true"
+  [style]="{ width: '780px' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="cerrar()"
+>
+  <div class="form-body">
+    <!-- Sección cliente -->
+    <div class="form-section">
+      <div class="section-title">
+        <i class="pi pi-user"></i>
+        Cliente
+      </div>
+      <div class="cliente-row">
+        <p-autoComplete
+          *ngIf="!clienteSeleccionado"
+          [(ngModel)]="clienteQuery"
+          [suggestions]="clienteSugerencias"
+          (completeMethod)="buscarCliente($event)"
+          (onSelect)="onClienteSeleccionado($event)"
+          [field]="'nombreCompleto'"
+          placeholder="Buscar cliente por nombre o documento..."
+          [style]="{ width: '100%' }"
+          [inputStyle]="{ width: '100%' }"
+          [minLength]="2"
+          [delay]="300"
+          [showClear]="true"
+        >
+          <ng-template let-c pTemplate="item">
+            <div class="cliente-option">
+              <span class="cliente-nombre">{{ c.nombreCompleto }}</span>
+              <span class="cliente-doc">{{ c.numeroDocumento }}</span>
+            </div>
+          </ng-template>
+        </p-autoComplete>
+
+        <div class="cliente-badge" *ngIf="clienteSeleccionado">
+          <div class="cliente-av">
+            {{ clienteSeleccionado.nombreCompleto.charAt(0).toUpperCase() }}
+          </div>
+          <div class="cliente-info">
+            <span class="cliente-nombre-sel">{{
+              clienteSeleccionado.nombreCompleto
+            }}</span>
+            <span class="cliente-doc-sel">{{
+              clienteSeleccionado.numeroDocumento
+            }}</span>
+          </div>
+          <button
+            pButton
+            icon="pi pi-times"
+            class="p-button-text p-button-sm btn-remove-cliente"
+            (click)="limpiarCliente()"
+            pTooltip="Quitar cliente"
+          ></button>
+        </div>
+
+        <span class="cf-label" *ngIf="!clienteSeleccionado">
+          <i class="pi pi-info-circle"></i> Si no selecciona cliente, se
+          registra como Consumidor Final
+        </span>
+      </div>
+    </div>
+
+    <p-divider />
+
+    <!-- Sección productos -->
+    <div class="form-section">
+      <div class="section-title">
+        <i class="pi pi-box"></i>
+        Productos
+      </div>
+
+      <p-autoComplete
+        [(ngModel)]="productoQuery"
+        [suggestions]="productoSugerencias"
+        (completeMethod)="buscarProducto($event)"
+        (onSelect)="onProductoSeleccionado($event)"
+        [field]="'nombre'"
+        placeholder="Buscar producto por nombre o SKU..."
+        [style]="{ width: '100%' }"
+        [inputStyle]="{ width: '100%' }"
+        [minLength]="2"
+        [delay]="300"
+        [showClear]="true"
+      >
+        <ng-template let-p pTemplate="item">
+          <div class="producto-option">
+            <div class="prod-nombre">{{ p.nombre }}</div>
+            <div class="prod-meta">
+              <span *ngIf="p.sku" class="prod-sku">{{ p.sku }}</span>
+              <span class="prod-precio">{{
+                formatCOP(p.precioFinal ?? p.precio ?? 0)
+              }}</span>
+            </div>
+          </div>
+        </ng-template>
+      </p-autoComplete>
+
+      <!-- Tabla carrito -->
+      <div class="carrito-table" *ngIf="carrito.length > 0">
+        <table>
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th style="width: 90px" class="text-center">Cant.</th>
+              <th style="width: 120px" class="text-right">Precio unit.</th>
+              <th style="width: 100px" class="text-right">IVA</th>
+              <th style="width: 120px" class="text-right">Subtotal</th>
+              <th style="width: 44px"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of carrito; let i = index">
+              <td>
+                <div class="item-nombre">{{ item.productoNombre }}</div>
+                <div class="item-sku" *ngIf="item.productoSku">
+                  {{ item.productoSku }}
+                </div>
+              </td>
+              <td class="text-center">
+                <p-inputNumber
+                  [(ngModel)]="item.cantidad"
+                  [min]="0.001"
+                  [step]="1"
+                  [showButtons]="false"
+                  (ngModelChange)="recalcularLinea(item)"
+                  [inputStyle]="{ width: '70px', textAlign: 'center' }"
+                />
+              </td>
+              <td class="text-right">
+                <p-inputNumber
+                  [(ngModel)]="item.precioUnitario"
+                  [min]="0"
+                  mode="currency"
+                  currency="COP"
+                  locale="es-CO"
+                  [maxFractionDigits]="0"
+                  (ngModelChange)="recalcularLinea(item)"
+                  [inputStyle]="{ width: '110px', textAlign: 'right' }"
+                />
+              </td>
+              <td class="text-right val-col">
+                {{ formatCOP(item.impuestoValor) }}
+              </td>
+              <td class="text-right val-col subtotal-col">
+                {{ formatCOP(item.subtotal) }}
+              </td>
+              <td class="text-center">
+                <button
+                  pButton
+                  icon="pi pi-trash"
+                  class="p-button-text p-button-sm p-button-danger btn-remove-item"
+                  pTooltip="Eliminar"
+                  (click)="eliminarItem(i)"
+                ></button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="carrito-empty" *ngIf="carrito.length === 0">
+        <i class="pi pi-shopping-cart"></i>
+        <span>Busca y agrega productos al pedido</span>
+      </div>
+    </div>
+
+    <!-- Totales -->
+    <div class="totales-section" *ngIf="carrito.length > 0">
+      <div class="total-row">
+        <span>Subtotal</span>
+        <span>{{ formatCOP(subtotalTotal) }}</span>
+      </div>
+      <div class="total-row">
+        <span>IVA</span>
+        <span>{{ formatCOP(ivaTotal) }}</span>
+      </div>
+      <div class="total-row total-final">
+        <span>Total a pagar</span>
+        <span>{{ formatCOP(totalPagar) }}</span>
+      </div>
+    </div>
+
+    <p-divider />
+
+    <!-- Observaciones -->
+    <div class="form-section">
+      <div class="section-title">
+        <i class="pi pi-comment"></i>
+        Observaciones <span class="opcional">(opcional)</span>
+      </div>
+      <textarea
+        pTextarea
+        [(ngModel)]="observaciones"
+        rows="3"
+        placeholder="Notas adicionales del pedido..."
+        style="width: 100%; resize: vertical"
+      ></textarea>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      class="p-button-text"
+      (click)="cerrar()"
+      [disabled]="isSubmitting"
+    ></button>
+    <button
+      pButton
+      label="Crear pedido"
+      icon="pi pi-check"
+      class="p-button-primary"
+      [loading]="isSubmitting"
+      [disabled]="carrito.length === 0"
+      (click)="crearPedido()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<p-toast />

@@ -10,8 +10,11 @@ export interface TecnicoDto {
 export interface ComisionConfigModel {
   id: number;
   empresaId: number;
-  productoId: number;
-  productoNombre: string;
+  modalidad: ModalidadComision;
+  productoId: number | null;
+  productoNombre: string | null;
+  categoriaId: number | null;
+  categoriaNombre: string | null;
   tecnicoId: number | null;
   tecnicoNombre: string | null;
   tipo: TipoComision;
@@ -22,7 +25,9 @@ export interface ComisionConfigModel {
 
 export interface ComisionConfigTableModel {
   id: number;
-  productoNombre: string;
+  modalidad: ModalidadComision;
+  productoNombre: string | null;
+  categoriaNombre: string | null;
   tecnicoNombre: string | null;
   tipo: TipoComision;
   porcentajeTecnico: number;
@@ -31,7 +36,9 @@ export interface ComisionConfigTableModel {
 }
 
 export interface CreateComisionConfigDto {
-  productoId: number;
+  modalidad: ModalidadComision;
+  productoId?: number | null;
+  categoriaId?: number | null;
   tecnicoId?: number | null;
   tipo: TipoComision;
   porcentajeTecnico: number;
@@ -43,6 +50,7 @@ export interface UpdateComisionConfigDto extends CreateComisionConfigDto {
 }
 
 export type TipoComision = 'PORCENTAJE' | 'VALOR_FIJO';
+export type ModalidadComision = 'SERVICIO' | 'VENTA';
 
 export interface ComisionConfigFilterParams {
   search?: string | null;
@@ -99,6 +107,12 @@ export interface CreateLiquidacionDto {
   fechaDesde: string;
   fechaHasta: string;
   observaciones?: string | null;
+}
+
+export interface MarcarPagadaDto {
+  fechaPago: string;
+  metodoPago: string;
+  cuentaBancariaId?: number | null;
 }
 
 export interface LiquidacionFilterParams {

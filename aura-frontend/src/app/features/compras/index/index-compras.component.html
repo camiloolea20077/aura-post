@@ -134,7 +134,7 @@
           </td>
 
           <!-- Acciones -->
-          <td class="text-center">
+          <td class="text-center flex">
             <button
               pButton
               type="button"
@@ -143,6 +143,25 @@
               pTooltip="Ver detalle"
               tooltipPosition="top"
               (click)="verDetalle(item)"
+            ></button>
+            <button
+              *ngIf="item.estado === 'RECIBIDA'"
+              pButton
+              type="button"
+              icon="pi pi-pencil"
+              class="p-button-text p-button-sm p-button-secondary"
+              pTooltip="Editar compra"
+              tooltipPosition="top"
+              (click)="editarCompra(item)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-file"
+              class="p-button-text p-button-sm p-button-warning"
+              pTooltip="Comprobante de egreso"
+              tooltipPosition="top"
+              (click)="verComprobante(item)"
             ></button>
           </td>
         </tr>
@@ -198,10 +217,19 @@
 
 <app-form-compra
   [displayModal]="showFormModal"
+  [compraToEdit]="compraEnEdicion"
+  [prefilledFromOC]="prefilledFromOC"
   (modalClosed)="onFormClosed()"
-  (compraSaved)="onCompraSaved()"
+  (compraSaved)="onCompraSaved($event)"
 >
 </app-form-compra>
+
+<app-comprobante-egreso
+  [compra]="compraComprobante"
+  [visible]="showComprobante"
+  (closed)="showComprobante = false"
+>
+</app-comprobante-egreso>
 
 <app-detalle-compra
   [visible]="showDetalle"

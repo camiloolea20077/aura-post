@@ -1,22 +1,24 @@
 <p-dialog
   [(visible)]="displayModal"
-  header="Registrar compra"
+  [header]="modoEdicion ? 'Editar compra' : 'Registrar compra'"
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
   [maximizable]="true"
-  [style]="{ width: '960px' }"
+  [style]="{ width: '1400px' }"
+  [contentStyle]="{
+    height: 'calc(88vh - 130px)',
+    overflow: 'hidden',
+    padding: '0',
+  }"
   styleClass="aura-dialog compra-dialog"
   (onHide)="closeModal()"
 >
-  <div class="compra-form">
-    <!-- ══ CABECERA ════════════════════════════════════════════════ -->
-    <div class="seccion-cabecera">
-      <div class="seccion-title">
-        <i class="pi pi-file-edit"></i> Datos de la compra
-      </div>
-
-      <div class="cab-grid">
+  <div class="compra-layout">
+    <!-- ═══════ HEADER (campos del documento) ════════════════════════ -->
+    <div class="compra-header">
+      <!-- Fila 1: Proveedor + metadatos del documento -->
+      <div class="header-row">
         <!-- Proveedor -->
         <div class="field field-proveedor">
           <label>Proveedor <span class="required">*</span></label>
@@ -25,7 +27,7 @@
               [(ngModel)]="proveedorQuery"
               [suggestions]="proveedoresSugerencias"
               field="nombreCompleto"
-              placeholder="Busca por nombre, NIT o razón social..."
+              placeholder="Nombre, NIT o razón social..."
               (completeMethod)="buscarProveedores($event.query)"
               (onSelect)="seleccionarProveedor($event)"
               styleClass="w-full auto-proveedor"
@@ -64,8 +66,20 @@
           </div>
         </div>
 
+        <!-- Tipo de documento -->
+        <div class="field field-tipodoc">
+          <label>Tipo Doc.</label>
+          <p-dropdown
+            [(ngModel)]="tipoDocumento"
+            [options]="tipoDocumentoOpts"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+          />
+        </div>
+
         <!-- Sucursal -->
-        <div class="field">
+        <div class="field field-sucursal">
           <label>Sucursal <span class="required">*</span></label>
           <p-dropdown
             [(ngModel)]="sucursalId"
@@ -77,25 +91,26 @@
           />
         </div>
 
-        <!-- N° Factura -->
-        <div class="field">
-          <label
-            >N° Factura / Remisión
-            <span class="optional">(opcional)</span></label
-          >
+        <!-- N° Documento -->
+        <div class="field field-ndoc">
+          <label>N° Documento <span class="optional">(opc.)</span></label>
           <input
             type="text"
             pInputText
             [(ngModel)]="numeroCompra"
-            placeholder="Ej: FC-001-2025"
+            placeholder="FC-001-2025"
             maxlength="50"
             autocomplete="off"
           />
         </div>
+      </div>
+      <!-- /header-row -->
 
+      <!-- Fila 2: Fecha, forma de pago, plazo -->
+      <div class="header-row header-row2">
         <!-- Fecha -->
-        <div class="field">
-          <label>Fecha de compra</label>
+        <div class="field field-fecha">
+          <label>Fecha</label>
           <p-calendar
             [(ngModel)]="fechaCompra"
             [showTime]="true"
@@ -104,31 +119,95 @@
             styleClass="w-full"
           />
         </div>
-      </div>
 
-      <!-- Observaciones -->
-      <div class="field">
-        <label>Observaciones <span class="optional">(opcional)</span></label>
-        <textarea
-          pInputTextarea
-          [(ngModel)]="observaciones"
-          placeholder="Notas internas sobre esta compra..."
-          [rows]="2"
-          maxlength="500"
-          style="
-            font-family: &quot;Outfit&quot;, sans-serif;
-            font-size: 0.85rem;
-            border-radius: 10px;
-            width: 100%;
-            border: 1.5px solid #e0e3eb;
-          "
-        >
-        </textarea>
+        <!-- Forma de pago -->
+        <div class="field field-formapago">
+          <label>Forma de pago</label>
+          <div class="forma-pago-btns">
+            <button
+              type="button"
+              class="fp-btn"
+              [class.active]="formaPago === 'CONTADO'"
+              (click)="formaPago = 'CONTADO'"
+            >
+              <i class="pi pi-money-bill"></i> Contado
+            </button>
+            <button
+              type="button"
+              class="fp-btn"
+              [class.active]="formaPago === 'CREDITO'"
+              (click)="formaPago = 'CREDITO'"
+            >
+              <i class="pi pi-credit-card"></i> Crédito
+            </button>
+          </div>
+        </div>
+
+        <!-- Método de pago (solo contado) -->
+        <div class="field field-metodopago" *ngIf="formaPago === 'CONTADO'">
+          <label>Método de pago</label>
+          <div class="metodo-pago-btns">
+            <button
+              *ngFor="let m of metodosPagoOpts"
+              type="button"
+              class="mp-btn"
+              [class.active]="metodoPago === m.value"
+              (click)="metodoPago = m.value"
+            >
+              <i class="pi {{ m.icon }}"></i> {{ m.label }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Cuenta bancaria (transferencia/nequi/tarjeta/cheque) -->
+        <div class="field field-banco" *ngIf="formaPago === 'CONTADO' && requiereBanco">
+          <label>Cuenta bancaria <span class="required">*</span></label>
+          <p-dropdown
+            [(ngModel)]="cuentaBancariaId"
+            [options]="cuentasBancarias"
+            optionLabel="nombre"
+            optionValue="id"
+            placeholder="Seleccionar cuenta..."
+            styleClass="w-full"
+          />
+        </div>
+
+        <!-- Plazo (solo crédito) -->
+        <div class="field field-plazo" *ngIf="formaPago === 'CREDITO'">
+          <label>Plazo <span class="optional">(días)</span></label>
+          <p-inputNumber
+            [(ngModel)]="plazoDias"
+            [min]="1"
+            [max]="365"
+            [showButtons]="true"
+            suffix=" días"
+            styleClass="w-full plazo-inp"
+          />
+        </div>
       </div>
+      <!-- /header-row2 -->
+
+      <!-- Fila 3: Observaciones -->
+      <div class="header-row header-row3">
+        <div class="field field-obs">
+          <label>Observaciones <span class="optional">(opcional)</span></label>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="observaciones"
+            placeholder="Notas internas..."
+            maxlength="500"
+            autocomplete="off"
+          />
+        </div>
+      </div>
+      <!-- /header-row3 -->
     </div>
+    <!-- /compra-header -->
 
-    <!-- ══ LÍNEAS DE DETALLE ═══════════════════════════════════════ -->
-    <div class="seccion-detalle">
+    <!-- ═══════ PANEL PRINCIPAL ══════════════════════════════════════ -->
+    <div class="compra-main">
+      <!-- Encabezado tabla -->
       <div class="detalle-header">
         <div class="seccion-title"><i class="pi pi-list"></i> Productos</div>
         <button
@@ -141,250 +220,359 @@
         ></button>
       </div>
 
-      <!-- Líneas -->
-      <div class="lineas-container" *ngIf="lineas.length > 0">
-        <!-- Header columnas -->
-        <div class="lineas-header">
-          <span class="col-producto">Producto</span>
-          <span class="col-presentacion">Presentación</span>
-          <span class="col-lote">Lote / Venc.</span>
-          <span class="col-cant">Cantidad</span>
-          <span class="col-costo">Costo unit.</span>
-          <span class="col-imp">Impuesto</span>
-          <span class="col-subtotal">Subtotal</span>
-          <span class="col-acc"></span>
-        </div>
-
-        <div
-          class="linea-row"
-          *ngFor="let l of lineas; let i = index; trackBy: trackByLinea"
-        >
-          <!-- Producto -->
-          <div class="col-producto">
-            <p-dropdown
-              inputId="productoId"
-              [ngModel]="l.productoId"
-              (ngModelChange)="onProductoChange(i, $event)"
-              [options]="productosOpts"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Escribe para buscar..."
-              [filter]="true"
-              filterPlaceholder="Escribe 2+ letras..."
-              (onFilter)="onFiltroProducto($event)"
-              styleClass="w-full"
-              [class.sin-seleccion]="!l.productoId"
-              appendTo="body"
-            />
+      <!-- Tabla con scroll interno -->
+      <div class="lineas-wrap">
+        <div class="lineas-container" *ngIf="lineas.length > 0">
+          <div class="lineas-header">
+            <span class="col-producto">Producto</span>
+            <span class="col-cant">Cant.</span>
+            <span class="col-vlrunit">Vlr. Unitario</span>
+            <span class="col-desc">Desc. $</span>
+            <span class="col-costo">Costo</span>
+            <span class="col-imp">IVA $</span>
+            <span class="col-neto">Vlr. Neto</span>
+            <span class="col-p1">P. Venta 1</span>
+            <span class="col-p2">P. Venta 2</span>
+            <span class="col-p3">P. Venta 3</span>
+            <span class="col-acc"></span>
           </div>
 
-          <!-- Presentación -->
-          <div class="col-presentacion">
-            <!-- Si tiene presentaciones cargadas → dropdown -->
-            <ng-container
-              *ngIf="l.presentacionesOpts && l.presentacionesOpts.length > 0"
-            >
+          <div
+            class="linea-row"
+            *ngFor="let l of lineas; let i = index; trackBy: trackByLinea"
+          >
+            <!-- Producto -->
+            <div class="col-producto">
               <p-dropdown
-                appendTo="body"
-                [ngModel]="l.presentacionId"
-                (ngModelChange)="onPresentacionChange(i, $event)"
-                [options]="l.presentacionesOpts"
+                [ngModel]="l.productoId"
+                (ngModelChange)="onProductoChange(i, $event)"
+                [options]="productosOpts"
                 optionLabel="label"
                 optionValue="value"
-                styleClass="w-full dropdown-pres"
-                [placeholder]="'Presentación'"
+                placeholder="Escribe para buscar..."
+                [filter]="true"
+                filterPlaceholder="Escribe 2+ letras..."
+                (onFilter)="onFiltroProducto($event)"
+                styleClass="w-full"
+                [class.sin-seleccion]="!l.productoId"
+                appendTo="body"
               />
-              <!-- Indicador de unidades base -->
-              <div
-                class="unidades-base-hint"
-                *ngIf="l.presentacionId && l.factorConversion > 1"
+            </div>
+
+            <!-- Cantidad -->
+            <div class="col-cant">
+              <p-inputNumber
+                [ngModel]="l.cantidad"
+                (ngModelChange)="onCantidadChange(i, $event)"
+                [min]="0.0001"
+                [maxFractionDigits]="4"
+                styleClass="w-full input-num"
+                placeholder="0"
+              />
+            </div>
+
+            <!-- Vlr. Unitario -->
+            <div class="col-vlrunit">
+              <p-inputNumber
+                [ngModel]="l.costoUnitario"
+                (ngModelChange)="onCostoChange(i, $event)"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [minFractionDigits]="0"
+                [min]="0.01"
+                styleClass="w-full input-num"
+              />
+            </div>
+
+            <!-- Descuento $ -->
+            <div class="col-desc">
+              <p-inputNumber
+                [ngModel]="l.descuentoValor"
+                (ngModelChange)="onDescuentoValorChange(i, $event)"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [minFractionDigits]="0"
+                [min]="0"
+                styleClass="w-full input-num"
+                placeholder="$ 0"
+              />
+            </div>
+
+            <!-- Costo (calculado) -->
+            <div class="col-costo">
+              <span class="val-calc" [class.cero]="!l.subtotal">
+                {{ l.subtotal | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+              </span>
+            </div>
+
+            <!-- IVA $ -->
+            <div class="col-imp">
+              <p-inputNumber
+                [ngModel]="l.impuestoValor"
+                (ngModelChange)="onImpuestoChange(i, $event)"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [minFractionDigits]="0"
+                [maxFractionDigits]="2"
+                [min]="0"
+                styleClass="w-full input-num"
+                placeholder="$ 0"
+              />
+            </div>
+
+            <!-- Vlr. Neto (calculado) -->
+            <div class="col-neto">
+              <span
+                class="val-calc neto"
+                [class.cero]="!l.subtotal && !l.impuestoValor"
               >
-                <i class="pi pi-info-circle"></i>
-                {{ l.cantidad ?? 0 | number: "1.0-4" }} ×
-                {{ l.factorConversion }} =
-                <strong
-                  >{{ unidadesBaseLinea(l) | number: "1.0-4" }} u. base</strong
-                >
+                {{
+                  l.subtotal + l.impuestoValor
+                    | currency: "COP" : "symbol-narrow" : "1.0-0"
+                }}
+              </span>
+            </div>
+
+            <!-- P. Venta 1 -->
+            <div class="col-p1">
+              <p-inputNumber
+                [ngModel]="l.precioVenta1"
+                (ngModelChange)="onPrecioVenta1Change(i, $event)"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [minFractionDigits]="0"
+                [min]="0"
+                styleClass="w-full input-num"
+                placeholder="$ 0"
+              />
+            </div>
+
+            <!-- P. Venta 2 -->
+            <div class="col-p2">
+              <p-inputNumber
+                [ngModel]="l.precioVenta2"
+                (ngModelChange)="onPrecioVenta2Change(i, $event)"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [minFractionDigits]="0"
+                [min]="0"
+                styleClass="w-full input-num"
+                placeholder="$ 0"
+              />
+            </div>
+
+            <!-- P. Venta 3 -->
+            <div class="col-p3">
+              <p-inputNumber
+                [ngModel]="l.precioVenta3"
+                (ngModelChange)="onPrecioVenta3Change(i, $event)"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [minFractionDigits]="0"
+                [min]="0"
+                styleClass="w-full input-num"
+                placeholder="$ 0"
+              />
+            </div>
+
+            <!-- Acciones -->
+            <div class="col-acc">
+              <button
+                pButton
+                type="button"
+                icon="pi pi-copy"
+                class="p-button-text p-button-sm p-button-secondary"
+                pTooltip="Duplicar"
+                tooltipPosition="top"
+                (click)="duplicarLinea(i)"
+              ></button>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-trash"
+                class="p-button-text p-button-sm p-button-danger"
+                pTooltip="Eliminar"
+                tooltipPosition="top"
+                (click)="eliminarLinea(i)"
+              ></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estado vacío -->
+        <div class="lineas-empty" *ngIf="lineas.length === 0">
+          <i class="pi pi-inbox"></i>
+          <p>Agrega productos haciendo click en "Agregar producto".</p>
+          <button
+            pButton
+            type="button"
+            label="Agregar primer producto"
+            icon="pi pi-plus"
+            class="p-button-outlined p-button-sm btn-add-linea"
+            (click)="agregarLinea()"
+          ></button>
+        </div>
+      </div>
+      <!-- /lineas-wrap -->
+
+      <!-- Totales siempre visibles abajo -->
+      <div class="totales-panel" *ngIf="lineas.length > 0">
+        <div class="totales-left">
+          <div class="items-count">
+            <i class="pi pi-box"></i>
+            {{ lineas.length }}
+            {{ lineas.length === 1 ? "producto" : "productos" }} —
+            <strong>{{ totalUnidades | number: "1.0-0" }}</strong> unidades
+          </div>
+          <!-- Retenciones -->
+          <div class="ret-section">
+            <div class="seccion-title">
+              <i class="pi pi-percentage"></i> Retenciones
+              <span class="optional" style="font-weight: 400; margin-left: 4px"
+                >(opc.)</span
+              >
+            </div>
+            <div class="ret-inline">
+              <div class="ret-item">
+                <div class="ret-header">
+                  <label>Retefuente</label>
+                  <small *ngIf="retefuentePct > 0" class="ret-val"
+                    >=
+                    {{
+                      retefuenteValor
+                        | currency: "COP" : "symbol-narrow" : "1.0-0"
+                    }}</small
+                  >
+                </div>
+                <p-inputNumber
+                  [(ngModel)]="retefuentePct"
+                  suffix=" %"
+                  [min]="0"
+                  [max]="100"
+                  [maxFractionDigits]="2"
+                  styleClass="w-full"
+                />
               </div>
-            </ng-container>
-            <!-- Si no tiene presentaciones → etiqueta "Unidad base" -->
-            <span
-              class="sin-presentacion"
-              *ngIf="!l.presentacionesOpts || l.presentacionesOpts.length === 0"
+              <div class="ret-item">
+                <div class="ret-header">
+                  <label>Reteiva</label>
+                  <small *ngIf="reteivaPct > 0" class="ret-val"
+                    >=
+                    {{
+                      reteivaValor | currency: "COP" : "symbol-narrow" : "1.0-0"
+                    }}</small
+                  >
+                </div>
+                <p-inputNumber
+                  [(ngModel)]="reteivaPct"
+                  suffix=" %"
+                  [min]="0"
+                  [max]="100"
+                  [maxFractionDigits]="2"
+                  styleClass="w-full"
+                />
+              </div>
+              <div class="ret-item">
+                <div class="ret-header">
+                  <label>Reteica</label>
+                  <small *ngIf="reteicaPct > 0" class="ret-val"
+                    >=
+                    {{
+                      reteicaValor | currency: "COP" : "symbol-narrow" : "1.0-0"
+                    }}</small
+                  >
+                </div>
+                <p-inputNumber
+                  [(ngModel)]="reteicaPct"
+                  suffix=" %"
+                  [min]="0"
+                  [max]="100"
+                  [maxFractionDigits]="2"
+                  styleClass="w-full"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="totales-right">
+          <div class="tot-row" *ngIf="descuentoTotal > 0">
+            <span class="tot-lbl">Subtotal bruto</span>
+            <span class="tot-val">{{
+              subtotalBruto | currency: "COP" : "symbol-narrow" : "1.0-0"
+            }}</span>
+          </div>
+          <div class="tot-row discount-row" *ngIf="descuentoTotal > 0">
+            <span class="tot-lbl">Descuento</span>
+            <span class="tot-val red"
+              >-{{
+                descuentoTotal | currency: "COP" : "symbol-narrow" : "1.0-0"
+              }}</span
             >
-              <ng-container *ngIf="l.productoId">
-                <i class="pi pi-minus-circle"></i> Unidad base
-              </ng-container>
-              <ng-container *ngIf="!l.productoId">—</ng-container>
+          </div>
+          <div class="tot-row">
+            <span class="tot-lbl">{{
+              descuentoTotal > 0 ? "Subtotal neto" : "Subtotal"
+            }}</span>
+            <span class="tot-val">{{
+              subtotal | currency: "COP" : "symbol-narrow" : "1.0-0"
+            }}</span>
+          </div>
+          <div class="tot-row" *ngIf="impuestosTotal > 0">
+            <span class="tot-lbl">IVA</span>
+            <span class="tot-val amber">{{
+              impuestosTotal | currency: "COP" : "symbol-narrow" : "1.0-0"
+            }}</span>
+          </div>
+          <div class="tot-row" *ngIf="totalRetenciones > 0">
+            <span class="tot-lbl">Retenciones</span>
+            <span class="tot-val red"
+              >-{{
+                totalRetenciones | currency: "COP" : "symbol-narrow" : "1.0-0"
+              }}</span
+            >
+          </div>
+          <!-- Fletes -->
+          <div class="tot-row fletes-row">
+            <span class="tot-lbl">
+              <i
+                class="pi pi-car"
+                style="font-size: 0.72rem; margin-right: 3px"
+              ></i>
+              Fletes
             </span>
-          </div>
-
-          <!-- Lote -->
-          <div class="col-lote">
-            <ng-container *ngIf="l.manejaLotes">
-              <input
-                type="text"
-                pTextarea
-                [ngModel]="l.codigoLote"
-                (ngModelChange)="onCodigoLoteChange(i, $event)"
-                placeholder="Cód. lote *"
-                maxlength="80"
-                class="input-lote"
-                [class.input-required]="!l.codigoLote"
-                style="
-                  text-transform: uppercase;
-                  font-family: &quot;JetBrains Mono&quot;, monospace;
-                  font-size: 0.78rem;
-                "
-              />
-              <p-calendar
-                [(ngModel)]="l.fechaVencimiento"
-                dateFormat="dd/mm/yy"
-                placeholder="Venc."
-                [showButtonBar]="true"
-                styleClass="cal-venc"
-              />
-            </ng-container>
-            <span class="sin-lote" *ngIf="!l.manejaLotes">—</span>
-          </div>
-
-          <!-- Cantidad -->
-          <div class="col-cant">
             <p-inputNumber
-              [ngModel]="l.cantidad"
-              (ngModelChange)="onCantidadChange(i, $event)"
-              [min]="0.0001"
-              [maxFractionDigits]="4"
-              styleClass="w-full input-num"
-              placeholder="0"
-            />
-            <!-- Label de unidad de la presentación seleccionada -->
-            <small class="cant-label" *ngIf="l.presentacionId">
-              {{ l.presentacionNombre || "presentaciones" }}
-            </small>
-          </div>
-
-          <!-- Costo unitario -->
-          <div class="col-costo">
-            <p-inputNumber
-              [ngModel]="l.costoUnitario"
-              (ngModelChange)="onCostoChange(i, $event)"
-              mode="currency"
-              currency="COP"
-              locale="es-CO"
-              [minFractionDigits]="0"
-              [min]="0.01"
-              styleClass="w-full input-num"
-            />
-            <small class="cant-label" *ngIf="l.presentacionId">
-              por {{ l.presentacionNombre || "presentación" }}
-            </small>
-          </div>
-
-          <!-- Impuesto -->
-          <div class="col-imp">
-            <p-inputNumber
-              [ngModel]="l.impuestoValor"
-              (ngModelChange)="onImpuestoChange(i, $event)"
+              [(ngModel)]="fletes"
               mode="currency"
               currency="COP"
               locale="es-CO"
               [minFractionDigits]="0"
               [min]="0"
-              styleClass="w-full input-num"
+              placeholder="$ 0"
+              styleClass="fletes-inp"
             />
           </div>
-
-          <!-- Subtotal -->
-          <div class="col-subtotal">
-            <span class="subtotal-val" [class.cero]="!l.subtotal">
-              {{ l.subtotal | currency: "COP" : "symbol-narrow" : "1.0-0" }}
-            </span>
-            <!-- Mostrar unidades base que entrarán al inventario -->
-            <small
-              class="subtotal-hint"
-              *ngIf="
-                l.presentacionId &&
-                l.factorConversion > 1 &&
-                (l.cantidad ?? 0) > 0
-              "
-            >
-              +{{ unidadesBaseLinea(l) | number: "1.0-0" }} al stock
-            </small>
-          </div>
-
-          <!-- Acciones fila -->
-          <div class="col-acc">
-            <button
-              pButton
-              type="button"
-              icon="pi pi-copy"
-              class="p-button-text p-button-sm p-button-secondary"
-              pTooltip="Duplicar línea"
-              tooltipPosition="top"
-              (click)="duplicarLinea(i)"
-            ></button>
-            <button
-              pButton
-              type="button"
-              icon="pi pi-trash"
-              class="p-button-text p-button-sm p-button-danger"
-              pTooltip="Eliminar línea"
-              tooltipPosition="top"
-              (click)="eliminarLinea(i)"
-            ></button>
+          <div class="tot-divider"></div>
+          <div class="tot-row tot-final">
+            <span class="tot-lbl">{{
+              totalRetenciones > 0 ? "Neto a pagar" : "Total a pagar"
+            }}</span>
+            <span class="tot-val green">{{
+              (totalRetenciones > 0 ? netaAPagar : total)
+                | currency: "COP" : "symbol-narrow" : "1.0-0"
+            }}</span>
           </div>
         </div>
       </div>
-
-      <!-- Estado vacío -->
-      <div class="lineas-empty" *ngIf="lineas.length === 0">
-        <i class="pi pi-inbox"></i>
-        <p>
-          Aún no has agregado productos. Haz click en "Agregar producto" para
-          comenzar.
-        </p>
-        <button
-          pButton
-          type="button"
-          label="Agregar primer producto"
-          icon="pi pi-plus"
-          class="p-button-outlined p-button-sm btn-add-linea"
-          (click)="agregarLinea()"
-        ></button>
-      </div>
     </div>
-
-    <!-- ══ TOTALES ══════════════════════════════════════════════════ -->
-    <div class="totales-panel" *ngIf="lineas.length > 0">
-      <div class="totales-row">
-        <span class="totales-label">Subtotal</span>
-        <span class="totales-val">{{
-          subtotal | currency: "COP" : "symbol-narrow" : "1.0-0"
-        }}</span>
-      </div>
-      <div class="totales-row">
-        <span class="totales-label">Impuestos</span>
-        <span class="totales-val impuesto">{{
-          impuestosTotal | currency: "COP" : "symbol-narrow" : "1.0-0"
-        }}</span>
-      </div>
-      <div class="totales-divider"></div>
-      <div class="totales-row total-final">
-        <span class="totales-label">Total a pagar</span>
-        <span class="totales-val total">{{
-          total | currency: "COP" : "symbol-narrow" : "1.0-0"
-        }}</span>
-      </div>
-      <div class="items-count">
-        <i class="pi pi-box"></i>
-        {{ lineas.length }}
-        {{ lineas.length === 1 ? "producto" : "productos" }} —
-        <strong>{{ totalUnidades | number: "1.0-0" }}</strong> unidades base al
-        stock
-      </div>
-    </div>
+    <!-- /compra-main -->
   </div>
+  <!-- /compra-layout -->
 
   <ng-template pTemplate="footer">
     <div class="dialog-footer">
@@ -400,7 +588,7 @@
       <button
         pButton
         type="button"
-        label="Registrar compra"
+        [label]="modoEdicion ? 'Actualizar compra' : 'Registrar compra'"
         [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
         class="btn-aura"
         [disabled]="isSubmitting || lineas.length === 0"

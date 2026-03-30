@@ -1,0 +1,237 @@
+<p-toast />
+
+<div class="module-wrapper">
+  <!-- ── Header ─────────────────────────────────────────────────── -->
+  <div class="module-header">
+    <div class="header-left">
+      <span class="header-icon"><i class="pi pi-credit-card"></i></span>
+      <div>
+        <h2>Cuentas Bancarias</h2>
+        <p>Administra tus cuentas, cajas y billeteras digitales</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button
+        pButton
+        icon="pi pi-refresh"
+        class="p-button-text p-button-rounded"
+        pTooltip="Recargar"
+        (click)="cargar()"
+        [loading]="loading"
+      ></button>
+      <button
+        pButton
+        label="Nueva Cuenta"
+        icon="pi pi-plus"
+        class="btn-aura btn-primary"
+        (click)="abrirNueva()"
+      ></button>
+    </div>
+  </div>
+
+  <!-- ── Skeleton loading ───────────────────────────────────────── -->
+  @if (loading) {
+    <div class="cuentas-grid">
+      @for (sk of [1,2,3,4]; track sk) {
+        <div class="cuenta-card skeleton-card">
+          <p-skeleton width="60%" height="1.2rem" styleClass="mb-2" />
+          <p-skeleton width="40%" height="0.9rem" styleClass="mb-3" />
+          <p-skeleton width="80%" height="2rem" styleClass="mb-2" />
+          <p-skeleton width="50%" height="0.85rem" />
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ── Grid de cuentas ────────────────────────────────────────── -->
+  @if (!loading && cuentas.length > 0) {
+    <div class="cuentas-grid">
+      @for (c of cuentas; track c.id) {
+        <div class="cuenta-card" [class.inactiva]="!c.activa">
+          <!-- Borde de color por tipo -->
+          <div
+            class="tipo-accent"
+            [style.background]="getTipoMeta(c.tipo).color"
+          ></div>
+
+          <!-- Header de la card -->
+          <div class="card-top">
+            <div class="card-tipo">
+              <span
+                class="tipo-icon"
+                [style.background]="getTipoMeta(c.tipo).color + '20'"
+                [style.color]="getTipoMeta(c.tipo).color"
+              >
+                <i [class]="getTipoMeta(c.tipo).icon"></i>
+              </span>
+              <span class="tipo-label">{{ getTipoMeta(c.tipo).label }}</span>
+            </div>
+            <span class="estado-badge" [class.activa]="c.activa">
+              {{ c.activa ? 'Activa' : 'Inactiva' }}
+            </span>
+          </div>
+
+          <!-- Nombre -->
+          <div class="card-nombre">{{ c.nombre }}</div>
+
+          <!-- Banco / número -->
+          @if (c.banco) {
+            <div class="card-banco">{{ c.banco }}</div>
+          }
+          @if (c.numeroCuenta) {
+            <div class="card-numero">{{ maskCuenta(c.numeroCuenta) }}</div>
+          }
+          @if (c.titular) {
+            <div class="card-titular">{{ c.titular }}</div>
+          }
+
+          <!-- Saldo -->
+          <div class="card-saldo">
+            <span class="saldo-label">Saldo actual</span>
+            <span class="saldo-valor" [class.negativo]="c.saldoActual < 0">
+              {{ formatCOP(c.saldoActual) }}
+            </span>
+          </div>
+
+          <!-- Acciones -->
+          <div class="card-actions">
+            <button
+              pButton
+              icon="pi pi-pencil"
+              class="p-button-text p-button-sm"
+              pTooltip="Editar"
+              (click)="abrirEditar(c)"
+            ></button>
+            <button
+              pButton
+              [icon]="c.activa ? 'pi pi-eye-slash' : 'pi pi-eye'"
+              class="p-button-text p-button-sm"
+              [class.p-button-warning]="c.activa"
+              [class.p-button-success]="!c.activa"
+              [pTooltip]="c.activa ? 'Desactivar' : 'Activar'"
+              (click)="toggleActiva(c)"
+            ></button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ── Empty state ────────────────────────────────────────────── -->
+  @if (!loading && cuentas.length === 0) {
+    <div class="empty-state">
+      <i class="pi pi-credit-card empty-icon"></i>
+      <p>No hay cuentas bancarias registradas</p>
+      <button
+        pButton
+        label="Crear primera cuenta"
+        icon="pi pi-plus"
+        class="btn-aura btn-primary"
+        (click)="abrirNueva()"
+      ></button>
+    </div>
+  }
+</div>
+
+<!-- ── Modal crear / editar ───────────────────────────────────────── -->
+<p-dialog
+  [(visible)]="showModal"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '480px' }"
+  [header]="editId ? 'Editar Cuenta' : 'Nueva Cuenta Bancaria'"
+>
+  <div class="modal-body">
+    <!-- Nombre -->
+    <div class="field">
+      <label>Nombre de la cuenta <span class="req">*</span></label>
+      <input
+        pInputText
+        [(ngModel)]="form.nombre"
+        placeholder="Ej: Bancolombia Principal"
+        class="w-full"
+      />
+    </div>
+
+    <!-- Tipo -->
+    <div class="field">
+      <label>Tipo <span class="req">*</span></label>
+      <p-dropdown
+        [(ngModel)]="form.tipo"
+        [options]="tiposOpts"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona tipo"
+        styleClass="w-full"
+      />
+    </div>
+
+    <!-- Banco (solo si tipo = BANCO) -->
+    @if (requiereBanco) {
+      <div class="field">
+        <label>Banco</label>
+        <input
+          pInputText
+          [(ngModel)]="form.banco"
+          placeholder="Ej: Bancolombia, Davivienda..."
+          class="w-full"
+        />
+      </div>
+    }
+
+    <!-- Número de cuenta -->
+    <div class="field">
+      <label>Número de cuenta / billetera</label>
+      <input
+        pInputText
+        [(ngModel)]="form.numeroCuenta"
+        placeholder="Ej: 300 123 4567"
+        class="w-full"
+      />
+    </div>
+
+    <!-- Titular -->
+    <div class="field">
+      <label>Titular</label>
+      <input
+        pInputText
+        [(ngModel)]="form.titular"
+        placeholder="Nombre del titular"
+        class="w-full"
+      />
+    </div>
+
+    <!-- Saldo inicial -->
+    <div class="field">
+      <label>Saldo inicial</label>
+      <p-inputNumber
+        [(ngModel)]="form.saldoInicial"
+        mode="currency"
+        currency="COP"
+        locale="es-CO"
+        [minFractionDigits]="0"
+        [maxFractionDigits]="0"
+        styleClass="w-full"
+      />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      class="p-button-text"
+      (click)="showModal = false"
+      [disabled]="saving"
+    ></button>
+    <button
+      pButton
+      [label]="editId ? 'Actualizar' : 'Crear Cuenta'"
+      icon="pi pi-check"
+      class="btn-aura btn-primary"
+      (click)="guardar()"
+      [loading]="saving"
+      [disabled]="!form.nombre?.trim() || !form.tipo"
+    ></button>
+  </ng-template>
+</p-dialog>

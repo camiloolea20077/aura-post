@@ -1,0 +1,417 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="page-title-area">
+      <div class="page-icon"><i class="pi pi-car"></i></div>
+      <div>
+        <h3 class="page-title">Ventas de Campo</h3>
+        <p class="page-sub">Pedidos tomados por vendedores en campo</p>
+      </div>
+    </div>
+    <button
+      pButton
+      icon="pi pi-plus"
+      label="Nueva venta"
+      class="btn-aura btn-primary"
+      (click)="abrirNueva()"
+    ></button>
+  </div>
+
+  <div class="card">
+    <!-- Toolbar -->
+    <div class="table-toolbar">
+      <div class="toolbar-left">
+        <span class="p-input-icon-left search-wrap">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            pInputText
+            class="search-input"
+            placeholder="Buscar por N° pedido, vendedor o cliente..."
+            [(ngModel)]="searchQuery"
+            (input)="onSearch()"
+            (keydown.escape)="clearSearch()"
+          />
+          <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">
+            <i class="pi pi-times"></i>
+          </button>
+        </span>
+        <span class="total-badge" *ngIf="!loadingTable"
+          >{{ totalRecords }} pedidos</span
+        >
+      </div>
+    </div>
+
+    <!-- Filtro por estado -->
+    <div class="estado-filters">
+      <button
+        *ngFor="let ef of estadosFiltro"
+        class="estado-filter-btn"
+        [class.active]="filtroEstado === ef.value"
+        (click)="setFiltroEstado(ef.value)"
+      >
+        {{ ef.label }}
+      </button>
+    </div>
+
+    <!-- Tabla -->
+    <p-table
+      [value]="items"
+      [lazy]="true"
+      (onLazyLoad)="loadTable($event)"
+      [paginator]="true"
+      [rows]="rowSize"
+      [totalRecords]="totalRecords"
+      [loading]="loadingTable"
+      [rowsPerPageOptions]="[10, 15, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords}"
+      styleClass="aura-table"
+      [tableStyle]="{ 'min-width': '700px' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 60px">#</th>
+          <th style="min-width: 120px">N° Pedido</th>
+          <th style="min-width: 140px">Vendedor</th>
+          <th style="min-width: 140px">Cliente</th>
+          <th style="width: 120px" class="text-right">Total</th>
+          <th style="width: 110px" class="text-center">Estado</th>
+          <th pSortableColumn="pv.fecha_creacion" style="min-width: 120px">
+            Fecha <p-sortIcon field="pv.fecha_creacion" />
+          </th>
+          <th style="min-width: 160px" class="text-center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item>
+        <tr [class.row-anulada]="item.estado === 'ANULADA'">
+          <td>
+            <span class="id-badge">#{{ item.id }}</span>
+          </td>
+          <td>
+            <span class="numero-pedido">{{ item.numeroPedido ?? "—" }}</span>
+          </td>
+          <td>
+            <div class="cell-persona">
+              <div class="persona-av vendedor-av">
+                {{ item.vendedorNombre.charAt(0).toUpperCase() }}
+              </div>
+              <span class="persona-n">{{ item.vendedorNombre }}</span>
+            </div>
+          </td>
+          <td>
+            <div
+              class="cell-persona"
+              *ngIf="item.clienteNombre; else sinCliente"
+            >
+              <div class="persona-av">
+                {{ item.clienteNombre.charAt(0).toUpperCase() }}
+              </div>
+              <span class="persona-n">{{ item.clienteNombre }}</span>
+            </div>
+            <ng-template #sinCliente>
+              <span class="text-muted">Consumidor final</span>
+            </ng-template>
+          </td>
+          <td class="text-right">
+            <span class="monto-val">{{ formatCOP(item.totalPagar) }}</span>
+          </td>
+          <td class="text-center">
+            <p-tag
+              [value]="getEstadoLabel(item.estado)"
+              [severity]="getEstadoSeverity(item.estado)"
+              [rounded]="true"
+            />
+          </td>
+          <td>
+            <span class="fecha-val">{{ formatFecha(item.fechaCreacion) }}</span>
+          </td>
+          <td class="text-center">
+            <!-- PENDIENTE_DESPACHO -->
+            <ng-container *ngIf="item.estado === 'PENDIENTE_DESPACHO'">
+              <button
+                pButton
+                icon="pi pi-truck"
+                class="p-button-text p-button-sm action-despachar"
+                pTooltip="Despachar"
+                tooltipPosition="top"
+                [loading]="loadingAccion"
+                (click)="confirmarDespachar(item, $event)"
+              ></button>
+              <button
+                pButton
+                icon="pi pi-times-circle"
+                class="p-button-text p-button-sm action-anular"
+                pTooltip="Anular"
+                tooltipPosition="top"
+                (click)="confirmarAnular(item, $event)"
+              ></button>
+            </ng-container>
+
+            <!-- DESPACHADA -->
+            <ng-container *ngIf="item.estado === 'DESPACHADA'">
+              <button
+                pButton
+                icon="pi pi-dollar"
+                class="p-button-text p-button-sm action-cobrar"
+                pTooltip="Registrar cobro"
+                tooltipPosition="top"
+                (click)="abrirCobro(item, $event)"
+              ></button>
+              <button
+                pButton
+                icon="pi pi-times-circle"
+                class="p-button-text p-button-sm action-anular"
+                pTooltip="Anular"
+                tooltipPosition="top"
+                (click)="confirmarAnular(item, $event)"
+              ></button>
+            </ng-container>
+
+            <!-- COBRADA o ANULADA -->
+            <ng-container
+              *ngIf="item.estado === 'COBRADA' || item.estado === 'ANULADA'"
+            >
+              <button
+                pButton
+                icon="pi pi-eye"
+                class="p-button-text p-button-sm action-view"
+                pTooltip="Ver detalle"
+                tooltipPosition="top"
+                (click)="abrirDetalle(item, $event)"
+              ></button>
+            </ng-container>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8">
+            <div class="empty-state">
+              <i class="pi pi-car"></i>
+              <p>
+                {{
+                  searchQuery || filtroEstado
+                    ? "Sin resultados"
+                    : "No hay pedidos registrados"
+                }}
+              </p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr *ngFor="let s of [1, 2, 3, 4, 5]">
+          <td><p-skeleton width="40px" /></td>
+          <td><p-skeleton width="90px" /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td class="text-right">
+            <p-skeleton width="90px" styleClass="ml-auto" />
+          </td>
+          <td class="text-center">
+            <p-skeleton width="80px" styleClass="mx-auto" />
+          </td>
+          <td><p-skeleton width="100px" /></td>
+          <td class="text-center">
+            <p-skeleton width="80px" styleClass="mx-auto" />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- Modal Nueva Venta -->
+<app-form-pedido-vendedor
+  [displayModal]="showNueva"
+  (modalClosed)="onNuevaModalClosed()"
+  (pedidoCreado)="onPedidoCreado()"
+/>
+
+<!-- Modal Registrar Cobro -->
+<p-dialog
+  header="Registrar cobro"
+  [(visible)]="showCobro"
+  [modal]="true"
+  [style]="{ width: '420px' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="cerrarCobro()"
+>
+  <div class="cobro-body" *ngIf="pedidoSeleccionado">
+    <p class="cobro-pedido-info">
+      Pedido
+      <strong>{{
+        pedidoSeleccionado.numeroPedido ?? "#" + pedidoSeleccionado.id
+      }}</strong>
+      &mdash; Total:
+      <strong>{{ formatCOP(pedidoSeleccionado.totalPagar) }}</strong>
+    </p>
+
+    <div class="form-field">
+      <label>Método de pago</label>
+      <p-dropdown
+        [options]="metodosPago"
+        [(ngModel)]="cobro_metodoPago"
+        optionLabel="label"
+        optionValue="value"
+        [style]="{ width: '100%' }"
+      />
+    </div>
+
+    <div class="form-field">
+      <label>Referencia <span class="opcional">(opcional)</span></label>
+      <input
+        type="text"
+        pInputText
+        [(ngModel)]="cobro_referencia"
+        placeholder="N° transferencia, comprobante..."
+        style="width: 100%"
+      />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      class="p-button-text"
+      (click)="cerrarCobro()"
+      [disabled]="loadingCobro"
+    ></button>
+    <button
+      pButton
+      label="Confirmar cobro"
+      icon="pi pi-check"
+      class="p-button-success"
+      [loading]="loadingCobro"
+      (click)="confirmarCobro()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Modal Detalle -->
+<p-dialog
+  header="Detalle del pedido"
+  [(visible)]="showDetalle"
+  [modal]="true"
+  [style]="{ width: '680px' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="cerrarDetalle()"
+>
+  <div class="detalle-loading" *ngIf="loadingDetalle">
+    <p-skeleton height="20px" styleClass="mb-2" />
+    <p-skeleton height="20px" styleClass="mb-2" />
+    <p-skeleton height="20px" />
+  </div>
+
+  <div class="detalle-body" *ngIf="!loadingDetalle && pedidoDetalle">
+    <div class="detalle-header-info">
+      <div class="detalle-meta-row">
+        <div class="detalle-meta">
+          <span class="meta-label">N° Pedido</span>
+          <span class="meta-value mono">{{
+            pedidoDetalle.numeroPedido ?? "—"
+          }}</span>
+        </div>
+        <div class="detalle-meta">
+          <span class="meta-label">Estado</span>
+          <p-tag
+            [value]="getEstadoLabel(pedidoDetalle.estado)"
+            [severity]="getEstadoSeverity(pedidoDetalle.estado)"
+            [rounded]="true"
+          />
+        </div>
+        <div class="detalle-meta">
+          <span class="meta-label">Fecha</span>
+          <span class="meta-value">{{
+            formatFecha(pedidoDetalle.fechaCreacion)
+          }}</span>
+        </div>
+      </div>
+      <div class="detalle-meta-row">
+        <div class="detalle-meta">
+          <span class="meta-label">Vendedor</span>
+          <span class="meta-value">{{ pedidoDetalle.vendedorNombre }}</span>
+        </div>
+        <div class="detalle-meta">
+          <span class="meta-label">Cliente</span>
+          <span class="meta-value">{{
+            pedidoDetalle.clienteNombre ?? "Consumidor final"
+          }}</span>
+        </div>
+      </div>
+      <div class="detalle-meta-row" *ngIf="pedidoDetalle.observaciones">
+        <div class="detalle-meta full">
+          <span class="meta-label">Observaciones</span>
+          <span class="meta-value">{{ pedidoDetalle.observaciones }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Items -->
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th class="text-center">Cant.</th>
+          <th class="text-right">Precio</th>
+          <th class="text-right">IVA</th>
+          <th class="text-right">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let det of pedidoDetalle.detalles">
+          <td>
+            <div class="item-nombre">{{ det.productoNombre }}</div>
+            <div class="item-sku" *ngIf="det.productoSku">
+              {{ det.productoSku }}
+            </div>
+          </td>
+          <td class="text-center">{{ det.cantidad }}</td>
+          <td class="text-right">{{ formatCOP(det.precioUnitario) }}</td>
+          <td class="text-right">{{ formatCOP(det.impuestoValor) }}</td>
+          <td class="text-right">{{ formatCOP(det.subtotalLinea) }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Totales -->
+    <div class="detalle-totales">
+      <div class="total-row">
+        <span>Subtotal</span>
+        <span>{{ formatCOP(pedidoDetalle.subtotal) }}</span>
+      </div>
+      <div class="total-row" *ngIf="pedidoDetalle.descuentoTotal > 0">
+        <span>Descuento</span>
+        <span class="text-danger"
+          >-{{ formatCOP(pedidoDetalle.descuentoTotal) }}</span
+        >
+      </div>
+      <div class="total-row">
+        <span>IVA</span>
+        <span>{{ formatCOP(pedidoDetalle.impuestosTotal) }}</span>
+      </div>
+      <div class="total-row total-final">
+        <span>Total</span>
+        <span>{{ formatCOP(pedidoDetalle.totalPagar) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cerrar"
+      class="p-button-text"
+      (click)="cerrarDetalle()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<p-toast />
+<p-confirmDialog />

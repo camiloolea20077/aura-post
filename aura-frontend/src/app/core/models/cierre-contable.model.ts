@@ -42,12 +42,28 @@ export interface CierreContableDto {
   // Posición neta
   posicionNeta: number;
 
-  // Movimientos de caja
+  // Movimientos de caja (internos / POS)
   totalIngresos: number;
   totalEgresos: number;
   cantidadIngresos: number;
   cantidadEgresos: number;
   detalleMovimientos: MovimientoCierreItem[];
+
+  // Gastos del período
+  cantidadGastos: number;
+  totalGastosDeducibles: number;
+  totalGastosNoDeducibles: number;
+  totalGastos: number;
+}
+
+export interface ReporteIvaDto {
+  fechaDesde: string;
+  fechaHasta: string;
+  ivaVentas: number;
+  cantidadVentas: number;
+  ivaCompras: number;
+  cantidadCompras: number;
+  ivaADeclararOPagarAlEstado: number;
 }
 
 export interface MovimientoCierreItem {
