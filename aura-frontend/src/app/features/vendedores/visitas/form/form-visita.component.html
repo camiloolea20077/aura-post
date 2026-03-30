@@ -1,0 +1,97 @@
+<p-dialog
+  [header]="isEdit ? 'Reprogramar visita' : 'Programar visita'"
+  [(visible)]="visible"
+  (onHide)="close()"
+  [modal]="true"
+  [style]="{ width: '480px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <form [formGroup]="form" class="dialog-form">
+    <div class="form-row">
+      <div class="field">
+        <label class="field-label">Local <span class="required">*</span></label>
+        <p-dropdown
+          formControlName="localId"
+          [options]="locales"
+          optionLabel="nombre"
+          optionValue="id"
+          placeholder="Seleccione un local"
+          [loading]="loadingData"
+          styleClass="w-full"
+          [class.ng-invalid]="isInvalid('localId')"
+        >
+          <ng-template let-local pTemplate="item">
+            <div>
+              <div>{{ local.nombre }}</div>
+              <small class="text-muted">{{ local.direccion }}</small>
+            </div>
+          </ng-template>
+        </p-dropdown>
+        <small class="field-error" *ngIf="isInvalid('localId')"
+          >Seleccione un local</small
+        >
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="field">
+        <label class="field-label">Ruta (opcional)</label>
+        <p-dropdown
+          formControlName="rutaId"
+          [options]="rutas"
+          optionLabel="nombre"
+          optionValue="id"
+          placeholder="Seleccione una ruta"
+          [loading]="loadingData"
+          styleClass="w-full"
+        />
+      </div>
+    </div>
+
+    <div class="form-row cols-2">
+      <div class="field">
+        <label class="field-label">Fecha <span class="required">*</span></label>
+        <p-calendar
+          formControlName="fechaProgramada"
+          [showIcon]="true"
+          dateFormat="yy-mm-dd"
+          [minDate]="today"
+          styleClass="w-full"
+          [class.ng-invalid]="isInvalid('fechaProgramada')"
+        />
+        <small class="field-error" *ngIf="isInvalid('fechaProgramada')"
+          >Seleccione una fecha</small
+        >
+      </div>
+      <div class="field">
+        <label class="field-label">Hora</label>
+        <p-calendar
+          formControlName="horaProgramada"
+          [timeOnly]="true"
+          [showIcon]="true"
+          placeholder="Hora"
+          styleClass="w-full"
+        />
+      </div>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="close()"
+    ></button>
+    <button
+      pButton
+      [label]="isEdit ? 'Reprogramar' : 'Programar'"
+      icon="pi pi-check"
+      class="btn-aura btn-primary"
+      [loading]="loading"
+      (click)="save()"
+    ></button>
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,97 @@
+<p-dialog
+  [header]="isEdit ? 'Editar ruta' : 'Nueva ruta'"
+  [(visible)]="visible"
+  (onHide)="close()"
+  [modal]="true"
+  [style]="{ width: '560px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <form [formGroup]="form" class="dialog-form">
+    <div class="form-row">
+      <div class="field">
+        <label class="field-label">Nombre <span class="required">*</span></label>
+        <input
+          type="text"
+          pInputText
+          formControlName="nombre"
+          placeholder="Nombre de la ruta"
+          class="w-full"
+          [class.ng-invalid]="isInvalid('nombre')"
+        />
+        <small class="field-error" *ngIf="isInvalid('nombre')"
+          >El nombre es obligatorio</small
+        >
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="field">
+        <label class="field-label">Descripción</label>
+        <textarea
+          pInputTextarea
+          formControlName="descripcion"
+          placeholder="Descripción de la ruta..."
+          rows="2"
+          class="w-full"
+        ></textarea>
+      </div>
+    </div>
+
+    <div class="form-row cols-2">
+      <div class="field">
+        <label class="field-label">Día de la semana</label>
+        <p-dropdown
+          formControlName="diaSemana"
+          [options]="diasSemana"
+          placeholder="Seleccione"
+          styleClass="w-full"
+        />
+      </div>
+      <div class="field">
+        <label class="field-label">Vendedor <span class="required">*</span></label>
+        <p-dropdown
+          formControlName="vendedorId"
+          [options]="[]"
+          placeholder="Cargando..."
+          styleClass="w-full"
+          [disabled]="true"
+        />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="field">
+        <label class="field-label">Locales</label>
+        <p-multiSelect
+          formControlName="localIds"
+          [options]="locales"
+          optionLabel="nombre"
+          optionValue="id"
+          placeholder="Seleccione locales"
+          [loading]="loadingLocales"
+          styleClass="w-full"
+          display="chip"
+        />
+      </div>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="close()"
+    ></button>
+    <button
+      pButton
+      [label]="isEdit ? 'Actualizar' : 'Guardar'"
+      icon="pi pi-check"
+      class="btn-aura btn-primary"
+      [loading]="loading"
+      (click)="save()"
+    ></button>
+  </ng-template>
+</p-dialog>

@@ -233,6 +233,16 @@ export const routes: Routes = [
             (m) => m.IndexVentasComponent,
           ),
       },
+
+      // Vendedores
+      {
+        path: 'vendedores',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadChildren: () =>
+          import('./features/vendedores/vendedores.routes').then(
+            (m) => m.VENDEDORES_ROUTES,
+          ),
+      },
       {
         path: 'cotizaciones',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN', 'CAJERO'])],

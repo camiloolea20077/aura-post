@@ -150,6 +150,33 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
     ],
   },
   {
+    label: 'Vendedores',
+    icon: 'pi pi-user-plus',
+    roles: ['SUPER_ADMIN', 'ADMIN'],
+    items: [
+      {
+        label: 'Vendedores',
+        icon: 'pi pi-users',
+        route: '/vendedores',
+      },
+      {
+        label: 'Locales',
+        icon: 'pi pi-map-marker',
+        route: '/vendedores/locales',
+      },
+      {
+        label: 'Rutas',
+        icon: 'pi pi-map',
+        route: '/vendedores/rutas',
+      },
+      {
+        label: 'Visitas',
+        icon: 'pi pi-calendar',
+        route: '/vendedores/visitas',
+      },
+    ],
+  },
+  {
     label: 'Contabilidad',
     icon: 'pi pi-wallet',
     roles: ['SUPER_ADMIN', 'ADMIN'],
