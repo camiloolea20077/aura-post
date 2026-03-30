@@ -4,6 +4,7 @@ export interface DashboardDto {
   ventasHoy:            ResumenVentasDto;
   ventasMes:            ResumenVentasDto;
   totalComprasMes:      number;
+  totalInventarioCosto: number;
   stockBajo:            ProductoStockBajoDto[];
   lotesProximosVencer:  LoteVencimientoDto[];
   ultimasVentas:        VentaRecienteDto[];

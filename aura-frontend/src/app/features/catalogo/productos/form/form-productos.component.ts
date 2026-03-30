@@ -173,6 +173,8 @@ export class FormProductosComponent implements OnInit, OnChanges {
       // precio y costo se derivan de la presentación de compra (Tab 4)
       precio: [0, [Validators.min(0)]],
       costo: [0, [Validators.min(0)]],
+      precio2: [null, [Validators.min(0)]],
+      precio3: [null, [Validators.min(0)]],
       ivaPorcentaje: [
         0,
         [Validators.required, Validators.min(0), Validators.max(100)],
@@ -209,6 +211,8 @@ export class FormProductosComponent implements OnInit, OnChanges {
       activo: true,
       precio: 0,
       costo: 0,
+      precio2: null,
+      precio3: null,
       ivaPorcentaje: 0,
       impoconsumo: 0,
       // precio y costo se recalculan desde la presentación de compra
@@ -590,6 +594,8 @@ export class FormProductosComponent implements OnInit, OnChanges {
           activo: d.activo,
           precio: d.precio,
           costo: d.costo,
+          precio2: d.precio2 ?? null,
+          precio3: d.precio3 ?? null,
           ivaPorcentaje: d.ivaPorcentaje,
           impoconsumo: d.impoconsumo,
           manejaInventario: d.manejaInventario,
@@ -683,6 +689,8 @@ export class FormProductosComponent implements OnInit, OnChanges {
       activo: v.activo,
       precio: v.precio ?? 0,
       costo: v.costo ?? 0,
+      precio2: v.precio2 ?? null,
+      precio3: v.precio3 ?? null,
       ivaPorcentaje: v.ivaPorcentaje ?? 0,
       impoconsumo: v.impoconsumo ?? 0,
       manejaInventario: v.manejaInventario,

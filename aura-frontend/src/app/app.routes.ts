@@ -173,6 +173,22 @@ export const routes: Routes = [
             (m) => m.EstadoCuentaComponent,
           ),
       },
+      {
+        path: 'contabilidad/reporte-iva',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/reporte-iva/reporte-iva.component').then(
+            (m) => m.ReporteIvaComponent,
+          ),
+      },
+      {
+        path: 'gastos',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/gastos/index/index-gastos.component').then(
+            (m) => m.IndexGastosComponent,
+          ),
+      },
 
       // Inventario
       {
@@ -223,6 +239,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/compras/index/index-compras.component').then(
             (m) => m.IndexComprasComponent,
+          ),
+      },
+      {
+        path: 'compras/ordenes',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/compras/ordenes/index-ordenes.component').then(
+            (m) => m.IndexOrdenesComponent,
           ),
       },
       {
@@ -350,6 +374,60 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/nomina/liquidacion/index/index-liquidacion.component').then(
             (m) => m.IndexLiquidacionComponent,
+          ),
+      },
+
+      // Ventas de campo
+      {
+        path: 'ventas-campo',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/ventas-campo/index/index-ventas-campo.component').then(
+            (m) => m.IndexVentasCampoComponent,
+          ),
+      },
+
+      // Cartera
+      {
+        path: 'cartera',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/cartera/index/index-cartera.component').then(
+            (m) => m.IndexCarteraComponent,
+          ),
+      },
+
+      // Tesorería
+      {
+        path: 'tesoreria/cuentas-bancarias',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/tesoreria/cuentas-bancarias/index-cuentas-bancarias.component').then(
+            (m) => m.IndexCuentasBancariasComponent,
+          ),
+      },
+      {
+        path: 'tesoreria/egresos',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/tesoreria/egresos/index-egresos.component').then(
+            (m) => m.IndexEgresosComponent,
+          ),
+      },
+      {
+        path: 'tesoreria/recaudos',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/tesoreria/recaudos/index-recaudos.component').then(
+            (m) => m.IndexRecaudosComponent,
+          ),
+      },
+      {
+        path: 'tesoreria/conciliacion',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/tesoreria/conciliacion/index-conciliacion.component').then(
+            (m) => m.IndexConciliacionComponent,
           ),
       },
 

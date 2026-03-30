@@ -1,0 +1,120 @@
+<p-dialog
+  [(visible)]="visible"
+  [header]="header"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '520px' }"
+  styleClass="aura-dialog"
+  (onHide)="close()"
+>
+  <div class="form-body">
+
+    <!-- Sucursal -->
+    <div class="field">
+      <label>Sucursal <span class="req">*</span></label>
+      <p-dropdown
+        [(ngModel)]="sucursalId"
+        [options]="sucursalesOpts"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Seleccionar sucursal"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+
+    <!-- Categoría -->
+    <div class="field">
+      <label>Categoría <span class="req">*</span></label>
+      <p-dropdown
+        [ngModel]="categoria"
+        (ngModelChange)="onCategoriaChange($event)"
+        [options]="categoriasOpts"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Seleccionar categoría"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+
+    <!-- Deducibilidad (auto-set, pero editable) -->
+    <div class="field deducible-field">
+      <label>Tipo fiscal</label>
+      <div class="tipo-btns">
+        <button
+          type="button"
+          class="tipo-btn"
+          [class.deducible]="deducible"
+          [class.active]="deducible"
+          (click)="deducible = true; cdr.markForCheck()"
+        >
+          <i class="pi pi-check-circle"></i> Deducible
+        </button>
+        <button
+          type="button"
+          class="tipo-btn"
+          [class.no-deducible]="!deducible"
+          [class.active]="!deducible"
+          (click)="deducible = false; cdr.markForCheck()"
+        >
+          <i class="pi pi-times-circle"></i> No deducible
+        </button>
+      </div>
+      <small class="field-hint">
+        <span *ngIf="deducible">Este gasto puede restarse de la base gravable de impuestos.</span>
+        <span *ngIf="!deducible">Este gasto no reduce la carga tributaria (ej: multas, salarios, gastos personales).</span>
+      </small>
+    </div>
+
+    <!-- Monto -->
+    <div class="field">
+      <label>Monto <span class="req">*</span></label>
+      <p-inputNumber
+        [(ngModel)]="monto"
+        mode="currency"
+        currency="COP"
+        locale="es-CO"
+        [maxFractionDigits]="0"
+        styleClass="w-full"
+        placeholder="$ 0"
+      />
+    </div>
+
+    <!-- Fecha -->
+    <div class="field">
+      <label>Fecha</label>
+      <p-calendar
+        [(ngModel)]="fecha"
+        dateFormat="yy-mm-dd"
+        [showIcon]="true"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+
+    <!-- Descripción -->
+    <div class="field">
+      <label>Descripción <span class="optional">(opcional)</span></label>
+      <textarea
+        pInputTextarea
+        [(ngModel)]="descripcion"
+        rows="3"
+        class="w-full"
+        placeholder="Detalle del gasto..."
+      ></textarea>
+    </div>
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton icon="pi pi-times" label="Cancelar" class="p-button-text" (click)="close()"></button>
+    <button pButton [icon]="saving ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+      [label]="modoEdicion ? 'Actualizar' : 'Registrar'"
+      class="btn-aura btn-primary"
+      [disabled]="saving"
+      (click)="save()">
+    </button>
+  </ng-template>
+</p-dialog>

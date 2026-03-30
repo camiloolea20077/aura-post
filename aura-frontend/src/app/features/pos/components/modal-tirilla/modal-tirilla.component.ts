@@ -82,10 +82,12 @@ export class ModalTirillaComponent implements OnChanges {
     return Math.round((d.impuestoValor / d.subtotalLinea) * 100);
   }
 
-  // Cambio total = lo que el cliente dio de más (suma de todos los pagos - total)
+  // Cambio total = suma de lo tendido - total (montoRecibido guarda lo que el cliente entregó)
   get cambioTotal(): number {
     if (!this.venta?.pagos?.length) return 0;
-    const totalTendido = this.venta.pagos.reduce((s, p) => s + p.monto, 0);
+    const totalTendido = this.venta.pagos.reduce(
+      (s, p) => s + (p.montoRecibido ?? p.monto), 0
+    );
     return Math.max(0, totalTendido - this.venta.totalPagar);
   }
 
@@ -130,7 +132,7 @@ export class ModalTirillaComponent implements OnChanges {
       .join('');
 
     // ── Construir filas de pagos ──────────────────────────────────
-    const totalTendido = v.pagos.reduce((s, p) => s + p.monto, 0);
+    const totalTendido = v.pagos.reduce((s, p) => s + (p.montoRecibido ?? p.monto), 0);
     const cambioTotal = Math.max(0, totalTendido - v.totalPagar);
 
     const filasPagos = v.pagos
@@ -138,7 +140,7 @@ export class ModalTirillaComponent implements OnChanges {
         (p) => `
         <div style="display:flex;gap:4px;font-size:0.92em;padding:1px 0;">
           <span style="flex:1;">${this.metodoPagoLabel(p.metodoPago)}</span>
-          <span style="text-align:right;">${this.formatCOP(p.monto)}</span>
+          <span style="text-align:right;">${this.formatCOP(p.montoRecibido ?? p.monto)}</span>
         </div>`,
       )
       .join('');

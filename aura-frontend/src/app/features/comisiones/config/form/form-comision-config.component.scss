@@ -52,6 +52,22 @@ $font: "Outfit", sans-serif;
   strong { color: $indigo; }
 }
 
+.venta-info-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.65rem 0.85rem;
+  background: rgba(14, 165, 233, 0.07);
+  border: 1px solid rgba(14, 165, 233, 0.25);
+  border-radius: 8px;
+  font-size: 0.78rem;
+  color: #0369a1;
+  line-height: 1.5;
+
+  i { flex-shrink: 0; margin-top: 0.1rem; }
+  strong { font-weight: 700; }
+}
+
 .auto-tag {
   font-size: 0.62rem;
   font-weight: 700;
@@ -66,6 +82,26 @@ $font: "Outfit", sans-serif;
 }
 
 ::ng-deep {
+  // SelectButton: modalidad y objetivo
+  .modalidad-btn .p-button,
+  .objetivo-btn .p-button {
+    flex: 1;
+    justify-content: center;
+    font-size: 0.82rem;
+    font-weight: 600;
+    font-family: $font;
+  }
+  .modalidad-btn .p-button.p-highlight {
+    background: $indigo !important;
+    border-color: $indigo !important;
+    color: #fff !important;
+  }
+  .objetivo-btn .p-button.p-highlight {
+    background: #0ea5e9 !important;
+    border-color: #0ea5e9 !important;
+    color: #fff !important;
+  }
+
   .negocio-field .p-inputnumber-input {
     background: $bg;
     color: $muted;

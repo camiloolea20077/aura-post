@@ -95,6 +95,7 @@ export class IndexUnidadesComponent implements OnInit {
   }
 
   async loadTable(lazyTable: TableLazyLoadEvent): Promise<void> {
+    this.lastLazyEvent = lazyTable;
     this.loadingTable = true;
     this.filtersTable = this.prepareTableParams(lazyTable);
 

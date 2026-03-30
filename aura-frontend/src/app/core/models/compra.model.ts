@@ -1,14 +1,6 @@
 // ─── Estados ──────────────────────────────────────────────────
 export type EstadoCompra = 'RECIBIDA' | 'ANULADA';
-
-// ─── Opción de presentación para el dropdown de línea ─────────
-export interface PresentacionOpcion {
-  label: string; // "Caja x 100 (×100)"
-  value: number; // id presentación
-  factor: number; // factorConversion
-  costo: number; // costo por presentación
-  esDefaultCompra: boolean;
-}
+export type TipoDocumentoCompra = 'FACTURA_COMPRA' | 'NOTA_DEBITO' | 'NOTA_CREDITO' | 'RECIBO';
 
 // ─── Detalle línea ────────────────────────────────────────────
 export interface CompraDetalleModel {
@@ -16,15 +8,28 @@ export interface CompraDetalleModel {
   productoId: number;
   productoNombre: string;
   productoSku: string | null;
-  loteId: number | null;
-  codigoLote: string | null;
   cantidad: number;
   costoUnitario: number;
+  descuentoPct: number;
+  descuentoValor: number;
   impuestoValor: number;
   subtotalLinea: number;
+  precioVenta1: number | null;
+  precioVenta2: number | null;
+  precioVenta3: number | null;
+}
+
+// ─── Pago de compra ───────────────────────────────────────────
+export interface CompraPagoModel {
+  id: number;
+  metodoPago: string; // EFECTIVO | TARJETA | TRANSFERENCIA | CREDITO
+  monto: number;
+  banco: string | null;
 }
 
 // ─── Modelo completo ──────────────────────────────────────────
+export type FormaPago = 'CONTADO' | 'CREDITO';
+
 export interface CompraModel {
   id: number;
   empresaId: number;
@@ -35,13 +40,25 @@ export interface CompraModel {
   usuarioId: number | null;
   numeroCompra: string | null;
   fecha: string;
+  formaPago: FormaPago | null;
+  tipoDocumento: TipoDocumentoCompra | null;
+  fletes: number;
   subtotal: number;
   descuentoTotal: number;
   impuestosTotal: number;
   total: number;
   observaciones: string | null;
   estado: EstadoCompra;
+  retefuentePct: number | null;
+  retefuenteValor: number | null;
+  reteivaPct: number | null;
+  reteivaValor: number | null;
+  reteicaPct: number | null;
+  reteicaValor: number | null;
+  totalRetenciones: number | null;
+  netaAPagar: number | null;
   detalles: CompraDetalleModel[];
+  pagos: CompraPagoModel[];
 }
 
 // ─── Tabla ───────────────────────────────────────────────────
@@ -58,13 +75,20 @@ export interface CompraTableModel {
 // ─── DTOs de creación ─────────────────────────────────────────
 export interface CreateCompraDetalleDto {
   productoId: number;
-  presentacionId: number | null; // ← nuevo
-  factorConversion: number; // ← nuevo (default 1)
-  codigoLote: string | null;
-  fechaVencimiento: string | null;
   cantidad: number;
   costoUnitario: number;
+  descuentoPct: number;
   impuestoValor: number;
+  precioVenta1: number | null;
+  precioVenta2: number | null;
+  precioVenta3: number | null;
+}
+
+export interface CreateCompraPagoDto {
+  metodoPago: string; // EFECTIVO | TRANSFERENCIA | NEQUI | TARJETA | CHEQUE
+  monto: number;
+  banco?: string | null;
+  cuentaBancariaId?: number | null;
 }
 
 export interface CreateCompraDto {
@@ -72,8 +96,16 @@ export interface CreateCompraDto {
   sucursalId: number;
   numeroCompra: string | null;
   fecha: string | null;
+  fechaVencimiento?: string | null;
   observaciones: string | null;
   detalles: CreateCompraDetalleDto[];
+  retefuentePct?: number | null;
+  reteivaPct?: number | null;
+  reteicaPct?: number | null;
+  formaPago?: FormaPago | null;
+  tipoDocumento?: TipoDocumentoCompra | null;
+  fletes?: number | null;
+  pagos?: CreateCompraPagoDto[] | null;
 }
 
 // ─── Pageable ─────────────────────────────────────────────────
@@ -90,28 +122,40 @@ export interface CompraLineaUI {
   _id: string;
   productoId: number | null;
   productoNombre: string;
-  manejaLotes: boolean;
-  codigoLote: string | null;
-  fechaVencimiento: Date | null;
-
-  // Presentación
-  presentacionId: number | null;
-  presentacionNombre: string;
-  factorConversion: number;
-  presentacionesOpts: PresentacionOpcion[];
-
   cantidad: number | null;
   costoUnitario: number | null;
+  descuentoPct: number;
+  descuentoValor: number;
   ivaPorcentaje: number;
   impuestoValor: number;
   subtotal: number;
+  precioVenta1: number | null;
+  precioVenta2: number | null;
+  precioVenta3: number | null;
+}
+
+// ─── Pre-fill desde Orden de Compra ──────────────────────────
+export interface PrefilledCompraOC {
+  proveedorId: number;
+  proveedorNombre: string;
+  sucursalId: number;
+  observaciones: string | null;
+  lineas: {
+    productoId: number;
+    productoNombre: string;
+    cantidad: number;
+    costoUnitario: number;
+  }[];
 }
 
 // ─── Opciones de producto para el dropdown ────────────────────
 export interface ProductoOpcion {
   label: string;
   value: number;
-  manejaLotes: boolean;
   sku: string | null;
   ivaPorcentaje: number;
+  costo: number | null;
+  precio: number | null;
+  precio2: number | null;
+  precio3: number | null;
 }

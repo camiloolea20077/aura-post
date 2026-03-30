@@ -20,18 +20,22 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { DropdownModule } from 'primeng/dropdown';
 import { ToggleButtonModule } from 'primeng/togglebutton';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { lastValueFrom } from 'rxjs';
 
 import { ComisionService } from '../../../../core/services/comision.service';
 import { ProductoService } from '../../../../core/services/producto.service';
+import { CategoriaService } from '../../../../core/services/categoria.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 import {
   ComisionConfigModel,
+  ModalidadComision,
   TecnicoDto,
   TipoComision,
 } from '../../../../core/models/comision.model';
+import { CategoriaDto } from '../../../../core/models/categoria.model';
 
-interface ServicioOpcion {
+interface OpcionSimple {
   label: string;
   value: number;
 }
@@ -49,6 +53,7 @@ interface ServicioOpcion {
     InputNumberModule,
     DropdownModule,
     ToggleButtonModule,
+    SelectButtonModule,
   ],
   templateUrl: './form-comision-config.component.html',
   styleUrls: ['./form-comision-config.component.scss'],
@@ -62,43 +67,68 @@ export class FormComisionConfigComponent implements OnChanges {
   frm: FormGroup;
   loading = false;
   loadingTecnicos = false;
+  loadingCategorias = false;
 
-  // Servicios: búsqueda server-side igual que compras
-  servicioOpts: ServicioOpcion[] = [];
-
-  // En edición precargamos el servicio actual para mostrarlo
-  servicioEditLabel = '';
-
+  productoOpts: OpcionSimple[] = [];
   tecnicos: TecnicoDto[] = [];
+  categorias: CategoriaDto[] = [];
+
+  readonly modalidadOptions: { label: string; value: ModalidadComision }[] = [
+    { label: 'Servicio / Taller', value: 'SERVICIO' },
+    { label: 'Venta (vendedor)', value: 'VENTA' },
+  ];
 
   readonly tipoOptions: { label: string; value: TipoComision }[] = [
     { label: 'Porcentaje (%)', value: 'PORCENTAJE' },
     { label: 'Valor fijo ($)', value: 'VALOR_FIJO' },
   ];
 
-  get isEdit(): boolean {
-    return !!this.config;
-  }
+  // Para VENTA: objetivo de la comisión
+  readonly objetivoOptions = [
+    { label: 'Por producto', value: 'producto' },
+    { label: 'Por categoría', value: 'categoria' },
+  ];
+
+  get isEdit(): boolean { return !!this.config; }
+  get modalidad(): ModalidadComision { return this.frm.get('modalidad')!.value; }
+  get objetivo(): 'producto' | 'categoria' { return this.frm.get('objetivo')!.value; }
+  get isServicio(): boolean { return this.modalidad === 'SERVICIO'; }
+  get isVentaProducto(): boolean { return !this.isServicio && this.objetivo === 'producto'; }
+  get isVentaCategoria(): boolean { return !this.isServicio && this.objetivo === 'categoria'; }
 
   constructor(
     private readonly fb: FormBuilder,
     private readonly comisionService: ComisionService,
     private readonly productoService: ProductoService,
+    private readonly categoriaService: CategoriaService,
     private readonly alertService: AlertService,
     private readonly cdr: ChangeDetectorRef,
   ) {
     this.frm = this.fb.group({
-      productoId: [null, Validators.required],
-      tecnicoId: [null],
-      tipo: ['PORCENTAJE', Validators.required],
-      porcentajeTecnico: [50, [Validators.required, Validators.min(0.01), Validators.max(99.99)]],
+      modalidad:         ['SERVICIO', Validators.required],
+      objetivo:          ['producto'],          // VENTA: producto | categoria
+      productoId:        [null],
+      categoriaId:       [null],
+      tecnicoId:         [null],
+      tipo:              ['PORCENTAJE', Validators.required],
+      porcentajeTecnico: [50, [Validators.required, Validators.min(0.01), Validators.max(100)]],
       porcentajeNegocio: [{ value: 50, disabled: true }],
-      activo: [true],
+      activo:            [true],
     });
 
+    // Auto-calcular % negocio solo para SERVICIO
     this.frm.get('porcentajeTecnico')!.valueChanges.subscribe((val) => {
-      const negocio = val != null ? Math.round((100 - val) * 100) / 100 : 0;
-      this.frm.get('porcentajeNegocio')!.setValue(negocio, { emitEvent: false });
+      if (this.isServicio) {
+        const neg = val != null ? Math.round((100 - val) * 100) / 100 : 0;
+        this.frm.get('porcentajeNegocio')!.setValue(neg, { emitEvent: false });
+      }
+      this.cdr.markForCheck();
+    });
+
+    // Al cambiar modalidad, resetear campos irrelevantes
+    this.frm.get('modalidad')!.valueChanges.subscribe(() => {
+      this.frm.patchValue({ productoId: null, categoriaId: null, porcentajeTecnico: 50 }, { emitEvent: false });
+      this.productoOpts = [];
       this.cdr.markForCheck();
     });
   }
@@ -106,10 +136,12 @@ export class FormComisionConfigComponent implements OnChanges {
   async ngOnChanges(): Promise<void> {
     if (!this.visible) return;
 
-    this.servicioOpts = [];
-    this.servicioEditLabel = '';
+    this.productoOpts = [];
     this.frm.reset({
+      modalidad: 'SERVICIO',
+      objetivo: 'producto',
       productoId: null,
+      categoriaId: null,
       tecnicoId: null,
       tipo: 'PORCENTAJE',
       porcentajeTecnico: 50,
@@ -117,84 +149,116 @@ export class FormComisionConfigComponent implements OnChanges {
       activo: true,
     });
 
-    await this.loadTecnicos();
+    await Promise.all([this.loadTecnicos(), this.loadCategorias()]);
 
     if (this.config) {
-      // En edición: precargar el servicio actual en el dropdown para que se muestre
-      this.servicioEditLabel = this.config.productoNombre;
-      this.servicioOpts = [{
-        label: this.config.productoNombre,
-        value: this.config.productoId,
-      }];
+      const modalidad = this.config.modalidad ?? 'SERVICIO';
+      const objetivo = this.config.categoriaId ? 'categoria' : 'producto';
+
+      if (this.config.productoNombre && this.config.productoId) {
+        this.productoOpts = [{ label: this.config.productoNombre, value: this.config.productoId }];
+      }
 
       this.frm.patchValue({
-        productoId: this.config.productoId,
-        tecnicoId: this.config.tecnicoId,
-        tipo: this.config.tipo,
+        modalidad,
+        objetivo,
+        productoId:        this.config.productoId,
+        categoriaId:       this.config.categoriaId,
+        tecnicoId:         this.config.tecnicoId,
+        tipo:              this.config.tipo,
         porcentajeTecnico: this.config.porcentajeTecnico,
         porcentajeNegocio: this.config.porcentajeNegocio,
-        activo: this.config.activo,
+        activo:            this.config.activo,
       });
     }
 
     this.cdr.markForCheck();
   }
 
-  // ── Búsqueda server-side de servicios (igual que compras) ──
-  async onFiltroServicio(event: { filter: string }): Promise<void> {
+  // ── Búsqueda server-side de productos ────────────────────────
+  async onFiltroProducto(event: { filter: string }): Promise<void> {
     const q = event.filter?.trim();
     if (!q || q.length < 2) {
-      // En edición mantenemos el item actual visible
-      if (this.isEdit && this.config) {
-        this.servicioOpts = [{ label: this.config.productoNombre, value: this.config.productoId }];
+      if (this.isEdit && this.config?.productoId) {
+        this.productoOpts = [{ label: this.config.productoNombre!, value: this.config.productoId }];
       } else {
-        this.servicioOpts = [];
+        this.productoOpts = [];
       }
       this.cdr.markForCheck();
       return;
     }
     try {
       const res = await lastValueFrom(this.productoService.search(q));
-      // Filtrar solo SERVICIO en cliente (el backend devuelve todos)
-      this.servicioOpts = (res?.data ?? [])
-        .filter((p: any) => p.tipoProducto === 'SERVICIO')
-        .map((p: any): ServicioOpcion => ({
-          label: p.nombre + (p.sku ? ` [${p.sku}]` : ''),
-          value: p.id,
-        }));
+      let productos = res?.data ?? [];
+      // Para SERVICIO: filtrar solo tipo SERVICIO
+      if (this.isServicio) {
+        productos = productos.filter((p: any) => p.tipoProducto === 'SERVICIO');
+      }
+      this.productoOpts = productos.map((p: any): OpcionSimple => ({
+        label: p.nombre + (p.sku ? ` [${p.sku}]` : ''),
+        value: p.id,
+      }));
     } catch {
-      this.servicioOpts = [];
+      this.productoOpts = [];
     }
     this.cdr.markForCheck();
   }
 
-  // ── Carga técnicos (lista compacta, no es masiva) ──────────
   private async loadTecnicos(): Promise<void> {
     this.loadingTecnicos = true;
     try {
       const res = await lastValueFrom(this.comisionService.listTecnicos());
       this.tecnicos = res?.data ?? [];
     } catch {
-      this.alertService.showError('Error', 'No se pudieron cargar los técnicos');
+      this.alertService.showError('Error', 'No se pudieron cargar los usuarios');
     } finally {
       this.loadingTecnicos = false;
       this.cdr.markForCheck();
     }
   }
 
-  async save(): Promise<void> {
-    if (this.frm.invalid) {
-      this.frm.markAllAsTouched();
-      return;
+  private async loadCategorias(): Promise<void> {
+    this.loadingCategorias = true;
+    try {
+      const res = await lastValueFrom(this.categoriaService.list());
+      this.categorias = res?.data ?? [];
+    } catch {
+      this.categorias = [];
+    } finally {
+      this.loadingCategorias = false;
+      this.cdr.markForCheck();
     }
+  }
+
+  async save(): Promise<void> {
+    this.frm.markAllAsTouched();
 
     const raw = this.frm.getRawValue();
+    const modalidad: ModalidadComision = raw.modalidad;
+
+    // Validaciones extra
+    if (modalidad === 'SERVICIO' && !raw.productoId) {
+      this.alertService.showError('Campo requerido', 'Selecciona el servicio');
+      return;
+    }
+    if (modalidad === 'VENTA' && raw.objetivo === 'producto' && !raw.productoId) {
+      this.alertService.showError('Campo requerido', 'Selecciona el producto');
+      return;
+    }
+    if (modalidad === 'VENTA' && raw.objetivo === 'categoria' && !raw.categoriaId) {
+      this.alertService.showError('Campo requerido', 'Selecciona la categoría');
+      return;
+    }
+    if (this.frm.invalid) return;
+
     const dto = {
-      productoId: raw.productoId,
-      tecnicoId: raw.tecnicoId ?? null,
-      tipo: raw.tipo as TipoComision,
+      modalidad,
+      productoId:        modalidad === 'SERVICIO' || raw.objetivo === 'producto' ? raw.productoId : null,
+      categoriaId:       modalidad === 'VENTA' && raw.objetivo === 'categoria' ? raw.categoriaId : null,
+      tecnicoId:         raw.tecnicoId ?? null,
+      tipo:              raw.tipo as TipoComision,
       porcentajeTecnico: raw.porcentajeTecnico,
-      porcentajeNegocio: raw.porcentajeNegocio,
+      porcentajeNegocio: modalidad === 'SERVICIO' ? raw.porcentajeNegocio : 0,
       ...(this.isEdit ? { activo: raw.activo } : {}),
     };
 

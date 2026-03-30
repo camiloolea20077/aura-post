@@ -94,6 +94,7 @@ export class IndexCategoriasComponent implements OnInit {
   }
 
   async loadTable(lazyTable: TableLazyLoadEvent): Promise<void> {
+    this.lastLazyEvent = lazyTable;
     this.loadingTable = true;
     this.filtersTable = this.prepareTableParams(lazyTable);
 
@@ -129,7 +130,7 @@ export class IndexCategoriasComponent implements OnInit {
   // ─── Buscar ───────────────────────────────────────────────
   onSearch(): void {
     if (this.lastLazyEvent) {
-      this.loadTable;
+      this.loadTable({ ...this.lastLazyEvent, first: 0 });
     }
   }
 
@@ -155,7 +156,6 @@ export class IndexCategoriasComponent implements OnInit {
   onModalClosed(): void {
     this.showModal = false;
     this.selectedId = null;
-    this.loadTable;
   }
 
   onItemSaved(): void {
@@ -165,7 +165,7 @@ export class IndexCategoriasComponent implements OnInit {
 
   private reloadTable(): void {
     if (this.lastLazyEvent) {
-      this.loadTable;
+      this.loadTable(this.lastLazyEvent);
     }
   }
 
