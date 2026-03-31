@@ -16,6 +16,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { MessageService, ConfirmationService } from 'primeng/api';
+import { RouterModule } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import {
   CreateEmpresaResponseDto,
@@ -26,6 +27,7 @@ import { PlatformService } from '../../../core/services/platform.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
 import { FormEmpresaComponent } from '../form/form-empresa.component';
 import { DialogModule } from 'primeng/dialog';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-index-empresas',
@@ -44,6 +46,7 @@ import { DialogModule } from 'primeng/dialog';
     ConfirmDialogModule,
     FormEmpresaComponent,
     DialogModule,
+    RouterModule,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './index-empresas.component.html',
@@ -67,6 +70,7 @@ export class IndexEmpresasComponent implements OnInit {
     private readonly alertService: AlertService,
     private readonly confirmService: ConfirmationService,
     private readonly cdr: ChangeDetectorRef,
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {}
@@ -176,6 +180,11 @@ export class IndexEmpresasComponent implements OnInit {
   copiar(texto: string): void {
     navigator.clipboard.writeText(texto);
     this.alertService.showSuccess('Copiado', 'Texto copiado al portapapeles');
+  }
+
+  gestionarPermisos(item: EmpresaTableModel, event: Event): void {
+    event.stopPropagation();
+    this.router.navigate(['/platform/permisos', item.id]);
   }
 
   formatFecha(iso: string): string {

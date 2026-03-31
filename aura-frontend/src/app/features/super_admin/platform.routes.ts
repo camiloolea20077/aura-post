@@ -28,6 +28,13 @@ export const PLATFORM_ROUTES: Routes = [
             (m) => m.MonitorErroresComponent,
           ),
       },
+      {
+        path: 'permisos/:id',
+        loadComponent: () =>
+          import('./permisos-empresa/index-permisos.component').then(
+            (m) => m.IndexPermisosComponent,
+          ),
+      },
     ],
   },
 ];
