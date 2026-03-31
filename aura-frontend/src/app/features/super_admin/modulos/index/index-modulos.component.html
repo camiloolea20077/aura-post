@@ -1,0 +1,152 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="pe-wrapper">
+  <div class="pe-header">
+    <div class="header-left">
+      <div class="header-icon"><i class="pi pi-th-large"></i></div>
+      <div>
+        <h2 class="header-title">Módulos</h2>
+        <p class="header-sub">Gestión de módulos y submódulos del sistema</p>
+      </div>
+    </div>
+    <button
+      pButton
+      icon="pi pi-plus"
+      label="Nuevo módulo"
+      class="btn-platform btn-primary"
+      (click)="nueva()"
+    ></button>
+  </div>
+
+  <div class="table-card">
+    <div class="table-toolbar">
+      <div class="search-wrap">
+        <i class="pi pi-search"></i>
+        <input
+          pInputText
+          [(ngModel)]="search"
+          placeholder="Buscar por nombre o código..."
+          (input)="onSearch()"
+          class="search-input"
+        />
+        <button *ngIf="search" class="clear-btn" (click)="clearSearch()">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+      <span class="total-badge">{{ totalRows }} módulos</span>
+    </div>
+
+    <p-table
+      [value]="rows"
+      [lazy]="true"
+      (onLazyLoad)="loadTable($event)"
+      [paginator]="true"
+      [rows]="rowSize"
+      [totalRecords]="totalRows"
+      [loading]="loadingTable"
+      [rowHover]="true"
+      [sortField]="'orden'"
+      [sortOrder]="1"
+      dataKey="id"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 50px">#</th>
+          <th pSortableColumn="nombre">
+            Nombre <p-sortIcon field="nombre" />
+          </th>
+          <th pSortableColumn="codigo" style="width: 160px">
+            Código <p-sortIcon field="codigo" />
+          </th>
+          <th style="width: 200px">Descripción</th>
+          <th pSortableColumn="orden" style="width: 100px">
+            Orden <p-sortIcon field="orden" />
+          </th>
+          <th style="width: 100px; text-align: center">Estado</th>
+          <th style="width: 100px; text-align: center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-m>
+        <tr class="clickable-row" (click)="editar(m.id)">
+          <td>
+            <span class="id-badge">{{ m.id }}</span>
+          </td>
+          <td>
+            <div class="fw-600">{{ m.nombre }}</div>
+          </td>
+          <td class="mono">{{ m.codigo }}</td>
+          <td class="text-muted">{{ m.descripcion }}</td>
+          <td class="text-center">{{ m.orden }}</td>
+          <td class="text-center">
+            <p-tag
+              [value]="m.activo ? 'Activo' : 'Inactivo'"
+              [severity]="m.activo ? 'success' : 'danger'"
+            />
+          </td>
+          <td class="text-center" (click)="$event.stopPropagation()">
+            <button
+              pButton
+              icon="pi pi-pencil"
+              class="p-button-text p-button-sm"
+              pTooltip="Editar"
+              (click)="editar(m.id)"
+            ></button>
+            <button
+              pButton
+              [icon]="m.activo ? 'pi pi-ban' : 'pi pi-check-circle'"
+              class="p-button-text p-button-sm"
+              [pTooltip]="m.activo ? 'Desactivar' : 'Activar'"
+              [class.p-button-danger]="m.activo"
+              [class.p-button-success]="!m.activo"
+              (click)="toggleActivo(m, $event)"
+            ></button>
+            <button
+              pButton
+              icon="pi pi-trash"
+              class="p-button-text p-button-sm p-button-danger"
+              pTooltip="Eliminar"
+              (click)="confirmarEliminar(m, $event)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7">
+            <div class="empty-row">
+              <i class="pi pi-th-large"></i>
+              <p>No hay módulos registrados</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr *ngFor="let i of [1, 2, 3, 4, 5]">
+          <td *ngFor="let j of [1, 2, 3, 4, 5, 6, 7]"><p-skeleton /></td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<p-dialog
+  [header]="editTarget ? 'Editar módulo' : 'Nuevo módulo'"
+  [(visible)]="showForm"
+  [modal]="true"
+  [style]="{ width: '560px' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="showForm = false"
+>
+  <app-form-modulo
+    *ngIf="showForm"
+    [modulo]="editTarget"
+    (saved)="onSaved()"
+    (cancelled)="showForm = false"
+  />
+</p-dialog>

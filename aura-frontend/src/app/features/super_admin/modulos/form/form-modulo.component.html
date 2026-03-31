@@ -1,0 +1,85 @@
+<form [formGroup]="frmModulo" class="fe-form">
+  <div class="section-title">
+    <i class="pi pi-th-large"></i> Datos del módulo
+  </div>
+
+  <div class="form-row two-col">
+    <div class="field">
+      <label class="field-label required">Nombre</label>
+      <input
+        pInputText
+        formControlName="nombre"
+        placeholder="Catálogo"
+        class="w-full"
+        [class.ng-invalid]="isInvalid('nombre')"
+      />
+      <small class="field-error" *ngIf="isInvalid('nombre')">Requerido</small>
+    </div>
+    <div class="field">
+      <label class="field-label required">Código</label>
+      <input
+        pInputText
+        formControlName="codigo"
+        placeholder="catalogo"
+        class="w-full"
+        [class.ng-invalid]="isInvalid('codigo')"
+        [readOnly]="isEdit"
+      />
+      <small class="field-error" *ngIf="isInvalid('codigo')">Requerido</small>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="field">
+      <label class="field-label">Descripción</label>
+      <input
+        pInputText
+        formControlName="descripcion"
+        placeholder="Gestión de productos, categorías y marcas"
+        class="w-full"
+      />
+    </div>
+  </div>
+
+  <div class="form-row two-col">
+    <div class="field">
+      <label class="field-label">Orden</label>
+      <p-inputNumber
+        formControlName="orden"
+        [showButtons]="true"
+        [min]="0"
+        styleClass="w-full"
+      />
+    </div>
+    <div class="field">
+      <label class="field-label">Estado</label>
+      <div class="toggle-wrap">
+        <p-toggleButton
+          formControlName="activo"
+          onLabel="Activo"
+          offLabel="Inactivo"
+          onIcon="pi pi-check"
+          offIcon="pi pi-times"
+        />
+      </div>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="cancel()"
+    ></button>
+    <button
+      pButton
+      [label]="isEdit ? 'Actualizar' : 'Crear'"
+      icon="pi pi-check"
+      class="btn-platform btn-primary"
+      [loading]="loading"
+      (click)="save()"
+    ></button>
+  </div>
+</form>

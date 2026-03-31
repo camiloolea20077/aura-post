@@ -35,6 +35,13 @@ export const PLATFORM_ROUTES: Routes = [
             (m) => m.IndexPermisosComponent,
           ),
       },
+      {
+        path: 'modulos',
+        loadComponent: () =>
+          import('./modulos/index/index-modulos.component').then(
+            (m) => m.IndexModulosComponent,
+          ),
+      },
     ],
   },
 ];
