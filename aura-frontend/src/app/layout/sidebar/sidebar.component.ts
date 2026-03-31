@@ -1,13 +1,16 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { filter } from 'rxjs/operators';
+import { lastValueFrom } from 'rxjs';
 
 import { SIDEBAR_MENU, SidebarMenuGroup, SidebarMenuItem } from './sidebar.config';
 import { IndexDBService } from '../../core/services/index-db.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-sidebar',
@@ -33,8 +36,10 @@ export class SidebarComponent implements OnInit {
 
   constructor(
     private readonly indexDBService: IndexDBService,
+    private readonly http: HttpClient,
     private readonly router: Router,
     private readonly confirmationService: ConfirmationService,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -50,19 +55,102 @@ export class SidebarComponent implements OnInit {
 
   private async loadUserInfo(): Promise<void> {
     const auth = await this.indexDBService.loadDataAuthDB();
+    console.log({auth})
     if (auth) {
       this.logoSafeUrl = auth.logo_url ?? 'assets/icons/icono.jpeg';
       this.userName = auth.nombreCompleto;
       this.userRole = auth.rol;
       this.empresaNombre = auth.username;
       this.userInitials = this.getInitials(auth.nombreCompleto);
-      this.menuGroups = this.filtrarMenu(auth.rol);
+
+      // PLATFORM_ADMIN tiene todos los módulos disponibles
+      if (auth.rol === 'PLATFORM_ADMIN') {
+        this.menuGroups = this.filtrarMenu(auth.rol);
+      } else {
+        // Cargar módulos según permisos de la empresa
+        await this.loadModulosPorPermisos();
+      }
 
       // Abrir grupos marcados como defaultOpen
       this.menuGroups
         .filter((g) => g.defaultOpen)
         .forEach((g) => this.openGroups.add(g.label));
     }
+  }
+
+  private async loadModulosPorPermisos(): Promise<void> {
+    try {
+      const res = await lastValueFrom(
+        this.http.get<any>(`${environment.apiUrl}public/empresas/permisos`),
+      );
+      const modulos = res?.data ?? [];
+      this.menuGroups = this.filtrarMenuPorPermisos(modulos);
+      this.cdr.markForCheck();
+    } catch {
+      this.menuGroups = this.filtrarMenu('ADMIN');
+    }
+  }
+
+  private filtrarMenuPorPermisos(modulos: any[]): SidebarMenuGroup[] {
+    const gruposDefaultOpenCajero = ['Operaciones', 'Administración'];
+
+    const normalize = (s: string): string =>
+      s
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, '-');
+
+    const moduloCodigoToGrupo: Record<string, string> = {
+      catalogo: 'catalogo',
+      precios: 'precios',
+      inventario: 'inventario',
+      ventas: 'operaciones',
+      recursoshumanos: 'vendedores',
+      contabilidad: 'contabilidad',
+      configuracion: 'administracion',
+      reportes: 'reportes',
+    };
+
+    const modulosActivos = new Set(
+      modulos.filter((m: any) => m.activo).map((m: any) => normalize(m.moduloCodigo)),
+    );
+
+    const submodulosActivos = new Set(
+      modulos
+        .filter((m: any) => m.activo)
+        .flatMap((m: any) => m.submodulos)
+        .filter((s: any) => s.activo)
+        .map((s: any) => normalize(s.submoduloCodigo)),
+    );
+
+    return SIDEBAR_MENU.map((group) => {
+      const grupoLabelNormalizado = normalize(group.label);
+      const grupoCodigoMapped =
+        moduloCodigoToGrupo[grupoLabelNormalizado] ?? grupoLabelNormalizado;
+
+      const grupoActivo =
+        modulosActivos.size === 0 || modulosActivos.has(grupoCodigoMapped);
+
+      return {
+        ...group,
+        items: group.items.filter((item) => {
+          const routeMatch = item.route?.match(/\/([^/]+)/g);
+          let itemCodigo: string;
+          if (routeMatch && routeMatch.length > 1) {
+            const segundoSegmento = routeMatch[1].replace('/', '');
+            itemCodigo = normalize(segundoSegmento);
+          } else {
+            itemCodigo = normalize(item.label);
+          }
+          return submodulosActivos.has(itemCodigo);
+        }),
+        defaultOpen:
+          group.defaultOpen ||
+          (this.userRole === 'CAJERO' &&
+            gruposDefaultOpenCajero.includes(group.label)),
+      };
+    }).filter((group) => group.items.length > 0);
   }
 
   /** Abre el grupo que contiene la ruta activa */
