@@ -78,6 +78,13 @@ export class IndexSubmodulosComponent implements OnInit {
   async loadTable(event: TableLazyLoadEvent): Promise<void> {
     this.lastEvent = event;
     this.loadingTable = true;
+
+    if (!this.moduloId) {
+      this.loadingTable = false;
+      this.cdr.markForCheck();
+      return;
+    }
+
     const page =
       event.first != null && event.rows
         ? Math.floor(event.first / event.rows)
@@ -89,13 +96,13 @@ export class IndexSubmodulosComponent implements OnInit {
         rows: event.rows ?? this.rowSize,
         search: this.search || null,
       };
-      if (this.moduloId) {
-        params.filters = { moduloId: this.moduloId };
-      }
 
-      const res = await lastValueFrom(this.service.pageSubmodulos(params));
-      this.rows = res?.data?.content ?? [];
-      this.totalRows = res?.data?.totalElements ?? 0;
+      const res = await lastValueFrom(
+        this.service.getSubmodulosByModulo(this.moduloId, params),
+      );
+      const data = res?.data ?? [];
+      this.rows = data;
+      this.totalRows = data.length > 0 ? (data[0].totalRows ?? data.length) : 0;
     } catch {
       this.rows = [];
       this.totalRows = 0;

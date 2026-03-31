@@ -55,7 +55,6 @@ export class SidebarComponent implements OnInit {
 
   private async loadUserInfo(): Promise<void> {
     const auth = await this.indexDBService.loadDataAuthDB();
-    console.log({auth})
     if (auth) {
       this.logoSafeUrl = auth.logo_url ?? 'assets/icons/icono.jpeg';
       this.userName = auth.nombreCompleto;
@@ -63,13 +62,7 @@ export class SidebarComponent implements OnInit {
       this.empresaNombre = auth.username;
       this.userInitials = this.getInitials(auth.nombreCompleto);
 
-      // PLATFORM_ADMIN tiene todos los módulos disponibles
-      if (auth.rol === 'PLATFORM_ADMIN') {
-        this.menuGroups = this.filtrarMenu(auth.rol);
-      } else {
-        // Cargar módulos según permisos de la empresa
-        await this.loadModulosPorPermisos();
-      }
+      await this.loadModulosPorPermisos();
 
       // Abrir grupos marcados como defaultOpen
       this.menuGroups
@@ -124,6 +117,21 @@ export class SidebarComponent implements OnInit {
         .map((s: any) => normalize(s.submoduloCodigo)),
     );
 
+    const tieneAccesoItem = (item: any, rol: string): boolean => {
+      if (rol === 'PLATFORM_ADMIN') {
+        return this.tieneAcceso(item.roles, rol);
+      }
+      const routeMatch = item.route?.match(/\/([^/]+)/g);
+      let itemCodigo: string;
+      if (routeMatch && routeMatch.length > 1) {
+        const segundoSegmento = routeMatch[1].replace('/', '');
+        itemCodigo = normalize(segundoSegmento);
+      } else {
+        itemCodigo = normalize(item.label);
+      }
+      return submodulosActivos.has(itemCodigo);
+    };
+
     return SIDEBAR_MENU.map((group) => {
       const grupoLabelNormalizado = normalize(group.label);
       const grupoCodigoMapped =
@@ -135,6 +143,9 @@ export class SidebarComponent implements OnInit {
       return {
         ...group,
         items: group.items.filter((item) => {
+          if (this.userRole === 'PLATFORM_ADMIN') {
+            return this.tieneAcceso(item.roles, this.userRole);
+          }
           const routeMatch = item.route?.match(/\/([^/]+)/g);
           let itemCodigo: string;
           if (routeMatch && routeMatch.length > 1) {
@@ -142,6 +153,9 @@ export class SidebarComponent implements OnInit {
             itemCodigo = normalize(segundoSegmento);
           } else {
             itemCodigo = normalize(item.label);
+          }
+          if (!grupoActivo) {
+            return submodulosActivos.has(itemCodigo);
           }
           return submodulosActivos.has(itemCodigo);
         }),
@@ -194,6 +208,7 @@ export class SidebarComponent implements OnInit {
   }
 
   private tieneAcceso(roles: string[] | undefined, rol: string): boolean {
+    if (rol === 'PLATFORM_ADMIN') return true;
     if (!roles || roles.length === 0) return true;
     return roles.includes(rol);
   }

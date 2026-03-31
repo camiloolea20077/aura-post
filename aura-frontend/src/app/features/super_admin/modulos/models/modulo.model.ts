@@ -29,16 +29,16 @@ export interface UpdateModuloDto {
 export interface SubmoduloModel {
   id: number;
   moduloId: number;
+  moduloNombre: string;
   nombre: string;
   codigo: string;
   descripcion?: string;
   orden: number;
   activo: boolean;
-}
-
-export interface SubmoduloTableModel extends SubmoduloModel {
   totalRows: number;
 }
+
+export interface SubmoduloTableModel extends SubmoduloModel {}
 
 export interface CreateSubmoduloDto {
   moduloId: number;

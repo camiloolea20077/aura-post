@@ -3,8 +3,8 @@
     <i class="pi pi-sitemap"></i> Datos del submódulo
   </div>
 
-  <div class="form-row">
-    <div class="field">
+  <div class="form-row w-full">
+    <div class="w-full">
       <label class="field-label required">Módulo</label>
       <p-dropdown
         formControlName="moduloId"
@@ -12,6 +12,8 @@
         optionLabel="nombre"
         optionValue="id"
         placeholder="Seleccionar módulo"
+        styleClass="w-full"
+        class="w-full"
         [style]="{ width: '100%' }"
         [class.ng-invalid]="isInvalid('moduloId')"
       />
@@ -46,7 +48,7 @@
   </div>
 
   <div class="form-row">
-    <div class="field">
+    <div class="w-full">
       <label class="field-label">Descripción</label>
       <input
         pInputText

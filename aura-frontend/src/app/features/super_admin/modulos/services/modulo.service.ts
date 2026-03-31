@@ -51,8 +51,10 @@ export class ModuloService {
     return this.http.get<any>(`${this.baseUrl}/submodulos`);
   }
 
-  getSubmodulosByModulo(moduloId: number): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/submodulos/modulo/${moduloId}`);
+  getSubmodulosByModulo(moduloId: number, params?: any): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/submodulos/modulo/${moduloId}`, {
+      params,
+    });
   }
 
   getSubmoduloById(id: number): Observable<any> {
