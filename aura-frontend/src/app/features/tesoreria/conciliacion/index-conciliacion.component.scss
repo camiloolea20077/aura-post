@@ -217,6 +217,66 @@
   }
 }
 
+// ── Header actions ───────────────────────────────────────────────────
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+// ── Extracto CSV info ─────────────────────────────────────────────────
+.extracto-calc {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #4f46e5;
+  background: #eef2ff;
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+}
+
+.badge-count.matched {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.text-green  { color: #15803d !important; }
+.text-muted  { color: #cbd5e1 !important; }
+
+// ── CSV Help card ─────────────────────────────────────────────────────
+.csv-help-card {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+
+  .csv-help-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 0.15rem;
+    i { color: #6366f1; }
+  }
+
+  code {
+    font-size: 0.7rem;
+    background: #e2e8f0;
+    border-radius: 4px;
+    padding: 0.15rem 0.4rem;
+    color: #334155;
+    font-family: monospace;
+  }
+
+  small { font-size: 0.68rem; color: #94a3b8; margin-top: 0.2rem; }
+}
+
 // ── Empty state ──────────────────────────────────────────────────────
 .empty-state {
   display: flex;

@@ -266,6 +266,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'devoluciones',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN', 'CAJERO'])],
+        loadComponent: () =>
+          import('./features/devoluciones/index/index-devoluciones.component').then(
+            (m) => m.IndexDevolucionesComponent,
+          ),
+      },
+      {
         path: 'mermas',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
@@ -431,6 +439,34 @@ export const routes: Routes = [
           ),
       },
 
+      // Contabilidad — Plan de Cuentas y Asientos
+      {
+        path: 'contabilidad/plan-cuentas',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/plan-cuentas/plan-cuentas.component').then(
+            (m) => m.PlanCuentasComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/asientos',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/asientos/asientos.component').then(
+            (m) => m.AsientosComponent,
+          ),
+      },
+
+      // Comprobantes de caja
+      {
+        path: 'comprobantes',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN', 'CAJERO'])],
+        loadComponent: () =>
+          import('./features/comprobantes/index/index-comprobantes.component').then(
+            (m) => m.IndexComprobantesComponent,
+          ),
+      },
+
       // Reportes
       {
         path: 'reportes/ventas',
@@ -444,6 +480,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/reporte-inventario/reporte-inventario.component').then(
             (m) => m.ReporteInventarioComponent,
+          ),
+      },
+      {
+        path: 'reportes/avanzados',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/reportes-avanzados/reportes-avanzados.component').then(
+            (m) => m.ReportesAvanzadosComponent,
           ),
       },
     ],

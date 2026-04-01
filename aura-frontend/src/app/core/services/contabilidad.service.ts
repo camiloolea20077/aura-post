@@ -1,0 +1,100 @@
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+
+import {
+  AsientoContableModel, BalanceGeneralModel,
+  CreateAsientoDto, CreatePlanCuentaDto, PlanCuentaModel,
+  EstadoResultadosModel, FlujoCajaModel, LibroMayorLineaModel,
+} from '../models/contabilidad.model';
+import { environment } from '../../../environments/environment';
+import { ResponseModel } from '../../shared/utils/responde.models';
+
+@Injectable({ providedIn: 'root' })
+export class ContabilidadService {
+  private readonly api = `${environment.apiUrl}contabilidad`;
+
+  constructor(private readonly http: HttpClient) {}
+
+  // ── Plan de Cuentas ──────────────────────────────────────────────
+  listarPlan(): Observable<ResponseModel<PlanCuentaModel[]>> {
+    return this.http.get<ResponseModel<PlanCuentaModel[]>>(`${this.api}/plan-cuentas`);
+  }
+
+  crearCuenta(dto: CreatePlanCuentaDto): Observable<ResponseModel<PlanCuentaModel>> {
+    return this.http.post<ResponseModel<PlanCuentaModel>>(`${this.api}/plan-cuentas`, dto);
+  }
+
+  actualizarCuenta(id: number, dto: CreatePlanCuentaDto): Observable<ResponseModel<PlanCuentaModel>> {
+    return this.http.put<ResponseModel<PlanCuentaModel>>(`${this.api}/plan-cuentas/${id}`, dto);
+  }
+
+  eliminarCuenta(id: number): Observable<ResponseModel<void>> {
+    return this.http.delete<ResponseModel<void>>(`${this.api}/plan-cuentas/${id}`);
+  }
+
+  seedPUC(): Observable<ResponseModel<void>> {
+    return this.http.post<ResponseModel<void>>(`${this.api}/plan-cuentas/seed`, {});
+  }
+
+  // ── Asientos ─────────────────────────────────────────────────────
+  listarAsientos(desde: string, hasta: string, tipoOrigen?: string | null,
+      page = 0, rows = 20): Observable<ResponseModel<AsientoContableModel[]>> {
+    let params = new HttpParams().set('desde', desde).set('hasta', hasta)
+        .set('page', page).set('rows', rows);
+    if (tipoOrigen) params = params.set('tipoOrigen', tipoOrigen);
+    return this.http.get<ResponseModel<AsientoContableModel[]>>(`${this.api}/asientos`, { params });
+  }
+
+  obtenerAsiento(id: number): Observable<ResponseModel<AsientoContableModel>> {
+    return this.http.get<ResponseModel<AsientoContableModel>>(`${this.api}/asientos/${id}`);
+  }
+
+  crearAsiento(dto: CreateAsientoDto): Observable<ResponseModel<AsientoContableModel>> {
+    return this.http.post<ResponseModel<AsientoContableModel>>(`${this.api}/asientos`, dto);
+  }
+
+  anularAsiento(id: number): Observable<ResponseModel<void>> {
+    return this.http.patch<ResponseModel<void>>(`${this.api}/asientos/${id}/anular`, {});
+  }
+
+  // ── Balance ───────────────────────────────────────────────────────
+  balanceGeneral(hasta?: string): Observable<ResponseModel<BalanceGeneralModel>> {
+    let params = new HttpParams();
+    if (hasta) params = params.set('hasta', hasta);
+    return this.http.get<ResponseModel<BalanceGeneralModel>>(`${this.api}/balance`, { params });
+  }
+
+  // ── Estado de Resultados (P&G) ────────────────────────────────────
+  estadoResultados(desde?: string, hasta?: string): Observable<ResponseModel<EstadoResultadosModel>> {
+    let params = new HttpParams();
+    if (desde) params = params.set('desde', desde);
+    if (hasta) params = params.set('hasta', hasta);
+    return this.http.get<ResponseModel<EstadoResultadosModel>>(`${this.api}/estado-resultados`, { params });
+  }
+
+  // ── Libro Mayor ───────────────────────────────────────────────────
+  libroMayor(cuentaId: number, desde: string, hasta: string): Observable<ResponseModel<LibroMayorLineaModel[]>> {
+    const params = new HttpParams().set('cuentaId', cuentaId).set('desde', desde).set('hasta', hasta);
+    return this.http.get<ResponseModel<LibroMayorLineaModel[]>>(`${this.api}/libro-mayor`, { params });
+  }
+
+  // ── Flujo de Caja ─────────────────────────────────────────────────
+  flujoCaja(desde?: string, hasta?: string): Observable<ResponseModel<FlujoCajaModel>> {
+    let params = new HttpParams();
+    if (desde) params = params.set('desde', desde);
+    if (hasta) params = params.set('hasta', hasta);
+    return this.http.get<ResponseModel<FlujoCajaModel>>(`${this.api}/flujo-caja`, { params });
+  }
+
+  // ── Asientos automáticos ──────────────────────────────────────────
+  generarDesdeVenta(ventaId: number): Observable<ResponseModel<AsientoContableModel>> {
+    return this.http.post<ResponseModel<AsientoContableModel>>(
+      `${this.api}/asientos/generar-desde-venta/${ventaId}`, {});
+  }
+
+  generarDesdeCompra(compraId: number): Observable<ResponseModel<AsientoContableModel>> {
+    return this.http.post<ResponseModel<AsientoContableModel>>(
+      `${this.api}/asientos/generar-desde-compra/${compraId}`, {});
+  }
+}

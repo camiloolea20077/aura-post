@@ -1,0 +1,189 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="page-title-area">
+      <div class="page-icon"><i class="pi pi-replay"></i></div>
+      <div>
+        <h3 class="page-title">Devoluciones</h3>
+        <p class="page-sub">Gestión de devoluciones de ventas</p>
+      </div>
+    </div>
+    <button
+      pButton
+      type="button"
+      label="Nueva Devolución"
+      icon="pi pi-plus"
+      class="btn-aura btn-primary"
+      (click)="openCreate()"
+    ></button>
+  </div>
+
+  <div class="card">
+    <div class="table-toolbar">
+      <div class="toolbar-left">
+        <span class="p-input-icon-left search-wrap">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            pInputText
+            class="search-input"
+            placeholder="Buscar por N° dev, N° venta o cliente..."
+            [(ngModel)]="searchQuery"
+            (input)="onSearch()"
+            (keydown.escape)="clearSearch()"
+          />
+          <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">
+            <i class="pi pi-times"></i>
+          </button>
+        </span>
+        <span class="total-badge" *ngIf="!loadingTable">
+          {{ totalRecords }} devoluciones
+        </span>
+      </div>
+    </div>
+
+    <p-table
+      [value]="items"
+      [lazy]="true"
+      (onLazyLoad)="loadTable($event)"
+      [paginator]="true"
+      [rows]="rowSize"
+      [totalRecords]="totalRecords"
+      [loading]="loadingTable"
+      [rowsPerPageOptions]="[10, 15, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords}"
+      styleClass="aura-table"
+      [tableStyle]="{ 'min-width': '750px' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 80px">N° Dev</th>
+          <th style="min-width: 120px">N° Venta</th>
+          <th style="min-width: 160px">Cliente</th>
+          <th style="width: 100px" class="text-center">Tipo</th>
+          <th style="width: 110px" class="text-center">Estado</th>
+          <th
+            pSortableColumn="d.total_devolucion"
+            style="width: 130px"
+            class="text-right"
+          >
+            Total <p-sortIcon field="d.total_devolucion" />
+          </th>
+          <th pSortableColumn="d.created_at" style="min-width: 140px">
+            Fecha <p-sortIcon field="d.created_at" />
+          </th>
+          <th style="width: 100px" class="text-center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item>
+        <tr
+          class="clickable-row"
+          [class.row-anulada]="item.estado === 'ANULADA'"
+          (click)="openDetalle(item)"
+        >
+          <td>
+            <span class="id-badge">DEV-{{ item.consecutivo }}</span>
+          </td>
+          <td>
+            <span class="numero-venta">{{ item.numeroVenta ?? "—" }}</span>
+          </td>
+          <td>
+            <div class="cell-cliente">
+              <div class="cliente-av">
+                {{ (item.clienteNombre ?? "CF").charAt(0).toUpperCase() }}
+              </div>
+              <span class="cliente-n">
+                {{ item.clienteNombre ?? "Consumidor final" }}
+              </span>
+            </div>
+          </td>
+          <td class="text-center">
+            <p-tag
+              [value]="getTipoLabel(item.tipo)"
+              [severity]="getTipoSeverity(item.tipo)"
+              [rounded]="true"
+            />
+          </td>
+          <td class="text-center">
+            <p-tag
+              [value]="getEstadoLabel(item.estado)"
+              [severity]="getEstadoSeverity(item.estado)"
+              [rounded]="true"
+            />
+          </td>
+          <td class="text-right">
+            <span class="monto-val">{{ formatCOP(item.totalDevolucion) }}</span>
+          </td>
+          <td>
+            <span class="fecha-val">{{ formatFecha(item.createdAt) }}</span>
+          </td>
+          <td class="text-center" (click)="$event.stopPropagation()">
+            <button
+              pButton
+              icon="pi pi-eye"
+              class="p-button-text p-button-sm action-view"
+              pTooltip="Ver detalle"
+              tooltipPosition="left"
+              (click)="openDetalle(item)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8">
+            <div class="empty-state">
+              <i class="pi pi-replay"></i>
+              <p>
+                {{
+                  searchQuery
+                    ? "Sin resultados para la búsqueda"
+                    : "No hay devoluciones registradas"
+                }}
+              </p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr *ngFor="let s of [1, 2, 3, 4, 5]">
+          <td><p-skeleton width="60px" /></td>
+          <td><p-skeleton width="90px" /></td>
+          <td><p-skeleton /></td>
+          <td class="text-center">
+            <p-skeleton width="70px" styleClass="mx-auto" />
+          </td>
+          <td class="text-center">
+            <p-skeleton width="80px" styleClass="mx-auto" />
+          </td>
+          <td class="text-right">
+            <p-skeleton width="90px" styleClass="ml-auto" />
+          </td>
+          <td><p-skeleton width="110px" /></td>
+          <td class="text-center">
+            <p-skeleton width="32px" styleClass="mx-auto" />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<app-detalle-devolucion
+  [devolucionId]="selectedId"
+  [visible]="showDetalle"
+  (closed)="onDetalleClosed()"
+  (anulada)="onAnulada()"
+/>
+
+<app-create-devolucion
+  [visible]="showCreate"
+  (closed)="onCreateClosed()"
+  (created)="onCreated()"
+/>
+
+<p-toast />
+<p-confirmDialog />
