@@ -1,4 +1,3 @@
-// ─── index-empresas.component.ts ─────────────────────────────
 import {
   Component,
   OnInit,
@@ -16,21 +15,16 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { MessageService, ConfirmationService } from 'primeng/api';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
-import {
-  CreateEmpresaResponseDto,
-  EmpresaPlataformaModel,
-  EmpresaTableModel,
-} from '../../../core/models/platform.model';
-import { PlatformService } from '../../../core/services/platform.service';
-import { AlertService } from '../../../shared/pipes/alert.service';
-import { FormEmpresaComponent } from '../form/form-empresa.component';
+import { ModuloTableModel, ModuloModel } from '../models/modulo.model';
+import { ModuloService } from '../services/modulo.service';
+import { AlertService } from '../../../../shared/pipes/alert.service';
+import { FormModuloComponent } from '../form/form-modulo.component';
 import { DialogModule } from 'primeng/dialog';
-import { Router } from '@angular/router';
 
 @Component({
-  selector: 'app-index-empresas',
+  selector: 'app-index-modulos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
@@ -44,16 +38,16 @@ import { Router } from '@angular/router';
     TooltipModule,
     SkeletonModule,
     ConfirmDialogModule,
-    FormEmpresaComponent,
+    FormModuloComponent,
     DialogModule,
     RouterModule,
   ],
   providers: [MessageService, ConfirmationService],
-  templateUrl: './index-empresas.component.html',
-  styleUrls: ['./index-empresas.component.scss'],
+  templateUrl: './index-modulos.component.html',
+  styleUrls: ['./index-modulos.component.scss'],
 })
-export class IndexEmpresasComponent implements OnInit {
-  rows: EmpresaTableModel[] = [];
+export class IndexModulosComponent implements OnInit {
+  rows: ModuloTableModel[] = [];
   totalRows = 0;
   loadingTable = true;
   search = '';
@@ -61,12 +55,10 @@ export class IndexEmpresasComponent implements OnInit {
   lastEvent!: TableLazyLoadEvent;
 
   showForm = false;
-  editTarget: EmpresaPlataformaModel | null = null;
-  credenciales: CreateEmpresaResponseDto | null = null;
-  showCredenciales = false;
+  editTarget: ModuloModel | null = null;
 
   constructor(
-    private readonly platformService: PlatformService,
+    private readonly service: ModuloService,
     private readonly alertService: AlertService,
     private readonly confirmService: ConfirmationService,
     private readonly cdr: ChangeDetectorRef,
@@ -85,7 +77,7 @@ export class IndexEmpresasComponent implements OnInit {
 
     try {
       const res = await lastValueFrom(
-        this.platformService.page({
+        this.service.pageModulos({
           page,
           rows: event.rows ?? this.rowSize,
           search: this.search || null,
@@ -105,10 +97,12 @@ export class IndexEmpresasComponent implements OnInit {
   onSearch(): void {
     if (this.lastEvent) this.loadTable({ ...this.lastEvent, first: 0 });
   }
+
   clearSearch(): void {
     this.search = '';
     this.onSearch();
   }
+
   private reload(): void {
     if (this.lastEvent) this.loadTable(this.lastEvent);
   }
@@ -120,78 +114,63 @@ export class IndexEmpresasComponent implements OnInit {
 
   async editar(id: number): Promise<void> {
     try {
-      const res = await lastValueFrom(this.platformService.getById(id));
+      const res = await lastValueFrom(this.service.getModuloById(id));
       this.editTarget = res?.data ?? null;
       this.showForm = true;
       this.cdr.markForCheck();
     } catch {
-      this.alertService.showError('Error', 'No se pudo cargar la empresa');
+      this.alertService.showError('Error', 'No se pudo cargar el módulo');
     }
   }
 
-  confirmarSuspender(item: EmpresaTableModel, event: Event): void {
+  confirmarEliminar(item: ModuloTableModel, event: Event): void {
     event.stopPropagation();
     this.confirmService.confirm({
       target: event.target as EventTarget,
-      message: `¿Suspender <strong>${item.razonSocial}</strong>? Los usuarios no podrán acceder.`,
-      header: 'Suspender empresa',
+      message: `¿Eliminar <strong>${item.nombre}</strong>? Se eliminarán todos sus submódulos.`,
+      header: 'Eliminar módulo',
       icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sí, suspender',
+      acceptLabel: 'Sí, eliminar',
       rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-danger',
-      accept: () => this.suspender(item.id),
+      accept: () => this.eliminar(item.id),
     });
   }
 
-  private async suspender(id: number): Promise<void> {
+  private async eliminar(id: number): Promise<void> {
     try {
-      await lastValueFrom(this.platformService.suspender(id));
-      this.alertService.showSuccess('Suspendida', 'Empresa suspendida');
+      await lastValueFrom(this.service.deleteModulo(id));
+      this.alertService.showSuccess('Eliminado', 'Módulo eliminado');
       this.reload();
     } catch {
-      this.alertService.showError('Error', 'No se pudo suspender');
+      this.alertService.showError('Error', 'No se pudo eliminar');
     }
   }
 
-  async activar(id: number, event: Event): Promise<void> {
+  async toggleActivo(item: ModuloTableModel, event: Event): Promise<void> {
     event.stopPropagation();
     try {
-      await lastValueFrom(this.platformService.activar(id));
-      this.alertService.showSuccess('Activada', 'Empresa activada');
+      await lastValueFrom(
+        this.service.updateModulo(item.id, { activo: !item.activo }),
+      );
+      this.alertService.showSuccess(
+        item.activo ? 'Desactivado' : 'Activado',
+        `Módulo ${item.activo ? 'desactivado' : 'activado'}`,
+      );
       this.reload();
     } catch {
-      this.alertService.showError('Error', 'No se pudo activar');
+      this.alertService.showError('Error', 'No se pudo cambiar el estado');
     }
   }
 
   onSaved(): void {
     this.showForm = false;
+    this.editTarget = null;
     this.reload();
   }
 
-  onCredencialesCreadas(data: CreateEmpresaResponseDto): void {
-    this.credenciales = data;
-    this.showForm = false;
-    this.showCredenciales = true;
-    this.reload();
-    this.cdr.markForCheck();
-  }
-
-  copiar(texto: string): void {
-    navigator.clipboard.writeText(texto);
-    this.alertService.showSuccess('Copiado', 'Texto copiado al portapapeles');
-  }
-
-  gestionarPermisos(item: EmpresaTableModel, event: Event): void {
+  verSubmodulos(item: ModuloTableModel, event: Event): void {
     event.stopPropagation();
-    this.router.navigate(['/platform/permisos', item.id]);
-  }
-
-  formatFecha(iso: string): string {
-    return new Date(iso).toLocaleDateString('es-CO', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
+    this.router.navigate(['/platform/modulos', item.id, 'submodulos']);
   }
 }
