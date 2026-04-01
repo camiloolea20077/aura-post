@@ -28,6 +28,27 @@ export const PLATFORM_ROUTES: Routes = [
             (m) => m.MonitorErroresComponent,
           ),
       },
+      {
+        path: 'permisos/:id',
+        loadComponent: () =>
+          import('./permisos-empresa/index-permisos.component').then(
+            (m) => m.IndexPermisosComponent,
+          ),
+      },
+      {
+        path: 'modulos',
+        loadComponent: () =>
+          import('./modulos/index/index-modulos.component').then(
+            (m) => m.IndexModulosComponent,
+          ),
+      },
+      {
+        path: 'modulos/:id/submodulos',
+        loadComponent: () =>
+          import('./modulos/index/index-submodulos.component').then(
+            (m) => m.IndexSubmodulosComponent,
+          ),
+      },
     ],
   },
 ];

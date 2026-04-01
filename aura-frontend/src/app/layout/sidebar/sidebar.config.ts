@@ -325,6 +325,12 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         route: '/admin/usuarios',
         roles: ['SUPER_ADMIN', 'ADMIN'],
       },
+      {
+        label: 'Módulos',
+        icon: 'pi pi-th-large',
+        route: '/platform/modulos',
+        roles: ['PLATFORM_ADMIN'],
+      },
     ],
   },
 ];

@@ -122,6 +122,13 @@
               *ngIf="!e.activa"
               (click)="activar(e.id, $event)"
             ></button>
+            <button
+              pButton
+              icon="pi pi-th-large"
+              class="p-button-text p-button-sm"
+              pTooltip="Gestionar módulos"
+              (click)="gestionarPermisos(e, $event)"
+            ></button>
           </td>
         </tr>
       </ng-template>
