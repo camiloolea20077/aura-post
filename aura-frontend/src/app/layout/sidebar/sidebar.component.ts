@@ -1,4 +1,11 @@
-import { Component, EventEmitter, Input, OnInit, Output, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -8,7 +15,11 @@ import { ConfirmationService } from 'primeng/api';
 import { filter } from 'rxjs/operators';
 import { lastValueFrom } from 'rxjs';
 
-import { SIDEBAR_MENU, SidebarMenuGroup, SidebarMenuItem } from './sidebar.config';
+import {
+  SIDEBAR_MENU,
+  SidebarMenuGroup,
+  SidebarMenuItem,
+} from './sidebar.config';
 import { IndexDBService } from '../../core/services/index-db.service';
 import { environment } from '../../../environments/environment';
 
@@ -80,7 +91,7 @@ export class SidebarComponent implements OnInit {
       this.menuGroups = this.filtrarMenuPorPermisos(modulos);
       this.cdr.markForCheck();
     } catch {
-      this.menuGroups = this.filtrarMenu('ADMIN');
+      this.menuGroups = this.filtrarMenuPorPermisos([]);
     }
   }
 
@@ -94,19 +105,10 @@ export class SidebarComponent implements OnInit {
         .replace(/[\u0300-\u036f]/g, '')
         .replace(/\s+/g, '-');
 
-    const moduloCodigoToGrupo: Record<string, string> = {
-      catalogo: 'catalogo',
-      precios: 'precios',
-      inventario: 'inventario',
-      ventas: 'operaciones',
-      recursoshumanos: 'vendedores',
-      contabilidad: 'contabilidad',
-      configuracion: 'administracion',
-      reportes: 'reportes',
-    };
-
     const modulosActivos = new Set(
-      modulos.filter((m: any) => m.activo).map((m: any) => normalize(m.moduloCodigo)),
+      modulos
+        .filter((m: any) => m.activo)
+        .map((m: any) => normalize(m.moduloCodigo)),
     );
 
     const submodulosActivos = new Set(
@@ -117,54 +119,37 @@ export class SidebarComponent implements OnInit {
         .map((s: any) => normalize(s.submoduloCodigo)),
     );
 
-    const tieneAccesoItem = (item: any, rol: string): boolean => {
-      if (rol === 'PLATFORM_ADMIN') {
-        return this.tieneAcceso(item.roles, rol);
-      }
-      const routeMatch = item.route?.match(/\/([^/]+)/g);
-      let itemCodigo: string;
-      if (routeMatch && routeMatch.length > 1) {
-        const segundoSegmento = routeMatch[1].replace('/', '');
-        itemCodigo = normalize(segundoSegmento);
-      } else {
-        itemCodigo = normalize(item.label);
-      }
-      return submodulosActivos.has(itemCodigo);
-    };
-
     return SIDEBAR_MENU.map((group) => {
       const grupoLabelNormalizado = normalize(group.label);
-      const grupoCodigoMapped =
-        moduloCodigoToGrupo[grupoLabelNormalizado] ?? grupoLabelNormalizado;
+      const grupoActivo = modulosActivos.has(grupoLabelNormalizado);
 
-      const grupoActivo =
-        modulosActivos.size === 0 || modulosActivos.has(grupoCodigoMapped);
+      if (!grupoActivo) {
+        group.items = [];
+        return group;
+      }
+
+      group.items = group.items.filter((item) => {
+        const itemCodigo = normalize(item.label);
+        return submodulosActivos.has(itemCodigo);
+      });
+
+      if (this.userRole === 'PLATFORM_ADMIN') {
+        group.items = group.items.filter((item) => {
+          const itemCodigo = normalize(item.label);
+          return submodulosActivos.has(itemCodigo);
+        });
+      }
 
       return {
         ...group,
-        items: group.items.filter((item) => {
-          if (this.userRole === 'PLATFORM_ADMIN') {
-            return this.tieneAcceso(item.roles, this.userRole);
-          }
-          const routeMatch = item.route?.match(/\/([^/]+)/g);
-          let itemCodigo: string;
-          if (routeMatch && routeMatch.length > 1) {
-            const segundoSegmento = routeMatch[1].replace('/', '');
-            itemCodigo = normalize(segundoSegmento);
-          } else {
-            itemCodigo = normalize(item.label);
-          }
-          if (!grupoActivo) {
-            return submodulosActivos.has(itemCodigo);
-          }
-          return submodulosActivos.has(itemCodigo);
-        }),
         defaultOpen:
           group.defaultOpen ||
           (this.userRole === 'CAJERO' &&
             gruposDefaultOpenCajero.includes(group.label)),
       };
-    }).filter((group) => group.items.length > 0);
+    })
+      .filter((group) => group.items.length > 0)
+      .filter((group) => this.tieneAcceso(group.roles, this.userRole));
   }
 
   /** Abre el grupo que contiene la ruta activa */
@@ -190,21 +175,9 @@ export class SidebarComponent implements OnInit {
   }
 
   isOpen(group: SidebarMenuGroup): boolean {
-    return this.collapsed || group.alwaysOpen || this.openGroups.has(group.label);
-  }
-
-  // ── Filtra grupos e ítems según el rol ────────────────────
-  private filtrarMenu(rol: string): SidebarMenuGroup[] {
-    const gruposDefaultOpenCajero = ['Operaciones', 'Administración'];
-    return SIDEBAR_MENU.filter((group) => this.tieneAcceso(group.roles, rol))
-      .map((group) => ({
-        ...group,
-        items: group.items.filter((item) => this.tieneAcceso(item.roles, rol)),
-        defaultOpen:
-          group.defaultOpen ||
-          (rol === 'CAJERO' && gruposDefaultOpenCajero.includes(group.label)),
-      }))
-      .filter((group) => group.items.length > 0);
+    return (
+      this.collapsed || group.alwaysOpen || this.openGroups.has(group.label)
+    );
   }
 
   private tieneAcceso(roles: string[] | undefined, rol: string): boolean {

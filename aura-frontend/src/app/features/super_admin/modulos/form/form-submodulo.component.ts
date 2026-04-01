@@ -32,7 +32,6 @@ import { AlertService } from '../../../../shared/pipes/alert.service';
 @Component({
   selector: 'app-form-submodulo',
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     ReactiveFormsModule,
@@ -128,7 +127,9 @@ export class FormSubmoduloComponent implements OnChanges {
       }
       this.saved.emit();
     } catch (err: any) {
-      this.alert.showError('Error', err?.error?.message ?? 'No se pudo guardar');
+      this.alert.showError('Error', err?.message || String(err));
+      this.loading = false;
+      this.cdr.markForCheck();
     } finally {
       this.loading = false;
       this.cdr.markForCheck();

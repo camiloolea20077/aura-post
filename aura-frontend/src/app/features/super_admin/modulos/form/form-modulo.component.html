@@ -23,7 +23,6 @@
         placeholder="catalogo"
         class="w-full"
         [class.ng-invalid]="isInvalid('codigo')"
-        [readOnly]="isEdit"
       />
       <small class="field-error" *ngIf="isInvalid('codigo')">Requerido</small>
     </div>
