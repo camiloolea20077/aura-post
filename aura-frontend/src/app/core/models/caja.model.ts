@@ -85,6 +85,10 @@ export interface MovimientoCajaDto {
   usuarioNombre?: string;
   cuentaNumero?: string | null;
   terceroNombre?: string | null;
+  metodoPago?: string;
+  entregadoA?: string;
+  comprobanteId?: number;
+  numeroComprobante?: string;
 }
 
 export interface CreateMovimientoCajaDto {
@@ -93,6 +97,8 @@ export interface CreateMovimientoCajaDto {
   monto: number;
   cuentaCobrarId?: number | null;
   cuentaPagarId?: number | null;
+  metodoPago?: string;   // EFECTIVO | TRANSFERENCIA
+  entregadoA?: string;   // opcional
 }
 
 export interface VentaCategoriaDto {

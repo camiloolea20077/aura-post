@@ -1,0 +1,174 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="page-title-area">
+      <div class="page-icon"><i class="pi pi-file-check"></i></div>
+      <div>
+        <h3 class="page-title">Comprobantes</h3>
+        <p class="page-sub">Comprobantes de ingreso y egreso de caja</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <!-- Toolbar con filtros -->
+    <div class="table-toolbar">
+      <div class="toolbar-left">
+        <div class="filter-row">
+          <!-- Filtro tipo -->
+          <p-dropdown
+            [options]="tipoOpciones"
+            [(ngModel)]="filtroTipo"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Tipo"
+            styleClass="filter-dropdown"
+            (onChange)="onFiltroChange()"
+          />
+
+          <!-- Desde -->
+          <p-calendar
+            [(ngModel)]="filtroDesdeFecha"
+            dateFormat="dd/mm/yy"
+            placeholder="Desde"
+            [showButtonBar]="true"
+            styleClass="filter-calendar"
+            (onSelect)="onFiltroChange()"
+            (onClearClick)="onFiltroChange()"
+          />
+
+          <!-- Hasta -->
+          <p-calendar
+            [(ngModel)]="filtroHastaFecha"
+            dateFormat="dd/mm/yy"
+            placeholder="Hasta"
+            [showButtonBar]="true"
+            styleClass="filter-calendar"
+            (onSelect)="onFiltroChange()"
+            (onClearClick)="onFiltroChange()"
+          />
+
+          <button
+            pButton
+            type="button"
+            icon="pi pi-times"
+            label="Limpiar"
+            class="p-button-outlined p-button-secondary p-button-sm"
+            (click)="limpiarFiltros()"
+          ></button>
+
+          <span class="total-badge" *ngIf="!loadingTable">
+            {{ totalRecords }} comprobantes
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <p-table
+      [value]="items"
+      [lazy]="true"
+      (onLazyLoad)="onPageChange($event)"
+      [paginator]="true"
+      [rows]="rowSize"
+      [totalRecords]="totalRecords"
+      [loading]="loadingTable"
+      [rowsPerPageOptions]="[10, 20, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords}"
+      styleClass="aura-table"
+      [tableStyle]="{ 'min-width': '850px' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="min-width: 140px">N° Comprobante</th>
+          <th style="width: 100px" class="text-center">Tipo</th>
+          <th style="min-width: 200px">Concepto</th>
+          <th style="width: 130px" class="text-right">Monto</th>
+          <th style="width: 120px">Método pago</th>
+          <th style="min-width: 140px">Entregado a</th>
+          <th style="width: 110px">Origen</th>
+          <th style="min-width: 140px">Fecha</th>
+          <th style="width: 80px" class="text-center">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item>
+        <tr class="clickable-row" (click)="verComprobante(item)">
+          <td>
+            <span class="id-badge">{{ item.numeroComprobante }}</span>
+          </td>
+          <td class="text-center">
+            <p-tag
+              [value]="getTipoLabel(item.tipo)"
+              [severity]="getTipoSeverity(item.tipo)"
+              [rounded]="true"
+            />
+          </td>
+          <td>
+            <span class="concepto-text">{{ item.concepto }}</span>
+          </td>
+          <td class="text-right">
+            <span class="monto-val" [class.monto-ingreso]="item.tipo === 'INGRESO'" [class.monto-egreso]="item.tipo === 'EGRESO'">
+              {{ formatCOP(item.monto) }}
+            </span>
+          </td>
+          <td>
+            <span class="metodo-badge" *ngIf="item.metodoPago">{{ item.metodoPago }}</span>
+            <span class="text-muted" *ngIf="!item.metodoPago">—</span>
+          </td>
+          <td>
+            <span class="entregado-text">{{ item.entregadoA || '—' }}</span>
+          </td>
+          <td>
+            <span class="origen-text">{{ getOrigenLabel(item.origen) }}</span>
+          </td>
+          <td>
+            <span class="fecha-val">{{ formatFecha(item.createdAt) }}</span>
+          </td>
+          <td class="text-center" (click)="$event.stopPropagation()">
+            <button
+              pButton
+              icon="pi pi-print"
+              class="p-button-text p-button-sm action-view"
+              pTooltip="Ver comprobante"
+              tooltipPosition="left"
+              (click)="verComprobante(item)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9">
+            <div class="empty-state">
+              <i class="pi pi-file-check"></i>
+              <p>No hay comprobantes para el período seleccionado</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr *ngFor="let s of [1, 2, 3, 4, 5]">
+          <td><p-skeleton width="110px" /></td>
+          <td class="text-center"><p-skeleton width="70px" styleClass="mx-auto" /></td>
+          <td><p-skeleton /></td>
+          <td class="text-right"><p-skeleton width="90px" styleClass="ml-auto" /></td>
+          <td><p-skeleton width="90px" /></td>
+          <td><p-skeleton width="120px" /></td>
+          <td><p-skeleton width="80px" /></td>
+          <td><p-skeleton width="110px" /></td>
+          <td class="text-center"><p-skeleton width="32px" styleClass="mx-auto" /></td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<app-ticket-comprobante-caja
+  [comprobante]="selectedComprobante"
+  [visible]="showTicket"
+  (closed)="onTicketClosed()"
+/>
+
+<p-toast />
