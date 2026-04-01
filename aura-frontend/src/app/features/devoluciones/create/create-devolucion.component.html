@@ -1,0 +1,204 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '680px' }"
+  [contentStyle]="{ 'overflow-y': 'auto', 'max-height': '80vh' }"
+  styleClass="aura-dialog"
+  (onHide)="close()"
+>
+  <ng-template pTemplate="header">
+    <div class="dialog-header">
+      <div class="header-icon"><i class="pi pi-replay"></i></div>
+      <div class="header-meta">
+        <span class="header-titulo">Nueva Devolución</span>
+        <span class="header-sub">Registrar devolución de una venta</span>
+      </div>
+    </div>
+  </ng-template>
+
+  <div class="dialog-body">
+
+    <!-- Búsqueda de venta -->
+    <div class="section-block">
+      <p class="section-label">Venta a devolver</p>
+      <div class="search-venta-row">
+        <input
+          type="text"
+          pInputText
+          class="input-venta"
+          placeholder="N° ID de la venta (ej: 123)"
+          [(ngModel)]="ventaSearch"
+          (keydown.enter)="buscarVenta()"
+        />
+        <button
+          pButton
+          type="button"
+          icon="pi pi-search"
+          label="Buscar"
+          class="p-button-outlined p-button-sm btn-buscar"
+          [loading]="isSearchingVenta"
+          (click)="buscarVenta()"
+        ></button>
+      </div>
+      <small class="error-msg" *ngIf="errorVenta">
+        <i class="pi pi-exclamation-circle"></i> {{ errorVenta }}
+      </small>
+
+      <!-- Info de la venta cargada -->
+      <div class="venta-info-card" *ngIf="ventaCargada">
+        <div class="venta-info-row">
+          <span class="vi-label">N° Venta</span>
+          <span class="vi-val numero-venta">{{ ventaCargada.numeroVenta ?? 'Venta #' + ventaCargada.id }}</span>
+        </div>
+        <div class="venta-info-row">
+          <span class="vi-label">Cliente</span>
+          <span class="vi-val">{{ ventaCargada.clienteNombre ?? 'Consumidor final' }}</span>
+        </div>
+        <div class="venta-info-row">
+          <span class="vi-label">Total venta</span>
+          <span class="vi-val monto">{{ formatCOP(ventaCargada.totalPagar) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <ng-container *ngIf="ventaCargada">
+      <p-divider />
+
+      <!-- Tipo + Método devolución + Reintegra -->
+      <div class="form-grid">
+        <div class="form-field">
+          <label class="field-label">Tipo de devolución <span class="req">*</span></label>
+          <p-dropdown
+            [options]="tipoOpciones"
+            [(ngModel)]="tipo"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+            (onChange)="onTipoChange()"
+          />
+        </div>
+        <div class="form-field">
+          <label class="field-label">Método de devolución de dinero</label>
+          <p-dropdown
+            [options]="metodoDevolucionOpciones"
+            [(ngModel)]="metodoDevolucion"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+          />
+        </div>
+        <div class="form-field">
+          <label class="field-label">Reintegrar inventario</label>
+          <div class="checkbox-row">
+            <p-checkbox [(ngModel)]="reintegraInventario" [binary]="true" inputId="reintegra" />
+            <label for="reintegra" class="checkbox-label">
+              {{ reintegraInventario ? 'Sí, devolver al stock' : 'No devolver al stock' }}
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-field mt-1">
+        <label class="field-label">Motivo <span class="req">*</span></label>
+        <textarea
+          pTextarea
+          class="w-full"
+          rows="2"
+          placeholder="Describe el motivo de la devolución..."
+          [(ngModel)]="motivo"
+        ></textarea>
+      </div>
+
+      <div class="form-field mt-1">
+        <label class="field-label">Observaciones</label>
+        <textarea
+          pTextarea
+          class="w-full"
+          rows="2"
+          placeholder="Observaciones adicionales (opcional)..."
+          [(ngModel)]="observaciones"
+        ></textarea>
+      </div>
+
+      <p-divider align="left"><span class="div-label">Productos a devolver</span></p-divider>
+
+      <!-- Tabla de detalles -->
+      <div class="detalles-table">
+        <table class="tabla-det">
+          <thead>
+            <tr>
+              <th style="width: 40px"></th>
+              <th>Producto</th>
+              <th class="text-right" style="width: 100px">Cant. orig.</th>
+              <th class="text-right" style="width: 110px">Precio unit.</th>
+              <th class="text-right" style="width: 120px">Cant. a dev.</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let det of detalles; let i = index" [class.row-selected]="det.seleccionado">
+              <td class="text-center">
+                <p-checkbox
+                  [(ngModel)]="det.seleccionado"
+                  [binary]="true"
+                  [inputId]="'det-' + i"
+                />
+              </td>
+              <td>
+                <span class="det-nombre">{{ det.productoNombre }}</span>
+              </td>
+              <td class="text-right">
+                <span class="det-cant-orig">{{ det.cantidadOriginal }}</span>
+              </td>
+              <td class="text-right">
+                <span class="det-precio">{{ formatCOP(det.precioUnitario) }}</span>
+              </td>
+              <td class="text-right">
+                <p-inputNumber
+                  [(ngModel)]="det.cantidad"
+                  [min]="0.01"
+                  [max]="det.cantidadOriginal"
+                  [step]="1"
+                  [disabled]="!det.seleccionado"
+                  [showButtons]="false"
+                  styleClass="cant-input"
+                  inputStyleClass="cant-input-inner"
+                />
+              </td>
+            </tr>
+            <tr *ngIf="detalles.length === 0">
+              <td colspan="5" class="empty-row">Sin productos</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-container>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button
+        pButton
+        type="button"
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-text p-button-plain"
+        (click)="close()"
+        [disabled]="isSaving"
+      ></button>
+      <button
+        pButton
+        type="button"
+        label="Guardar devolución"
+        icon="pi pi-check"
+        class="btn-aura btn-primary"
+        [loading]="isSaving"
+        [disabled]="!isFormValid()"
+        (click)="guardar()"
+      ></button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-toast />

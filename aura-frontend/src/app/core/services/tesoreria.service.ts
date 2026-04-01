@@ -47,4 +47,8 @@ export class TesoreriaService {
       .set('hasta', hasta);
     return this.http.get<ResponseModel<TesoreriaMovimientoModel[]>>(`${this.api}/conciliacion`, { params });
   }
+
+  conciliarLote(ids: number[]): Observable<ResponseModel<void>> {
+    return this.http.patch<ResponseModel<void>>(`${this.api}/conciliacion/conciliar-lote`, ids);
+  }
 }

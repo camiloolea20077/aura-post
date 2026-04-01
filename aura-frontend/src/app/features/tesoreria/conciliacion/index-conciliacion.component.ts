@@ -12,6 +12,7 @@ import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { CheckboxModule } from 'primeng/checkbox';
+import { BadgeModule } from 'primeng/badge';
 import { MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
@@ -21,6 +22,14 @@ import { AlertService } from '../../../shared/pipes/alert.service';
 import { TesoreriaMovimientoModel } from '../../../core/models/tesoreria.model';
 import { CuentaBancariaModel } from '../../../core/models/cuenta-bancaria.model';
 
+export interface ExtractoLinea {
+  fecha: string;
+  concepto: string;
+  monto: number;
+  matched: boolean;
+  movimientoId?: number;
+}
+
 @Component({
   selector: 'app-index-conciliacion',
   standalone: true,
@@ -28,7 +37,7 @@ import { CuentaBancariaModel } from '../../../core/models/cuenta-bancaria.model'
   imports: [
     CommonModule, FormsModule,
     ButtonModule, DropdownModule, CalendarModule, InputNumberModule,
-    TableModule, TagModule, ToastModule, TooltipModule, CheckboxModule,
+    TableModule, TagModule, ToastModule, TooltipModule, CheckboxModule, BadgeModule,
   ],
   providers: [MessageService],
   templateUrl: './index-conciliacion.component.html',
@@ -49,6 +58,8 @@ export class IndexConciliacionComponent implements OnInit {
 
   // ── Extracto bancario ─────────────────────────────────────────────
   saldoExtracto: number | null = null;
+  extractoLineas: ExtractoLinea[] = [];
+  importando = false;
 
   get cuentaActual(): CuentaBancariaModel | null {
     return this.cuentas.find((c) => c.id === this.cuentaId) ?? null;
@@ -97,6 +108,14 @@ export class IndexConciliacionComponent implements OnInit {
     return this.movimientos.filter((m) => !m.conciliado).length;
   }
 
+  get extractoMatchedCount(): number {
+    return this.extractoLineas.filter((l) => l.matched).length;
+  }
+
+  get extractoTotal(): number {
+    return this.extractoLineas.reduce((s, l) => s + l.monto, 0);
+  }
+
   constructor(
     private readonly service: TesoreriaService,
     private readonly cuentaService: CuentaBancariaService,
@@ -125,6 +144,10 @@ export class IndexConciliacionComponent implements OnInit {
         this.service.listarConciliacion(this.cuentaId, desde, hasta),
       );
       this.movimientos = res?.data ?? [];
+      // Re-match si hay extracto importado
+      if (this.extractoLineas.length) {
+        this.matchExtracto();
+      }
     } catch {
       this.alertService.showError('Error', 'No se pudo cargar la conciliación');
     } finally {
@@ -152,18 +175,133 @@ export class IndexConciliacionComponent implements OnInit {
   async conciliarTodos(): Promise<void> {
     const pendientes = this.movimientos.filter((m) => !m.conciliado);
     if (!pendientes.length) return;
-    for (const m of pendientes) {
-      this.toggling.add(m.id);
+    this.loading = true;
+    this.cdr.markForCheck();
+    try {
+      const ids = pendientes.map((m) => m.id);
+      await lastValueFrom(this.service.conciliarLote(ids));
+      pendientes.forEach((m) => (m.conciliado = true));
+      this.alertService.showSuccess('Todos conciliados', '');
+    } catch {
+      this.alertService.showError('Error', 'No se pudo conciliar todos');
+    } finally {
+      this.loading = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  // ── CSV Import ────────────────────────────────────────────────────
+  triggerFileInput(): void {
+    document.getElementById('csv-input')?.click();
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    this.importando = true;
+    this.cdr.markForCheck();
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
       try {
-        await lastValueFrom(this.service.toggleConciliado(m.id));
-        m.conciliado = true;
+        const text = (e.target?.result as string) ?? '';
+        this.extractoLineas = this.parseCSV(text);
+        this.matchExtracto();
+        this.alertService.showSuccess(
+          'CSV importado',
+          `${this.extractoLineas.length} líneas cargadas`,
+        );
       } catch {
-        this.alertService.showError('Error', `No se pudo conciliar: ${m.concepto}`);
+        this.alertService.showError('Error', 'No se pudo leer el archivo CSV');
       } finally {
-        this.toggling.delete(m.id);
+        this.importando = false;
+        this.cdr.markForCheck();
+      }
+    };
+    reader.readAsText(file);
+    input.value = '';
+  }
+
+  /**
+   * Parsea CSV con formato: fecha,concepto,monto
+   * La primera fila se omite si contiene texto (encabezado).
+   * El monto puede ser negativo (salida) o positivo (entrada).
+   */
+  private parseCSV(text: string): ExtractoLinea[] {
+    const lines = text.split(/\r?\n/).filter((l) => l.trim());
+    const result: ExtractoLinea[] = [];
+
+    for (const line of lines) {
+      const cols = line.split(/[,;]/).map((c) => c.trim().replace(/^"|"$/g, ''));
+      if (cols.length < 3) continue;
+      const fecha = cols[0];
+      const concepto = cols[1];
+      const montoRaw = parseFloat(cols[2].replace(/[$.]/g, '').replace(',', '.'));
+      if (isNaN(montoRaw)) continue; // skip encabezado u otras filas no numéricas
+      result.push({ fecha, concepto, monto: Math.abs(montoRaw), matched: false });
+    }
+    return result;
+  }
+
+  /**
+   * Auto-match: para cada línea de extracto, busca un movimiento del sistema
+   * con monto igual (±1 peso) y fecha cercana (±3 días).
+   */
+  matchExtracto(): void {
+    this.extractoLineas.forEach((linea) => {
+      linea.matched = false;
+      linea.movimientoId = undefined;
+    });
+
+    for (const linea of this.extractoLineas) {
+      const lineaFecha = new Date(linea.fecha);
+      if (isNaN(lineaFecha.getTime())) continue;
+
+      const candidato = this.movimientos.find((m) => {
+        if (m.conciliado) return false;
+        const diff = Math.abs(m.monto - linea.monto);
+        if (diff > 1) return false;
+        const mFecha = new Date(m.fecha);
+        const diasDiff = Math.abs((mFecha.getTime() - lineaFecha.getTime()) / 86400000);
+        return diasDiff <= 3;
+      });
+
+      if (candidato) {
+        linea.matched = true;
+        linea.movimientoId = candidato.id;
       }
     }
-    this.alertService.showSuccess('Todos conciliados', '');
+    this.cdr.markForCheck();
+  }
+
+  async conciliarMatches(): Promise<void> {
+    const matchIds = this.extractoLineas
+      .filter((l) => l.matched && l.movimientoId != null)
+      .map((l) => l.movimientoId!);
+
+    if (!matchIds.length) {
+      this.alertService.showError('Sin coincidencias', 'No hay movimientos emparejados para conciliar');
+      return;
+    }
+    this.loading = true;
+    this.cdr.markForCheck();
+    try {
+      await lastValueFrom(this.service.conciliarLote(matchIds));
+      this.movimientos
+        .filter((m) => matchIds.includes(m.id))
+        .forEach((m) => (m.conciliado = true));
+      this.alertService.showSuccess('Conciliados', `${matchIds.length} movimientos conciliados automáticamente`);
+    } catch {
+      this.alertService.showError('Error', 'No se pudo conciliar');
+    } finally {
+      this.loading = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  limpiarExtracto(): void {
+    this.extractoLineas = [];
     this.cdr.markForCheck();
   }
 
