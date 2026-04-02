@@ -20,6 +20,24 @@
   margin-left: 72px;
 }
 
+.aura-layout.no-sidebar .aura-main {
+  margin-left: 0;
+}
+
+// ─── Drawer backdrop (cajero) ─────────────────────────────────
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 99;
+  cursor: pointer;
+}
+
+// El sidebar ya es position:fixed, solo subimos z-index para que quede sobre el backdrop
+.aura-layout.no-sidebar ::ng-deep .aura-sidebar {
+  z-index: 100;
+}
+
 .aura-content {
   flex: 1;
   overflow-y: auto;

@@ -288,3 +288,15 @@
   border-radius: 9px !important;
   font-size: 0.83rem !important;
 }
+
+::ng-deep .btn-pdf.p-button {
+  border-radius: 9px !important;
+  font-size: 0.83rem !important;
+  background: linear-gradient(135deg, #374151, #1e293b) !important;
+  border: none !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px rgba(30, 41, 59, 0.3) !important;
+  &:hover {
+    box-shadow: 0 4px 14px rgba(30, 41, 59, 0.45) !important;
+  }
+}

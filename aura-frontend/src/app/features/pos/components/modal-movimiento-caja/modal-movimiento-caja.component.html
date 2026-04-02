@@ -36,6 +36,37 @@
       </div>
     </div>
 
+    <!-- Método de pago -->
+    <div class="form-group">
+      <label class="form-label">
+        <i class="pi pi-credit-card"></i> Método de pago
+      </label>
+      <p-dropdown
+        [options]="metodoPagoOpciones"
+        [(ngModel)]="metodoPago"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+      />
+    </div>
+
+    <!-- Entregado a / Recibido de -->
+    <div class="form-group">
+      <label class="form-label">
+        <i class="pi pi-user"></i>
+        {{ tipo === 'INGRESO' ? 'Recibido de' : 'Entregado a' }}
+        <span class="text-muted">(opcional)</span>
+      </label>
+      <input
+        type="text"
+        pInputText
+        [(ngModel)]="entregadoA"
+        [placeholder]="tipo === 'INGRESO' ? 'Nombre de quien entrega el dinero...' : 'Nombre de quien recibe...'"
+        class="w-full"
+        maxlength="200"
+      />
+    </div>
+
     <!-- Cuenta -->
     <div class="form-group">
       <label class="form-label">

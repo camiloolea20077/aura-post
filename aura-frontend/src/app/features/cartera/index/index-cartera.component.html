@@ -1,0 +1,693 @@
+<p-toast />
+
+<div class="module-wrapper">
+  <!-- ══ HEADER ════════════════════════════════════════════════════════ -->
+  <div class="module-header">
+    <div class="header-left">
+      <span class="header-icon cartera-icon"
+        ><i class="pi pi-chart-line"></i
+      ></span>
+      <div>
+        <h2>Cartera</h2>
+        <p>Gestión de crédito, cobros y análisis de cartera</p>
+      </div>
+    </div>
+    <button
+      pButton
+      icon="pi pi-refresh"
+      class="btn-aura btn-secondary"
+      pTooltip="Actualizar"
+      tooltipPosition="left"
+      (click)="refreshTab()"
+    ></button>
+  </div>
+
+  <!-- ══ TABS ══════════════════════════════════════════════════════════ -->
+  <div class="cartera-tabs">
+    <button
+      class="ctab"
+      [class.active]="tab === 'dashboard'"
+      (click)="setTab('dashboard')"
+    >
+      <i class="pi pi-home"></i> Dashboard
+    </button>
+    <button
+      class="ctab"
+      [class.active]="tab === 'alertas'"
+      (click)="setTab('alertas')"
+    >
+      <i class="pi pi-bell"></i> Cuentas Vencidas
+    </button>
+    <button
+      class="ctab"
+      [class.active]="tab === 'clientes'"
+      (click)="setTab('clientes')"
+    >
+      <i class="pi pi-users"></i> Clientes
+    </button>
+    <button
+      class="ctab"
+      [class.active]="tab === 'edades'"
+      (click)="setTab('edades')"
+    >
+      <i class="pi pi-chart-bar"></i> Edades de Cartera
+    </button>
+  </div>
+
+  <!-- ══ TAB: DASHBOARD ════════════════════════════════════════════════ -->
+  <ng-container *ngIf="tab === 'dashboard'">
+    <!-- KPI Cards -->
+    <div class="kpi-grid" *ngIf="!loadingDashboard && dashboard; else skDash">
+      <div class="kpi-card kpi-total">
+        <div class="kpi-icon"><i class="pi pi-money-bill"></i></div>
+        <div class="kpi-body">
+          <span class="kpi-label">Total Cartera</span>
+          <span class="kpi-value">{{ formatCOP(dashboard.totalCartera) }}</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-vencida">
+        <div class="kpi-icon"><i class="pi pi-exclamation-circle"></i></div>
+        <div class="kpi-body">
+          <span class="kpi-label">Cartera Vencida</span>
+          <span class="kpi-value">{{
+            formatCOP(dashboard.carteraVencida)
+          }}</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-vencer">
+        <div class="kpi-icon"><i class="pi pi-clock"></i></div>
+        <div class="kpi-body">
+          <span class="kpi-label">Por Vencer (30 días)</span>
+          <span class="kpi-value">{{
+            formatCOP(dashboard.carteraPorVencer)
+          }}</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-recaudo">
+        <div class="kpi-icon"><i class="pi pi-arrow-circle-down"></i></div>
+        <div class="kpi-body">
+          <span class="kpi-label">Recaudo del Mes</span>
+          <span class="kpi-value">{{ formatCOP(dashboard.recaudoMes) }}</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-mora">
+        <div class="kpi-icon"><i class="pi pi-users"></i></div>
+        <div class="kpi-body">
+          <span class="kpi-label">Clientes en Mora</span>
+          <span class="kpi-value">{{ dashboard.clientesConMora }}</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-bloq">
+        <div class="kpi-icon"><i class="pi pi-lock"></i></div>
+        <div class="kpi-body">
+          <span class="kpi-label">Clientes Bloqueados</span>
+          <span class="kpi-value">{{ dashboard.clientesBloqueados }}</span>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #skDash>
+      <div class="kpi-grid">
+        <p-skeleton
+          *ngFor="let i of [1, 2, 3, 4, 5, 6]"
+          height="90px"
+          borderRadius="14px"
+        />
+      </div>
+    </ng-template>
+
+    <!-- Edades resumen + Alertas top -->
+    <div class="dash-bottom" *ngIf="!loadingDashboard && dashboard">
+      <!-- Edades de cartera (resumen) -->
+      <div class="table-card dash-edades">
+        <div class="section-title">
+          <i class="pi pi-chart-bar"></i> Edades de Cartera
+        </div>
+        <div class="edad-bars">
+          <div class="edad-row verde-row">
+            <div class="edad-row-top">
+              <span class="edad-label">Corriente (0-30 días)</span>
+              <span class="edad-val verde">{{ formatCOP(dashboard.edad0a30) }}</span>
+            </div>
+            <div class="edad-progress">
+              <div class="edad-fill" [style.width.%]="getEdadPct(dashboard.edad0a30)"></div>
+            </div>
+          </div>
+          <div class="edad-row amarillo-row">
+            <div class="edad-row-top">
+              <span class="edad-label">31 – 60 días</span>
+              <span class="edad-val amarillo">{{ formatCOP(dashboard.edad31a60) }}</span>
+            </div>
+            <div class="edad-progress">
+              <div class="edad-fill" [style.width.%]="getEdadPct(dashboard.edad31a60)"></div>
+            </div>
+          </div>
+          <div class="edad-row naranja-row">
+            <div class="edad-row-top">
+              <span class="edad-label">61 – 90 días</span>
+              <span class="edad-val naranja">{{ formatCOP(dashboard.edad61a90) }}</span>
+            </div>
+            <div class="edad-progress">
+              <div class="edad-fill" [style.width.%]="getEdadPct(dashboard.edad61a90)"></div>
+            </div>
+          </div>
+          <div class="edad-row rojo-row">
+            <div class="edad-row-top">
+              <span class="edad-label">Más de 90 días</span>
+              <span class="edad-val rojo">{{ formatCOP(dashboard.edadMas90) }}</span>
+            </div>
+            <div class="edad-progress">
+              <div class="edad-fill" [style.width.%]="getEdadPct(dashboard.edadMas90)"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top alertas vencidas -->
+      <div class="table-card dash-alertas">
+        <div class="section-title">
+          <i class="pi pi-bell"></i> Alertas de Cartera Vencida
+        </div>
+        <div
+          class="alerta-list"
+          *ngIf="dashboard.alertasVencidas?.length; else sinAlertas"
+        >
+          <div class="alerta-item" *ngFor="let a of dashboard.alertasVencidas">
+            <div class="alerta-left">
+              <div class="alerta-nombre">{{ a.terceroNombre }}</div>
+              <div class="alerta-doc">
+                {{ a.numeroCuenta }} · {{ a.terceroDocumento }}
+              </div>
+            </div>
+            <div class="alerta-right">
+              <span class="alerta-monto">{{
+                formatCOP(a.saldoPendiente)
+              }}</span>
+              <span
+                class="alerta-dias"
+                [style.background]="getMoraColor(a.diasVencida)"
+              >
+                {{ a.diasVencida }} días
+              </span>
+            </div>
+          </div>
+        </div>
+        <ng-template #sinAlertas>
+          <div class="empty-row">
+            <i class="pi pi-check-circle"></i> Sin cartera vencida
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ══ TAB: CUENTAS VENCIDAS ══════════════════════════════════════════ -->
+  <ng-container *ngIf="tab === 'alertas'">
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="toolbar-left">
+          <span class="section-title"
+            ><i class="pi pi-bell"></i> Cuentas Vencidas</span
+          >
+          <span class="total-badge" *ngIf="!loadingAlertas"
+            >{{ alertas.length }} documentos</span
+          >
+        </div>
+      </div>
+
+      <p-table
+        [value]="alertas"
+        [loading]="loadingAlertas"
+        [scrollable]="true"
+        scrollHeight="calc(100vh - 320px)"
+        styleClass="p-datatable-sm p-datatable-striped"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Cliente</th>
+            <th>Documento</th>
+            <th class="text-right">Saldo</th>
+            <th class="text-center">Vencimiento</th>
+            <th class="text-center">Días mora</th>
+            <th class="text-center">Score</th>
+            <th class="text-center">Última gestión</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-a>
+          <tr>
+            <td>
+              <div class="cell-nombre">{{ a.terceroNombre }}</div>
+              <div class="cell-sub">{{ a.terceroDocumento }}</div>
+            </td>
+            <td>
+              <span class="num-cuenta">{{ a.numeroCuenta }}</span>
+            </td>
+            <td class="text-right font-bold">
+              {{ formatCOP(a.saldoPendiente) }}
+            </td>
+            <td class="text-center">{{ a.fechaVencimiento }}</td>
+            <td class="text-center">
+              <span
+                class="dias-badge"
+                [style.background]="getMoraColor(a.diasVencida)"
+              >
+                {{ a.diasVencida }} días
+              </span>
+            </td>
+            <td class="text-center">
+              <span
+                class="score-badge"
+                [style.color]="getScoreColor(a.scoreCrediticio)"
+              >
+                {{ a.scoreCrediticio }}
+              </span>
+            </td>
+            <td class="text-center">
+              <span *ngIf="a.ultimaGestion" class="gestion-chip">{{
+                a.ultimaGestion
+              }}</span>
+              <span *ngIf="!a.ultimaGestion" class="sin-gestion"
+                >Sin gestión</span
+              >
+              <div class="cell-sub" *ngIf="a.fechaUltimaGestion">
+                {{ a.fechaUltimaGestion }}
+              </div>
+            </td>
+            <td class="text-center">
+              <button
+                pButton
+                icon="pi pi-phone"
+                class="p-button-text p-button-sm"
+                pTooltip="Registrar gestión"
+                (click)="abrirGestion(a.terceroId, a.cuentaId)"
+              ></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="8" class="empty-row">
+              <i class="pi pi-check-circle"></i> Sin cuentas vencidas
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </ng-container>
+
+  <!-- ══ TAB: CLIENTES ══════════════════════════════════════════════════ -->
+  <ng-container *ngIf="tab === 'clientes'">
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="toolbar-left">
+          <span class="p-input-icon-left search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              class="search-input"
+              placeholder="Buscar cliente..."
+              [(ngModel)]="searchClientes"
+              (input)="onSearchClientes()"
+            />
+          </span>
+          <span class="total-badge" *ngIf="!loadingClientes"
+            >{{ totalClientes }} clientes</span
+          >
+        </div>
+      </div>
+
+      <p-table
+        [value]="clientes"
+        [loading]="loadingClientes"
+        [lazy]="true"
+        [totalRecords]="totalClientes"
+        [rows]="rowsClientes"
+        [paginator]="true"
+        (onLazyLoad)="onPageClientes($event)"
+        [scrollable]="true"
+        scrollHeight="calc(100vh - 380px)"
+        styleClass="p-datatable-sm p-datatable-striped"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Cliente</th>
+            <th class="text-right">Cupo</th>
+            <th class="text-right">Saldo Cartera</th>
+            <th class="text-right">Disponible</th>
+            <th class="text-center">Estado</th>
+            <th class="text-center">Score</th>
+            <th class="text-center">Mora</th>
+            <th class="text-center">Vencido</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-c>
+          <tr>
+            <td>
+              <div class="cell-nombre">{{ c.terceroNombre }}</div>
+              <div class="cell-sub">
+                {{ c.tipoDocumento }} {{ c.numeroDocumento }}
+              </div>
+            </td>
+            <td class="text-right">
+              <span *ngIf="c.cupoCreditoActual != null">{{
+                formatCOP(c.cupoCreditoActual)
+              }}</span>
+              <span *ngIf="c.cupoCreditoActual == null" class="sin-cupo"
+                >Sin cupo</span
+              >
+            </td>
+            <td class="text-right font-bold">
+              {{ formatCOP(c.saldoCartera) }}
+            </td>
+            <td class="text-right" [class.text-danger]="c.saldoDisponible < 0">
+              {{ formatCOP(c.saldoDisponible) }}
+            </td>
+            <td class="text-center">
+              <span
+                *ngIf="c.estadoCredito"
+                class="estado-chip"
+                [style.background]="
+                  getEstadoCreditoColor(c.estadoCredito) + '22'
+                "
+                [style.color]="getEstadoCreditoColor(c.estadoCredito)"
+              >
+                {{ c.estadoCredito }}
+              </span>
+              <span *ngIf="!c.estadoCredito" class="sin-cupo">—</span>
+            </td>
+            <td class="text-center">
+              <span
+                class="score-badge"
+                [style.color]="getScoreColor(c.scoreCrediticio)"
+              >
+                {{ c.scoreCrediticio }}
+              </span>
+            </td>
+            <td class="text-center">
+              <span
+                *ngIf="c.diasMoraMaximo > 0"
+                class="dias-badge"
+                [style.background]="getMoraColor(c.diasMoraMaximo)"
+              >
+                {{ c.diasMoraMaximo }} días
+              </span>
+              <span *ngIf="c.diasMoraMaximo === 0" class="al-dia">Al día</span>
+            </td>
+            <td class="text-right" [class.text-danger]="c.totalVencido > 0">
+              {{ formatCOP(c.totalVencido) }}
+            </td>
+            <td class="text-center">
+              <div class="row-actions">
+                <button
+                  pButton
+                  icon="pi pi-phone"
+                  class="p-button-text p-button-sm"
+                  pTooltip="Gestión de cobro"
+                  (click)="abrirGestion(c.terceroId)"
+                ></button>
+                <button
+                  pButton
+                  icon="pi pi-credit-card"
+                  class="p-button-text p-button-sm"
+                  pTooltip="{{ c.creditoId ? 'Editar crédito' : 'Abrir cupo' }}"
+                  (click)="
+                    c.creditoId ? abrirCreditoEditar(c) : abrirCreditoNuevo(c)
+                  "
+                ></button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="9" class="empty-row">Sin clientes con cartera</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </ng-container>
+
+  <!-- ══ TAB: EDADES DE CARTERA ══════════════════════════════════════════ -->
+  <ng-container *ngIf="tab === 'edades'">
+    <div class="table-card">
+      <div class="table-toolbar">
+        <div class="toolbar-left">
+          <span class="section-title"
+            ><i class="pi pi-chart-bar"></i> Edades de Cartera por Cliente</span
+          >
+          <span class="total-badge" *ngIf="!loadingEdades"
+            >{{ edades.length }} clientes</span
+          >
+        </div>
+      </div>
+
+      <p-table
+        [value]="edades"
+        [loading]="loadingEdades"
+        [scrollable]="true"
+        scrollHeight="calc(100vh - 320px)"
+        styleClass="p-datatable-sm p-datatable-striped"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Cliente</th>
+            <th class="text-right edad-col corriente-col">Corriente (0-30)</th>
+            <th class="text-right edad-col">31 – 60 días</th>
+            <th class="text-right edad-col">61 – 90 días</th>
+            <th class="text-right edad-col">+ 90 días</th>
+            <th class="text-right edad-col total-col">Total</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-e>
+          <tr>
+            <td>
+              <div class="cell-nombre">{{ e.terceroNombre }}</div>
+              <div class="cell-sub">{{ e.numeroDocumento }}</div>
+            </td>
+            <td class="text-right verde">{{ formatCOP(e.corriente) }}</td>
+            <td class="text-right amarillo">{{ formatCOP(e.dias31a60) }}</td>
+            <td class="text-right naranja">{{ formatCOP(e.dias61a90) }}</td>
+            <td class="text-right rojo">{{ formatCOP(e.mas90dias) }}</td>
+            <td class="text-right font-bold">{{ formatCOP(e.total) }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="summary">
+          <tr class="edad-totales" *ngIf="edades.length">
+            <td><strong>Total general</strong></td>
+            <td class="text-right verde">
+              <strong>{{ formatCOP(sumEdad("corriente")) }}</strong>
+            </td>
+            <td class="text-right amarillo">
+              <strong>{{ formatCOP(sumEdad("dias31a60")) }}</strong>
+            </td>
+            <td class="text-right naranja">
+              <strong>{{ formatCOP(sumEdad("dias61a90")) }}</strong>
+            </td>
+            <td class="text-right rojo">
+              <strong>{{ formatCOP(sumEdad("mas90dias")) }}</strong>
+            </td>
+            <td class="text-right font-bold">
+              <strong>{{ formatCOP(sumEdad("total")) }}</strong>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="empty-row">
+              <i class="pi pi-check-circle"></i> Sin cartera pendiente
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </ng-container>
+</div>
+
+<!-- ══ MODAL CRÉDITO ══════════════════════════════════════════════════ -->
+<p-dialog
+  [(visible)]="showCreditoModal"
+  [header]="creditoEditId ? 'Editar cupo de crédito' : 'Abrir cupo de crédito'"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '480px' }"
+  styleClass="aura-dialog"
+>
+  <div class="credito-form" *ngIf="clienteSeleccionado">
+    <div class="cf-cliente">
+      <i class="pi pi-user"></i>
+      <div>
+        <div class="cf-nombre">{{ clienteSeleccionado.terceroNombre }}</div>
+        <div class="cf-doc">
+          {{ clienteSeleccionado.tipoDocumento }}
+          {{ clienteSeleccionado.numeroDocumento }}
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Cupo de Crédito <span class="required">*</span></label>
+      <p-inputNumber
+        [(ngModel)]="creditoForm.cupoCreditoInicial"
+        mode="currency"
+        currency="COP"
+        locale="es-CO"
+        [minFractionDigits]="0"
+        [min]="0"
+        styleClass="w-full"
+      />
+    </div>
+
+    <div class="form-row">
+      <div class="field">
+        <label>Plazo (días)</label>
+        <p-inputNumber
+          [(ngModel)]="creditoForm.plazoDias"
+          [min]="1"
+          [max]="365"
+          suffix=" días"
+          styleClass="w-full"
+        />
+      </div>
+      <div class="field">
+        <label>Días tolerancia mora</label>
+        <p-inputNumber
+          [(ngModel)]="creditoForm.diasMoraTolerancia"
+          [min]="0"
+          [max]="365"
+          suffix=" días"
+          styleClass="w-full"
+        />
+      </div>
+    </div>
+
+    <div class="field" *ngIf="creditoEditId">
+      <label>Estado del crédito</label>
+      <p-dropdown
+        [(ngModel)]="creditoForm.estadoCredito"
+        [options]="estadosCredito"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+      />
+    </div>
+
+    <div class="field-check">
+      <p-checkbox
+        [(ngModel)]="creditoForm.requiereAutorizacion"
+        [binary]="true"
+        inputId="reqAuth"
+      />
+      <label for="reqAuth"
+        >Requiere autorización al superar cupo (en lugar de bloqueo
+        total)</label
+      >
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text p-button-secondary"
+      (click)="showCreditoModal = false"
+    ></button>
+    <button
+      pButton
+      [label]="creditoEditId ? 'Actualizar' : 'Configurar'"
+      icon="pi pi-check"
+      class="btn-aura btn-primary"
+      [loading]="savingCredito"
+      (click)="guardarCredito()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ══ MODAL GESTIÓN COBRO ════════════════════════════════════════════ -->
+<p-dialog
+  [(visible)]="showGestionModal"
+  header="Registrar gestión de cobro"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '460px' }"
+  styleClass="aura-dialog"
+>
+  <div class="gestion-form">
+    <div class="field">
+      <label>Tipo de gestión <span class="required">*</span></label>
+      <p-dropdown
+        [(ngModel)]="gestionForm.tipoGestion"
+        [options]="tiposGestion"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Seleccionar..."
+        styleClass="w-full"
+      />
+    </div>
+
+    <div class="field">
+      <label>Resultado</label>
+      <p-dropdown
+        [(ngModel)]="gestionForm.resultado"
+        [options]="resultadosGestion"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Seleccionar..."
+        [showClear]="true"
+        styleClass="w-full"
+      />
+    </div>
+
+    <div class="field" *ngIf="gestionForm.resultado === 'PROMESA_PAGO'">
+      <label>Monto prometido</label>
+      <p-inputNumber
+        [(ngModel)]="gestionForm.montoPrometido"
+        mode="currency"
+        currency="COP"
+        locale="es-CO"
+        [minFractionDigits]="0"
+        styleClass="w-full"
+      />
+    </div>
+
+    <div class="field">
+      <label>Nota</label>
+      <textarea
+        pTextarea
+        [(ngModel)]="gestionForm.nota"
+        rows="3"
+        placeholder="Observaciones de la gestión..."
+        class="w-full"
+      ></textarea>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text p-button-secondary"
+      (click)="showGestionModal = false"
+    ></button>
+    <button
+      pButton
+      label="Registrar"
+      icon="pi pi-check"
+      class="btn-aura btn-primary"
+      [loading]="savingGestion"
+      [disabled]="!gestionForm.tipoGestion"
+      (click)="guardarGestion()"
+    ></button>
+  </ng-template>
+</p-dialog>

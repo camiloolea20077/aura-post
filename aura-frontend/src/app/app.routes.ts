@@ -173,6 +173,22 @@ export const routes: Routes = [
             (m) => m.EstadoCuentaComponent,
           ),
       },
+      {
+        path: 'contabilidad/reporte-iva',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/reporte-iva/reporte-iva.component').then(
+            (m) => m.ReporteIvaComponent,
+          ),
+      },
+      {
+        path: 'gastos',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/gastos/index/index-gastos.component').then(
+            (m) => m.IndexGastosComponent,
+          ),
+      },
 
       // Inventario
       {
@@ -226,6 +242,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'compras/ordenes',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/compras/ordenes/index-ordenes.component').then(
+            (m) => m.IndexOrdenesComponent,
+          ),
+      },
+      {
         path: 'ventas',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN', 'CAJERO'])],
         loadComponent: () =>
@@ -239,6 +263,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/cotizaciones/index/index-cotizaciones.component').then(
             (m) => m.IndexCotizacionesComponent,
+          ),
+      },
+      {
+        path: 'devoluciones',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN', 'CAJERO'])],
+        loadComponent: () =>
+          import('./features/devoluciones/index/index-devoluciones.component').then(
+            (m) => m.IndexDevolucionesComponent,
           ),
       },
       {
@@ -353,6 +385,88 @@ export const routes: Routes = [
           ),
       },
 
+      // Ventas de campo
+      {
+        path: 'ventas-campo',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/ventas-campo/index/index-ventas-campo.component').then(
+            (m) => m.IndexVentasCampoComponent,
+          ),
+      },
+
+      // Cartera
+      {
+        path: 'cartera',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/cartera/index/index-cartera.component').then(
+            (m) => m.IndexCarteraComponent,
+          ),
+      },
+
+      // Tesorería
+      {
+        path: 'tesoreria/cuentas-bancarias',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/tesoreria/cuentas-bancarias/index-cuentas-bancarias.component').then(
+            (m) => m.IndexCuentasBancariasComponent,
+          ),
+      },
+      {
+        path: 'tesoreria/egresos',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/tesoreria/egresos/index-egresos.component').then(
+            (m) => m.IndexEgresosComponent,
+          ),
+      },
+      {
+        path: 'tesoreria/recaudos',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/tesoreria/recaudos/index-recaudos.component').then(
+            (m) => m.IndexRecaudosComponent,
+          ),
+      },
+      {
+        path: 'tesoreria/conciliacion',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/tesoreria/conciliacion/index-conciliacion.component').then(
+            (m) => m.IndexConciliacionComponent,
+          ),
+      },
+
+      // Contabilidad — Plan de Cuentas y Asientos
+      {
+        path: 'contabilidad/plan-cuentas',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/plan-cuentas/plan-cuentas.component').then(
+            (m) => m.PlanCuentasComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/asientos',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/asientos/asientos.component').then(
+            (m) => m.AsientosComponent,
+          ),
+      },
+
+      // Comprobantes de caja
+      {
+        path: 'comprobantes',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN', 'CAJERO'])],
+        loadComponent: () =>
+          import('./features/comprobantes/index/index-comprobantes.component').then(
+            (m) => m.IndexComprobantesComponent,
+          ),
+      },
+
       // Reportes
       {
         path: 'reportes/ventas',
@@ -366,6 +480,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/reporte-inventario/reporte-inventario.component').then(
             (m) => m.ReporteInventarioComponent,
+          ),
+      },
+      {
+        path: 'reportes/avanzados',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/reportes-avanzados/reportes-avanzados.component').then(
+            (m) => m.ReportesAvanzadosComponent,
           ),
       },
     ],

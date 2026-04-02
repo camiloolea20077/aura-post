@@ -1,0 +1,77 @@
+.module-wrapper {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.module-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    h2 { margin: 0; font-size: 1.4rem; font-weight: 700; color: #1e293b; }
+    p  { margin: 0; color: #64748b; font-size: 0.85rem; }
+  }
+}
+
+.header-icon {
+  width: 3rem; height: 3rem;
+  background: #6366f1;
+  border-radius: 12px;
+  display: grid; place-items: center;
+  i { color: #fff; font-size: 1.3rem; }
+}
+
+.search-wrap {
+  span { width: 100%; max-width: 360px; }
+  input { width: 100%; }
+}
+
+.table-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+
+.empty-row {
+  text-align: center;
+  color: #94a3b8;
+  padding: 2rem;
+  i { margin-right: 0.5rem; }
+}
+
+.tipo-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  &.debito  { background: #dbeafe; color: #1d4ed8; }
+  &.credito { background: #dcfce7; color: #15803d; }
+}
+
+.text-green { color: #15803d; }
+.text-muted { color: #cbd5e1; }
+.req { color: #ef4444; }
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  label { font-size: 0.82rem; font-weight: 600; color: #374151; }
+  input, p-dropdown { width: 100%; }
+}

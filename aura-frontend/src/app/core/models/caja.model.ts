@@ -85,6 +85,10 @@ export interface MovimientoCajaDto {
   usuarioNombre?: string;
   cuentaNumero?: string | null;
   terceroNombre?: string | null;
+  metodoPago?: string;
+  entregadoA?: string;
+  comprobanteId?: number;
+  numeroComprobante?: string;
 }
 
 export interface CreateMovimientoCajaDto {
@@ -93,6 +97,8 @@ export interface CreateMovimientoCajaDto {
   monto: number;
   cuentaCobrarId?: number | null;
   cuentaPagarId?: number | null;
+  metodoPago?: string;   // EFECTIVO | TRANSFERENCIA
+  entregadoA?: string;   // opcional
 }
 
 export interface VentaCategoriaDto {
@@ -150,6 +156,10 @@ export interface ResumenTurnoDto {
   // Comisiones generadas en el turno
   comisiones: ComisionTurnoDto[];
   totalComisiones: number;
+
+  // Ventas a crédito del turno
+  cantidadVentasCredito: number;
+  totalVentasCredito: number;
 
   // Diagnóstico: detalle de cada pago en efectivo del turno
   detalleEfectivo: DetalleEfectivoItem[];

@@ -1,0 +1,143 @@
+<p-toast />
+
+<div class="module-wrapper">
+
+  <!-- Header -->
+  <div class="module-header">
+    <div class="header-left">
+      <span class="header-icon"><i class="pi pi-percentage"></i></span>
+      <div>
+        <h2>Reporte de IVA</h2>
+        <p>IVA generado en ventas vs IVA descontable en compras</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filtros-card">
+    <div class="filtros-row">
+      <div class="filtro-field">
+        <label>Desde</label>
+        <p-calendar [(ngModel)]="fechaDesde" dateFormat="yy-mm-dd" [showIcon]="true"
+          styleClass="w-full" appendTo="body" />
+      </div>
+      <div class="filtro-field">
+        <label>Hasta</label>
+        <p-calendar [(ngModel)]="fechaHasta" dateFormat="yy-mm-dd" [showIcon]="true"
+          styleClass="w-full" appendTo="body" />
+      </div>
+      <button pButton label="Consultar" icon="pi pi-search"
+        class="btn-aura btn-primary" (click)="cargar()" [loading]="loading">
+      </button>
+    </div>
+  </div>
+
+  <!-- Skeleton -->
+  <ng-container *ngIf="loading">
+    <div class="cards-grid">
+      <p-skeleton height="140px" *ngFor="let i of [1,2,3]" />
+    </div>
+  </ng-container>
+
+  <!-- Contenido -->
+  <ng-container *ngIf="!loading && data">
+
+    <div class="periodo-label">
+      <i class="pi pi-calendar"></i>
+      Período: {{ data.fechaDesde }} &mdash; {{ data.fechaHasta }}
+    </div>
+
+    <!-- Cards principales -->
+    <div class="cards-grid">
+
+      <!-- IVA Ventas -->
+      <div class="iva-card ventas">
+        <div class="card-icon"><i class="pi pi-arrow-up-right"></i></div>
+        <div class="card-label">IVA Generado (Ventas)</div>
+        <div class="card-value">{{ formatCOP(data.ivaVentas) }}</div>
+        <div class="card-sub">{{ data.cantidadVentas }} venta(s) completada(s)</div>
+      </div>
+
+      <!-- IVA Compras -->
+      <div class="iva-card compras">
+        <div class="card-icon"><i class="pi pi-arrow-down-left"></i></div>
+        <div class="card-label">IVA Descontable (Compras)</div>
+        <div class="card-value">{{ formatCOP(data.ivaCompras) }}</div>
+        <div class="card-sub">{{ data.cantidadCompras }} compra(s) recibida(s)</div>
+      </div>
+
+      <!-- Balance -->
+      <div class="iva-card balance" [ngClass]="data.ivaADeclararOPagarAlEstado > 0 ? 'a-pagar' : data.ivaADeclararOPagarAlEstado < 0 ? 'a-favor' : 'equilibrio'">
+        <div class="card-icon"><i class="pi pi-balance-scale"></i></div>
+        <div class="card-label">IVA a Declarar</div>
+        <div class="card-value">{{ formatCOP(data.ivaADeclararOPagarAlEstado) }}</div>
+        <div class="card-sub">
+          <p-tag [severity]="balanceTag(data.ivaADeclararOPagarAlEstado)"
+            [value]="balanceLabel(data.ivaADeclararOPagarAlEstado)" />
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Tabla resumen -->
+    <div class="table-card">
+      <div class="table-toolbar">
+        <span class="toolbar-title"><i class="pi pi-table"></i> Resumen declaración IVA</span>
+      </div>
+
+      <table class="iva-table">
+        <thead>
+          <tr>
+            <th>Concepto</th>
+            <th class="num">Cantidad documentos</th>
+            <th class="num">Valor IVA (COP)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <span class="concept-dot ventas-dot"></span>
+              IVA generado en ventas
+            </td>
+            <td class="num">{{ data.cantidadVentas }}</td>
+            <td class="num positivo">{{ formatCOP(data.ivaVentas) }}</td>
+          </tr>
+          <tr class="alt">
+            <td>
+              <span class="concept-dot compras-dot"></span>
+              IVA descontable en compras
+            </td>
+            <td class="num">{{ data.cantidadCompras }}</td>
+            <td class="num negativo">{{ formatCOP(data.ivaCompras) }}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="total-row">
+            <td colspan="2">IVA neto a declarar / pagar al Estado</td>
+            <td class="num" [ngClass]="data.ivaADeclararOPagarAlEstado > 0 ? 'a-pagar-text' : 'a-favor-text'">
+              {{ formatCOP(data.ivaADeclararOPagarAlEstado) }}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="nota-legal">
+        <i class="pi pi-info-circle"></i>
+        <span>
+          Si el valor es <strong>positivo</strong>, la empresa debe pagar ese IVA al Estado.
+          Si es <strong>negativo</strong>, tiene un saldo a favor que puede descontar en el siguiente período.
+        </span>
+      </div>
+    </div>
+
+  </ng-container>
+
+  <!-- Empty -->
+  <ng-container *ngIf="!loading && !data">
+    <div class="empty-state">
+      <i class="pi pi-percentage"></i>
+      <p>No se encontraron datos para el período seleccionado.</p>
+    </div>
+  </ng-container>
+
+</div>

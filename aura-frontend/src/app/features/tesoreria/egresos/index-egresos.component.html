@@ -1,0 +1,179 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="module-wrapper">
+  <!-- ── Header ────────────────────────────────────────────────── -->
+  <div class="module-header">
+    <div class="header-left">
+      <span class="header-icon egreso-icon"><i class="pi pi-arrow-up-right"></i></span>
+      <div>
+        <h2>Egresos</h2>
+        <p>Salidas de dinero de tus cuentas</p>
+      </div>
+    </div>
+    <button pButton label="Nuevo Egreso" icon="pi pi-plus"
+      class="btn-aura btn-danger" (click)="abrirNuevo()"></button>
+  </div>
+
+  <!-- ── Filtros ────────────────────────────────────────────────── -->
+  <div class="filters-bar">
+    <div class="filter-item">
+      <label>Período</label>
+      <p-calendar
+        [(ngModel)]="rangoFechas"
+        selectionMode="range"
+        [readonlyInput]="true"
+        dateFormat="dd/mm/yy"
+        placeholder="Desde — Hasta"
+        styleClass="w-full"
+        (onSelect)="cargar()"
+      />
+    </div>
+    <div class="filter-item">
+      <label>Cuenta</label>
+      <p-dropdown
+        [(ngModel)]="cuentaFiltroId"
+        [options]="cuentasOpts()"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Todas las cuentas"
+        styleClass="w-full"
+        [showClear]="true"
+        (onChange)="cargar()"
+      />
+    </div>
+    <button pButton icon="pi pi-refresh" class="p-button-text p-button-rounded"
+      pTooltip="Recargar" (click)="cargar()" [loading]="loading"></button>
+  </div>
+
+  <!-- ── KPI ───────────────────────────────────────────────────── -->
+  <div class="kpi-bar">
+    <div class="kpi-card">
+      <span class="kpi-label">Total egresos del período</span>
+      <span class="kpi-valor danger">{{ formatCOP(totalPeriodo) }}</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label">Número de movimientos</span>
+      <span class="kpi-valor">{{ movimientos.length }}</span>
+    </div>
+  </div>
+
+  <!-- ── Tabla ─────────────────────────────────────────────────── -->
+  <div class="table-card">
+    <p-table
+      [value]="movimientos"
+      [loading]="loading"
+      [paginator]="movimientos.length > 20"
+      [rows]="20"
+      styleClass="p-datatable-sm"
+      [rowHover]="true"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Fecha</th>
+          <th>Cuenta</th>
+          <th>Concepto</th>
+          <th>Beneficiario</th>
+          <th>Categoría</th>
+          <th>Referencia</th>
+          <th class="text-right">Monto</th>
+          <th>Estado</th>
+          <th></th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-m>
+        <tr [class.anulado-row]="m.anulado">
+          <td>{{ m.fecha }}</td>
+          <td>{{ m.cuentaBancariaNombre }}</td>
+          <td>{{ m.concepto }}</td>
+          <td>{{ m.beneficiario ?? '—' }}</td>
+          <td>
+            <span class="categoria-tag">{{ categoriaLabel(m.categoria) }}</span>
+          </td>
+          <td>{{ m.referencia ?? '—' }}</td>
+          <td class="text-right monto-egreso">{{ formatCOP(m.monto) }}</td>
+          <td>
+            <span class="estado-badge" [class.conciliado]="m.conciliado" [class.anulado]="m.anulado">
+              {{ m.anulado ? 'Anulado' : m.conciliado ? 'Conciliado' : 'Pendiente' }}
+            </span>
+          </td>
+          <td>
+            <button
+              pButton icon="pi pi-ban"
+              class="p-button-text p-button-sm p-button-danger"
+              [pTooltip]="m.conciliado ? 'No se puede anular: ya está conciliado' : 'Anular'"
+              [disabled]="m.anulado || m.conciliado"
+              (click)="anular(m)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9" class="empty-row">
+            <i class="pi pi-arrow-up-right" style="font-size:2rem;color:#cbd5e1"></i>
+            <p>No hay egresos en el período seleccionado</p>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- ── Modal nuevo egreso ────────────────────────────────────────── -->
+<p-dialog
+  [(visible)]="showModal"
+  header="Registrar Egreso"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '480px' }"
+>
+  <div class="modal-body">
+    <div class="field">
+      <label>Cuenta <span class="req">*</span></label>
+      <p-dropdown [(ngModel)]="form.cuentaBancariaId"
+        [options]="cuentasOpts()" optionLabel="label" optionValue="value"
+        placeholder="Selecciona cuenta" styleClass="w-full" />
+    </div>
+    <div class="field">
+      <label>Fecha <span class="req">*</span></label>
+      <p-calendar [(ngModel)]="form.fecha" dateFormat="yy-mm-dd"
+        [showIcon]="true" styleClass="w-full" />
+    </div>
+    <div class="field">
+      <label>Monto <span class="req">*</span></label>
+      <p-inputNumber [(ngModel)]="form.monto" mode="currency" currency="COP"
+        locale="es-CO" [minFractionDigits]="0" styleClass="w-full" />
+    </div>
+    <div class="field">
+      <label>Concepto <span class="req">*</span></label>
+      <input pInputText [(ngModel)]="form.concepto"
+        placeholder="Ej: Pago factura energía" class="w-full" />
+    </div>
+    <div class="field">
+      <label>Categoría <span class="req">*</span></label>
+      <p-dropdown [(ngModel)]="form.categoria"
+        [options]="categoriasOpts" optionLabel="label" optionValue="value"
+        placeholder="Selecciona categoría" styleClass="w-full" />
+    </div>
+    <div class="field">
+      <label>Beneficiario / A quién se le paga</label>
+      <input pInputText [(ngModel)]="form.beneficiario"
+        placeholder="Nombre del beneficiario" class="w-full" />
+    </div>
+    <div class="field">
+      <label>Referencia</label>
+      <input pInputText [(ngModel)]="form.referencia"
+        placeholder="# cheque, comprobante..." class="w-full" />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancelar" class="p-button-text"
+      (click)="showModal = false" [disabled]="saving"></button>
+    <button pButton label="Registrar Egreso" icon="pi pi-check"
+      class="btn-aura btn-danger" (click)="guardar()" [loading]="saving"
+      [disabled]="!form.cuentaBancariaId || !form.monto || !form.concepto?.trim() || !form.categoria">
+    </button>
+  </ng-template>
+</p-dialog>

@@ -12,7 +12,7 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
-import { DividerModule } from 'primeng/divider';
+import { DropdownModule } from 'primeng/dropdown';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import {
@@ -21,6 +21,8 @@ import {
   METODOS_PAGO,
   PagoUI,
 } from '../../../../core/models/venta.model';
+import { CuentaBancariaModel } from '../../../../core/models/cuenta-bancaria.model';
+import { ValidacionCreditoModel } from '../../../../core/models/cartera.model';
 
 @Component({
   selector: 'app-modal-pago',
@@ -32,7 +34,7 @@ import {
     ButtonModule,
     InputNumberModule,
     InputTextModule,
-    DividerModule,
+    DropdownModule,
     ToastModule,
   ],
   providers: [MessageService],
@@ -45,6 +47,11 @@ export class ModalPagoComponent implements OnChanges {
   @Input() subtotal = 0;
   @Input() impuestosTotal = 0;
   @Input() pagosPrev: PagoUI[] = [];
+
+  // ── Nuevos inputs ────────────────────────────────────────────────
+  @Input() cuentasBancarias: CuentaBancariaModel[] = [];
+  @Input() creditoInfo: ValidacionCreditoModel | null = null;
+  @Input() clienteNombre: string | null = null;
 
   @Output() modalClosed = new EventEmitter<void>();
   @Output() ventaConfirmada = new EventEmitter<{
@@ -62,7 +69,7 @@ export class ModalPagoComponent implements OnChanges {
     if (changes['displayModal'] && this.displayModal) {
       this.pagos = this.pagosPrev.length
         ? [...this.pagosPrev.map((p) => ({ ...p }))]
-        : [{ metodoPago: 'EFECTIVO', monto: this.total, referencia: null }];
+        : [{ metodoPago: 'EFECTIVO', monto: this.total, referencia: null, cuentaBancariaId: null }];
       this.isSubmitting = false;
     }
   }
@@ -89,8 +96,30 @@ export class ModalPagoComponent implements OnChanges {
     return this.pagos.some((p) => p.metodoPago === 'CREDITO');
   }
 
+  get creditoBloqueado(): boolean {
+    return this.tieneCredito && this.creditoInfo !== null && !this.creditoInfo.permitido;
+  }
+
+  esCreditoSeleccionable(): boolean {
+    return this.creditoInfo === null || this.creditoInfo.permitido;
+  }
+
+  get cuentasOpts(): { label: string; value: number }[] {
+    return this.cuentasBancarias
+      .filter((c) => c.activa)
+      .map((c) => ({
+        label: `${c.nombre}${c.banco ? ' — ' + c.banco : ''}`,
+        value: c.id,
+      }));
+  }
+
+  requiereCuenta(m: MetodoPago): boolean {
+    return m === 'TRANSFERENCIA' || m === 'NEQUI' || m === 'DAVIPLATA';
+  }
+
   setMetodo(pago: PagoUI, m: MetodoPago): void {
     pago.metodoPago = m;
+    pago.cuentaBancariaId = null;
     if (m === 'CREDITO') {
       pago.monto = this.total;
     }
@@ -101,6 +130,7 @@ export class ModalPagoComponent implements OnChanges {
       metodoPago: 'EFECTIVO',
       monto: Math.max(this.faltante, 0) || null,
       referencia: null,
+      cuentaBancariaId: null,
     });
   }
 
@@ -123,13 +153,14 @@ export class ModalPagoComponent implements OnChanges {
     }).format(v);
 
   confirmar(): void {
-    if (!this.cuadra || this.isSubmitting) return;
+    if (!this.cuadra || this.isSubmitting || this.creditoBloqueado) return;
     const dtos: CreateVentaPagoDto[] = this.pagos
       .filter((p) => (p.monto ?? 0) > 0)
       .map((p) => ({
         metodoPago: p.metodoPago,
         monto: p.monto!,
         referencia: p.referencia || null,
+        cuentaBancariaId: p.cuentaBancariaId ?? null,
       }));
     this.isSubmitting = true;
     this.ventaConfirmada.emit({
@@ -145,5 +176,12 @@ export class ModalPagoComponent implements OnChanges {
 
   metodoInfo(m: MetodoPago) {
     return this.metodos.find((x) => x.value === m) ?? this.metodos[0];
+  }
+
+  getCreditoColor(): string {
+    if (!this.creditoInfo) return '#64748b';
+    if (!this.creditoInfo.permitido) return '#dc2626';
+    if ((this.creditoInfo.saldoDisponible ?? 0) < 0) return '#f59e0b';
+    return '#10b981';
   }
 }

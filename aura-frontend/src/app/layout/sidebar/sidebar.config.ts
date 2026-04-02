@@ -9,21 +9,27 @@ export interface SidebarMenuItem {
 
 export interface SidebarMenuGroup {
   label: string;
-  icon: string; // icono del grupo para el header colapsable
+  icon: string;
   items: SidebarMenuItem[];
   roles?: string[];
-  defaultOpen?: boolean; // si arranca abierto
-  alwaysOpen?: boolean; // no colapsable, siempre visible
+  defaultOpen?: boolean;
+  alwaysOpen?: boolean;
 }
 
 export const SIDEBAR_MENU: SidebarMenuGroup[] = [
+  // ── Principal ───────────────────────────────────────────────────────────────
   {
     label: 'Principal',
     icon: 'pi pi-home',
     defaultOpen: true,
     alwaysOpen: true,
     items: [
-      { label: 'Dashboard', icon: 'pi pi-home', route: '/dashboard' },
+      {
+        label: 'Dashboard',
+        icon: 'pi pi-home',
+        route: '/dashboard',
+        roles: ['SUPER_ADMIN', 'ADMIN'],
+      },
       {
         label: 'Punto de Venta',
         icon: 'pi pi-shopping-cart',
@@ -33,6 +39,8 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
       },
     ],
   },
+
+  // ── Catálogo ────────────────────────────────────────────────────────────────
   {
     label: 'Catálogo',
     icon: 'pi pi-box',
@@ -67,6 +75,8 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
       },
     ],
   },
+
+  // ── Precios ─────────────────────────────────────────────────────────────────
   {
     label: 'Precios',
     icon: 'pi pi-tags',
@@ -89,16 +99,15 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
       },
     ],
   },
+
+  // ── Inventario ──────────────────────────────────────────────────────────────
+  // Incluye movimientos físicos: reconteos, mermas y traslados
   {
     label: 'Inventario',
     icon: 'pi pi-database',
     roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [
-      {
-        label: 'Inventario',
-        icon: 'pi pi-database',
-        route: '/inventario/stock',
-      },
+      { label: 'Stock', icon: 'pi pi-database', route: '/inventario/stock' },
       { label: 'Lotes', icon: 'pi pi-calendar', route: '/inventario/lotes' },
       {
         label: 'Seriales',
@@ -111,18 +120,31 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         icon: 'pi pi-warehouse',
         route: '/inventario/reconteos',
       },
+      { label: 'Mermas', icon: 'pi pi-trash', route: '/mermas' },
+      { label: 'Traslados', icon: 'pi pi-arrows-h', route: '/traslados' },
     ],
   },
+
+  // ── Compras ─────────────────────────────────────────────────────────────────
   {
-    label: 'Operaciones',
+    label: 'Compras',
+    icon: 'pi pi-truck',
+    roles: ['SUPER_ADMIN', 'ADMIN'],
+    items: [
+      { label: 'Compras', icon: 'pi pi-truck', route: '/compras' },
+      {
+        label: 'Órdenes de Compra',
+        icon: 'pi pi-file-edit',
+        route: '/compras/ordenes',
+      },
+    ],
+  },
+
+  // ── Ventas ──────────────────────────────────────────────────────────────────
+  {
+    label: 'Ventas',
     icon: 'pi pi-receipt',
     items: [
-      {
-        label: 'Compras',
-        icon: 'pi pi-truck',
-        route: '/compras',
-        roles: ['SUPER_ADMIN', 'ADMIN'],
-      },
       {
         label: 'Ventas',
         icon: 'pi pi-receipt',
@@ -130,15 +152,9 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         roles: ['SUPER_ADMIN', 'ADMIN', 'CAJERO'],
       },
       {
-        label: 'Mermas',
-        icon: 'pi pi-trash',
-        route: '/mermas',
-        roles: ['SUPER_ADMIN', 'ADMIN'],
-      },
-      {
-        label: 'Traslados',
-        icon: 'pi pi-arrows-h',
-        route: '/traslados',
+        label: 'Ventas de Campo',
+        icon: 'pi pi-car',
+        route: '/ventas-campo',
         roles: ['SUPER_ADMIN', 'ADMIN'],
       },
       {
@@ -147,43 +163,93 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         route: '/cotizaciones',
         roles: ['SUPER_ADMIN', 'ADMIN', 'CAJERO'],
       },
+      {
+        label: 'Devoluciones',
+        icon: 'pi pi-replay',
+        route: '/devoluciones',
+        roles: ['SUPER_ADMIN', 'ADMIN', 'CAJERO'],
+      },
     ],
   },
+
+  // ── Cuentas ─────────────────────────────────────────────────────────────────
   {
-    label: 'Contabilidad',
-    icon: 'pi pi-wallet',
+    label: 'Cuentas',
+    icon: 'pi pi-money-bill',
     roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [
       {
-        label: 'Cierre Contable',
-        icon: 'pi pi-book',
-        route: '/contabilidad/cierre',
-      },
-      {
-        label: 'Estado de Cuenta',
-        icon: 'pi pi-file-edit',
-        route: '/contabilidad/estado-cuenta',
-      },
-      {
         label: 'Cuentas por Cobrar',
-        icon: 'pi pi-money-bill',
+        icon: 'pi pi-arrow-circle-down',
         route: '/cuentas/cuentas-por-cobrar',
       },
       {
         label: 'Cuentas por Pagar',
-        icon: 'pi pi-credit-card',
+        icon: 'pi pi-arrow-circle-up',
         route: '/cuentas/cuentas-por-pagar',
       },
     ],
   },
+
+  // ── Cartera ──────────────────────────────────────────────────────────────────
   {
-    label: 'Administración',
-    icon: 'pi pi-sliders-h',
+    label: 'Cartera',
+    icon: 'pi pi-chart-line',
+    roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [
       {
-        label: 'Clientes y Proveedores',
-        icon: 'pi pi-users',
-        route: '/terceros',
+        label: 'Cartera',
+        icon: 'pi pi-chart-line',
+        route: '/cartera',
+        highlight: true,
+      },
+    ],
+  },
+
+  // ── Tesorería ────────────────────────────────────────────────────────────────
+  {
+    label: 'Tesorería',
+    icon: 'pi pi-wallet',
+    roles: ['SUPER_ADMIN', 'ADMIN'],
+    items: [
+      {
+        label: 'Cuentas Bancarias',
+        icon: 'pi pi-credit-card',
+        route: '/tesoreria/cuentas-bancarias',
+      },
+      {
+        label: 'Egresos',
+        icon: 'pi pi-arrow-up-right',
+        route: '/tesoreria/egresos',
+      },
+      {
+        label: 'Recaudos',
+        icon: 'pi pi-arrow-down-left',
+        route: '/tesoreria/recaudos',
+      },
+      {
+        label: 'Conciliación',
+        icon: 'pi pi-check-square',
+        route: '/tesoreria/conciliacion',
+      },
+    ],
+  },
+
+  // ── Caja ─────────────────────────────────────────────────────────────────────
+  {
+    label: 'Caja',
+    icon: 'pi pi-file-check',
+    items: [
+      {
+        label: 'Comprobantes',
+        icon: 'pi pi-file-check',
+        route: '/comprobantes',
+        roles: ['SUPER_ADMIN', 'ADMIN', 'CAJERO'],
+      },
+      {
+        label: 'Usuarios',
+        icon: 'pi pi-user',
+        route: '/admin/usuarios',
         roles: ['SUPER_ADMIN', 'ADMIN'],
       },
       {
@@ -193,70 +259,74 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         roles: ['SUPER_ADMIN', 'ADMIN'],
       },
       { label: 'Turnos', icon: 'pi pi-clock', route: '/caja/turnos' },
-      {
-        label: 'Sucursales',
-        icon: 'pi pi-building',
-        route: '/admin/sucursales',
-        roles: ['SUPER_ADMIN', 'ADMIN'],
-      },
-      {
-        label: 'Usuarios',
-        icon: 'pi pi-user',
-        route: '/admin/usuarios',
-        roles: ['SUPER_ADMIN', 'ADMIN'],
-      },
     ],
   },
+
+  // ── Contabilidad ────────────────────────────────────────────────────────────
+  // Reportes financieros y control de gastos
   {
-    label: 'Comisiones',
-    icon: 'pi pi-percentage',
+    label: 'Contabilidad',
+    icon: 'pi pi-book',
     roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [
       {
-        label: 'Configuración',
-        icon: 'pi pi-cog',
-        route: '/comisiones/configuracion',
-        roles: ['SUPER_ADMIN', 'ADMIN'],
+        label: 'Plan de Cuentas',
+        icon: 'pi pi-list',
+        route: '/contabilidad/plan-cuentas',
       },
       {
-        label: 'Liquidaciones',
-        icon: 'pi pi-wallet',
-        route: '/comisiones/liquidaciones',
-        roles: ['SUPER_ADMIN', 'ADMIN'],
+        label: 'Asientos Contables',
+        icon: 'pi pi-book',
+        route: '/contabilidad/asientos',
       },
+      {
+        label: 'Cierre Contable',
+        icon: 'pi pi-calendar-times',
+        route: '/contabilidad/cierre',
+      },
+      {
+        label: 'Estado de Cuenta',
+        icon: 'pi pi-file-edit',
+        route: '/contabilidad/estado-cuenta',
+      },
+      {
+        label: 'Reporte IVA',
+        icon: 'pi pi-percentage',
+        route: '/contabilidad/reporte-iva',
+      },
+      { label: 'Gastos', icon: 'pi pi-wallet', route: '/gastos' },
     ],
   },
+
+  // ── Recursos Humanos ────────────────────────────────────────────────────────
+  // Nómina de empleados + comisiones de técnicos/vendedores
   {
-    label: 'Nómina',
+    label: 'Recursos Humanos',
     icon: 'pi pi-id-card',
     roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [
+      { label: 'Empleados', icon: 'pi pi-users', route: '/nomina/empleados' },
+      { label: 'Períodos', icon: 'pi pi-calendar', route: '/nomina/periodos' },
       {
-        label: 'Empleados',
-        icon: 'pi pi-users',
-        route: '/nomina/empleados',
-        roles: ['SUPER_ADMIN', 'ADMIN'],
-      },
-      {
-        label: 'Períodos',
-        icon: 'pi pi-calendar',
-        route: '/nomina/periodos',
-        roles: ['SUPER_ADMIN', 'ADMIN'],
-      },
-      {
-        label: 'Liquidación',
+        label: 'Liquidación Nómina',
         icon: 'pi pi-calculator',
         route: '/nomina/liquidacion',
-        roles: ['SUPER_ADMIN', 'ADMIN'],
+      },
+      { label: 'Config. Nómina', icon: 'pi pi-cog', route: '/nomina/config' },
+      {
+        label: 'Comisiones',
+        icon: 'pi pi-percentage',
+        route: '/comisiones/configuracion',
       },
       {
-        label: 'Configuración',
-        icon: 'pi pi-cog',
-        route: '/nomina/config',
-        roles: ['SUPER_ADMIN', 'ADMIN'],
+        label: 'Liquidar Comisiones',
+        icon: 'pi pi-wallet',
+        route: '/comisiones/liquidaciones',
       },
     ],
   },
+
+  // ── Reportes ────────────────────────────────────────────────────────────────
   {
     label: 'Reportes',
     icon: 'pi pi-chart-bar',
@@ -267,6 +337,33 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         label: 'Inventario',
         icon: 'pi pi-chart-pie',
         route: '/reportes/inventario',
+      },
+      {
+        label: 'Reportes Avanzados',
+        icon: 'pi pi-chart-bar',
+        route: '/reportes/avanzados',
+        roles: ['SUPER_ADMIN', 'ADMIN'],
+      },
+    ],
+  },
+
+  // ── Configuración ───────────────────────────────────────────────────────────
+  // Maestros del sistema: contactos, cajas y estructura organizacional
+  {
+    label: 'Terceros y Sucursales',
+    icon: 'pi pi-sliders-h',
+    items: [
+      {
+        label: 'Clientes y Proveedores',
+        icon: 'pi pi-users',
+        route: '/terceros',
+        roles: ['SUPER_ADMIN', 'ADMIN'],
+      },
+      {
+        label: 'Sucursales',
+        icon: 'pi pi-building',
+        route: '/admin/sucursales',
+        roles: ['SUPER_ADMIN', 'ADMIN'],
       },
     ],
   },

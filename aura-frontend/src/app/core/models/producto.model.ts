@@ -20,6 +20,8 @@ export interface ProductoModel {
   permitirStockNegativo: boolean;
   costo: number;
   precio: number;
+  precio2: number | null;
+  precio3: number | null;
   ivaPorcentaje: number;
   impoconsumo: number;
   activo: boolean;
@@ -66,6 +68,8 @@ export interface CreateProductoDto {
   permitirStockNegativo: boolean;
   costo: number;
   precio: number;
+  precio2?: number | null;
+  precio3?: number | null;
   ivaPorcentaje: number;
   impoconsumo: number;
   activo: boolean;

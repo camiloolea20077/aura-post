@@ -1,0 +1,167 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '620px' }"
+  [contentStyle]="{ 'overflow-y': 'auto', 'max-height': '78vh' }"
+  styleClass="aura-dialog"
+  (onHide)="closePanel()"
+>
+  <ng-template pTemplate="header">
+    <div class="sidebar-header" *ngIf="devolucion && !isLoading">
+      <div class="header-icon"><i class="pi pi-replay"></i></div>
+      <div class="header-meta">
+        <span class="header-numero">DEV-{{ devolucion.consecutivo }}</span>
+        <span class="header-fecha">{{
+          formatFecha(devolucion.createdAt)
+        }}</span>
+      </div>
+      <div class="header-tags">
+        <p-tag
+          [value]="getTipoLabel(devolucion.tipo)"
+          [severity]="getTipoSeverity(devolucion.tipo)"
+          [rounded]="true"
+        />
+        <p-tag
+          [value]="getEstadoLabel(devolucion.estado)"
+          [severity]="getEstadoSeverity(devolucion.estado)"
+          [rounded]="true"
+        />
+      </div>
+    </div>
+    <div class="sidebar-header" *ngIf="isLoading">
+      <p-skeleton width="36px" height="36px" borderRadius="10px" />
+      <div style="flex: 1">
+        <p-skeleton width="55%" />
+        <p-skeleton width="38%" height="10px" styleClass="mt-1" />
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- Loading -->
+  <div class="loading-body" *ngIf="isLoading">
+    <p-skeleton height="80px" borderRadius="10px" />
+    <p-skeleton height="180px" borderRadius="10px" />
+    <p-skeleton height="90px" borderRadius="10px" />
+  </div>
+
+  <div class="sidebar-body" *ngIf="devolucion && !isLoading">
+    <!-- Info cabecera -->
+    <div class="info-grid">
+      <div class="info-item">
+        <span class="info-label">N° Venta</span>
+        <span class="info-val mono">{{
+          devolucion.numeroVenta ?? "Venta #" + devolucion.ventaId
+        }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Cliente</span>
+        <span class="info-val"
+          ><i class="pi pi-user"></i>
+          {{ devolucion.clienteNombre ?? "Consumidor final" }}</span
+        >
+      </div>
+      <div class="info-item full">
+        <span class="info-label">Motivo</span>
+        <span class="info-val">{{ devolucion.motivo }}</span>
+      </div>
+      <div class="info-item" *ngIf="devolucion.observaciones">
+        <span class="info-label">Observaciones</span>
+        <span class="info-val">{{ devolucion.observaciones }}</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Reintegra inventario</span>
+        <span class="info-val">
+          <i
+            [class]="
+              devolucion.reintegraInventario
+                ? 'pi pi-check-circle'
+                : 'pi pi-times-circle'
+            "
+            [style.color]="
+              devolucion.reintegraInventario ? '#22c55e' : '#ef4444'
+            "
+          ></i>
+          {{ devolucion.reintegraInventario ? "Sí" : "No" }}
+        </span>
+      </div>
+      <div class="info-item" *ngIf="devolucion.metodoDevolucion && devolucion.metodoDevolucion !== 'SIN_DEVOLUCION'">
+        <span class="info-label">Método devolución dinero</span>
+        <span class="info-val"><i class="pi pi-money-bill"></i> {{ getMetodoLabel(devolucion.metodoDevolucion) }}</span>
+      </div>
+    </div>
+
+    <!-- Cartera afectada -->
+    <div class="cartera-block" *ngIf="devolucion.afectoCartera">
+      <div class="cartera-icon"><i class="pi pi-wallet"></i></div>
+      <div class="cartera-info">
+        <span class="cartera-titulo">Cartera reducida automáticamente</span>
+        <span class="cartera-monto">{{ formatCOP(devolucion.montoCarteraAfectado ?? 0) }} descontados de la cuenta por cobrar</span>
+      </div>
+    </div>
+
+    <p-divider align="left"
+      ><span class="div-label">Productos devueltos</span></p-divider
+    >
+
+    <!-- Detalles -->
+    <div class="detalle-list">
+      <div
+        class="det-item"
+        *ngFor="let d of devolucion.detalles; let i = index"
+      >
+        <div class="det-num">{{ i + 1 }}</div>
+        <div class="det-info">
+          <span class="det-nombre">{{ d.productoNombre }}</span>
+        </div>
+        <div class="det-calc">
+          <span class="det-expr"
+            >{{ d.cantidad }} &times; {{ formatCOP(d.precioUnitario) }}</span
+          >
+          <span class="det-sub">{{ formatCOP(d.subtotalLinea) }}</span>
+        </div>
+      </div>
+      <div class="empty-state-sm" *ngIf="devolucion.detalles.length === 0">
+        <i class="pi pi-inbox"></i>
+        <span>Sin detalles</span>
+      </div>
+    </div>
+
+    <!-- Total -->
+    <div class="totales-block">
+      <div class="tot-row total-fin">
+        <span class="tot-total">TOTAL DEVUELTO</span>
+        <span class="tot-total-val">{{
+          formatCOP(devolucion.totalDevolucion)
+        }}</span>
+      </div>
+    </div>
+
+    <!-- Zona anular -->
+    <div
+      class="anular-zone"
+      *ngIf="devolucion.estado === 'COMPLETADA' && puedeAnular"
+    >
+      <div class="anular-warn">
+        <i class="pi pi-exclamation-triangle"></i>
+        <div>
+          <p class="warn-title">Anular devolución</p>
+          <p class="warn-sub">Esta acción no se puede deshacer.</p>
+        </div>
+      </div>
+      <button
+        pButton
+        type="button"
+        label="Anular devolución"
+        icon="pi pi-ban"
+        class="p-button-danger p-button-outlined p-button-sm"
+        [loading]="isAnulando"
+        (click)="confirmarAnular()"
+      ></button>
+    </div>
+  </div>
+</p-dialog>
+
+<p-toast />
+<p-confirmDialog />

@@ -1,0 +1,301 @@
+<p-toast />
+
+<!-- Hidden file input for CSV -->
+<input id="csv-input" type="file" accept=".csv,.txt" style="display:none"
+  (change)="onFileSelected($event)" />
+
+<div class="module-wrapper">
+  <!-- ── Header ────────────────────────────────────────────────── -->
+  <div class="module-header">
+    <div class="header-left">
+      <span class="header-icon conciliacion-icon"><i class="pi pi-check-square"></i></span>
+      <div>
+        <h2>Conciliación Bancaria</h2>
+        <p>Compara los movimientos del sistema con tu extracto bancario</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button pButton icon="pi pi-upload" label="Importar CSV"
+        class="p-button-outlined p-button-sm"
+        pTooltip="Formato: fecha,concepto,monto"
+        [loading]="importando"
+        (click)="triggerFileInput()">
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Filtros ────────────────────────────────────────────────── -->
+  <div class="filters-bar">
+    <div class="filter-item">
+      <label>Cuenta <span class="req">*</span></label>
+      <p-dropdown
+        [(ngModel)]="cuentaId"
+        [options]="cuentasOpts"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona una cuenta"
+        styleClass="w-full"
+        (onChange)="cargar()"
+      />
+    </div>
+    <div class="filter-item">
+      <label>Período</label>
+      <p-calendar
+        [(ngModel)]="rangoFechas"
+        selectionMode="range"
+        [readonlyInput]="true"
+        dateFormat="dd/mm/yy"
+        placeholder="Desde — Hasta"
+        styleClass="w-full"
+        (onSelect)="cargar()"
+      />
+    </div>
+    <button pButton icon="pi pi-refresh" class="p-button-text p-button-rounded"
+      pTooltip="Recargar" (click)="cargar()" [loading]="loading"></button>
+  </div>
+
+  <!-- ── Sin cuenta seleccionada ───────────────────────────────── -->
+  @if (!cuentaId) {
+    <div class="empty-state">
+      <i class="pi pi-check-square empty-icon"></i>
+      <p>Selecciona una cuenta bancaria para comenzar la conciliación</p>
+    </div>
+  }
+
+  <!-- ── Contenido principal ──────────────────────────────────── -->
+  @if (cuentaId) {
+    <div class="conciliacion-layout">
+
+      <!-- ══ Panel izquierdo ══ -->
+      <div class="movimientos-panel">
+
+        <!-- Tabla del sistema -->
+        <div class="tabla-toolbar">
+          <span class="tabla-titulo">
+            Movimientos del sistema
+            <span class="badge-count">{{ movimientos.length }}</span>
+          </span>
+          <div class="toolbar-actions">
+            <button pButton label="Conciliar todos" icon="pi pi-check-circle"
+              class="p-button-outlined p-button-sm"
+              [disabled]="!pendientesCount || loading"
+              (click)="conciliarTodos()">
+            </button>
+          </div>
+        </div>
+
+        <div class="table-card">
+          <p-table
+            [value]="movimientos"
+            [loading]="loading"
+            styleClass="p-datatable-sm conciliacion-table"
+            [rowHover]="true"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="width:48px">✓</th>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Concepto</th>
+                <th>Referencia</th>
+                <th class="text-right">Entradas</th>
+                <th class="text-right">Salidas</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-m>
+              <tr [class.row-conciliado]="m.conciliado" [class.row-pendiente]="!m.conciliado">
+                <td>
+                  <p-checkbox
+                    [binary]="true"
+                    [ngModel]="m.conciliado"
+                    (onChange)="onCheckboxChange(m, $event.checked)"
+                    [disabled]="toggling.has(m.id)"
+                  />
+                </td>
+                <td>{{ m.fecha }}</td>
+                <td>
+                  <span class="tipo-tag" [class.entrada]="isEntrada(m)" [class.salida]="!isEntrada(m)">
+                    {{ tipoLabel(m.tipo) }}
+                  </span>
+                </td>
+                <td>{{ m.concepto }}</td>
+                <td>{{ m.referencia ?? '—' }}</td>
+                <td class="text-right entrada-monto">
+                  {{ isEntrada(m) ? formatCOP(m.monto) : '' }}
+                </td>
+                <td class="text-right salida-monto">
+                  {{ !isEntrada(m) ? formatCOP(m.monto) : '' }}
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="7" class="empty-row">
+                  <p>No hay movimientos en el período seleccionado para esta cuenta</p>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+
+        <!-- ── Extracto bancario importado ───────────────────── -->
+        @if (extractoLineas.length > 0) {
+          <div class="tabla-toolbar" style="margin-top:1.5rem">
+            <span class="tabla-titulo">
+              Extracto bancario importado
+              <span class="badge-count">{{ extractoLineas.length }}</span>
+              <span class="badge-count matched">{{ extractoMatchedCount }} emparejados</span>
+            </span>
+            <div class="toolbar-actions">
+              <button pButton label="Conciliar emparejados" icon="pi pi-link"
+                class="p-button-sm btn-aura btn-primary"
+                [disabled]="!extractoMatchedCount || loading"
+                (click)="conciliarMatches()">
+              </button>
+              <button pButton icon="pi pi-times" class="p-button-text p-button-rounded p-button-sm"
+                pTooltip="Limpiar extracto" (click)="limpiarExtracto()">
+              </button>
+            </div>
+          </div>
+
+          <div class="table-card">
+            <p-table
+              [value]="extractoLineas"
+              styleClass="p-datatable-sm"
+              [rowHover]="true"
+            >
+              <ng-template pTemplate="header">
+                <tr>
+                  <th style="width:48px"></th>
+                  <th>Fecha</th>
+                  <th>Concepto</th>
+                  <th class="text-right">Monto</th>
+                  <th>Estado</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-linea>
+                <tr [class.row-conciliado]="linea.matched" [class.row-pendiente]="!linea.matched">
+                  <td>
+                    <i [class]="linea.matched ? 'pi pi-check-circle text-green' : 'pi pi-question-circle text-muted'"></i>
+                  </td>
+                  <td>{{ linea.fecha }}</td>
+                  <td>{{ linea.concepto }}</td>
+                  <td class="text-right entrada-monto">{{ formatCOP(linea.monto) }}</td>
+                  <td>
+                    <span class="tipo-tag" [class.entrada]="linea.matched" [class.salida]="!linea.matched">
+                      {{ linea.matched ? 'Emparejado' : 'Sin match' }}
+                    </span>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        }
+
+      </div>
+
+      <!-- ══ Panel derecho: resumen de conciliación ══ -->
+      <div class="resumen-panel">
+
+        <!-- Saldo extracto bancario -->
+        <div class="extracto-card">
+          <div class="extracto-header">
+            <i class="pi pi-building"></i>
+            <span>Saldo según extracto</span>
+          </div>
+          <p-inputNumber
+            [(ngModel)]="saldoExtracto"
+            mode="currency"
+            currency="COP"
+            locale="es-CO"
+            [minFractionDigits]="0"
+            placeholder="$ 0"
+            styleClass="w-full extracto-inp"
+          />
+          @if (extractoLineas.length > 0) {
+            <div class="extracto-calc">
+              <span>Total extracto CSV:</span>
+              <span>{{ formatCOP(extractoTotal) }}</span>
+            </div>
+          }
+          <small>Ingresa el saldo final del extracto bancario</small>
+        </div>
+
+        <!-- Progreso de conciliación -->
+        <div class="progreso-card">
+          <div class="progreso-header">Progreso</div>
+          <div class="progreso-bar-wrap">
+            <div class="progreso-bar"
+              [style.width.%]="movimientos.length ? (conciliadosCount / movimientos.length) * 100 : 0">
+            </div>
+          </div>
+          <div class="progreso-stats">
+            <span class="stat-ok"><i class="pi pi-check-circle"></i> {{ conciliadosCount }} conciliados</span>
+            <span class="stat-pend"><i class="pi pi-clock"></i> {{ pendientesCount }} pendientes</span>
+          </div>
+        </div>
+
+        <!-- Cuadre numérico -->
+        <div class="cuadre-card">
+          <div class="cuadre-title">Cuadre</div>
+
+          <div class="cuadre-row">
+            <span>Saldo inicial cuenta</span>
+            <span>{{ formatCOP(cuentaActual?.saldoInicial ?? 0) }}</span>
+          </div>
+          <div class="cuadre-row entrada">
+            <span>+ Recaudos conciliados</span>
+            <span>{{ formatCOP(totalRecaudosConciliados) }}</span>
+          </div>
+          <div class="cuadre-row salida">
+            <span>− Egresos conciliados</span>
+            <span>{{ formatCOP(totalEgresosConciliados) }}</span>
+          </div>
+          <div class="cuadre-divider"></div>
+          <div class="cuadre-row total-sistema">
+            <span>Saldo sistema conciliado</span>
+            <span>{{ formatCOP(saldoSistemaConciliado) }}</span>
+          </div>
+
+          @if (saldoExtracto != null) {
+            <div class="cuadre-row extracto-row">
+              <span>Saldo extracto</span>
+              <span>{{ formatCOP(saldoExtracto) }}</span>
+            </div>
+            <div class="cuadre-divider"></div>
+            <div class="cuadre-diferencia" [class.ok]="diferencia === 0" [class.diff]="diferencia !== 0">
+              <span>Diferencia</span>
+              <span class="dif-valor">
+                {{ diferencia === 0 ? '✓ Cuadrado' : formatCOP(diferencia!) }}
+              </span>
+            </div>
+          }
+
+          <!-- Pendientes por conciliar -->
+          <div class="cuadre-divider"></div>
+          <div class="cuadre-row pending-section">
+            <span>Pendientes por conciliar:</span>
+          </div>
+          <div class="cuadre-row entrada">
+            <span>&nbsp;+ Recaudos</span>
+            <span>{{ formatCOP(totalRecaudosPendientes) }}</span>
+          </div>
+          <div class="cuadre-row salida">
+            <span>&nbsp;− Egresos</span>
+            <span>{{ formatCOP(totalEgresosPendientes) }}</span>
+          </div>
+        </div>
+
+        <!-- Ayuda CSV -->
+        <div class="csv-help-card">
+          <div class="csv-help-title"><i class="pi pi-info-circle"></i> Formato CSV</div>
+          <code>fecha,concepto,monto</code>
+          <code>2024-01-15,Pago cliente,500000</code>
+          <code>2024-01-16,Servicio,-150000</code>
+          <small>Separador: coma o punto y coma. Fecha: YYYY-MM-DD</small>
+        </div>
+
+      </div>
+    </div>
+  }
+</div>
