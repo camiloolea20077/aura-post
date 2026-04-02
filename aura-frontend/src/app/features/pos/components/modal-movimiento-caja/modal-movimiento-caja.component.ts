@@ -12,6 +12,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DropdownModule } from 'primeng/dropdown';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { ToastModule } from 'primeng/toast';
@@ -40,6 +41,7 @@ import { CuentaPagarTableModel } from '../../../cuentas/models/cuenta-pagar.mode
     FormsModule,
     DialogModule,
     ButtonModule,
+    DropdownModule,
     InputNumberModule,
     InputTextModule,
     ToastModule,
@@ -60,9 +62,16 @@ export class ModalMovimientoCajaComponent implements OnChanges {
     { label: 'Egreso', value: 'EGRESO', icon: 'pi pi-arrow-up' },
   ];
 
+  readonly metodoPagoOpciones = [
+    { label: 'Efectivo', value: 'EFECTIVO' },
+    { label: 'Transferencia', value: 'TRANSFERENCIA' },
+  ];
+
   tipo: TipoMovimiento = 'INGRESO';
   concepto = '';
   monto: number | null = null;
+  metodoPago = 'EFECTIVO';
+  entregadoA = '';
   isSubmitting = false;
 
   cuentaSearch = '';
@@ -89,6 +98,8 @@ export class ModalMovimientoCajaComponent implements OnChanges {
     this.tipo = 'INGRESO';
     this.concepto = '';
     this.monto = null;
+    this.metodoPago = 'EFECTIVO';
+    this.entregadoA = '';
     this.isSubmitting = false;
     this.cuentaSearch = '';
     this.cuentasSugeridas = [];
@@ -184,6 +195,8 @@ export class ModalMovimientoCajaComponent implements OnChanges {
         monto: this.monto!,
         cuentaCobrarId: this.tipo === 'INGRESO' ? this.cuentaSeleccionada?.id ?? null : null,
         cuentaPagarId: this.tipo === 'EGRESO' ? this.cuentaSeleccionada?.id ?? null : null,
+        metodoPago: this.metodoPago,
+        entregadoA: this.entregadoA.trim() || undefined,
       };
       const res = await lastValueFrom(
         this.turnoCajaService.registrarMovimiento(this.turno!.id, dto),

@@ -1,0 +1,141 @@
+.ancho-selector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  .ancho-label {
+    font-size: 0.85rem;
+    color: var(--text-color-secondary);
+    white-space: nowrap;
+  }
+}
+
+.tirilla-preview {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  margin: 0 auto;
+  font-family: 'Courier New', Courier, monospace;
+  line-height: 1.45;
+  color: #000;
+  overflow: hidden;
+  transition: width 0.2s;
+
+  &.tirilla-58 { width: 200px; font-size: 11px; }
+  &.tirilla-80 { width: 270px; font-size: 12px; }
+}
+
+/* Text helpers */
+.t-center  { text-align: center; }
+.t-bold    { font-weight: 700; }
+.t-small   { font-size: 0.88em; }
+.t-lbl     { white-space: nowrap; color: #444; margin-right: 4px; }
+
+.t-title {
+  text-align: center;
+  font-weight: 800;
+  font-size: 1.05em;
+  letter-spacing: 0.5px;
+  margin: 2px 0 4px;
+}
+
+/* Dividers */
+.t-divider-solid {
+  border: none;
+  border-top: 1px solid #000;
+  margin: 5px 0;
+}
+.t-divider-dash {
+  border: none;
+  border-top: 1.5px dashed #555;
+  margin: 5px 0;
+}
+
+/* Rows */
+.t-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 1px 0;
+}
+
+.t-info-row {
+  display: flex;
+  gap: 4px;
+  padding: 1px 0;
+  font-size: 0.92em;
+}
+
+/* Grand total */
+.t-grand-total {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 800;
+  font-size: 1.15em;
+  padding: 4px 0;
+  margin: 6px 0;
+
+  &.grand-ingreso {
+    border-top: 2px solid #16a34a;
+    border-bottom: 2px solid #16a34a;
+    color: #16a34a;
+  }
+
+  &.grand-egreso {
+    border-top: 2px solid #dc2626;
+    border-bottom: 2px solid #dc2626;
+    color: #dc2626;
+  }
+}
+
+/* Firma area */
+.t-firmas {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 18mm;
+}
+
+.t-firma {
+  text-align: center;
+  font-size: 0.8em;
+}
+
+.t-firma-linea {
+  border-top: 1px solid #000;
+  width: 30mm;
+  margin: 0 auto 3px;
+}
+
+/* Footer */
+.t-footer {
+  text-align: center;
+  font-size: 0.75em;
+  color: #666;
+  margin-top: 10px;
+}
+
+.btn-aura {
+  height: 38px;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 1.1rem;
+  transition: all 0.15s;
+
+  &.btn-primary {
+    background: linear-gradient(135deg, #6366f1, #818cf8);
+    color: white;
+    box-shadow: 0 3px 10px rgba(99, 102, 241, 0.35);
+
+    &:hover {
+      box-shadow: 0 5px 15px rgba(99, 102, 241, 0.45);
+      transform: translateY(-1px);
+    }
+  }
+}

@@ -13,6 +13,7 @@ import {
   ComisionConfigPageableDto,
   CreateLiquidacionDto,
   LiquidacionPageableDto,
+  MarcarPagadaDto,
   ReporteTecnicoItem,
   TecnicoDto,
 } from '../models/comision.model';
@@ -102,10 +103,10 @@ export class ComisionService {
     );
   }
 
-  marcarPagada(id: number, fechaPago: string): Observable<ResponseModel<void>> {
+  marcarPagada(id: number, dto: MarcarPagadaDto): Observable<ResponseModel<void>> {
     return this.http.patch<ResponseModel<void>>(
       `${this.baseUrl}/liquidaciones/${id}/pagar`,
-      { fechaPago },
+      dto,
     );
   }
 

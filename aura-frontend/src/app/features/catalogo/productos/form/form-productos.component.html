@@ -971,6 +971,36 @@
             </div>
           </div>
 
+          <!-- Precio 2 y Precio 3 -->
+          <div class="field-row">
+            <div class="field">
+              <label>Precio 2 <span class="optional">(opcional)</span></label>
+              <p-inputNumber
+                formControlName="precio2"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [minFractionDigits]="0"
+                [min]="0"
+                styleClass="w-full"
+                placeholder="0"
+              />
+            </div>
+            <div class="field">
+              <label>Precio 3 <span class="optional">(opcional)</span></label>
+              <p-inputNumber
+                formControlName="precio3"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [minFractionDigits]="0"
+                [min]="0"
+                styleClass="w-full"
+                placeholder="0"
+              />
+            </div>
+          </div>
+
           <!-- Margen de utilidad -->
           <div class="margen-card" *ngIf="frmProducto.get('precio')?.value > 0">
             <div class="margen-info">

@@ -1,13 +1,27 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { filter } from 'rxjs/operators';
+import { lastValueFrom } from 'rxjs';
 
-import { SIDEBAR_MENU, SidebarMenuGroup, SidebarMenuItem } from './sidebar.config';
+import {
+  SIDEBAR_MENU,
+  SidebarMenuGroup,
+  SidebarMenuItem,
+} from './sidebar.config';
 import { IndexDBService } from '../../core/services/index-db.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-sidebar',
@@ -33,8 +47,10 @@ export class SidebarComponent implements OnInit {
 
   constructor(
     private readonly indexDBService: IndexDBService,
+    private readonly http: HttpClient,
     private readonly router: Router,
     private readonly confirmationService: ConfirmationService,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -56,13 +72,84 @@ export class SidebarComponent implements OnInit {
       this.userRole = auth.rol;
       this.empresaNombre = auth.username;
       this.userInitials = this.getInitials(auth.nombreCompleto);
-      this.menuGroups = this.filtrarMenu(auth.rol);
+
+      await this.loadModulosPorPermisos();
 
       // Abrir grupos marcados como defaultOpen
       this.menuGroups
         .filter((g) => g.defaultOpen)
         .forEach((g) => this.openGroups.add(g.label));
     }
+  }
+
+  private async loadModulosPorPermisos(): Promise<void> {
+    try {
+      const res = await lastValueFrom(
+        this.http.get<any>(`${environment.apiUrl}public/empresas/permisos`),
+      );
+      const modulos = res?.data ?? [];
+      this.menuGroups = this.filtrarMenuPorPermisos(modulos);
+      this.cdr.markForCheck();
+    } catch {
+      this.menuGroups = this.filtrarMenuPorPermisos([]);
+    }
+  }
+
+  private filtrarMenuPorPermisos(modulos: any[]): SidebarMenuGroup[] {
+    const gruposDefaultOpenCajero = ['Operaciones', 'Administración'];
+
+    const normalize = (s: string): string =>
+      s
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, '-');
+
+    const modulosActivos = new Set(
+      modulos
+        .filter((m: any) => m.activo)
+        .map((m: any) => normalize(m.moduloCodigo)),
+    );
+
+    const submodulosActivos = new Set(
+      modulos
+        .filter((m: any) => m.activo)
+        .flatMap((m: any) => m.submodulos)
+        .filter((s: any) => s.activo)
+        .map((s: any) => normalize(s.submoduloCodigo)),
+    );
+
+    return SIDEBAR_MENU.map((group) => {
+      const grupoLabelNormalizado = normalize(group.label);
+      const grupoActivo = modulosActivos.has(grupoLabelNormalizado);
+
+      if (!grupoActivo) {
+        group.items = [];
+        return group;
+      }
+
+      group.items = group.items.filter((item) => {
+        const itemCodigo = normalize(item.label);
+        return submodulosActivos.has(itemCodigo);
+      });
+
+      if (this.userRole === 'PLATFORM_ADMIN') {
+        group.items = group.items.filter((item) => {
+          const itemCodigo = normalize(item.label);
+          return submodulosActivos.has(itemCodigo);
+        });
+      }
+
+      return {
+        ...group,
+        defaultOpen:
+          group.defaultOpen ||
+          (this.userRole === 'CAJERO' &&
+            gruposDefaultOpenCajero.includes(group.label)),
+      };
+    })
+      .filter((group) => group.items.length > 0)
+      .filter((group) => this.tieneAcceso(group.roles, this.userRole));
   }
 
   /** Abre el grupo que contiene la ruta activa */
@@ -88,24 +175,13 @@ export class SidebarComponent implements OnInit {
   }
 
   isOpen(group: SidebarMenuGroup): boolean {
-    return this.collapsed || group.alwaysOpen || this.openGroups.has(group.label);
-  }
-
-  // ── Filtra grupos e ítems según el rol ────────────────────
-  private filtrarMenu(rol: string): SidebarMenuGroup[] {
-    const gruposDefaultOpenCajero = ['Operaciones', 'Administración'];
-    return SIDEBAR_MENU.filter((group) => this.tieneAcceso(group.roles, rol))
-      .map((group) => ({
-        ...group,
-        items: group.items.filter((item) => this.tieneAcceso(item.roles, rol)),
-        defaultOpen:
-          group.defaultOpen ||
-          (rol === 'CAJERO' && gruposDefaultOpenCajero.includes(group.label)),
-      }))
-      .filter((group) => group.items.length > 0);
+    return (
+      this.collapsed || group.alwaysOpen || this.openGroups.has(group.label)
+    );
   }
 
   private tieneAcceso(roles: string[] | undefined, rol: string): boolean {
+    if (rol === 'PLATFORM_ADMIN') return true;
     if (!roles || roles.length === 0) return true;
     return roles.includes(rol);
   }

@@ -44,6 +44,7 @@
           <a *ngFor="let item of group.items"
             [routerLink]="item.route"
             routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
             class="nav-item"
             [class.highlight]="item.highlight"
             [pTooltip]="collapsed ? item.label : ''"

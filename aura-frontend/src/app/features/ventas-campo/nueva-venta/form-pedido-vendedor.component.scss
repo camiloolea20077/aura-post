@@ -1,0 +1,288 @@
+.form-body {
+  padding: 0.25rem 0;
+}
+
+.form-section {
+  margin-bottom: 1rem;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 0.75rem;
+
+  i {
+    color: #6366f1;
+    font-size: 0.9rem;
+  }
+
+  .opcional {
+    font-weight: 400;
+    color: #9ca3af;
+    font-size: 0.78rem;
+  }
+}
+
+// Cliente
+.cliente-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cliente-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.9rem;
+  background: #f0f9ff;
+  border: 1.5px solid #bae6fd;
+  border-radius: 10px;
+}
+
+.cliente-av {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+
+.cliente-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.cliente-nombre-sel {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.cliente-doc-sel {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.btn-remove-cliente {
+  margin-left: auto;
+}
+
+.cf-label {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+
+  i {
+    font-size: 0.75rem;
+  }
+}
+
+// Autocomplete opciones
+::ng-deep .p-autocomplete-panel {
+  .p-autocomplete-item {
+    padding: 0.5rem 0.85rem;
+  }
+}
+
+.cliente-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.cliente-nombre {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.cliente-doc {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.producto-option {
+  padding: 0.15rem 0;
+}
+
+.prod-nombre {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.prod-meta {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 0.15rem;
+}
+
+.prod-sku {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-family: "JetBrains Mono", monospace;
+  background: #f1f5f9;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+}
+
+.prod-precio {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #6366f1;
+  font-family: "JetBrains Mono", monospace;
+}
+
+// Carrito tabla
+.carrito-table {
+  margin-top: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.83rem;
+  }
+
+  thead tr {
+    background: #fafbfe;
+    border-bottom: 2px solid #e2e8f0;
+
+    th {
+      padding: 0.6rem 0.75rem;
+      text-align: left;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #94a3b8;
+    }
+  }
+
+  tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+
+    td {
+      padding: 0.5rem 0.75rem;
+      vertical-align: middle;
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover td {
+      background: rgba(99, 102, 241, 0.02);
+    }
+  }
+}
+
+.item-nombre {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.83rem;
+}
+
+.item-sku {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.val-col {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.82rem;
+  color: #475569;
+}
+
+.subtotal-col {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+::ng-deep .btn-remove-item {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 7px !important;
+  padding: 0 !important;
+}
+
+.carrito-empty {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.25rem;
+  background: #f8fafc;
+  border: 1.5px dashed #e2e8f0;
+  border-radius: 10px;
+  color: #94a3b8;
+  font-size: 0.83rem;
+
+  i {
+    font-size: 1.2rem;
+  }
+}
+
+// Totales
+.totales-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.3rem;
+  padding: 0.75rem 0;
+}
+
+.total-row {
+  display: flex;
+  gap: 2.5rem;
+  font-size: 0.84rem;
+  color: #475569;
+
+  span:last-child {
+    font-family: "JetBrains Mono", monospace;
+    text-align: right;
+    min-width: 120px;
+  }
+
+  &.total-final {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #1e293b;
+    border-top: 2px solid #e2e8f0;
+    padding-top: 0.4rem;
+    margin-top: 0.2rem;
+
+    span:last-child {
+      color: #6366f1;
+    }
+  }
+}
+
+.text-center {
+  text-align: center !important;
+}
+
+.text-right {
+  text-align: right !important;
+}
