@@ -64,6 +64,15 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "ventas": {
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.ventas.ts"
+                }
+              ],
+              "outputHashing": "all"
             }
           },
           "defaultConfiguration": "production"
@@ -76,6 +85,9 @@
             },
             "development": {
               "buildTarget": "aura-frontend:build:development"
+            },
+            "ventas": {
+              "buildTarget": "aura-frontend:build:ventas"
             }
           },
           "defaultConfiguration": "development"

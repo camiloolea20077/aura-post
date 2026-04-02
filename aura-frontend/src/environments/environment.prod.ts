@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://back-ventas.cloudtecnology.cloud/api/',
+  apiUrl: 'https://back-v0.cloudtecnology.cloud/api/',
 };
