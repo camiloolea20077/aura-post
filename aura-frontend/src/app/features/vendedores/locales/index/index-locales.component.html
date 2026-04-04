@@ -69,15 +69,25 @@
           <td class="mono text-muted">{{ l.id }}</td>
           <td class="fw-600">{{ l.nombre }}</td>
           <td>{{ l.direccion }}</td>
-          <td>{{ l.barrio ?? '-' }}</td>
-          <td>{{ l.ciudad ?? '-' }}</td>
-          <td>{{ l.vendedorActualNombre ?? '-' }}</td>
-          <td>{{ l.rutaNombre ?? '-' }}</td>
+          <td>{{ l.barrio ?? "-" }}</td>
+          <td>{{ l.ciudad ?? "-" }}</td>
+          <td>{{ l.vendedorActualNombre ?? "-" }}</td>
+          <td>{{ l.rutaNombre ?? "-" }}</td>
           <td>
-            <p-tag [value]="l.activo ? 'Activo' : 'Inactivo'" [severity]="getSeverity(l.activo)" />
+            <p-tag
+              [value]="l.activo ? 'Activo' : 'Inactivo'"
+              [severity]="getSeverity(l.activo)"
+            />
           </td>
           <td>
             <div class="actions">
+              <button
+                pButton
+                icon="pi pi-user-plus"
+                class="p-button-text p-button-sm"
+                pTooltip="Asignar vendedor"
+                (click)="abrirAsignarVendedor(l)"
+              ></button>
               <button
                 pButton
                 icon="pi pi-pencil"
@@ -112,5 +122,50 @@
   (saved)="onSaved()"
   (visibleChange)="onFormClosed()"
 />
+
+<!-- Modal asignar vendedor -->
+<p-dialog
+  [header]="'Asignar Vendedor - ' + (localParaAsignar?.nombre || '')"
+  [(visible)]="showAsignarVendedor"
+  [modal]="true"
+  [style]="{ width: '420px' }"
+  [draggable]="false"
+>
+  <div class="form-field">
+    <label>Seleccionar vendedor</label>
+    <p-dropdown
+      [options]="vendedores"
+      [(ngModel)]="selectedVendedorId"
+      optionLabel="label"
+      optionValue="value"
+      placeholder="Selecciona un vendedor"
+      [filter]="true"
+      [filterBy]="'label'"
+      appendTo="body"
+      [showClear]="true"
+      [style]="{ width: '100%' }"
+    />
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="showAsignarVendedor = false"
+    ></button>
+    <button
+      pButton
+      label="Asignar"
+      icon="pi pi-check"
+      class="btn-aura"
+      [loading]="savingVendedor"
+      [disabled]="selectedVendedorId === null"
+      (click)="asignarVendedor()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
 <p-confirmDialog />
 <p-toast />

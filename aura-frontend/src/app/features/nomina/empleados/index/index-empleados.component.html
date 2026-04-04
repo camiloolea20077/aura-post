@@ -7,14 +7,24 @@
         <p class="page-sub">Gestión del personal vinculado a la empresa</p>
       </div>
     </div>
-    <button
-      pButton
-      type="button"
-      label="Nuevo empleado"
-      icon="pi pi-plus"
-      class="btn-nomina"
-      (click)="openForm()"
-    ></button>
+    <div class="header-actions">
+      <button
+        pButton
+        type="button"
+        label="Nuevo cargo"
+        icon="pi pi-briefcase"
+        class="p-button-outlined"
+        (click)="showTipoEmpleadoModal = true"
+      ></button>
+      <button
+        pButton
+        type="button"
+        label="Nuevo empleado"
+        icon="pi pi-plus"
+        class="btn-nomina"
+        (click)="openForm()"
+      ></button>
+    </div>
   </div>
 
   <div class="card">
@@ -189,6 +199,11 @@
   [empleadoEdit]="selectedEmpleado"
   (modalClosed)="onFormClosed()"
   (empleadoSaved)="onEmpleadoSaved()"
+/>
+
+<app-form-tipo-empleado
+  [(visible)]="showTipoEmpleadoModal"
+  (saved)="onTipoEmpleadoSaved()"
 />
 
 <p-toast />

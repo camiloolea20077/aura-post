@@ -36,4 +36,10 @@ export class LocalService {
   delete(id: number): Observable<any> {
     return this.http.delete<any>(`${this.base}/${id}`);
   }
+
+  asignarVendedor(localId: number, vendedorId: number): Observable<any> {
+    return this.http.post<any>(`${this.base}/${localId}/asignar-vendedor`, {
+      vendedorId,
+    });
+  }
 }

@@ -343,6 +343,16 @@ export const routes: Routes = [
           ),
       },
 
+      // Configuración
+      {
+        path: 'configuracion/tipos-empleado',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/configuracion/tipos-empleado/index/index-tipos-empleado.component').then(
+            (m) => m.IndexTiposEmpleadoComponent,
+          ),
+      },
+
       // Comisiones
       {
         path: 'comisiones/configuracion',

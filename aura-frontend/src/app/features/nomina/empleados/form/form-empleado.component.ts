@@ -3,6 +3,7 @@ import {
   EventEmitter,
   Input,
   OnChanges,
+  OnInit,
   Output,
   SimpleChanges,
 } from '@angular/core';
@@ -10,12 +11,15 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+import { TextareaModule } from 'primeng/textarea';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { CalendarModule } from 'primeng/calendar';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { lastValueFrom } from 'rxjs';
 
 import { NominaService } from '../../../../core/services/nomina.service';
+import { TipoEmpleadoService } from '../../../configuracion/tipos-empleado/services/tipo-empleado.service';
 import {
   CreateEmpleadoDto,
   EmpleadoModel,
@@ -31,13 +35,15 @@ import { AlertService } from '../../../../shared/pipes/alert.service';
     DialogModule,
     ButtonModule,
     InputTextModule,
+    TextareaModule,
+    InputNumberModule,
     DropdownModule,
     CalendarModule,
   ],
   templateUrl: './form-empleado.component.html',
   styleUrls: ['./form-empleado.component.scss'],
 })
-export class FormEmpleadoComponent implements OnChanges {
+export class FormEmpleadoComponent implements OnChanges, OnInit {
   @Input() displayModal = false;
   @Input() empleadoEdit: EmpleadoModel | null = null;
   @Output() modalClosed = new EventEmitter<void>();
@@ -74,12 +80,33 @@ export class FormEmpleadoComponent implements OnChanges {
     { label: 'Nivel V - 6.960%', value: 5 },
   ];
 
+  public tipoEmpleadoOpts: { label: string; value: number }[] = [];
+
   public fechaIngreso: Date | null = null;
+
+  public showNewTipoEmpleado = false;
+  public newTipoEmpleado = { nombre: '', descripcion: '' };
+  public savingTipoEmpleado = false;
 
   constructor(
     private readonly nominaService: NominaService,
+    private readonly tipoEmpleadoService: TipoEmpleadoService,
     private readonly alertService: AlertService,
   ) {}
+
+  async ngOnInit(): Promise<void> {
+    await this.loadTipoEmpleados();
+  }
+
+  async loadTipoEmpleados(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.tipoEmpleadoService.getAll());
+      this.tipoEmpleadoOpts =
+        res?.data?.map((t) => ({ label: t.nombre, value: t.id })) ?? [];
+    } catch {
+      this.tipoEmpleadoOpts = [];
+    }
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['displayModal']?.currentValue) {
@@ -90,6 +117,7 @@ export class FormEmpleadoComponent implements OnChanges {
           tipoDocumento: this.empleadoEdit.tipoDocumento,
           numeroDocumento: this.empleadoEdit.numeroDocumento,
           cargo: this.empleadoEdit.cargo,
+          tipoEmpleadoId: this.empleadoEdit.tipoEmpleadoId,
           fechaIngreso: this.empleadoEdit.fechaIngreso,
           salarioBase: this.empleadoEdit.salarioBase,
           tipoContrato: this.empleadoEdit.tipoContrato,
@@ -148,6 +176,34 @@ export class FormEmpleadoComponent implements OnChanges {
     }
   }
 
+  async createTipoEmpleado(): Promise<void> {
+    if (!this.newTipoEmpleado.nombre.trim()) {
+      this.alertService.showWarn('Campo requerido', 'El nombre es obligatorio');
+      return;
+    }
+
+    this.savingTipoEmpleado = true;
+    try {
+      const res = await lastValueFrom(
+        this.tipoEmpleadoService.create({
+          nombre: this.newTipoEmpleado.nombre.toUpperCase(),
+          descripcion: this.newTipoEmpleado.descripcion || null,
+        }),
+      );
+      this.alertService.showSuccess('Creado', 'Tipo de empleado creado');
+      this.form.tipoEmpleadoId = res.data.id;
+      await this.loadTipoEmpleados();
+      this.showNewTipoEmpleado = false;
+      this.newTipoEmpleado = { nombre: '', descripcion: '' };
+    } catch (err: unknown) {
+      const msg =
+        (err as any)?.error?.message ?? 'No se pudo crear el tipo de empleado';
+      this.alertService.showError('Error', msg);
+    } finally {
+      this.savingTipoEmpleado = false;
+    }
+  }
+
   close(): void {
     this.modalClosed.emit();
   }
@@ -159,6 +215,7 @@ export class FormEmpleadoComponent implements OnChanges {
       tipoDocumento: 'CC',
       numeroDocumento: '',
       cargo: null,
+      tipoEmpleadoId: null,
       fechaIngreso: '',
       salarioBase: 0,
       tipoContrato: 'INDEFINIDO',

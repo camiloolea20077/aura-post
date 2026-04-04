@@ -204,6 +204,7 @@ export interface VendedorModel {
 
 export interface VendedorFilter {
   activo?: boolean | null;
+  cargo?: string | null;
 }
 
 // ─── Pageable ─────────────────────────────────────────────────

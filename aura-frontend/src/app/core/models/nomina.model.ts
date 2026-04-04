@@ -60,6 +60,8 @@ export interface EmpleadoModel {
   tipoDocumento: string;
   numeroDocumento: string;
   cargo: string | null;
+  tipoEmpleadoId: number | null;
+  tipoEmpleadoNombre: string | null;
   fechaIngreso: string;
   fechaRetiro: string | null;
   salarioBase: number;
@@ -82,6 +84,8 @@ export interface EmpleadoTableModel {
   tipoDocumento: string;
   numeroDocumento: string;
   cargo: string | null;
+  tipoEmpleadoId: number | null;
+  tipoEmpleadoNombre: string | null;
   fechaIngreso: string;
   salarioBase: number;
   tipoContrato: TipoContrato;
@@ -95,6 +99,7 @@ export interface CreateEmpleadoDto {
   tipoDocumento: string;
   numeroDocumento: string;
   cargo?: string | null;
+  tipoEmpleadoId?: number | null;
   fechaIngreso: string;
   salarioBase: number;
   tipoContrato: TipoContrato;
