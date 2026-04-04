@@ -29,6 +29,7 @@
         formControlName="nombre"
         placeholder="Productos"
         class="w-full"
+        (change)="generateCode()"
         [class.ng-invalid]="isInvalid('nombre')"
       />
       <small class="field-error" *ngIf="isInvalid('nombre')">Requerido</small>
@@ -40,6 +41,7 @@
         formControlName="codigo"
         placeholder="productos"
         class="w-full"
+        [readonly]="true"
         [class.ng-invalid]="isInvalid('codigo')"
       />
       <small class="field-error" *ngIf="isInvalid('codigo')">Requerido</small>

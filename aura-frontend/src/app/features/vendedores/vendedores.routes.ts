@@ -2,7 +2,7 @@ import { Routes } from '@angular/router';
 
 export const VENDEDORES_ROUTES: Routes = [
   {
-    path: '',
+    path: 'vendedores',
     loadComponent: () =>
       import('./index/index-vendedores.component').then(
         (m) => m.IndexVendedoresComponent,

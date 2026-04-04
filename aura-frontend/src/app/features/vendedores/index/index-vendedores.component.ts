@@ -68,6 +68,7 @@ export class IndexVendedoresComponent implements OnInit {
           search: this.search || null,
           params: {
             activo: true,
+            cargo: 'VENDEDOR',
           },
         }),
       );

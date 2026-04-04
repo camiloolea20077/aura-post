@@ -200,7 +200,7 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
       {
         label: 'Vendedores',
         icon: 'pi pi-users',
-        route: '/vendedores',
+        route: '/vendedores/vendedores',
       },
       {
         label: 'Locales',

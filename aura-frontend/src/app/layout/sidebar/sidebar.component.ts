@@ -22,6 +22,7 @@ import {
 } from './sidebar.config';
 import { IndexDBService } from '../../core/services/index-db.service';
 import { environment } from '../../../environments/environment';
+import { normalize } from '../../shared/utils/commons';
 
 @Component({
   selector: 'app-sidebar',
@@ -97,13 +98,6 @@ export class SidebarComponent implements OnInit {
 
   private filtrarMenuPorPermisos(modulos: any[]): SidebarMenuGroup[] {
     const gruposDefaultOpenCajero = ['Operaciones', 'Administración'];
-
-    const normalize = (s: string): string =>
-      s
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/\s+/g, '-');
 
     const modulosActivos = new Set(
       modulos
