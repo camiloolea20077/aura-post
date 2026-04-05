@@ -1,5 +1,12 @@
 <div class="locales-container">
   <div class="toolbar">
+    <button
+      pButton
+      label="Nuevo Local"
+      icon="pi pi-plus"
+      class="btn-aura ml-auto"
+      (click)="nuevo()"
+    ></button>
     <span class="search-wrap">
       <i class="pi pi-search"></i>
       <input
@@ -11,13 +18,6 @@
         class="search-input"
       />
     </span>
-    <button
-      pButton
-      label="Nuevo Local"
-      icon="pi pi-plus"
-      class="btn-aura"
-      (click)="nuevo()"
-    ></button>
   </div>
 
   <div class="table-card">
@@ -50,8 +50,8 @@
           <td class="mono text-muted">{{ l.id }}</td>
           <td class="fw-600">{{ l.nombre }}</td>
           <td>{{ l.direccion }}</td>
-          <td>{{ l.barrio ?? '-' }}</td>
-          <td>{{ l.ciudadNombre ?? '-' }}</td>
+          <td>{{ l.barrio ?? "-" }}</td>
+          <td>{{ l.ciudadNombre ?? "-" }}</td>
           <td>
             <p-tag
               [value]="l.activo ? 'Activo' : 'Inactivo'"

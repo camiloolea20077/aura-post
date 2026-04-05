@@ -93,7 +93,6 @@ export class LoginComponent implements OnInit {
         );
         const rol = response.data.rol;
         setTimeout(() => {
-          console.log(rol, ROLES_REDIRECT[rol], ROLES_REDIRECT['DEFAULT']);
           this.router.navigate([
             ROLES_REDIRECT[rol] ?? ROLES_REDIRECT['DEFAULT'],
           ]);

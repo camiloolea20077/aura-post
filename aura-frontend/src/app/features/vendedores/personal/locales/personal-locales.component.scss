@@ -8,6 +8,7 @@
   justify-content: space-between;
   margin-bottom: 1rem;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .search-wrap {
@@ -33,6 +34,10 @@
   }
 }
 
+.ml-auto {
+  margin-left: auto;
+}
+
 .table-card {
   background: #fff;
   border: 1.5px solid #e2e8f0;
@@ -50,7 +55,7 @@
 }
 
 .mono {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
 }
 
 .fw-600 {
@@ -94,4 +99,10 @@
   background: linear-gradient(135deg, #6366f1, #818cf8) !important;
   border: none !important;
   font-weight: 600 !important;
+}
+
+@media (min-width: 768px) {
+  .toolbar {
+    flex-direction: row-reverse;
+  }
 }
