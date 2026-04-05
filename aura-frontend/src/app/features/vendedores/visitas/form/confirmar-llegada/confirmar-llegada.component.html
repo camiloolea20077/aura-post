@@ -3,7 +3,7 @@
   [(visible)]="visible"
   (onHide)="close()"
   [modal]="true"
-  [style]="{ width: '420px' }"
+  [style]="{ width: '450px' }"
   [draggable]="false"
   [resizable]="false"
 >
@@ -22,26 +22,6 @@
       </div>
     </div>
 
-    <div class="location-actions">
-      <p-button
-        label="Confirmar con GPS"
-        icon="pi pi-map-marker"
-        class="p-button-success w-full"
-        [loading]="loadingGPS"
-        (click)="getLocation()"
-      />
-      <div class="divider-text">
-        <span>ó</span>
-      </div>
-      <p-button
-        label="Confirmar Manualmente"
-        icon="pi pi-check"
-        class="p-button-outlined w-full"
-        [loading]="loading"
-        (click)="confirmarManual()"
-      />
-    </div>
-
     <div class="observaciones">
       <label class="field-label">Observaciones</label>
       <textarea
@@ -51,6 +31,18 @@
         rows="3"
         class="w-full"
       ></textarea>
+    </div>
+
+    <div class="qr-section">
+      <app-qr-scanner
+        title="Escanee el QR del local para confirmar llegada"
+        [config]="{ stopOnFirstScan: true, facingMode: 'environment' }"
+        (scanned)="onQrScanned($event)"
+        scanMode="qr-only"
+        theme="light"
+        [showModeSelector]="false"
+        [showResult]="false"
+      />
     </div>
   </div>
 

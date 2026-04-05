@@ -29,6 +29,7 @@ import {
 import { VisitaService } from '../services/visita.service';
 import { LocalService } from '../../locales/services/local.service';
 import { RutaService } from '../../rutas/services/ruta.service';
+import { formatDate } from '../../../../shared/utils/date.utils';
 
 @Component({
   selector: 'app-form-visita',
@@ -141,10 +142,11 @@ export class FormVisitaComponent implements OnChanges {
       const dto: CreateVisitaDto = {
         localId: this.form.value.localId,
         rutaId: this.form.value.rutaId,
-        fechaProgramada: this.form.value.fechaProgramada
-          .toISOString()
-          .split('T')[0],
-        horaProgramada: this.form.value.horaProgramada,
+        fechaProgramada: formatDate(
+          this.form.value.fechaProgramada,
+          'yyyy-MM-dd',
+        ),
+        horaProgramada: formatDate(this.form.value.horaProgramada, 'HH:mm'),
       };
       if (this.isEdit) {
         await lastValueFrom(this.visitaService.delete(this.visita!.id));

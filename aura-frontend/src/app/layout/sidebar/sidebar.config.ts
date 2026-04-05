@@ -217,6 +217,16 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         icon: 'pi pi-calendar',
         route: '/vendedores/visitas',
       },
+      {
+        label: 'Escanear QR',
+        icon: 'pi pi-qrcode',
+        route: '/vendedores/escanear',
+      },
+      {
+        label: 'Mi Perfil',
+        icon: 'pi pi-user',
+        route: '/vendedores/personal',
+      },
     ],
   },
 

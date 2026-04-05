@@ -1,0 +1,36 @@
+<div class="module-container" *ngIf="!loading">
+  <div class="module-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="pi pi-user"></i>
+      </div>
+      <div>
+        <h2 class="header-title">Mi Perfil</h2>
+        <p class="header-sub" *ngIf="vendedor">
+          {{ vendedor.nombres }} {{ vendedor.apellidos }} - {{ vendedor.numeroDocumento }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs-container">
+    <p-tabView [(activeIndex)]="activeTab" (onChange)="onTabChange($event.index)">
+      <p-tabPanel header="Mis Locales">
+        <app-personal-locales [vendedorId]="vendedorId" />
+      </p-tabPanel>
+      <p-tabPanel header="Mis Rutas">
+        <app-personal-rutas [vendedorId]="vendedorId" />
+      </p-tabPanel>
+      <p-tabPanel header="Visitas">
+        <app-personal-visitas [vendedorId]="vendedorId" />
+      </p-tabPanel>
+    </p-tabView>
+  </div>
+</div>
+
+<div class="loading-container" *ngIf="loading">
+  <i class="pi pi-spin pi-spinner"></i>
+  <p>Cargando...</p>
+</div>
+
+<p-toast />

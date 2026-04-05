@@ -18,6 +18,7 @@ import { ToastModule } from 'primeng/toast';
 import { DialogModule } from 'primeng/dialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
+import { QRCodeModule } from 'angularx-qrcode';
 
 import { AlertService } from '../../../../shared/pipes/alert.service';
 import { FormLocalComponent } from '../form/form-local.component';
@@ -43,6 +44,7 @@ import { ActivatedRoute, Router } from '@angular/router';
     ToastModule,
     DialogModule,
     FormLocalComponent,
+    QRCodeModule,
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './index-locales.component.html',
@@ -64,6 +66,10 @@ export class IndexLocalesComponent implements OnInit {
   vendedores: { label: string; value: number }[] = [];
   selectedVendedorId: number | null = null;
   savingVendedor = false;
+
+  showQR = false;
+  qrData = '';
+  qrLocal: LocalTableModel | null = null;
 
   filtroVendedor: number | null = null;
   filtroActivo: boolean | null = null;
@@ -222,5 +228,48 @@ export class IndexLocalesComponent implements OnInit {
     } finally {
       this.savingVendedor = false;
     }
+  }
+
+  private encodeBase64(id: number): string {
+    return btoa(id.toString());
+  }
+
+  abrirQR(local: LocalTableModel): void {
+    this.qrLocal = local;
+    this.qrData = this.encodeBase64(local.id);
+    this.showQR = true;
+    this.cdr.markForCheck();
+  }
+
+  cerrarQR(): void {
+    this.showQR = false;
+    this.qrLocal = null;
+    this.qrData = '';
+    this.cdr.markForCheck();
+  }
+
+  printQR(): void {
+    const printContent = document.getElementById('qr-print-area');
+    if (!printContent) return;
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>QR - ${this.qrLocal?.nombre}</title>
+          <style>
+            body { font-family: Arial, sans-serif; text-align: center; padding: 40px; }
+            .qr-img { width: 200px; height: 200px; }
+            .local-name { font-size: 18px; font-weight: bold; margin: 16px 0; }
+            .local-id { font-size: 14px; color: #666; }
+          </style>
+        </head>
+        <body>
+          ${printContent.innerHTML}
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
   }
 }

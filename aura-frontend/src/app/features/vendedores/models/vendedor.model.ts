@@ -138,6 +138,8 @@ export interface VisitaModel {
   localId: number;
   localNombre: string;
   localDireccion: string;
+  localLatitud: number | null;
+  localLongitud: number | null;
   vendedorId: number;
   vendedorNombre: string;
   rutaId: number | null;
@@ -147,6 +149,7 @@ export interface VisitaModel {
   fechaReal: string | null;
   latitudLlegada: number | null;
   longitudLlegada: number | null;
+  distanciaMetros: number | null;
   estado: EstadoVisita;
   observaciones: string | null;
   createdAt: string;
@@ -170,11 +173,25 @@ export interface CreateVisitaDto {
   rutaId?: number | null;
   fechaProgramada: string;
   horaProgramada?: string | null;
+  observaciones?: string | null;
+  latitud?: number | null;
+  longitud?: number | null;
+}
+
+export interface CreateVisitaAndConfirmarDto {
+  localId: number;
+  rutaId?: number | null;
+  vendedorId: number | null;
+  fechaProgramada: string;
+  horaProgramada?: string | null;
+  observaciones?: string | null;
+  latitudLlegada?: number | null;
+  longitudLlegada?: number | null;
 }
 
 export interface ConfirmarLlegadaDto {
-  latitud?: number;
-  longitud?: number;
+  latitud?: number | null;
+  longitud?: number | null;
   confirmacionManual?: boolean;
   observaciones?: string | null;
 }

@@ -87,9 +87,9 @@
           <td class="fw-600">{{ v.localNombre }}</td>
           <td>{{ v.localDireccion }}</td>
           <td>{{ v.vendedorNombre }}</td>
-          <td>{{ v.rutaNombre ?? '-' }}</td>
+          <td>{{ v.rutaNombre ?? "-" }}</td>
           <td class="mono">
-            {{ v.fechaProgramada | date: 'dd/MM/yyyy' }}
+            {{ v.fechaProgramada | date: "dd/MM/yyyy" }}
             <span *ngIf="v.horaProgramada" class="text-muted">
               {{ v.horaProgramada }}
             </span>
@@ -99,6 +99,14 @@
           </td>
           <td>
             <div class="actions">
+              <button
+                pButton
+                icon="pi pi-map"
+                class="p-button-text p-button-sm"
+                pTooltip="Ver detalle"
+                *ngIf="v.estado && v.estado !== 'PROGRAMADA'"
+                (click)="openDetalle(v)"
+              ></button>
               <button
                 pButton
                 icon="pi pi-check"
@@ -115,6 +123,14 @@
                 *ngIf="v.estado === 'PROGRAMADA'"
                 (click)="confirmCancel(v)"
               ></button>
+              @if (v.distanciaMetros > maxDistance) {
+                <button
+                  pButton
+                  icon="pi pi-exclamation-triangle"
+                  class="p-button-danger p-button-sm"
+                  pTooltip="Fuera de rango {{ v.distanciaMetros }} metros"
+                ></button>
+              }
             </div>
           </td>
         </tr>
@@ -128,21 +144,34 @@
   </div>
 </div>
 
-<!-- Modal formulario -->
-<app-form-visita
-  [(visible)]="showForm"
-  [visita]="selectedVisita"
-  (saved)="onSaved()"
-  (visibleChange)="onFormClosed()"
-/>
+@if (showForm) {
+  <!-- Modal formulario -->
+  <app-form-visita
+    [(visible)]="showForm"
+    [visita]="selectedVisita"
+    (saved)="onSaved()"
+    (visibleChange)="onFormClosed()"
+  />
+}
 
-<!-- Modal confirmar llegada -->
-<app-confirmar-llegada
-  [(visible)]="showConfirmar"
-  [visita]="selectedVisita"
-  (confirmado)="onConfirmado()"
-  (visibleChange)="onConfirmarClosed()"
-/>
+@if (showConfirmar) {
+  <!-- Modal confirmar llegada -->
+  <app-confirmar-llegada
+    [(visible)]="showConfirmar"
+    [visita]="selectedVisita"
+    (confirmado)="onConfirmado()"
+    (visibleChange)="onConfirmarClosed()"
+  />
+}
+
+@if (showDetalle) {
+  <!-- Modal detalle -->
+  <app-detalle-visita
+    [(visible)]="showDetalle"
+    [visitaId]="selectedDetalleId"
+    (visibleChange)="onDetalleClosed()"
+  />
+}
 
 <p-confirmDialog />
 <p-toast />

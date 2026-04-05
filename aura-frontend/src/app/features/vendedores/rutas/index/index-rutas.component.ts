@@ -21,6 +21,7 @@ import { AlertService } from '../../../../shared/pipes/alert.service';
 import { FormRutaComponent } from '../form/form-ruta.component';
 import { RutaTableModel } from '../../models/vendedor.model';
 import { RutaService } from '../services/ruta.service';
+import { DIAS_SEMANA_MAP } from '../constants';
 
 @Component({
   selector: 'app-index-rutas',
@@ -53,6 +54,7 @@ export class IndexRutasComponent implements OnInit {
 
   showForm = false;
   selectedRuta: RutaTableModel | null = null;
+  semanaMap = DIAS_SEMANA_MAP;
 
   constructor(
     private readonly service: RutaService,
@@ -135,7 +137,10 @@ export class IndexRutasComponent implements OnInit {
       this.alert.showSuccess('Eliminado', 'Ruta eliminada correctamente');
       this.load();
     } catch (err: any) {
-      this.alert.showError('Error', err?.error?.message ?? 'No se pudo eliminar');
+      this.alert.showError(
+        'Error',
+        err?.error?.message ?? 'No se pudo eliminar',
+      );
     }
   }
 

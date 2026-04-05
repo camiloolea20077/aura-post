@@ -5,6 +5,7 @@ import {
   OnChanges,
   Output,
   ChangeDetectorRef,
+  OnInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -21,9 +22,15 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { lastValueFrom } from 'rxjs';
 
 import { AlertService } from '../../../../shared/pipes/alert.service';
-import { RutaTableModel, CreateRutaDto, LocalTableModel } from '../../models/vendedor.model';
+import {
+  RutaTableModel,
+  CreateRutaDto,
+  LocalTableModel,
+} from '../../models/vendedor.model';
 import { RutaService } from '../services/ruta.service';
 import { LocalService } from '../../locales/services/local.service';
+import { VendedorService } from '../../services/vendedor.service';
+import { DIAS_SEMANA_OPTIONS } from '../constants';
 
 @Component({
   selector: 'app-form-ruta',
@@ -40,7 +47,7 @@ import { LocalService } from '../../locales/services/local.service';
   templateUrl: './form-ruta.component.html',
   styleUrls: ['./form-ruta.component.scss'],
 })
-export class FormRutaComponent implements OnChanges {
+export class FormRutaComponent implements OnChanges, OnInit {
   @Input() visible = false;
   @Input() ruta: RutaTableModel | null = null;
   @Output() visibleChange = new EventEmitter<boolean>();
@@ -50,25 +57,19 @@ export class FormRutaComponent implements OnChanges {
   loading = false;
   loadingLocales = false;
   locales: LocalTableModel[] = [];
+  vendedores: { label: string; value: number }[] = [];
 
   get isEdit(): boolean {
     return !!this.ruta;
   }
 
-  diasSemana = [
-    { label: 'Lunes', value: 1 },
-    { label: 'Martes', value: 2 },
-    { label: 'Miércoles', value: 3 },
-    { label: 'Jueves', value: 4 },
-    { label: 'Viernes', value: 5 },
-    { label: 'Sábado', value: 6 },
-    { label: 'Domingo', value: 7 },
-  ];
+  diasSemana = DIAS_SEMANA_OPTIONS;
 
   constructor(
     private readonly fb: FormBuilder,
     private readonly rutaService: RutaService,
     private readonly localService: LocalService,
+    private readonly vendedorService: VendedorService,
     private readonly alert: AlertService,
     private readonly cdr: ChangeDetectorRef,
   ) {
@@ -97,6 +98,23 @@ export class FormRutaComponent implements OnChanges {
     }
   }
 
+  ngOnInit(): void {
+    this.loadVendedores();
+  }
+
+  async loadVendedores(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.vendedorService.getAllVendedores());
+      const data = res?.data?.content ?? res?.data ?? [];
+      this.vendedores = data.map((v: any) => ({
+        label: `${v.nombres} ${v.apellidos}`,
+        value: v.id,
+      }));
+    } catch {
+      this.vendedores = [];
+    }
+  }
+
   async loadLocales(): Promise<void> {
     this.loadingLocales = true;
     try {
@@ -115,10 +133,11 @@ export class FormRutaComponent implements OnChanges {
       const res = await lastValueFrom(this.rutaService.getById(this.ruta!.id));
       const data = res?.data;
       if (data) {
+        const dia = data.diaSemana;
         this.form.patchValue({
-          nombre: data.nombre,
+          nombre: data.nombre.replace(/\s*\([^)]+\)\s*$/, '').trim(),
           descripcion: data.descripcion,
-          diaSemana: data.diaSemana,
+          diaSemana: Array.isArray(dia) ? dia : [dia],
           vendedorId: data.vendedorId,
           localIds: data.localIds ?? [],
         });
@@ -137,20 +156,55 @@ export class FormRutaComponent implements OnChanges {
     }
     this.loading = true;
     try {
-      const dto: CreateRutaDto = {
-        ...this.form.value,
-      };
+      const { nombre, descripcion, diaSemana, vendedorId, localIds } =
+        this.form.value;
+      const dias = Array.isArray(diaSemana)
+        ? diaSemana
+        : diaSemana
+          ? [diaSemana]
+          : [];
+
+      if (dias.length === 0) {
+        this.alert.showError(
+          'Error',
+          'Seleccione al menos un día de la semana',
+        );
+        return;
+      }
+
+      const payloads: CreateRutaDto[] = dias.map((dia: number) => {
+        const diaInfo = this.diasSemana.find((d) => d.value === dia);
+        const nombreConDia = diaInfo ? `${nombre} (${diaInfo.abrev})` : nombre;
+        return {
+          nombre: nombreConDia,
+          descripcion,
+          diaSemana: dia,
+          vendedorId,
+          localIds: localIds ?? [],
+        };
+      });
+
       if (this.isEdit) {
-        await lastValueFrom(this.rutaService.update(this.ruta!.id, dto));
+        await lastValueFrom(
+          this.rutaService.update(this.ruta!.id, payloads[0]),
+        );
         this.alert.showSuccess('Actualizado', 'Ruta actualizada correctamente');
       } else {
-        await lastValueFrom(this.rutaService.create(dto));
-        this.alert.showSuccess('Creado', 'Ruta creada correctamente');
+        for (const dto of payloads) {
+          await lastValueFrom(this.rutaService.create(dto));
+        }
+        this.alert.showSuccess(
+          'Creado',
+          `${payloads.length} ruta(s) creada(s) correctamente`,
+        );
       }
       this.saved.emit();
       this.close();
     } catch (err: any) {
-      this.alert.showError('Error', err?.error?.message ?? 'No se pudo guardar');
+      this.alert.showError(
+        'Error',
+        err?.error?.message ?? 'No se pudo guardar',
+      );
     } finally {
       this.loading = false;
       this.cdr.markForCheck();

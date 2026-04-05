@@ -28,7 +28,7 @@ export class RutaService {
   }
 
   create(dto: CreateRutaDto): Observable<any> {
-    return this.http.post<any>(`${this.base}`, dto);
+    return this.http.post<any>(`${this.base}/create`, dto);
   }
 
   update(id: number, dto: CreateRutaDto): Observable<any> {
@@ -37,5 +37,15 @@ export class RutaService {
 
   delete(id: number): Observable<any> {
     return this.http.delete<any>(`${this.base}/${id}`);
+  }
+
+  validar(vendedorId: number, localId: number, diaSemana: number): Observable<any> {
+    return this.http.get<any>(`${this.base}/validar`, {
+      params: { vendedorId, localId, diaSemana },
+    });
+  }
+
+  getByVendedor(vendedorId: number): Observable<any> {
+    return this.http.get<any>(`${this.base}/vendedor/${vendedorId}`);
   }
 }

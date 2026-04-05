@@ -29,4 +29,18 @@ export const VENDEDORES_ROUTES: Routes = [
         (m) => m.IndexVisitasComponent,
       ),
   },
+  {
+    path: 'escanear',
+    loadComponent: () =>
+      import('./escanear-qr/escanear-qr.component').then(
+        (m) => m.EscanearQrComponent,
+      ),
+  },
+  {
+    path: 'personal',
+    loadComponent: () =>
+      import('./personal/index/personal-index.component').then(
+        (m) => m.PersonalIndexComponent,
+      ),
+  },
 ];

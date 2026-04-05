@@ -144,3 +144,23 @@ $mono: "JetBrains Mono", monospace;
   border: none !important;
   font-weight: 600 !important;
 }
+
+.qr-dialog-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+}
+
+.qr-print-area {
+  background: #fff;
+  padding: 1rem;
+  border-radius: 12px;
+}
+
+.qr-hint {
+  color: $muted;
+  font-size: 0.85rem;
+  margin-top: 1rem;
+  text-align: center;
+}

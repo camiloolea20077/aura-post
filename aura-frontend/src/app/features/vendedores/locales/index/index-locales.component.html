@@ -83,6 +83,13 @@
             <div class="actions">
               <button
                 pButton
+                icon="pi pi-qrcode"
+                class="p-button-text p-button-sm"
+                pTooltip="Generar QR"
+                (click)="abrirQR(l)"
+              ></button>
+              <button
+                pButton
                 icon="pi pi-user-plus"
                 class="p-button-text p-button-sm"
                 pTooltip="Asignar vendedor"
@@ -169,3 +176,41 @@
 
 <p-confirmDialog />
 <p-toast />
+
+<!-- Modal QR -->
+<p-dialog
+  [header]="'QR - ' + (qrLocal?.nombre || '')"
+  [(visible)]="showQR"
+  [modal]="true"
+  [style]="{ width: '320px' }"
+  [draggable]="false"
+  (onHide)="cerrarQR()"
+>
+  <div class="qr-dialog-content">
+    <div id="qr-print-area" class="qr-print-area">
+      <qrcode
+        [qrdata]="qrData"
+        [width]="200"
+        [errorCorrectionLevel]="'M'"
+      ></qrcode>
+    </div>
+    <p class="qr-hint">Escanee este código para registrar visita</p>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cerrar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="cerrarQR()"
+    ></button>
+    <button
+      pButton
+      label="Imprimir"
+      icon="pi pi-print"
+      class="btn-aura"
+      (click)="printQR()"
+    ></button>
+  </ng-template>
+</p-dialog>

@@ -7,9 +7,7 @@
       </div>
       <div>
         <h2 class="header-title">Rutas</h2>
-        <p class="header-sub">
-          Gestión de rutas de visita para vendedores
-        </p>
+        <p class="header-sub">Gestión de rutas de visita para vendedores</p>
       </div>
     </div>
     <button
@@ -67,12 +65,15 @@
         <tr>
           <td class="mono text-muted">{{ r.id }}</td>
           <td class="fw-600">{{ r.nombre }}</td>
-          <td>{{ r.descripcion ?? '-' }}</td>
-          <td>{{ r.diaSemanaNombre ?? '-' }}</td>
+          <td>{{ r.descripcion ?? "-" }}</td>
+          <td>{{ semanaMap[r.diaSemana] ?? "-" }}</td>
           <td>{{ r.vendedorNombre }}</td>
-          <td class="mono">{{ r.totalLocales }}</td>
+          <td class="mono">{{ r.cantidadLocales }}</td>
           <td>
-            <p-tag [value]="r.activo ? 'Activo' : 'Inactivo'" [severity]="getSeverity(r.activo)" />
+            <p-tag
+              [value]="r.activo ? 'Activo' : 'Inactivo'"
+              [severity]="getSeverity(r.activo)"
+            />
           </td>
           <td>
             <div class="actions">

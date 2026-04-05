@@ -21,6 +21,7 @@ import { lastValueFrom } from 'rxjs';
 
 import { AlertService } from '../../../../shared/pipes/alert.service';
 import { FormVisitaComponent } from '../form/form-visita.component';
+import { DetalleVisitaComponent } from '../detalle/detalle-visita.component';
 import { VisitaTableModel, EstadoVisita } from '../../models/vendedor.model';
 import { VisitaService } from '../services/visita.service';
 import { ConfirmarLlegadaComponent } from '../form/confirmar-llegada/confirmar-llegada.component';
@@ -44,6 +45,7 @@ import { ConfirmarLlegadaComponent } from '../form/confirmar-llegada/confirmar-l
     DialogModule,
     FormVisitaComponent,
     ConfirmarLlegadaComponent,
+    DetalleVisitaComponent,
   ],
   providers: [ConfirmationService, MessageService],
   templateUrl: './index-visitas.component.html',
@@ -56,10 +58,13 @@ export class IndexVisitasComponent implements OnInit {
   search = '';
   page = 0;
   pageSize = 10;
+  maxDistance = 20;
 
   showForm = false;
   showConfirmar = false;
+  showDetalle = false;
   selectedVisita: VisitaTableModel | null = null;
+  selectedDetalleId: number | null = null;
 
   filtroEstado: EstadoVisita | null = null;
   filtroFechaDesde: Date | null = null;
@@ -151,6 +156,16 @@ export class IndexVisitasComponent implements OnInit {
   onConfirmarClosed(): void {
     this.showConfirmar = false;
     this.selectedVisita = null;
+  }
+
+  openDetalle(visita: VisitaTableModel): void {
+    this.selectedDetalleId = visita.id;
+    this.showDetalle = true;
+  }
+
+  onDetalleClosed(): void {
+    this.showDetalle = false;
+    this.selectedDetalleId = null;
   }
 
   confirmCancel(visita: VisitaTableModel): void {

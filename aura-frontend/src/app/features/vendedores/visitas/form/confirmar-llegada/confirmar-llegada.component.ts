@@ -13,12 +13,16 @@ import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
+
 import {
   ConfirmarLlegadaDto,
   VisitaTableModel,
 } from '../../../models/vendedor.model';
 import { VisitaService } from '../../services/visita.service';
 import { AlertService } from '../../../../../shared/pipes/alert.service';
+import { GpsService } from '../../../../../core/services/gps.service';
+import { QrScannerComponent } from '../../../../../shared/components/qr-scanner/qr-scanner.component';
+import { ScanResult } from '../../../../../shared/interfaces/scanner.interface';
 
 @Component({
   selector: 'app-confirmar-llegada',
@@ -30,6 +34,7 @@ import { AlertService } from '../../../../../shared/pipes/alert.service';
     InputTextModule,
     DialogModule,
     ToastModule,
+    QrScannerComponent,
   ],
   providers: [MessageService],
   templateUrl: './confirmar-llegada.component.html',
@@ -42,55 +47,33 @@ export class ConfirmarLlegadaComponent {
   @Output() confirmado = new EventEmitter<void>();
 
   loading = false;
-  loadingGPS = false;
   observaciones = '';
 
   constructor(
     private readonly service: VisitaService,
+    private readonly gpsService: GpsService,
     private readonly alert: AlertService,
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
-  async getLocation(): Promise<void> {
-    if (!navigator.geolocation) {
-      this.alert.showError('Error', 'Geolocalización no soportada');
-      return;
-    }
-
-    this.loadingGPS = true;
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        await this.confirmar(
-          position.coords.latitude,
-          position.coords.longitude,
-          false,
-        );
-      },
-      (error) => {
-        this.loadingGPS = false;
-        this.alert.showError('Error', 'No se pudo obtener ubicación');
-        this.cdr.markForCheck();
-      },
-    );
+  async onQrScanned(result: ScanResult): Promise<void> {
+    await this.confirmarConGps();
   }
 
-  async confirmarManual(): Promise<void> {
-    await this.confirmar(null, null, true);
-  }
-
-  private async confirmar(
-    lat: number | null,
-    lng: number | null,
-    manual: boolean,
-  ): Promise<void> {
+  async confirmarConGps(): Promise<void> {
     this.loading = true;
+    this.cdr.markForCheck();
+
     try {
+      const gps = await this.gpsService.getCurrentPosition();
+
       const dto: ConfirmarLlegadaDto = {
-        latitud: lat ?? undefined,
-        longitud: lng ?? undefined,
-        confirmacionManual: manual,
+        latitud: gps?.latitud ?? undefined,
+        longitud: gps?.longitud ?? undefined,
+        confirmacionManual: !gps,
         observaciones: this.observaciones || null,
       };
+
       await lastValueFrom(this.service.confirmar(this.visita!.id, dto));
       this.alert.showSuccess('Confirmado', 'Llegada confirmada correctamente');
       this.confirmado.emit();
@@ -102,7 +85,6 @@ export class ConfirmarLlegadaComponent {
       );
     } finally {
       this.loading = false;
-      this.loadingGPS = false;
       this.cdr.markForCheck();
     }
   }

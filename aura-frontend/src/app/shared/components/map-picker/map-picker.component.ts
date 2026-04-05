@@ -28,7 +28,7 @@ export interface MapCoordinates {
   template: `
     <div class="map-wrapper">
       <div class="map-container" #mapContainer></div>
-      <div class="map-hint">
+      <div class="map-hint" *ngIf="!readonly">
         Haz clic en el mapa para seleccionar una ubicación
       </div>
     </div>
@@ -71,6 +71,7 @@ export class MapPickerComponent implements AfterViewInit, OnDestroy, OnChanges {
   @Input() lng: number | null = null;
   @Input() zoom = 13;
   @Input() markerColor = '#ef4444';
+  @Input() readonly = false;
 
   @Output() coordinatesChange = new EventEmitter<MapCoordinates>();
 
@@ -109,7 +110,9 @@ export class MapPickerComponent implements AfterViewInit, OnDestroy, OnChanges {
       zoom: this.zoom,
     });
 
-    this.map.addControl(new maplibregl.NavigationControl(), 'top-right');
+    if (!this.readonly) {
+      this.map.addControl(new maplibregl.NavigationControl(), 'top-right');
+    }
 
     this.map.on('load', () => {
       this.mapReady = true;
@@ -118,10 +121,12 @@ export class MapPickerComponent implements AfterViewInit, OnDestroy, OnChanges {
       }
     });
 
-    this.map.on('click', (e) => {
-      this.setMarker(e.lngLat.lat, e.lngLat.lng);
-      this.coordinatesChange.emit({ lat: e.lngLat.lat, lng: e.lngLat.lng });
-    });
+    if (!this.readonly) {
+      this.map.on('click', (e) => {
+        this.setMarker(e.lngLat.lat, e.lngLat.lng);
+        this.coordinatesChange.emit({ lat: e.lngLat.lat, lng: e.lngLat.lng });
+      });
+    }
   }
 
   private updateMapPosition(): void {
