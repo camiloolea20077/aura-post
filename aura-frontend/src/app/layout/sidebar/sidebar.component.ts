@@ -134,6 +134,10 @@ export class SidebarComponent implements OnInit {
         });
       }
 
+      group.items = group.items.filter((item) => {
+        return this.tieneAcceso(item.roles, this.userRole);
+      });
+
       return {
         ...group,
         defaultOpen:

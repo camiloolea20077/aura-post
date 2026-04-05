@@ -18,6 +18,13 @@ import { AlertService } from '../../../../shared/pipes/alert.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { IndexDBService } from '../../../../core/services/index-db.service';
 
+const ROLES_REDIRECT: Record<string, string> = {
+  PLATFORM_ADMIN: '/platform/dashboard',
+  VENDEDOR: '/vendedores/personal',
+  CAJERO: '/pos',
+  DEFAULT: '/dashboard',
+};
+
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -82,15 +89,14 @@ export class LoginComponent implements OnInit {
           response.data.nombreCompleto ?? response.data.username ?? '';
         this.alertService.showSuccess(
           '¡Bienvenido!',
-          `Hola${nombre ? ', ' + nombre : ''}. Sesión iniciada correctamente.`,
+          `Hola ${nombre ? ', ' + nombre : ''}. Sesión iniciada correctamente.`,
         );
         const rol = response.data.rol;
         setTimeout(() => {
-          if (rol === 'PLATFORM_ADMIN') {
-            this.router.navigate(['/platform/dashboard']);
-          } else {
-            this.router.navigate(['/dashboard']);
-          }
+          console.log(rol, ROLES_REDIRECT[rol], ROLES_REDIRECT['DEFAULT']);
+          this.router.navigate([
+            ROLES_REDIRECT[rol] ?? ROLES_REDIRECT['DEFAULT'],
+          ]);
         }, 1000);
       } else {
         this.alertService.showError(

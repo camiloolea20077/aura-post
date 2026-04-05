@@ -261,7 +261,7 @@ export const routes: Routes = [
       // Vendedores
       {
         path: 'vendedores',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN', 'VENDEDOR'])],
         loadChildren: () =>
           import('./features/vendedores/vendedores.routes').then(
             (m) => m.VENDEDORES_ROUTES,
