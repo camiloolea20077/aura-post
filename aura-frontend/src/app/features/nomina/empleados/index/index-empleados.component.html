@@ -125,6 +125,16 @@
             <button
               pButton
               type="button"
+              icon="pi pi-user-plus"
+              class="p-button-text p-button-sm action-edit"
+              pTooltip="Crear usuario"
+              tooltipPosition="top"
+              *ngIf="!item.usuarioId && item.activo"
+              (click)="openCrearUsuario(item)"
+            ></button>
+            <button
+              pButton
+              type="button"
               icon="pi pi-pencil"
               class="p-button-text p-button-sm action-edit"
               pTooltip="Editar"
@@ -194,16 +204,29 @@
   </div>
 </div>
 
-<app-form-empleado
-  [displayModal]="showFormModal"
-  [empleadoEdit]="selectedEmpleado"
-  (modalClosed)="onFormClosed()"
-  (empleadoSaved)="onEmpleadoSaved()"
-/>
+@if (showFormModal) {
+  <app-form-empleado
+    [displayModal]="showFormModal"
+    [empleadoEdit]="selectedEmpleado"
+    (modalClosed)="onFormClosed()"
+    (empleadoSaved)="onEmpleadoSaved()"
+  />
+}
 
-<app-form-tipo-empleado
-  [(visible)]="showTipoEmpleadoModal"
-  (saved)="onTipoEmpleadoSaved()"
-/>
+@if (showTipoEmpleadoModal) {
+  <app-form-tipo-empleado
+    [(visible)]="showTipoEmpleadoModal"
+    (saved)="onTipoEmpleadoSaved()"
+  />
+}
+
+@if (showCrearUsuarioModal) {
+  <app-crear-usuario-empleado
+    [(visible)]="showCrearUsuarioModal"
+    [empleado]="selectedEmpleadoForUser"
+    (saved)="onUsuarioCreated()"
+    (visibleChange)="showCrearUsuarioModal = $event"
+  />
+}
 
 <p-toast />

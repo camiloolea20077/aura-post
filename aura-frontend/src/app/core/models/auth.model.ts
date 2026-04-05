@@ -7,6 +7,7 @@ export interface AuthResponse {
   rol: string;
   nit: string;
   empresaId: number;
+  empleadoId?: number;
   logo_url?: string;
   facturaElectronica?: boolean;
   sucursales: SucursalAuth[];

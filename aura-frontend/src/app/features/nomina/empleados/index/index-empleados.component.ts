@@ -13,6 +13,7 @@ import { lastValueFrom } from 'rxjs';
 
 import { FormEmpleadoComponent } from '../form/form-empleado.component';
 import { FormTipoEmpleadoComponent } from '../../../configuracion/tipos-empleado/form/form-tipo-empleado.component';
+import { CrearUsuarioEmpleadoComponent } from '../crear-usuario/crear-usuario-empleado.component';
 import { NominaService } from '../../../../core/services/nomina.service';
 import {
   EmpleadoModel,
@@ -36,6 +37,7 @@ import { AlertService } from '../../../../shared/pipes/alert.service';
     SkeletonModule,
     FormEmpleadoComponent,
     FormTipoEmpleadoComponent,
+    CrearUsuarioEmpleadoComponent,
   ],
   providers: [MessageService],
   templateUrl: './index-empleados.component.html',
@@ -45,6 +47,8 @@ export class IndexEmpleadosComponent implements OnInit {
   public showFormModal = false;
   public selectedEmpleado: EmpleadoModel | null = null;
   public showTipoEmpleadoModal = false;
+  public showCrearUsuarioModal = false;
+  public selectedEmpleadoForUser: EmpleadoTableModel | null = null;
 
   public items: EmpleadoTableModel[] = [];
   public loadingTable = true;
@@ -146,6 +150,17 @@ export class IndexEmpleadosComponent implements OnInit {
 
   onTipoEmpleadoSaved(): void {
     this.showTipoEmpleadoModal = false;
+  }
+
+  openCrearUsuario(empleado: EmpleadoTableModel): void {
+    this.selectedEmpleadoForUser = empleado;
+    this.showCrearUsuarioModal = true;
+  }
+
+  onUsuarioCreated(): void {
+    this.showCrearUsuarioModal = false;
+    this.selectedEmpleadoForUser = null;
+    this.reloadTable();
   }
 
   formatFecha(f: string): string {

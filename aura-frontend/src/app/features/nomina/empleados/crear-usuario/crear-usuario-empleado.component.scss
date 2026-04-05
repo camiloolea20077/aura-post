@@ -1,0 +1,31 @@
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.field-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1e293b;
+
+  .required {
+    color: #ef4444;
+  }
+}
+
+.w-full {
+  width: 100%;
+}
+
+::ng-deep .btn-nomina {
+  background: linear-gradient(135deg, #6366f1, #818cf8) !important;
+  border: none !important;
+  font-weight: 600 !important;
+}

@@ -90,7 +90,14 @@ export interface EmpleadoTableModel {
   salarioBase: number;
   tipoContrato: TipoContrato;
   activo: boolean;
+  usuarioId: number | null;
   totalRows: number;
+}
+
+export interface CreateUsuarioFromEmpleadoDto {
+  empleadoId: number;
+  username: string;
+  password: string;
 }
 
 export interface CreateEmpleadoDto {
