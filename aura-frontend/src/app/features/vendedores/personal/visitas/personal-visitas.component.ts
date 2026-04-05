@@ -98,7 +98,7 @@ export class PersonalVisitasComponent implements OnInit {
     const auth = await this.indexDBService.loadDataAuthDB();
     if (auth?.usuarioId) {
       this.usuarioNombre = auth.nombreCompleto ?? '';
-      this.vendedorId = 1; // TODO: Obtener el vendedorId del usuario logueado
+      this.vendedorId = auth.empleadoId ?? null;
     } else {
       this.alert.showError('Error', 'No se encontró usuario logueado');
     }

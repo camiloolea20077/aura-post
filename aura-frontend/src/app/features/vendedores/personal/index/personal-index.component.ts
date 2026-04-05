@@ -55,7 +55,7 @@ export class PersonalIndexComponent implements OnInit {
   private async loadVendedor(): Promise<void> {
     const auth = await this.indexDBService.loadDataAuthDB();
     if (auth?.usuarioId) {
-      this.vendedorId = auth.usuarioId;
+      this.vendedorId = auth.empleadoId ?? null;
       await this.loadVendedorData();
     }
     this.loading = false;
@@ -65,7 +65,9 @@ export class PersonalIndexComponent implements OnInit {
   private async loadVendedorData(): Promise<void> {
     if (!this.vendedorId) return;
     try {
-      const res = await lastValueFrom(this.vendedorService.getById(this.vendedorId));
+      const res = await lastValueFrom(
+        this.vendedorService.getById(this.vendedorId),
+      );
       this.vendedor = res?.data ?? null;
     } catch {
       this.vendedor = null;
