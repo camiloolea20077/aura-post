@@ -1,4 +1,12 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import {
+  Component,
+  effect,
+  EventEmitter,
+  inject,
+  Input,
+  OnInit,
+  Output,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
 import { OverlayPanelModule } from 'primeng/overlaypanel';
@@ -8,6 +16,7 @@ import { BadgeModule } from 'primeng/badge';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { filter } from 'rxjs/operators';
 import { IndexDBService } from '../../core/services/index-db.service';
+import { StateStore } from '../../core/store/state';
 
 interface BreadcrumbItem {
   label: string;
@@ -38,6 +47,7 @@ export class TopbarComponent implements OnInit {
   @Input() sidebarCollapsed = false;
   @Output() toggleSidebar = new EventEmitter<void>();
 
+  public readonly state = inject(StateStore);
   public breadcrumbs: BreadcrumbItem[] = [];
   public userName = '';
   public turnoActivo = false;

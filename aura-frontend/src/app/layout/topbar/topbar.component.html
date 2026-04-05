@@ -2,14 +2,16 @@
   <!-- ─── Left ──────────────────────────────────── -->
   <div class="topbar-left">
     <!-- Hamburger -->
-    <button
-      class="topbar-btn hamburger"
-      (click)="toggleSidebar.emit()"
-      pTooltip="Colapsar menú"
-      tooltipPosition="bottom"
-    >
-      <i class="pi pi-bars"></i>
-    </button>
+    @if (!state.isMobile()) {
+      <button
+        class="topbar-btn hamburger"
+        (click)="toggleSidebar.emit()"
+        pTooltip="Colapsar menú"
+        tooltipPosition="bottom"
+      >
+        <i class="pi pi-bars"></i>
+      </button>
+    }
 
     <!-- Breadcrumbs -->
     <nav class="breadcrumb-nav">

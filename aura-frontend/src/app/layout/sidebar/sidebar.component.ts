@@ -15,11 +15,7 @@ import { ConfirmationService } from 'primeng/api';
 import { filter } from 'rxjs/operators';
 import { lastValueFrom } from 'rxjs';
 
-import {
-  SIDEBAR_MENU,
-  SidebarMenuGroup,
-  SidebarMenuItem,
-} from './sidebar.config';
+import { SIDEBAR_MENU, SidebarMenuGroup } from './sidebar.config';
 import { IndexDBService } from '../../core/services/index-db.service';
 import { environment } from '../../../environments/environment';
 import { normalize } from '../../shared/utils/commons';
