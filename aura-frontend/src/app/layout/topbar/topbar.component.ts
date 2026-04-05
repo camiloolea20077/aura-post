@@ -1,6 +1,5 @@
 import {
   Component,
-  effect,
   EventEmitter,
   inject,
   Input,
@@ -15,8 +14,11 @@ import { DropdownModule } from 'primeng/dropdown';
 import { BadgeModule } from 'primeng/badge';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { filter } from 'rxjs/operators';
+import { normalize } from '../../shared/utils/commons';
 import { IndexDBService } from '../../core/services/index-db.service';
 import { StateStore } from '../../core/store/state';
+import { MobileMenuComponent } from '../mobile-menu/mobile-menu.component';
+import { SIDEBAR_MENU } from '../sidebar/sidebar.config';
 
 interface BreadcrumbItem {
   label: string;
@@ -39,6 +41,7 @@ interface Sucursal {
     TooltipModule,
     DropdownModule,
     BadgeModule,
+    MobileMenuComponent,
   ],
   templateUrl: './topbar.component.html',
   styleUrls: ['./topbar.component.scss'],
@@ -50,11 +53,16 @@ export class TopbarComponent implements OnInit {
   public readonly state = inject(StateStore);
   public breadcrumbs: BreadcrumbItem[] = [];
   public userName = '';
+  public userRole = '';
   public turnoActivo = false;
   public darkMode = false;
   public notifCount = 0;
   public currentTime = '';
   public currentDate = '';
+  public menuGroups: {
+    label: string;
+    items: { label: string; icon: string; route?: string }[];
+  }[] = [];
 
   // Form solo para el selector de sucursal (evitamos ngModel)
   public frmTopbar!: FormGroup;
@@ -112,6 +120,7 @@ export class TopbarComponent implements OnInit {
     const auth = await this.indexDBService.loadDataAuthDB();
     if (auth) {
       this.userName = auth.nombreCompleto;
+      this.userRole = auth.rol;
 
       // Cargar sucursales desde el array
       this.sucursales = auth.sucursales.map((s: any) => ({
@@ -126,8 +135,39 @@ export class TopbarComponent implements OnInit {
       if (defaultSucursal) {
         this.frmTopbar.patchValue({ sucursalId: defaultSucursal.id });
       }
+
+      // Cargar menú para mobile
+      this.loadMenuForMobile();
     }
   }
+
+  private loadMenuForMobile(): void {
+    this.menuGroups = SIDEBAR_MENU.filter((g) =>
+      this.tieneAcceso(g.roles, this.userRole),
+    )
+      .map((g) => ({
+        label: g.label,
+        items: g.items
+          .filter((i) => this.tieneAcceso(i.roles, this.userRole))
+          .map((i) => ({
+            label: i.label,
+            icon: i.icon,
+            route: i.route,
+          })),
+      }))
+      .filter((g) => g.items.length > 0);
+  }
+
+  private tieneAcceso(roles: string[] | undefined, rol: string): boolean {
+    if (rol === 'PLATFORM_ADMIN') return true;
+    if (!roles || roles.length === 0) return true;
+    return roles.includes(rol);
+  }
+
+  onMobileMenuClose(): void {
+    // Callback when mobile menu is closed
+  }
+
   private watchRoute(): void {
     this.buildBreadcrumbs(this.router.url);
 
@@ -175,5 +215,10 @@ export class TopbarComponent implements OnInit {
     this.darkMode = !this.darkMode;
     localStorage.setItem('darkMode', String(this.darkMode));
     document.documentElement.classList.toggle('dark-mode', this.darkMode);
+  }
+
+  async onLogout(): Promise<void> {
+    await this.indexDBService.deleteDataAuthDB();
+    this.router.navigate(['/login']);
   }
 }

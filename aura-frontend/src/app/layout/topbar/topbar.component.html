@@ -1,7 +1,7 @@
 <header class="aura-topbar">
   <!-- ─── Left ──────────────────────────────────── -->
   <div class="topbar-left">
-    <!-- Hamburger -->
+    <!-- Hamburger (solo desktop) -->
     @if (!state.isMobile()) {
       <button
         class="topbar-btn hamburger"
@@ -124,5 +124,14 @@
         </a>
       </div>
     </p-overlaypanel>
+
+    <!-- Mobile Menu Button -->
+    @if (state.isMobile()) {
+      <app-mobile-menu
+        [userName]="userName"
+        (closeMenu)="onMobileMenuClose()"
+        (logout)="onLogout()"
+      />
+    }
   </div>
 </header>
