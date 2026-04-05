@@ -17,6 +17,7 @@ import { lastValueFrom } from 'rxjs';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { IndexDBService } from '../../../../core/services/index-db.service';
+import { StateStore } from '../../../../core/store/state';
 
 const ROLES_REDIRECT: Record<string, string> = {
   PLATFORM_ADMIN: '/platform/dashboard',
@@ -51,10 +52,12 @@ export class LoginComponent implements OnInit {
     private readonly alertService: AlertService,
     private readonly router: Router,
     private readonly messageService: MessageService,
+    private readonly state: StateStore,
   ) {}
 
   ngOnInit(): void {
     this.initForm();
+    this.state.clearState();
   }
 
   private initForm(): void {
@@ -92,6 +95,13 @@ export class LoginComponent implements OnInit {
           `Hola ${nombre ? ', ' + nombre : ''}. Sesión iniciada correctamente.`,
         );
         const rol = response.data.rol;
+        this.state.setEmpleadoAndUsuarioId(
+          response.data.usuarioId,
+          rol,
+          response.data.empleadoId ?? null,
+        );
+        this.state.updateMenuGroups(rol);
+
         setTimeout(() => {
           this.router.navigate([
             ROLES_REDIRECT[rol] ?? ROLES_REDIRECT['DEFAULT'],

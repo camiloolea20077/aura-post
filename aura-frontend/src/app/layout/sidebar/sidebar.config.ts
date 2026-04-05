@@ -1,20 +1,4 @@
-export interface SidebarMenuItem {
-  label: string;
-  icon: string;
-  route?: string;
-  badge?: string;
-  highlight?: boolean;
-  roles?: string[];
-}
-
-export interface SidebarMenuGroup {
-  label: string;
-  icon: string;
-  items: SidebarMenuItem[];
-  roles?: string[];
-  defaultOpen?: boolean;
-  alwaysOpen?: boolean;
-}
+import { SidebarMenuGroup } from '../../shared/interfaces';
 
 export const SIDEBAR_MENU: SidebarMenuGroup[] = [
   // ── Principal ───────────────────────────────────────────────────────────────

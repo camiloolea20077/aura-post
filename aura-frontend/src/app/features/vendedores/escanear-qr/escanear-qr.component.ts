@@ -281,11 +281,6 @@ export class EscanearQrComponent implements AfterViewInit, OnDestroy {
   }
 
   onScanned(result: QrScanResult) {
-    console.log('QR detectado:', result.data);
-    console.log('Hora:', result.timestamp);
-    console.log('Posición:', result.location);
-    console.log(this.vendedorId);
-
     this.onQrScanned(result.data);
   }
 }

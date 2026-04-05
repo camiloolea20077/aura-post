@@ -287,13 +287,6 @@ export class FormLocalComponent implements OnChanges {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.alert.showError('Error', 'Formulario inválido');
-      console.log(this.form.value);
-      console.log(this.form.errors);
-      // const errors = this.form.get('direccion')?.errors;
-      const errors = Object.entries(this.form.controls).filter(
-        ([key, control]) => control.invalid,
-      );
-      console.log({ errors });
       return;
     }
     this.loading = true;
