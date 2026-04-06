@@ -41,7 +41,12 @@
           <div class="vendedor-avatar">V</div>
         }
         <div class="vendedor-info">
-          <h3 class="vendedor-nombre">{{ v.nombreCompleto }}</h3>
+          <h3 class="vendedor-nombre">
+            {{ v.nombreCompleto }}
+            @if (v.online) {
+              <span class="online-dot" pTooltip="En línea"></span>
+            }
+          </h3>
           <p class="vendedor-doc">
             {{ v.tipoDocumento }} {{ v.numeroDocumento }}
           </p>
@@ -59,6 +64,20 @@
           <span class="stat-label">Locales</span>
         </div>
       </div>
+
+      @if (v.location) {
+        <div class="card-location">
+          <i class="pi pi-map"></i>
+          <span class="location-coords">
+            {{ v.location.lat | number:'1.5-5' }}, {{ v.location.lng | number:'1.5-5' }}
+          </span>
+          @if (v.battery && v.battery !== 'N/A') {
+            <span class="location-battery">
+              <i class="pi pi-bolt"></i> {{ v.battery }}
+            </span>
+          }
+        </div>
+      }
 
       <div class="card-actions">
         <a
