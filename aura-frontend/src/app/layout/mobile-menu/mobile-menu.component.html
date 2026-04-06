@@ -1,0 +1,70 @@
+<!-- Botón hamburguesa -->
+<button
+  class="mobile-menu-btn"
+  (click)="toggle()"
+  pTooltip="Menú"
+  tooltipPosition="bottom"
+>
+  <i class="pi pi-bars"></i>
+</button>
+
+<!-- Overlay -->
+@if (open) {
+  <div class="mobile-menu-overlay" (click)="close()"></div>
+}
+
+<!-- Menú flotante -->
+<div class="mobile-menu" [class.open]="open">
+  <div class="mobile-menu-header">
+    <div class="user-info">
+      <div class="user-avatar">{{ userName | slice: 0 : 1 }}</div>
+      <div class="user-details">
+        <span class="user-name">{{ userName }}</span>
+        <span class="user-role">{{ stateStore.role() }}</span>
+      </div>
+    </div>
+    <button class="close-btn" (click)="close()">
+      <i class="pi pi-times"></i>
+    </button>
+  </div>
+
+  <div class="mobile-menu-content">
+    @for (group of stateStore.menuGroups(); track group.label) {
+      <div class="menu-group">
+        <div class="group-header" (click)="toggleGroup(group.label)">
+          <span class="group-label">{{ group.label }}</span>
+          <i
+            class="pi"
+            [class.pi-chevron-down]="!isGroupExpanded(group.label)"
+            [class.pi-chevron-up]="isGroupExpanded(group.label)"
+          ></i>
+        </div>
+
+        @if (isGroupExpanded(group.label)) {
+          <div class="group-items">
+            @for (item of group.items; track item.route) {
+              <a
+                [routerLink]="item.route"
+                routerLinkActive="active"
+                class="menu-item"
+                (click)="onNavigate()"
+              >
+                <i [class]="item.icon"></i>
+                <span>{{ item.label }}</span>
+              </a>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="mobile-menu-footer">
+    <button class="logout-btn" (click)="confirmLogout()">
+      <i class="pi pi-sign-out"></i>
+      <span>Cerrar sesión</span>
+    </button>
+  </div>
+</div>
+
+<p-confirmDialog />

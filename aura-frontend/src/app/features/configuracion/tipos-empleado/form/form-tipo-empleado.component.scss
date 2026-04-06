@@ -1,0 +1,42 @@
+$indigo: #6366f1;
+$border: #e2e8f0;
+$text: #1e293b;
+$muted: #94a3b8;
+
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: $text;
+  }
+
+  input,
+  textarea {
+    border-color: $border;
+
+    &:focus {
+      border-color: $indigo;
+      box-shadow: 0 0 0 1px $indigo;
+    }
+  }
+}
+
+.w-full {
+  width: 100%;
+}
+
+::ng-deep .btn-primary.p-button {
+  background: linear-gradient(135deg, $indigo, #818cf8) !important;
+  border: none !important;
+  font-weight: 600 !important;
+}

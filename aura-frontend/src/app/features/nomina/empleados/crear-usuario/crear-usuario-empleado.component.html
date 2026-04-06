@@ -1,0 +1,143 @@
+<p-dialog
+  [header]="'Crear usuario para ' + (empleado?.nombreCompleto || '')"
+  [(visible)]="visible"
+  (onHide)="close()"
+  [modal]="true"
+  [style]="{ width: '420px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  @if (form) {
+    <form [formGroup]="form" class="dialog-form">
+      <div class="field">
+        <label class="field-label"
+          >Sucursal <span class="required">*</span></label
+        >
+        <p-dropdown
+          [options]="sucursalesOpts"
+          formControlName="sucursalId"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Selecciona una sucursal"
+          [showClear]="true"
+          [class.ng-invalid]="isInvalid('sucursalId')"
+        />
+        <small class="p-error">
+          <div *ngIf="form.get('sucursalId')?.hasError('required')">
+            <span class="error-message">La sucursal es requerida</span>
+          </div>
+        </small>
+      </div>
+      <div class="field">
+        <label class="field-label"
+          >Usuario <span class="required">*</span></label
+        >
+        <input
+          type="email"
+          pInputText
+          formControlName="username"
+          placeholder="Nombre de usuario"
+          class="w-full"
+          [class.ng-invalid]="isInvalid('username')"
+        />
+        <small class="p-error">
+          <div *ngIf="form.get('username')?.hasError('required')">
+            <span class="error-message">El usuario es requerido</span>
+          </div>
+          <div *ngIf="form.get('username')?.hasError('minlength')">
+            <span class="error-message"
+              >El usuario debe tener al menos 6 caracteres</span
+            >
+          </div>
+          <div *ngIf="form.get('username')?.hasError('maxlength')">
+            <span class="error-message"
+              >El usuario debe tener como máximo 50 caracteres</span
+            >
+          </div>
+          <div *ngIf="form.get('username')?.hasError('email')">
+            <span class="error-message"
+              >El usuario debe ser un correo electrónico válido</span
+            >
+          </div>
+        </small>
+      </div>
+
+      <div class="field">
+        <label class="field-label"
+          >Contraseña <span class="required">*</span></label
+        >
+        <p-password
+          id="password"
+          formControlName="password"
+          placeholder="••••••••"
+          [feedback]="false"
+          [toggleMask]="true"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+          [class.ng-invalid]="isInvalid('password')"
+          [class.ng-dirty]="form.get('password')?.touched"
+        />
+        <small class="p-error">
+          <div *ngIf="form.get('password')?.hasError('required')">
+            <span class="error-message">La contraseña es requerida</span>
+          </div>
+          <div *ngIf="form.get('password')?.hasError('minlength')">
+            <span class="error-message"
+              >La contraseña debe tener al menos 6 caracteres</span
+            >
+          </div>
+          <div *ngIf="form.get('password')?.hasError('maxlength')">
+            <span class="error-message"
+              >La contraseña debe tener como máximo 50 caracteres</span
+            >
+          </div>
+        </small>
+      </div>
+
+      <div class="field">
+        <label class="field-label"
+          >Confirmar Contraseña <span class="required">*</span></label
+        >
+        <p-password
+          id="confirmarPassword"
+          formControlName="confirmarPassword"
+          placeholder="••••••••"
+          [feedback]="false"
+          [toggleMask]="true"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+          [class.ng-invalid]="isInvalid('confirmarPassword')"
+          [class.ng-dirty]="form.get('confirmarPassword')?.touched"
+        />
+        <small
+          class="p-error"
+          *ngIf="
+            form.get('password')?.touched &&
+            form.get('confirmarPassword')?.touched &&
+            form.get('password')?.value !== form.get('confirmarPassword')?.value
+          "
+        >
+          Las contraseñas no coinciden
+        </small>
+      </div>
+    </form>
+    <ng-template pTemplate="footer">
+      <button
+        pButton
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-text"
+        (click)="close()"
+      ></button>
+      <button
+        pButton
+        label="Crear usuario"
+        icon="pi pi-check"
+        class="btn-nomina"
+        [loading]="loading"
+        [disabled]="form.invalid"
+        (click)="save()"
+      ></button>
+    </ng-template>
+  }
+</p-dialog>

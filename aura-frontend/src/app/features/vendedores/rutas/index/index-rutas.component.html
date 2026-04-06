@@ -1,0 +1,115 @@
+<div class="module-container">
+  <!-- Header -->
+  <div class="module-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="pi pi-map"></i>
+      </div>
+      <div>
+        <h2 class="header-title">Rutas</h2>
+        <p class="header-sub">Gestión de rutas de visita para vendedores</p>
+      </div>
+    </div>
+    <button
+      pButton
+      label="Nueva ruta"
+      icon="pi pi-plus"
+      class="btn-aura"
+      (click)="nuevo()"
+    ></button>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="table-toolbar">
+    <span class="search-wrap">
+      <i class="pi pi-search"></i>
+      <input
+        type="text"
+        pInputText
+        placeholder="Buscar por nombre..."
+        [(ngModel)]="search"
+        (input)="onSearch()"
+        class="search-input"
+      />
+    </span>
+  </div>
+
+  <!-- Tabla -->
+  <div class="table-card">
+    <p-table
+      [value]="rows"
+      [lazy]="true"
+      [loading]="loading"
+      [totalRecords]="totalRows"
+      [rows]="pageSize"
+      [paginator]="true"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      (onPage)="onPage($event)"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords}"
+      styleClass="p-datatable-sm p-datatable-gridlines"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 80px">#</th>
+          <th>Nombre</th>
+          <th>Descripción</th>
+          <th>Día</th>
+          <th>Vendedor</th>
+          <th style="width: 100px">Locales</th>
+          <th style="width: 100px">Estado</th>
+          <th style="width: 110px">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-r>
+        <tr>
+          <td class="mono text-muted">{{ r.id }}</td>
+          <td class="fw-600">{{ r.nombre }}</td>
+          <td>{{ r.descripcion ?? "-" }}</td>
+          <td>{{ semanaMap[r.diaSemana] ?? "-" }}</td>
+          <td>{{ r.vendedorNombre }}</td>
+          <td class="mono">{{ r.cantidadLocales }}</td>
+          <td>
+            <p-tag
+              [value]="r.activo ? 'Activo' : 'Inactivo'"
+              [severity]="getSeverity(r.activo)"
+            />
+          </td>
+          <td>
+            <div class="actions">
+              <button
+                pButton
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm"
+                pTooltip="Editar"
+                (click)="editRuta(r)"
+              ></button>
+              <button
+                pButton
+                icon="pi pi-trash"
+                class="p-button-text p-button-danger p-button-sm"
+                pTooltip="Eliminar"
+                (click)="confirmDelete(r)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8" class="empty-row">No hay rutas registradas</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- Modal formulario -->
+<app-form-ruta
+  [(visible)]="showForm"
+  [ruta]="selectedRuta"
+  (saved)="onSaved()"
+  (visibleChange)="onFormClosed()"
+/>
+<p-confirmDialog />
+<p-toast />

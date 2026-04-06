@@ -55,7 +55,15 @@
     <div class="form-grid">
       <div class="field">
         <label>Cargo</label>
-        <input pInputText [(ngModel)]="form.cargo" placeholder="Ej: Vendedor" />
+        <p-dropdown
+          [options]="tipoEmpleadoOpts"
+          [(ngModel)]="form.cargo"
+          optionLabel="label"
+          optionValue="label"
+          placeholder="Selecciona tipo"
+          [showClear]="true"
+          [style]="{ width: '100%' }"
+        />
       </div>
       <div class="field">
         <label>Fecha de ingreso *</label>
@@ -69,16 +77,18 @@
       </div>
       <div class="field">
         <label>Salario base *</label>
-        <div class="input-prefix">
-          <span>$</span>
-          <input
-            type="number"
-            pInputText
-            [(ngModel)]="form.salarioBase"
-            min="0"
-            placeholder="0"
-          />
-        </div>
+        <p-inputNumber
+          [(ngModel)]="form.salarioBase"
+          mode="currency"
+          currency="COP"
+          locale="es-CO"
+          [minFractionDigits]="0"
+          [maxFractionDigits]="0"
+          [showButtons]="false"
+          [min]="0"
+          placeholder="0"
+          [style]="{ width: '100%' }"
+        />
       </div>
       <div class="field">
         <label>Tipo de contrato</label>

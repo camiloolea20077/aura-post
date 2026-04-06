@@ -1,0 +1,53 @@
+<p-dialog
+  [header]="isEdit ? 'Editar Tipo de Empleado' : 'Nuevo Tipo de Empleado'"
+  [(visible)]="visible"
+  (onHide)="close()"
+  [modal]="true"
+  [style]="{ width: '420px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="dialog-form">
+    <div class="form-field">
+      <label for="nombre">Nombre *</label>
+      <input
+        pInputText
+        id="nombre"
+        [(ngModel)]="form.nombre"
+        [maxlength]="50"
+        placeholder="Ej: VENDEDOR, CAJERO"
+        class="w-full uppercase"
+      />
+    </div>
+    <div class="form-field">
+      <label for="descripcion">Descripción</label>
+      <textarea
+        pInputTextarea
+        id="descripcion"
+        [(ngModel)]="form.descripcion"
+        [maxlength]="255"
+        rows="3"
+        placeholder="Descripción opcional"
+        class="w-full"
+      ></textarea>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="close()"
+    ></button>
+    <button
+      pButton
+      [label]="isEdit ? 'Actualizar' : 'Guardar'"
+      icon="pi pi-check"
+      class="btn-primary"
+      [loading]="saving"
+      (click)="save()"
+    ></button>
+  </ng-template>
+</p-dialog>

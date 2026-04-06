@@ -2,12 +2,11 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, from } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { AuthResponse, LoginDto } from '../models/auth.model';
+import { AuthResponse, LoginDto, Modulo } from '../models/auth.model';
 
 import { ResponseModel } from '../../shared/utils/responde.models';
 import { environment } from '../../../environments/environment';
 import { IndexDBService } from './index-db.service';
-
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -15,14 +14,14 @@ export class AuthService {
 
   constructor(
     private readonly http: HttpClient,
-    private readonly indexDBService: IndexDBService
+    private readonly indexDBService: IndexDBService,
   ) {}
 
   // ─── Login ──────────────────────────────────────────────────
   login(dto: LoginDto): Observable<ResponseModel<AuthResponse>> {
     return this.http.post<ResponseModel<AuthResponse>>(
       `${this.apiUrl}/login`,
-      dto
+      dto,
     );
   }
 
@@ -52,13 +51,11 @@ export class AuthService {
       const parts = token.split('.');
       if (parts.length !== 3) return null;
 
-      const base64 = parts[1]
-        .replace(/-/g, '+')
-        .replace(/_/g, '/');
+      const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
 
       const padded = base64.padEnd(
         base64.length + ((4 - (base64.length % 4)) % 4),
-        '='
+        '=',
       );
 
       const decoded = atob(padded);
@@ -66,6 +63,12 @@ export class AuthService {
     } catch {
       return null;
     }
+  }
+
+  getModulos(): Observable<ResponseModel<Modulo[]>> {
+    return this.http.get<ResponseModel<Modulo[]>>(
+      `${environment.apiUrl}public/empresas/permisos`,
+    );
   }
 
   // ─── Logout ─────────────────────────────────────────────────
@@ -76,15 +79,15 @@ export class AuthService {
   // ─── Obtener claims del token ────────────────────────────────
   getTokenClaims(): Observable<any> {
     return from(this.indexDBService.getToken()).pipe(
-      map(token => (token ? this.decodeToken(token) : null))
+      map((token) => (token ? this.decodeToken(token) : null)),
     );
   }
   isAuthenticated(): Observable<boolean> {
     return this.getAuthResponse().pipe(
-      map(auth => {
+      map((auth) => {
         if (!auth?.token) return false;
         return !this.isTokenExpired(auth.token);
-      })
+      }),
     );
   }
 }

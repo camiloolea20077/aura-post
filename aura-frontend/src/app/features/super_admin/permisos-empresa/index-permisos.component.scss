@@ -8,6 +8,7 @@ $bg: #f8fafc;
   padding: 1.5rem;
   max-width: 900px;
   margin: 0 auto;
+  padding-top: 0;
 }
 
 .pe-header {
@@ -116,7 +117,7 @@ $bg: #f8fafc;
       .modulo-codigo {
         font-size: 0.75rem;
         color: #64748b;
-        font-family: 'JetBrains Mono', monospace;
+        font-family: "JetBrains Mono", monospace;
       }
     }
 
@@ -169,7 +170,7 @@ $bg: #f8fafc;
       .submodulo-codigo {
         font-size: 0.7rem;
         color: #64748b;
-        font-family: 'JetBrains Mono', monospace;
+        font-family: "JetBrains Mono", monospace;
       }
     }
   }
@@ -191,4 +192,12 @@ $bg: #f8fafc;
   background: linear-gradient(135deg, $indigo, #818cf8) !important;
   border: none !important;
   font-weight: 600 !important;
+}
+
+::ng-deep .pe-header {
+  padding: 1.5rem;
+  position: sticky;
+  top: 0;
+  background: #f4f6fa;
+  z-index: 10;
 }

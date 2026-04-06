@@ -28,6 +28,7 @@ import {
 } from '../models/modulo.model';
 import { ModuloService } from '../services/modulo.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
+import { normalize } from '../../../../shared/utils/commons';
 
 @Component({
   selector: 'app-form-submodulo',
@@ -143,5 +144,14 @@ export class FormSubmoduloComponent implements OnChanges {
   isInvalid(f: string): boolean {
     const c = this.frmSubmodulo.get(f);
     return !!(c?.invalid && c?.touched);
+  }
+
+  generateCode(): void {
+    const nombre = this.frmSubmodulo.get('nombre')?.value;
+    if (nombre) {
+      this.frmSubmodulo
+        .get('codigo')
+        ?.setValue(normalize(nombre), { emitEvent: false });
+    }
   }
 }
