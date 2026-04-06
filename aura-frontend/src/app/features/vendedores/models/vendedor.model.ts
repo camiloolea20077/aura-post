@@ -217,6 +217,7 @@ export interface VendedorModel {
   activo: boolean;
   totalLocales: number;
   totalRows: number;
+  usuarioId: number;
 }
 
 export interface VendedorFilter {

@@ -20,7 +20,13 @@ import { AlertService } from '../../../shared/pipes/alert.service';
 import { VendedorModel } from '../models/vendedor.model';
 import { VendedorService } from '../services/vendedor.service';
 import { PaginatorModule } from 'primeng/paginator';
-import { SocketService, MonitorMessage, MonitorLocation } from '../../../shared/services/socket.service';
+import { DialogModule } from 'primeng/dialog';
+import {
+  SocketService,
+  MonitorMessage,
+  MonitorLocation,
+} from '../../../shared/services/socket.service';
+import { MapPickerComponent } from '../../../shared/components/map-picker/map-picker.component';
 
 interface VendedorExtended extends VendedorModel {
   online: boolean;
@@ -44,6 +50,8 @@ interface VendedorExtended extends VendedorModel {
     TagModule,
     TooltipModule,
     ToastModule,
+    DialogModule,
+    MapPickerComponent,
   ],
   providers: [MessageService],
   templateUrl: './index-vendedores.component.html',
@@ -57,6 +65,9 @@ export class IndexVendedoresComponent implements OnInit, OnDestroy {
   page = 0;
   pageSize = 10;
   first = 0;
+
+  showMapDialog = false;
+  selectedLocation: { lat: number; lng: number } | null = null;
 
   private socketSub?: Subscription;
 
@@ -119,27 +130,49 @@ export class IndexVendedoresComponent implements OnInit, OnDestroy {
   private connectSocket(): void {
     this.socketService.connectMonitor('viewer', undefined, 'VENDEDOR');
 
-    this.socketSub = this.socketService.messages$.subscribe((msg: MonitorMessage) => {
-      if (msg.type === 'update' && msg.providerId && msg.data) {
-        this.updateVendedorFromSocket(msg.providerId, msg.data);
-      }
-    });
+    this.socketSub = this.socketService.messages$.subscribe(
+      (msg: MonitorMessage) => {
+        if (msg.providerId) {
+          this.updateVendedorFromSocket(msg.providerId, msg.data, msg.type);
+        }
+      },
+    );
   }
 
-  private updateVendedorFromSocket(providerId: string, data: any): void {
+  private updateVendedorFromSocket(
+    providerId: string,
+    data: any,
+    type: string,
+  ): void {
     const vendedorId = parseInt(providerId, 10);
-    const idx = this.rows.findIndex((v) => v.id === vendedorId);
+    const idx = this.rows.findIndex((v) => v.usuarioId === vendedorId);
 
     if (idx === -1) return;
 
     const v = this.rows[idx];
-    v.online = true;
-    v.location = data.location ?? null;
+    v.online = ['connect', 'update'].includes(type);
+    v.location = data?.location ?? null;
     v.lastUpdate = new Date().toISOString();
-    v.battery = data.battery ?? null;
-    v.status = data.status ?? null;
+    v.battery = data?.battery ?? null;
+    v.status = data?.status ?? null;
 
     this.rows = [...this.rows];
+    this.cdr.markForCheck();
+  }
+
+  openLocationMap(vendedor: VendedorExtended): void {
+    if (!vendedor.location) return;
+    this.selectedLocation = {
+      lat: vendedor.location.lat,
+      lng: vendedor.location.lng,
+    };
+    this.showMapDialog = true;
+    this.cdr.markForCheck();
+  }
+
+  closeMapDialog(): void {
+    this.showMapDialog = false;
+    this.selectedLocation = null;
     this.cdr.markForCheck();
   }
 }

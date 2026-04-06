@@ -71,12 +71,10 @@ export class SocketService {
    */
   private initAutoConnect(role: string, usuarioId: number): void {
     if (role === 'VENDEDOR' && usuarioId) {
-      console.log('Auto-connecting VENDEDOR monitor...');
       this.connectMonitor('provider', usuarioId.toString(), role);
       this.startAutomaticReporting();
     } else {
       if (!this.isManualDisconnect && this.ws) {
-        console.log('User is not VENDEDOR or logged out, disconnecting...');
         this.disconnect();
       }
     }
@@ -91,7 +89,7 @@ export class SocketService {
   connectMonitor(
     role: MonitorRole,
     id?: string,
-    monitorId: string = 'default'
+    monitorId: string = 'default',
   ): void {
     // Si ya existe una conexión con los mismos parámetros y está abierta, no hacemos nada
     if (
@@ -134,7 +132,6 @@ export class SocketService {
     this.ws.onmessage = (event) => {
       try {
         const msg: MonitorMessage = JSON.parse(event.data);
-        console.log('Monitor Message:', msg);
         this.messagesSubject.next(msg);
       } catch (err) {
         console.warn('Error parsing monitor message:', event.data);
@@ -201,7 +198,7 @@ export class SocketService {
    */
   async startAutomaticReporting(): Promise<void> {
     if (this.reportingInterval) return;
-    
+
     this.reportingInterval = setInterval(async () => {
       if (this.connected$.value) {
         try {

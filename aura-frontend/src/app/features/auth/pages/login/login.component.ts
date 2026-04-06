@@ -101,6 +101,7 @@ export class LoginComponent implements OnInit {
           response.data.empleadoId ?? null,
         );
         this.state.updateMenuGroups(rol);
+        this.state.setRole(rol);
 
         setTimeout(() => {
           this.router.navigate([

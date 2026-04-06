@@ -45,6 +45,8 @@
             {{ v.nombreCompleto }}
             @if (v.online) {
               <span class="online-dot" pTooltip="En línea"></span>
+            } @else {
+              <span class="offline-dot" pTooltip="Fuera de línea"></span>
             }
           </h3>
           <p class="vendedor-doc">
@@ -66,12 +68,13 @@
       </div>
 
       @if (v.location) {
-        <div class="card-location">
+        <div class="card-location" (click)="openLocationMap(v)">
           <i class="pi pi-map"></i>
           <span class="location-coords">
-            {{ v.location.lat | number:'1.5-5' }}, {{ v.location.lng | number:'1.5-5' }}
+            {{ v.location.lat | number: "1.5-5" }},
+            {{ v.location.lng | number: "1.5-5" }}
           </span>
-          @if (v.battery && v.battery !== 'N/A') {
+          @if (v.battery && v.battery !== "N/A") {
             <span class="location-battery">
               <i class="pi pi-bolt"></i> {{ v.battery }}
             </span>
@@ -121,7 +124,10 @@
   </div>
 
   <!-- Empty state -->
-  <div class="empty-state" *ngIf="!loading && rows.length === 0 && totalRows === 0">
+  <div
+    class="empty-state"
+    *ngIf="!loading && rows.length === 0 && totalRows === 0"
+  >
     <i class="pi pi-users"></i>
     <p>No hay vendedores registrados</p>
   </div>
@@ -133,3 +139,22 @@
 </div>
 
 <p-toast />
+
+<p-dialog
+  header="Ubicación del vendedor"
+  [(visible)]="showMapDialog"
+  (onHide)="closeMapDialog()"
+  [modal]="true"
+  [style]="{ width: '600px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  @if (selectedLocation) {
+    <app-map-picker
+      [lat]="selectedLocation.lat"
+      [lng]="selectedLocation.lng"
+      [readonly]="true"
+      [zoom]="15"
+    />
+  }
+</p-dialog>
