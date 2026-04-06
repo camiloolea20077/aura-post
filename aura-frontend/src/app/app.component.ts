@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { StateStore } from './core/store/state';
 import { ProgressSpinner } from 'primeng/progressspinner';
 import { IndexDBService } from './core/services/index-db.service';
+import { SocketService } from './shared/services/socket.service';
 
 @Component({
   selector: 'app-root',
@@ -14,6 +15,7 @@ import { IndexDBService } from './core/services/index-db.service';
 export class AppComponent implements OnInit {
   private readonly stateStore = inject(StateStore);
   private readonly indexDBService = inject(IndexDBService);
+  private readonly socketService = inject(SocketService);
   title = 'aura-frontend';
 
   public loading = signal(false);
@@ -39,6 +41,7 @@ export class AppComponent implements OnInit {
         auth.empleadoId ?? null,
       );
       this.stateStore.updateMenuGroups(auth.rol);
+      this.stateStore.setRole(auth.rol);
     }
     this.loading.set(false);
   }

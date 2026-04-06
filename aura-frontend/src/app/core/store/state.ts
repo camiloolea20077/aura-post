@@ -33,6 +33,7 @@ export class StateStore {
   readonly isMobile = computed(() => this._state().isMobile);
   readonly menuGroups = computed(() => this._state().menuGroups);
   readonly role = computed(() => this._state().role);
+  readonly usuarioId = computed(() => this._state().usuarioId);
 
   setWindowWidth(width: number) {
     this._state.update((state) => ({
