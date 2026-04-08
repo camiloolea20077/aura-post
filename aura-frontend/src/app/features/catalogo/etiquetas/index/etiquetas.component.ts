@@ -63,6 +63,8 @@ export class EtiquetasComponent implements OnInit {
     anchoEtiqueta: 100, // porcentaje
     marginVertical: 5,
     marginHorizontal: 5,
+    saltarEtiquetas: 0,
+    alinearFinal: true,
   };
 
   public opcionesColumnas = [
@@ -230,8 +232,21 @@ export class EtiquetasComponent implements OnInit {
     );
 
     await this.cargarJsBarcodePromise();
+    const settings = this.settings;
+    const lista: {
+      nombre: string;
+      codigo: string;
+      precio: number;
+      isPlaceholder?: boolean;
+    }[] = [];
 
-    const lista: { nombre: string; codigo: string; precio: number }[] = [];
+    // Agregar espacios vacíos si se solicita
+    if (settings.saltarEtiquetas > 0) {
+      for (let i = 0; i < settings.saltarEtiquetas; i++) {
+        lista.push({ nombre: '', codigo: '', precio: 0, isPlaceholder: true });
+      }
+    }
+
     for (const p of paraPrint) {
       const copias = Math.max(1, Math.floor(Number(p.copias) || 1));
       for (let i = 0; i < copias; i++) {
@@ -270,6 +285,7 @@ export class EtiquetasComponent implements OnInit {
       background: #fff;
       padding: ${this.settings.marginVertical}px ${this.settings.marginHorizontal}px;
       box-sizing: border-box;
+      ${this.settings.alinearFinal ? 'align-content: end; min-height: 97vh;' : ''}
     }
 
     .label {
@@ -334,6 +350,12 @@ export class EtiquetasComponent implements OnInit {
       const div = document.createElement('div');
       div.className = 'label';
       
+      if (item.isPlaceholder) {
+        div.style.border = 'none';
+        container.appendChild(div);
+        return;
+      }
+
       if (settings.mostrarNombre) {
         const nombre = document.createElement('div');
         nombre.className = 'nombre';
