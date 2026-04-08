@@ -483,3 +483,7 @@
     }
   }
 }
+
+::ng-deep .p-togglebutton.p-togglebutton-checked {
+  color: #6366f1 !important;
+}
