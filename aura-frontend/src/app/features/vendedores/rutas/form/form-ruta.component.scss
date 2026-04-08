@@ -1,0 +1,55 @@
+$indigo: #6366f1;
+$red: #ef4444;
+$border: #e2e8f0;
+$text: #1e293b;
+$muted: #94a3b8;
+
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.25rem 0;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+
+  &.cols-2 {
+    .field {
+      flex: 1;
+    }
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+
+  .field-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: $text;
+  }
+
+  .required {
+    color: $red;
+  }
+
+  .field-error {
+    color: $red;
+    font-size: 0.72rem;
+  }
+}
+
+.w-full {
+  width: 100%;
+}
+
+::ng-deep .btn-primary.p-button {
+  background: linear-gradient(135deg, $indigo, #818cf8) !important;
+  border: none !important;
+  font-weight: 600 !important;
+}

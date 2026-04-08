@@ -1,0 +1,160 @@
+<div class="module-container">
+  <!-- Header -->
+  <div class="module-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="pi pi-users"></i>
+      </div>
+      <div>
+        <h2 class="header-title">Vendedores</h2>
+        <p class="header-sub">
+          Gestión de vendedores, locales, rutas y visitas
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="table-toolbar">
+    <span class="search-wrap">
+      <i class="pi pi-search"></i>
+      <input
+        type="text"
+        pInputText
+        placeholder="Buscar vendedor..."
+        [(ngModel)]="search"
+        (input)="onSearch()"
+        class="search-input"
+      />
+    </span>
+  </div>
+
+  <!-- Grid de tarjetas -->
+  <div class="vendedores-grid">
+    <div class="vendedor-card" *ngFor="let v of rows">
+      <div class="card-header">
+        @if (v.nombreCompleto) {
+          <div class="vendedor-avatar">
+            {{ v.nombreCompleto.charAt(0) }}
+          </div>
+        } @else {
+          <div class="vendedor-avatar">V</div>
+        }
+        <div class="vendedor-info">
+          <h3 class="vendedor-nombre">
+            {{ v.nombreCompleto }}
+            @if (v.online) {
+              <span class="online-dot" pTooltip="En línea"></span>
+            } @else {
+              <span class="offline-dot" pTooltip="Fuera de línea"></span>
+            }
+          </h3>
+          <p class="vendedor-doc">
+            {{ v.tipoDocumento }} {{ v.numeroDocumento }}
+          </p>
+        </div>
+        <p-tag
+          [value]="v.activo ? 'Activo' : 'Inactivo'"
+          [severity]="getSeverity(v.activo)"
+        />
+      </div>
+
+      <div class="card-stats">
+        <div class="stat">
+          <i class="pi pi-map-marker"></i>
+          <span class="stat-value">{{ v.totalLocales }}</span>
+          <span class="stat-label">Locales</span>
+        </div>
+      </div>
+
+      @if (v.location) {
+        <div class="card-location" (click)="openLocationMap(v)">
+          <i class="pi pi-map"></i>
+          <span class="location-coords">
+            {{ v.location.lat | number: "1.5-5" }},
+            {{ v.location.lng | number: "1.5-5" }}
+          </span>
+          @if (v.battery && v.battery !== "N/A") {
+            <span class="location-battery">
+              <i class="pi pi-bolt"></i> {{ v.battery }}
+            </span>
+          }
+        </div>
+      }
+
+      <div class="card-actions">
+        <a
+          [routerLink]="['/vendedores/locales']"
+          [queryParams]="{ vendedorId: v.id }"
+          class="action-btn"
+        >
+          <i class="pi pi-map"></i>
+          <span>Locales</span>
+        </a>
+        <a
+          [routerLink]="['/vendedores/rutas']"
+          [queryParams]="{ vendedorId: v.id }"
+          class="action-btn"
+        >
+          <i class="pi pi-route"></i>
+          <span>Rutas</span>
+        </a>
+        <a
+          [routerLink]="['/vendedores/visitas']"
+          [queryParams]="{ vendedorId: v.id }"
+          class="action-btn"
+        >
+          <i class="pi pi-calendar"></i>
+          <span>Visitas</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Paginador -->
+  <div class="paginator-container" *ngIf="totalRows > 0">
+    <p-paginator
+      [first]="page * pageSize"
+      [rows]="pageSize"
+      [totalRecords]="totalRows"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      (onPage)="onPage($event)"
+      styleClass="paginator-custom"
+    />
+  </div>
+
+  <!-- Empty state -->
+  <div
+    class="empty-state"
+    *ngIf="!loading && rows.length === 0 && totalRows === 0"
+  >
+    <i class="pi pi-users"></i>
+    <p>No hay vendedores registrados</p>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-overlay" *ngIf="loading">
+    <i class="pi pi-spin pi-spinner"></i>
+  </div>
+</div>
+
+<p-toast />
+
+<p-dialog
+  header="Ubicación del vendedor"
+  [(visible)]="showMapDialog"
+  (onHide)="closeMapDialog()"
+  [modal]="true"
+  [style]="{ width: '600px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  @if (selectedLocation) {
+    <app-map-picker
+      [lat]="selectedLocation.lat"
+      [lng]="selectedLocation.lng"
+      [readonly]="true"
+      [zoom]="15"
+    />
+  }
+</p-dialog>

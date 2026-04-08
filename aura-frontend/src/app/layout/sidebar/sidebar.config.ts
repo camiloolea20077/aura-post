@@ -1,20 +1,4 @@
-export interface SidebarMenuItem {
-  label: string;
-  icon: string;
-  route?: string;
-  badge?: string;
-  highlight?: boolean;
-  roles?: string[];
-}
-
-export interface SidebarMenuGroup {
-  label: string;
-  icon: string;
-  items: SidebarMenuItem[];
-  roles?: string[];
-  defaultOpen?: boolean;
-  alwaysOpen?: boolean;
-}
+import { SidebarMenuGroup } from '../../shared/interfaces';
 
 export const SIDEBAR_MENU: SidebarMenuGroup[] = [
   // ── Principal ───────────────────────────────────────────────────────────────
@@ -187,6 +171,51 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         label: 'Cuentas por Pagar',
         icon: 'pi pi-arrow-circle-up',
         route: '/cuentas/cuentas-por-pagar',
+      },
+    ],
+  },
+
+  // ── Vendedores ────────────────────────────────────────────────────────────────
+  {
+    label: 'Vendedores',
+    icon: 'pi pi-user-plus',
+    roles: ['SUPER_ADMIN', 'ADMIN', 'VENDEDOR'],
+    items: [
+      {
+        label: 'Vendedores',
+        icon: 'pi pi-users',
+        route: '/vendedores/vendedores',
+        roles: ['SUPER_ADMIN', 'ADMIN'],
+      },
+      {
+        label: 'Locales',
+        icon: 'pi pi-map-marker',
+        route: '/vendedores/locales',
+        roles: ['SUPER_ADMIN', 'ADMIN'],
+      },
+      {
+        label: 'Rutas',
+        icon: 'pi pi-map',
+        route: '/vendedores/rutas',
+        roles: ['SUPER_ADMIN', 'ADMIN'],
+      },
+      {
+        label: 'Visitas',
+        icon: 'pi pi-calendar',
+        route: '/vendedores/visitas',
+        roles: ['SUPER_ADMIN', 'ADMIN'],
+      },
+      {
+        label: 'Mi Perfil',
+        icon: 'pi pi-user',
+        route: '/vendedores/personal',
+        roles: ['VENDEDOR'],
+      },
+      {
+        label: 'Escanear QR',
+        icon: 'pi pi-qrcode',
+        route: '/vendedores/escanear',
+        roles: ['VENDEDOR'],
       },
     ],
   },

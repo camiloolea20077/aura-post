@@ -6,6 +6,7 @@ import {
   AddNovedadDto,
   CreateEmpleadoDto,
   CreatePeriodoDto,
+  CreateUsuarioFromEmpleadoDto,
   EmpleadoModel,
   EmpleadoTableModel,
   NominaConfigModel,
@@ -80,6 +81,15 @@ export class NominaService {
     return this.http.put<ResponseModel<void>>(
       `${this.base}empleados/${id}/retirar`,
       {},
+    );
+  }
+
+  createUsuarioFromEmpleado(
+    dto: CreateUsuarioFromEmpleadoDto,
+  ): Observable<ResponseModel<any>> {
+    return this.http.post<ResponseModel<any>>(
+      `${this.base}usuarios/create-from-empleado`,
+      dto,
     );
   }
 

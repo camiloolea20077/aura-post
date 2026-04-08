@@ -1,13 +1,26 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { filter } from 'rxjs/operators';
+import { lastValueFrom } from 'rxjs';
 
-import { SIDEBAR_MENU, SidebarMenuGroup, SidebarMenuItem } from './sidebar.config';
+import { SIDEBAR_MENU } from './sidebar.config';
 import { IndexDBService } from '../../core/services/index-db.service';
+import { environment } from '../../../environments/environment';
+import { normalize } from '../../shared/utils/commons';
+import { SidebarMenuGroup } from '../../shared/interfaces';
+import { StateStore } from '../../core/store/state';
 
 @Component({
   selector: 'app-sidebar',
@@ -33,11 +46,15 @@ export class SidebarComponent implements OnInit {
 
   constructor(
     private readonly indexDBService: IndexDBService,
+    private readonly http: HttpClient,
     private readonly router: Router,
+    private readonly stateStore: StateStore,
     private readonly confirmationService: ConfirmationService,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   async ngOnInit(): Promise<void> {
+    this.menuGroups = this.stateStore.menuGroups();
     await this.loadUserInfo();
 
     // Cuando navega, abrir el grupo de la ruta activa
@@ -56,7 +73,6 @@ export class SidebarComponent implements OnInit {
       this.userRole = auth.rol;
       this.empresaNombre = auth.username;
       this.userInitials = this.getInitials(auth.nombreCompleto);
-      this.menuGroups = this.filtrarMenu(auth.rol);
 
       // Abrir grupos marcados como defaultOpen
       this.menuGroups
@@ -88,26 +104,9 @@ export class SidebarComponent implements OnInit {
   }
 
   isOpen(group: SidebarMenuGroup): boolean {
-    return this.collapsed || group.alwaysOpen || this.openGroups.has(group.label);
-  }
-
-  // ── Filtra grupos e ítems según el rol ────────────────────
-  private filtrarMenu(rol: string): SidebarMenuGroup[] {
-    const gruposDefaultOpenCajero = ['Operaciones', 'Administración'];
-    return SIDEBAR_MENU.filter((group) => this.tieneAcceso(group.roles, rol))
-      .map((group) => ({
-        ...group,
-        items: group.items.filter((item) => this.tieneAcceso(item.roles, rol)),
-        defaultOpen:
-          group.defaultOpen ||
-          (rol === 'CAJERO' && gruposDefaultOpenCajero.includes(group.label)),
-      }))
-      .filter((group) => group.items.length > 0);
-  }
-
-  private tieneAcceso(roles: string[] | undefined, rol: string): boolean {
-    if (!roles || roles.length === 0) return true;
-    return roles.includes(rol);
+    return (
+      this.collapsed || group.alwaysOpen || this.openGroups.has(group.label)
+    );
   }
 
   private getInitials(name: string): string {

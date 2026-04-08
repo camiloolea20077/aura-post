@@ -5,6 +5,9 @@ export interface AuthResponse {
   username: string;
   nombreCompleto: string;
   rol: string;
+  nit: string;
+  empresaId: number;
+  empleadoId?: number;
   logo_url?: string;
   facturaElectronica?: boolean;
   sucursales: SucursalAuth[];
@@ -28,4 +31,21 @@ export interface SucursalAuth {
 export interface LoginDto {
   username: string;
   password: string;
+}
+
+export interface BaseActivo {
+  activo: boolean;
+}
+
+export interface Submodulo extends BaseActivo {
+  submoduloId: number;
+  submoduloCodigo: string;
+  submoduloNombre: string;
+}
+
+export interface Modulo extends BaseActivo {
+  moduloId: number;
+  moduloCodigo: string;
+  moduloNombre: string;
+  submodulos: Submodulo[];
 }

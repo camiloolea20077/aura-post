@@ -1,0 +1,104 @@
+<form [formGroup]="frmSubmodulo" class="fe-form">
+  <div class="section-title">
+    <i class="pi pi-sitemap"></i> Datos del submódulo
+  </div>
+
+  <div class="form-row w-full">
+    <div class="w-full">
+      <label class="field-label required">Módulo</label>
+      <p-dropdown
+        formControlName="moduloId"
+        [options]="modulos"
+        optionLabel="nombre"
+        optionValue="id"
+        placeholder="Seleccionar módulo"
+        styleClass="w-full"
+        class="w-full"
+        [style]="{ width: '100%' }"
+        [class.ng-invalid]="isInvalid('moduloId')"
+      />
+      <small class="field-error" *ngIf="isInvalid('moduloId')">Requerido</small>
+    </div>
+  </div>
+
+  <div class="form-row two-col">
+    <div class="field">
+      <label class="field-label required">Nombre</label>
+      <input
+        pInputText
+        formControlName="nombre"
+        placeholder="Productos"
+        class="w-full"
+        (change)="generateCode()"
+        [class.ng-invalid]="isInvalid('nombre')"
+      />
+      <small class="field-error" *ngIf="isInvalid('nombre')">Requerido</small>
+    </div>
+    <div class="field">
+      <label class="field-label required">Código</label>
+      <input
+        pInputText
+        formControlName="codigo"
+        placeholder="productos"
+        class="w-full"
+        [readonly]="true"
+        [class.ng-invalid]="isInvalid('codigo')"
+      />
+      <small class="field-error" *ngIf="isInvalid('codigo')">Requerido</small>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="w-full">
+      <label class="field-label">Descripción</label>
+      <input
+        pInputText
+        formControlName="descripcion"
+        placeholder="Gestión de productos"
+        class="w-full"
+      />
+    </div>
+  </div>
+
+  <div class="form-row two-col">
+    <div class="field">
+      <label class="field-label">Orden</label>
+      <p-inputNumber
+        formControlName="orden"
+        [showButtons]="true"
+        [min]="0"
+        styleClass="w-full"
+      />
+    </div>
+    <div class="field">
+      <label class="field-label">Estado</label>
+      <div class="toggle-wrap">
+        <p-toggleButton
+          formControlName="activo"
+          onLabel="Activo"
+          offLabel="Inactivo"
+          onIcon="pi pi-check"
+          offIcon="pi pi-times"
+        />
+      </div>
+    </div>
+  </div>
+
+  <div class="form-actions">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="cancel()"
+    ></button>
+    <button
+      pButton
+      [label]="isEdit ? 'Actualizar' : 'Crear'"
+      icon="pi pi-check"
+      class="btn-platform btn-primary"
+      [loading]="loading"
+      (click)="save()"
+    ></button>
+  </div>
+</form>

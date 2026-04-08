@@ -417,6 +417,12 @@
   padding: 10px 0;
 }
 
+.config-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
 .config-section {
   display: flex;
   flex-direction: column;
@@ -482,4 +488,8 @@
       }
     }
   }
+}
+
+::ng-deep .p-togglebutton.p-togglebutton-checked {
+  color: #6366f1 !important;
 }
