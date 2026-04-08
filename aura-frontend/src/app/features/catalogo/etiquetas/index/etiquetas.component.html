@@ -258,6 +258,35 @@
         </div>
       </div>
 
+      <!-- Márgenes de página -->
+      <div class="config-grid-2">
+        <div class="config-section">
+          <div class="flex justify-content-between mb-2">
+            <label
+              >Margen Horizontal:
+              <b>{{ settings.marginHorizontal }}px</b></label
+            >
+          </div>
+          <p-slider
+            [(ngModel)]="settings.marginHorizontal"
+            [min]="0"
+            [max]="150"
+          />
+        </div>
+        <div class="config-section">
+          <div class="flex justify-content-between mb-2">
+            <label
+              >Margen Vertical: <b>{{ settings.marginVertical }}px</b></label
+            >
+          </div>
+          <p-slider
+            [(ngModel)]="settings.marginVertical"
+            [min]="0"
+            [max]="150"
+          />
+        </div>
+      </div>
+
       <!-- Max caracteres nombre -->
       <div class="config-section" *ngIf="settings.mostrarNombre">
         <div class="flex justify-content-between mb-2">

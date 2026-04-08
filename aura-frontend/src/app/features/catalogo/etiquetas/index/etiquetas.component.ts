@@ -61,6 +61,8 @@ export class EtiquetasComponent implements OnInit {
     maxCaracteresNombre: 50,
     espaciado: 10,
     anchoEtiqueta: 100, // porcentaje
+    marginVertical: 5,
+    marginHorizontal: 5,
   };
 
   public opcionesColumnas = [
@@ -234,7 +236,10 @@ export class EtiquetasComponent implements OnInit {
       const copias = Math.max(1, Math.floor(Number(p.copias) || 1));
       for (let i = 0; i < copias; i++) {
         lista.push({
-          nombre: this.truncarNombre(p.nombre, this.settings.maxCaracteresNombre),
+          nombre: this.truncarNombre(
+            p.nombre,
+            this.settings.maxCaracteresNombre,
+          ),
           codigo: p.codigoGenerado ?? p.codigoBarras ?? '',
           precio: p.precio,
         });
@@ -263,7 +268,8 @@ export class EtiquetasComponent implements OnInit {
       max-width: 1000px;
       margin: 0 auto;
       background: #fff;
-      padding: 10px;
+      padding: ${this.settings.marginVertical}px ${this.settings.marginHorizontal}px;
+      box-sizing: border-box;
     }
 
     .label {
@@ -311,7 +317,7 @@ export class EtiquetasComponent implements OnInit {
 
     @media print {
       body { padding: 0; background: #fff; }
-      .grid-container { padding: 0; border: none; max-width: none; }
+      .grid-container { border: none; max-width: none; }
       .label { border: none; page-break-inside: avoid; }
     }
   </style>
