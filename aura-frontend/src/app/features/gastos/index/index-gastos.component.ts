@@ -21,6 +21,8 @@ import { GastoService } from '../../../core/services/gasto.service';
 import { GastoTableModel } from '../../../core/models/gasto.model';
 import { AlertService } from '../../../shared/pipes/alert.service';
 import { FormGastoComponent } from '../form/form-gasto.component';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 
 @Component({
   selector: 'app-index-gastos',
@@ -38,6 +40,8 @@ import { FormGastoComponent } from '../form/form-gasto.component';
     ConfirmDialogModule,
     TooltipModule,
     FormGastoComponent,
+    IconFieldModule,
+    InputIconModule,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './index-gastos.component.html',
@@ -87,7 +91,9 @@ export class IndexGastosComponent implements OnInit {
 
   reloadTable(): void {
     const page = this.lastEvent
-      ? Math.floor((this.lastEvent.first ?? 0) / (this.lastEvent.rows ?? this.rowSize))
+      ? Math.floor(
+          (this.lastEvent.first ?? 0) / (this.lastEvent.rows ?? this.rowSize),
+        )
       : 0;
     this.loadData(page, this.lastEvent?.rows ?? this.rowSize);
   }
@@ -97,7 +103,11 @@ export class IndexGastosComponent implements OnInit {
     this.cdr.markForCheck();
     try {
       const res = await lastValueFrom(
-        this.gastoService.page({ page, rows: rows as number, search: this.searchQuery }),
+        this.gastoService.page({
+          page,
+          rows: rows as number,
+          search: this.searchQuery,
+        }),
       );
       this.items = res?.data?.content ?? [];
       this.totalRecords = res?.data?.totalElements ?? 0;
@@ -149,12 +159,19 @@ export class IndexGastosComponent implements OnInit {
     });
   }
 
-  onFormClosed(): void { this.showForm = false; }
-  onSaved(): void { this.showForm = false; this.reloadTable(); }
+  onFormClosed(): void {
+    this.showForm = false;
+  }
+  onSaved(): void {
+    this.showForm = false;
+    this.reloadTable();
+  }
 
   formatCOP(v: number | null | undefined): string {
     return new Intl.NumberFormat('es-CO', {
-      style: 'currency', currency: 'COP', maximumFractionDigits: 0,
+      style: 'currency',
+      currency: 'COP',
+      maximumFractionDigits: 0,
     }).format(v ?? 0);
   }
 

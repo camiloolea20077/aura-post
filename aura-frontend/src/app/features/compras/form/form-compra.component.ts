@@ -48,6 +48,7 @@ import { AlertService } from '../../../shared/pipes/alert.service';
 import { IndexDBService } from '../../../core/services/index-db.service';
 import { CuentaBancariaService } from '../../../core/services/cuenta-bancaria.service';
 import { CuentaBancariaModel } from '../../../core/models/cuenta-bancaria.model';
+import { TarifaRetencionService } from '../../../core/services/tarifa-retencion.service';
 
 @Component({
   selector: 'app-form-compra',
@@ -190,6 +191,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
     private readonly terceroService: TerceroService,
     private readonly productoService: ProductoService,
     private readonly cuentaBancariaService: CuentaBancariaService,
+    private readonly tarifaRetencionService: TarifaRetencionService,
     private readonly alertService: AlertService,
     private readonly indexDBService: IndexDBService,
     private readonly cdr: ChangeDetectorRef,
@@ -352,6 +354,23 @@ export class FormCompraComponent implements OnInit, OnChanges {
     const t = event.value as TerceroTableModel;
     this.proveedorSeleccionado = t;
     this.proveedorQuery = t.nombreCompleto;
+    this.cargarRetencionesSugeridas(t.id);
+  }
+
+  private async cargarRetencionesSugeridas(terceroId: number): Promise<void> {
+    try {
+      const res = await lastValueFrom(
+        this.tarifaRetencionService.sugeridas(terceroId),
+      );
+      const s = res?.data;
+      if (!s) return;
+      if (s.retefuentePct != null) this.retefuentePct = Number(s.retefuentePct);
+      if (s.reteivaPct != null) this.reteivaPct = Number(s.reteivaPct);
+      if (s.reteicaPct != null) this.reteicaPct = Number(s.reteicaPct);
+      this.cdr.markForCheck();
+    } catch {
+      // no bloqueante — el usuario puede ingresar los valores manualmente
+    }
   }
 
   limpiarProveedor(): void {

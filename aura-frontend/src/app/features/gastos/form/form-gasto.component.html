@@ -9,7 +9,6 @@
   (onHide)="close()"
 >
   <div class="form-body">
-
     <!-- Sucursal -->
     <div class="field">
       <label>Sucursal <span class="req">*</span></label>
@@ -63,8 +62,13 @@
         </button>
       </div>
       <small class="field-hint">
-        <span *ngIf="deducible">Este gasto puede restarse de la base gravable de impuestos.</span>
-        <span *ngIf="!deducible">Este gasto no reduce la carga tributaria (ej: multas, salarios, gastos personales).</span>
+        <span *ngIf="deducible"
+          >Este gasto puede restarse de la base gravable de impuestos.</span
+        >
+        <span *ngIf="!deducible"
+          >Este gasto no reduce la carga tributaria (ej: multas, salarios,
+          gastos personales).</span
+        >
       </small>
     </div>
 
@@ -98,7 +102,7 @@
     <div class="field">
       <label>Descripción <span class="optional">(opcional)</span></label>
       <textarea
-        pInputTextarea
+        pTextarea
         [(ngModel)]="descripcion"
         rows="3"
         class="w-full"
@@ -106,15 +110,217 @@
       ></textarea>
     </div>
 
+    <p-divider align="left"
+      ><span
+        style="
+          font-size: 0.78rem;
+          font-weight: 600;
+          color: var(--text-color-secondary);
+        "
+        >Información tributaria</span
+      ></p-divider
+    >
+
+    <!-- Tercero (proveedor) -->
+    <div class="field">
+      <label
+        >Proveedor / Tercero <span class="optional">(opcional)</span></label
+      >
+      <p-autoComplete
+        [(ngModel)]="terceroSeleccionado"
+        [suggestions]="terceroSugerencias"
+        (completeMethod)="buscarTerceros($event)"
+        field="nombreCompleto"
+        [dropdown]="false"
+        placeholder="Buscar proveedor por nombre o NIT..."
+        [showClear]="true"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+
+    <!-- Cuenta contable -->
+    <div class="field">
+      <label>Cuenta contable <span class="optional">(opcional)</span></label>
+      <p-dropdown
+        [(ngModel)]="cuentaContableId"
+        [options]="cuentasOpts"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Seleccionar cuenta..."
+        [showClear]="true"
+        [filter]="true"
+        filterBy="label"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+
+    <!-- Documento soporte -->
+    <div class="field-row" style="gap: 1rem">
+      <div class="field" style="min-width: 160px">
+        <label>Tipo doc. soporte</label>
+        <p-dropdown
+          [(ngModel)]="tipoDocSoporte"
+          [options]="tipoDocOpts"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Tipo..."
+          [showClear]="true"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+      <div class="field flex-1">
+        <label>Número doc. soporte</label>
+        <input
+          type="text"
+          pInputText
+          [(ngModel)]="numeroDocSoporte"
+          placeholder="Ej: FV-0001"
+          maxlength="50"
+          autocomplete="off"
+          class="w-full"
+        />
+      </div>
+    </div>
+
+    <!-- IVA -->
+    <div class="field-row" style="gap: 1rem; align-items: flex-end">
+      <div class="field flex-1">
+        <label>Base IVA</label>
+        <p-inputNumber
+          [(ngModel)]="baseIva"
+          mode="currency"
+          currency="COP"
+          locale="es-CO"
+          [maxFractionDigits]="0"
+          styleClass="w-full"
+          (ngModelChange)="recalcularIva()"
+        />
+      </div>
+      <div class="field" style="min-width: 100px">
+        <label>Tarifa %</label>
+        <p-inputNumber
+          [(ngModel)]="tarifaIva"
+          [min]="0"
+          [max]="100"
+          [maxFractionDigits]="2"
+          styleClass="w-full"
+          suffix="%"
+          (ngModelChange)="recalcularIva()"
+        />
+      </div>
+      <div class="field flex-1">
+        <label>Valor IVA</label>
+        <p-inputNumber
+          [(ngModel)]="valorIva"
+          mode="currency"
+          currency="COP"
+          locale="es-CO"
+          [maxFractionDigits]="0"
+          styleClass="w-full"
+          [readonly]="true"
+        />
+      </div>
+    </div>
+
+    <!-- Retefuente -->
+    <div class="field-row" style="gap: 1rem; align-items: flex-end">
+      <div class="field flex-1">
+        <label>Base Retefuente</label>
+        <p-inputNumber
+          [(ngModel)]="baseRetefuente"
+          mode="currency"
+          currency="COP"
+          locale="es-CO"
+          [maxFractionDigits]="0"
+          styleClass="w-full"
+          (ngModelChange)="recalcularRetefuente()"
+        />
+      </div>
+      <div class="field" style="min-width: 100px">
+        <label>Tarifa %</label>
+        <p-inputNumber
+          [(ngModel)]="tarifaRetefuente"
+          [min]="0"
+          [max]="100"
+          [maxFractionDigits]="2"
+          styleClass="w-full"
+          suffix="%"
+          (ngModelChange)="recalcularRetefuente()"
+        />
+      </div>
+      <div class="field flex-1">
+        <label>Valor Rete.</label>
+        <p-inputNumber
+          [(ngModel)]="valorRetefuente"
+          mode="currency"
+          currency="COP"
+          locale="es-CO"
+          [maxFractionDigits]="0"
+          styleClass="w-full"
+          [readonly]="true"
+        />
+      </div>
+    </div>
+
+    <!-- ReteICA -->
+    <div class="field-row" style="gap: 1rem; align-items: flex-end">
+      <div class="field flex-1">
+        <label>Base ReteICA</label>
+        <p-inputNumber
+          [(ngModel)]="baseReteica"
+          mode="currency"
+          currency="COP"
+          locale="es-CO"
+          [maxFractionDigits]="0"
+          styleClass="w-full"
+          (ngModelChange)="recalcularReteica()"
+        />
+      </div>
+      <div class="field" style="min-width: 100px">
+        <label>Tarifa ‰</label>
+        <p-inputNumber
+          [(ngModel)]="tarifaReteica"
+          [min]="0"
+          [max]="100"
+          [maxFractionDigits]="2"
+          styleClass="w-full"
+          suffix="‰"
+          (ngModelChange)="recalcularReteica()"
+        />
+      </div>
+      <div class="field flex-1">
+        <label>Valor ICA</label>
+        <p-inputNumber
+          [(ngModel)]="valorReteica"
+          mode="currency"
+          currency="COP"
+          locale="es-CO"
+          [maxFractionDigits]="0"
+          styleClass="w-full"
+          [readonly]="true"
+        />
+      </div>
+    </div>
   </div>
 
   <ng-template pTemplate="footer">
-    <button pButton icon="pi pi-times" label="Cancelar" class="p-button-text" (click)="close()"></button>
-    <button pButton [icon]="saving ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+    <button
+      pButton
+      icon="pi pi-times"
+      label="Cancelar"
+      class="p-button-text"
+      (click)="close()"
+    ></button>
+    <button
+      pButton
+      [icon]="saving ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
       [label]="modoEdicion ? 'Actualizar' : 'Registrar'"
       class="btn-aura btn-primary"
       [disabled]="saving"
-      (click)="save()">
-    </button>
+      (click)="save()"
+    ></button>
   </ng-template>
 </p-dialog>

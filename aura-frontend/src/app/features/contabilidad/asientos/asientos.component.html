@@ -562,6 +562,8 @@
           <tr>
             <th>Código</th>
             <th>Cuenta</th>
+            <th>Tercero</th>
+            <th>C. Costo</th>
             <th>Descripción</th>
             <th class="text-right">Débito</th>
             <th class="text-right">Crédito</th>
@@ -571,6 +573,14 @@
           <tr>
             <td><code>{{ d.cuentaCodigo }}</code></td>
             <td>{{ d.cuentaNombre }}</td>
+            <td>
+              <span *ngIf="d.terceroNombre">{{ d.terceroNombre }}</span>
+              <span *ngIf="!d.terceroNombre" class="text-muted">—</span>
+            </td>
+            <td>
+              <span *ngIf="d.centroCostoNombre">{{ d.centroCostoNombre }}</span>
+              <span *ngIf="!d.centroCostoNombre" class="text-muted">—</span>
+            </td>
             <td>{{ d.descripcion ?? '—' }}</td>
             <td class="text-right debito-val">{{ d.debito > 0 ? formatCOP(d.debito) : '' }}</td>
             <td class="text-right credito-val">{{ d.credito > 0 ? formatCOP(d.credito) : '' }}</td>
@@ -578,7 +588,7 @@
         </ng-template>
         <ng-template pTemplate="footer">
           <tr>
-            <td colspan="3" style="text-align: right; font-weight: 700">TOTALES</td>
+            <td colspan="5" style="text-align: right; font-weight: 700">TOTALES</td>
             <td class="text-right debito-val" style="font-weight: 700">{{ formatCOP(asientoDetalle.totalDebito) }}</td>
             <td class="text-right credito-val" style="font-weight: 700">{{ formatCOP(asientoDetalle.totalCredito) }}</td>
           </tr>
@@ -653,7 +663,7 @@
   [modal]="true"
   [closable]="true"
   header="Nuevo Asiento Contable"
-  [style]="{ width: '700px' }"
+  [style]="{ width: '960px' }"
   [draggable]="false"
 >
   <div class="asiento-form">
@@ -672,7 +682,9 @@
       <p-table [value]="formAsiento.detalles" styleClass="p-datatable-sm">
         <ng-template pTemplate="header">
           <tr>
-            <th style="min-width: 220px">Cuenta</th>
+            <th style="min-width: 200px">Cuenta</th>
+            <th style="min-width: 160px">Tercero</th>
+            <th style="min-width: 150px">Centro Costo</th>
             <th>Descripción</th>
             <th class="text-right" style="width: 130px">Débito</th>
             <th class="text-right" style="width: 130px">Crédito</th>
@@ -690,6 +702,32 @@
                 optionValue="value"
                 placeholder="Seleccionar"
                 [filter]="true"
+                styleClass="w-full"
+              />
+            </td>
+            <td>
+              <p-dropdown
+                [(ngModel)]="d.terceroId"
+                [options]="terceroOpts"
+                optionLabel="label"
+                optionValue="value"
+                appendTo="body"
+                placeholder="Opcional"
+                [filter]="true"
+                [showClear]="true"
+                styleClass="w-full"
+              />
+            </td>
+            <td>
+              <p-dropdown
+                [(ngModel)]="d.centroCostoId"
+                [options]="centroCostoOpts"
+                optionLabel="label"
+                optionValue="value"
+                appendTo="body"
+                placeholder="Opcional"
+                [filter]="true"
+                [showClear]="true"
                 styleClass="w-full"
               />
             </td>
@@ -729,7 +767,7 @@
         </ng-template>
         <ng-template pTemplate="footer">
           <tr>
-            <td colspan="2" style="text-align: right; font-size: 0.78rem; color: #94a3b8">TOTALES</td>
+            <td colspan="4" style="text-align: right; font-size: 0.78rem; color: #94a3b8">TOTALES</td>
             <td class="text-right debito-val"><strong>{{ formatCOP(totalDebito) }}</strong></td>
             <td class="text-right credito-val"><strong>{{ formatCOP(totalCredito) }}</strong></td>
             <td></td>

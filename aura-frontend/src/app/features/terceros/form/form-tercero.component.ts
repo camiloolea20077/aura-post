@@ -35,6 +35,8 @@ import {
   CreateTerceroDto,
   esPersonaJuridica,
   RESPONSABILIDAD_FISCAL_OPTIONS,
+  TIPO_PERSONA_OPTIONS,
+  REGIMEN_OPTIONS,
   TerceroModel,
   TIPO_DOCUMENTO_OPTIONS,
   TipoDocumento,
@@ -80,6 +82,8 @@ export class FormTerceroComponent implements OnInit, OnChanges {
 
   public readonly tipoDocOpts = TIPO_DOCUMENTO_OPTIONS;
   public readonly respFiscalOpts = RESPONSABILIDAD_FISCAL_OPTIONS;
+  public readonly tipoPersonaOpts = TIPO_PERSONA_OPTIONS;
+  public readonly regimenOpts = REGIMEN_OPTIONS;
 
   // Autocomplete municipio
   municipioSugerencias: MunicipioDto[] = [];
@@ -138,6 +142,15 @@ export class FormTerceroComponent implements OnInit, OnChanges {
         esProveedor: [false],
         esEmpleado: [false],
         activo: [true],
+        // Información fiscal (V52)
+        tipoPersona: ['NATURAL'],
+        regimen: ['NO_RESPONSABLE_IVA'],
+        granContribuyente: [false],
+        autoRetenedor: [false],
+        codigoCIIU: [null, Validators.maxLength(10)],
+        actividadEconomica: [null, Validators.maxLength(200)],
+        pais: ['Colombia', Validators.maxLength(60)],
+        codigoPais: ['CO', Validators.maxLength(5)],
       },
       { validators: this.validarNombre },
     );
@@ -187,6 +200,14 @@ export class FormTerceroComponent implements OnInit, OnChanges {
       esProveedor: false,
       esEmpleado: false,
       activo: true,
+      tipoPersona: 'NATURAL',
+      regimen: 'NO_RESPONSABLE_IVA',
+      granContribuyente: false,
+      autoRetenedor: false,
+      codigoCIIU: null,
+      actividadEconomica: null,
+      pais: 'Colombia',
+      codigoPais: 'CO',
     });
   }
 
@@ -242,6 +263,14 @@ export class FormTerceroComponent implements OnInit, OnChanges {
               esProveedor: d.esProveedor,
               esEmpleado: d.esEmpleado,
               activo: d.activo,
+              tipoPersona: d.tipoPersona ?? 'NATURAL',
+              regimen: d.regimen ?? 'NO_RESPONSABLE_IVA',
+              granContribuyente: d.granContribuyente ?? false,
+              autoRetenedor: d.autoRetenedor ?? false,
+              codigoCIIU: d.codigoCIIU ?? null,
+              actividadEconomica: d.actividadEconomica ?? null,
+              pais: d.pais ?? 'Colombia',
+              codigoPais: d.codigoPais ?? 'CO',
             },
             { emitEvent: false },
           );
@@ -296,6 +325,14 @@ export class FormTerceroComponent implements OnInit, OnChanges {
       esProveedor: v.esProveedor,
       esEmpleado: v.esEmpleado,
       activo: v.activo,
+      tipoPersona: v.tipoPersona,
+      regimen: v.regimen,
+      granContribuyente: v.granContribuyente ?? false,
+      autoRetenedor: v.autoRetenedor ?? false,
+      codigoCIIU: v.codigoCIIU?.trim() || null,
+      actividadEconomica: v.actividadEconomica?.trim() || null,
+      pais: v.pais?.trim() || 'Colombia',
+      codigoPais: v.codigoPais?.trim() || 'CO',
     };
     this.isSubmitting = true;
     try {

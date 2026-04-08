@@ -1,0 +1,361 @@
+<p-toast />
+
+<div class="module-wrapper">
+  <!-- Header -->
+  <div class="module-header">
+    <div class="header-left">
+      <span class="header-icon"><i class="pi pi-lock"></i></span>
+      <div>
+        <h2>Períodos Contables</h2>
+        <p>Control de apertura y cierre de períodos — bloquea asientos en períodos cerrados</p>
+      </div>
+    </div>
+    <button
+      pButton
+      label="Abrir Período"
+      icon="pi pi-plus"
+      class="btn-aura btn-primary"
+      [disabled]="!!periodoActivo"
+      [pTooltip]="periodoActivo ? 'Cierre el período activo antes de abrir uno nuevo' : ''"
+      (click)="abrirDialogNuevo()"
+    ></button>
+  </div>
+
+  <!-- Banner período activo -->
+  <div class="periodo-activo-banner" *ngIf="periodoActivo">
+    <i class="pi pi-calendar-plus"></i>
+    <span>
+      Período activo: <strong>{{ mesLabel(periodoActivo.mes) }} {{ periodoActivo.anio }}</strong>
+      — abierto el {{ periodoActivo.fechaApertura | date:'dd/MM/yyyy' }}
+    </span>
+    <button
+      pButton
+      label="Cerrar período"
+      icon="pi pi-lock"
+      class="p-button-sm p-button-danger"
+      (click)="abrirDialogCerrar(periodoActivo)"
+    ></button>
+  </div>
+
+  <div class="periodo-activo-banner banner-warn" *ngIf="!periodoActivo && !loading">
+    <i class="pi pi-exclamation-triangle"></i>
+    <span>No hay ningún período contable abierto. Los asientos automáticos desde ventas y compras quedarán bloqueados.</span>
+  </div>
+
+  <!-- TabView -->
+  <p-tabView>
+
+    <!-- Tab 1: Listado de períodos -->
+    <p-tabPanel header="Períodos" leftIcon="pi pi-list">
+      <div class="table-card">
+        <p-table
+          [value]="periodos"
+          [loading]="loading"
+          styleClass="p-datatable-sm"
+          responsiveLayout="scroll"
+          [rowHover]="true"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Período</th>
+              <th style="width: 100px">Año</th>
+              <th style="width: 100px">Estado</th>
+              <th style="width: 140px">Apertura</th>
+              <th style="width: 140px">Cierre</th>
+              <th style="width: 110px">Asientos</th>
+              <th>Observaciones</th>
+              <th style="width: 80px"></th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-p>
+            <tr>
+              <td><strong>{{ mesLabel(p.mes) }}</strong></td>
+              <td>{{ p.anio }}</td>
+              <td>
+                <p-tag
+                  [severity]="estadoSeverity(p.estado)"
+                  [value]="p.estado"
+                />
+              </td>
+              <td>{{ p.fechaApertura | date:'dd/MM/yyyy' }}</td>
+              <td>
+                <span *ngIf="p.fechaCierre">{{ p.fechaCierre | date:'dd/MM/yyyy' }}</span>
+                <span *ngIf="!p.fechaCierre" class="text-muted">—</span>
+              </td>
+              <td>
+                <span class="badge-count">{{ p.totalAsientos }}</span>
+              </td>
+              <td>
+                <span *ngIf="p.observaciones">{{ p.observaciones }}</span>
+                <span *ngIf="!p.observaciones" class="text-muted">—</span>
+              </td>
+              <td>
+                <button
+                  *ngIf="p.estado === 'ABIERTO'"
+                  pButton
+                  icon="pi pi-lock"
+                  class="p-button-text p-button-sm p-button-rounded p-button-danger"
+                  pTooltip="Cerrar período"
+                  (click)="abrirDialogCerrar(p)"
+                ></button>
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="8" class="empty-row">
+                <i class="pi pi-lock"></i> No hay períodos contables registrados.
+                Abra el primero para comenzar.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </p-tabPanel>
+
+    <!-- Tab 2: Balance de Comprobación -->
+    <p-tabPanel header="Balance de Comprobación" leftIcon="pi pi-chart-bar">
+      <div class="balance-toolbar">
+        <div class="balance-selector">
+          <label>Seleccione período</label>
+          <p-dropdown
+            [(ngModel)]="periodoBalanceId"
+            [options]="periodos"
+            optionLabel="mes"
+            optionValue="id"
+            placeholder="Elegir período..."
+            appendTo="body"
+            styleClass="w-full"
+            [showClear]="true"
+          >
+            <ng-template let-p pTemplate="item">
+              {{ mesLabel(p.mes) }} {{ p.anio }}
+              <p-tag
+                [severity]="estadoSeverity(p.estado)"
+                [value]="p.estado"
+                styleClass="ml-2 text-xs"
+              />
+            </ng-template>
+            <ng-template let-p pTemplate="selectedItem">
+              <span *ngIf="p">{{ mesLabel(p.mes) }} {{ p.anio }}</span>
+            </ng-template>
+          </p-dropdown>
+          <button
+            pButton
+            label="Generar"
+            icon="pi pi-refresh"
+            class="btn-aura btn-primary"
+            [disabled]="!periodoBalanceId"
+            [loading]="loadingBalance"
+            (click)="cargarBalance()"
+          ></button>
+        </div>
+
+        <!-- Info del balance generado -->
+        <div class="balance-info" *ngIf="balance && !loadingBalance">
+          <span class="balance-periodo-label">
+            {{ mesLabel(balance.mes) }} {{ balance.anio }}
+            <p-tag
+              [severity]="estadoSeverity(balance.estadoPeriodo)"
+              [value]="balance.estadoPeriodo"
+              styleClass="ml-2"
+            />
+          </span>
+          <span
+            class="cuadrado-badge"
+            [class.cuadrado-ok]="balance.cuadrado"
+            [class.cuadrado-err]="!balance.cuadrado"
+          >
+            <i [class]="balance.cuadrado ? 'pi pi-check-circle' : 'pi pi-times-circle'"></i>
+            {{ balance.cuadrado ? 'Cuadrado' : 'Descuadrado' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Skeleton mientras carga -->
+      <div *ngIf="loadingBalance" class="table-card">
+        <p-skeleton height="2rem" styleClass="mb-2" />
+        <p-skeleton height="2rem" styleClass="mb-2" />
+        <p-skeleton height="2rem" styleClass="mb-2" />
+        <p-skeleton height="2rem" />
+      </div>
+
+      <!-- Tabla balance -->
+      <div class="table-card" *ngIf="balance && !loadingBalance">
+        <p-table
+          [value]="balance.lineas"
+          styleClass="p-datatable-sm"
+          responsiveLayout="scroll"
+          [rowHover]="true"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 130px">Código</th>
+              <th>Cuenta</th>
+              <th style="width: 100px">Tipo</th>
+              <th style="width: 140px; text-align: right">Débito</th>
+              <th style="width: 140px; text-align: right">Crédito</th>
+              <th style="width: 140px; text-align: right">Saldo</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-l>
+            <tr>
+              <td><code class="cuenta-code">{{ l.codigo }}</code></td>
+              <td>{{ l.nombre }}</td>
+              <td>
+                <span class="tipo-badge tipo-{{ l.tipo | lowercase }}">{{ l.tipo }}</span>
+              </td>
+              <td class="num-cell">{{ l.totalDebito | number:'1.2-2' }}</td>
+              <td class="num-cell">{{ l.totalCredito | number:'1.2-2' }}</td>
+              <td class="num-cell saldo-cell" [class.saldo-neg]="l.saldo < 0">
+                {{ l.saldo | number:'1.2-2' }}
+              </td>
+            </tr>
+          </ng-template>
+
+          <!-- Fila totales -->
+          <ng-template pTemplate="footer">
+            <tr class="totals-row">
+              <td colspan="3"><strong>TOTALES</strong></td>
+              <td class="num-cell"><strong>{{ balance.totalDebito | number:'1.2-2' }}</strong></td>
+              <td class="num-cell"><strong>{{ balance.totalCredito | number:'1.2-2' }}</strong></td>
+              <td class="num-cell">
+                <strong [class.text-danger]="!balance.cuadrado">
+                  {{ (balance.totalDebito - balance.totalCredito) | number:'1.2-2' }}
+                </strong>
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6" class="empty-row">
+                <i class="pi pi-inbox"></i> No hay movimientos registrados en este período.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <!-- Placeholder inicial -->
+      <div class="balance-placeholder" *ngIf="!balance && !loadingBalance">
+        <i class="pi pi-chart-bar"></i>
+        <p>Seleccione un período y presione <strong>Generar</strong> para ver el balance de comprobación.</p>
+      </div>
+    </p-tabPanel>
+
+  </p-tabView>
+</div>
+
+<!-- Dialog: Abrir período -->
+<p-dialog
+  [(visible)]="showAbrirDialog"
+  [modal]="true"
+  header="Abrir Período Contable"
+  [style]="{ width: '420px' }"
+  [draggable]="false"
+>
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Año <span class="req">*</span></label>
+      <p-dropdown
+        [(ngModel)]="formAbrir.anio"
+        [options]="anioOpts"
+        optionLabel="label"
+        optionValue="value"
+        appendTo="body"
+        styleClass="w-full"
+      />
+    </div>
+    <div class="form-group">
+      <label>Mes <span class="req">*</span></label>
+      <p-dropdown
+        [(ngModel)]="formAbrir.mes"
+        [options]="mesesOpts"
+        optionLabel="label"
+        optionValue="value"
+        appendTo="body"
+        styleClass="w-full"
+      />
+    </div>
+    <div class="form-group full-width">
+      <label>Observaciones</label>
+      <textarea
+        pTextarea
+        [(ngModel)]="formAbrir.observaciones"
+        rows="2"
+        placeholder="Opcional"
+        style="width: 100%; resize: vertical"
+      ></textarea>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-outlined p-button-secondary"
+      (click)="showAbrirDialog = false"
+    ></button>
+    <button
+      pButton
+      label="Abrir período"
+      icon="pi pi-check"
+      class="btn-aura btn-primary"
+      [loading]="saving"
+      [disabled]="!formAbrir.anio || !formAbrir.mes"
+      (click)="confirmarAbrir()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog: Cerrar período -->
+<p-dialog
+  [(visible)]="showCerrarDialog"
+  [modal]="true"
+  header="Cerrar Período Contable"
+  [style]="{ width: '420px' }"
+  [draggable]="false"
+>
+  <div class="aviso-cierre">
+    <i class="pi pi-exclamation-triangle"></i>
+    <p>
+      Esta acción <strong>bloqueará</strong> todos los asientos del período.
+      No se podrán generar ni modificar asientos en un período cerrado.
+    </p>
+    <p>Se validará que todos los comprobantes cuadren (débito = crédito) antes de cerrar.</p>
+  </div>
+
+  <div class="form-group" style="margin-top: 1rem">
+    <label>Observaciones de cierre</label>
+    <textarea
+      pTextarea
+      [(ngModel)]="observacionesCierre"
+      rows="2"
+      placeholder="Opcional"
+      style="width: 100%; resize: vertical"
+    ></textarea>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-outlined p-button-secondary"
+      (click)="showCerrarDialog = false"
+    ></button>
+    <button
+      pButton
+      label="Confirmar cierre"
+      icon="pi pi-lock"
+      class="p-button-danger"
+      [loading]="saving"
+      (click)="confirmarCerrar()"
+    ></button>
+  </ng-template>
+</p-dialog>

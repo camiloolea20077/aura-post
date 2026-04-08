@@ -116,7 +116,7 @@ export interface CreateVentaPagoDto {
 }
 
 export interface CreateVentaDto {
-  turnoCajaId: number;
+  turnoCajaId: number | null;
   clienteId: number | null;
   detalles: CreateVentaDetalleDto[];
   pagos: CreateVentaPagoDto[];

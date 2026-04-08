@@ -280,6 +280,16 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         route: '/contabilidad/asientos',
       },
       {
+        label: 'Centros de Costo',
+        icon: 'pi pi-sitemap',
+        route: '/contabilidad/centros-costo',
+      },
+      {
+        label: 'Períodos Contables',
+        icon: 'pi pi-lock',
+        route: '/contabilidad/periodos',
+      },
+      {
         label: 'Cierre Contable',
         icon: 'pi pi-calendar-times',
         route: '/contabilidad/cierre',
@@ -295,6 +305,16 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         route: '/contabilidad/reporte-iva',
       },
       { label: 'Gastos', icon: 'pi pi-wallet', route: '/gastos' },
+      {
+        label: 'Activos Fijos',
+        icon: 'pi pi-building',
+        route: '/contabilidad/activos-fijos',
+      },
+      {
+        label: 'Tarifas Retención',
+        icon: 'pi pi-percentage',
+        route: '/contabilidad/tarifas-retencion',
+      },
     ],
   },
 

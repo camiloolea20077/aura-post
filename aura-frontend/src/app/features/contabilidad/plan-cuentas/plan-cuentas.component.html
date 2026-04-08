@@ -29,12 +29,14 @@
 
   <div class="search-wrap">
     <span class="p-input-icon-left">
-      <i class="pi pi-search"></i>
-      <input
-        pInputText
-        [(ngModel)]="search"
-        placeholder="Buscar por código o nombre…"
-      />
+      <p-iconfield>
+        <p-inputicon class="pi pi-search" />
+        <input
+          pInputText
+          [(ngModel)]="search"
+          placeholder="Buscar por código o descripción..."
+        />
+      </p-iconfield>
     </span>
   </div>
 

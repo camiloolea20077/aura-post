@@ -4,8 +4,8 @@
   <p>Verificando turno activo...</p>
 </div>
 
-<!-- GUARD: sin turno -->
-<div class="guard-container guard-error" *ngIf="!loadingTurno && turnoError">
+<!-- GUARD: sin turno (solo para roles que requieren turno) -->
+<div class="guard-container guard-error" *ngIf="!loadingTurno && turnoError && !esVendedor">
   <div class="guard-icon"><i class="pi pi-lock"></i></div>
   <h3>Sin turno abierto</h3>
   <p>Debes abrir un turno de caja antes de registrar ventas.</p>
@@ -21,7 +21,7 @@
 <!-- ═══════════════════════════════════════════════════════════════
     POS PRINCIPAL
 ════════════════════════════════════════════════════════════════ -->
-<div class="pos-layout" *ngIf="!loadingTurno && !turnoError">
+<div class="pos-layout" *ngIf="!loadingTurno && (!turnoError || esVendedor)">
   <!-- ══ PANEL IZQUIERDO — Catálogo ════════════════════════════ -->
   <div class="catalog-panel">
     <!-- Header: turno + búsqueda -->
@@ -29,9 +29,10 @@
       <div class="catalog-turno-row">
         <div class="catalog-turno">
           <span class="turno-dot"></span>
-          <span class="turno-label">{{ turnoActivo?.cajaNombre }}</span>
+          <span class="turno-label">{{ esVendedor ? 'Vendedor' : turnoActivo?.cajaNombre }}</span>
         </div>
         <button
+          *ngIf="!esVendedor"
           class="btn-mov-chip"
           pTooltip="Registrar ingreso o egreso de caja"
           tooltipPosition="bottom"
@@ -838,9 +839,16 @@
     [displayModal]="showMovimiento"
     [turno]="turnoActivo"
     (modalClosed)="showMovimiento = false"
-    (movimientoRegistrado)="showMovimiento = false"
+    (movimientoRegistrado)="onMovimientoRegistrado($event)"
   />
 }
+
+<!-- Ticket comprobante ingreso / egreso -->
+<app-ticket-comprobante-caja
+  [comprobante]="comprobanteMovimiento"
+  [visible]="showTicketMovimiento"
+  (closed)="showTicketMovimiento = false; comprobanteMovimiento = null"
+/>
 
 <!-- Modal nuevo cliente -->
 @if (showNuevoCliente) {
