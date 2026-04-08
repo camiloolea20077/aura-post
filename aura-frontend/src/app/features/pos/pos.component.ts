@@ -134,6 +134,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   public turnoError = false;
   public loadingTurno = true;
   public esVendedor = false;
+  private vendedorSucursalId: number | null = null;
 
   // ── Catálogo ───────────────────────────────────────────────
   public productos: ProductoPOS[] = [];
@@ -348,6 +349,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       if (rol === 'VENDEDOR') {
         this.esVendedor = true;
         this.turnoError = false;
+        this.vendedorSucursalId = await this.indexDBService.getSucursalDefault();
         this.initTabs();
         this.loadProductos();
         return;
@@ -1131,6 +1133,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const dto: CreateVentaDto = {
       turnoCajaId: this.turnoActivo?.id ?? null,
+      sucursalId: this.esVendedor ? this.vendedorSucursalId : null,
       clienteId: this.clienteId,
       detalles: this.cart.map((c) => ({
         productoId: c.productoId,
