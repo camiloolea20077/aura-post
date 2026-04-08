@@ -1,0 +1,312 @@
+<div class="qr-scanner-wrapper" [class]="themeClass">
+  <!-- Header -->
+  <div class="scanner-header">
+    <div class="scanner-title">
+      <svg
+        class="icon-scan"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <rect x="3" y="3" width="7" height="7" rx="1" />
+        <rect x="14" y="3" width="7" height="7" rx="1" />
+        <rect x="3" y="14" width="7" height="7" rx="1" />
+        <path d="M14 14h2v2h-2zM18 14h3v2h-3zM14 18h2v3h-2zM18 18h3v3h-3z" />
+      </svg>
+      <span>{{ title }}</span>
+    </div>
+    <div class="header-right">
+      <span class="mode-chip">{{ modeLabelText }}</span>
+      <!-- Botón toggle de tema -->
+      <button
+        class="theme-toggle"
+        (click)="cycleTheme()"
+        [title]="themeToggleTitle"
+      >
+        <svg
+          *ngIf="effectiveTheme === 'dark'"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"
+          />
+        </svg>
+        <svg
+          *ngIf="effectiveTheme === 'light'"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </button>
+      <div class="scanner-badge" [class]="'badge-' + state">
+        {{ stateLabel }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Selector de modo -->
+  <div class="mode-selector" *ngIf="showModeSelector">
+    <button
+      *ngFor="let m of modes"
+      class="mode-btn"
+      [class.active]="scanMode === m.value"
+      (click)="setScanMode(m.value)"
+      [disabled]="state === 'scanning'"
+    >
+      <svg viewBox="0 0 16 16" fill="currentColor" [innerHTML]="m.icon"></svg>
+      {{ m.label }}
+    </button>
+  </div>
+
+  <!-- Viewport -->
+  <div class="scanner-viewport" [class.active]="state === 'scanning'">
+    <video
+      #videoElement
+      class="scanner-video"
+      [class.visible]="state === 'scanning'"
+      autoplay
+      muted
+      playsinline
+      webkit-playsinline
+    ></video>
+    <canvas #canvasElement class="scanner-canvas"></canvas>
+
+    <!-- Overlay -->
+    <div
+      class="scanner-overlay"
+      *ngIf="state === 'scanning' && config.showOverlay !== false"
+    >
+      <div class="scan-frame" [class.frame-bar]="scanMode === 'barcode-only'">
+        <span class="corner tl"></span>
+        <span class="corner tr"></span>
+        <span class="corner bl"></span>
+        <span class="corner br"></span>
+        <div class="scan-line"></div>
+        <div class="scan-hint">{{ modeHintText }}</div>
+      </div>
+      <div class="scan-vignette"></div>
+    </div>
+
+    <!-- Estado: Idle -->
+    <div class="state-screen" *ngIf="state === 'idle'">
+      <div class="state-icon idle-icon">
+        <svg
+          viewBox="0 0 64 64"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+        >
+          <rect x="8" y="8" width="20" height="20" rx="2" />
+          <rect
+            x="12"
+            y="12"
+            width="12"
+            height="12"
+            rx="1"
+            fill="currentColor"
+            stroke="none"
+            opacity="0.3"
+          />
+          <rect x="36" y="8" width="20" height="20" rx="2" />
+          <rect
+            x="40"
+            y="12"
+            width="12"
+            height="12"
+            rx="1"
+            fill="currentColor"
+            stroke="none"
+            opacity="0.3"
+          />
+          <rect x="8" y="36" width="20" height="20" rx="2" />
+          <rect
+            x="12"
+            y="40"
+            width="12"
+            height="12"
+            rx="1"
+            fill="currentColor"
+            stroke="none"
+            opacity="0.3"
+          />
+          <rect
+            x="36"
+            y="38"
+            width="3"
+            height="16"
+            rx="1"
+            fill="currentColor"
+            stroke="none"
+          />
+          <rect
+            x="41"
+            y="38"
+            width="5"
+            height="16"
+            rx="1"
+            fill="currentColor"
+            stroke="none"
+          />
+          <rect
+            x="48"
+            y="38"
+            width="2"
+            height="16"
+            rx="1"
+            fill="currentColor"
+            stroke="none"
+          />
+          <rect
+            x="52"
+            y="38"
+            width="4"
+            height="16"
+            rx="1"
+            fill="currentColor"
+            stroke="none"
+          />
+        </svg>
+      </div>
+      <p class="state-text">Listo para escanear</p>
+      <button class="btn-primary" (click)="startScanning()">
+        <svg viewBox="0 0 20 20" fill="currentColor">
+          <path
+            d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zm12.553 1.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"
+          />
+        </svg>
+        Iniciar camara
+      </button>
+    </div>
+
+    <!-- Estado: Solicitando -->
+    <div class="state-screen" *ngIf="state === 'requesting'">
+      <div class="state-icon spin-icon">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"
+          />
+        </svg>
+      </div>
+      <p class="state-text">Solicitando acceso a camara...</p>
+    </div>
+
+    <!-- Estado: Error -->
+    <div class="state-screen" *ngIf="state === 'error'">
+      <div class="state-icon error-icon">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 8v4M12 16h.01" />
+        </svg>
+      </div>
+      <p class="state-text">{{ errorMessage }}</p>
+      <button class="btn-secondary" (click)="startScanning()">
+        Reintentar
+      </button>
+    </div>
+
+    <!-- Estado: Detenido -->
+    <div class="state-screen" *ngIf="state === 'stopped'">
+      <div class="state-icon success-icon">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M9 12l2 2 4-4" />
+          <circle cx="12" cy="12" r="10" />
+        </svg>
+      </div>
+      <p class="state-text">Escaneo completado</p>
+      <button class="btn-primary" (click)="startScanning()">
+        Escanear otro
+      </button>
+    </div>
+  </div>
+
+  @if (showResult) {
+    <!-- Resultado -->
+    <div class="scan-result" *ngIf="lastResult">
+      <div class="result-header">
+        <svg viewBox="0 0 16 16" fill="currentColor">
+          <path
+            d="M13.854 3.646a.5.5 0 010 .708l-7 7a.5.5 0 01-.708 0l-3.5-3.5a.5.5 0 11.708-.708L6.5 10.293l6.646-6.647a.5.5 0 01.708 0z"
+          />
+        </svg>
+        <span>Codigo detectado</span>
+        <span class="format-tag" [class]="'fmt-' + lastResult.type">{{
+          lastResult.format
+        }}</span>
+        <small>{{ lastResult.timestamp | date: "HH:mm:ss" }}</small>
+      </div>
+      <div class="result-value">{{ lastResult.data }}</div>
+      <div class="result-actions">
+        <button class="btn-icon" (click)="copyResult()">
+          <svg viewBox="0 0 20 20" fill="currentColor">
+            <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+            <path
+              d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"
+            />
+          </svg>
+          {{ copied ? "Copiado!" : "Copiar" }}
+        </button>
+        <button
+          class="btn-icon"
+          *ngIf="isUrl(lastResult.data)"
+          (click)="openUrl(lastResult.data)"
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor">
+            <path
+              d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"
+            />
+            <path
+              d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"
+            />
+          </svg>
+          Abrir URL
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Controles durante escaneo -->
+  <div class="scanner-controls" *ngIf="state === 'scanning'">
+    <button class="btn-control" (click)="toggleCamera()">
+      <svg viewBox="0 0 20 20" fill="currentColor">
+        <path
+          fill-rule="evenodd"
+          d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z"
+          clip-rule="evenodd"
+        />
+      </svg>
+      Girar camara
+    </button>
+    <button class="btn-control btn-stop" (click)="stopScanning()">
+      <svg viewBox="0 0 20 20" fill="currentColor">
+        <path
+          fill-rule="evenodd"
+          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z"
+          clip-rule="evenodd"
+        />
+      </svg>
+      Detener
+    </button>
+  </div>
+</div>

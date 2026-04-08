@@ -257,6 +257,16 @@ export const routes: Routes = [
             (m) => m.IndexVentasComponent,
           ),
       },
+
+      // Vendedores
+      {
+        path: 'vendedores',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN', 'VENDEDOR'])],
+        loadChildren: () =>
+          import('./features/vendedores/vendedores.routes').then(
+            (m) => m.VENDEDORES_ROUTES,
+          ),
+      },
       {
         path: 'cotizaciones',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN', 'CAJERO'])],
@@ -330,6 +340,16 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/usuarios/index/index-usuarios.component').then(
             (m) => m.IndexUsuariosComponent,
+          ),
+      },
+
+      // Configuración
+      {
+        path: 'configuracion/tipos-empleado',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/configuracion/tipos-empleado/index/index-tipos-empleado.component').then(
+            (m) => m.IndexTiposEmpleadoComponent,
           ),
       },
 

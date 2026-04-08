@@ -1,0 +1,123 @@
+<div class="visitas-container">
+  <div class="toolbar">
+    <span class="search-wrap">
+      <i class="pi pi-search"></i>
+      <input
+        type="text"
+        pInputText
+        placeholder="Buscar visitas..."
+        [(ngModel)]="search"
+        (input)="onSearch()"
+        class="search-input"
+      />
+    </span>
+    <button
+      pButton
+      label="Confirmar Visita (QR)"
+      icon="pi pi-qrcode"
+      class="btn-aura"
+      (click)="nuevaConQR()"
+    ></button>
+  </div>
+
+  <div class="table-card">
+    <p-table
+      [value]="rows"
+      [lazy]="true"
+      [loading]="loading"
+      [totalRecords]="totalRows"
+      [rows]="pageSize"
+      [paginator]="true"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      (onPage)="onPage($event)"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords}"
+      styleClass="p-datatable-sm p-datatable-gridlines"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 80px">#</th>
+          <th>Local</th>
+          <th>Dirección</th>
+          <th>Ruta</th>
+          <th>Fecha</th>
+          <th>Hora</th>
+          <th>Estado</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-v>
+        <tr>
+          <td class="mono text-muted">{{ v.id }}</td>
+          <td class="fw-600">{{ v.localNombre }}</td>
+          <td>{{ v.localDireccion }}</td>
+          <td>{{ v.rutaNombre ?? "-" }}</td>
+          <td>{{ v.fechaProgramada }}</td>
+          <td>{{ v.horaProgramada ?? "-" }}</td>
+          <td>
+            <p-tag [value]="v.estado" [severity]="getSeverity(v.estado)" />
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="empty-row">No hay visitas registradas</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<p-dialog
+  header="Escanear QR"
+  [(visible)]="showScanner"
+  [modal]="true"
+  [style]="{ width: '400px' }"
+  [draggable]="false"
+  (onHide)="showScanner = false"
+>
+  <div class="scanner-content">
+    <app-qr-scanner
+      title="Fije el QR del local en el centro"
+      [config]="{ stopOnFirstScan: true, facingMode: 'environment' }"
+      (scanned)="onQrScanned($event)"
+      scanMode="qr-only"
+      theme="light"
+      [showModeSelector]="false"
+      [showResult]="false"
+    />
+  </div>
+</p-dialog>
+
+<p-dialog
+  header="Sin ruta encontrada"
+  [(visible)]="showNoRutaConfirm"
+  [modal]="true"
+  [style]="{ width: '400px' }"
+  [draggable]="false"
+>
+  <div class="no-ruta-content">
+    <i class="pi pi-exclamation-triangle"></i>
+    <p>No se encontró una ruta existente para este local, día y vendedor.</p>
+    <p class="question">¿Desea registrar la visita de todos modos?</p>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="cancelarSinRuta()"
+    ></button>
+    <button
+      pButton
+      label="Sí, registrar visita"
+      icon="pi pi-check"
+      class="btn-aura"
+      [loading]="saving"
+      (click)="crearSinRutaConfirmado()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<p-toast />

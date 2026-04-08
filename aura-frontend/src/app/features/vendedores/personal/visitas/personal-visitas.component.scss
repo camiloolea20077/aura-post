@@ -1,0 +1,173 @@
+.visitas-container {
+  padding: 1rem 0;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  .pi-search {
+    position: absolute;
+    left: 0.75rem;
+    color: #94a3b8;
+    font-size: 0.82rem;
+    pointer-events: none;
+  }
+
+  .search-input {
+    height: 38px;
+    padding-left: 2.2rem;
+    border-radius: 10px;
+    border: 1.5px solid #e2e8f0;
+    font-size: 0.85rem;
+    width: 250px;
+  }
+}
+
+.table-card {
+  background: #fff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.text-muted {
+  color: #94a3b8;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.fw-600 {
+  font-weight: 600;
+}
+
+.empty-row {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  padding: 2rem !important;
+}
+
+.scanner-content {
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.scan-start {
+  text-align: center;
+
+  i {
+    font-size: 3rem;
+    color: #94a3b8;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    color: #94a3b8;
+    margin-bottom: 1rem;
+  }
+}
+
+.scanner-area {
+  width: 100%;
+  text-align: center;
+
+  #qr-reader-personal {
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+
+  .hint {
+    color: #94a3b8;
+    font-size: 0.9rem;
+  }
+}
+
+.scan-result {
+  text-align: center;
+
+  i {
+    font-size: 2.5rem;
+    color: #10b981;
+    margin-bottom: 0.5rem;
+  }
+
+  .local-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 1rem;
+  }
+
+  button {
+    margin: 0.25rem;
+  }
+}
+
+.rutas-selection {
+  width: 100%;
+  text-align: center;
+
+  p {
+    color: #94a3b8;
+    margin-bottom: 0.75rem;
+  }
+
+  .rutas-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+}
+
+.no-rutas {
+  text-align: center;
+
+  p {
+    color: #94a3b8;
+    margin-bottom: 1rem;
+  }
+}
+
+.no-ruta-content {
+  text-align: center;
+  padding: 1rem 0;
+
+  i {
+    font-size: 3rem;
+    color: #f59e0b;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+  }
+
+  .question {
+    font-weight: 600;
+    color: #1e293b;
+  }
+}
+
+::ng-deep .btn-aura {
+  background: linear-gradient(135deg, #6366f1, #818cf8) !important;
+  border: none !important;
+  font-weight: 600 !important;
+}

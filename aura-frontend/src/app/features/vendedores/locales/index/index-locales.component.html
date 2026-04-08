@@ -1,0 +1,216 @@
+<div class="module-container">
+  <!-- Header -->
+  <div class="module-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="pi pi-map-marker"></i>
+      </div>
+      <div>
+        <h2 class="header-title">Locales</h2>
+        <p class="header-sub">
+          Gestión de locales (puntos de venta de vendedores)
+        </p>
+      </div>
+    </div>
+    <button
+      pButton
+      label="Nuevo local"
+      icon="pi pi-plus"
+      class="btn-aura"
+      (click)="nuevo()"
+    ></button>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="table-toolbar">
+    <span class="search-wrap">
+      <i class="pi pi-search"></i>
+      <input
+        type="text"
+        pInputText
+        placeholder="Buscar por nombre o dirección..."
+        [(ngModel)]="search"
+        (input)="onSearch()"
+        class="search-input"
+      />
+    </span>
+  </div>
+
+  <!-- Tabla -->
+  <div class="table-card">
+    <p-table
+      [value]="rows"
+      [lazy]="true"
+      [loading]="loading"
+      [totalRecords]="totalRows"
+      [rows]="pageSize"
+      [paginator]="true"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      (onPage)="onPage($event)"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords}"
+      styleClass="p-datatable-sm p-datatable-gridlines"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 80px">#</th>
+          <th>Nombre</th>
+          <th>Dirección</th>
+          <th>Barrio</th>
+          <th>Ciudad</th>
+          <th>Vendedor Actual</th>
+          <th>Ruta</th>
+          <th style="width: 100px">Estado</th>
+          <th style="width: 110px">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-l>
+        <tr>
+          <td class="mono text-muted">{{ l.id }}</td>
+          <td class="fw-600">{{ l.nombre }}</td>
+          <td>{{ l.direccion }}</td>
+          <td>{{ l.barrio ?? "-" }}</td>
+          <td>{{ l.ciudad ?? "-" }}</td>
+          <td>{{ l.vendedorActualNombre ?? "-" }}</td>
+          <td>{{ l.rutaNombre ?? "-" }}</td>
+          <td>
+            <p-tag
+              [value]="l.activo ? 'Activo' : 'Inactivo'"
+              [severity]="getSeverity(l.activo)"
+            />
+          </td>
+          <td>
+            <div class="actions">
+              <button
+                pButton
+                icon="pi pi-qrcode"
+                class="p-button-text p-button-sm"
+                pTooltip="Generar QR"
+                (click)="abrirQR(l)"
+              ></button>
+              <button
+                pButton
+                icon="pi pi-user-plus"
+                class="p-button-text p-button-sm"
+                pTooltip="Asignar vendedor"
+                (click)="abrirAsignarVendedor(l)"
+              ></button>
+              <button
+                pButton
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm"
+                pTooltip="Editar"
+                (click)="editLocal(l)"
+              ></button>
+              <button
+                pButton
+                icon="pi pi-trash"
+                class="p-button-text p-button-danger p-button-sm"
+                pTooltip="Eliminar"
+                (click)="confirmDelete(l)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9" class="empty-row">No hay locales registrados</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- Modal formulario -->
+<app-form-local
+  [(visible)]="showForm"
+  [local]="selectedLocal"
+  (saved)="onSaved()"
+  (visibleChange)="onFormClosed()"
+/>
+
+<!-- Modal asignar vendedor -->
+<p-dialog
+  [header]="'Asignar Vendedor - ' + (localParaAsignar?.nombre || '')"
+  [(visible)]="showAsignarVendedor"
+  [modal]="true"
+  [style]="{ width: '420px' }"
+  [draggable]="false"
+>
+  <div class="form-field">
+    <label>Seleccionar vendedor</label>
+    <p-dropdown
+      [options]="vendedores"
+      [(ngModel)]="selectedVendedorId"
+      optionLabel="label"
+      optionValue="value"
+      placeholder="Selecciona un vendedor"
+      [filter]="true"
+      [filterBy]="'label'"
+      appendTo="body"
+      [showClear]="true"
+      [style]="{ width: '100%' }"
+    />
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="showAsignarVendedor = false"
+    ></button>
+    <button
+      pButton
+      label="Asignar"
+      icon="pi pi-check"
+      class="btn-aura"
+      [loading]="savingVendedor"
+      [disabled]="selectedVendedorId === null"
+      (click)="asignarVendedor()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog />
+<p-toast />
+
+<!-- Modal QR -->
+<p-dialog
+  [header]="'QR - ' + (qrLocal?.nombre || '')"
+  [(visible)]="showQR"
+  [modal]="true"
+  [style]="{ width: '320px' }"
+  [draggable]="false"
+  (onHide)="cerrarQR()"
+>
+  <div class="qr-dialog-content">
+    <div id="qr-print-area" class="qr-print-area">
+      <qrcode
+        [qrdata]="qrData"
+        [width]="200"
+        [errorCorrectionLevel]="'M'"
+      ></qrcode>
+    </div>
+    <p class="qr-hint">Escanee este código para registrar visita</p>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cerrar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="cerrarQR()"
+    ></button>
+    <button
+      pButton
+      label="Imprimir"
+      icon="pi pi-print"
+      class="btn-aura"
+      (click)="printQR()"
+    ></button>
+  </ng-template>
+</p-dialog>

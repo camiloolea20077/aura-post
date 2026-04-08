@@ -1,0 +1,60 @@
+<div class="module-container">
+  <div class="module-header">
+    <div class="header-left">
+      <div class="header-icon">
+        <i class="pi pi-qrcode"></i>
+      </div>
+      <div>
+        <h2 class="header-title">Escanear QR</h2>
+        <p class="header-sub">
+          Escanee el código QR del local para registrar visita
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="w-full scan-content">
+    <app-qr-scanner
+      title="Fije el QR en el centro de la pantalla"
+      [config]="{ stopOnFirstScan: true, facingMode: 'environment' }"
+      (scanned)="onScanned($event)"
+      scanMode="qr-only"
+      theme="light"
+      [showModeSelector]="false"
+      [showResult]="false"
+    />
+  </div>
+</div>
+
+<p-dialog
+  header="Sin ruta encontrada"
+  [(visible)]="showNoRutaConfirm"
+  [modal]="true"
+  [style]="{ width: '400px' }"
+  [draggable]="false"
+>
+  <div class="no-ruta-content">
+    <i class="pi pi-exclamation-triangle"></i>
+    <p>No se encontró una ruta existente para este local, día y vendedor.</p>
+    <p class="question">¿Desea registrar la visita de todos modos?</p>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="cancelarSinRuta()"
+    ></button>
+    <button
+      pButton
+      label="Sí, registrar visita"
+      icon="pi pi-check"
+      class="btn-aura"
+      [loading]="saving"
+      (click)="crearSinRutaConfirmado()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<p-toast />

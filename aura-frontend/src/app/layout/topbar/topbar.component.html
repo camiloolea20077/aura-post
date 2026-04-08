@@ -1,15 +1,17 @@
 <header class="aura-topbar">
   <!-- ─── Left ──────────────────────────────────── -->
   <div class="topbar-left">
-    <!-- Hamburger -->
-    <button
-      class="topbar-btn hamburger"
-      (click)="toggleSidebar.emit()"
-      pTooltip="Colapsar menú"
-      tooltipPosition="bottom"
-    >
-      <i class="pi pi-bars"></i>
-    </button>
+    <!-- Hamburger (solo desktop) -->
+    @if (!state.isMobile()) {
+      <button
+        class="topbar-btn hamburger"
+        (click)="toggleSidebar.emit()"
+        pTooltip="Colapsar menú"
+        tooltipPosition="bottom"
+      >
+        <i class="pi pi-bars"></i>
+      </button>
+    }
 
     <!-- Breadcrumbs -->
     <nav class="breadcrumb-nav">
@@ -57,14 +59,14 @@
     </div>
 
     <!-- Modo oscuro -->
-    <button
+    <!-- <button
       class="topbar-btn"
       (click)="toggleDarkMode()"
       [pTooltip]="darkMode ? 'Modo claro' : 'Modo oscuro'"
       tooltipPosition="bottom"
     >
       <i [class]="darkMode ? 'pi pi-sun' : 'pi pi-moon'"></i>
-    </button>
+    </button> -->
 
     <!-- Notificaciones -->
     <button
@@ -122,5 +124,14 @@
         </a>
       </div>
     </p-overlaypanel>
+
+    <!-- Mobile Menu Button -->
+    @if (state.isMobile()) {
+      <app-mobile-menu
+        [userName]="userName"
+        (closeMenu)="onMobileMenuClose()"
+        (logout)="onLogout()"
+      />
+    }
   </div>
 </header>

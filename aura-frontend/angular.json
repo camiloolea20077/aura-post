@@ -34,7 +34,11 @@
                 "output": "assets"
               }
             ],
-            "styles": ["src/styles.scss"],
+            "styles": [
+              "node_modules/maplibre-gl/dist/maplibre-gl.css",
+              "node_modules/leaflet/dist/leaflet.css",
+              "src/styles.scss"
+            ],
             "scripts": []
           },
           "configurations": {

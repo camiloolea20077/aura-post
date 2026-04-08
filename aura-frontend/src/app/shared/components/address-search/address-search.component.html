@@ -1,0 +1,149 @@
+<div class="address-search-wrapper">
+  <!-- Search box -->
+  <div class="search-container">
+    <div
+      class="search-box"
+      [class.active]="showSuggestions && suggestions.length > 0"
+    >
+      <div class="search-input-row">
+        <svg class="search-icon" viewBox="0 0 20 20" fill="none">
+          <circle
+            cx="9"
+            cy="9"
+            r="6"
+            stroke="currentColor"
+            stroke-width="1.5"
+          />
+          <path
+            d="M13.5 13.5L17 17"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          />
+        </svg>
+        <input
+          #searchInput
+          type="text"
+          class="search-input"
+          placeholder="Buscar dirección..."
+          [(ngModel)]="searchQuery"
+          (ngModelChange)="onQueryChange($event)"
+          (focus)="onFocus()"
+          (blur)="onBlur()"
+          (keydown)="onKeyDown($event)"
+          autocomplete="off"
+        />
+        <button
+          *ngIf="searchQuery"
+          class="clear-btn"
+          (mousedown)="clearSearch()"
+          type="button"
+        >
+          <svg viewBox="0 0 16 16" fill="none">
+            <path
+              d="M4 4l8 8M12 4l-8 8"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
+        <div class="spinner" *ngIf="isLoading"></div>
+      </div>
+
+      <!-- Suggestions dropdown -->
+      <ul class="suggestions" *ngIf="showSuggestions && suggestions.length > 0">
+        <li
+          *ngFor="let item of suggestions; let i = index"
+          class="suggestion-item"
+          [class.highlighted]="i === highlightedIndex"
+          (mousedown)="selectSuggestion(item)"
+        >
+          <svg class="pin-icon" viewBox="0 0 16 20" fill="none">
+            <path
+              d="M8 0C4.69 0 2 2.69 2 6c0 4.5 6 14 6 14s6-9.5 6-14c0-3.31-2.69-6-6-6z"
+              fill="currentColor"
+            />
+            <circle cx="8" cy="6" r="2" fill="white" />
+          </svg>
+          <div class="suggestion-text">
+            <span class="suggestion-main">{{ getMainName(item) }}</span>
+            <span class="suggestion-sub">{{ getSubName(item) }}</span>
+          </div>
+        </li>
+      </ul>
+
+      <!-- No results -->
+      <div
+        class="no-results"
+        *ngIf="
+          showSuggestions &&
+          !isLoading &&
+          suggestions.length === 0 &&
+          searchQuery.length > 2
+        "
+      >
+        Sin resultados para "{{ searchQuery }}"
+      </div>
+    </div>
+  </div>
+
+  <!-- Selected location info -->
+  <div class="location-info" *ngIf="selectedLocation">
+    <div class="location-info-inner">
+      <div class="location-address">{{ selectedLocation.displayName }}</div>
+      <div class="location-coords">
+        <span class="coord-badge"
+          >Lat {{ selectedLocation.lat | number: "1.5-5" }}</span
+        >
+        <span class="coord-badge"
+          >Lng {{ selectedLocation.lng | number: "1.5-5" }}</span
+        >
+      </div>
+    </div>
+    <button
+      class="copy-btn"
+      (click)="copyCoords()"
+      [class.copied]="copied"
+      type="button"
+    >
+      <svg *ngIf="!copied" viewBox="0 0 16 16" fill="none">
+        <rect
+          x="5"
+          y="5"
+          width="9"
+          height="9"
+          rx="1.5"
+          stroke="currentColor"
+          stroke-width="1.2"
+        />
+        <path
+          d="M2 11V2h9"
+          stroke="currentColor"
+          stroke-width="1.2"
+          stroke-linecap="round"
+        />
+      </svg>
+      <svg *ngIf="copied" viewBox="0 0 16 16" fill="none">
+        <path
+          d="M3 8l4 4 6-7"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Map -->
+  <div class="map-container">
+    <div #mapContainer class="map"></div>
+    <!-- <div class="map-attribution">
+      ©
+      <a href="https://www.openstreetmap.org/copyright" target="_blank"
+        >OpenStreetMap</a
+      >
+    </div> -->
+  </div>
+</div>
