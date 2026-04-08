@@ -228,39 +228,101 @@
         />
       </div>
 
-      <!-- Mostrar Nombre -->
-      <div
-        class="config-section flex align-items-center justify-content-between"
-      >
-        <label>Mostrar nombre del producto</label>
-        <p-toggleButton
-          [(ngModel)]="settings.mostrarNombre"
-          onLabel="SÍ"
-          offLabel="NO"
-          onIcon="pi pi-check"
-          offIcon="pi pi-times"
-        />
+      <div class="w-full flex gap-2 justify-content-between">
+        <!-- Mostrar Nombre -->
+        <div
+          class="config-section flex align-items-center justify-content-between"
+        >
+          <label>Mostrar nombre del producto</label>
+          <p-toggleButton
+            [(ngModel)]="settings.mostrarNombre"
+            onLabel="SÍ"
+            offLabel="NO"
+            onIcon="pi pi-check"
+            offIcon="pi pi-times"
+          />
+        </div>
+
+        <!-- Mostrar Precio -->
+        <div
+          class="config-section flex align-items-center justify-content-between"
+        >
+          <label>Mostrar precio del producto</label>
+          <p-toggleButton
+            [(ngModel)]="settings.mostrarPrecio"
+            onLabel="SÍ"
+            offLabel="NO"
+            onIcon="pi pi-check"
+            offIcon="pi pi-times"
+          />
+        </div>
+      </div>
+
+      <!-- Márgenes de página -->
+      <div class="config-grid-2">
+        <div class="config-section">
+          <div class="flex justify-content-between mb-2">
+            <label
+              >Margen Horizontal:
+              <b>{{ settings.marginHorizontal }}px</b></label
+            >
+          </div>
+          <p-slider
+            [(ngModel)]="settings.marginHorizontal"
+            [min]="0"
+            [max]="150"
+          />
+        </div>
+        <div class="config-section">
+          <div class="flex justify-content-between mb-2">
+            <label
+              >Margen Vertical: <b>{{ settings.marginVertical }}px</b></label
+            >
+          </div>
+          <p-slider
+            [(ngModel)]="settings.marginVertical"
+            [min]="0"
+            [max]="150"
+          />
+        </div>
+      </div>
+
+      <!-- Control de Hoja -->
+      <div class="config-grid-2">
+        <div class="config-section">
+          <div class="flex justify-content-between mb-2">
+            <label
+              >Saltar espacios: <b>{{ settings.saltarEtiquetas }}</b></label
+            >
+          </div>
+          <p-slider [(ngModel)]="settings.saltarEtiquetas" [min]="0" [max]="50" />
+        </div>
+        <div class="config-section">
+          <div class="flex justify-content-between mb-2">
+            <label>Auto-alinear al final</label>
+          </div>
+          <p-toggleButton
+            [(ngModel)]="settings.alinearFinal"
+            onLabel="SÍ"
+            offLabel="NO"
+            onIcon="pi pi-check"
+            offIcon="pi pi-times"
+          />
+        </div>
       </div>
 
       <!-- Max caracteres nombre -->
       <div class="config-section" *ngIf="settings.mostrarNombre">
         <div class="flex justify-content-between mb-2">
-          <label>Máx. caracteres del nombre: <b>{{ settings.maxCaracteresNombre }}</b></label>
+          <label
+            >Máx. caracteres del nombre:
+            <b>{{ settings.maxCaracteresNombre }}</b></label
+          >
         </div>
-        <p-slider [(ngModel)]="settings.maxCaracteresNombre" [min]="5" [max]="100" />
-      </div>
-
-      <!-- Mostrar Precio -->
-      <div
-        class="config-section flex align-items-center justify-content-between"
-      >
-        <label>Mostrar precio del producto</label>
-        <p-toggleButton
-          [(ngModel)]="settings.mostrarPrecio"
-          onLabel="SÍ"
-          offLabel="NO"
-          onIcon="pi pi-check"
-          offIcon="pi pi-times"
+        <p-slider
+          [(ngModel)]="settings.maxCaracteresNombre"
+          [min]="5"
+          [max]="100"
         />
       </div>
 
