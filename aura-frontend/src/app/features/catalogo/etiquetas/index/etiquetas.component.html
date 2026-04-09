@@ -211,174 +211,227 @@
     header="Configuración de impresión"
     [(visible)]="showSettings"
     [modal]="true"
-    [style]="{ width: '450px' }"
+    [style]="{ width: '480px' }"
     [draggable]="false"
     [resizable]="false"
     styleClass="dialog-config"
   >
     <div class="config-form">
-      <!-- Layout -->
-      <div class="config-section">
-        <label>Número de columnas</label>
-        <p-selectButton
-          [options]="opcionesColumnas"
-          [(ngModel)]="settings.columnas"
-          optionLabel="label"
-          optionValue="value"
-        />
-      </div>
-
-      <div class="w-full flex gap-2 justify-content-between">
-        <!-- Mostrar Nombre -->
-        <div
-          class="config-section flex align-items-center justify-content-between"
-        >
-          <label>Mostrar nombre del producto</label>
-          <p-toggleButton
-            [(ngModel)]="settings.mostrarNombre"
-            onLabel="SÍ"
-            offLabel="NO"
-            onIcon="pi pi-check"
-            offIcon="pi pi-times"
-          />
+      <!-- ── SECCIÓN 1: DISEÑO Y CUADRÍCULA ────────────────────────────── -->
+      <div class="config-group">
+        <div class="group-header">
+          <i class="pi pi-th-large"></i>
+          <span>Diseño y Cuadrícula</span>
         </div>
 
-        <!-- Mostrar Precio -->
-        <div
-          class="config-section flex align-items-center justify-content-between"
-        >
-          <label>Mostrar precio del producto</label>
-          <p-toggleButton
-            [(ngModel)]="settings.mostrarPrecio"
-            onLabel="SÍ"
-            offLabel="NO"
-            onIcon="pi pi-check"
-            offIcon="pi pi-times"
-          />
-        </div>
-      </div>
-
-      <!-- Márgenes de página -->
-      <div class="config-grid-2">
         <div class="config-section">
-          <div class="flex justify-content-between mb-2">
+          <label>Número de columnas</label>
+          <p-selectButton
+            [options]="opcionesColumnas"
+            [(ngModel)]="settings.columnas"
+            optionLabel="label"
+            optionValue="value"
+            pTooltip="Define cuántas etiquetas se imprimirán por cada fila horizontal"
+            tooltipPosition="top"
+          />
+        </div>
+
+        <div class="config-section">
+          <div class="flex justify-content-between mb-1">
             <label
-              >Margen Horizontal:
-              <b>{{ settings.marginHorizontal }}px</b></label
+              >Espaciado entre etiquetas: <b>{{ settings.espaciado }}px</b></label
             >
           </div>
           <p-slider
-            [(ngModel)]="settings.marginHorizontal"
+            [(ngModel)]="settings.espaciado"
             [min]="0"
-            [max]="150"
+            [max]="50"
+            pTooltip="Ajusta la separación (gap) entre cada etiqueta individual"
+            tooltipPosition="top"
           />
         </div>
+
+        <div class="config-grid-2">
+          <div class="config-section">
+            <div class="flex justify-content-between mb-1">
+              <label
+                >Margen Horizontal:
+                <b>{{ settings.marginHorizontal }}px</b></label
+              >
+            </div>
+            <p-slider
+              [(ngModel)]="settings.marginHorizontal"
+              [min]="0"
+              [max]="150"
+              pTooltip="Añade espacio a los lados de toda la hoja de impresión"
+              tooltipPosition="top"
+            />
+          </div>
+          <div class="config-section">
+            <div class="flex justify-content-between mb-1">
+              <label
+                >Margen Vertical: <b>{{ settings.marginVertical }}px</b></label
+              >
+            </div>
+            <p-slider
+              [(ngModel)]="settings.marginVertical"
+              [min]="0"
+              [max]="150"
+              pTooltip="Añade espacio arriba y abajo de toda la hoja de impresión"
+              tooltipPosition="top"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SECCIÓN 2: ESTILO DE ETIQUETA ────────────────────────────── -->
+      <div class="config-group">
+        <div class="group-header">
+          <i class="pi pi-palette"></i>
+          <span>Estilo de Etiqueta</span>
+        </div>
+
+        <div class="config-grid-2">
+          <div class="config-section flex flex-column gap-2">
+            <label>Mostrar Nombre</label>
+            <p-toggleButton
+              [(ngModel)]="settings.mostrarNombre"
+              onLabel="SÍ"
+              offLabel="NO"
+              onIcon="pi pi-check"
+              offIcon="pi pi-times"
+              class="w-full"
+              pTooltip="Incluye o quita el nombre del producto en la parte superior de la etiqueta"
+              tooltipPosition="top"
+            />
+          </div>
+          <div class="config-section flex flex-column gap-2">
+            <label>Mostrar Precio</label>
+            <p-toggleButton
+              [(ngModel)]="settings.mostrarPrecio"
+              onLabel="SÍ"
+              offLabel="NO"
+              onIcon="pi pi-check"
+              offIcon="pi pi-times"
+              class="w-full"
+              pTooltip="Incluye o quita el precio de venta en la etiqueta"
+              tooltipPosition="top"
+            />
+          </div>
+        </div>
+
+        <div class="config-grid-2" *ngIf="settings.mostrarNombre || settings.mostrarPrecio">
+          <div class="config-section" *ngIf="settings.mostrarNombre">
+            <div class="flex justify-content-between mb-1">
+              <label>Título: <b>{{ settings.fontSizeTitulo }}px</b></label>
+            </div>
+            <p-slider
+              [(ngModel)]="settings.fontSizeTitulo"
+              [min]="8"
+              [max]="32"
+              pTooltip="Ajusta el tamaño de la letra del nombre del producto"
+              tooltipPosition="top"
+            />
+          </div>
+          <div class="config-section">
+            <div class="flex justify-content-between mb-1">
+              <label>Código: <b>{{ settings.fontSizeCodigo }}px</b></label>
+            </div>
+            <p-slider
+              [(ngModel)]="settings.fontSizeCodigo"
+              [min]="8"
+              [max]="24"
+              pTooltip="Ajusta el tamaño del texto que aparece bajo el código de barras"
+              tooltipPosition="top"
+            />
+          </div>
+        </div>
+
         <div class="config-section">
-          <div class="flex justify-content-between mb-2">
+          <div class="flex justify-content-between mb-1">
             <label
-              >Margen Vertical: <b>{{ settings.marginVertical }}px</b></label
+              >Ancho del código: <b>{{ settings.anchoEtiqueta }}%</b></label
             >
           </div>
           <p-slider
-            [(ngModel)]="settings.marginVertical"
-            [min]="0"
-            [max]="150"
+            [(ngModel)]="settings.anchoEtiqueta"
+            [min]="50"
+            [max]="100"
+            pTooltip="Permite encoger o expandir el código de barras horizontalmente"
+            tooltipPosition="top"
           />
         </div>
       </div>
 
-      <!-- Control de Hoja -->
-      <div class="config-grid-2">
-        <div class="config-section">
-          <div class="flex justify-content-between mb-2">
-            <label
-              >Saltar espacios: <b>{{ settings.saltarEtiquetas }}</b></label
-            >
-          </div>
-          <p-slider [(ngModel)]="settings.saltarEtiquetas" [min]="0" [max]="50" />
+      <!-- ── SECCIÓN 3: CONTROL DE IMPRESIÓN ────────────────────────────── -->
+      <div class="config-group">
+        <div class="group-header">
+          <i class="pi pi-print"></i>
+          <span>Control de Impresión</span>
         </div>
-        <div class="config-section">
-          <div class="flex justify-content-between mb-2">
+
+        <div class="config-grid-2">
+          <div class="config-section">
+            <div class="flex justify-content-between mb-1">
+              <label>Saltar espacios: <b>{{ settings.saltarEtiquetas }}</b></label>
+            </div>
+            <p-slider
+              [(ngModel)]="settings.saltarEtiquetas"
+              [min]="0"
+              [max]="50"
+              pTooltip="Ideal para hojas reutilizables: deja huecos en blanco antes de empezar a imprimir"
+              tooltipPosition="top"
+            />
+          </div>
+          <div class="config-section">
+            <div class="flex justify-content-between mb-1">
+              <label>Ahorrar papel</label>
+            </div>
+            <p-toggleButton
+              [(ngModel)]="settings.ahorrarPapel"
+              onLabel="SÍ"
+              offLabel="NO"
+              onIcon="pi pi-check"
+              offIcon="pi pi-times"
+              (onChange)="settings.ahorrarPapel ? settings.alinearFinal = false : null"
+              class="w-full"
+              pTooltip="Ajusta el largo de la hoja al mínimo necesario (ideal para impresoras térmicas)"
+              tooltipPosition="top"
+            />
+          </div>
+        </div>
+
+        <div class="config-section" *ngIf="!settings.ahorrarPapel">
+          <div class="flex justify-content-between mb-1">
             <label>Auto-alinear al final</label>
           </div>
           <p-toggleButton
             [(ngModel)]="settings.alinearFinal"
-            onLabel="SÍ"
-            offLabel="NO"
-            onIcon="pi pi-check"
-            offIcon="pi pi-times"
+            onLabel="ACTIVADO"
+            offLabel="DESACTIVADO"
+            onIcon="pi pi-sort-amount-down"
+            offIcon="pi pi-sort-amount-up"
+            styleClass="w-full"
+            pTooltip="Empuja todas las etiquetas a la parte inferior de la hoja A4"
+            tooltipPosition="top"
           />
         </div>
-      </div>
-
-      <!-- Max caracteres nombre -->
-      <div class="config-section" *ngIf="settings.mostrarNombre">
-        <div class="flex justify-content-between mb-2">
-          <label
-            >Máx. caracteres del nombre:
-            <b>{{ settings.maxCaracteresNombre }}</b></label
-          >
-        </div>
-        <p-slider
-          [(ngModel)]="settings.maxCaracteresNombre"
-          [min]="5"
-          [max]="100"
-        />
-      </div>
-
-      <!-- Tamaños de fuente -->
-      <div class="config-section">
-        <div class="flex justify-content-between mb-2">
-          <label
-            >Tamaño título: <b>{{ settings.fontSizeTitulo }}px</b></label
-          >
-        </div>
-        <p-slider [(ngModel)]="settings.fontSizeTitulo" [min]="8" [max]="32" />
-      </div>
-
-      <div class="config-section">
-        <div class="flex justify-content-between mb-2">
-          <label
-            >Tamaño código: <b>{{ settings.fontSizeCodigo }}px</b></label
-          >
-        </div>
-        <p-slider [(ngModel)]="settings.fontSizeCodigo" [min]="8" [max]="24" />
-      </div>
-
-      <!-- Espaciado -->
-      <div class="config-section">
-        <div class="flex justify-content-between mb-2">
-          <label
-            >Espaciado entre etiquetas: <b>{{ settings.espaciado }}px</b></label
-          >
-        </div>
-        <p-slider [(ngModel)]="settings.espaciado" [min]="0" [max]="50" />
-      </div>
-
-      <!-- Ancho Barcode -->
-      <div class="config-section">
-        <div class="flex justify-content-between mb-2">
-          <label
-            >Ancho del código: <b>{{ settings.anchoEtiqueta }}%</b></label
-          >
-        </div>
-        <p-slider [(ngModel)]="settings.anchoEtiqueta" [min]="50" [max]="100" />
       </div>
     </div>
 
     <ng-template pTemplate="footer">
       <button
         pButton
-        label="Cancelar"
+        label="Cerrar"
         icon="pi pi-times"
         class="p-button-text p-button-secondary"
         (click)="showSettings = false"
       ></button>
       <button
         pButton
-        label="Imprimir ahora"
+        label="Imprimir etiquetas"
         icon="pi pi-print"
-        class="p-button-primary"
+        class="btn-print-action"
         (click)="imprimir()"
       ></button>
     </ng-template>
