@@ -44,16 +44,6 @@
           </button>
         </span>
 
-        <!-- Filtro tipo -->
-        <p-dropdown
-          [options]="tipoFiltroOpts"
-          [(ngModel)]="tipoFiltro"
-          optionLabel="label"
-          optionValue="value"
-          (onChange)="onTipoFiltroChange()"
-          styleClass="tipo-filter"
-        />
-
         <!-- Total -->
         <span class="total-badge" *ngIf="!loadingTable">
           {{ totalRecords | number }}

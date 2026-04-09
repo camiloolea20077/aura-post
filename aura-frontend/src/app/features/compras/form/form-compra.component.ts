@@ -17,10 +17,9 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { CalendarModule } from 'primeng/calendar';
 import { DropdownModule } from 'primeng/dropdown';
-import {
-  AutoCompleteModule,
-  AutoCompleteSelectEvent,
-} from 'primeng/autocomplete';
+import { AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
+import { TableLazyLoadEvent, TableModule } from 'primeng/table';
+import { SkeletonModule } from 'primeng/skeleton';
 import { TextareaModule } from 'primeng/textarea';
 import { DividerModule } from 'primeng/divider';
 import { TooltipModule } from 'primeng/tooltip';
@@ -49,6 +48,7 @@ import { IndexDBService } from '../../../core/services/index-db.service';
 import { CuentaBancariaService } from '../../../core/services/cuenta-bancaria.service';
 import { CuentaBancariaModel } from '../../../core/models/cuenta-bancaria.model';
 import { TarifaRetencionService } from '../../../core/services/tarifa-retencion.service';
+import { PageableDto, ProductoTableModel } from '../../../core/models/producto.model';
 
 @Component({
   selector: 'app-form-compra',
@@ -64,6 +64,8 @@ import { TarifaRetencionService } from '../../../core/services/tarifa-retencion.
     CalendarModule,
     DropdownModule,
     AutoCompleteModule,
+    TableModule,
+    SkeletonModule,
     TextareaModule,
     DividerModule,
     TooltipModule,
@@ -96,11 +98,21 @@ export class FormCompraComponent implements OnInit, OnChanges {
   public numeroCompra = '';
   public fechaCompra: Date = new Date();
   public observaciones = '';
-  public productosOpts: ProductoOpcion[] = [];
   // ─── Líneas ───────────────────────────────────────────────────────
   public lineas: CompraLineaUI[] = [];
-  public productoSelAC: (ProductoOpcion | null)[] = [];
-  public productoSugerencias: ProductoOpcion[] = [];
+
+  // ─── Modal selector de producto ───────────────────────────────────
+  public showProductDialog = false;
+  public dialogLineIdx = -1;
+  public dialogSearch = '';
+  public dialogItems: ProductoTableModel[] = [];
+  public dialogTotal = 0;
+  public dialogLoading = false;
+  private dialogLastEvent!: TableLazyLoadEvent;
+
+  // ─── Barcode ──────────────────────────────────────────────────────
+  public barcodeQuery = '';
+  public barcodeSearching = false;
 
   // ─── Forma de pago ───────────────────────────────────────────────
   public formaPago: FormaPago = 'CONTADO';
@@ -240,7 +252,6 @@ export class FormCompraComponent implements OnInit, OnChanges {
         precioVenta3: d.precioVenta3 ?? null,
       }),
     );
-    this.productoSelAC = this.lineas.map(() => null);
     this.formaPago = compra.formaPago ?? 'CONTADO';
     this.tipoDocumento = compra.tipoDocumento ?? 'FACTURA_COMPRA';
     this.fletes = compra.fletes ?? 0;
@@ -258,17 +269,6 @@ export class FormCompraComponent implements OnInit, OnChanges {
     this.proveedorQuery = oc.proveedorNombre;
     this.sucursalId = oc.sucursalId;
     this.observaciones = oc.observaciones ?? '';
-    // Populate options so the dropdowns can display the product names
-    this.productosOpts = oc.lineas.map((l): ProductoOpcion => ({
-      label: l.productoNombre,
-      value: l.productoId,
-      sku: null,
-      ivaPorcentaje: 0,
-      costo: l.costoUnitario,
-      precio: null,
-      precio2: null,
-      precio3: null,
-    }));
     this.lineas = oc.lineas.map((l): CompraLineaUI => ({
       _id: uuidv4(),
       productoId: l.productoId,
@@ -284,7 +284,6 @@ export class FormCompraComponent implements OnInit, OnChanges {
       precioVenta2: null,
       precioVenta3: null,
     }));
-    this.productoSelAC = this.lineas.map(() => null);
     this.cdr.markForCheck();
   }
 
@@ -310,34 +309,87 @@ export class FormCompraComponent implements OnInit, OnChanges {
     }
   }
 
-  // ─── Búsqueda servidor para autoComplete de producto ─────────────
-  async buscarProductoEnLinea(event: { query: string }): Promise<void> {
-    const q = event.query?.trim();
-    if (!q || q.length < 2) {
-      this.productoSugerencias = [];
-      return;
-    }
+  // ─── Modal selector de producto ───────────────────────────────────
+  openProductDialog(lineIdx: number): void {
+    this.dialogLineIdx = lineIdx;
+    this.dialogSearch = '';
+    this.dialogItems = [];
+    this.dialogTotal = 0;
+    this.showProductDialog = true;
+  }
+
+  async loadDialogTable(event: TableLazyLoadEvent): Promise<void> {
+    this.dialogLastEvent = event;
+    this.dialogLoading = true;
+    this.cdr.markForCheck();
+
+    const page = event.first != null && event.rows
+      ? Math.floor(event.first / event.rows) : 0;
+
+    const dto: PageableDto = {
+      page,
+      rows: event.rows ?? 10,
+      search: this.dialogSearch || null,
+      order_by: 'p.nombre',
+      order: 'ASC',
+    };
+
     try {
-      const res = await lastValueFrom(this.productoService.search(q));
-      this.productoSugerencias = (res?.data ?? []).map(
-        (p: any): ProductoOpcion => ({
-          label: p.nombre + (p.sku ? ` [${p.sku}]` : ''),
-          value: p.id,
-          sku: p.sku ?? null,
-          ivaPorcentaje: p.ivaPorcentaje ?? 0,
-          costo: p.costo ?? null,
-          precio: p.precio ?? null,
-          precio2: p.precio2 ?? null,
-          precio3: p.precio3 ?? null,
-        }),
-      );
+      const res = await lastValueFrom(this.productoService.page(dto));
+      this.dialogItems = res?.data?.content ?? [];
+      this.dialogTotal = res?.data?.totalElements ?? 0;
     } catch {
-      this.productoSugerencias = [];
+      this.dialogItems = [];
+      this.dialogTotal = 0;
+    } finally {
+      this.dialogLoading = false;
+      this.cdr.markForCheck();
     }
   }
 
-  onProductoACSelect(idx: number, item: ProductoOpcion): void {
-    this.onProductoChange(idx, item.value);
+  onDialogSearch(): void {
+    if (this.dialogLastEvent) {
+      this.loadDialogTable({ ...this.dialogLastEvent, first: 0 });
+    }
+  }
+
+  async selectProductFromDialog(item: ProductoTableModel): Promise<void> {
+    const opcion: ProductoOpcion = {
+      label: item.nombre + (item.sku ? ` [${item.sku}]` : ''),
+      value: item.id,
+      sku: item.sku ?? null,
+      ivaPorcentaje: (item as any).ivaPorcentaje ?? 0,
+      costo: item.costo ?? null,
+      precio: item.precio ?? null,
+      precio2: (item as any).precio2 ?? null,
+      precio3: (item as any).precio3 ?? null,
+    };
+    await this.onProductoChange(this.dialogLineIdx, opcion.value, opcion);
+    this.showProductDialog = false;
+  }
+
+  // ─── Búsqueda por código de barras (desde el modal) ─────────────
+  async buscarPorBarcode(): Promise<void> {
+    const q = this.barcodeQuery.trim();
+    if (!q) return;
+    this.barcodeSearching = true;
+    this.cdr.markForCheck();
+    try {
+      const res = await lastValueFrom(this.productoService.search(q));
+      const productos = res?.data ?? [];
+      if (productos.length === 0) {
+        this.alertService.showWarn('Sin resultados', `No se encontró producto con código "${q}".`);
+        return;
+      }
+      // Selecciona el producto para la línea actual y cierra el modal
+      await this.selectProductFromDialog(productos[0]);
+      this.barcodeQuery = '';
+    } catch {
+      this.alertService.showError('Error', 'No se pudo buscar el producto.');
+    } finally {
+      this.barcodeSearching = false;
+      this.cdr.markForCheck();
+    }
   }
 
   // ─── Autocomplete proveedor ───────────────────────────────────────
@@ -396,19 +448,16 @@ export class FormCompraComponent implements OnInit, OnChanges {
       precioVenta3: null,
     };
     this.lineas = [...this.lineas, nueva];
-    this.productoSelAC = [...this.productoSelAC, null];
+    this.cdr.markForCheck();
   }
 
   eliminarLinea(idx: number): void {
     this.lineas = this.lineas.filter((_, i) => i !== idx);
-    this.productoSelAC = this.productoSelAC.filter((_, i) => i !== idx);
   }
 
   // ─── Selección de producto ────────────────────────────────────────
-  async onProductoChange(idx: number, productoId: number): Promise<void> {
-    let prod =
-      this.productosOpts.find((p) => p.value === productoId) ??
-      this.productoSugerencias.find((p) => p.value === productoId);
+  async onProductoChange(idx: number, productoId: number, preloaded?: ProductoOpcion): Promise<void> {
+    let prod = preloaded;
 
     if (!prod) {
       try {
@@ -565,9 +614,6 @@ export class FormCompraComponent implements OnInit, OnChanges {
     const nuevo = [...this.lineas];
     nuevo.splice(idx + 1, 0, l);
     this.lineas = nuevo;
-    const nuevoAC = [...this.productoSelAC];
-    nuevoAC.splice(idx + 1, 0, this.productoSelAC[idx] ?? null);
-    this.productoSelAC = nuevoAC;
   }
 
   trackByLinea(_: number, l: CompraLineaUI): string {
@@ -680,8 +726,9 @@ export class FormCompraComponent implements OnInit, OnChanges {
     this.fechaCompra = new Date();
     this.observaciones = '';
     this.lineas = [];
-    this.productoSelAC = [];
-    this.productoSugerencias = [];
+    this.barcodeQuery = '';
+    this.barcodeSearching = false;
+    this.showProductDialog = false;
     this.retefuentePct = 0;
     this.reteivaPct = 0;
     this.reteicaPct = 0;
@@ -697,29 +744,5 @@ export class FormCompraComponent implements OnInit, OnChanges {
   closeModal(): void {
     this.resetForm();
     this.modalClosed.emit();
-  }
-  async onFiltroProducto(event: { filter: string }): Promise<void> {
-    const q = event.filter?.trim();
-    if (!q || q.length < 2) {
-      this.productosOpts = [];
-      return;
-    }
-    try {
-      const res = await lastValueFrom(this.productoService.search(q));
-      this.productosOpts = (res?.data ?? []).map(
-        (p: any): ProductoOpcion => ({
-          label: p.nombre + (p.sku ? ` [${p.sku}]` : ''),
-          value: p.id,
-          sku: p.sku ?? null,
-          ivaPorcentaje: p.ivaPorcentaje ?? 0,
-          costo: p.costo ?? null,
-          precio: p.precio ?? null,
-          precio2: p.precio2 ?? null,
-          precio3: p.precio3 ?? null,
-        }),
-      );
-    } catch {
-      /* no bloquear */
-    }
   }
 }
