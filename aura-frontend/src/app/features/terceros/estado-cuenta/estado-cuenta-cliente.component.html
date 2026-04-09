@@ -1,15 +1,22 @@
 <div class="page-container">
-
   <!-- Header -->
   <div class="page-header">
     <div class="page-title-area">
-      <button pButton type="button" icon="pi pi-arrow-left" class="p-button-text p-button-sm back-btn"
-        (click)="volver()" pTooltip="Volver a terceros" tooltipPosition="right"></button>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-arrow-left"
+        class="p-button-text p-button-sm back-btn"
+        (click)="volver()"
+        pTooltip="Volver a terceros"
+        tooltipPosition="right"
+      ></button>
       <div class="page-icon"><i class="pi pi-file-edit"></i></div>
       <div>
         <h3 class="page-title">Estado de cuenta</h3>
         <p class="page-sub" *ngIf="estado && !loading">
-          {{ estado.nombreCliente }} · {{ estado.tipoDocumento }} {{ estado.numeroDocumento }}
+          {{ estado.nombreCliente }} · {{ estado.tipoDocumento }}
+          {{ estado.numeroDocumento }}
         </p>
         <p class="page-sub" *ngIf="loading">Cargando...</p>
       </div>
@@ -17,21 +24,45 @@
 
     <!-- Filtros de fecha -->
     <div class="filtros-fecha">
-      <p-calendar [(ngModel)]="fechaDesde" placeholder="Desde" dateFormat="yy-mm-dd"
-        [showIcon]="true" styleClass="cal-sm" />
-      <p-calendar [(ngModel)]="fechaHasta" placeholder="Hasta" dateFormat="yy-mm-dd"
-        [showIcon]="true" styleClass="cal-sm" />
-      <button pButton type="button" label="Filtrar" icon="pi pi-filter" class="btn-aura btn-indigo p-button-sm"
-        (click)="filtrar()" [disabled]="loading"></button>
-      <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-sm"
-        pTooltip="Limpiar filtros" (click)="limpiarFiltros()" *ngIf="fechaDesde || fechaHasta"></button>
+      <p-calendar
+        [(ngModel)]="fechaDesde"
+        placeholder="Desde"
+        dateFormat="yy-mm-dd"
+        [showIcon]="true"
+        styleClass="cal-sm"
+      />
+      <p-calendar
+        [(ngModel)]="fechaHasta"
+        placeholder="Hasta"
+        dateFormat="yy-mm-dd"
+        [showIcon]="true"
+        styleClass="cal-sm"
+      />
+      <button
+        pButton
+        type="button"
+        label="Filtrar"
+        icon="pi pi-filter"
+        class="btn-aura btn-indigo p-button-sm"
+        (click)="filtrar()"
+        [disabled]="loading"
+      ></button>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-times"
+        class="p-button-text p-button-sm"
+        pTooltip="Limpiar filtros"
+        (click)="limpiarFiltros()"
+        *ngIf="fechaDesde || fechaHasta"
+      ></button>
     </div>
   </div>
 
   <!-- Skeletons cargando -->
   <ng-container *ngIf="loading">
     <div class="resumen-grid">
-      <div class="resumen-card" *ngFor="let s of [1,2,3,4]">
+      <div class="resumen-card" *ngFor="let s of [1, 2, 3, 4]">
         <p-skeleton height="80px" />
       </div>
     </div>
@@ -42,7 +73,6 @@
 
   <!-- Contenido -->
   <ng-container *ngIf="!loading && estado">
-
     <!-- Tarjetas resumen -->
     <div class="resumen-grid">
       <div class="resumen-card">
@@ -59,7 +89,8 @@
           <span class="resumen-label">Total deuda (crédito)</span>
           <span class="resumen-valor">{{ formatCOP(estado.totalDeuda) }}</span>
           <span class="resumen-sub">
-            {{ estado.cuentasActivas }} activa(s) · {{ estado.cuentasVencidas }} vencida(s)
+            {{ estado.cuentasActivas }} activa(s) ·
+            {{ estado.cuentasVencidas }} vencida(s)
           </span>
         </div>
       </div>
@@ -68,19 +99,31 @@
         <div class="resumen-icon green"><i class="pi pi-check-circle"></i></div>
         <div class="resumen-body">
           <span class="resumen-label">Total abonado</span>
-          <span class="resumen-valor text-success">{{ formatCOP(estado.totalAbonado) }}</span>
+          <span class="resumen-valor text-success">{{
+            formatCOP(estado.totalAbonado)
+          }}</span>
         </div>
       </div>
 
       <div class="resumen-card" [class.card-alerta]="estado.saldoPendiente > 0">
-        <div class="resumen-icon" [class.red]="estado.saldoPendiente > 0" [class.green]="estado.saldoPendiente === 0">
-          <i class="pi" [class.pi-exclamation-triangle]="estado.saldoPendiente > 0"
-            [class.pi-check]="estado.saldoPendiente === 0"></i>
+        <div
+          class="resumen-icon"
+          [class.red]="estado.saldoPendiente > 0"
+          [class.green]="estado.saldoPendiente === 0"
+        >
+          <i
+            class="pi"
+            [class.pi-exclamation-triangle]="estado.saldoPendiente > 0"
+            [class.pi-check]="estado.saldoPendiente === 0"
+          ></i>
         </div>
         <div class="resumen-body">
           <span class="resumen-label">Saldo pendiente</span>
-          <span class="resumen-valor" [class.text-danger]="estado.saldoPendiente > 0"
-            [class.text-success]="estado.saldoPendiente === 0">
+          <span
+            class="resumen-valor"
+            [class.text-danger]="estado.saldoPendiente > 0"
+            [class.text-success]="estado.saldoPendiente === 0"
+          >
             {{ formatCOP(estado.saldoPendiente) }}
           </span>
         </div>
@@ -91,27 +134,37 @@
     <div class="card mt-4">
       <div class="card-header-row">
         <h4 class="section-title"><i class="pi pi-list"></i> Movimientos</h4>
-        <span class="total-badge">{{ estado.movimientos.length }} registros</span>
+        <span class="total-badge"
+          >{{ estado.movimientos.length }} registros</span
+        >
       </div>
 
-      <p-table [value]="estado.movimientos" styleClass="aura-table" [tableStyle]="{'min-width': '700px'}"
-        [paginator]="estado.movimientos.length > 15" [rows]="15">
-
+      <p-table
+        [value]="estado.movimientos"
+        [tableStyle]="{ 'min-width': '700px' }"
+        [paginator]="estado.movimientos.length > 15"
+        [rows]="15"
+        showGridlines
+      >
         <ng-template pTemplate="header">
           <tr>
-            <th style="width:130px">Tipo</th>
-            <th style="width:120px">Fecha</th>
-            <th style="min-width:180px">Descripción</th>
-            <th style="width:120px" class="text-right">Cargo</th>
-            <th style="width:120px" class="text-right">Abono</th>
-            <th style="width:130px" class="text-right">Saldo acum.</th>
+            <th style="width: 130px">Tipo</th>
+            <th style="width: 120px">Fecha</th>
+            <th style="min-width: 180px">Descripción</th>
+            <th style="width: 120px" class="text-right">Cargo</th>
+            <th style="width: 120px" class="text-right">Abono</th>
+            <th style="width: 130px" class="text-right">Saldo acum.</th>
           </tr>
         </ng-template>
 
         <ng-template pTemplate="body" let-m>
           <tr>
             <td>
-              <p-tag [value]="getTipoLabel(m.tipo)" [severity]="getTipoSeverity(m.tipo)" [rounded]="true" />
+              <p-tag
+                [value]="getTipoLabel(m.tipo)"
+                [severity]="getTipoSeverity(m.tipo)"
+                [rounded]="true"
+              />
             </td>
             <td class="mono text-muted">{{ formatFecha(m.fecha) }}</td>
             <td>
@@ -121,11 +174,15 @@
               </div>
             </td>
             <td class="text-right mono">
-              <span *ngIf="m.cargo > 0" class="text-danger">{{ formatCOP(m.cargo) }}</span>
+              <span *ngIf="m.cargo > 0" class="text-danger">{{
+                formatCOP(m.cargo)
+              }}</span>
               <span *ngIf="m.cargo === 0" class="text-muted">—</span>
             </td>
             <td class="text-right mono">
-              <span *ngIf="m.abono > 0" class="text-success">{{ formatCOP(m.abono) }}</span>
+              <span *ngIf="m.abono > 0" class="text-success">{{
+                formatCOP(m.abono)
+              }}</span>
               <span *ngIf="m.abono === 0" class="text-muted">—</span>
             </td>
             <td class="text-right mono fw-600" [ngClass]="getSaldoClass(m)">
@@ -146,7 +203,6 @@
         </ng-template>
       </p-table>
     </div>
-
   </ng-container>
 
   <!-- Sin datos -->
@@ -154,8 +210,14 @@
     <div class="empty-state card">
       <i class="pi pi-exclamation-circle"></i>
       <p>No se pudo cargar el estado de cuenta</p>
-      <button pButton type="button" label="Reintentar" icon="pi pi-refresh" class="btn-aura btn-indigo"
-        (click)="cargar()"></button>
+      <button
+        pButton
+        type="button"
+        label="Reintentar"
+        icon="pi pi-refresh"
+        class="btn-aura btn-indigo"
+        (click)="cargar()"
+      ></button>
     </div>
   </ng-container>
 </div>

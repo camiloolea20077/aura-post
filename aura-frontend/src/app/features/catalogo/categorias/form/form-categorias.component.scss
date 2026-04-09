@@ -18,37 +18,51 @@
     align-items: center;
     gap: 0.4rem;
 
-    .required { color: #EF4444; }
-    .optional  { font-size: 0.72rem; font-weight: 400; color: #9CA3AF; }
+    .required {
+      color: #ef4444;
+    }
+    .optional {
+      font-size: 0.72rem;
+      font-weight: 400;
+      color: #9ca3af;
+    }
   }
 
   input.p-inputtext,
   textarea.p-inputtextarea {
     width: 100%;
     border-radius: 10px;
-    border: 1.5px solid #E0E3EB;
-    font-family: 'Outfit', sans-serif;
+    border: 1.5px solid #e0e3eb;
+    font-family: "Outfit", sans-serif;
     font-size: 0.875rem;
-    color: #1E293B;
+    color: #1e293b;
     transition: all 0.2s;
 
-    &::placeholder { color: #9CA3AF; }
+    &::placeholder {
+      color: #9ca3af;
+    }
 
     &:focus {
-      border-color: #2E6CF6;
+      border-color: #2e6cf6;
       box-shadow: 0 0 0 3px rgba(46, 108, 246, 0.1);
       outline: none;
     }
 
     &.ng-invalid.ng-dirty {
-      border-color: #EF4444;
+      border-color: #ef4444;
       box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
     }
   }
 
-  input.p-inputtext { height: 42px; padding: 0 0.9rem; }
+  input.p-inputtext {
+    height: 42px;
+    padding: 0 0.9rem;
+  }
 
-  textarea.p-inputtextarea { padding: 0.6rem 0.9rem; resize: none; }
+  textarea.p-inputtextarea {
+    padding: 0.6rem 0.9rem;
+    resize: none;
+  }
 }
 
 .field-footer {
@@ -58,7 +72,7 @@
 
   .char-count {
     font-size: 0.72rem;
-    color: #9CA3AF;
+    color: #9ca3af;
     margin-left: auto;
   }
 }
@@ -69,9 +83,9 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.85rem 1rem;
-  background: #F8FAFC;
+  background: #f8fafc;
   border-radius: 12px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid #e2e8f0;
 
   .switch-label {
     display: flex;
@@ -86,7 +100,7 @@
 
     .label-sub {
       font-size: 0.72rem;
-      color: #94A3B8;
+      color: #94a3b8;
     }
   }
 }
@@ -97,10 +111,15 @@
   justify-content: center;
   gap: 0.75rem;
   padding: 2rem;
-  color: #64748B;
+  color: #64748b;
 
-  i { font-size: 1.25rem; color: #2E6CF6; }
-  span { font-size: 0.875rem; }
+  i {
+    font-size: 1.25rem;
+    color: #2e6cf6;
+  }
+  span {
+    font-size: 0.875rem;
+  }
 }
 
 .dialog-footer {
@@ -113,10 +132,10 @@
 // Override p-inputSwitch colores
 ::ng-deep {
   .p-inputswitch.p-inputswitch-checked .p-inputswitch-slider {
-    background: linear-gradient(135deg, #2E6CF6, #7B4DFF);
+    background: #2563eb;
   }
 
   .p-inputswitch:not(.p-disabled):hover .p-inputswitch-slider {
-    background: #CBD5E1;
+    background: #cbd5e1;
   }
 }

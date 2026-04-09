@@ -43,6 +43,7 @@
       [rowsPerPageOptions]="[10, 15, 25, 50]"
       styleClass="p-datatable-sm"
       rowHover
+      showGridlines
     >
       <ng-template pTemplate="header">
         <tr>
@@ -374,6 +375,7 @@
       [value]="ordenDetalle.detalles"
       styleClass="p-datatable-sm detalle-lines-table"
       [scrollable]="true"
+      showGridlines
     >
       <ng-template pTemplate="header">
         <tr>

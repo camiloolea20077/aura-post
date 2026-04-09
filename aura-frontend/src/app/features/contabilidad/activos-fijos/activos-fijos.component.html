@@ -52,6 +52,7 @@
       (onLazyLoad)="onPage($event)"
       styleClass="p-datatable-sm"
       [rowHover]="true"
+      showGridlines
     >
       <ng-template pTemplate="header">
         <tr>
@@ -365,7 +366,7 @@
   [style]="{ width: '600px' }"
   styleClass="aura-dialog"
 >
-  <p-table [value]="historial" styleClass="p-datatable-sm">
+  <p-table [value]="historial" styleClass="p-datatable-sm" showGridlines>
     <ng-template pTemplate="header">
       <tr>
         <th>Período</th>

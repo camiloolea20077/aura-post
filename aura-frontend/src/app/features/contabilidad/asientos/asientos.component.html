@@ -76,6 +76,7 @@
           [rows]="rows"
           [paginator]="totalRows > rows"
           (onPage)="onPage($event)"
+          showGridlines
         >
           <ng-template pTemplate="header">
             <tr>
@@ -337,6 +338,7 @@
           [loading]="loadingMayor"
           styleClass="p-datatable-sm"
           responsiveLayout="scroll"
+          showGridlines
         >
           <ng-template pTemplate="header">
             <tr>
@@ -501,6 +503,7 @@
             [value]="flujoCaja.movimientos"
             styleClass="p-datatable-sm"
             responsiveLayout="scroll"
+            showGridlines
           >
             <ng-template pTemplate="header">
               <tr>
@@ -561,6 +564,7 @@
               styleClass="p-datatable-sm"
               [scrollable]="true"
               scrollHeight="220px"
+              showGridlines
             >
               <ng-template pTemplate="header">
                 <tr>
@@ -604,6 +608,7 @@
               styleClass="p-datatable-sm"
               [scrollable]="true"
               scrollHeight="220px"
+              showGridlines
             >
               <ng-template pTemplate="header">
                 <tr>
@@ -675,6 +680,7 @@
       <p-table
         [value]="asientoDetalle.detalles ?? []"
         styleClass="p-datatable-sm"
+        showGridlines
       >
         <ng-template pTemplate="header">
           <tr>
@@ -833,7 +839,7 @@
     </div>
 
     <div class="table-card" style="margin-top: 0.75rem">
-      <p-table [value]="formAsiento.detalles" styleClass="p-datatable-sm">
+      <p-table [value]="formAsiento.detalles" styleClass="p-datatable-sm" showGridlines>
         <ng-template pTemplate="header">
           <tr>
             <th style="min-width: 200px">Cuenta</th>

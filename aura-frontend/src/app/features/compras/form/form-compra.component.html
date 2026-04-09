@@ -160,7 +160,10 @@
         </div>
 
         <!-- Cuenta bancaria (transferencia/nequi/tarjeta/cheque) -->
-        <div class="field field-banco" *ngIf="formaPago === 'CONTADO' && requiereBanco">
+        <div
+          class="field field-banco"
+          *ngIf="formaPago === 'CONTADO' && requiereBanco"
+        >
           <label>Cuenta bancaria <span class="required">*</span></label>
           <p-dropdown
             [(ngModel)]="cuentaBancariaId"

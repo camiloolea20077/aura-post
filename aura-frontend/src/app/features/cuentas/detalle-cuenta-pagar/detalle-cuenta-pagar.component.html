@@ -136,7 +136,7 @@
       </div>
 
       <div *ngIf="(cuenta.abonos?.length ?? 0) > 0" class="abonos-list">
-        <p-table [value]="cuenta.abonos" styleClass="p-datatable-sm">
+        <p-table [value]="cuenta.abonos" styleClass="p-datatable-sm" showGridlines>
           <ng-template pTemplate="header">
             <tr>
               <th>Fecha</th>

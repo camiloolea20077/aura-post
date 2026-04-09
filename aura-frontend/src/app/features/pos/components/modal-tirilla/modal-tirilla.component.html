@@ -164,7 +164,9 @@
         <!-- Pagos -->
         <div class="t-pago-row" *ngFor="let p of venta.pagos">
           <span class="t-pago-metodo">{{ metodoPagoLabel(p.metodoPago) }}</span>
-          <span class="t-pago-monto">{{ formatCOP(p.montoRecibido ?? p.monto) }}</span>
+          <span class="t-pago-monto">{{
+            formatCOP(p.montoRecibido ?? p.monto)
+          }}</span>
         </div>
         <div class="t-pago-row t-cambio-row" *ngIf="cambioTotal > 0">
           <span class="t-pago-metodo t-cambio-label">Cambio entregado</span>

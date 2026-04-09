@@ -66,6 +66,7 @@
     <p-table
       [value]="items"
       [lazy]="true"
+      showGridlines="true"
       (onLazyLoad)="loadTable($event)"
       [paginator]="true"
       [rows]="rowSize"
@@ -74,7 +75,6 @@
       [rowsPerPageOptions]="[10, 15, 25, 50]"
       [showCurrentPageReport]="true"
       currentPageReportTemplate="{first}-{last} de {totalRecords}"
-      styleClass="aura-table"
       [tableStyle]="{ 'min-width': '700px' }"
     >
       <ng-template pTemplate="header">

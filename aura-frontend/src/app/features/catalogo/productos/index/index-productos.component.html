@@ -69,14 +69,14 @@
       (onLazyLoad)="loadTable($event)"
       [paginator]="true"
       [rows]="rowSize"
+      showGridlines
       [totalRecords]="totalRecords"
       [loading]="loadingTable"
       [rowsPerPageOptions]="[10, 25, 50]"
       [sortMode]="'single'"
       [showCurrentPageReport]="true"
       currentPageReportTemplate="{first}-{last} de {totalRecords} registros"
-      styleClass="aura-table"
-      [tableStyle]="{ 'min-width': '800px' }"
+      [tableStyle]="{ 'min-width': '50rem' }"
     >
       <!-- Header -->
       <ng-template pTemplate="header">
