@@ -14,7 +14,7 @@
       pButton
       label="Nueva Tarifa"
       icon="pi pi-plus"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       (click)="abrirNuevo()"
     ></button>
   </div>
@@ -237,7 +237,7 @@
       pButton
       [label]="editId ? 'Actualizar' : 'Guardar'"
       icon="pi pi-check"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       [loading]="saving"
       [disabled]="!form.tipo || !form.concepto"
       (click)="guardar()"

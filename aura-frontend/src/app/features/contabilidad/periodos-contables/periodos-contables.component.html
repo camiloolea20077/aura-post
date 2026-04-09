@@ -7,16 +7,21 @@
       <span class="header-icon"><i class="pi pi-lock"></i></span>
       <div>
         <h2>Períodos Contables</h2>
-        <p>Control de apertura y cierre de períodos — bloquea asientos en períodos cerrados</p>
+        <p>
+          Control de apertura y cierre de períodos — bloquea asientos en
+          períodos cerrados
+        </p>
       </div>
     </div>
     <button
       pButton
       label="Abrir Período"
       icon="pi pi-plus"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       [disabled]="!!periodoActivo"
-      [pTooltip]="periodoActivo ? 'Cierre el período activo antes de abrir uno nuevo' : ''"
+      [pTooltip]="
+        periodoActivo ? 'Cierre el período activo antes de abrir uno nuevo' : ''
+      "
       (click)="abrirDialogNuevo()"
     ></button>
   </div>
@@ -25,8 +30,11 @@
   <div class="periodo-activo-banner" *ngIf="periodoActivo">
     <i class="pi pi-calendar-plus"></i>
     <span>
-      Período activo: <strong>{{ mesLabel(periodoActivo.mes) }} {{ periodoActivo.anio }}</strong>
-      — abierto el {{ periodoActivo.fechaApertura | date:'dd/MM/yyyy' }}
+      Período activo:
+      <strong
+        >{{ mesLabel(periodoActivo.mes) }} {{ periodoActivo.anio }}</strong
+      >
+      — abierto el {{ periodoActivo.fechaApertura | date: "dd/MM/yyyy" }}
     </span>
     <button
       pButton
@@ -37,14 +45,19 @@
     ></button>
   </div>
 
-  <div class="periodo-activo-banner banner-warn" *ngIf="!periodoActivo && !loading">
+  <div
+    class="periodo-activo-banner banner-warn"
+    *ngIf="!periodoActivo && !loading"
+  >
     <i class="pi pi-exclamation-triangle"></i>
-    <span>No hay ningún período contable abierto. Los asientos automáticos desde ventas y compras quedarán bloqueados.</span>
+    <span
+      >No hay ningún período contable abierto. Los asientos automáticos desde
+      ventas y compras quedarán bloqueados.</span
+    >
   </div>
 
   <!-- TabView -->
   <p-tabView>
-
     <!-- Tab 1: Listado de períodos -->
     <p-tabPanel header="Períodos" leftIcon="pi pi-list">
       <div class="table-card">
@@ -70,7 +83,9 @@
 
           <ng-template pTemplate="body" let-p>
             <tr>
-              <td><strong>{{ mesLabel(p.mes) }}</strong></td>
+              <td>
+                <strong>{{ mesLabel(p.mes) }}</strong>
+              </td>
               <td>{{ p.anio }}</td>
               <td>
                 <p-tag
@@ -78,9 +93,11 @@
                   [value]="p.estado"
                 />
               </td>
-              <td>{{ p.fechaApertura | date:'dd/MM/yyyy' }}</td>
+              <td>{{ p.fechaApertura | date: "dd/MM/yyyy" }}</td>
               <td>
-                <span *ngIf="p.fechaCierre">{{ p.fechaCierre | date:'dd/MM/yyyy' }}</span>
+                <span *ngIf="p.fechaCierre">{{
+                  p.fechaCierre | date: "dd/MM/yyyy"
+                }}</span>
                 <span *ngIf="!p.fechaCierre" class="text-muted">—</span>
               </td>
               <td>
@@ -106,8 +123,8 @@
           <ng-template pTemplate="emptymessage">
             <tr>
               <td colspan="8" class="empty-row">
-                <i class="pi pi-lock"></i> No hay períodos contables registrados.
-                Abra el primero para comenzar.
+                <i class="pi pi-lock"></i> No hay períodos contables
+                registrados. Abra el primero para comenzar.
               </td>
             </tr>
           </ng-template>
@@ -146,7 +163,7 @@
             pButton
             label="Generar"
             icon="pi pi-refresh"
-            class="btn-aura btn-primary"
+            class="btn-aura"
             [disabled]="!periodoBalanceId"
             [loading]="loadingBalance"
             (click)="cargarBalance()"
@@ -168,8 +185,12 @@
             [class.cuadrado-ok]="balance.cuadrado"
             [class.cuadrado-err]="!balance.cuadrado"
           >
-            <i [class]="balance.cuadrado ? 'pi pi-check-circle' : 'pi pi-times-circle'"></i>
-            {{ balance.cuadrado ? 'Cuadrado' : 'Descuadrado' }}
+            <i
+              [class]="
+                balance.cuadrado ? 'pi pi-check-circle' : 'pi pi-times-circle'
+              "
+            ></i>
+            {{ balance.cuadrado ? "Cuadrado" : "Descuadrado" }}
           </span>
         </div>
       </div>
@@ -203,15 +224,19 @@
 
           <ng-template pTemplate="body" let-l>
             <tr>
-              <td><code class="cuenta-code">{{ l.codigo }}</code></td>
+              <td>
+                <code class="cuenta-code">{{ l.codigo }}</code>
+              </td>
               <td>{{ l.nombre }}</td>
               <td>
-                <span class="tipo-badge tipo-{{ l.tipo | lowercase }}">{{ l.tipo }}</span>
+                <span class="tipo-badge tipo-{{ l.tipo | lowercase }}">{{
+                  l.tipo
+                }}</span>
               </td>
-              <td class="num-cell">{{ l.totalDebito | number:'1.2-2' }}</td>
-              <td class="num-cell">{{ l.totalCredito | number:'1.2-2' }}</td>
+              <td class="num-cell">{{ l.totalDebito | number: "1.2-2" }}</td>
+              <td class="num-cell">{{ l.totalCredito | number: "1.2-2" }}</td>
               <td class="num-cell saldo-cell" [class.saldo-neg]="l.saldo < 0">
-                {{ l.saldo | number:'1.2-2' }}
+                {{ l.saldo | number: "1.2-2" }}
               </td>
             </tr>
           </ng-template>
@@ -220,11 +245,17 @@
           <ng-template pTemplate="footer">
             <tr class="totals-row">
               <td colspan="3"><strong>TOTALES</strong></td>
-              <td class="num-cell"><strong>{{ balance.totalDebito | number:'1.2-2' }}</strong></td>
-              <td class="num-cell"><strong>{{ balance.totalCredito | number:'1.2-2' }}</strong></td>
+              <td class="num-cell">
+                <strong>{{ balance.totalDebito | number: "1.2-2" }}</strong>
+              </td>
+              <td class="num-cell">
+                <strong>{{ balance.totalCredito | number: "1.2-2" }}</strong>
+              </td>
               <td class="num-cell">
                 <strong [class.text-danger]="!balance.cuadrado">
-                  {{ (balance.totalDebito - balance.totalCredito) | number:'1.2-2' }}
+                  {{
+                    balance.totalDebito - balance.totalCredito | number: "1.2-2"
+                  }}
                 </strong>
               </td>
             </tr>
@@ -233,7 +264,8 @@
           <ng-template pTemplate="emptymessage">
             <tr>
               <td colspan="6" class="empty-row">
-                <i class="pi pi-inbox"></i> No hay movimientos registrados en este período.
+                <i class="pi pi-inbox"></i> No hay movimientos registrados en
+                este período.
               </td>
             </tr>
           </ng-template>
@@ -243,10 +275,12 @@
       <!-- Placeholder inicial -->
       <div class="balance-placeholder" *ngIf="!balance && !loadingBalance">
         <i class="pi pi-chart-bar"></i>
-        <p>Seleccione un período y presione <strong>Generar</strong> para ver el balance de comprobación.</p>
+        <p>
+          Seleccione un período y presione <strong>Generar</strong> para ver el
+          balance de comprobación.
+        </p>
       </div>
     </p-tabPanel>
-
   </p-tabView>
 </div>
 
@@ -305,7 +339,7 @@
       pButton
       label="Abrir período"
       icon="pi pi-check"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       [loading]="saving"
       [disabled]="!formAbrir.anio || !formAbrir.mes"
       (click)="confirmarAbrir()"
@@ -324,10 +358,13 @@
   <div class="aviso-cierre">
     <i class="pi pi-exclamation-triangle"></i>
     <p>
-      Esta acción <strong>bloqueará</strong> todos los asientos del período.
-      No se podrán generar ni modificar asientos en un período cerrado.
+      Esta acción <strong>bloqueará</strong> todos los asientos del período. No
+      se podrán generar ni modificar asientos en un período cerrado.
     </p>
-    <p>Se validará que todos los comprobantes cuadren (débito = crédito) antes de cerrar.</p>
+    <p>
+      Se validará que todos los comprobantes cuadren (débito = crédito) antes de
+      cerrar.
+    </p>
   </div>
 
   <div class="form-group" style="margin-top: 1rem">

@@ -35,7 +35,7 @@
           pButton
           icon="pi pi-plus"
           label="Nuevo Activo"
-          class="btn-aura btn-primary"
+          class="btn-aura"
           (click)="openCreate()"
         ></button>
       </div>
@@ -348,7 +348,7 @@
       pButton
       [label]="isEdit ? 'Actualizar' : 'Guardar'"
       [icon]="saving ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       [disabled]="saving"
       (click)="save()"
     ></button>
@@ -483,7 +483,7 @@
       pButton
       label="Calcular"
       icon="pi pi-calculator"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       [icon]="depreciando ? 'pi pi-spin pi-spinner' : 'pi pi-calculator'"
       [disabled]="depreciando"
       (click)="ejecutarDepreciacion()"

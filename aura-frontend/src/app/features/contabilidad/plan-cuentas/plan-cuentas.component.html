@@ -21,7 +21,7 @@
         pButton
         label="Nueva Cuenta"
         icon="pi pi-plus"
-        class="btn-aura btn-primary"
+        class="btn-aura"
         (click)="abrirNuevo()"
       ></button>
     </div>
@@ -231,7 +231,7 @@
       pButton
       [label]="editId ? 'Actualizar' : 'Guardar'"
       icon="pi pi-check"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       [loading]="saving"
       [disabled]="!form.codigo || !form.nombre || !form.tipo"
       (click)="guardar()"

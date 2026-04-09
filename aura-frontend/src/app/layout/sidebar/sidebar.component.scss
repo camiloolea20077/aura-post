@@ -256,9 +256,9 @@
   }
 
   &.active {
-    background: linear-gradient(135deg, #2e6cf6 0%, #7b4dff 100%);
+    background: #2563eb;
     color: white;
-    box-shadow: 0 4px 14px rgba(46, 108, 246, 0.28);
+    box-shadow: none;
     font-weight: 600;
 
     .nav-icon { color: white; }
@@ -296,7 +296,7 @@
 
 .nav-badge {
   margin-left: auto;
-  background: linear-gradient(135deg, #2e6cf6, #7b4dff);
+  background: #2563eb;
   color: white;
   font-size: 0.6rem;
   font-weight: 700;
@@ -337,7 +337,7 @@
   width: 36px;
   height: 36px;
   min-width: 36px;
-  background: linear-gradient(135deg, #2e6cf6, #7b4dff);
+  background: #2563eb;
   border-radius: 10px;
   display: flex;
   align-items: center;

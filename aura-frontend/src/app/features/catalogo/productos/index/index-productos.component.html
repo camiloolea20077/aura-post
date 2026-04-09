@@ -118,16 +118,11 @@
         <tr>
           <!-- Nombre + código barras -->
           <td>
-            <div class="cell-producto">
-              <div class="prod-avatar">
-                {{ item.nombre.charAt(0).toUpperCase() }}
-              </div>
-              <div class="prod-info">
-                <span class="prod-nombre">{{ item.nombre }}</span>
-                <span class="prod-barras" *ngIf="item.codigoBarras">
-                  <i class="pi pi-barcode"></i> {{ item.codigoBarras }}
-                </span>
-              </div>
+            <div class="prod-info">
+              <span class="prod-nombre">{{ item.nombre }}</span>
+              <span class="prod-barras" *ngIf="item.codigoBarras">
+                <i class="pi pi-barcode"></i> {{ item.codigoBarras }}
+              </span>
             </div>
           </td>
 

@@ -22,12 +22,11 @@
 .page-icon {
   width: 46px;
   height: 46px;
-  background: linear-gradient(135deg, #2e6cf6, #7b4dff);
+  background: #2563eb;
   border-radius: 13px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(46, 108, 246, 0.3);
   i {
     font-size: 1.15rem;
     color: white;
@@ -108,8 +107,8 @@
       color: #9ca3af;
     }
     &:focus {
-      border-color: #2e6cf6;
-      box-shadow: 0 0 0 3px rgba(46, 108, 246, 0.1);
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
       outline: none;
     }
     @media (max-width: 600px) {
@@ -179,12 +178,12 @@
       color: #cbd5e1;
     }
     &.p-highlight .p-sortable-column-icon {
-      color: #2e6cf6;
+      color: #2563eb;
     }
   }
 
   .p-datatable-tbody > tr {
-    border-bottom: 1px solid #f8fafc;
+    border-bottom: 1px solid #f1f5f9;
     transition: background 0.12s;
 
     > td {
@@ -194,7 +193,7 @@
       color: #374151;
     }
     &:hover > td {
-      background: rgba(46, 108, 246, 0.025);
+      background: #f8fafc;
     }
     &:last-child {
       border-bottom: none;
@@ -212,7 +211,7 @@
       font-size: 0.78rem;
     }
     .p-paginator-page.p-highlight {
-      background: linear-gradient(135deg, #2e6cf6, #7b4dff);
+      background: #2563eb;
       color: white;
       border-radius: 8px;
     }
@@ -227,22 +226,7 @@
 }
 
 .prod-avatar {
-  width: 38px;
-  height: 38px;
-  min-width: 38px;
-  background: linear-gradient(
-    135deg,
-    rgba(46, 108, 246, 0.1),
-    rgba(123, 77, 255, 0.1)
-  );
-  border: 1px solid rgba(46, 108, 246, 0.15);
-  border-radius: 11px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  font-weight: 700;
-  color: #2e6cf6;
+  display: none;
 }
 
 .prod-info {
@@ -275,36 +259,21 @@
 }
 
 .sku-badge {
-  display: inline-block;
   font-family: "JetBrains Mono", monospace;
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: #2e6cf6;
-  background: rgba(46, 108, 246, 0.08);
-  padding: 0.2rem 0.5rem;
-  border-radius: 6px;
-  letter-spacing: 0.05em;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
 }
 
 .chip-cat {
-  display: inline-block;
-  padding: 0.2rem 0.55rem;
-  border-radius: 20px;
-  font-size: 0.71rem;
-  font-weight: 600;
-  background: rgba(46, 108, 246, 0.08);
-  color: #2e6cf6;
+  font-size: 0.82rem;
+  color: #475569;
   white-space: nowrap;
 }
 
 .chip-marca {
-  display: inline-block;
-  padding: 0.2rem 0.55rem;
-  border-radius: 20px;
-  font-size: 0.71rem;
-  font-weight: 600;
-  background: rgba(123, 77, 255, 0.08);
-  color: #7b4dff;
+  font-size: 0.82rem;
+  color: #475569;
   white-space: nowrap;
 }
 
@@ -341,8 +310,8 @@
     padding: 0;
   }
   ::ng-deep .action-edit:hover {
-    background: rgba(46, 108, 246, 0.1) !important;
-    color: #2e6cf6 !important;
+    background: rgba(37, 99, 235, 0.1) !important;
+    color: #2563eb !important;
   }
   ::ng-deep .action-delete:hover {
     background: rgba(239, 68, 68, 0.1) !important;

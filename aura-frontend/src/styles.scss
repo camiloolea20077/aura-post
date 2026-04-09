@@ -7,14 +7,12 @@
 
 // ─── Variables AURA POS ────────────────────────────────────────────────────
 :root {
-  --aura-blue: #2e6cf6;
-  --aura-blue-light: #4da3ff;
-  --aura-purple: #7b4dff;
-  --aura-gradient: linear-gradient(135deg, #2e6cf6 0%, #7b4dff 100%);
-  --aura-gradient-hover: linear-gradient(135deg, #1a5ae8 0%, #6a3df0 100%);
-  --aura-gradient-soft: linear-gradient(135deg,
-      rgba(46, 108, 246, 0.1) 0%,
-      rgba(123, 77, 255, 0.1) 100%);
+  --aura-blue: #2563eb;
+  --aura-blue-light: #3b82f6;
+  --aura-purple: #2563eb;
+  --aura-gradient: #2563eb;
+  --aura-gradient-hover: #1d4ed8;
+  --aura-gradient-soft: rgba(37, 99, 235, 0.08);
   --aura-bg: #f4f6fa;
   --aura-surface: #ffffff;
   --aura-text: #2d2d2d;
@@ -30,6 +28,51 @@
   --shadow-md: 0 4px 16px rgba(46, 108, 246, 0.12);
   --shadow-lg: 0 8px 32px rgba(46, 108, 246, 0.18);
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.07);
+  --p-primary-50: var(--p-blue-50) !important;
+  --p-primary-100: var(--p-blue-100) !important;
+  --p-primary-200: var(--p-blue-200) !important;
+  --p-primary-300: var(--p-blue-300) !important;
+  --p-primary-400: var(--p-blue-400) !important;
+  --p-primary-500: var(--p-blue-500) !important;
+  --p-primary-600: var(--p-blue-600) !important;
+  --p-primary-700: var(--p-blue-700) !important;
+  --p-primary-800: var(--p-blue-800) !important;
+  --p-primary-900: var(--p-blue-900) !important;
+  --p-primary-950: var(--p-blue-950) !important;
+  --p-button-outlined-warn-color: var(--p-yellow-300) !important;
+  --p-button-outlined-warn-border-color: var(--p-yellow-300) !important;
+  --p-button-warn-hover-border-color: var(--p-yellow-400) !important;
+  --p-button-warn-focus-ring-color: var(--p-yellow-300) !important;
+  --p-button-outlined-warn-hover-color: var(--p-yellow-400) !important;
+  --p-button-outlined-warn-hover-border-color: var(--p-yellow-400) !important;
+  --p-button-outlined-warn-active-color: var(--p-yellow-500) !important;
+  --p-button-outlined-warn-active-border-color: var(--p-yellow-500) !important;
+  --p-button-outlined-warn-focus-color: var(--p-yellow-500) !important;
+  --p-button-outlined-warn-focus-border-color: var(--p-yellow-500) !important;
+  --p-datatable-header-cell-color: #8a8ea6 !important;
+  --p-datatable-header-cell-padding: 0.571rem 0.571rem !important;
+  --p-primary-color: theme("colors.primary") !important;
+  --p-primary-hover-color: theme("colors.primaryHover") !important;
+  --p-primary-focus-color: theme("colors.primaryFocus") !important;
+  --primary-color: theme("colors.primary") !important;
+  --p-inputtext-focus-border-color: theme("colors.primary") !important;
+  --fc-button-bg-color: theme("colors.primary") !important;
+  --fc-button-border-color: theme("colors.primary") !important;
+  --fc-button-active-bg-color: theme("colors.primaryFocus") !important;
+  --fc-button-active-border-color: theme("colors.primaryFocus") !important;
+  --p-button-text-primary-color: theme("colors.primary") !important;
+  --p-button-text-primary-active-background: theme(
+    "colors.primaryTransparent"
+  ) !important;
+  --p-breadcrumb-item-color: theme("colors.primaryFocus") !important;
+  --p-text-hover-color: theme("colors.primaryFocus") !important;
+  --p-breadcrumb-item-icon-color: theme("colors.primaryFocus") !important;
+  --p-chip-background: theme("colors.primary") !important;
+  --p-chip-color: #ffffff !important;
+  --p-chip-remove-icon-color: inherit !important;
+  --p-popover-background: #f1f5f9 !important;
+  --p-datepicker-dropdown-background: theme("colors.primary") !important;
+  --p-datepicker-dropdown-color: #ffffff !important;
 }
 
 html.dark-mode {
@@ -114,7 +157,7 @@ body {
 .p-datatable {
   font-family: "Outfit", sans-serif;
 
-  .p-datatable-thead>tr>th {
+  .p-datatable-thead > tr > th {
     background: var(--aura-bg);
     font-size: 0.75rem;
     font-weight: 700;
@@ -125,16 +168,16 @@ body {
     padding: 0.85rem 1rem;
   }
 
-  .p-datatable-tbody>tr {
+  .p-datatable-tbody > tr {
     transition: background 0.15s;
 
-    >td {
+    > td {
       padding: 0.75rem 1rem;
       font-size: 0.85rem;
       border-bottom: 1px solid #f3f4f6;
     }
 
-    &:hover>td {
+    &:hover > td {
       background: rgba(46, 108, 246, 0.04);
     }
   }
@@ -278,7 +321,7 @@ body {
   border-radius: 10px !important;
   font-weight: 600 !important;
   font-family: "Outfit", sans-serif !important;
-  box-shadow: 0 4px 14px rgba(46, 108, 246, 0.3) !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25) !important;
   transition: all 0.2s !important;
 
   &:hover:not(:disabled) {

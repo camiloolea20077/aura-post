@@ -8,7 +8,6 @@
   [resizable]="false"
 >
   <form [formGroup]="frm" class="dialog-form">
-
     <!-- ── Modalidad ──────────────────────────────────────────── -->
     <div class="field" *ngIf="!isEdit">
       <label class="field-label required">Tipo de comisión</label>
@@ -25,7 +24,8 @@
       </small>
       <small class="field-hint" *ngIf="!isServicio">
         <i class="pi pi-tag"></i>
-        El vendedor recibe un % por cada venta del producto o categoría configurada.
+        El vendedor recibe un % por cada venta del producto o categoría
+        configurada.
       </small>
     </div>
 
@@ -48,14 +48,16 @@
         [class.ng-invalid]="isInvalid('productoId')"
       />
       <small class="field-hint" *ngIf="!isEdit">
-        <i class="pi pi-info-circle"></i> Solo productos de tipo <strong>SERVICIO</strong>
+        <i class="pi pi-info-circle"></i> Solo productos de tipo
+        <strong>SERVICIO</strong>
       </small>
-      <small class="field-error" *ngIf="isInvalid('productoId')">Requerido</small>
+      <small class="field-error" *ngIf="isInvalid('productoId')"
+        >Requerido</small
+      >
     </div>
 
     <!-- ── VENTA: objetivo (producto o categoría) ─────────────── -->
     <ng-container *ngIf="!isServicio">
-
       <!-- Selector de objetivo (solo en creación) -->
       <div class="field" *ngIf="!isEdit">
         <label class="field-label required">Aplicar comisión a</label>
@@ -109,10 +111,10 @@
         />
         <small class="field-hint">
           <i class="pi pi-info-circle"></i>
-          Aplica a todos los productos de la categoría (si no tienen config propia).
+          Aplica a todos los productos de la categoría (si no tienen config
+          propia).
         </small>
       </div>
-
     </ng-container>
 
     <!-- ── Técnico por defecto (solo SERVICIO) ───────────────── -->
@@ -132,15 +134,19 @@
         appendTo="body"
       />
       <small class="field-hint">
-        Opcional. Si se deja vacío, el cajero selecciona el técnico al momento de vender.
+        Opcional. Si se deja vacío, el cajero selecciona el técnico al momento
+        de vender.
       </small>
     </div>
 
     <!-- ── Info VENTA: vendedor = usuario logueado ────────────── -->
     <div class="venta-info-box" *ngIf="!isServicio">
       <i class="pi pi-info-circle"></i>
-      <span>La comisión se asigna automáticamente al <strong>usuario que realiza la venta</strong>.
-      Los cajeros no generan comisión de venta.</span>
+      <span
+        >La comisión se asigna automáticamente al
+        <strong>usuario que realiza la venta</strong>. Los cajeros no generan
+        comisión de venta.</span
+      >
     </div>
 
     <!-- ── Tipo de cálculo ────────────────────────────────────── -->
@@ -158,10 +164,11 @@
 
     <!-- ── Porcentajes ────────────────────────────────────────── -->
     <div class="form-row" [class.two-col]="isServicio">
-
       <!-- % Técnico / Vendedor -->
       <div class="field">
-        <label class="field-label required">{{ isServicio ? '% Técnico' : '% Vendedor' }}</label>
+        <label class="field-label required">{{
+          isServicio ? "% Técnico" : "% Vendedor"
+        }}</label>
         <p-inputNumber
           formControlName="porcentajeTecnico"
           [min]="0.01"
@@ -173,13 +180,15 @@
           [class.ng-invalid]="isInvalid('porcentajeTecnico')"
         />
         <small class="field-error" *ngIf="isInvalid('porcentajeTecnico')">
-          Debe ser entre 0.01 y {{ isServicio ? '99.99' : '100' }}
+          Debe ser entre 0.01 y {{ isServicio ? "99.99" : "100" }}
         </small>
       </div>
 
       <!-- % Negocio (solo SERVICIO) -->
       <div class="field" *ngIf="isServicio">
-        <label class="field-label">% Negocio <span class="auto-tag">auto</span></label>
+        <label class="field-label"
+          >% Negocio <span class="auto-tag">auto</span></label
+        >
         <p-inputNumber
           formControlName="porcentajeNegocio"
           [minFractionDigits]="2"
@@ -203,7 +212,6 @@
         styleClass="toggle-estado"
       />
     </div>
-
   </form>
 
   <ng-template pTemplate="footer">
@@ -218,7 +226,7 @@
       pButton
       [label]="isEdit ? 'Actualizar' : 'Guardar'"
       icon="pi pi-check"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       [loading]="loading"
       (click)="save()"
     ></button>

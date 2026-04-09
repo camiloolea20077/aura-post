@@ -19,7 +19,6 @@
   </ng-template>
 
   <div class="dialog-body">
-
     <!-- Búsqueda de venta -->
     <div class="section-block">
       <p class="section-label">Venta a devolver</p>
@@ -50,15 +49,21 @@
       <div class="venta-info-card" *ngIf="ventaCargada">
         <div class="venta-info-row">
           <span class="vi-label">N° Venta</span>
-          <span class="vi-val numero-venta">{{ ventaCargada.numeroVenta ?? 'Venta #' + ventaCargada.id }}</span>
+          <span class="vi-val numero-venta">{{
+            ventaCargada.numeroVenta ?? "Venta #" + ventaCargada.id
+          }}</span>
         </div>
         <div class="venta-info-row">
           <span class="vi-label">Cliente</span>
-          <span class="vi-val">{{ ventaCargada.clienteNombre ?? 'Consumidor final' }}</span>
+          <span class="vi-val">{{
+            ventaCargada.clienteNombre ?? "Consumidor final"
+          }}</span>
         </div>
         <div class="venta-info-row">
           <span class="vi-label">Total venta</span>
-          <span class="vi-val monto">{{ formatCOP(ventaCargada.totalPagar) }}</span>
+          <span class="vi-val monto">{{
+            formatCOP(ventaCargada.totalPagar)
+          }}</span>
         </div>
       </div>
     </div>
@@ -69,7 +74,9 @@
       <!-- Tipo + Método devolución + Reintegra -->
       <div class="form-grid">
         <div class="form-field">
-          <label class="field-label">Tipo de devolución <span class="req">*</span></label>
+          <label class="field-label"
+            >Tipo de devolución <span class="req">*</span></label
+          >
           <p-dropdown
             [options]="tipoOpciones"
             [(ngModel)]="tipo"
@@ -92,9 +99,17 @@
         <div class="form-field">
           <label class="field-label">Reintegrar inventario</label>
           <div class="checkbox-row">
-            <p-checkbox [(ngModel)]="reintegraInventario" [binary]="true" inputId="reintegra" />
+            <p-checkbox
+              [(ngModel)]="reintegraInventario"
+              [binary]="true"
+              inputId="reintegra"
+            />
             <label for="reintegra" class="checkbox-label">
-              {{ reintegraInventario ? 'Sí, devolver al stock' : 'No devolver al stock' }}
+              {{
+                reintegraInventario
+                  ? "Sí, devolver al stock"
+                  : "No devolver al stock"
+              }}
             </label>
           </div>
         </div>
@@ -122,7 +137,9 @@
         ></textarea>
       </div>
 
-      <p-divider align="left"><span class="div-label">Productos a devolver</span></p-divider>
+      <p-divider align="left"
+        ><span class="div-label">Productos a devolver</span></p-divider
+      >
 
       <!-- Tabla de detalles -->
       <div class="detalles-table">
@@ -137,7 +154,10 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let det of detalles; let i = index" [class.row-selected]="det.seleccionado">
+            <tr
+              *ngFor="let det of detalles; let i = index"
+              [class.row-selected]="det.seleccionado"
+            >
               <td class="text-center">
                 <p-checkbox
                   [(ngModel)]="det.seleccionado"
@@ -152,7 +172,9 @@
                 <span class="det-cant-orig">{{ det.cantidadOriginal }}</span>
               </td>
               <td class="text-right">
-                <span class="det-precio">{{ formatCOP(det.precioUnitario) }}</span>
+                <span class="det-precio">{{
+                  formatCOP(det.precioUnitario)
+                }}</span>
               </td>
               <td class="text-right">
                 <p-inputNumber
@@ -192,7 +214,7 @@
         type="button"
         label="Guardar devolución"
         icon="pi pi-check"
-        class="btn-aura btn-primary"
+        class="btn-aura"
         [loading]="isSaving"
         [disabled]="!isFormValid()"
         (click)="guardar()"

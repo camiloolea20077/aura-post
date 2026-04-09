@@ -14,7 +14,7 @@
       pButton
       label="Nuevo reconteo"
       icon="pi pi-plus"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       (click)="nuevo()"
     ></button>
   </div>
@@ -71,13 +71,18 @@
             <p-tag [value]="r.estado" [severity]="getSeverity(r.estado)" />
           </td>
           <td class="mono text-muted">
-            {{ r.fechaInicio | date: 'dd/MM/yyyy HH:mm' }}
+            {{ r.fechaInicio | date: "dd/MM/yyyy HH:mm" }}
           </td>
           <td class="mono text-muted">
-            {{ r.fechaCierre ? (r.fechaCierre | date: 'dd/MM/yyyy HH:mm') : '—' }}
+            {{
+              r.fechaCierre ? (r.fechaCierre | date: "dd/MM/yyyy HH:mm") : "—"
+            }}
           </td>
           <td class="mono text-center fw-600">{{ r.totalProductos }}</td>
-          <td class="mono text-center" [class.text-danger]="r.diferenciasEncontradas > 0">
+          <td
+            class="mono text-center"
+            [class.text-danger]="r.diferenciasEncontradas > 0"
+          >
             {{ r.diferenciasEncontradas }}
           </td>
           <td (click)="$event.stopPropagation()">

@@ -22,17 +22,15 @@
         pButton
         label="Nuevo Asiento"
         icon="pi pi-plus"
-        class="btn-aura btn-primary"
+        class="btn-aura"
         (click)="abrirCrear()"
       ></button>
     </div>
   </div>
 
   <p-tabView>
-
     <!-- ══ TAB 1: LIBRO DIARIO ══════════════════════════════════════ -->
     <p-tabPanel header="Libro Diario" leftIcon="pi pi-list">
-
       <div class="filters-bar">
         <div class="filter-item">
           <label>Período</label>
@@ -68,7 +66,7 @@
 
       <div class="table-card">
         <p-table
-          [value]="loading ? [1,2,3,4,5] : asientos"
+          [value]="loading ? [1, 2, 3, 4, 5] : asientos"
           [loading]="loading"
           styleClass="p-datatable-sm"
           responsiveLayout="scroll"
@@ -94,17 +92,29 @@
           <ng-template pTemplate="body" let-a>
             <tr *ngIf="!loading" [class.row-anulado]="a.estado === 'ANULADO'">
               <td>
-                <code class="comprobante">{{ a.numeroComprobante ?? '#' + a.id }}</code>
+                <code class="comprobante">{{
+                  a.numeroComprobante ?? "#" + a.id
+                }}</code>
               </td>
               <td>{{ a.fecha }}</td>
               <td>{{ a.descripcion }}</td>
               <td>
-                <p-tag [severity]="tipoOrigenBadge(a.tipoOrigen)" [value]="a.tipoOrigen" />
+                <p-tag
+                  [severity]="tipoOrigenBadge(a.tipoOrigen)"
+                  [value]="a.tipoOrigen"
+                />
               </td>
-              <td class="text-right debito-val">{{ formatCOP(a.totalDebito) }}</td>
-              <td class="text-right credito-val">{{ formatCOP(a.totalCredito) }}</td>
+              <td class="text-right debito-val">
+                {{ formatCOP(a.totalDebito) }}
+              </td>
+              <td class="text-right credito-val">
+                {{ formatCOP(a.totalCredito) }}
+              </td>
               <td>
-                <p-tag [severity]="estadoSeverity(a.estado)" [value]="a.estado" />
+                <p-tag
+                  [severity]="estadoSeverity(a.estado)"
+                  [value]="a.estado"
+                />
               </td>
               <td>
                 <div style="display: flex; gap: 0.2rem">
@@ -120,14 +130,19 @@
                     icon="pi pi-ban"
                     class="p-button-text p-button-sm p-button-rounded p-button-danger"
                     pTooltip="Anular"
-                    [disabled]="a.estado !== 'CONTABILIZADO' || a.tipoOrigen !== 'MANUAL'"
+                    [disabled]="
+                      a.estado !== 'CONTABILIZADO' || a.tipoOrigen !== 'MANUAL'
+                    "
                     (click)="anular(a)"
                   ></button>
                 </div>
               </td>
             </tr>
             <tr *ngIf="loading">
-              <td *ngFor="let c of [1,2,3,4,5,6,7,8]" style="padding: 0.75rem">
+              <td
+                *ngFor="let c of [1, 2, 3, 4, 5, 6, 7, 8]"
+                style="padding: 0.75rem"
+              >
                 <div class="skeleton-line"></div>
               </td>
             </tr>
@@ -145,7 +160,6 @@
 
     <!-- ══ TAB 2: ESTADO DE RESULTADOS (P&G) ═══════════════════════ -->
     <p-tabPanel header="Estado de Resultados" leftIcon="pi pi-chart-line">
-
       <div class="filters-bar">
         <div class="filter-item">
           <label>Período</label>
@@ -162,7 +176,7 @@
           pButton
           icon="pi pi-search"
           label="Generar"
-          class="btn-aura btn-primary"
+          class="btn-aura"
           (click)="cargarPyG()"
           [loading]="loadingPyG"
         ></button>
@@ -170,26 +184,33 @@
 
       @if (loadingPyG) {
         <div class="pyg-skeleton">
-          <p-skeleton height="2rem" styleClass="mb-2" *ngFor="let i of [1,2,3,4,5]" />
+          <p-skeleton
+            height="2rem"
+            styleClass="mb-2"
+            *ngFor="let i of [1, 2, 3, 4, 5]"
+          />
         </div>
       }
 
       @if (!loadingPyG && estadoResultados) {
         <div class="pyg-wrapper">
-
           <!-- Ingresos -->
           <div class="pyg-section ingresos">
             <div class="pyg-section-title">
               <i class="pi pi-arrow-up-right"></i> INGRESOS
             </div>
             <div class="pyg-row" *ngFor="let l of estadoResultados.ingresos">
-              <span class="pyg-codigo"><code>{{ l.codigo }}</code></span>
+              <span class="pyg-codigo"
+                ><code>{{ l.codigo }}</code></span
+              >
               <span class="pyg-nombre">{{ l.nombre }}</span>
               <span class="pyg-valor text-green">{{ formatCOP(l.saldo) }}</span>
             </div>
             <div class="pyg-subtotal">
               <span>Total Ingresos</span>
-              <strong class="text-green">{{ formatCOP(estadoResultados.totalIngresos) }}</strong>
+              <strong class="text-green">{{
+                formatCOP(estadoResultados.totalIngresos)
+              }}</strong>
             </div>
           </div>
 
@@ -199,23 +220,33 @@
               <i class="pi pi-minus-circle"></i> COSTO DE VENTAS
             </div>
             <div class="pyg-row" *ngFor="let l of estadoResultados.costos">
-              <span class="pyg-codigo"><code>{{ l.codigo }}</code></span>
+              <span class="pyg-codigo"
+                ><code>{{ l.codigo }}</code></span
+              >
               <span class="pyg-nombre">{{ l.nombre }}</span>
               <span class="pyg-valor text-red">{{ formatCOP(l.saldo) }}</span>
             </div>
             <div class="pyg-subtotal">
               <span>Total Costos</span>
-              <strong class="text-red">{{ formatCOP(estadoResultados.totalCostos) }}</strong>
+              <strong class="text-red">{{
+                formatCOP(estadoResultados.totalCostos)
+              }}</strong>
             </div>
           </div>
 
           <!-- Utilidad Bruta -->
           <div class="pyg-resultado bruta">
             <span>UTILIDAD BRUTA</span>
-            <strong [class]="estadoResultados.utilidadBruta >= 0 ? 'text-green' : 'text-red'">
+            <strong
+              [class]="
+                estadoResultados.utilidadBruta >= 0 ? 'text-green' : 'text-red'
+              "
+            >
               {{ formatCOP(estadoResultados.utilidadBruta) }}
             </strong>
-            <span class="margen-badge">{{ estadoResultados.margenBruto | number:'1.1-1' }}%</span>
+            <span class="margen-badge"
+              >{{ estadoResultados.margenBruto | number: "1.1-1" }}%</span
+            >
           </div>
 
           <!-- Gastos -->
@@ -224,25 +255,34 @@
               <i class="pi pi-minus-circle"></i> GASTOS OPERACIONALES
             </div>
             <div class="pyg-row" *ngFor="let l of estadoResultados.gastos">
-              <span class="pyg-codigo"><code>{{ l.codigo }}</code></span>
+              <span class="pyg-codigo"
+                ><code>{{ l.codigo }}</code></span
+              >
               <span class="pyg-nombre">{{ l.nombre }}</span>
               <span class="pyg-valor text-red">{{ formatCOP(l.saldo) }}</span>
             </div>
             <div class="pyg-subtotal">
               <span>Total Gastos</span>
-              <strong class="text-red">{{ formatCOP(estadoResultados.totalGastos) }}</strong>
+              <strong class="text-red">{{
+                formatCOP(estadoResultados.totalGastos)
+              }}</strong>
             </div>
           </div>
 
           <!-- Utilidad Neta -->
           <div class="pyg-resultado neta">
             <span>UTILIDAD NETA</span>
-            <strong [class]="estadoResultados.utilidadNeta >= 0 ? 'text-green' : 'text-red'">
+            <strong
+              [class]="
+                estadoResultados.utilidadNeta >= 0 ? 'text-green' : 'text-red'
+              "
+            >
               {{ formatCOP(estadoResultados.utilidadNeta) }}
             </strong>
-            <span class="margen-badge">{{ estadoResultados.margenNeto | number:'1.1-1' }}%</span>
+            <span class="margen-badge"
+              >{{ estadoResultados.margenNeto | number: "1.1-1" }}%</span
+            >
           </div>
-
         </div>
       }
 
@@ -256,7 +296,6 @@
 
     <!-- ══ TAB 3: LIBRO MAYOR ═══════════════════════════════════════ -->
     <p-tabPanel header="Libro Mayor" leftIcon="pi pi-book">
-
       <div class="filters-bar">
         <div class="filter-item" style="flex: 2">
           <label>Cuenta</label>
@@ -285,7 +324,7 @@
           pButton
           icon="pi pi-search"
           label="Consultar"
-          class="btn-aura btn-primary"
+          class="btn-aura"
           (click)="cargarLibroMayor()"
           [loading]="loadingMayor"
           [disabled]="!cuentaMayorId"
@@ -294,7 +333,7 @@
 
       <div class="table-card">
         <p-table
-          [value]="loadingMayor ? [1,2,3,4,5] : libroMayorLineas"
+          [value]="loadingMayor ? [1, 2, 3, 4, 5] : libroMayorLineas"
           [loading]="loadingMayor"
           styleClass="p-datatable-sm"
           responsiveLayout="scroll"
@@ -313,24 +352,40 @@
           <ng-template pTemplate="body" let-l>
             <tr *ngIf="!loadingMayor">
               <td>{{ l.fecha }}</td>
-              <td><code class="comprobante">{{ l.numeroComprobante }}</code></td>
+              <td>
+                <code class="comprobante">{{ l.numeroComprobante }}</code>
+              </td>
               <td>
                 <span>{{ l.descripcion }}</span>
-                <span *ngIf="l.descripcionLinea" class="linea-desc"> — {{ l.descripcionLinea }}</span>
+                <span *ngIf="l.descripcionLinea" class="linea-desc">
+                  — {{ l.descripcionLinea }}</span
+                >
               </td>
               <td>
-                <p-tag [severity]="tipoOrigenBadge(l.tipoOrigen)" [value]="l.tipoOrigen" />
+                <p-tag
+                  [severity]="tipoOrigenBadge(l.tipoOrigen)"
+                  [value]="l.tipoOrigen"
+                />
               </td>
-              <td class="text-right debito-val">{{ l.debito > 0 ? formatCOP(l.debito) : '' }}</td>
-              <td class="text-right credito-val">{{ l.credito > 0 ? formatCOP(l.credito) : '' }}</td>
-              <td class="text-right saldo-val"
-                  [class.saldo-pos]="l.saldoAcumulado >= 0"
-                  [class.saldo-neg]="l.saldoAcumulado < 0">
+              <td class="text-right debito-val">
+                {{ l.debito > 0 ? formatCOP(l.debito) : "" }}
+              </td>
+              <td class="text-right credito-val">
+                {{ l.credito > 0 ? formatCOP(l.credito) : "" }}
+              </td>
+              <td
+                class="text-right saldo-val"
+                [class.saldo-pos]="l.saldoAcumulado >= 0"
+                [class.saldo-neg]="l.saldoAcumulado < 0"
+              >
                 {{ formatCOP(l.saldoAcumulado) }}
               </td>
             </tr>
             <tr *ngIf="loadingMayor">
-              <td *ngFor="let c of [1,2,3,4,5,6,7]" style="padding: 0.75rem">
+              <td
+                *ngFor="let c of [1, 2, 3, 4, 5, 6, 7]"
+                style="padding: 0.75rem"
+              >
                 <div class="skeleton-line"></div>
               </td>
             </tr>
@@ -338,7 +393,9 @@
           <ng-template pTemplate="footer">
             @if (libroMayorLineas.length > 0) {
               <tr>
-                <td colspan="4" style="text-align: right; font-weight: 700">TOTALES</td>
+                <td colspan="4" style="text-align: right; font-weight: 700">
+                  TOTALES
+                </td>
                 <td class="text-right debito-val" style="font-weight: 700">
                   {{ formatCOP(libroMayorTotalDebito) }}
                 </td>
@@ -366,7 +423,6 @@
 
     <!-- ══ TAB 4: FLUJO DE CAJA ════════════════════════════════════ -->
     <p-tabPanel header="Flujo de Caja" leftIcon="pi pi-wallet">
-
       <div class="filters-bar">
         <div class="filter-item">
           <label>Período</label>
@@ -383,7 +439,7 @@
           pButton
           icon="pi pi-search"
           label="Generar"
-          class="btn-aura btn-primary"
+          class="btn-aura"
           (click)="cargarFlujoCaja()"
           [loading]="loadingFlujo"
         ></button>
@@ -391,7 +447,11 @@
 
       @if (loadingFlujo) {
         <div class="pyg-skeleton">
-          <p-skeleton height="2rem" styleClass="mb-2" *ngFor="let i of [1,2,3,4,5]" />
+          <p-skeleton
+            height="2rem"
+            styleClass="mb-2"
+            *ngFor="let i of [1, 2, 3, 4, 5]"
+          />
         </div>
       }
 
@@ -400,21 +460,33 @@
         <div class="flujo-kpis">
           <div class="flujo-kpi">
             <span class="kpi-label">Saldo Inicial</span>
-            <strong class="kpi-val" [class.text-green]="flujoCaja.saldoInicial >= 0" [class.text-red]="flujoCaja.saldoInicial < 0">
+            <strong
+              class="kpi-val"
+              [class.text-green]="flujoCaja.saldoInicial >= 0"
+              [class.text-red]="flujoCaja.saldoInicial < 0"
+            >
               {{ formatCOP(flujoCaja.saldoInicial) }}
             </strong>
           </div>
           <div class="flujo-kpi ingreso">
             <span class="kpi-label">+ Ingresos del período</span>
-            <strong class="kpi-val text-green">{{ formatCOP(flujoCaja.totalIngresos) }}</strong>
+            <strong class="kpi-val text-green">{{
+              formatCOP(flujoCaja.totalIngresos)
+            }}</strong>
           </div>
           <div class="flujo-kpi egreso">
             <span class="kpi-label">− Egresos del período</span>
-            <strong class="kpi-val text-red">{{ formatCOP(flujoCaja.totalEgresos) }}</strong>
+            <strong class="kpi-val text-red">{{
+              formatCOP(flujoCaja.totalEgresos)
+            }}</strong>
           </div>
           <div class="flujo-kpi final">
             <span class="kpi-label">Saldo Final</span>
-            <strong class="kpi-val" [class.text-green]="flujoCaja.saldoFinal >= 0" [class.text-red]="flujoCaja.saldoFinal < 0">
+            <strong
+              class="kpi-val"
+              [class.text-green]="flujoCaja.saldoFinal >= 0"
+              [class.text-red]="flujoCaja.saldoFinal < 0"
+            >
               {{ formatCOP(flujoCaja.saldoFinal) }}
             </strong>
           </div>
@@ -425,7 +497,11 @@
           <i class="pi pi-history"></i> Movimientos del período
         </div>
         <div class="table-card">
-          <p-table [value]="flujoCaja.movimientos" styleClass="p-datatable-sm" responsiveLayout="scroll">
+          <p-table
+            [value]="flujoCaja.movimientos"
+            styleClass="p-datatable-sm"
+            responsiveLayout="scroll"
+          >
             <ng-template pTemplate="header">
               <tr>
                 <th>Fecha</th>
@@ -440,7 +516,9 @@
               <tr>
                 <td>{{ m.fecha }}</td>
                 <td>{{ m.concepto }}</td>
-                <td><span class="categoria-badge">{{ m.categoria }}</span></td>
+                <td>
+                  <span class="categoria-badge">{{ m.categoria }}</span>
+                </td>
                 <td>{{ m.cuentaBanco }}</td>
                 <td>
                   <p-tag
@@ -448,28 +526,42 @@
                     [value]="m.tipo"
                   />
                 </td>
-                <td class="text-right" [class.debito-val]="m.tipo === 'EGRESO'" [class.credito-val]="m.tipo === 'INGRESO'">
+                <td
+                  class="text-right"
+                  [class.debito-val]="m.tipo === 'EGRESO'"
+                  [class.credito-val]="m.tipo === 'INGRESO'"
+                >
                   {{ formatCOP(m.monto) }}
                 </td>
               </tr>
             </ng-template>
             <ng-template pTemplate="emptymessage">
-              <tr><td colspan="6" class="empty-row">Sin movimientos en el período</td></tr>
+              <tr>
+                <td colspan="6" class="empty-row">
+                  Sin movimientos en el período
+                </td>
+              </tr>
             </ng-template>
           </p-table>
         </div>
 
         <!-- Proyecciones -->
         <div class="flujo-proyecciones">
-
           <!-- CxC -->
           <div class="flujo-proyeccion-card cxc">
             <div class="flujo-proyeccion-header">
               <i class="pi pi-arrow-down-right"></i>
               <span>Por Cobrar (CxC)</span>
-              <strong class="text-green">{{ formatCOP(flujoCaja.totalPorCobrar) }}</strong>
+              <strong class="text-green">{{
+                formatCOP(flujoCaja.totalPorCobrar)
+              }}</strong>
             </div>
-            <p-table [value]="flujoCaja.proyeccionCxC" styleClass="p-datatable-sm" [scrollable]="true" scrollHeight="220px">
+            <p-table
+              [value]="flujoCaja.proyeccionCxC"
+              styleClass="p-datatable-sm"
+              [scrollable]="true"
+              scrollHeight="220px"
+            >
               <ng-template pTemplate="header">
                 <tr>
                   <th>Vence</th>
@@ -480,14 +572,20 @@
               </ng-template>
               <ng-template pTemplate="body" let-p>
                 <tr>
-                  <td>{{ p.fechaVencimiento | slice:0:10 }}</td>
+                  <td>{{ p.fechaVencimiento | slice: 0 : 10 }}</td>
                   <td>{{ p.tercero }}</td>
-                  <td><code>{{ p.referencia }}</code></td>
-                  <td class="text-right credito-val">{{ formatCOP(p.saldo) }}</td>
+                  <td>
+                    <code>{{ p.referencia }}</code>
+                  </td>
+                  <td class="text-right credito-val">
+                    {{ formatCOP(p.saldo) }}
+                  </td>
                 </tr>
               </ng-template>
               <ng-template pTemplate="emptymessage">
-                <tr><td colspan="4" class="empty-row">Sin cuentas por cobrar</td></tr>
+                <tr>
+                  <td colspan="4" class="empty-row">Sin cuentas por cobrar</td>
+                </tr>
               </ng-template>
             </p-table>
           </div>
@@ -497,9 +595,16 @@
             <div class="flujo-proyeccion-header">
               <i class="pi pi-arrow-up-right"></i>
               <span>Por Pagar (CxP)</span>
-              <strong class="text-red">{{ formatCOP(flujoCaja.totalPorPagar) }}</strong>
+              <strong class="text-red">{{
+                formatCOP(flujoCaja.totalPorPagar)
+              }}</strong>
             </div>
-            <p-table [value]="flujoCaja.proyeccionCxP" styleClass="p-datatable-sm" [scrollable]="true" scrollHeight="220px">
+            <p-table
+              [value]="flujoCaja.proyeccionCxP"
+              styleClass="p-datatable-sm"
+              [scrollable]="true"
+              scrollHeight="220px"
+            >
               <ng-template pTemplate="header">
                 <tr>
                   <th>Vence</th>
@@ -510,18 +615,23 @@
               </ng-template>
               <ng-template pTemplate="body" let-p>
                 <tr>
-                  <td>{{ p.fechaVencimiento | slice:0:10 }}</td>
+                  <td>{{ p.fechaVencimiento | slice: 0 : 10 }}</td>
                   <td>{{ p.tercero }}</td>
-                  <td><code>{{ p.referencia }}</code></td>
-                  <td class="text-right debito-val">{{ formatCOP(p.saldo) }}</td>
+                  <td>
+                    <code>{{ p.referencia }}</code>
+                  </td>
+                  <td class="text-right debito-val">
+                    {{ formatCOP(p.saldo) }}
+                  </td>
                 </tr>
               </ng-template>
               <ng-template pTemplate="emptymessage">
-                <tr><td colspan="4" class="empty-row">Sin cuentas por pagar</td></tr>
+                <tr>
+                  <td colspan="4" class="empty-row">Sin cuentas por pagar</td>
+                </tr>
               </ng-template>
             </p-table>
           </div>
-
         </div>
       }
 
@@ -532,7 +642,6 @@
         </div>
       }
     </p-tabPanel>
-
   </p-tabView>
 </div>
 
@@ -547,17 +656,26 @@
 >
   @if (asientoDetalle) {
     <div class="detalle-header">
-      <span><strong>Comprobante:</strong> <code>{{ asientoDetalle.numeroComprobante }}</code></span>
+      <span
+        ><strong>Comprobante:</strong>
+        <code>{{ asientoDetalle.numeroComprobante }}</code></span
+      >
       <span><strong>Fecha:</strong> {{ asientoDetalle.fecha }}</span>
       <span><strong>Origen:</strong> {{ asientoDetalle.tipoOrigen }}</span>
       <span>
         <strong>Estado:</strong>
-        <p-tag [severity]="estadoSeverity(asientoDetalle.estado)" [value]="asientoDetalle.estado" />
+        <p-tag
+          [severity]="estadoSeverity(asientoDetalle.estado)"
+          [value]="asientoDetalle.estado"
+        />
       </span>
     </div>
     <p class="detalle-desc">{{ asientoDetalle.descripcion }}</p>
     <div class="table-card" style="margin-top: 0.75rem">
-      <p-table [value]="asientoDetalle.detalles ?? []" styleClass="p-datatable-sm">
+      <p-table
+        [value]="asientoDetalle.detalles ?? []"
+        styleClass="p-datatable-sm"
+      >
         <ng-template pTemplate="header">
           <tr>
             <th>Código</th>
@@ -571,7 +689,9 @@
         </ng-template>
         <ng-template pTemplate="body" let-d>
           <tr>
-            <td><code>{{ d.cuentaCodigo }}</code></td>
+            <td>
+              <code>{{ d.cuentaCodigo }}</code>
+            </td>
             <td>{{ d.cuentaNombre }}</td>
             <td>
               <span *ngIf="d.terceroNombre">{{ d.terceroNombre }}</span>
@@ -581,16 +701,26 @@
               <span *ngIf="d.centroCostoNombre">{{ d.centroCostoNombre }}</span>
               <span *ngIf="!d.centroCostoNombre" class="text-muted">—</span>
             </td>
-            <td>{{ d.descripcion ?? '—' }}</td>
-            <td class="text-right debito-val">{{ d.debito > 0 ? formatCOP(d.debito) : '' }}</td>
-            <td class="text-right credito-val">{{ d.credito > 0 ? formatCOP(d.credito) : '' }}</td>
+            <td>{{ d.descripcion ?? "—" }}</td>
+            <td class="text-right debito-val">
+              {{ d.debito > 0 ? formatCOP(d.debito) : "" }}
+            </td>
+            <td class="text-right credito-val">
+              {{ d.credito > 0 ? formatCOP(d.credito) : "" }}
+            </td>
           </tr>
         </ng-template>
         <ng-template pTemplate="footer">
           <tr>
-            <td colspan="5" style="text-align: right; font-weight: 700">TOTALES</td>
-            <td class="text-right debito-val" style="font-weight: 700">{{ formatCOP(asientoDetalle.totalDebito) }}</td>
-            <td class="text-right credito-val" style="font-weight: 700">{{ formatCOP(asientoDetalle.totalCredito) }}</td>
+            <td colspan="5" style="text-align: right; font-weight: 700">
+              TOTALES
+            </td>
+            <td class="text-right debito-val" style="font-weight: 700">
+              {{ formatCOP(asientoDetalle.totalDebito) }}
+            </td>
+            <td class="text-right credito-val" style="font-weight: 700">
+              {{ formatCOP(asientoDetalle.totalCredito) }}
+            </td>
           </tr>
         </ng-template>
       </p-table>
@@ -615,42 +745,62 @@
       <div class="balance-section activo">
         <div class="bs-title">ACTIVOS</div>
         <div class="bs-row">
-          <span>Total Activo</span><strong>{{ formatCOP(balance.totalActivo) }}</strong>
+          <span>Total Activo</span
+          ><strong>{{ formatCOP(balance.totalActivo) }}</strong>
         </div>
       </div>
       <div class="balance-section pasivo">
         <div class="bs-title">PASIVOS</div>
         <div class="bs-row">
-          <span>Total Pasivo</span><strong>{{ formatCOP(balance.totalPasivo) }}</strong>
+          <span>Total Pasivo</span
+          ><strong>{{ formatCOP(balance.totalPasivo) }}</strong>
         </div>
       </div>
       <div class="balance-section patrimonio">
         <div class="bs-title">PATRIMONIO</div>
         <div class="bs-row">
-          <span>Total Patrimonio</span><strong>{{ formatCOP(balance.totalPatrimonio) }}</strong>
+          <span>Total Patrimonio</span
+          ><strong>{{ formatCOP(balance.totalPatrimonio) }}</strong>
         </div>
       </div>
       <div class="balance-section pyl">
         <div class="bs-title">ESTADO DE RESULTADOS</div>
         <div class="bs-row">
-          <span>Ingresos</span><strong class="text-green">{{ formatCOP(balance.totalIngreso) }}</strong>
+          <span>Ingresos</span
+          ><strong class="text-green">{{
+            formatCOP(balance.totalIngreso)
+          }}</strong>
         </div>
         <div class="bs-row">
-          <span>Costo de Ventas</span><strong class="text-red">{{ formatCOP(balance.totalCosto) }}</strong>
+          <span>Costo de Ventas</span
+          ><strong class="text-red">{{ formatCOP(balance.totalCosto) }}</strong>
         </div>
         <div class="bs-row">
-          <span>Gastos</span><strong class="text-red">{{ formatCOP(balance.totalGasto) }}</strong>
+          <span>Gastos</span
+          ><strong class="text-red">{{ formatCOP(balance.totalGasto) }}</strong>
         </div>
         <div class="bs-divider"></div>
         <div class="bs-row total">
           <span>Utilidad Neta</span>
-          <strong [class]="balance.utilidadNeta >= 0 ? 'text-green' : 'text-red'">
+          <strong
+            [class]="balance.utilidadNeta >= 0 ? 'text-green' : 'text-red'"
+          >
             {{ formatCOP(balance.utilidadNeta) }}
           </strong>
         </div>
       </div>
-      <div class="balance-ecuacion" [class.ok]="Math.abs(balance.ecuacionContable) < 1">
-        <i class="pi" [class]="Math.abs(balance.ecuacionContable) < 1 ? 'pi-check-circle' : 'pi-exclamation-circle'"></i>
+      <div
+        class="balance-ecuacion"
+        [class.ok]="Math.abs(balance.ecuacionContable) < 1"
+      >
+        <i
+          class="pi"
+          [class]="
+            Math.abs(balance.ecuacionContable) < 1
+              ? 'pi-check-circle'
+              : 'pi-exclamation-circle'
+          "
+        ></i>
         Ecuación contable: {{ formatCOP(balance.ecuacionContable) }}
       </div>
     </div>
@@ -674,7 +824,11 @@
       </div>
       <div class="form-group" style="flex: 2">
         <label>Descripción <span class="req">*</span></label>
-        <input pInputText [(ngModel)]="formAsiento.descripcion" placeholder="Concepto del asiento" />
+        <input
+          pInputText
+          [(ngModel)]="formAsiento.descripcion"
+          placeholder="Concepto del asiento"
+        />
       </div>
     </div>
 
@@ -732,7 +886,12 @@
               />
             </td>
             <td>
-              <input pInputText [(ngModel)]="d.descripcion" placeholder="Opcional" style="width: 100%" />
+              <input
+                pInputText
+                [(ngModel)]="d.descripcion"
+                placeholder="Opcional"
+                style="width: 100%"
+              />
             </td>
             <td>
               <p-inputNumber
@@ -767,9 +926,18 @@
         </ng-template>
         <ng-template pTemplate="footer">
           <tr>
-            <td colspan="4" style="text-align: right; font-size: 0.78rem; color: #94a3b8">TOTALES</td>
-            <td class="text-right debito-val"><strong>{{ formatCOP(totalDebito) }}</strong></td>
-            <td class="text-right credito-val"><strong>{{ formatCOP(totalCredito) }}</strong></td>
+            <td
+              colspan="4"
+              style="text-align: right; font-size: 0.78rem; color: #94a3b8"
+            >
+              TOTALES
+            </td>
+            <td class="text-right debito-val">
+              <strong>{{ formatCOP(totalDebito) }}</strong>
+            </td>
+            <td class="text-right credito-val">
+              <strong>{{ formatCOP(totalCredito) }}</strong>
+            </td>
             <td></td>
           </tr>
         </ng-template>
@@ -784,9 +952,18 @@
         class="p-button-outlined p-button-sm"
         (click)="agregarLinea()"
       ></button>
-      <div class="cuadre-indicator" [class.ok]="asientoCuadrado" [class.diff]="!asientoCuadrado">
-        <i class="pi" [class]="asientoCuadrado ? 'pi-check-circle' : 'pi-exclamation-circle'"></i>
-        {{ asientoCuadrado ? 'Asiento cuadrado' : 'Sin cuadrar' }}
+      <div
+        class="cuadre-indicator"
+        [class.ok]="asientoCuadrado"
+        [class.diff]="!asientoCuadrado"
+      >
+        <i
+          class="pi"
+          [class]="
+            asientoCuadrado ? 'pi-check-circle' : 'pi-exclamation-circle'
+          "
+        ></i>
+        {{ asientoCuadrado ? "Asiento cuadrado" : "Sin cuadrar" }}
       </div>
     </div>
   </div>
@@ -803,7 +980,7 @@
       pButton
       label="Contabilizar"
       icon="pi pi-check"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       [loading]="saving"
       [disabled]="!asientoCuadrado || !formAsiento.descripcion"
       (click)="guardar()"

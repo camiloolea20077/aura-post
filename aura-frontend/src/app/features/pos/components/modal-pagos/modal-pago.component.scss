@@ -44,7 +44,10 @@
   font-size: 0.82rem;
   font-weight: 700;
   color: #1e293b;
-  i { color: #f59e0b; font-size: 0.9rem; }
+  i {
+    color: #f59e0b;
+    font-size: 0.9rem;
+  }
 }
 
 .credito-cliente {
@@ -54,7 +57,10 @@
   font-size: 0.8rem;
   color: #475569;
   font-weight: 600;
-  i { font-size: 0.75rem; color: #94a3b8; }
+  i {
+    font-size: 0.75rem;
+    color: #94a3b8;
+  }
 }
 
 .credito-estado {
@@ -63,7 +69,9 @@
   gap: 0.4rem;
   font-size: 0.78rem;
   font-weight: 700;
-  i { font-size: 0.85rem; }
+  i {
+    font-size: 0.85rem;
+  }
 }
 
 .credito-metricas {
@@ -84,8 +92,14 @@
 
   &.highlight {
     border-color: #cbd5e1;
-    &.ok { border-color: #86efac; background: #f0fdf4; }
-    &.warn { border-color: #fca5a5; background: #fff1f2; }
+    &.ok {
+      border-color: #86efac;
+      background: #f0fdf4;
+    }
+    &.warn {
+      border-color: #fca5a5;
+      background: #fff1f2;
+    }
   }
 }
 
@@ -101,7 +115,9 @@
   font-size: 0.82rem;
   font-weight: 700;
   color: #1e293b;
-  &.red { color: #dc2626; }
+  &.red {
+    color: #dc2626;
+  }
 }
 
 .credito-warning {
@@ -114,7 +130,9 @@
   padding: 0.4rem 0.6rem;
   background: #fff1f2;
   border-radius: 8px;
-  i { font-size: 0.8rem; }
+  i {
+    font-size: 0.8rem;
+  }
 }
 
 .credito-sin-info {
@@ -123,7 +141,9 @@
   gap: 0.4rem;
   font-size: 0.76rem;
   color: #94a3b8;
-  i { font-size: 0.8rem; }
+  i {
+    font-size: 0.8rem;
+  }
 }
 
 // ─── Campo cuenta destino ─────────────────────────────────────────────────────
@@ -140,7 +160,10 @@
   font-size: 0.75rem;
   font-weight: 600;
   color: #475569;
-  i { font-size: 0.75rem; color: #6366f1; }
+  i {
+    font-size: 0.75rem;
+    color: #6366f1;
+  }
 }
 
 ::ng-deep .cuenta-drop.p-dropdown {
@@ -174,7 +197,10 @@
   font-weight: 700;
   color: #374151;
 
-  i { font-size: 0.8rem; color: #6366f1; }
+  i {
+    font-size: 0.8rem;
+    color: #6366f1;
+  }
 }
 
 .remove-btn {
@@ -191,8 +217,13 @@
   border-radius: 6px;
   transition: all 0.1s;
 
-  i { font-size: 0.65rem; }
-  &:hover { color: #ef4444; background: rgba(239, 68, 68, 0.08); }
+  i {
+    font-size: 0.65rem;
+  }
+  &:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+  }
 }
 
 // ─── Grid de métodos ─────────────────────────────────────────────────────────
@@ -220,7 +251,9 @@
   cursor: pointer;
   transition: all 0.15s;
 
-  i { font-size: 1rem; }
+  i {
+    font-size: 1rem;
+  }
 
   &:hover {
     border-color: var(--mcolor);
@@ -236,7 +269,8 @@
     box-shadow: 0 2px 8px color-mix(in srgb, var(--mcolor) 20%, transparent);
   }
 
-  &.disabled-metodo, &:disabled {
+  &.disabled-metodo,
+  &:disabled {
     opacity: 0.38;
     cursor: not-allowed;
     pointer-events: none;
@@ -299,7 +333,9 @@
   color: #64748b;
   transition: all 0.15s;
 
-  i { font-size: 0.72rem; }
+  i {
+    font-size: 0.72rem;
+  }
 
   &:hover:not(:disabled) {
     border-color: #6366f1;
@@ -307,7 +343,10 @@
     background: rgba(99, 102, 241, 0.06);
   }
 
-  &:disabled { opacity: 0.4; cursor: not-allowed; }
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
 }
 
 .ref-field {
@@ -330,7 +369,9 @@
     font-family: "Outfit", sans-serif;
     width: 100%;
 
-    &::placeholder { color: #9ca3af; }
+    &::placeholder {
+      color: #9ca3af;
+    }
   }
 }
 
@@ -352,7 +393,9 @@
   transition: all 0.15s;
   flex-shrink: 0;
 
-  i { font-size: 0.75rem; }
+  i {
+    font-size: 0.75rem;
+  }
 
   &:hover {
     border-color: #6366f1;
@@ -368,7 +411,7 @@
   align-items: center;
   padding: 0.85rem 0.75rem;
   border-radius: 14px;
-  background: linear-gradient(135deg, #6366f1, #818cf8);
+  background: #2563eb;
   box-shadow: 0 4px 16px rgba(99, 102, 241, 0.28);
   text-align: center;
   flex-shrink: 0;
@@ -446,11 +489,17 @@
     font-size: 0.85rem;
     color: #1e293b;
 
-    span { color: #1e293b; }
+    span {
+      color: #1e293b;
+    }
   }
 
-  .red { color: #dc2626 !important; }
-  .blue { color: #3b82f6 !important; }
+  .red {
+    color: #dc2626 !important;
+  }
+  .blue {
+    color: #3b82f6 !important;
+  }
 }
 
 .res-divider {
@@ -468,7 +517,10 @@
   border-radius: 12px;
   flex-shrink: 0;
 
-  i { font-size: 1.1rem; flex-shrink: 0; }
+  i {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
 
   .estado-label {
     font-size: 0.7rem;
@@ -500,7 +552,9 @@
     border: 1px solid rgba(99, 102, 241, 0.2);
     color: #6366f1;
 
-    .estado-val { font-size: 0.88rem; }
+    .estado-val {
+      font-size: 0.88rem;
+    }
   }
 }
 
@@ -531,9 +585,13 @@
   cursor: pointer;
   transition: opacity 0.15s;
 
-  i { font-size: 1rem; }
+  i {
+    font-size: 1rem;
+  }
 
-  &:hover:not(:disabled) { opacity: 0.91; }
+  &:hover:not(:disabled) {
+    opacity: 0.91;
+  }
 
   &:disabled {
     opacity: 0.38;
@@ -541,7 +599,9 @@
     box-shadow: none;
   }
 
-  &.submitting { opacity: 0.7; }
+  &.submitting {
+    opacity: 0.7;
+  }
 }
 
 .btn-cancelar {
@@ -555,7 +615,9 @@
   padding: 0.3rem;
   transition: color 0.1s;
 
-  &:hover { color: #ef4444; }
+  &:hover {
+    color: #ef4444;
+  }
 }
 
 // ─── Override dialog ──────────────────────────────────────────────────────────
