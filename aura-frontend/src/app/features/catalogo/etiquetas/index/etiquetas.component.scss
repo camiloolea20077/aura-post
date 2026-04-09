@@ -8,6 +8,9 @@
   --color-text: #111827;
   --color-sub: #6b7280;
   --radius: 12px;
+  --glass: rgba(255, 255, 255, 0.7);
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
 }
 
 // ── Page layout ──────────────────────────────────────────────────────
@@ -413,20 +416,65 @@
 .config-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
   padding: 10px 0;
+}
+
+.config-group {
+  background: #fcfcfd;
+  border: 1px solid #f1f5f9;
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.2s;
+
+  &:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary-light);
+  }
+}
+
+.group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+
+  i {
+    width: 32px;
+    height: 32px;
+    background: var(--color-primary-light);
+    color: var(--color-primary);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+  }
+
+  span {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-text);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
 }
 
 .config-grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 16px;
 }
 
 .config-section {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  position: relative;
 
   label {
     font-size: 0.9rem;
@@ -440,56 +488,104 @@
 }
 
 ::ng-deep .dialog-config {
+  .p-dialog-header {
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%) !important;
+    color: #fff !important;
+    padding: 1.5rem !important;
+    border-radius: 12px 12px 0 0 !important;
+
+    .p-dialog-title {
+      font-weight: 700 !important;
+      letter-spacing: -0.01em;
+    }
+
+    .p-dialog-header-icon {
+      color: #fff !important;
+      &:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+      }
+    }
+  }
+
   .p-dialog-content {
-    padding-bottom: 30px !important;
+    background: #fff !important;
+    padding: 24px !important;
+  }
+
+  .p-dialog-footer {
+    padding: 1.25rem 24px !important;
+    border-top: 1px solid #f1f5f9;
+    background: #f9fafb !important;
   }
 
   .p-slider {
-    background: #f3f4f6;
-    height: 6px;
+    background: #f1f5f9;
+    height: 5px;
     border: none;
+    margin-top: 8px;
 
     .p-slider-range {
       background: var(--color-primary);
     }
 
     .p-slider-handle {
-      border: 2px solid var(--color-primary);
-      background: #fff;
-      width: 16px;
-      height: 16px;
-      margin-top: -6px;
-      margin-left: -8px;
+      border: 3px solid #fff;
+      background: var(--color-primary);
+      width: 18px;
+      height: 18px;
+      margin-top: -7px;
+      margin-left: -9px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      transition: transform 0.1s;
+
+      &:hover {
+        transform: scale(1.1);
+      }
 
       &:focus {
-        box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+        box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.2);
       }
     }
   }
 
   .p-togglebutton {
-    width: 60px;
-    height: 32px;
+    height: 34px;
+    border-radius: 8px !important;
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
 
     &.p-highlight {
       background: var(--color-primary) !important;
       border-color: var(--color-primary) !important;
+      color: white !important;
     }
   }
 
   .p-selectbutton {
     .p-button {
-      font-size: 0.85rem;
-      padding: 8px 12px;
+      font-size: 0.82rem;
+      padding: 10px 14px;
+      border-color: #e2e8f0;
 
       &.p-highlight {
         background: var(--color-primary) !important;
         border-color: var(--color-primary) !important;
+        color: white !important;
       }
     }
   }
 }
 
-::ng-deep .p-togglebutton.p-togglebutton-checked {
-  color: #6366f1 !important;
+.btn-print-action {
+  background: var(--color-success) !important;
+  border-color: var(--color-success) !important;
+  font-weight: 700 !important;
+  padding: 0.6rem 1.5rem !important;
+  transition: all 0.2s;
+
+  &:hover {
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+  }
 }

@@ -65,6 +65,7 @@ export class EtiquetasComponent implements OnInit {
     marginHorizontal: 5,
     saltarEtiquetas: 0,
     alinearFinal: true,
+    ahorrarPapel: false,
   };
 
   public opcionesColumnas = [
@@ -285,7 +286,13 @@ export class EtiquetasComponent implements OnInit {
       background: #fff;
       padding: ${this.settings.marginVertical}px ${this.settings.marginHorizontal}px;
       box-sizing: border-box;
-      ${this.settings.alinearFinal ? 'align-content: end; min-height: 97vh;' : ''}
+      ${
+        this.settings.ahorrarPapel
+          ? 'min-height: auto;'
+          : this.settings.alinearFinal
+          ? 'align-content: end; min-height: 97vh;'
+          : ''
+      }
     }
 
     .label {
@@ -399,6 +406,13 @@ export class EtiquetasComponent implements OnInit {
     });
 
     window.onload = function() {
+      if (settings.ahorrarPapel) {
+        const height = container.offsetHeight;
+        const style = document.createElement('style');
+        style.innerHTML = '@page { size: auto ' + height + 'px; margin: 0; }';
+        document.head.appendChild(style);
+      }
+      
       setTimeout(() => {
         window.print();
       }, 500);
