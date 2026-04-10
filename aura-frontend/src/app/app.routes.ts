@@ -189,6 +189,22 @@ export const routes: Routes = [
             (m) => m.IndexGastosComponent,
           ),
       },
+      {
+        path: 'gastos/nuevo',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/gastos/form/form-gasto.component').then(
+            (m) => m.FormGastoComponent,
+          ),
+      },
+      {
+        path: 'gastos/editar/:id',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/gastos/form/form-gasto.component').then(
+            (m) => m.FormGastoComponent,
+          ),
+      },
 
       // Inventario
       {

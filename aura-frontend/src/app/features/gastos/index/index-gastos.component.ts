@@ -6,6 +6,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
@@ -16,11 +17,9 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
-
 import { GastoService } from '../../../core/services/gasto.service';
 import { GastoTableModel } from '../../../core/models/gasto.model';
 import { AlertService } from '../../../shared/pipes/alert.service';
-import { FormGastoComponent } from '../form/form-gasto.component';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 
@@ -39,7 +38,6 @@ import { InputIconModule } from 'primeng/inputicon';
     ToastModule,
     ConfirmDialogModule,
     TooltipModule,
-    FormGastoComponent,
     IconFieldModule,
     InputIconModule,
   ],
@@ -56,10 +54,6 @@ export class IndexGastosComponent implements OnInit {
   private searchTimer?: ReturnType<typeof setTimeout>;
   private lastEvent?: TableLazyLoadEvent;
 
-  // Modal form
-  showForm = false;
-  gastoToEdit: GastoTableModel | null = null;
-
   // Totales resumen
   totalDeducibles = 0;
   totalNoDeducibles = 0;
@@ -68,6 +62,7 @@ export class IndexGastosComponent implements OnInit {
     private readonly gastoService: GastoService,
     private readonly alertService: AlertService,
     private readonly confirmationService: ConfirmationService,
+    private readonly router: Router,
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
@@ -130,13 +125,11 @@ export class IndexGastosComponent implements OnInit {
   }
 
   openForm(): void {
-    this.gastoToEdit = null;
-    this.showForm = true;
+    this.router.navigate(['/gastos/nuevo']);
   }
 
   editarGasto(item: GastoTableModel): void {
-    this.gastoToEdit = item;
-    this.showForm = true;
+    this.router.navigate(['/gastos/editar', item.id]);
   }
 
   eliminarGasto(item: GastoTableModel): void {
@@ -157,14 +150,6 @@ export class IndexGastosComponent implements OnInit {
         }
       },
     });
-  }
-
-  onFormClosed(): void {
-    this.showForm = false;
-  }
-  onSaved(): void {
-    this.showForm = false;
-    this.reloadTable();
   }
 
   formatCOP(v: number | null | undefined): string {
