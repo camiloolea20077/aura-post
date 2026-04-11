@@ -20,7 +20,7 @@
 .page-icon {
   width: 46px;
   height: 46px;
-  background: linear-gradient(135deg, #2e6cf6, #7b4dff);
+  background: #2563eb;
   border-radius: 13px;
   display: flex;
   align-items: center;
@@ -173,7 +173,7 @@
       font-size: 0.78rem;
     }
     .p-paginator-page.p-highlight {
-      background: linear-gradient(135deg, #2e6cf6, #7b4dff);
+      background: #2563eb;
       color: white;
       border-radius: 8px;
     }
@@ -320,7 +320,9 @@
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  transition: box-shadow 0.15s, border-color 0.15s;
+  transition:
+    box-shadow 0.15s,
+    border-color 0.15s;
 
   &:hover {
     border-color: #cbd5e1;

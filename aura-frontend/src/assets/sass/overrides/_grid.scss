@@ -1,0 +1,110 @@
+$gutter: 0.5rem !default;
+$prefix-grid: 'p-' !default; // Prefijo para el contenedor
+$prefix-col: '' !default; // Prefijo para las columnas (vacío por defecto)
+$separator: '\\:' !default;
+
+$xs: 400px !default;
+$sm: 576px !default;
+$md: 768px !default;
+$lg: 992px !default;
+$xl: 1200px !default;
+
+$breakpoints: (
+  'sm': $sm,
+  'md': $md,
+  'lg': $lg,
+  'xl': $xl) !default;
+
+/* ===============================
+   Contenedor Grid
+   =============================== */
+.#{$prefix-grid}grid {
+  display: flex;
+  flex-wrap: wrap;
+  margin-right: -$gutter;
+  margin-left: -$gutter;
+  margin-top: -$gutter;
+}
+
+/* Selector para hijos directos del grid */
+.#{$prefix-grid}grid>.#{$prefix-col}col,
+.#{$prefix-grid}grid>[class*="#{$prefix-col}col"] {
+  box-sizing: border-box;
+}
+
+.#{$prefix-grid}grid-nogutter {
+  margin-right: 0;
+  margin-left: 0;
+  margin-top: 0;
+}
+
+.#{$prefix-grid}grid-nogutter>.#{$prefix-col}col,
+.#{$prefix-grid}grid-nogutter>[class*="#{$prefix-col}col-"] {
+  padding: 0;
+}
+
+/* ===============================
+   Columnas Base
+   =============================== */
+.#{$prefix-col}col {
+  flex-grow: 1;
+  flex-basis: 0;
+  padding: $gutter;
+}
+
+.#{$prefix-col}col-fixed {
+  flex: 0 0 auto;
+  padding: $gutter;
+}
+
+$grid-columns: (
+  "col-1": 8.3333%,
+  "col-2": 16.6667%,
+  "col-3": 25%,
+  "col-4": 33.3333%,
+  "col-5": 41.6667%,
+  "col-6": 50%,
+  "col-7": 58.3333%,
+  "col-8": 66.6667%,
+  "col-9": 75%,
+  "col-10": 83.3333%,
+  "col-11": 91.6667%,
+  "col-12": 100%) !default;
+
+@each $col, $width in $grid-columns {
+  .#{$prefix-col}#{$col} {
+    flex: 0 0 auto;
+    padding: $gutter;
+    width: #{$width};
+  }
+}
+
+/* ===============================
+   Responsive Breakpoints
+   =============================== */
+@each $key, $val in $breakpoints {
+  @media screen and (min-width: #{$val}) {
+    .#{$key + $separator} {
+
+      /* Aquí usamos interpolación para aplicar el breakpoint al prefijo col */
+      &#{$prefix-col}col {
+        flex-grow: 1;
+        flex-basis: 0;
+        padding: $gutter;
+      }
+
+      &#{$prefix-col}col-fixed {
+        flex: 0 0 auto;
+        padding: $gutter;
+      }
+
+      @each $col, $width in $grid-columns {
+        &#{$prefix-col}#{$col} {
+          flex: 0 0 auto;
+          padding: $gutter;
+          width: #{$width};
+        }
+      }
+    }
+  }
+}

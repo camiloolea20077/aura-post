@@ -16,7 +16,7 @@
       pButton
       label="Nuevo motivo"
       icon="pi pi-plus"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       (click)="openCreate()"
     ></button>
   </div>
@@ -50,6 +50,7 @@
       [showCurrentPageReport]="true"
       currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords}"
       styleClass="p-datatable-sm p-datatable-gridlines"
+      showGridlines
     >
       <ng-template pTemplate="header">
         <tr>

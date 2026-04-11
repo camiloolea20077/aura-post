@@ -160,7 +160,10 @@
         </div>
 
         <!-- Cuenta bancaria (transferencia/nequi/tarjeta/cheque) -->
-        <div class="field field-banco" *ngIf="formaPago === 'CONTADO' && requiereBanco">
+        <div
+          class="field field-banco"
+          *ngIf="formaPago === 'CONTADO' && requiereBanco"
+        >
           <label>Cuenta bancaria <span class="required">*</span></label>
           <p-dropdown
             [(ngModel)]="cuentaBancariaId"
@@ -243,20 +246,20 @@
           >
             <!-- Producto -->
             <div class="col-producto">
-              <p-dropdown
-                [ngModel]="l.productoId"
-                (ngModelChange)="onProductoChange(i, $event)"
-                [options]="productosOpts"
-                optionLabel="label"
-                optionValue="value"
-                placeholder="Escribe para buscar..."
-                [filter]="true"
-                filterPlaceholder="Escribe 2+ letras..."
-                (onFilter)="onFiltroProducto($event)"
-                styleClass="w-full"
-                [class.sin-seleccion]="!l.productoId"
-                appendTo="body"
-              />
+              <div class="prod-selector" [class.sin-seleccion]="!l.productoId">
+                <span class="prod-sel-nombre">
+                  {{ l.productoNombre || 'Seleccionar producto...' }}
+                </span>
+                <button
+                  type="button"
+                  class="prod-sel-btn"
+                  (click)="openProductDialog(i)"
+                  pTooltip="Buscar producto"
+                  tooltipPosition="top"
+                >
+                  <i class="pi pi-search"></i>
+                </button>
+              </div>
             </div>
 
             <!-- Cantidad -->
@@ -597,4 +600,135 @@
     </div>
   </ng-template>
 </p-dialog>
+<!-- ═══════ MODAL SELECTOR DE PRODUCTO ═══════════════════════════ -->
+<p-dialog
+  [(visible)]="showProductDialog"
+  header="Seleccionar producto"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '720px' }"
+  [contentStyle]="{ padding: '0' }"
+  styleClass="aura-dialog prod-dialog"
+  (onHide)="showProductDialog = false"
+>
+  <!-- Buscadores -->
+  <div class="prod-dialog-search">
+    <!-- Texto / nombre / SKU -->
+    <span class="p-input-icon-left search-wrap-dialog">
+      <i class="pi pi-search"></i>
+      <input
+        type="text"
+        pInputText
+        placeholder="Buscar por nombre, SKU..."
+        [(ngModel)]="dialogSearch"
+        (input)="onDialogSearch()"
+        (keydown.escape)="dialogSearch = ''; onDialogSearch()"
+        class="search-input-dialog"
+        autocomplete="off"
+      />
+      <button *ngIf="dialogSearch" class="clear-btn-dialog" (click)="dialogSearch = ''; onDialogSearch()">
+        <i class="pi pi-times"></i>
+      </button>
+    </span>
+    <!-- Código de barras -->
+    <div class="barcode-wrap">
+      <i class="pi pi-barcode barcode-icon"></i>
+      <input
+        type="text"
+        class="barcode-inp"
+        placeholder="Código de barras..."
+        [(ngModel)]="barcodeQuery"
+        (keydown.enter)="buscarPorBarcode()"
+        autocomplete="off"
+      />
+      <button
+        type="button"
+        class="barcode-btn"
+        [disabled]="!barcodeQuery || barcodeSearching"
+        (click)="buscarPorBarcode()"
+        pTooltip="Buscar por código de barras"
+        tooltipPosition="top"
+      >
+        <i [class]="barcodeSearching ? 'pi pi-spin pi-spinner' : 'pi pi-arrow-right'"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <p-table
+    [value]="dialogItems"
+    [lazy]="true"
+    (onLazyLoad)="loadDialogTable($event)"
+    [paginator]="true"
+    [rows]="10"
+    [totalRecords]="dialogTotal"
+    [loading]="dialogLoading"
+    [rowsPerPageOptions]="[10, 25]"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="{first}-{last} de {totalRecords}"
+    [tableStyle]="{ 'min-width': '100%' }"
+    styleClass="prod-select-table"
+    selectionMode="single"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="min-width: 200px">Producto</th>
+        <th style="width: 90px">SKU</th>
+        <th style="width: 110px">Categoría</th>
+        <th style="width: 110px" class="text-right">Precio</th>
+        <th style="width: 90px" class="text-right">Costo</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-item>
+      <tr class="prod-dialog-row" (click)="selectProductFromDialog(item)">
+        <td>
+          <div class="prod-info-cell">
+            <span class="prod-info-nombre">{{ item.nombre }}</span>
+            <span class="prod-info-barras" *ngIf="item.codigoBarras">
+              <i class="pi pi-barcode"></i> {{ item.codigoBarras }}
+            </span>
+          </div>
+        </td>
+        <td>
+          <span class="sku-chip" *ngIf="item.sku">{{ item.sku }}</span>
+          <span class="text-muted" *ngIf="!item.sku">—</span>
+        </td>
+        <td>
+          <span *ngIf="item.categoriaNombre">{{ item.categoriaNombre }}</span>
+          <span class="text-muted" *ngIf="!item.categoriaNombre">—</span>
+        </td>
+        <td class="text-right">
+          <span class="price-cell">{{ item.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+        </td>
+        <td class="text-right">
+          <span class="cost-cell">{{ item.costo | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="5">
+          <div class="dialog-empty">
+            <i class="pi pi-search"></i>
+            <p>{{ dialogSearch ? 'Sin resultados para "' + dialogSearch + '"' : 'Escribe para buscar productos' }}</p>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="loadingbody">
+      <tr *ngFor="let s of [1,2,3,4,5]">
+        <td><p-skeleton /></td>
+        <td><p-skeleton width="70px" /></td>
+        <td><p-skeleton /></td>
+        <td><p-skeleton width="90px" styleClass="ml-auto" /></td>
+        <td><p-skeleton width="80px" styleClass="ml-auto" /></td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-dialog>
+
 <p-toast />

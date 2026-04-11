@@ -24,6 +24,8 @@ import {
   PlanCuentaModel,
   CreatePlanCuentaDto,
 } from '../../../core/models/contabilidad.model';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
 
 @Component({
   selector: 'app-plan-cuentas',
@@ -40,6 +42,8 @@ import {
     TagModule,
     ToastModule,
     TooltipModule,
+    IconFieldModule,
+    InputIconModule,
     CheckboxModule,
   ],
   providers: [MessageService],

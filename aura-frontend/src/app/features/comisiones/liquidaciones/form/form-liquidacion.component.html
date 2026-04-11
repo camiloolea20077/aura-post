@@ -8,7 +8,6 @@
   [resizable]="false"
 >
   <form [formGroup]="frm" class="dialog-form">
-
     <!-- Técnico -->
     <div class="field">
       <label class="field-label required">Técnico</label>
@@ -24,7 +23,9 @@
         [loading]="loadingTecnicos"
         [class.ng-invalid]="isInvalid('tecnicoId')"
       />
-      <small class="field-error" *ngIf="isInvalid('tecnicoId')">Requerido</small>
+      <small class="field-error" *ngIf="isInvalid('tecnicoId')"
+        >Requerido</small
+      >
     </div>
 
     <!-- Rango de fechas -->
@@ -39,7 +40,9 @@
           styleClass="w-full"
           [class.ng-invalid]="isInvalid('fechaDesde')"
         />
-        <small class="field-error" *ngIf="isInvalid('fechaDesde')">Requerido</small>
+        <small class="field-error" *ngIf="isInvalid('fechaDesde')"
+          >Requerido</small
+        >
       </div>
       <div class="field">
         <label class="field-label required">Fecha hasta</label>
@@ -51,7 +54,9 @@
           styleClass="w-full"
           [class.ng-invalid]="isInvalid('fechaHasta')"
         />
-        <small class="field-error" *ngIf="isInvalid('fechaHasta')">Requerido</small>
+        <small class="field-error" *ngIf="isInvalid('fechaHasta')"
+          >Requerido</small
+        >
       </div>
     </div>
 
@@ -81,7 +86,10 @@
         <i class="pi pi-spin pi-spinner"></i> Cargando...
       </div>
 
-      <div *ngIf="!loadingPendientes && ventasPendientes.length === 0" class="pendientes-empty">
+      <div
+        *ngIf="!loadingPendientes && ventasPendientes.length === 0"
+        class="pendientes-empty"
+      >
         <i class="pi pi-inbox"></i>
         <span>No hay comisiones pendientes para este técnico</span>
       </div>
@@ -92,6 +100,7 @@
         styleClass="p-datatable-sm pendientes-table"
         [scrollable]="true"
         scrollHeight="200px"
+        showGridlines
       >
         <ng-template pTemplate="header">
           <tr>
@@ -107,7 +116,9 @@
             <td style="text-align: right" class="mono">
               {{ formatCOP(v.valorTotal) }}
             </td>
-            <td style="text-align: center" class="mono">{{ v.porcentajeTecnico }}%</td>
+            <td style="text-align: center" class="mono">
+              {{ v.porcentajeTecnico }}%
+            </td>
             <td style="text-align: right" class="mono fw-600 color-tecnico">
               {{ formatCOP(v.valorTecnico) }}
             </td>
@@ -115,7 +126,6 @@
         </ng-template>
       </p-table>
     </div>
-
   </form>
 
   <ng-template pTemplate="footer">
@@ -130,7 +140,7 @@
       pButton
       label="Generar liquidación"
       icon="pi pi-check"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       [loading]="loading"
       [disabled]="ventasPendientes.length === 0"
       (click)="save()"

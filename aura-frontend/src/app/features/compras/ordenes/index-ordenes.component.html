@@ -7,14 +7,16 @@
       <span class="header-icon"><i class="pi pi-file-edit"></i></span>
       <div>
         <h1>Órdenes de Compra</h1>
-        <p>Gestiona pedidos a proveedores con flujo de aprobación y recepción</p>
+        <p>
+          Gestiona pedidos a proveedores con flujo de aprobación y recepción
+        </p>
       </div>
     </div>
     <button
       pButton
       label="Nueva Orden"
       icon="pi pi-plus"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       (click)="abrirNueva()"
     ></button>
   </div>
@@ -41,6 +43,7 @@
       [rowsPerPageOptions]="[10, 15, 25, 50]"
       styleClass="p-datatable-sm"
       rowHover
+      showGridlines
     >
       <ng-template pTemplate="header">
         <tr>
@@ -50,14 +53,16 @@
           <th>Sucursal</th>
           <th>Fecha</th>
           <th>Entrega Esperada</th>
-          <th style="text-align:right">Total</th>
-          <th style="width:160px"></th>
+          <th style="text-align: right">Total</th>
+          <th style="width: 160px"></th>
         </tr>
       </ng-template>
 
       <ng-template pTemplate="body" let-o>
         <tr class="clickable-row" (click)="verDetalle(o.id)">
-          <td><strong>{{ o.numeroOrden }}</strong></td>
+          <td>
+            <strong>{{ o.numeroOrden }}</strong>
+          </td>
           <td>
             <p-tag
               [value]="estadoLabel(o.estado)"
@@ -66,9 +71,17 @@
           </td>
           <td>{{ o.proveedorNombre }}</td>
           <td>{{ o.sucursalNombre }}</td>
-          <td>{{ o.fecha | date:'dd/MM/yyyy' }}</td>
-          <td>{{ o.fechaEntregaEsperada ? (o.fechaEntregaEsperada | date:'dd/MM/yyyy') : '—' }}</td>
-          <td style="text-align:right"><strong>{{ formatCOP(o.total) }}</strong></td>
+          <td>{{ o.fecha | date: "dd/MM/yyyy" }}</td>
+          <td>
+            {{
+              o.fechaEntregaEsperada
+                ? (o.fechaEntregaEsperada | date: "dd/MM/yyyy")
+                : "—"
+            }}
+          </td>
+          <td style="text-align: right">
+            <strong>{{ formatCOP(o.total) }}</strong>
+          </td>
           <td (click)="$event.stopPropagation()">
             <div class="action-btns">
               <button
@@ -110,7 +123,9 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="8" class="empty-row">No hay órdenes de compra registradas</td>
+          <td colspan="8" class="empty-row">
+            No hay órdenes de compra registradas
+          </td>
         </tr>
       </ng-template>
     </p-table>
@@ -180,19 +195,24 @@
         [(ngModel)]="formOC.observaciones"
         rows="2"
         placeholder="Notas para el proveedor..."
-        style="width:100%"
+        style="width: 100%"
       ></textarea>
     </div>
 
-    <p-divider align="left"><span class="divider-label">Productos</span></p-divider>
+    <p-divider align="left"
+      ><span class="divider-label">Productos</span></p-divider
+    >
 
     <!-- Líneas de productos -->
     <div class="lineas-table">
       <div class="lineas-header-row">
-        <span class="col-prod">Producto <small class="hint">— escribe 2+ letras para buscar</small></span>
-        <span class="col-cant" style="text-align:right">Cantidad</span>
-        <span class="col-costo" style="text-align:right">Costo Unit.</span>
-        <span class="col-sub" style="text-align:right">Subtotal</span>
+        <span class="col-prod"
+          >Producto
+          <small class="hint">— escribe 2+ letras para buscar</small></span
+        >
+        <span class="col-cant" style="text-align: right">Cantidad</span>
+        <span class="col-costo" style="text-align: right">Costo Unit.</span>
+        <span class="col-sub" style="text-align: right">Subtotal</span>
         <span class="col-del"></span>
       </div>
 
@@ -267,7 +287,8 @@
           (click)="agregarLinea()"
         ></button>
         <span class="footer-total">
-          Total: <strong class="total-highlight">{{ formatCOP(totalLineas) }}</strong>
+          Total:
+          <strong class="total-highlight">{{ formatCOP(totalLineas) }}</strong>
         </span>
       </div>
     </div>
@@ -286,7 +307,7 @@
       pButton
       label="Guardar"
       icon="pi pi-save"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       (click)="guardar()"
       [loading]="saving"
     ></button>
@@ -327,15 +348,21 @@
       </div>
       <div class="info-item">
         <span class="info-label">Fecha</span>
-        <span class="info-value">{{ ordenDetalle.fecha | date:'dd/MM/yyyy' }}</span>
+        <span class="info-value">{{
+          ordenDetalle.fecha | date: "dd/MM/yyyy"
+        }}</span>
       </div>
       <div class="info-item" *ngIf="ordenDetalle.fechaEntregaEsperada">
         <span class="info-label">Entrega esperada</span>
-        <span class="info-value">{{ ordenDetalle.fechaEntregaEsperada | date:'dd/MM/yyyy' }}</span>
+        <span class="info-value">{{
+          ordenDetalle.fechaEntregaEsperada | date: "dd/MM/yyyy"
+        }}</span>
       </div>
       <div class="info-item" *ngIf="ordenDetalle.compraId">
         <span class="info-label">Compra generada</span>
-        <span class="info-value compra-link"># {{ ordenDetalle.compraId }}</span>
+        <span class="info-value compra-link"
+          ># {{ ordenDetalle.compraId }}</span
+        >
       </div>
     </div>
 
@@ -344,31 +371,50 @@
     </div>
 
     <!-- Tabla de detalles -->
-    <p-table [value]="ordenDetalle.detalles" styleClass="p-datatable-sm detalle-lines-table" [scrollable]="true">
+    <p-table
+      [value]="ordenDetalle.detalles"
+      styleClass="p-datatable-sm detalle-lines-table"
+      [scrollable]="true"
+      showGridlines
+    >
       <ng-template pTemplate="header">
         <tr>
           <th>Producto</th>
-          <th style="text-align:right">Pedido</th>
-          <th style="text-align:right">Recibido</th>
-          <th style="text-align:right">Pendiente</th>
-          <th style="text-align:right">Costo Unit.</th>
-          <th style="text-align:right">Subtotal</th>
+          <th style="text-align: right">Pedido</th>
+          <th style="text-align: right">Recibido</th>
+          <th style="text-align: right">Pendiente</th>
+          <th style="text-align: right">Costo Unit.</th>
+          <th style="text-align: right">Subtotal</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-d>
         <tr>
           <td>{{ d.productoNombre }}</td>
-          <td style="text-align:right">{{ d.cantidad }}</td>
-          <td style="text-align:right" [class.text-success]="d.cantidadRecibida > 0">{{ d.cantidadRecibida }}</td>
-          <td style="text-align:right" [class.text-warning]="d.cantidadPendiente > 0">{{ d.cantidadPendiente }}</td>
-          <td style="text-align:right">{{ formatCOP(d.costoUnitario) }}</td>
-          <td style="text-align:right"><strong>{{ formatCOP(d.subtotalLinea) }}</strong></td>
+          <td style="text-align: right">{{ d.cantidad }}</td>
+          <td
+            style="text-align: right"
+            [class.text-success]="d.cantidadRecibida > 0"
+          >
+            {{ d.cantidadRecibida }}
+          </td>
+          <td
+            style="text-align: right"
+            [class.text-warning]="d.cantidadPendiente > 0"
+          >
+            {{ d.cantidadPendiente }}
+          </td>
+          <td style="text-align: right">{{ formatCOP(d.costoUnitario) }}</td>
+          <td style="text-align: right">
+            <strong>{{ formatCOP(d.subtotalLinea) }}</strong>
+          </td>
         </tr>
       </ng-template>
       <ng-template pTemplate="footer">
         <tr>
-          <td colspan="5" style="text-align:right"><strong>Total:</strong></td>
-          <td style="text-align:right"><strong>{{ formatCOP(ordenDetalle.total) }}</strong></td>
+          <td colspan="5" style="text-align: right"><strong>Total:</strong></td>
+          <td style="text-align: right">
+            <strong>{{ formatCOP(ordenDetalle.total) }}</strong>
+          </td>
         </tr>
       </ng-template>
     </p-table>
@@ -430,7 +476,7 @@
           pInputText
           [(ngModel)]="recepcionForm.numeroFactura"
           placeholder="Ej: FAC-001234"
-          style="width:100%"
+          style="width: 100%"
         />
       </div>
       <div class="form-field">
@@ -439,25 +485,29 @@
           pInputText
           [(ngModel)]="recepcionForm.observaciones"
           placeholder="Notas..."
-          style="width:100%"
+          style="width: 100%"
         />
       </div>
     </div>
 
-    <p-divider align="left"><span class="divider-label">Cantidades recibidas</span></p-divider>
+    <p-divider align="left"
+      ><span class="divider-label">Cantidades recibidas</span></p-divider
+    >
 
     <table class="recepcion-table">
       <thead>
         <tr>
           <th>Producto</th>
-          <th style="text-align:right">Pendiente</th>
-          <th style="width:160px">Cantidad a Recibir</th>
+          <th style="text-align: right">Pendiente</th>
+          <th style="width: 160px">Cantidad a Recibir</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let d of ordenDetalle.detalles; let i = index">
           <td>{{ d.productoNombre }}</td>
-          <td style="text-align:right;color:var(--color-warning)">{{ d.cantidadPendiente }}</td>
+          <td style="text-align: right; color: var(--color-warning)">
+            {{ d.cantidadPendiente }}
+          </td>
           <td>
             <p-inputNumber
               [(ngModel)]="cantidadesRecepcion[i]"
@@ -474,8 +524,9 @@
 
     <div class="recepcion-notice">
       <i class="pi pi-info-circle"></i>
-      Al confirmar se creará una <strong>Compra</strong> automáticamente con los productos recibidos.
-      Si no recibe todo, la orden quedará en <strong>Recibida Parcialmente</strong>.
+      Al confirmar se creará una <strong>Compra</strong> automáticamente con los
+      productos recibidos. Si no recibe todo, la orden quedará en
+      <strong>Recibida Parcialmente</strong>.
     </div>
   </div>
 
@@ -492,7 +543,7 @@
       pButton
       label="Confirmar recepción"
       icon="pi pi-check"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       (click)="guardarRecepcion()"
       [loading]="savingRecepcion"
     ></button>

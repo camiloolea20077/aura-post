@@ -126,6 +126,7 @@ export class SidebarComponent implements OnInit {
       acceptLabel: 'Sí, cerrar sesión',
       rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'btn-aura',
       accept: async () => {
         await this.indexDBService.deleteDataAuthDB();
         this.router.navigate(['/login']);

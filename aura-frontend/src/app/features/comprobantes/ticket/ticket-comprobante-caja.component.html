@@ -1,6 +1,10 @@
 <p-dialog
   [(visible)]="visible"
-  [header]="comprobante?.tipo === 'INGRESO' ? 'Comprobante de Ingreso' : 'Comprobante de Egreso'"
+  [header]="
+    comprobante?.tipo === 'INGRESO'
+      ? 'Comprobante de Ingreso'
+      : 'Comprobante de Egreso'
+  "
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
@@ -9,7 +13,6 @@
   (onHide)="close()"
 >
   <ng-container *ngIf="comprobante">
-
     <!-- Selector de ancho -->
     <div class="ancho-selector">
       <span class="ancho-label">Ancho de tirilla:</span>
@@ -22,8 +25,11 @@
     </div>
 
     <!-- Preview de tirilla -->
-    <div class="tirilla-preview" [class.tirilla-58]="ancho === 58" [class.tirilla-80]="ancho === 80">
-
+    <div
+      class="tirilla-preview"
+      [class.tirilla-58]="ancho === 58"
+      [class.tirilla-80]="ancho === 80"
+    >
       <div class="t-center t-title">{{ tituloComprobante }}</div>
 
       <div class="t-divider-solid"></div>
@@ -31,7 +37,7 @@
       <div class="t-row">
         <span class="t-bold">N° {{ comprobante.numeroComprobante }}</span>
       </div>
-      <div class="t-small" style="color:#555;">{{ fechaFormateada }}</div>
+      <div class="t-small" style="color: #555">{{ fechaFormateada }}</div>
 
       <div class="t-divider-solid"></div>
 
@@ -50,12 +56,18 @@
 
       <div class="t-divider-dash"></div>
 
-      <div style="margin: 3px 0;">
+      <div style="margin: 3px 0">
         <div class="t-bold t-small">Concepto:</div>
-        <div class="t-small" style="line-height:1.35;">{{ comprobante.concepto }}</div>
+        <div class="t-small" style="line-height: 1.35">
+          {{ comprobante.concepto }}
+        </div>
       </div>
 
-      <div class="t-grand-total" [class.grand-ingreso]="comprobante.tipo === 'INGRESO'" [class.grand-egreso]="comprobante.tipo === 'EGRESO'">
+      <div
+        class="t-grand-total"
+        [class.grand-ingreso]="comprobante.tipo === 'INGRESO'"
+        [class.grand-egreso]="comprobante.tipo === 'EGRESO'"
+      >
         <span>{{ totalLabel }}</span>
         <span>{{ formatCOP(comprobante.monto) }}</span>
       </div>
@@ -73,7 +85,6 @@
 
       <div class="t-footer">Powered by Aura POS</div>
     </div>
-
   </ng-container>
 
   <ng-template pTemplate="footer">
@@ -81,10 +92,16 @@
       pButton
       icon="pi pi-print"
       label="Imprimir"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       (click)="imprimir()"
       [disabled]="!comprobante"
     ></button>
-    <button pButton icon="pi pi-times" label="Cerrar" class="p-button-text" (click)="close()"></button>
+    <button
+      pButton
+      icon="pi pi-times"
+      label="Cerrar"
+      class="p-button-text"
+      (click)="close()"
+    ></button>
   </ng-template>
 </p-dialog>

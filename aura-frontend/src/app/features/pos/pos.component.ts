@@ -71,6 +71,9 @@ import { CuentaBancariaService } from '../../core/services/cuenta-bancaria.servi
 import { CuentaBancariaModel } from '../../core/models/cuenta-bancaria.model';
 import { CarteraService } from '../../core/services/cartera.service';
 import { ValidacionCreditoModel } from '../../core/models/cartera.model';
+import { TicketComprobanteCajaComponent } from '../comprobantes/ticket/ticket-comprobante-caja.component';
+import { ComprobanteCajaModel } from '../../core/models/comprobante-caja.model';
+import { MovimientoCajaDto } from '../../core/models/caja.model';
 
 interface CartTab {
   id: string;
@@ -109,6 +112,7 @@ interface CartTab {
     DialogModule,
     TextareaModule,
     FormTerceroComponent,
+    TicketComprobanteCajaComponent,
   ],
   providers: [MessageService],
   templateUrl: './pos.component.html',
@@ -129,6 +133,8 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   public turnoActivo: TurnoCajaModel | null = null;
   public turnoError = false;
   public loadingTurno = true;
+  public esVendedor = false;
+  private vendedorSucursalId: number | null = null;
 
   // ── Catálogo ───────────────────────────────────────────────
   public productos: ProductoPOS[] = [];
@@ -174,6 +180,8 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ── Movimiento de caja (ingreso / egreso) ─────────────────
   public showMovimiento = false;
+  public showTicketMovimiento = false;
+  public comprobanteMovimiento: ComprobanteCajaModel | null = null;
 
   // ── Exento de IVA (ONG / entidades sin ánimo de lucro) ───
   public exentoIva = false;
@@ -337,6 +345,15 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private async checkTurno(): Promise<void> {
     try {
+      const rol = await this.indexDBService.getRol();
+      if (rol === 'VENDEDOR') {
+        this.esVendedor = true;
+        this.turnoError = false;
+        this.vendedorSucursalId = await this.indexDBService.getSucursalDefault();
+        this.initTabs();
+        this.loadProductos();
+        return;
+      }
       const res = await lastValueFrom(this.turnoCajaService.turnoActivo());
       this.turnoActivo = res?.data ?? null;
       this.turnoError = !this.turnoActivo;
@@ -1115,7 +1132,8 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     const clienteEmailParaFE = this.feClienteEmail;
 
     const dto: CreateVentaDto = {
-      turnoCajaId: this.turnoActivo!.id,
+      turnoCajaId: this.turnoActivo?.id ?? null,
+      sucursalId: this.esVendedor ? this.vendedorSucursalId : null,
       clienteId: this.clienteId,
       detalles: this.cart.map((c) => ({
         productoId: c.productoId,
@@ -1255,6 +1273,24 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   // ── Movimiento de caja ────────────────────────────────────
   abrirMovimiento(): void {
     this.showMovimiento = true;
+    this.cdr.markForCheck();
+  }
+
+  onMovimientoRegistrado(mov: MovimientoCajaDto): void {
+    this.showMovimiento = false;
+    // Construir ComprobanteCajaModel desde el DTO devuelto
+    this.comprobanteMovimiento = {
+      id: mov.comprobanteId ?? mov.id,
+      numeroComprobante: mov.numeroComprobante ?? `MOV-${String(mov.id).padStart(6, '0')}`,
+      tipo: mov.tipo,
+      concepto: mov.concepto ?? '',
+      monto: mov.monto,
+      metodoPago: mov.metodoPago,
+      entregadoA: mov.entregadoA,
+      origen: 'MANUAL',
+      createdAt: mov.fecha,
+    };
+    this.showTicketMovimiento = true;
     this.cdr.markForCheck();
   }
 

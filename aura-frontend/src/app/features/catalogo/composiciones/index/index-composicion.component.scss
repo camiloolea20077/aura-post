@@ -21,7 +21,7 @@
 .page-icon {
   width: 46px;
   height: 46px;
-  background: linear-gradient(135deg, #2e6cf6, #7b4dff);
+  background: #2563eb;
   border-radius: 13px;
   display: flex;
   align-items: center;
@@ -197,7 +197,7 @@
       font-size: 0.78rem;
     }
     .p-paginator-page.p-highlight {
-      background: linear-gradient(135deg, #2e6cf6, #7b4dff);
+      background: #2563eb;
       color: white;
       border-radius: 8px;
     }

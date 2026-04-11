@@ -26,7 +26,11 @@
       "Bash(find 'D:/DOCUMENTOS CLOUD TECNOLOGY/REPOSITORIOS/aura-back-old/src/main/java/com/cloud_technological/aura_pos' -type f \\\\\\(-name *Cliente* -o -name *Tercero* -o -name *Credito* \\\\\\) -name *.java)",
       "Bash(find 'D:/Proyectos Camilo/aura-post/aura-frontend/src/app/core/models' -type f -name *.model.ts)",
       "Bash(find 'D:/DOCUMENTOS CLOUD TECNOLOGY/REPOSITORIOS/aura-back-old/src/main/java/com/cloud_technological/aura_pos/services/implementations' -type f -name *Cartera* -o -name *Venta*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(mkdir -p \"D:/DOCUMENTOS CLOUD TECNOLOGY/REPOSITORIOS/aura-back-old/src/main/java/com/cloud_technological/aura_pos/repositories/centros_costos\")",
+      "Bash(mkdir -p \"D:/DOCUMENTOS CLOUD TECNOLOGY/REPOSITORIOS/aura-back-old/src/main/java/com/cloud_technological/aura_pos/dto/centros_costos\")",
+      "Bash(mkdir -p \"D:/DOCUMENTOS CLOUD TECNOLOGY/REPOSITORIOS/aura-back-old/src/main/java/com/cloud_technological/aura_pos/repositories/periodo_contable\")",
+      "Bash(mkdir -p \"D:/DOCUMENTOS CLOUD TECNOLOGY/REPOSITORIOS/aura-back-old/src/main/java/com/cloud_technological/aura_pos/dto/periodo_contable\")"
     ]
   }
 }

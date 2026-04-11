@@ -17,7 +17,7 @@
       pButton
       icon="pi pi-plus"
       label="Nueva sucursal"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       (click)="nueva()"
     ></button>
   </div>
@@ -49,6 +49,7 @@
       (onLazyLoad)="loadTable($event)"
       [paginator]="true"
       [rows]="rowSize"
+      showGridlines
       [totalRecords]="totalRows"
       [loading]="loadingTable"
       [rowHover]="true"

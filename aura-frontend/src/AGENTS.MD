@@ -691,7 +691,7 @@ export class IndexMermasComponent implements OnInit {
       pButton
       [label]="isEdit ? 'Actualizar' : 'Guardar'"
       icon="pi pi-check"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       [loading]="loading"
       (click)="save()"
     ></button>

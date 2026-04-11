@@ -1,0 +1,204 @@
+$bg-alert: #dedfe3;
+$border-width: 0 0 0 20px;
+$color-text: #44486D;
+
+.p-message {
+  margin: 1rem 0;
+  border-radius: 6px;
+}
+
+.p-message .p-message-wrapper {
+  padding: 1.143rem 1.357rem;
+}
+
+.p-message .p-message-close {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: $bg-alert;
+  transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.p-message .p-message-close:hover {
+  background: $bg-alert;
+}
+
+.p-message .p-message-close:focus {
+  outline: 0 none;
+  outline-offset: 0;
+  box-shadow: 0 none;
+}
+
+.p-message.p-message-info {
+  background: $bg-alert;
+  border: solid #873EFE;
+  border-width: $border-width;
+  color: $color-text;
+}
+
+.p-message.p-message-info .p-message-icon {
+  color: $color-text;
+}
+
+.p-message.p-message-info .p-message-close {
+  color: $color-text;
+}
+
+.p-message.p-message-success {
+  background: $bg-alert;
+  border: solid #0BD18A;
+  border-width: $border-width;
+  color: $color-text;
+}
+
+.p-message.p-message-success .p-message-icon {
+  color: $color-text;
+}
+
+.p-message.p-message-success .p-message-close {
+  color: $color-text;
+}
+
+.p-message.p-message-warn {
+  background: $bg-alert;
+  border: solid #EEE500;
+  border-width: $border-width;
+  color: $color-text;
+}
+
+.p-message.p-message-warn .p-message-icon {
+  color: #1f2346;
+}
+
+.p-message.p-message-warn .p-message-close {
+  color: $color-text;
+}
+
+.p-message.p-message-error {
+  background: $bg-alert;
+  border: solid #FC6161;
+  border-width: $border-width;
+  color: $color-text;
+}
+
+.p-message.p-message-error .p-message-icon {
+  color: $color-text;
+}
+
+.p-message.p-message-error .p-message-close {
+  color: $color-text;
+}
+
+.p-message .p-message-text {
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.p-message .p-message-icon {
+  font-size: 1.286rem;
+  margin-right: 0.5rem;
+}
+
+.p-message .p-message-summary {
+  font-weight: 700;
+}
+
+.p-message .p-message-detail {
+  margin-left: 0.5rem;
+}
+
+.p-toast {
+  opacity: 0.9;
+}
+
+.p-toast .p-toast-message {
+  margin: 0 0 1rem 0;
+  box-shadow: none;
+  border-radius: 6px;
+}
+
+.p-toast .p-toast-message .p-toast-message-content {
+  padding: 1.143rem 1.357rem;
+}
+
+.p-toast .p-toast-message .p-toast-message-content .p-toast-message-text {
+  margin: 0 0 0 1rem;
+}
+
+.p-toast .p-toast-message .p-toast-message-content .p-toast-message-icon {
+  font-size: 1.286rem;
+}
+
+.p-toast .p-toast-message .p-toast-message-content .p-toast-summary {
+  font-weight: 400;
+}
+
+.p-toast .p-toast-message .p-toast-message-content .p-toast-detail {
+  margin: 0.5rem 0 0 0;
+}
+
+.p-toast .p-toast-message .p-toast-icon-close {
+  width: 1.286rem;
+  height: 1.286rem;
+  border-radius: 50%;
+  background: $bg-alert;
+  transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.p-toast .p-toast-message .p-toast-icon-close:hover {
+  background: $bg-alert;
+}
+
+.p-toast .p-toast-message .p-toast-icon-close:focus {
+  outline: 0 none;
+  outline-offset: 0;
+  box-shadow: 0 none;
+}
+
+.p-toast .p-toast-message.p-toast-message-info {
+  background: $bg-alert;
+  border: solid #873EFE;
+  border-width: $border-width;
+  color: $color-text;
+}
+
+.p-toast .p-toast-message.p-toast-message-info .p-toast-message-icon,
+.p-toast .p-toast-message.p-toast-message-info .p-toast-icon-close {
+  color: $color-text;
+}
+
+.p-toast .p-toast-message.p-toast-message-success {
+  background: $bg-alert;
+  border: solid #0BD18A;
+  border-width: $border-width;
+  color: $color-text;
+}
+
+.p-toast .p-toast-message.p-toast-message-success .p-toast-message-icon,
+.p-toast .p-toast-message.p-toast-message-success .p-toast-icon-close {
+  color: $color-text;
+}
+
+.p-toast .p-toast-message.p-toast-message-warn {
+  background: $bg-alert;
+  border: solid #EEE500;
+  border-width: $border-width;
+  color: $color-text;
+}
+
+.p-toast .p-toast-message.p-toast-message-warn .p-toast-message-icon,
+.p-toast .p-toast-message.p-toast-message-warn .p-toast-icon-close {
+  color: $color-text;
+}
+
+.p-toast .p-toast-message.p-toast-message-error {
+  background: $bg-alert;
+  border: solid #FC6161;
+  border-width: $border-width;
+  color: $color-text;
+}
+
+.p-toast .p-toast-message.p-toast-message-error .p-toast-message-icon,
+.p-toast .p-toast-message.p-toast-message-error .p-toast-icon-close {
+  color: $color-text;
+}

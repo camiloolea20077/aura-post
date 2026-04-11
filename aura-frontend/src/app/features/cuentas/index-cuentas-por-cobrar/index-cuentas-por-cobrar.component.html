@@ -15,7 +15,7 @@
       pButton
       label="Nueva Cuenta"
       icon="pi pi-plus"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       (click)="nueva()"
     ></button>
   </div>
@@ -107,6 +107,7 @@
     [rowHover]="true"
     (onRowSelect)="verDetalle($event.data)"
     dataKey="id"
+    showGridlines
   >
     <ng-template pTemplate="header">
       <tr>

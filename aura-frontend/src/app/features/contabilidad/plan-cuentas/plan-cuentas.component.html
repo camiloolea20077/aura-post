@@ -21,7 +21,7 @@
         pButton
         label="Nueva Cuenta"
         icon="pi pi-plus"
-        class="btn-aura btn-primary"
+        class="btn-aura"
         (click)="abrirNuevo()"
       ></button>
     </div>
@@ -29,12 +29,14 @@
 
   <div class="search-wrap">
     <span class="p-input-icon-left">
-      <i class="pi pi-search"></i>
-      <input
-        pInputText
-        [(ngModel)]="search"
-        placeholder="Buscar por código o nombre…"
-      />
+      <p-iconfield>
+        <p-inputicon class="pi pi-search" />
+        <input
+          pInputText
+          [(ngModel)]="search"
+          placeholder="Buscar por código o descripción..."
+        />
+      </p-iconfield>
     </span>
   </div>
 
@@ -45,6 +47,7 @@
       styleClass="p-datatable-sm"
       responsiveLayout="scroll"
       [rowHover]="true"
+      showGridlines
     >
       <ng-template pTemplate="header">
         <tr>
@@ -229,7 +232,7 @@
       pButton
       [label]="editId ? 'Actualizar' : 'Guardar'"
       icon="pi pi-check"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       [loading]="saving"
       [disabled]="!form.codigo || !form.nombre || !form.tipo"
       (click)="guardar()"

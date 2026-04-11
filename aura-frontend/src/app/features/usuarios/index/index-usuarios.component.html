@@ -17,7 +17,7 @@
       pButton
       icon="pi pi-plus"
       label="Nuevo usuario"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       (click)="nuevo()"
     ></button>
   </div>
@@ -54,6 +54,7 @@
       [sortOrder]="-1"
       dataKey="id"
       styleClass="p-datatable-sm"
+      showGridlines
     >
       <ng-template pTemplate="header">
         <tr>

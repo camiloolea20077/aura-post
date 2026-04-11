@@ -12,24 +12,47 @@
     </div>
     <!-- Filtros de fecha -->
     <div class="filtros-wrap">
-      <p-calendar [(ngModel)]="fechaDesde" dateFormat="yy-mm-dd" [showIcon]="true"
-        placeholder="Desde" [maxDate]="fechaHasta" />
-      <p-calendar [(ngModel)]="fechaHasta" dateFormat="yy-mm-dd" [showIcon]="true"
-        placeholder="Hasta" [minDate]="fechaDesde" />
-      <button pButton label="Aplicar" icon="pi pi-filter" class="btn-aura btn-primary"
-        (click)="aplicarFiltros()"></button>
-      <button pButton label="Limpiar" icon="pi pi-times" class="p-button-outlined p-button-secondary"
-        (click)="limpiarFiltros()"></button>
+      <p-calendar
+        [(ngModel)]="fechaDesde"
+        dateFormat="yy-mm-dd"
+        [showIcon]="true"
+        placeholder="Desde"
+        [maxDate]="fechaHasta"
+      />
+      <p-calendar
+        [(ngModel)]="fechaHasta"
+        dateFormat="yy-mm-dd"
+        [showIcon]="true"
+        placeholder="Hasta"
+        [minDate]="fechaDesde"
+      />
+      <button
+        pButton
+        label="Aplicar"
+        icon="pi pi-filter"
+        class="btn-aura"
+        (click)="aplicarFiltros()"
+      ></button>
+      <button
+        pButton
+        label="Limpiar"
+        icon="pi pi-times"
+        class="p-button-outlined p-button-secondary"
+        (click)="limpiarFiltros()"
+      ></button>
     </div>
   </div>
 
   <!-- Tabs -->
   <p-tabView styleClass="aura-tabs">
-
     <!-- ═══════════ TAB 1: RESUMEN ═══════════ -->
     <p-tabPanel header="Resumen Ejecutivo">
       <div *ngIf="loadingResumen" class="kpi-grid">
-        <p-skeleton *ngFor="let i of [1,2,3,4]" height="7rem" borderRadius="12px" />
+        <p-skeleton
+          *ngFor="let i of [1, 2, 3, 4]"
+          height="7rem"
+          borderRadius="12px"
+        />
       </div>
 
       <ng-container *ngIf="!loadingResumen && resumen">
@@ -38,35 +61,55 @@
           <div class="kpi-card">
             <span class="kpi-label">Total Ventas</span>
             <span class="kpi-value">{{ cop(resumen.totalVentasPeriodo) }}</span>
-            <span [class]="'kpi-var ' + getVariacionClass(resumen.variacionVentas)">
+            <span
+              [class]="'kpi-var ' + getVariacionClass(resumen.variacionVentas)"
+            >
               <i [class]="getVariacionIcon(resumen.variacionVentas)"></i>
-              {{ resumen.variacionVentas | number:'1.1-1' }}% vs período ant.
+              {{ resumen.variacionVentas | number: "1.1-1" }}% vs período ant.
             </span>
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Margen Bruto</span>
             <span class="kpi-value">{{ cop(resumen.margenBrutoPeriodo) }}</span>
-            <span class="kpi-sub">Compras: {{ cop(resumen.totalComprasPeriodo) }}</span>
+            <span class="kpi-sub"
+              >Compras: {{ cop(resumen.totalComprasPeriodo) }}</span
+            >
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Transacciones</span>
-            <span class="kpi-value">{{ resumen.cantidadTransacciones | number }}</span>
-            <span class="kpi-sub">Ticket prom.: {{ cop(resumen.ticketPromedio) }}</span>
+            <span class="kpi-value">{{
+              resumen.cantidadTransacciones | number
+            }}</span>
+            <span class="kpi-sub"
+              >Ticket prom.: {{ cop(resumen.ticketPromedio) }}</span
+            >
           </div>
           <div class="kpi-card">
             <span class="kpi-label">Clientes</span>
-            <span class="kpi-value">{{ (resumen.clientesNuevos + resumen.clientesRecurrentes) | number }}</span>
+            <span class="kpi-value">{{
+              resumen.clientesNuevos + resumen.clientesRecurrentes | number
+            }}</span>
             <span class="kpi-sub">
-              {{ resumen.clientesNuevos }} nuevos · {{ resumen.clientesRecurrentes }} recurrentes
+              {{ resumen.clientesNuevos }} nuevos ·
+              {{ resumen.clientesRecurrentes }} recurrentes
             </span>
           </div>
         </div>
 
         <!-- Top info -->
         <div class="top-row">
-          <div class="top-badge"><i class="pi pi-star"></i> Top categoría: <strong>{{ resumen.topCategoria }}</strong></div>
-          <div class="top-badge"><i class="pi pi-box"></i> Top producto: <strong>{{ resumen.topProducto }}</strong></div>
-          <div class="top-badge"><i class="pi pi-user"></i> Top vendedor: <strong>{{ resumen.topVendedor }}</strong></div>
+          <div class="top-badge">
+            <i class="pi pi-star"></i> Top categoría:
+            <strong>{{ resumen.topCategoria }}</strong>
+          </div>
+          <div class="top-badge">
+            <i class="pi pi-box"></i> Top producto:
+            <strong>{{ resumen.topProducto }}</strong>
+          </div>
+          <div class="top-badge">
+            <i class="pi pi-user"></i> Top vendedor:
+            <strong>{{ resumen.topVendedor }}</strong>
+          </div>
         </div>
 
         <!-- Charts -->
@@ -74,13 +117,21 @@
           <div class="chart-card" *ngIf="chartVentasDia">
             <h4>Ventas por día</h4>
             <div class="chart-container">
-              <p-chart type="line" [data]="chartVentasDia" [options]="chartOpts" />
+              <p-chart
+                type="line"
+                [data]="chartVentasDia"
+                [options]="chartOpts"
+              />
             </div>
           </div>
           <div class="chart-card" *ngIf="chartMetodoPago">
             <h4>Por método de pago</h4>
             <div class="chart-container">
-              <p-chart type="doughnut" [data]="chartMetodoPago" [options]="chartOpts" />
+              <p-chart
+                type="doughnut"
+                [data]="chartMetodoPago"
+                [options]="chartOpts"
+              />
             </div>
           </div>
         </div>
@@ -94,8 +145,13 @@
     <!-- ═══════════ TAB 2: POR CATEGORÍA ═══════════ -->
     <p-tabPanel header="Por Categoría">
       <div class="table-card">
-        <p-table [value]="loadingCategoria ? [1,2,3,4,5] : categorias"
-          [loading]="loadingCategoria" responsiveLayout="scroll" styleClass="p-datatable-sm">
+        <p-table
+          [value]="loadingCategoria ? [1, 2, 3, 4, 5] : categorias"
+          [loading]="loadingCategoria"
+          responsiveLayout="scroll"
+          styleClass="p-datatable-sm"
+          showGridlines
+        >
           <ng-template pTemplate="header">
             <tr>
               <th>Categoría</th>
@@ -108,19 +164,27 @@
           </ng-template>
           <ng-template pTemplate="body" let-row>
             <tr *ngIf="!loadingCategoria">
-              <td><strong>{{ row.categoriaNombre }}</strong></td>
+              <td>
+                <strong>{{ row.categoriaNombre }}</strong>
+              </td>
               <td class="text-right">{{ row.totalVentas | number }}</td>
-              <td class="text-right">{{ row.totalUnidades | number:'1.0-2' }}</td>
+              <td class="text-right">
+                {{ row.totalUnidades | number: "1.0-2" }}
+              </td>
               <td class="text-right">{{ cop(row.ingresos) }}</td>
               <td class="text-right">{{ cop(row.costoEstimado) }}</td>
-              <td class="text-right"><strong class="text-green">{{ cop(row.margenBruto) }}</strong></td>
+              <td class="text-right">
+                <strong class="text-green">{{ cop(row.margenBruto) }}</strong>
+              </td>
             </tr>
             <tr *ngIf="loadingCategoria">
-              <td *ngFor="let c of [1,2,3,4,5,6]"><p-skeleton /></td>
+              <td *ngFor="let c of [1, 2, 3, 4, 5, 6]"><p-skeleton /></td>
             </tr>
           </ng-template>
           <ng-template pTemplate="emptymessage">
-            <tr><td colspan="6" class="empty-row">Sin datos para el período</td></tr>
+            <tr>
+              <td colspan="6" class="empty-row">Sin datos para el período</td>
+            </tr>
           </ng-template>
         </p-table>
       </div>
@@ -129,22 +193,36 @@
     <!-- ═══════════ TAB 3: TOP PRODUCTOS ═══════════ -->
     <p-tabPanel header="Top Productos">
       <div class="table-toolbar">
-        <p-dropdown [options]="limiteOpciones" [(ngModel)]="limiteSeleccionado"
-          optionLabel="label" optionValue="value" (onChange)="onLimiteChange()" />
+        <p-dropdown
+          [options]="limiteOpciones"
+          [(ngModel)]="limiteSeleccionado"
+          optionLabel="label"
+          optionValue="value"
+          (onChange)="onLimiteChange()"
+        />
       </div>
 
       <div class="charts-row" *ngIf="chartTopProductos && !loadingTopProductos">
         <div class="chart-card chart-wide">
           <h4>Top 10 por Ingresos</h4>
           <div class="chart-container">
-            <p-chart type="bar" [data]="chartTopProductos" [options]="chartOpts" />
+            <p-chart
+              type="bar"
+              [data]="chartTopProductos"
+              [options]="chartOpts"
+            />
           </div>
         </div>
       </div>
 
       <div class="table-card">
-        <p-table [value]="loadingTopProductos ? [1,2,3,4,5] : topProductos"
-          [loading]="loadingTopProductos" responsiveLayout="scroll" styleClass="p-datatable-sm">
+        <p-table
+          [value]="loadingTopProductos ? [1, 2, 3, 4, 5] : topProductos"
+          [loading]="loadingTopProductos"
+          responsiveLayout="scroll"
+          styleClass="p-datatable-sm"
+          showGridlines
+        >
           <ng-template pTemplate="header">
             <tr>
               <th>Producto</th>
@@ -158,20 +236,30 @@
           </ng-template>
           <ng-template pTemplate="body" let-row>
             <tr *ngIf="!loadingTopProductos">
-              <td><strong>{{ row.productoNombre }}</strong></td>
-              <td><code>{{ row.sku }}</code></td>
+              <td>
+                <strong>{{ row.productoNombre }}</strong>
+              </td>
+              <td>
+                <code>{{ row.sku }}</code>
+              </td>
               <td>{{ row.categoriaNombre }}</td>
-              <td class="text-right">{{ row.cantidadVendida | number:'1.0-2' }}</td>
-              <td class="text-right"><strong>{{ cop(row.ingresos) }}</strong></td>
+              <td class="text-right">
+                {{ row.cantidadVendida | number: "1.0-2" }}
+              </td>
+              <td class="text-right">
+                <strong>{{ cop(row.ingresos) }}</strong>
+              </td>
               <td class="text-right">{{ cop(row.precioPromedio) }}</td>
               <td class="text-right">{{ row.numeroPedidos | number }}</td>
             </tr>
             <tr *ngIf="loadingTopProductos">
-              <td *ngFor="let c of [1,2,3,4,5,6,7]"><p-skeleton /></td>
+              <td *ngFor="let c of [1, 2, 3, 4, 5, 6, 7]"><p-skeleton /></td>
             </tr>
           </ng-template>
           <ng-template pTemplate="emptymessage">
-            <tr><td colspan="7" class="empty-row">Sin datos para el período</td></tr>
+            <tr>
+              <td colspan="7" class="empty-row">Sin datos para el período</td>
+            </tr>
           </ng-template>
         </p-table>
       </div>
@@ -180,8 +268,13 @@
     <!-- ═══════════ TAB 4: POR VENDEDOR ═══════════ -->
     <p-tabPanel header="Por Vendedor">
       <div class="table-card">
-        <p-table [value]="loadingVendedor ? [1,2,3] : vendedores"
-          [loading]="loadingVendedor" responsiveLayout="scroll" styleClass="p-datatable-sm">
+        <p-table
+          [value]="loadingVendedor ? [1, 2, 3] : vendedores"
+          [loading]="loadingVendedor"
+          responsiveLayout="scroll"
+          styleClass="p-datatable-sm"
+          showGridlines
+        >
           <ng-template pTemplate="header">
             <tr>
               <th>Vendedor</th>
@@ -193,31 +286,130 @@
           </ng-template>
           <ng-template pTemplate="body" let-row>
             <tr *ngIf="!loadingVendedor">
-              <td><strong>{{ row.vendedorNombre }}</strong></td>
+              <td>
+                <strong>{{ row.vendedorNombre }}</strong>
+              </td>
               <td class="text-right">{{ row.totalVentas | number }}</td>
-              <td class="text-right"><strong>{{ cop(row.ingresos) }}</strong></td>
+              <td class="text-right">
+                <strong>{{ cop(row.ingresos) }}</strong>
+              </td>
               <td class="text-right">{{ cop(row.ticketPromedio) }}</td>
-              <td class="text-right text-danger">{{ cop(row.descuentoTotal) }}</td>
+              <td class="text-right text-danger">
+                {{ cop(row.descuentoTotal) }}
+              </td>
             </tr>
             <tr *ngIf="loadingVendedor">
-              <td *ngFor="let c of [1,2,3,4,5]"><p-skeleton /></td>
+              <td *ngFor="let c of [1, 2, 3, 4, 5]"><p-skeleton /></td>
             </tr>
           </ng-template>
           <ng-template pTemplate="emptymessage">
-            <tr><td colspan="5" class="empty-row">Sin datos para el período</td></tr>
+            <tr>
+              <td colspan="5" class="empty-row">Sin datos para el período</td>
+            </tr>
           </ng-template>
         </p-table>
       </div>
     </p-tabPanel>
 
-    <!-- ═══════════ TAB 5: MÁRGENES & ROTACIÓN ═══════════ -->
-    <p-tabPanel header="Márgenes & Rotación">
+    <!-- ═══════════ TAB 5: MOVIMIENTOS DE CAJA ═══════════ -->
+    <p-tabPanel header="Movimientos de Caja">
+      <!-- KPIs de caja -->
+      <ng-container *ngIf="!loadingCaja && movimientosCaja">
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-ingreso">
+            <span class="kpi-label">Total Ingresos</span>
+            <span class="kpi-value text-green">{{ cop(movimientosCaja.totalIngresos) }}</span>
+          </div>
+          <div class="kpi-card kpi-egreso">
+            <span class="kpi-label">Total Egresos</span>
+            <span class="kpi-value text-danger">{{ cop(movimientosCaja.totalEgresos) }}</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Saldo Neto</span>
+            <span
+              class="kpi-value"
+              [class.text-green]="movimientosCaja.saldoNeto >= 0"
+              [class.text-danger]="movimientosCaja.saldoNeto < 0"
+            >{{ cop(movimientosCaja.saldoNeto) }}</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Movimientos</span>
+            <span class="kpi-value">{{ movimientosCaja.movimientos.length | number }}</span>
+          </div>
+        </div>
 
+        <!-- Tabla de movimientos -->
+        <div class="table-card" style="margin-top: 1.5rem">
+          <p-table
+            [value]="movimientosCaja.movimientos"
+            [paginator]="movimientosCaja.movimientos.length > 25"
+            [rows]="25"
+            responsiveLayout="scroll"
+            styleClass="p-datatable-sm"
+            showGridlines
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Concepto</th>
+                <th>Caja</th>
+                <th>Usuario</th>
+                <th class="text-right">Monto</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-row>
+              <tr>
+                <td>{{ row.fecha }}</td>
+                <td>
+                  <p-tag
+                    [severity]="getTipoSeverity(row.tipo)"
+                    [value]="row.tipo"
+                  />
+                </td>
+                <td>{{ row.concepto }}</td>
+                <td>{{ row.cajaNombre }}</td>
+                <td>{{ row.usuarioNombre }}</td>
+                <td class="text-right">
+                  <strong [class.text-green]="row.tipo === 'INGRESO'" [class.text-danger]="row.tipo === 'EGRESO'">
+                    {{ cop(row.monto) }}
+                  </strong>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="6" class="empty-row">
+                  <i class="pi pi-inbox"></i> Sin movimientos para el período
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </ng-container>
+
+      <div *ngIf="loadingCaja" class="kpi-grid">
+        <p-skeleton *ngFor="let i of [1, 2, 3, 4]" height="7rem" borderRadius="12px" />
+      </div>
+
+      <div *ngIf="!loadingCaja && !movimientosCaja" class="empty-row">
+        <i class="pi pi-inbox"></i> Sin movimientos para el período seleccionado
+      </div>
+    </p-tabPanel>
+
+    <!-- ═══════════ TAB 6: MÁRGENES & ROTACIÓN ═══════════ -->
+    <p-tabPanel header="Márgenes & Rotación">
       <h4 class="section-title">Márgenes por Producto</h4>
       <div class="table-card">
-        <p-table [value]="loadingMargenes ? [1,2,3,4,5] : margenes"
-          [loading]="loadingMargenes" [paginator]="margenes.length > 20"
-          [rows]="20" responsiveLayout="scroll" styleClass="p-datatable-sm">
+        <p-table
+          [value]="loadingMargenes ? [1, 2, 3, 4, 5] : margenes"
+          [loading]="loadingMargenes"
+          [paginator]="margenes.length > 20"
+          [rows]="20"
+          responsiveLayout="scroll"
+          styleClass="p-datatable-sm"
+          showGridlines
+        >
           <ng-template pTemplate="header">
             <tr>
               <th>Producto</th>
@@ -231,31 +423,52 @@
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-row>
-            <tr *ngIf="!loadingMargenes" [class]="getMargenClass(row.margenPorcentaje)">
+            <tr
+              *ngIf="!loadingMargenes"
+              [class]="getMargenClass(row.margenPorcentaje)"
+            >
               <td>{{ row.productoNombre }}</td>
-              <td><code>{{ row.sku }}</code></td>
+              <td>
+                <code>{{ row.sku }}</code>
+              </td>
               <td class="text-right">{{ cop(row.precioVenta) }}</td>
               <td class="text-right">{{ cop(row.costo) }}</td>
-              <td class="text-right"><strong>{{ cop(row.margenBruto) }}</strong></td>
-              <td class="text-right"><strong>{{ row.margenPorcentaje | number:'1.1-1' }}%</strong></td>
-              <td class="text-right">{{ row.cantidadVendida | number:'1.0-2' }}</td>
+              <td class="text-right">
+                <strong>{{ cop(row.margenBruto) }}</strong>
+              </td>
+              <td class="text-right">
+                <strong>{{ row.margenPorcentaje | number: "1.1-1" }}%</strong>
+              </td>
+              <td class="text-right">
+                {{ row.cantidadVendida | number: "1.0-2" }}
+              </td>
               <td class="text-right">{{ cop(row.ingresoTotal) }}</td>
             </tr>
             <tr *ngIf="loadingMargenes">
-              <td *ngFor="let c of [1,2,3,4,5,6,7,8]"><p-skeleton /></td>
+              <td *ngFor="let c of [1, 2, 3, 4, 5, 6, 7, 8]"><p-skeleton /></td>
             </tr>
           </ng-template>
           <ng-template pTemplate="emptymessage">
-            <tr><td colspan="8" class="empty-row">Sin datos para el período</td></tr>
+            <tr>
+              <td colspan="8" class="empty-row">Sin datos para el período</td>
+            </tr>
           </ng-template>
         </p-table>
       </div>
 
-      <h4 class="section-title" style="margin-top:2rem">Rotación de Inventario (últimos 30 días)</h4>
+      <h4 class="section-title" style="margin-top: 2rem">
+        Rotación de Inventario (últimos 30 días)
+      </h4>
       <div class="table-card">
-        <p-table [value]="loadingRotacion ? [1,2,3,4,5] : rotacion"
-          [loading]="loadingRotacion" [paginator]="rotacion.length > 20"
-          [rows]="20" responsiveLayout="scroll" styleClass="p-datatable-sm">
+        <p-table
+          [value]="loadingRotacion ? [1, 2, 3, 4, 5] : rotacion"
+          [loading]="loadingRotacion"
+          [paginator]="rotacion.length > 20"
+          [rows]="20"
+          responsiveLayout="scroll"
+          styleClass="p-datatable-sm"
+          showGridlines
+        >
           <ng-template pTemplate="header">
             <tr>
               <th>Producto</th>
@@ -271,27 +484,40 @@
           <ng-template pTemplate="body" let-row>
             <tr *ngIf="!loadingRotacion">
               <td>{{ row.productoNombre }}</td>
-              <td><code>{{ row.sku }}</code></td>
-              <td class="text-right">{{ row.stockActual | number:'1.0-2' }}</td>
-              <td class="text-right">{{ row.stockMinimo | number:'1.0-2' }}</td>
-              <td class="text-right">{{ row.unidadesVendidas | number:'1.0-2' }}</td>
-              <td class="text-right">{{ row.diasSinMovimiento | number }}</td>
-              <td class="text-right"><strong>{{ row.rotacion | number:'1.2-2' }}</strong></td>
               <td>
-                <p-tag [severity]="getEstadoStockSeverity(row.estadoStock)"
-                  [value]="row.estadoStock" />
+                <code>{{ row.sku }}</code>
+              </td>
+              <td class="text-right">
+                {{ row.stockActual | number: "1.0-2" }}
+              </td>
+              <td class="text-right">
+                {{ row.stockMinimo | number: "1.0-2" }}
+              </td>
+              <td class="text-right">
+                {{ row.unidadesVendidas | number: "1.0-2" }}
+              </td>
+              <td class="text-right">{{ row.diasSinMovimiento | number }}</td>
+              <td class="text-right">
+                <strong>{{ row.rotacion | number: "1.2-2" }}</strong>
+              </td>
+              <td>
+                <p-tag
+                  [severity]="getEstadoStockSeverity(row.estadoStock)"
+                  [value]="row.estadoStock"
+                />
               </td>
             </tr>
             <tr *ngIf="loadingRotacion">
-              <td *ngFor="let c of [1,2,3,4,5,6,7,8]"><p-skeleton /></td>
+              <td *ngFor="let c of [1, 2, 3, 4, 5, 6, 7, 8]"><p-skeleton /></td>
             </tr>
           </ng-template>
           <ng-template pTemplate="emptymessage">
-            <tr><td colspan="8" class="empty-row">Sin productos</td></tr>
+            <tr>
+              <td colspan="8" class="empty-row">Sin productos</td>
+            </tr>
           </ng-template>
         </p-table>
       </div>
     </p-tabPanel>
-
   </p-tabView>
 </div>

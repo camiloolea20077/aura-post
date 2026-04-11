@@ -88,7 +88,7 @@
     <div class="form-field">
       <label for="observaciones">Observaciones</label>
       <textarea
-        pInputTextarea
+        pTextarea
         id="observaciones"
         formControlName="observaciones"
         rows="3"
@@ -110,7 +110,7 @@
       pButton
       [label]="isEdit ? 'Actualizar' : 'Guardar'"
       icon="pi pi-check"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       [loading]="loading"
       (click)="save()"
     ></button>
