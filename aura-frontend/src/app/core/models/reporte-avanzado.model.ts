@@ -54,6 +54,22 @@ export interface ReporteRotacionInventarioModel {
   estadoStock: 'CRITICO' | 'BAJO' | 'NORMAL' | 'ALTO';
 }
 
+export interface ReporteLineaMovimientoCajaModel {
+  fecha: string;
+  tipo: 'INGRESO' | 'EGRESO';
+  concepto: string;
+  monto: number;
+  cajaNombre: string;
+  usuarioNombre: string;
+}
+
+export interface ReporteMovimientosCajaModel {
+  totalIngresos: number;
+  totalEgresos: number;
+  saldoNeto: number;
+  movimientos: ReporteLineaMovimientoCajaModel[];
+}
+
 export interface ReporteResumenAvanzadoModel {
   totalVentasPeriodo: number;
   totalVentasPeriodoAnterior: number;

@@ -311,7 +311,93 @@
       </div>
     </p-tabPanel>
 
-    <!-- ═══════════ TAB 5: MÁRGENES & ROTACIÓN ═══════════ -->
+    <!-- ═══════════ TAB 5: MOVIMIENTOS DE CAJA ═══════════ -->
+    <p-tabPanel header="Movimientos de Caja">
+      <!-- KPIs de caja -->
+      <ng-container *ngIf="!loadingCaja && movimientosCaja">
+        <div class="kpi-grid">
+          <div class="kpi-card kpi-ingreso">
+            <span class="kpi-label">Total Ingresos</span>
+            <span class="kpi-value text-green">{{ cop(movimientosCaja.totalIngresos) }}</span>
+          </div>
+          <div class="kpi-card kpi-egreso">
+            <span class="kpi-label">Total Egresos</span>
+            <span class="kpi-value text-danger">{{ cop(movimientosCaja.totalEgresos) }}</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Saldo Neto</span>
+            <span
+              class="kpi-value"
+              [class.text-green]="movimientosCaja.saldoNeto >= 0"
+              [class.text-danger]="movimientosCaja.saldoNeto < 0"
+            >{{ cop(movimientosCaja.saldoNeto) }}</span>
+          </div>
+          <div class="kpi-card">
+            <span class="kpi-label">Movimientos</span>
+            <span class="kpi-value">{{ movimientosCaja.movimientos.length | number }}</span>
+          </div>
+        </div>
+
+        <!-- Tabla de movimientos -->
+        <div class="table-card" style="margin-top: 1.5rem">
+          <p-table
+            [value]="movimientosCaja.movimientos"
+            [paginator]="movimientosCaja.movimientos.length > 25"
+            [rows]="25"
+            responsiveLayout="scroll"
+            styleClass="p-datatable-sm"
+            showGridlines
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Concepto</th>
+                <th>Caja</th>
+                <th>Usuario</th>
+                <th class="text-right">Monto</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-row>
+              <tr>
+                <td>{{ row.fecha }}</td>
+                <td>
+                  <p-tag
+                    [severity]="getTipoSeverity(row.tipo)"
+                    [value]="row.tipo"
+                  />
+                </td>
+                <td>{{ row.concepto }}</td>
+                <td>{{ row.cajaNombre }}</td>
+                <td>{{ row.usuarioNombre }}</td>
+                <td class="text-right">
+                  <strong [class.text-green]="row.tipo === 'INGRESO'" [class.text-danger]="row.tipo === 'EGRESO'">
+                    {{ cop(row.monto) }}
+                  </strong>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="6" class="empty-row">
+                  <i class="pi pi-inbox"></i> Sin movimientos para el período
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </ng-container>
+
+      <div *ngIf="loadingCaja" class="kpi-grid">
+        <p-skeleton *ngFor="let i of [1, 2, 3, 4]" height="7rem" borderRadius="12px" />
+      </div>
+
+      <div *ngIf="!loadingCaja && !movimientosCaja" class="empty-row">
+        <i class="pi pi-inbox"></i> Sin movimientos para el período seleccionado
+      </div>
+    </p-tabPanel>
+
+    <!-- ═══════════ TAB 6: MÁRGENES & ROTACIÓN ═══════════ -->
     <p-tabPanel header="Márgenes & Rotación">
       <h4 class="section-title">Márgenes por Producto</h4>
       <div class="table-card">

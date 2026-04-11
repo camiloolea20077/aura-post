@@ -26,6 +26,7 @@ import {
   ReporteVentasVendedorModel,
   ReporteMargenesProductoModel,
   ReporteRotacionInventarioModel,
+  ReporteMovimientosCajaModel,
 } from '../../core/models/reporte-avanzado.model';
 
 type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' | undefined;
@@ -63,6 +64,7 @@ export class ReportesAvanzadosComponent implements OnInit {
   public loadingVendedor = false;
   public loadingMargenes = false;
   public loadingRotacion = false;
+  public loadingCaja = false;
 
   // Datos
   public resumen: ReporteResumenAvanzadoModel | null = null;
@@ -71,6 +73,7 @@ export class ReportesAvanzadosComponent implements OnInit {
   public vendedores: ReporteVentasVendedorModel[] = [];
   public margenes: ReporteMargenesProductoModel[] = [];
   public rotacion: ReporteRotacionInventarioModel[] = [];
+  public movimientosCaja: ReporteMovimientosCajaModel | null = null;
 
   // Top productos config
   public limiteOpciones = [
@@ -111,6 +114,7 @@ export class ReportesAvanzadosComponent implements OnInit {
       this.cargarVendedores(desde, hasta),
       this.cargarMargenes(desde, hasta),
       this.cargarRotacion(),
+      this.cargarMovimientosCaja(desde, hasta),
     ]);
   }
 
@@ -221,6 +225,24 @@ export class ReportesAvanzadosComponent implements OnInit {
       this.loadingRotacion = false;
       this.cdr.markForCheck();
     }
+  }
+
+  private async cargarMovimientosCaja(desde: string, hasta: string): Promise<void> {
+    this.loadingCaja = true;
+    this.cdr.markForCheck();
+    try {
+      const res = await lastValueFrom(this.service.movimientosCaja(desde, hasta));
+      this.movimientosCaja = res?.data ?? null;
+    } catch {
+      this.movimientosCaja = null;
+    } finally {
+      this.loadingCaja = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  getTipoSeverity(tipo: string): 'success' | 'danger' {
+    return tipo === 'INGRESO' ? 'success' : 'danger';
   }
 
   // ── Charts ─────────────────────────────────────────────────────────────────
