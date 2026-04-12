@@ -56,19 +56,7 @@ export class IndexProductosComponent implements OnInit {
   public totalRecords = 0;
   public rowSize = 10;
   public searchQuery = '';
-  public sortField = 'p.id';
-  public sortOrder = 'DESC';
   public lastLazyEvent!: TableLazyLoadEvent;
-
-  // ─── Filtros extra ────────────────────────────────────────
-  public tipoFiltro: TipoProducto | null = null;
-  public tipoFiltroOpts = [
-    { label: 'Todos los tipos', value: null },
-    { label: 'Estándar', value: 'ESTANDAR' },
-    { label: 'Kit', value: 'KIT' },
-    { label: 'Receta', value: 'RECETA' },
-    { label: 'Servicio', value: 'SERVICIO' },
-  ];
 
   constructor(
     private readonly productoService: ProductoService,
@@ -102,19 +90,14 @@ export class IndexProductosComponent implements OnInit {
 
     try {
       const response = await lastValueFrom(this.productoService.page(dto));
-      // Backend retorna 206 cuando vacío (GlobalException PARTIAL_CONTENT)
       this.items = response?.data?.content ?? [];
       this.totalRecords = response?.data?.totalElements ?? 0;
     } catch (err: any) {
-      // 206 PARTIAL_CONTENT → simplemente vacío, no es un error real
       if (err?.status === 206) {
         this.items = [];
         this.totalRecords = 0;
       } else {
-        this.alertService.showError(
-          'Error',
-          'No se pudo cargar los productos.',
-        );
+        this.alertService.showError('Error', 'No se pudo cargar los productos.');
         this.items = [];
         this.totalRecords = 0;
       }
@@ -123,7 +106,6 @@ export class IndexProductosComponent implements OnInit {
     }
   }
 
-  // ─── Búsqueda / filtros ───────────────────────────────────
   onSearch(): void {
     if (this.lastLazyEvent) this.loadTable({ ...this.lastLazyEvent, first: 0 });
   }
@@ -133,16 +115,13 @@ export class IndexProductosComponent implements OnInit {
     this.onSearch();
   }
 
-  onTipoFiltroChange(): void {
-    this.onSearch();
-  }
-
   // ─── Modal ────────────────────────────────────────────────
   openCreate(): void {
     this.selectedId = null;
     this.modalSlug = 'create';
     this.showModal = true;
   }
+
   openEdit(item: ProductoTableModel): void {
     this.selectedId = item.id;
     this.modalSlug = 'edit';
@@ -153,10 +132,12 @@ export class IndexProductosComponent implements OnInit {
     this.showModal = false;
     this.selectedId = null;
   }
+
   onItemSaved(): void {
     this.showModal = false;
     this.reloadTable();
   }
+
   private reloadTable(): void {
     if (this.lastLazyEvent) this.loadTable(this.lastLazyEvent);
   }
@@ -177,10 +158,7 @@ export class IndexProductosComponent implements OnInit {
             this.productoService.delete(item.id),
           );
           if (response?.status === 200) {
-            this.alertService.showSuccess(
-              'Producto eliminado',
-              response.message,
-            );
+            this.alertService.showSuccess('Producto eliminado', response.message);
             this.reloadTable();
           }
         } catch (error: any) {

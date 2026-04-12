@@ -51,12 +51,12 @@
       (onLazyLoad)="loadTable($event)"
       [paginator]="true"
       [rows]="rowSize"
+      showGridlines
       [totalRecords]="totalRecords"
       [loading]="loadingTable"
       [rowsPerPageOptions]="[10, 25, 50]"
       [showCurrentPageReport]="true"
       currentPageReportTemplate="{first}-{last} de {totalRecords} registros"
-      styleClass="aura-table"
       [tableStyle]="{ 'min-width': '500px' }"
     >
       <ng-template pTemplate="header">
@@ -209,7 +209,10 @@
         </div>
         <div class="precio-info">
           <span class="precio-producto">{{ p.productoNombre }}</span>
-          <span class="precio-presentacion" *ngIf="p.productoPresentacionNombre">
+          <span
+            class="precio-presentacion"
+            *ngIf="p.productoPresentacionNombre"
+          >
             <i class="pi pi-layers"></i> {{ p.productoPresentacionNombre }}
           </span>
           <span class="precio-directo" *ngIf="!p.productoPresentacionNombre">

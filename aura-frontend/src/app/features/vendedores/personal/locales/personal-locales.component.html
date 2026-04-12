@@ -1,0 +1,154 @@
+<div class="locales-container">
+  <div class="toolbar">
+    <button
+      pButton
+      label="Nuevo Local"
+      icon="pi pi-plus"
+      class="btn-aura ml-auto"
+      (click)="nuevo()"
+    ></button>
+    <span class="search-wrap">
+      <i class="pi pi-search"></i>
+      <input
+        type="text"
+        pInputText
+        placeholder="Buscar locales..."
+        [(ngModel)]="search"
+        (input)="onSearch()"
+        class="search-input"
+      />
+    </span>
+  </div>
+
+  <div class="table-card">
+    <p-table
+      [value]="rows"
+      [lazy]="true"
+      [loading]="loading"
+      [totalRecords]="totalRows"
+      [rows]="pageSize"
+      [paginator]="true"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      (onPage)="onPage($event)"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords}"
+      styleClass="p-datatable-sm p-datatable-gridlines"
+      showGridlines
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 80px">#</th>
+          <th>Nombre</th>
+          <th>Dirección</th>
+          <th>Barrio</th>
+          <th>Ciudad</th>
+          <th style="width: 100px">Estado</th>
+          <th style="width: 80px">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-l>
+        <tr>
+          <td class="mono text-muted">{{ l.id }}</td>
+          <td class="fw-600">{{ l.nombre }}</td>
+          <td>{{ l.direccion }}</td>
+          <td>{{ l.barrio ?? "-" }}</td>
+          <td>{{ l.ciudadNombre ?? "-" }}</td>
+          <td>
+            <p-tag
+              [value]="l.activo ? 'Activo' : 'Inactivo'"
+              [severity]="getSeverity(l.activo)"
+            />
+          </td>
+          <td>
+            <div class="actions">
+              <button
+                pButton
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm"
+                pTooltip="Editar"
+                (click)="editLocal(l)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="empty-row">No hay locales asignados</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<p-dialog
+  [header]="editingLocal ? 'Editar Local' : 'Nuevo Local'"
+  [(visible)]="showForm"
+  [modal]="true"
+  [style]="{ width: '480px' }"
+  [draggable]="false"
+  (onHide)="closeForm()"
+>
+  <div class="form-fields">
+    <div class="field">
+      <label>Nombre <span class="required">*</span></label>
+      <input
+        type="text"
+        pInputText
+        [(ngModel)]="form.nombre"
+        placeholder="Nombre del local"
+        class="w-full"
+      />
+    </div>
+    <div class="field">
+      <label>Dirección <span class="required">*</span></label>
+      <input
+        type="text"
+        pInputText
+        [(ngModel)]="form.direccion"
+        placeholder="Dirección del local"
+        class="w-full"
+      />
+    </div>
+    <div class="field">
+      <label>Barrio</label>
+      <input
+        type="text"
+        pInputText
+        [(ngModel)]="form.barrio"
+        placeholder="Barrio"
+        class="w-full"
+      />
+    </div>
+    <div class="field">
+      <label>Ciudad</label>
+      <input
+        type="text"
+        pInputText
+        [(ngModel)]="form.ciudadNombre"
+        placeholder="Ciudad"
+        class="w-full"
+      />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="closeForm()"
+    ></button>
+    <button
+      pButton
+      [label]="editingLocal ? 'Actualizar' : 'Guardar'"
+      icon="pi pi-check"
+      class="btn-aura"
+      [loading]="saving"
+      (click)="save()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<p-toast />

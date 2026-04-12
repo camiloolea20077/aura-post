@@ -1,0 +1,100 @@
+.layout-breadcrumb-container {
+    background-color: #ffffff;
+    padding-top: 30px;
+
+    .layout-breadcrumb {
+        background: transparent;
+        border: 0 none;
+        border-radius: 0;
+        padding-left: 30px;
+
+        ul {
+            li {
+                &.p-breadcrumb-chevron {
+                    margin: 0 .75rem;
+
+                    &::before {
+                        content: "\003e";
+                        font-weight: bold;
+                        font-size: 1rem;
+                    }
+                }
+
+                .p-menuitem-link {
+                    display: flex;
+                    font-size: 1rem;
+                    margin-left: 1px;
+                    margin-top: 6px;
+                    .p-menuitem-text {
+                        color: $textThirdColor;
+                        margin-left: 6px;
+                    }
+                }
+
+                &:last-child {
+                    .p-menuitem-text {
+                        font-weight: 500;
+                        color: $textColor;
+                    }
+                }
+            }
+        }
+    }
+
+    .layout-breadcrumb-right-items {
+        .search-icon {
+            display:none;
+            align-items: center;
+            justify-content: center;
+            color: $textColor;
+            width: 32px;
+            height: 32px;
+            margin-right: .5rem;
+        }
+
+        .search-wrapper {
+            transition: transform $animationDuration $animationTimingFunction;
+
+            .p-input-icon-left {
+                margin-right: .5rem;
+                width: 100%;
+
+                input {
+                    background: transparent;
+                    border-color: transparent;
+                }
+            }
+        }
+    }
+}
+
+@media screen and (max-width: $tabletBreakpoint) {
+    .layout-breadcrumb-container {
+        .layout-breadcrumb-right-items {
+            .search-icon {
+                display:flex;
+            }
+            .search-wrapper {
+                width: 0;
+                position: absolute;
+                right: 40px;
+                background: $topbarSubmenuBg;
+                border-radius: 6px;
+                transition: width $animationDuration $animationTimingFunction;
+
+                input {
+                    width: 0;
+                }
+
+                &.active-search-wrapper {
+                    width: calc(100% - 70px);
+                    transition: width $animationDuration $animationTimingFunction;
+
+                    input {
+                        width: 100%;
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,249 @@
+<p-dialog
+  [header]="isEdit ? 'Editar local' : 'Nuevo local'"
+  [(visible)]="visible"
+  (onHide)="close()"
+  [modal]="true"
+  [style]="{ width: '560px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <form [formGroup]="form" class="dialog-form">
+    <div class="form-row">
+      <div class="field">
+        <label class="field-label"
+          >Nombre <span class="required">*</span></label
+        >
+        <input
+          type="text"
+          pInputText
+          formControlName="nombre"
+          placeholder="Nombre del local"
+          class="w-full"
+          [class.ng-invalid]="isInvalid('nombre')"
+        />
+        <small class="field-error" *ngIf="isInvalid('nombre')"
+          >El nombre es obligatorio</small
+        >
+      </div>
+    </div>
+
+    <div class="form-row cols-3">
+      <div class="field">
+        <label class="field-label"
+          >Departamento <span class="required">*</span></label
+        >
+        <p-dropdown
+          formControlName="departamentoId"
+          [options]="departamentos"
+          [filter]="true"
+          [loading]="loadingDepartamentos"
+          placeholder="Seleccione"
+          styleClass="w-full"
+          [class.ng-invalid]="isInvalid('departamentoId')"
+          (onChange)="onDepartamentoChange($event.value)"
+        />
+        <small class="field-error" *ngIf="isInvalid('departamentoId')"
+          >El departamento es obligatorio</small
+        >
+      </div>
+      <div class="field">
+        <label class="field-label"
+          >Ciudad <span class="required">*</span></label
+        >
+        <p-dropdown
+          formControlName="ciudadId"
+          [options]="ciudades"
+          [loading]="loadingCiudades"
+          placeholder="Seleccione"
+          styleClass="w-full"
+          [filter]="true"
+          filterPlaceholder="Buscar..."
+          [class.ng-invalid]="isInvalid('ciudadId')"
+          (onChange)="onCiudadChange($event.value)"
+        />
+        <small class="field-error" *ngIf="isInvalid('ciudadId')"
+          >La ciudad es obligatoria</small
+        >
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="field">
+        <label class="field-label"
+          >Dirección <span class="required">*</span></label
+        >
+        <p-autoComplete
+          formControlName="direccion"
+          [suggestions]="addressResults"
+          (completeMethod)="searchAddress($event)"
+          (onSelect)="onAddressSelect($event.value)"
+          field="display_name"
+          [forceSelection]="false"
+          [minLength]="4"
+          [disabled]="!ciudadSelected"
+          placeholder="Ej: Calle 12 #12-12"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+          appendTo="body"
+        >
+          <ng-template let-result pTemplate="item">
+            <div class="address-result">
+              <div class="address-name">{{ result.display_name }}</div>
+            </div>
+          </ng-template>
+        </p-autoComplete>
+        <small class="field-error" *ngIf="isInvalid('direccion')"
+          >La dirección debe tener el formato Calle/Carrera 12 #12-12</small
+        >
+      </div>
+      <div class="field">
+        <label class="field-label">Barrio</label>
+        <input
+          type="text"
+          pInputText
+          formControlName="barrio"
+          placeholder="Barrio"
+          class="w-full"
+        />
+      </div>
+    </div>
+
+    <div class="form-row cols-2">
+      <div class="field">
+        <label class="field-label">Latitud</label>
+        <input
+          type="text"
+          pInputText
+          [value]="form.get('latitud')?.value ?? ''"
+          placeholder="Sin asignar"
+          class="w-full"
+          readonly
+        />
+      </div>
+      <div class="field">
+        <label class="field-label">Longitud</label>
+        <input
+          type="text"
+          pInputText
+          [value]="form.get('longitud')?.value ?? ''"
+          placeholder="Sin asignar"
+          class="w-full"
+          readonly
+        />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="field">
+        <label class="field-label">Ubicación</label>
+        <app-map-picker
+          [lat]="form.get('latitud')?.value"
+          [lng]="form.get('longitud')?.value"
+          (coordinatesChange)="onMapCoordinatesChange($event)"
+        />
+      </div>
+    </div>
+
+    <div class="form-row cols-2">
+      <div class="field">
+        <label class="field-label"
+          >Teléfono <span class="required">*</span></label
+        >
+        <input
+          type="text"
+          pInputText
+          formControlName="telefono"
+          placeholder="Teléfono"
+          class="w-full"
+          [class.ng-invalid]="isInvalid('telefono')"
+        />
+        <small class="field-error" *ngIf="isInvalid('telefono')"
+          >El teléfono es obligatorio</small
+        >
+      </div>
+      <div class="field">
+        <label class="field-label">Email</label>
+        <input
+          type="email"
+          pInputText
+          formControlName="email"
+          placeholder="Email"
+          class="w-full"
+        />
+      </div>
+    </div>
+
+    <div class="form-row cols-2">
+      <div class="field">
+        <label class="field-label">Hora Apertura</label>
+        <p-calendar
+          formControlName="horaApertura"
+          [timeOnly]="true"
+          placeholder="Hora apertura"
+          styleClass="w-full"
+        />
+      </div>
+      <div class="field">
+        <label class="field-label">Hora Cierre</label>
+        <p-calendar
+          formControlName="horaCierre"
+          [timeOnly]="true"
+          placeholder="Hora cierre"
+          styleClass="w-full"
+        />
+      </div>
+    </div>
+
+    <div class="form-row cols-2">
+      <div class="field">
+        <label class="field-label">Día Inicio</label>
+        <p-dropdown
+          formControlName="diaInicioSemana"
+          [options]="diasSemana"
+          placeholder="Seleccione"
+          styleClass="w-full"
+        />
+      </div>
+      <div class="field">
+        <label class="field-label">Día Fin</label>
+        <p-dropdown
+          formControlName="diaFinSemana"
+          [options]="diasSemana"
+          placeholder="Seleccione"
+          styleClass="w-full"
+        />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="field">
+        <label class="field-label">Preferencia de Visita</label>
+        <textarea
+          pInputTextarea
+          formControlName="preferenciaVisita"
+          placeholder="Notas sobre preferencias de visita..."
+          rows="2"
+          class="w-full"
+        ></textarea>
+      </div>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="close()"
+    ></button>
+    <button
+      pButton
+      [label]="isEdit ? 'Actualizar' : 'Guardar'"
+      icon="pi pi-check"
+      class="btn-aura"
+      [loading]="loading"
+      (click)="save()"
+    ></button>
+  </ng-template>
+</p-dialog>

@@ -19,7 +19,7 @@
       pButton
       icon="pi pi-plus"
       label="Nueva configuración"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       (click)="nueva()"
     ></button>
   </div>
@@ -56,6 +56,7 @@
       [sortOrder]="-1"
       dataKey="id"
       styleClass="p-datatable-sm"
+      showGridlines
     >
       <ng-template pTemplate="header">
         <tr>

@@ -32,6 +32,10 @@ export interface AsientoDetalleModel {
   descripcion: string;
   debito: number;
   credito: number;
+  terceroId?: number | null;
+  terceroNombre?: string | null;
+  centroCostoId?: number | null;
+  centroCostoNombre?: string | null;
 }
 
 export interface CreateAsientoDetalleDto {
@@ -39,6 +43,8 @@ export interface CreateAsientoDetalleDto {
   descripcion?: string;
   debito: number;
   credito: number;
+  terceroId?: number | null;
+  centroCostoId?: number | null;
 }
 
 export interface AsientoContableModel {

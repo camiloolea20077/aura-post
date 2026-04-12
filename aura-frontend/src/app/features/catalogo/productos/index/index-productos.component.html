@@ -44,16 +44,6 @@
           </button>
         </span>
 
-        <!-- Filtro tipo -->
-        <p-dropdown
-          [options]="tipoFiltroOpts"
-          [(ngModel)]="tipoFiltro"
-          optionLabel="label"
-          optionValue="value"
-          (onChange)="onTipoFiltroChange()"
-          styleClass="tipo-filter"
-        />
-
         <!-- Total -->
         <span class="total-badge" *ngIf="!loadingTable">
           {{ totalRecords | number }}
@@ -69,14 +59,14 @@
       (onLazyLoad)="loadTable($event)"
       [paginator]="true"
       [rows]="rowSize"
+      showGridlines
       [totalRecords]="totalRecords"
       [loading]="loadingTable"
       [rowsPerPageOptions]="[10, 25, 50]"
       [sortMode]="'single'"
       [showCurrentPageReport]="true"
       currentPageReportTemplate="{first}-{last} de {totalRecords} registros"
-      styleClass="aura-table"
-      [tableStyle]="{ 'min-width': '800px' }"
+      [tableStyle]="{ 'min-width': '50rem' }"
     >
       <!-- Header -->
       <ng-template pTemplate="header">
@@ -118,16 +108,11 @@
         <tr>
           <!-- Nombre + código barras -->
           <td>
-            <div class="cell-producto">
-              <div class="prod-avatar">
-                {{ item.nombre.charAt(0).toUpperCase() }}
-              </div>
-              <div class="prod-info">
-                <span class="prod-nombre">{{ item.nombre }}</span>
-                <span class="prod-barras" *ngIf="item.codigoBarras">
-                  <i class="pi pi-barcode"></i> {{ item.codigoBarras }}
-                </span>
-              </div>
+            <div class="prod-info">
+              <span class="prod-nombre">{{ item.nombre }}</span>
+              <span class="prod-barras" *ngIf="item.codigoBarras">
+                <i class="pi pi-barcode"></i> {{ item.codigoBarras }}
+              </span>
             </div>
           </td>
 

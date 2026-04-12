@@ -1,120 +1,401 @@
-<p-dialog
-  [(visible)]="visible"
-  [header]="header"
-  [modal]="true"
-  [draggable]="false"
-  [resizable]="false"
-  [style]="{ width: '520px' }"
-  styleClass="aura-dialog"
-  (onHide)="close()"
->
-  <div class="form-body">
+<!-- ═══════ LOADING ═══════════════════════════════════════════════ -->
+<div class="page-loading" *ngIf="loadingPage">
+  <i class="pi pi-spin pi-spinner"></i>
+  <span>Cargando gasto...</span>
+</div>
 
-    <!-- Sucursal -->
-    <div class="field">
-      <label>Sucursal <span class="req">*</span></label>
-      <p-dropdown
-        [(ngModel)]="sucursalId"
-        [options]="sucursalesOpts"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="Seleccionar sucursal"
-        styleClass="w-full"
-        appendTo="body"
-      />
+<!-- ═══════ PÁGINA ════════════════════════════════════════════════ -->
+<div *ngIf="!loadingPage">
+  <!-- Page Header -->
+  <div class="page-header">
+    <button
+      type="button"
+      class="btn-back"
+      (click)="cancelar()"
+      pTooltip="Volver a gastos"
+      tooltipPosition="right"
+    >
+      <i class="pi pi-arrow-left"></i>
+    </button>
+    <div>
+      <h2 class="page-title">
+        {{ modoEdicion ? "Editar gasto" : "Nuevo gasto" }}
+      </h2>
+      <p class="page-sub">
+        {{
+          modoEdicion
+            ? "Modifica los datos del gasto"
+            : "Registra un nuevo gasto operativo"
+        }}
+      </p>
     </div>
-
-    <!-- Categoría -->
-    <div class="field">
-      <label>Categoría <span class="req">*</span></label>
-      <p-dropdown
-        [ngModel]="categoria"
-        (ngModelChange)="onCategoriaChange($event)"
-        [options]="categoriasOpts"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="Seleccionar categoría"
-        styleClass="w-full"
-        appendTo="body"
-      />
-    </div>
-
-    <!-- Deducibilidad (auto-set, pero editable) -->
-    <div class="field deducible-field">
-      <label>Tipo fiscal</label>
-      <div class="tipo-btns">
-        <button
-          type="button"
-          class="tipo-btn"
-          [class.deducible]="deducible"
-          [class.active]="deducible"
-          (click)="deducible = true; cdr.markForCheck()"
-        >
-          <i class="pi pi-check-circle"></i> Deducible
-        </button>
-        <button
-          type="button"
-          class="tipo-btn"
-          [class.no-deducible]="!deducible"
-          [class.active]="!deducible"
-          (click)="deducible = false; cdr.markForCheck()"
-        >
-          <i class="pi pi-times-circle"></i> No deducible
-        </button>
-      </div>
-      <small class="field-hint">
-        <span *ngIf="deducible">Este gasto puede restarse de la base gravable de impuestos.</span>
-        <span *ngIf="!deducible">Este gasto no reduce la carga tributaria (ej: multas, salarios, gastos personales).</span>
-      </small>
-    </div>
-
-    <!-- Monto -->
-    <div class="field">
-      <label>Monto <span class="req">*</span></label>
-      <p-inputNumber
-        [(ngModel)]="monto"
-        mode="currency"
-        currency="COP"
-        locale="es-CO"
-        [maxFractionDigits]="0"
-        styleClass="w-full"
-        placeholder="$ 0"
-      />
-    </div>
-
-    <!-- Fecha -->
-    <div class="field">
-      <label>Fecha</label>
-      <p-calendar
-        [(ngModel)]="fecha"
-        dateFormat="yy-mm-dd"
-        [showIcon]="true"
-        styleClass="w-full"
-        appendTo="body"
-      />
-    </div>
-
-    <!-- Descripción -->
-    <div class="field">
-      <label>Descripción <span class="optional">(opcional)</span></label>
-      <textarea
-        pInputTextarea
-        [(ngModel)]="descripcion"
-        rows="3"
-        class="w-full"
-        placeholder="Detalle del gasto..."
-      ></textarea>
-    </div>
-
   </div>
 
-  <ng-template pTemplate="footer">
-    <button pButton icon="pi pi-times" label="Cancelar" class="p-button-text" (click)="close()"></button>
-    <button pButton [icon]="saving ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
-      [label]="modoEdicion ? 'Actualizar' : 'Registrar'"
-      class="btn-aura btn-primary"
-      [disabled]="saving"
-      (click)="save()">
-    </button>
-  </ng-template>
-</p-dialog>
+  <!-- Form -->
+  <form name="frm" id="frm" [formGroup]="frm" class="gasto-form">
+    <!-- ── Sección 1: Datos del gasto ────────────────────────────── -->
+    <p-fieldset legend="Datos del gasto" styleClass="fs-section">
+      <div class="p-grid p-fluid">
+        <!-- Sucursal -->
+        <div class="col-12 sm:col-12 md:col-6 lg:col-3 py-0 px-1">
+          <label for="sucursalId">Sucursal <span class="req">*</span></label>
+          <div class="field mt-1">
+            <p-dropdown
+              formControlName="sucursalId"
+              id="sucursalId"
+              [options]="sucursalesOpts"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Seleccionar sucursal"
+              styleClass="w-full"
+            />
+          </div>
+        </div>
+
+        <!-- Categoría -->
+        <div class="col-12 sm:col-12 md:col-6 lg:col-3 py-0 px-1">
+          <label for="categoria">Categoría <span class="req">*</span></label>
+          <div class="field mt-1">
+            <p-dropdown
+              formControlName="categoria"
+              id="categoria"
+              [options]="categoriasOpts"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Seleccionar categoría"
+              styleClass="w-full"
+              (onChange)="onCategoriaChange($event.value)"
+            />
+          </div>
+        </div>
+
+        <!-- Monto -->
+        <div class="col-12 sm:col-12 md:col-6 lg:col-3 py-0 px-1">
+          <label for="monto">Monto <span class="req">*</span></label>
+          <div class="field mt-1">
+            <p-inputNumber
+              formControlName="monto"
+              id="monto"
+              mode="currency"
+              currency="COP"
+              locale="es-CO"
+              [maxFractionDigits]="0"
+              placeholder="$ 0"
+              styleClass="w-full"
+            />
+          </div>
+        </div>
+
+        <!-- Fecha -->
+        <div class="col-12 sm:col-12 md:col-6 lg:col-3 py-0 px-1">
+          <label for="fecha">Fecha</label>
+          <div class="field mt-1">
+            <p-calendar
+              formControlName="fecha"
+              id="fecha"
+              dateFormat="dd/mm/yy"
+              [showIcon]="true"
+              styleClass="w-full"
+            />
+          </div>
+        </div>
+
+        <!-- Tipo fiscal -->
+        <div class="col-12 sm:col-12 md:col-6 lg:col-3 py-0 px-1">
+          <label>Tipo fiscal</label>
+          <div class="field mt-1">
+            <div class="tipo-btns">
+              <button
+                type="button"
+                class="tipo-btn"
+                [class.deducible]="frm.value.deducible"
+                [class.active]="frm.value.deducible"
+                (click)="
+                  frm.patchValue({ deducible: true }); cdr.markForCheck()
+                "
+              >
+                <i class="pi pi-check-circle"></i> Deducible
+              </button>
+              <button
+                type="button"
+                class="tipo-btn"
+                [class.no-deducible]="!frm.value.deducible"
+                [class.active]="!frm.value.deducible"
+                (click)="
+                  frm.patchValue({ deducible: false }); cdr.markForCheck()
+                "
+              >
+                <i class="pi pi-times-circle"></i> No deducible
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </p-fieldset>
+
+    <!-- ── Sección 2: Documento soporte ──────────────────────────── -->
+    <p-fieldset legend="Documento soporte" styleClass="fs-section" class="mt-2">
+      <div class="p-grid p-fluid">
+        <!-- Tipo doc -->
+        <div class="col-12 sm:col-12 md:col-6 lg:col-3 py-0 px-1">
+          <label for="tipoDocSoporte">Tipo de documento</label>
+          <div class="field mt-1">
+            <p-dropdown
+              formControlName="tipoDocSoporte"
+              id="tipoDocSoporte"
+              [options]="tipoDocOpts"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Tipo..."
+              [showClear]="true"
+              styleClass="w-full"
+            />
+          </div>
+        </div>
+
+        <!-- N° documento -->
+        <div class="col-12 sm:col-12 md:col-6 lg:col-3 py-0 px-1">
+          <label for="numeroDocSoporte">N° documento</label>
+          <div class="field mt-1">
+            <input
+              type="text"
+              pInputText
+              formControlName="numeroDocSoporte"
+              id="numeroDocSoporte"
+              placeholder="Ej: FV-0001"
+              maxlength="50"
+              autocomplete="off"
+              class="w-full"
+            />
+          </div>
+        </div>
+
+        <!-- Descripción -->
+        <div class="col-12 sm:col-12 md:col-12 lg:col-6 py-0 px-1">
+          <label for="descripcion"
+            >Descripción <span class="optional">(opcional)</span></label
+          >
+          <div class="field mt-1">
+            <input
+              type="text"
+              pInputText
+              formControlName="descripcion"
+              id="descripcion"
+              placeholder="Detalle del gasto..."
+              maxlength="500"
+              autocomplete="off"
+              class="w-full"
+            />
+          </div>
+        </div>
+      </div>
+    </p-fieldset>
+
+    <!-- ── Sección 3: Tercero y contabilidad ─────────────────────── -->
+    <p-fieldset legend="Tercero y contabilidad" styleClass="fs-section">
+      <div class="p-grid p-fluid">
+        <!-- Proveedor / Tercero -->
+        <div class="col-12 sm:col-12 md:col-6 lg:col-6 py-0 px-1">
+          <label
+            >Proveedor / Tercero <span class="optional">(opcional)</span></label
+          >
+          <div class="field mt-1">
+            <p-autoComplete
+              [(ngModel)]="terceroSeleccionado"
+              [ngModelOptions]="{ standalone: true }"
+              [suggestions]="terceroSugerencias"
+              [style]="{ width: '100%' }"
+              (completeMethod)="buscarTerceros($event)"
+              field="nombreCompleto"
+              placeholder="Buscar por nombre o NIT..."
+              [showClear]="true"
+              styleClass="w-full"
+            />
+          </div>
+        </div>
+
+        <!-- Cuenta contable -->
+        <div class="col-12 sm:col-12 md:col-6 lg:col-6 py-0 px-1">
+          <label
+            >Cuenta contable <span class="optional">(opcional)</span></label
+          >
+          <div class="field mt-1">
+            <p-dropdown
+              formControlName="cuentaContableId"
+              [options]="cuentasOpts"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Seleccionar cuenta..."
+              [showClear]="true"
+              [filter]="true"
+              filterBy="label"
+              styleClass="w-full"
+            />
+          </div>
+        </div>
+      </div>
+    </p-fieldset>
+
+    <!-- ── Sección 4: Información tributaria ─────────────────────── -->
+    <p-fieldset legend="Información tributaria" styleClass="fs-section">
+      <div class="p-grid p-fluid">
+        <!-- IVA -->
+        <div class="col-12 sm:col-12 md:col-4 lg:col-4 py-0 px-1">
+          <label>Base IVA</label>
+          <div class="field mt-1">
+            <p-inputNumber
+              formControlName="baseIva"
+              mode="currency"
+              currency="COP"
+              locale="es-CO"
+              [maxFractionDigits]="0"
+              styleClass="w-full"
+              (onChange)="recalcularIva()"
+            />
+          </div>
+        </div>
+        <div class="col-12 sm:col-12 md:col-2 lg:col-4 py-0 px-1">
+          <label>Tarifa %</label>
+          <div class="field mt-1">
+            <p-inputNumber
+              formControlName="tarifaIva"
+              [min]="0"
+              [max]="100"
+              [maxFractionDigits]="2"
+              suffix="%"
+              styleClass="w-full"
+              (onChange)="recalcularIva()"
+            />
+          </div>
+        </div>
+        <div class="col-12 sm:col-12 md:col-4 lg:col-4 py-0 px-1">
+          <label>Valor IVA</label>
+          <div class="field mt-1">
+            <p-inputNumber
+              formControlName="valorIva"
+              mode="currency"
+              currency="COP"
+              locale="es-CO"
+              [maxFractionDigits]="0"
+              styleClass="w-full"
+            />
+          </div>
+        </div>
+
+        <div class="col-12 py-0"><div class="sep-retencion"></div></div>
+
+        <!-- Retefuente -->
+        <div class="col-12 sm:col-12 md:col-4 lg:col-4 py-0 px-1">
+          <label>Base Retefuente</label>
+          <div class="field mt-1">
+            <p-inputNumber
+              formControlName="baseRetefuente"
+              mode="currency"
+              currency="COP"
+              locale="es-CO"
+              [maxFractionDigits]="0"
+              styleClass="w-full"
+              (onChange)="recalcularRetefuente()"
+            />
+          </div>
+        </div>
+        <div class="col-12 sm:col-12 md:col-2 lg:col-4 py-0 px-1">
+          <label>Tarifa %</label>
+          <div class="field mt-1">
+            <p-inputNumber
+              formControlName="tarifaRetefuente"
+              [min]="0"
+              [max]="100"
+              [maxFractionDigits]="2"
+              suffix="%"
+              styleClass="w-full"
+              (onChange)="recalcularRetefuente()"
+            />
+          </div>
+        </div>
+        <div class="col-12 sm:col-12 md:col-4 lg:col-4 py-0 px-1">
+          <label>Valor Retefuente</label>
+          <div class="field mt-1">
+            <p-inputNumber
+              formControlName="valorRetefuente"
+              mode="currency"
+              currency="COP"
+              locale="es-CO"
+              [maxFractionDigits]="0"
+              styleClass="w-full"
+            />
+          </div>
+        </div>
+
+        <div class="col-12 py-0"><div class="sep-retencion"></div></div>
+
+        <!-- ReteICA -->
+        <div class="col-12 sm:col-12 md:col-4 lg:col-4 py-0 px-1">
+          <label>Base ReteICA</label>
+          <div class="field mt-1">
+            <p-inputNumber
+              formControlName="baseReteica"
+              mode="currency"
+              currency="COP"
+              locale="es-CO"
+              [maxFractionDigits]="0"
+              styleClass="w-full"
+              (onChange)="recalcularReteica()"
+            />
+          </div>
+        </div>
+        <div class="col-12 sm:col-12 md:col-2 lg:col-4 py-0 px-1">
+          <label>Tarifa ‰</label>
+          <div class="field mt-1">
+            <p-inputNumber
+              formControlName="tarifaReteica"
+              [min]="0"
+              [max]="100"
+              [maxFractionDigits]="2"
+              suffix="‰"
+              styleClass="w-full"
+              (onChange)="recalcularReteica()"
+            />
+          </div>
+        </div>
+        <div class="col-12 sm:col-12 md:col-4 lg:col-4 py-0 px-1">
+          <label>Valor ReteICA</label>
+          <div class="field mt-1">
+            <p-inputNumber
+              formControlName="valorReteica"
+              mode="currency"
+              currency="COP"
+              locale="es-CO"
+              [maxFractionDigits]="0"
+              styleClass="w-full"
+            />
+          </div>
+        </div>
+      </div>
+    </p-fieldset>
+
+    <!-- Page Footer -->
+    <div class="page-footer">
+      <button
+        pButton
+        type="button"
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-outlined p-button-secondary"
+        [disabled]="isSubmitting"
+        (click)="cancelar()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        [label]="modoEdicion ? 'Actualizar gasto' : 'Registrar gasto'"
+        [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+        class="btn-aura"
+        [disabled]="isSubmitting || frm.invalid"
+        (click)="save()"
+      ></button>
+    </div>
+  </form>
+</div>
+
+<p-toast />

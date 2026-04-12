@@ -71,6 +71,9 @@ import { CuentaBancariaService } from '../../core/services/cuenta-bancaria.servi
 import { CuentaBancariaModel } from '../../core/models/cuenta-bancaria.model';
 import { CarteraService } from '../../core/services/cartera.service';
 import { ValidacionCreditoModel } from '../../core/models/cartera.model';
+import { TicketComprobanteCajaComponent } from '../comprobantes/ticket/ticket-comprobante-caja.component';
+import { ComprobanteCajaModel } from '../../core/models/comprobante-caja.model';
+import { MovimientoCajaDto } from '../../core/models/caja.model';
 
 interface CartTab {
   id: string;
@@ -109,6 +112,7 @@ interface CartTab {
     DialogModule,
     TextareaModule,
     FormTerceroComponent,
+    TicketComprobanteCajaComponent,
   ],
   providers: [MessageService],
   templateUrl: './pos.component.html',
@@ -129,6 +133,8 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   public turnoActivo: TurnoCajaModel | null = null;
   public turnoError = false;
   public loadingTurno = true;
+  public esVendedor = false;
+  private vendedorSucursalId: number | null = null;
 
   // ── Catálogo ───────────────────────────────────────────────
   public productos: ProductoPOS[] = [];
@@ -174,6 +180,8 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // ── Movimiento de caja (ingreso / egreso) ─────────────────
   public showMovimiento = false;
+  public showTicketMovimiento = false;
+  public comprobanteMovimiento: ComprobanteCajaModel | null = null;
 
   // ── Exento de IVA (ONG / entidades sin ánimo de lucro) ───
   public exentoIva = false;
@@ -183,7 +191,10 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   public listaSeleccionada: { id: number; nombre: string } | null = null;
   private preciosPorLista = new Map<number, number>(); // presentacionId → precio
   // Todas las listas precargadas: listaPrecioId → { nombre, precios: Map<productKey, precio> }
-  private todasListasPrecio = new Map<number, { nombre: string; precios: Map<number, number> }>();
+  private todasListasPrecio = new Map<
+    number,
+    { nombre: string; precios: Map<number, number> }
+  >();
 
   // ── Cotización ────────────────────────────────────────────
   public showCotizacion = false;
@@ -230,7 +241,9 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     try {
       const res = await lastValueFrom(this.cuentaBancariaService.list());
       this.cuentasBancarias = (res?.data ?? []).filter((c) => c.activa);
-    } catch { /* silencioso */ }
+    } catch {
+      /* silencioso */
+    }
   }
 
   private cargarCotizacionDesdeNavegacion(): void {
@@ -337,6 +350,16 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private async checkTurno(): Promise<void> {
     try {
+      const rol = await this.indexDBService.getRol();
+      if (rol === 'VENDEDOR') {
+        this.esVendedor = true;
+        this.turnoError = false;
+        this.vendedorSucursalId =
+          await this.indexDBService.getSucursalDefault();
+        this.initTabs();
+        this.loadProductos();
+        return;
+      }
       const res = await lastValueFrom(this.turnoCajaService.turnoActivo());
       this.turnoActivo = res?.data ?? null;
       this.turnoError = !this.turnoActivo;
@@ -462,7 +485,10 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         showDescuento: false,
         precio2: p.precio2 ?? null,
         precio3: p.precio3 ?? null,
-        preciosDisponibles: this.buildPreciosDisponibles(p.id, p.presentacionId),
+        preciosDisponibles: this.buildPreciosDisponibles(
+          p.id,
+          p.presentacionId,
+        ),
       };
       this.cart = [item, ...this.cart];
       this.calcLine(item);
@@ -572,12 +598,17 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     try {
       const res = await lastValueFrom(this.listaPreciosService.list());
       const listas = res?.data ?? [];
-      this.listaPreciosOpts = listas.map((l) => ({ label: l.nombre, value: l.id }));
+      this.listaPreciosOpts = listas.map((l) => ({
+        label: l.nombre,
+        value: l.id,
+      }));
       // Precargar precios de todas las listas en paralelo
       await Promise.all(
         listas.map(async (l) => {
           try {
-            const pr = await lastValueFrom(this.productoPrecioService.listByLista(l.id));
+            const pr = await lastValueFrom(
+              this.productoPrecioService.listByLista(l.id),
+            );
             const precios = new Map<number, number>();
             for (const p of pr?.data ?? []) {
               if (p.productoPresentacionId != null) {
@@ -587,7 +618,9 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
               }
             }
             this.todasListasPrecio.set(l.id, { nombre: l.nombre, precios });
-          } catch { /* silent */ }
+          } catch {
+            /* silent */
+          }
         }),
       );
       // Una vez cargadas todas las listas, actualizar los ítems ya en carrito/tabs
@@ -602,23 +635,33 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   private refreshPreciosDisponiblesEnTodos(): void {
     // Carrito activo (this.cart es copia independiente del tab)
     for (const item of this.cart) {
-      item.preciosDisponibles = this.buildPreciosDisponibles(item.productoId, item.presentacionId);
+      item.preciosDisponibles = this.buildPreciosDisponibles(
+        item.productoId,
+        item.presentacionId,
+      );
     }
     // Resto de tabs guardados
     for (const tab of this.tabs) {
       for (const item of tab.cart) {
-        item.preciosDisponibles = this.buildPreciosDisponibles(item.productoId, item.presentacionId);
+        item.preciosDisponibles = this.buildPreciosDisponibles(
+          item.productoId,
+          item.presentacionId,
+        );
       }
     }
   }
 
   /** Construye los precios disponibles de todas las listas para un producto/presentación */
-  private buildPreciosDisponibles(productoId: number, presentacionId: number | null): PrecioDisponible[] {
+  private buildPreciosDisponibles(
+    productoId: number,
+    presentacionId: number | null,
+  ): PrecioDisponible[] {
     const result: PrecioDisponible[] = [];
     for (const [listaId, { nombre, precios }] of this.todasListasPrecio) {
-      const precio = presentacionId != null
-        ? (precios.get(presentacionId) ?? precios.get(-productoId))
-        : precios.get(-productoId);
+      const precio =
+        presentacionId != null
+          ? (precios.get(presentacionId) ?? precios.get(-productoId))
+          : precios.get(-productoId);
       if (precio != null && isFinite(precio)) {
         result.push({ listaId, listaNombre: nombre, precio });
       }
@@ -628,7 +671,8 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** Aplica el precio de una lista específica a una línea del carrito */
   cambiarPrecioPorLinea(item: CartItem, opt: PrecioDisponible): void {
-    if (item.precioOriginal === undefined) item.precioOriginal = item.precioCatalogo;
+    if (item.precioOriginal === undefined)
+      item.precioOriginal = item.precioCatalogo;
     item.precio = opt.precio;
     item.listaPrecioNombre = opt.listaNombre;
     item.listaPrecioId = opt.listaId;
@@ -638,8 +682,13 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /** Selecciona P2 o P3 del producto como precio de la línea */
-  seleccionarPrecioProducto(item: CartItem, precio: number, label: string): void {
-    if (item.precioOriginal === undefined) item.precioOriginal = item.precioCatalogo;
+  seleccionarPrecioProducto(
+    item: CartItem,
+    precio: number,
+    label: string,
+  ): void {
+    if (item.precioOriginal === undefined)
+      item.precioOriginal = item.precioCatalogo;
     item.precio = precio;
     item.listaPrecioNombre = label;
     item.listaPrecioId = undefined;
@@ -823,7 +872,10 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         showDescuento: false,
         precio2: p.precio2 ?? null,
         precio3: p.precio3 ?? null,
-        preciosDisponibles: this.buildPreciosDisponibles(p.id, p.presentacionId),
+        preciosDisponibles: this.buildPreciosDisponibles(
+          p.id,
+          p.presentacionId,
+        ),
       };
       this.cart = [item, ...this.cart];
       this.calcLine(item);
@@ -899,7 +951,15 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private newTab(n: number): CartTab {
-    return { id: uuid(), label: `Orden ${n}`, cart: [], clienteId: null, clienteNombre: null, listaSeleccionada: null, preciosPorLista: [] };
+    return {
+      id: uuid(),
+      label: `Orden ${n}`,
+      cart: [],
+      clienteId: null,
+      clienteNombre: null,
+      listaSeleccionada: null,
+      preciosPorLista: [],
+    };
   }
 
   private initTabs(): void {
@@ -916,7 +976,9 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
           return;
         }
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     this.tabs = [this.newTab(1)];
     this.tabActivo = 0;
   }
@@ -932,7 +994,11 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       preciosPorLista: Array.from(this.preciosPorLista.entries()),
       exentoIva: this.exentoIva,
     };
-    try { localStorage.setItem(this.storageKey(), JSON.stringify(this.tabs)); } catch { /* ignore */ }
+    try {
+      localStorage.setItem(this.storageKey(), JSON.stringify(this.tabs));
+    } catch {
+      /* ignore */
+    }
   }
 
   private loadStateFromTab(tab: CartTab): void {
@@ -945,7 +1011,10 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     // Refrescar precios disponibles (pueden venir vacíos desde localStorage)
     if (this.todasListasPrecio.size > 0) {
       for (const item of this.cart) {
-        item.preciosDisponibles = this.buildPreciosDisponibles(item.productoId, item.presentacionId);
+        item.preciosDisponibles = this.buildPreciosDisponibles(
+          item.productoId,
+          item.presentacionId,
+        );
       }
     }
     this.recalcularTotales();
@@ -974,7 +1043,10 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
 
   closeTab(i: number, event: Event): void {
     event.stopPropagation();
-    if (this.tabs.length === 1) { this.clearCart(); return; }
+    if (this.tabs.length === 1) {
+      this.clearCart();
+      return;
+    }
     const newTabs = this.tabs.filter((_, idx) => idx !== i);
     newTabs.forEach((t, idx) => (t.label = `Orden ${idx + 1}`));
     this.tabs = newTabs;
@@ -983,12 +1055,19 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     this._loadingTab = true;
     this.loadStateFromTab(this.tabs[newIdx]);
     this._loadingTab = false;
-    try { localStorage.setItem(this.storageKey(), JSON.stringify(this.tabs)); } catch { /* ignore */ }
+    try {
+      localStorage.setItem(this.storageKey(), JSON.stringify(this.tabs));
+    } catch {
+      /* ignore */
+    }
     this.cdr.markForCheck();
   }
 
   private cerrarTabActivo(): void {
-    if (this.tabs.length === 1) { this.clearCart(); return; }
+    if (this.tabs.length === 1) {
+      this.clearCart();
+      return;
+    }
     this.closeTab(this.tabActivo, new Event(''));
   }
 
@@ -1079,7 +1158,12 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   async irAlPago(): Promise<void> {
     if (!this.cart.length) return;
     this.pagosPrev = [
-      { metodoPago: 'EFECTIVO', monto: this.total, referencia: null, cuentaBancariaId: null },
+      {
+        metodoPago: 'EFECTIVO',
+        monto: this.total,
+        referencia: null,
+        cuentaBancariaId: null,
+      },
     ];
     // Cargar info de crédito si hay cliente seleccionado
     this.creditoInfo = null;
@@ -1089,7 +1173,9 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
           this.carteraService.validarVenta(this.clienteId, this.total),
         );
         this.creditoInfo = res?.data ?? null;
-      } catch { /* silencioso */ }
+      } catch {
+        /* silencioso */
+      }
     }
     this.showPago = true;
     this.cdr.markForCheck();
@@ -1115,7 +1201,8 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     const clienteEmailParaFE = this.feClienteEmail;
 
     const dto: CreateVentaDto = {
-      turnoCajaId: this.turnoActivo!.id,
+      turnoCajaId: this.turnoActivo?.id ?? null,
+      sucursalId: this.esVendedor ? this.vendedorSucursalId : null,
       clienteId: this.clienteId,
       detalles: this.cart.map((c) => ({
         productoId: c.productoId,
@@ -1169,6 +1256,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         this.cufeActual = null;
         this.searchProduct = '';
         this.filtrar();
+        this.loadProductos();
         this.alertService.showSuccess(
           'Venta registrada',
           `Venta #${(res.data as any).numero ?? this.ventaCompletadaId} completada exitosamente`,
@@ -1255,6 +1343,25 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   // ── Movimiento de caja ────────────────────────────────────
   abrirMovimiento(): void {
     this.showMovimiento = true;
+    this.cdr.markForCheck();
+  }
+
+  onMovimientoRegistrado(mov: MovimientoCajaDto): void {
+    this.showMovimiento = false;
+    // Construir ComprobanteCajaModel desde el DTO devuelto
+    this.comprobanteMovimiento = {
+      id: mov.comprobanteId ?? mov.id,
+      numeroComprobante:
+        mov.numeroComprobante ?? `MOV-${String(mov.id).padStart(6, '0')}`,
+      tipo: mov.tipo,
+      concepto: mov.concepto ?? '',
+      monto: mov.monto,
+      metodoPago: mov.metodoPago,
+      entregadoA: mov.entregadoA,
+      origen: 'MANUAL',
+      createdAt: mov.fecha,
+    };
+    this.showTicketMovimiento = true;
     this.cdr.markForCheck();
   }
 

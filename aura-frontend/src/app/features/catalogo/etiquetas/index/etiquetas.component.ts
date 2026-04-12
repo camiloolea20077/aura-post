@@ -61,6 +61,11 @@ export class EtiquetasComponent implements OnInit {
     maxCaracteresNombre: 50,
     espaciado: 10,
     anchoEtiqueta: 100, // porcentaje
+    marginVertical: 5,
+    marginHorizontal: 5,
+    saltarEtiquetas: 0,
+    alinearFinal: true,
+    ahorrarPapel: false,
   };
 
   public opcionesColumnas = [
@@ -228,13 +233,29 @@ export class EtiquetasComponent implements OnInit {
     );
 
     await this.cargarJsBarcodePromise();
+    const settings = this.settings;
+    const lista: {
+      nombre: string;
+      codigo: string;
+      precio: number;
+      isPlaceholder?: boolean;
+    }[] = [];
 
-    const lista: { nombre: string; codigo: string; precio: number }[] = [];
+    // Agregar espacios vacíos si se solicita
+    if (settings.saltarEtiquetas > 0) {
+      for (let i = 0; i < settings.saltarEtiquetas; i++) {
+        lista.push({ nombre: '', codigo: '', precio: 0, isPlaceholder: true });
+      }
+    }
+
     for (const p of paraPrint) {
       const copias = Math.max(1, Math.floor(Number(p.copias) || 1));
       for (let i = 0; i < copias; i++) {
         lista.push({
-          nombre: this.truncarNombre(p.nombre, this.settings.maxCaracteresNombre),
+          nombre: this.truncarNombre(
+            p.nombre,
+            this.settings.maxCaracteresNombre,
+          ),
           codigo: p.codigoGenerado ?? p.codigoBarras ?? '',
           precio: p.precio,
         });
@@ -263,7 +284,15 @@ export class EtiquetasComponent implements OnInit {
       max-width: 1000px;
       margin: 0 auto;
       background: #fff;
-      padding: 10px;
+      padding: ${this.settings.marginVertical}px ${this.settings.marginHorizontal}px;
+      box-sizing: border-box;
+      ${
+        this.settings.ahorrarPapel
+          ? 'min-height: auto;'
+          : this.settings.alinearFinal
+          ? 'align-content: end; min-height: 97vh;'
+          : ''
+      }
     }
 
     .label {
@@ -311,7 +340,7 @@ export class EtiquetasComponent implements OnInit {
 
     @media print {
       body { padding: 0; background: #fff; }
-      .grid-container { padding: 0; border: none; max-width: none; }
+      .grid-container { border: none; max-width: none; }
       .label { border: none; page-break-inside: avoid; }
     }
   </style>
@@ -328,6 +357,12 @@ export class EtiquetasComponent implements OnInit {
       const div = document.createElement('div');
       div.className = 'label';
       
+      if (item.isPlaceholder) {
+        div.style.border = 'none';
+        container.appendChild(div);
+        return;
+      }
+
       if (settings.mostrarNombre) {
         const nombre = document.createElement('div');
         nombre.className = 'nombre';
@@ -371,6 +406,13 @@ export class EtiquetasComponent implements OnInit {
     });
 
     window.onload = function() {
+      if (settings.ahorrarPapel) {
+        const height = container.offsetHeight;
+        const style = document.createElement('style');
+        style.innerHTML = '@page { size: auto ' + height + 'px; margin: 0; }';
+        document.head.appendChild(style);
+      }
+      
       setTimeout(() => {
         window.print();
       }, 500);

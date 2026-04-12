@@ -9,6 +9,7 @@ import {
   ReporteMargenesProductoModel,
   ReporteRotacionInventarioModel,
   ReporteResumenAvanzadoModel,
+  ReporteMovimientosCajaModel,
 } from '../models/reporte-avanzado.model';
 
 @Injectable({ providedIn: 'root' })
@@ -55,5 +56,11 @@ export class ReporteAvanzadoService {
 
   rotacionInventario(): Observable<any> {
     return this.http.get<any>(`${this.base}/rotacion-inventario`);
+  }
+
+  movimientosCaja(desde?: string, hasta?: string): Observable<any> {
+    return this.http.get<any>(`${this.base}/movimientos-caja`, {
+      params: this.buildParams(desde, hasta),
+    });
   }
 }

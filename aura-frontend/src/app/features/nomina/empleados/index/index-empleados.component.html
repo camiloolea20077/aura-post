@@ -7,14 +7,24 @@
         <p class="page-sub">Gestión del personal vinculado a la empresa</p>
       </div>
     </div>
-    <button
-      pButton
-      type="button"
-      label="Nuevo empleado"
-      icon="pi pi-plus"
-      class="btn-nomina"
-      (click)="openForm()"
-    ></button>
+    <div class="header-actions">
+      <button
+        pButton
+        type="button"
+        label="Nuevo cargo"
+        icon="pi pi-briefcase"
+        class="p-button-outlined"
+        (click)="showTipoEmpleadoModal = true"
+      ></button>
+      <button
+        pButton
+        type="button"
+        label="Nuevo empleado"
+        icon="pi pi-plus"
+        class="btn-nomina"
+        (click)="openForm()"
+      ></button>
+    </div>
   </div>
 
   <div class="card">
@@ -47,12 +57,12 @@
       (onLazyLoad)="loadTable($event)"
       [paginator]="true"
       [rows]="rowSize"
+      showGridlines
       [totalRecords]="totalRecords"
       [loading]="loadingTable"
       [rowsPerPageOptions]="[10, 15, 25, 50]"
       [showCurrentPageReport]="true"
       currentPageReportTemplate="{first}-{last} de {totalRecords}"
-      styleClass="aura-table"
       [tableStyle]="{ 'min-width': '650px' }"
     >
       <ng-template pTemplate="header">
@@ -112,6 +122,16 @@
             />
           </td>
           <td class="text-center flex">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-user-plus"
+              class="p-button-text p-button-sm action-edit"
+              pTooltip="Crear usuario"
+              tooltipPosition="top"
+              *ngIf="!item.usuarioId && item.activo"
+              (click)="openCrearUsuario(item)"
+            ></button>
             <button
               pButton
               type="button"
@@ -184,11 +204,29 @@
   </div>
 </div>
 
-<app-form-empleado
-  [displayModal]="showFormModal"
-  [empleadoEdit]="selectedEmpleado"
-  (modalClosed)="onFormClosed()"
-  (empleadoSaved)="onEmpleadoSaved()"
-/>
+@if (showFormModal) {
+  <app-form-empleado
+    [displayModal]="showFormModal"
+    [empleadoEdit]="selectedEmpleado"
+    (modalClosed)="onFormClosed()"
+    (empleadoSaved)="onEmpleadoSaved()"
+  />
+}
+
+@if (showTipoEmpleadoModal) {
+  <app-form-tipo-empleado
+    [(visible)]="showTipoEmpleadoModal"
+    (saved)="onTipoEmpleadoSaved()"
+  />
+}
+
+@if (showCrearUsuarioModal) {
+  <app-crear-usuario-empleado
+    [(visible)]="showCrearUsuarioModal"
+    [empleado]="selectedEmpleadoForUser"
+    (saved)="onUsuarioCreated()"
+    (visibleChange)="showCrearUsuarioModal = $event"
+  />
+}
 
 <p-toast />

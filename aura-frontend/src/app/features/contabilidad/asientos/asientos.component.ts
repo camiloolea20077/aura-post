@@ -19,12 +19,16 @@ import { MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
 import { ContabilidadService } from '../../../core/services/contabilidad.service';
+import { TerceroService } from '../../../core/services/tercero.service';
+import { CentroCostoService } from '../../../core/services/centro-costo.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
 import {
   AsientoContableModel, BalanceGeneralModel,
   CreateAsientoDto, CreateAsientoDetalleDto, PlanCuentaModel,
   EstadoResultadosModel, FlujoCajaModel, LibroMayorLineaModel,
 } from '../../../core/models/contabilidad.model';
+import { TerceroTableModel } from '../../../core/models/tercero.model';
+import { CentroCostoDto } from '../../../core/models/centro-costo.model';
 
 @Component({
   selector: 'app-asientos',
@@ -95,6 +99,10 @@ export class AsientosComponent implements OnInit {
   cuentas: PlanCuentaModel[] = [];
   formAsiento: CreateAsientoDto = this.emptyForm();
 
+  // Selectores para líneas de detalle
+  terceroOpts: { label: string; value: number }[] = [];
+  centroCostoOpts: { label: string; value: number }[] = [];
+
   readonly tipoOrigenOpts = [
     { label: 'Todos', value: null },
     { label: 'Manual', value: 'MANUAL' },
@@ -139,6 +147,8 @@ export class AsientosComponent implements OnInit {
 
   constructor(
     private readonly service: ContabilidadService,
+    private readonly terceroService: TerceroService,
+    private readonly ccService: CentroCostoService,
     private readonly alertService: AlertService,
     private readonly cdr: ChangeDetectorRef,
   ) {}
@@ -146,6 +156,7 @@ export class AsientosComponent implements OnInit {
   ngOnInit(): void {
     this.cargar();
     this.cargarCuentas();
+    this.cargarSelectores();
   }
 
   // ── Libro Diario ─────────────────────────────────────────────────
@@ -173,6 +184,22 @@ export class AsientosComponent implements OnInit {
   async cargarCuentas(): Promise<void> {
     const res = await lastValueFrom(this.service.listarPlan()).catch(() => null);
     this.cuentas = res?.data ?? [];
+    this.cdr.markForCheck();
+  }
+
+  async cargarSelectores(): Promise<void> {
+    const [tercRes, ccRes] = await Promise.all([
+      lastValueFrom(this.terceroService.terceros()).catch(() => null),
+      lastValueFrom(this.ccService.list()).catch(() => null),
+    ]);
+    this.terceroOpts = (tercRes?.data ?? []).map((t: TerceroTableModel) => ({
+      label: `${t.numeroDocumento} — ${t.nombreCompleto}`,
+      value: t.id,
+    }));
+    this.centroCostoOpts = (ccRes?.data ?? []).map((cc: CentroCostoDto) => ({
+      label: `${cc.codigo} — ${cc.nombre}`,
+      value: cc.id,
+    }));
     this.cdr.markForCheck();
   }
 
@@ -288,7 +315,7 @@ export class AsientosComponent implements OnInit {
   }
 
   agregarLinea(): void {
-    this.formAsiento.detalles.push({ cuentaId: 0, debito: 0, credito: 0 });
+    this.formAsiento.detalles.push({ cuentaId: 0, debito: 0, credito: 0, terceroId: null, centroCostoId: null });
     this.cdr.markForCheck();
   }
 
@@ -344,8 +371,8 @@ export class AsientosComponent implements OnInit {
       fecha: new Date().toISOString().slice(0, 10),
       descripcion: '',
       detalles: [
-        { cuentaId: 0, debito: 0, credito: 0 },
-        { cuentaId: 0, debito: 0, credito: 0 },
+        { cuentaId: 0, debito: 0, credito: 0, terceroId: null, centroCostoId: null },
+        { cuentaId: 0, debito: 0, credito: 0, terceroId: null, centroCostoId: null },
       ],
     };
   }

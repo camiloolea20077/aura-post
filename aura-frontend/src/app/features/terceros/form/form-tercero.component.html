@@ -298,6 +298,98 @@
       Selecciona al menos un rol para el tercero.
     </div>
 
+    <p-divider align="left"><span class="divider-label">Información Fiscal</span></p-divider>
+
+    <!-- ══ INFORMACIÓN FISCAL ════════════════════════════════ -->
+    <div class="field-row">
+      <div class="field flex-1">
+        <label>Tipo de persona</label>
+        <p-dropdown
+          formControlName="tipoPersona"
+          [options]="tipoPersonaOpts"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+        />
+      </div>
+      <div class="field flex-1">
+        <label>Régimen tributario</label>
+        <p-dropdown
+          formControlName="regimen"
+          [options]="regimenOpts"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+        />
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field flex-1">
+        <label>Código CIIU <span class="optional">(opcional)</span></label>
+        <input
+          type="text"
+          pInputText
+          formControlName="codigoCIIU"
+          placeholder="Ej: 4711"
+          maxlength="10"
+          autocomplete="off"
+        />
+      </div>
+      <div class="field flex-1">
+        <label>Actividad económica <span class="optional">(opcional)</span></label>
+        <input
+          type="text"
+          pInputText
+          formControlName="actividadEconomica"
+          placeholder="Ej: Comercio al por menor"
+          maxlength="200"
+          autocomplete="off"
+        />
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field flex-1">
+        <label>País</label>
+        <input
+          type="text"
+          pInputText
+          formControlName="pais"
+          placeholder="Colombia"
+          maxlength="60"
+          autocomplete="off"
+        />
+      </div>
+      <div class="field" style="min-width: 120px">
+        <label>Código país</label>
+        <input
+          type="text"
+          pInputText
+          formControlName="codigoPais"
+          placeholder="CO"
+          maxlength="5"
+          autocomplete="off"
+          style="text-transform: uppercase"
+        />
+      </div>
+    </div>
+
+    <div class="field-row" style="gap: 2rem; margin-top: 0.25rem">
+      <div class="field-inline" style="flex: 1">
+        <div class="switch-label">
+          <span class="label-text">Gran Contribuyente</span>
+        </div>
+        <p-inputSwitch formControlName="granContribuyente" />
+      </div>
+      <div class="field-inline" style="flex: 1">
+        <div class="switch-label">
+          <span class="label-text">Autorretenedor</span>
+        </div>
+        <p-inputSwitch formControlName="autoRetenedor" />
+      </div>
+    </div>
+
     <p-divider />
 
     <!-- Estado -->

@@ -1,0 +1,265 @@
+<p-toast />
+
+<div class="module-wrapper">
+  <!-- Header -->
+  <div class="module-header">
+    <div class="header-left">
+      <span class="header-icon"><i class="pi pi-sitemap"></i></span>
+      <div>
+        <h2>Centros de Costo</h2>
+        <p>Unidades de análisis para asignación de gastos e ingresos</p>
+      </div>
+    </div>
+    <button
+      pButton
+      label="Nuevo Centro"
+      icon="pi pi-plus"
+      class="btn-aura"
+      (click)="abrirNuevo()"
+    ></button>
+  </div>
+
+  <!-- Búsqueda -->
+  <div class="table-toolbar">
+    <div class="search-wrap">
+      <span class="p-input-icon-left">
+        <p-iconfield>
+          <p-inputicon class="pi pi-search" />
+          <input
+            pInputText
+            [(ngModel)]="search"
+            (keyup.enter)="onSearch()"
+            placeholder="Buscar por código o descripción..."
+          />
+        </p-iconfield>
+      </span>
+      <button
+        pButton
+        icon="pi pi-search"
+        class="p-button-outlined p-button-sm"
+        (click)="onSearch()"
+      ></button>
+    </div>
+
+    <span class="total-badge">{{ totalRecords }} registros</span>
+  </div>
+
+  <!-- Tabla -->
+  <div class="table-card">
+    <p-table
+      [value]="rows"
+      [loading]="loading"
+      [lazy]="true"
+      [totalRecords]="totalRecords"
+      [rows]="pageSize"
+      [paginator]="true"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      (onPage)="onPage($event)"
+      styleClass="p-datatable-sm"
+      responsiveLayout="scroll"
+      [rowHover]="true"
+      showGridlines
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 110px">Código</th>
+          <th>Nombre</th>
+          <th style="width: 130px">Tipo</th>
+          <th style="width: 80px">Nivel</th>
+          <th>Padre</th>
+          <th style="width: 110px">Movimientos</th>
+          <th style="width: 90px">Estado</th>
+          <th style="width: 80px"></th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-cc>
+        <tr class="clickable-row">
+          <td>
+            <code>{{ cc.codigo }}</code>
+          </td>
+          <td [style.paddingLeft]="cc.nivel * 1.2 + 'rem'">
+            <span [style.fontWeight]="cc.nivel === 0 ? '700' : '400'">{{
+              cc.nombre
+            }}</span>
+          </td>
+          <td>
+            <p-tag
+              *ngIf="cc.tipo"
+              [severity]="tipoSeverity(cc.tipo)"
+              [value]="cc.tipo"
+            />
+            <span *ngIf="!cc.tipo" class="text-muted">—</span>
+          </td>
+          <td>{{ cc.nivel }}</td>
+          <td>
+            <span *ngIf="cc.nombrePadre; else sinPadre">{{
+              cc.nombrePadre
+            }}</span>
+            <ng-template #sinPadre
+              ><span class="text-muted">—</span></ng-template
+            >
+          </td>
+          <td>
+            <p-tag
+              [severity]="cc.permiteMovimientos ? 'success' : 'secondary'"
+              [value]="cc.permiteMovimientos ? 'Sí' : 'No'"
+            />
+          </td>
+          <td>
+            <p-tag
+              [severity]="cc.activo ? 'success' : 'danger'"
+              [value]="cc.activo ? 'Activo' : 'Inactivo'"
+            />
+          </td>
+          <td>
+            <div style="display: flex; gap: 0.25rem">
+              <button
+                pButton
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm p-button-rounded"
+                pTooltip="Editar"
+                (click)="abrirEditar(cc)"
+              ></button>
+              <button
+                pButton
+                icon="pi pi-trash"
+                class="p-button-text p-button-sm p-button-rounded p-button-danger"
+                pTooltip="Eliminar"
+                (click)="eliminar(cc)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8" class="empty-row">
+            <i class="pi pi-sitemap"></i> No hay centros de costo registrados.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- Dialog Crear / Editar -->
+<p-dialog
+  [(visible)]="showDialog"
+  [modal]="true"
+  [closable]="true"
+  [header]="editId ? 'Editar Centro de Costo' : 'Nuevo Centro de Costo'"
+  [style]="{ width: '520px' }"
+  [draggable]="false"
+>
+  <div class="form-grid">
+    <!-- Código -->
+    <div class="form-group">
+      <label>Código <span class="req">*</span></label>
+      <input
+        pInputText
+        [(ngModel)]="form.codigo"
+        placeholder="Ej: ADM-001"
+        style="text-transform: uppercase"
+      />
+    </div>
+
+    <!-- Nombre -->
+    <div class="form-group">
+      <label>Nombre <span class="req">*</span></label>
+      <input
+        pInputText
+        [(ngModel)]="form.nombre"
+        placeholder="Ej: Administración General"
+      />
+    </div>
+
+    <!-- Tipo -->
+    <div class="form-group">
+      <label>Tipo</label>
+      <p-dropdown
+        [(ngModel)]="form.tipo"
+        [options]="tipoOpts"
+        optionLabel="label"
+        optionValue="value"
+        appendTo="body"
+        placeholder="Seleccionar tipo"
+        [showClear]="true"
+        styleClass="w-full"
+      />
+    </div>
+
+    <!-- Padre -->
+    <div class="form-group">
+      <label>Centro Padre</label>
+      <p-dropdown
+        [(ngModel)]="form.padreCentroCostoId"
+        [options]="padreOpts"
+        optionLabel="label"
+        optionValue="value"
+        appendTo="body"
+        placeholder="Sin padre (raíz)"
+        [filter]="true"
+        styleClass="w-full"
+      />
+    </div>
+
+    <!-- Presupuesto -->
+    <div class="form-group">
+      <label>Presupuesto Asignado</label>
+      <p-inputNumber
+        [(ngModel)]="form.presupuestoAsignado"
+        mode="currency"
+        currency="COP"
+        locale="es-CO"
+        placeholder="0"
+        styleClass="w-full"
+      />
+    </div>
+
+    <!-- Permite movimientos -->
+    <div
+      class="form-group"
+      style="justify-content: flex-end; padding-top: 1.5rem"
+    >
+      <label
+        style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer"
+      >
+        <p-checkbox [(ngModel)]="form.permiteMovimientos" [binary]="true" />
+        Permite movimientos contables
+      </label>
+    </div>
+
+    <!-- Descripción -->
+    <div class="form-group full-width">
+      <label>Descripción</label>
+      <textarea
+        pInputText
+        [(ngModel)]="form.descripcion"
+        rows="2"
+        placeholder="Descripción opcional del centro de costo"
+        style="width: 100%; resize: vertical"
+      ></textarea>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-outlined p-button-secondary"
+      (click)="showDialog = false"
+    ></button>
+    <button
+      pButton
+      [label]="editId ? 'Actualizar' : 'Guardar'"
+      icon="pi pi-check"
+      class="btn-aura"
+      [loading]="saving"
+      [disabled]="!form.codigo || !form.nombre"
+      (click)="guardar()"
+    ></button>
+  </ng-template>
+</p-dialog>

@@ -23,7 +23,7 @@
         pButton
         label="Nueva Cuenta"
         icon="pi pi-plus"
-        class="btn-aura btn-primary"
+        class="btn-aura"
         (click)="abrirNueva()"
       ></button>
     </div>
@@ -32,7 +32,7 @@
   <!-- ── Skeleton loading ───────────────────────────────────────── -->
   @if (loading) {
     <div class="cuentas-grid">
-      @for (sk of [1,2,3,4]; track sk) {
+      @for (sk of [1, 2, 3, 4]; track sk) {
         <div class="cuenta-card skeleton-card">
           <p-skeleton width="60%" height="1.2rem" styleClass="mb-2" />
           <p-skeleton width="40%" height="0.9rem" styleClass="mb-3" />
@@ -67,7 +67,7 @@
               <span class="tipo-label">{{ getTipoMeta(c.tipo).label }}</span>
             </div>
             <span class="estado-badge" [class.activa]="c.activa">
-              {{ c.activa ? 'Activa' : 'Inactiva' }}
+              {{ c.activa ? "Activa" : "Inactiva" }}
             </span>
           </div>
 
@@ -126,7 +126,7 @@
         pButton
         label="Crear primera cuenta"
         icon="pi pi-plus"
-        class="btn-aura btn-primary"
+        class="btn-aura"
         (click)="abrirNueva()"
       ></button>
     </div>
@@ -228,7 +228,7 @@
       pButton
       [label]="editId ? 'Actualizar' : 'Crear Cuenta'"
       icon="pi pi-check"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       (click)="guardar()"
       [loading]="saving"
       [disabled]="!form.nombre?.trim() || !form.tipo"

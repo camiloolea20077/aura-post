@@ -189,6 +189,22 @@ export const routes: Routes = [
             (m) => m.IndexGastosComponent,
           ),
       },
+      {
+        path: 'gastos/nuevo',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/gastos/form/form-gasto.component').then(
+            (m) => m.FormGastoComponent,
+          ),
+      },
+      {
+        path: 'gastos/editar/:id',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/gastos/form/form-gasto.component').then(
+            (m) => m.FormGastoComponent,
+          ),
+      },
 
       // Inventario
       {
@@ -255,6 +271,16 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/ventas/index/index-ventas.component').then(
             (m) => m.IndexVentasComponent,
+          ),
+      },
+
+      // Vendedores
+      {
+        path: 'vendedores',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN', 'VENDEDOR'])],
+        loadChildren: () =>
+          import('./features/vendedores/vendedores.routes').then(
+            (m) => m.VENDEDORES_ROUTES,
           ),
       },
       {
@@ -330,6 +356,16 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/usuarios/index/index-usuarios.component').then(
             (m) => m.IndexUsuariosComponent,
+          ),
+      },
+
+      // Configuración
+      {
+        path: 'configuracion/tipos-empleado',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/configuracion/tipos-empleado/index/index-tipos-empleado.component').then(
+            (m) => m.IndexTiposEmpleadoComponent,
           ),
       },
 
@@ -454,6 +490,38 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/contabilidad/asientos/asientos.component').then(
             (m) => m.AsientosComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/centros-costo',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/centros-costo/centros-costo.component').then(
+            (m) => m.CentrosCostoComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/periodos',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/periodos-contables/periodos-contables.component').then(
+            (m) => m.PeriodosContablesComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/activos-fijos',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/activos-fijos/activos-fijos.component').then(
+            (m) => m.ActivosFijosComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/tarifas-retencion',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/tarifas-retencion/tarifas-retencion.component').then(
+            (m) => m.TarifasRetencionComponent,
           ),
       },
 

@@ -4,8 +4,11 @@
   <p>Verificando turno activo...</p>
 </div>
 
-<!-- GUARD: sin turno -->
-<div class="guard-container guard-error" *ngIf="!loadingTurno && turnoError">
+<!-- GUARD: sin turno (solo para roles que requieren turno) -->
+<div
+  class="guard-container guard-error"
+  *ngIf="!loadingTurno && turnoError && !esVendedor"
+>
   <div class="guard-icon"><i class="pi pi-lock"></i></div>
   <h3>Sin turno abierto</h3>
   <p>Debes abrir un turno de caja antes de registrar ventas.</p>
@@ -21,7 +24,7 @@
 <!-- ═══════════════════════════════════════════════════════════════
     POS PRINCIPAL
 ════════════════════════════════════════════════════════════════ -->
-<div class="pos-layout" *ngIf="!loadingTurno && !turnoError">
+<div class="pos-layout" *ngIf="!loadingTurno && (!turnoError || esVendedor)">
   <!-- ══ PANEL IZQUIERDO — Catálogo ════════════════════════════ -->
   <div class="catalog-panel">
     <!-- Header: turno + búsqueda -->
@@ -29,9 +32,12 @@
       <div class="catalog-turno-row">
         <div class="catalog-turno">
           <span class="turno-dot"></span>
-          <span class="turno-label">{{ turnoActivo?.cajaNombre }}</span>
+          <span class="turno-label">{{
+            esVendedor ? "Vendedor" : turnoActivo?.cajaNombre
+          }}</span>
         </div>
         <button
+          *ngIf="!esVendedor"
           class="btn-mov-chip"
           pTooltip="Registrar ingreso o egreso de caja"
           tooltipPosition="bottom"
@@ -488,35 +494,64 @@
           <div class="spacer"></div>
 
           <div class="line-tools">
-
             <!-- Botón eliminar -->
-            <button class="tool-btn btn-delete" (click)="removeItem(item._id)" pTooltip="Eliminar" tooltipPosition="top">
+            <button
+              class="tool-btn btn-delete"
+              (click)="removeItem(item._id)"
+              pTooltip="Eliminar"
+              tooltipPosition="top"
+            >
               <i class="pi pi-trash"></i>
             </button>
 
             <!-- Botón "..." -->
-            <button #btnMore class="tool-btn btn-more" (click)="opMenu.toggle($event)" pTooltip="Opciones" tooltipPosition="top">
+            <button
+              #btnMore
+              class="tool-btn btn-more"
+              (click)="opMenu.toggle($event)"
+              pTooltip="Opciones"
+              tooltipPosition="top"
+            >
               <i class="pi pi-ellipsis-v"></i>
             </button>
 
             <!-- Menú desplegable -->
             <p-popover #opMenu styleClass="item-menu-pop">
               <div class="item-menu">
-                <button class="item-menu-btn" [class.menu-active]="item.descuento > 0"
-                  (click)="op.show($event, btnMore); neto = item.descuento || null; percent = ((item.descuento || 0) / item.subtotal) * 100; opMenu.hide()">
+                <button
+                  class="item-menu-btn"
+                  [class.menu-active]="item.descuento > 0"
+                  (click)="
+                    op.show($event, btnMore);
+                    neto = item.descuento || null;
+                    percent = ((item.descuento || 0) / item.subtotal) * 100;
+                    opMenu.hide()
+                  "
+                >
                   <i class="pi pi-percentage"></i>
                   <span>Descuento</span>
                   <span class="menu-dot" *ngIf="item.descuento > 0"></span>
                 </button>
 
-                <button class="item-menu-btn" [class.menu-active]="item.precioOriginal !== undefined"
-                  (click)="opPrecio.show($event, btnMore); tempPrecio = item.precio * (1 + item.impuesto / 100); opMenu.hide()">
+                <button
+                  class="item-menu-btn"
+                  [class.menu-active]="item.precioOriginal !== undefined"
+                  (click)="
+                    opPrecio.show($event, btnMore);
+                    tempPrecio = item.precio * (1 + item.impuesto / 100);
+                    opMenu.hide()
+                  "
+                >
                   <i class="pi pi-pencil"></i>
                   <span>Editar precio</span>
                 </button>
 
-                <button class="item-menu-btn" *ngIf="item.precio2 || item.precio3" [class.menu-active]="item.listaPrecioNombre"
-                  (click)="opLista.show($event, btnMore); opMenu.hide()">
+                <button
+                  class="item-menu-btn"
+                  *ngIf="item.precio2 || item.precio3"
+                  [class.menu-active]="item.listaPrecioNombre"
+                  (click)="opLista.show($event, btnMore); opMenu.hide()"
+                >
                   <i class="pi pi-tags"></i>
                   <span>Precio de venta</span>
                   <span class="menu-dot" *ngIf="item.listaPrecioNombre"></span>
@@ -533,7 +568,9 @@
                     <p-inputnumber
                       [(ngModel)]="percent"
                       inputId="percent"
-                      (ngModelChange)="neto = ((percent || 0) / 100) * item.subtotal"
+                      (ngModelChange)="
+                        neto = ((percent || 0) / 100) * item.subtotal
+                      "
                       inputStyleClass="w-full"
                       prefix="%"
                       [min]="0"
@@ -544,7 +581,9 @@
                     <label for="descuento">Neto</label>
                     <p-inputnumber
                       [(ngModel)]="neto"
-                      (ngModelChange)="percent = ((neto || 0) / item.subtotal) * 100"
+                      (ngModelChange)="
+                        percent = ((neto || 0) / item.subtotal) * 100
+                      "
                       inputStyleClass="w-full"
                       inputId="minmax"
                       mode="decimal"
@@ -554,8 +593,19 @@
                   </div>
                 </div>
                 <div class="popover-group-btn">
-                  <p-button label="Cancelar" severity="warn" (click)="op.hide(); neto = null; percent = null" icon="pi pi-times" class="p-button-text" />
-                  <p-button label="Aplicar" (click)="aplicarDescuento(item); op.hide()" icon="pi pi-check" />
+                  <p-button
+                    label="Cancelar"
+                    severity="warn"
+                    (click)="op.hide(); neto = null; percent = null"
+                    icon="pi pi-times"
+                    class="p-button-text"
+                  />
+                  <p-button
+                    label="Aplicar"
+                    class="btn-aura"
+                    (click)="aplicarDescuento(item); op.hide()"
+                    icon="pi pi-check"
+                  />
                 </div>
               </div>
             </p-popover>
@@ -568,18 +618,41 @@
                     <label>Precio final (con IVA)</label>
                     <p-inputnumber
                       [(ngModel)]="tempPrecio"
-                      mode="currency" currency="COP" locale="es-CO"
-                      [minFractionDigits]="0" [maxFractionDigits]="2" [min]="0"
+                      mode="currency"
+                      currency="COP"
+                      locale="es-CO"
+                      [minFractionDigits]="0"
+                      [maxFractionDigits]="2"
+                      [min]="0"
                       inputStyleClass="w-full"
                     />
-                    <small class="precio-original-hint" *ngIf="item.precioOriginal !== undefined">
-                      Catálogo: {{ formatCOP(item.precioOriginal * (1 + item.impuesto / 100)) }}
+                    <small
+                      class="precio-original-hint"
+                      *ngIf="item.precioOriginal !== undefined"
+                    >
+                      Catálogo:
+                      {{
+                        formatCOP(
+                          item.precioOriginal * (1 + item.impuesto / 100)
+                        )
+                      }}
                     </small>
                   </div>
                 </div>
                 <div class="popover-group-btn">
-                  <p-button label="Cancelar" severity="warn" (click)="opPrecio.hide(); tempPrecio = null" icon="pi pi-times" class="p-button-text" />
-                  <p-button label="Aplicar" (click)="aplicarPrecio(item); opPrecio.hide()" icon="pi pi-check" />
+                  <p-button
+                    label="Cancelar"
+                    severity="warn"
+                    (click)="opPrecio.hide(); tempPrecio = null"
+                    icon="pi pi-times"
+                    class="p-button-text"
+                  />
+                  <p-button
+                    label="Aplicar"
+                    class="btn-aura"
+                    (click)="aplicarPrecio(item); opPrecio.hide()"
+                    icon="pi pi-check"
+                  />
                 </div>
               </div>
             </p-popover>
@@ -590,26 +663,46 @@
                 <div class="lista-picker-title">
                   <i class="pi pi-tags"></i> Precio de venta
                 </div>
-                <button class="lista-opt" [class.active]="!item.listaPrecioNombre"
-                  (click)="resetPrecioLinea(item); opLista.hide()">
+                <button
+                  class="lista-opt"
+                  [class.active]="!item.listaPrecioNombre"
+                  (click)="resetPrecioLinea(item); opLista.hide()"
+                >
                   <span class="lista-opt-nombre">Precio 1 (catálogo)</span>
-                  <span class="lista-opt-precio">{{ formatCOP(item.precioCatalogo * (1 + item.impuesto / 100)) }}</span>
+                  <span class="lista-opt-precio">{{
+                    formatCOP(item.precioCatalogo * (1 + item.impuesto / 100))
+                  }}</span>
                 </button>
-                <button class="lista-opt" *ngIf="item.precio2"
+                <button
+                  class="lista-opt"
+                  *ngIf="item.precio2"
                   [class.active]="item.listaPrecioNombre === 'P2'"
-                  (click)="seleccionarPrecioProducto(item, item.precio2!, 'P2'); opLista.hide()">
+                  (click)="
+                    seleccionarPrecioProducto(item, item.precio2!, 'P2');
+                    opLista.hide()
+                  "
+                >
                   <span class="lista-opt-nombre">Precio 2</span>
-                  <span class="lista-opt-precio">{{ formatCOP(item.precio2 * (1 + item.impuesto / 100)) }}</span>
+                  <span class="lista-opt-precio">{{
+                    formatCOP(item.precio2 * (1 + item.impuesto / 100))
+                  }}</span>
                 </button>
-                <button class="lista-opt" *ngIf="item.precio3"
+                <button
+                  class="lista-opt"
+                  *ngIf="item.precio3"
                   [class.active]="item.listaPrecioNombre === 'P3'"
-                  (click)="seleccionarPrecioProducto(item, item.precio3!, 'P3'); opLista.hide()">
+                  (click)="
+                    seleccionarPrecioProducto(item, item.precio3!, 'P3');
+                    opLista.hide()
+                  "
+                >
                   <span class="lista-opt-nombre">Precio 3</span>
-                  <span class="lista-opt-precio">{{ formatCOP(item.precio3 * (1 + item.impuesto / 100)) }}</span>
+                  <span class="lista-opt-precio">{{
+                    formatCOP(item.precio3 * (1 + item.impuesto / 100))
+                  }}</span>
                 </button>
               </div>
             </p-popover>
-
           </div>
         </div>
       </div>
@@ -838,9 +931,16 @@
     [displayModal]="showMovimiento"
     [turno]="turnoActivo"
     (modalClosed)="showMovimiento = false"
-    (movimientoRegistrado)="showMovimiento = false"
+    (movimientoRegistrado)="onMovimientoRegistrado($event)"
   />
 }
+
+<!-- Ticket comprobante ingreso / egreso -->
+<app-ticket-comprobante-caja
+  [comprobante]="comprobanteMovimiento"
+  [visible]="showTicketMovimiento"
+  (closed)="showTicketMovimiento = false; comprobanteMovimiento = null"
+/>
 
 <!-- Modal nuevo cliente -->
 @if (showNuevoCliente) {

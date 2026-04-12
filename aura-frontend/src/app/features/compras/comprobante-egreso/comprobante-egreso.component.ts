@@ -61,7 +61,8 @@ export class ComprobanteEgresoComponent implements OnChanges {
 
   get fechaFormateada(): string {
     if (!this.compra?.fecha) return '';
-    return new Date(this.compra.fecha + 'T00:00:00').toLocaleDateString('es-CO', {
+    const dateOnly = this.compra.fecha.substring(0, 10);
+    return new Date(dateOnly + 'T00:00:00').toLocaleDateString('es-CO', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',

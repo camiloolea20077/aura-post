@@ -1,1 +1,7 @@
-<router-outlet />
+@if (loading()) {
+  <div class="flex items-center justify-center h-screen">
+    <p-progressSpinner></p-progressSpinner>
+  </div>
+} @else {
+  <router-outlet />
+}

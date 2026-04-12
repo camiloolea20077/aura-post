@@ -1,0 +1,30 @@
+/* Add your customizations of layout here */
+.p-datatable .p-datatable-tbody>tr>td {
+  text-align: left;
+  border: 1px solid rgba(68, 72, 109, 0.17);
+  border-width: 0 0 0 0;
+  padding: 0.207rem 0.371rem;
+}
+
+.layout-breadcrumb-container {
+  background-color: #fff;
+  padding-top: 1px;
+  box-shadow: 0 0 4px #0000001a
+}
+
+.p-dialog .p-dialog-footer {
+  background: #fff;
+}
+
+.p-dialog .p-dialog-header {
+  background: #fff;
+}
+
+.p-dialog .p-dialog-content {
+  background: #fff;
+}
+
+h1 {
+  font-size: $h1FontSize;
+  color: $h1Color;
+}

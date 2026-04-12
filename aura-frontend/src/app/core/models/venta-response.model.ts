@@ -46,4 +46,10 @@ export interface VentaResponse {
   numeroVenta: string | null;
   cufe: string | null;
   estadoDian: string | null;
+  // Desglose IVA por tarifa (V53)
+  ivaBase0: number;
+  ivaBase5: number;
+  ivaValor5: number;
+  ivaBase19: number;
+  ivaValor19: number;
 }

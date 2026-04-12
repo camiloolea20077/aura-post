@@ -85,6 +85,14 @@ export interface PageableDto {
   search?: string | null;
   order_by?: string | null;
   order?: string | null;
+  // Filtros avanzados
+  codigoBarras?: string | null;
+  categoriaId?: number | null;
+  marcaId?: number | null;
+  tipoProducto?: string | null;
+  activo?: boolean | null;
+  precioMin?: number | null;
+  precioMax?: number | null;
 }
 
 // ─── Enum tipo producto ───────────────────────────────────────

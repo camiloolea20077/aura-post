@@ -1,3 +1,9 @@
+// ─── SASS Modules ──────────────────────────────────────────────────────────
+@use "./assets/sass/overrides/grid";
+@use "./assets/sass/overrides/flex";
+@use "./assets/sass/overrides/alerts";
+@use "./assets/sass/overrides/accordion";
+
 // ─── Fuentes ───────────────────────────────────────────────────────────────
 @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap");
 
@@ -7,14 +13,12 @@
 
 // ─── Variables AURA POS ────────────────────────────────────────────────────
 :root {
-  --aura-blue: #2e6cf6;
-  --aura-blue-light: #4da3ff;
-  --aura-purple: #7b4dff;
-  --aura-gradient: linear-gradient(135deg, #2e6cf6 0%, #7b4dff 100%);
-  --aura-gradient-hover: linear-gradient(135deg, #1a5ae8 0%, #6a3df0 100%);
-  --aura-gradient-soft: linear-gradient(135deg,
-      rgba(46, 108, 246, 0.1) 0%,
-      rgba(123, 77, 255, 0.1) 100%);
+  --aura-blue: #2563eb;
+  --aura-blue-light: #3b82f6;
+  --aura-purple: #2563eb;
+  --aura-gradient: #2563eb;
+  --aura-gradient-hover: #1d4ed8;
+  --aura-gradient-soft: rgba(37, 99, 235, 0.08);
   --aura-bg: #f4f6fa;
   --aura-surface: #ffffff;
   --aura-text: #2d2d2d;
@@ -31,7 +35,15 @@
   --shadow-lg: 0 8px 32px rgba(46, 108, 246, 0.18);
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.07);
 }
-
+.p-fieldset {
+  margin-top: 10px !important;
+  background: var(--p-fieldset-background);
+  border: 1px solid var(--p-fieldset-border-color);
+  border-radius: var(--p-fieldset-border-radius);
+  color: var(--p-fieldset-color);
+  padding: var(--p-fieldset-padding);
+  margin: 0;
+}
 html.dark-mode {
   --bg-primary: #1e1e2e;
   --bg-secondary: #2a2a3e;
@@ -48,6 +60,13 @@ html.dark-mode {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+.p-grid {
+  display: flex;
+  flex-wrap: wrap;
+  margin-right: -0.5rem;
+  margin-left: -0.5rem;
+  margin-top: -0.5rem;
 }
 
 html,
@@ -67,23 +86,6 @@ body {
   font-weight: 600;
   border-radius: 10px;
   transition: all 0.2s ease;
-}
-
-.p-inputtext {
-  font-family: "Outfit", sans-serif;
-  border-radius: 10px;
-  border: 1.5px solid var(--aura-border);
-  transition: all 0.2s;
-
-  &:focus {
-    border-color: var(--aura-blue);
-    box-shadow: 0 0 0 3px rgba(46, 108, 246, 0.12);
-  }
-
-  &.ng-invalid.ng-dirty {
-    border-color: var(--aura-danger);
-    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
-  }
 }
 
 .p-dropdown {
@@ -114,7 +116,7 @@ body {
 .p-datatable {
   font-family: "Outfit", sans-serif;
 
-  .p-datatable-thead>tr>th {
+  .p-datatable-thead > tr > th {
     background: var(--aura-bg);
     font-size: 0.75rem;
     font-weight: 700;
@@ -125,16 +127,16 @@ body {
     padding: 0.85rem 1rem;
   }
 
-  .p-datatable-tbody>tr {
+  .p-datatable-tbody > tr {
     transition: background 0.15s;
 
-    >td {
+    > td {
       padding: 0.75rem 1rem;
       font-size: 0.85rem;
       border-bottom: 1px solid #f3f4f6;
     }
 
-    &:hover>td {
+    &:hover > td {
       background: rgba(46, 108, 246, 0.04);
     }
   }
@@ -242,11 +244,6 @@ body {
   }
 }
 
-// InputNumber
-.p-inputnumber {
-  width: 100%;
-}
-
 // Password
 .p-password {
   width: 100%;
@@ -278,7 +275,7 @@ body {
   border-radius: 10px !important;
   font-weight: 600 !important;
   font-family: "Outfit", sans-serif !important;
-  box-shadow: 0 4px 14px rgba(46, 108, 246, 0.3) !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25) !important;
   transition: all 0.2s !important;
 
   &:hover:not(:disabled) {

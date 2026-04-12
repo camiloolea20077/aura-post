@@ -132,37 +132,57 @@
           <div class="edad-row verde-row">
             <div class="edad-row-top">
               <span class="edad-label">Corriente (0-30 días)</span>
-              <span class="edad-val verde">{{ formatCOP(dashboard.edad0a30) }}</span>
+              <span class="edad-val verde">{{
+                formatCOP(dashboard.edad0a30)
+              }}</span>
             </div>
             <div class="edad-progress">
-              <div class="edad-fill" [style.width.%]="getEdadPct(dashboard.edad0a30)"></div>
+              <div
+                class="edad-fill"
+                [style.width.%]="getEdadPct(dashboard.edad0a30)"
+              ></div>
             </div>
           </div>
           <div class="edad-row amarillo-row">
             <div class="edad-row-top">
               <span class="edad-label">31 – 60 días</span>
-              <span class="edad-val amarillo">{{ formatCOP(dashboard.edad31a60) }}</span>
+              <span class="edad-val amarillo">{{
+                formatCOP(dashboard.edad31a60)
+              }}</span>
             </div>
             <div class="edad-progress">
-              <div class="edad-fill" [style.width.%]="getEdadPct(dashboard.edad31a60)"></div>
+              <div
+                class="edad-fill"
+                [style.width.%]="getEdadPct(dashboard.edad31a60)"
+              ></div>
             </div>
           </div>
           <div class="edad-row naranja-row">
             <div class="edad-row-top">
               <span class="edad-label">61 – 90 días</span>
-              <span class="edad-val naranja">{{ formatCOP(dashboard.edad61a90) }}</span>
+              <span class="edad-val naranja">{{
+                formatCOP(dashboard.edad61a90)
+              }}</span>
             </div>
             <div class="edad-progress">
-              <div class="edad-fill" [style.width.%]="getEdadPct(dashboard.edad61a90)"></div>
+              <div
+                class="edad-fill"
+                [style.width.%]="getEdadPct(dashboard.edad61a90)"
+              ></div>
             </div>
           </div>
           <div class="edad-row rojo-row">
             <div class="edad-row-top">
               <span class="edad-label">Más de 90 días</span>
-              <span class="edad-val rojo">{{ formatCOP(dashboard.edadMas90) }}</span>
+              <span class="edad-val rojo">{{
+                formatCOP(dashboard.edadMas90)
+              }}</span>
             </div>
             <div class="edad-progress">
-              <div class="edad-fill" [style.width.%]="getEdadPct(dashboard.edadMas90)"></div>
+              <div
+                class="edad-fill"
+                [style.width.%]="getEdadPct(dashboard.edadMas90)"
+              ></div>
             </div>
           </div>
         </div>
@@ -226,6 +246,7 @@
         [scrollable]="true"
         scrollHeight="calc(100vh - 320px)"
         styleClass="p-datatable-sm p-datatable-striped"
+        showGridlines
       >
         <ng-template pTemplate="header">
           <tr>
@@ -334,6 +355,7 @@
         [scrollable]="true"
         scrollHeight="calc(100vh - 380px)"
         styleClass="p-datatable-sm p-datatable-striped"
+        showGridlines
       >
         <ng-template pTemplate="header">
           <tr>
@@ -455,6 +477,7 @@
         [scrollable]="true"
         scrollHeight="calc(100vh - 320px)"
         styleClass="p-datatable-sm p-datatable-striped"
+        showGridlines
       >
         <ng-template pTemplate="header">
           <tr>
@@ -605,7 +628,7 @@
       pButton
       [label]="creditoEditId ? 'Actualizar' : 'Configurar'"
       icon="pi pi-check"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       [loading]="savingCredito"
       (click)="guardarCredito()"
     ></button>
@@ -684,7 +707,7 @@
       pButton
       label="Registrar"
       icon="pi pi-check"
-      class="btn-aura btn-primary"
+      class="btn-aura"
       [loading]="savingGestion"
       [disabled]="!gestionForm.tipoGestion"
       (click)="guardarGestion()"

@@ -1,0 +1,57 @@
+<p-dialog
+  header="Confirmar Llegada"
+  [(visible)]="visible"
+  (onHide)="close()"
+  [modal]="true"
+  [style]="{ width: '450px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="confirm-content">
+    <div class="visit-info">
+      <div class="info-row">
+        <i class="pi pi-map-marker"></i>
+        <div>
+          <strong>{{ visita?.localNombre }}</strong>
+          <p class="text-muted">{{ visita?.localDireccion }}</p>
+        </div>
+      </div>
+      <div class="info-row">
+        <i class="pi pi-calendar"></i>
+        <span>{{ visita?.fechaProgramada | date: "dd/MM/yyyy" }}</span>
+      </div>
+    </div>
+
+    <div class="observaciones">
+      <label class="field-label">Observaciones</label>
+      <textarea
+        pInputTextarea
+        [(ngModel)]="observaciones"
+        placeholder="Notas de la visita..."
+        rows="3"
+        class="w-full"
+      ></textarea>
+    </div>
+
+    <div class="qr-section">
+      <app-qr-scanner
+        title="Escanee el QR del local para confirmar llegada"
+        [config]="{ stopOnFirstScan: true, facingMode: 'environment' }"
+        (scanned)="onQrScanned($event)"
+        scanMode="qr-only"
+        theme="light"
+        [showModeSelector]="false"
+        [showResult]="false"
+      />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      class="p-button-text"
+      (click)="close()"
+    ></button>
+  </ng-template>
+</p-dialog>

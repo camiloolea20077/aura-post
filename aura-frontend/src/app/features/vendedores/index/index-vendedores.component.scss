@@ -1,0 +1,321 @@
+$indigo: #6366f1;
+$red: #ef4444;
+$border: #e2e8f0;
+$text: #1e293b;
+$muted: #94a3b8;
+$bg: #f8fafc;
+$card: #ffffff;
+
+.module-container {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  position: relative;
+}
+
+.module-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .header-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(99, 102, 241, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    i {
+      font-size: 1.1rem;
+      color: $indigo;
+    }
+  }
+
+  .header-title {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: $text;
+    margin: 0;
+  }
+
+  .header-sub {
+    font-size: 0.78rem;
+    color: $muted;
+    margin: 0;
+  }
+}
+
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  .search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    .pi-search {
+      position: absolute;
+      left: 0.75rem;
+      color: $muted;
+      font-size: 0.82rem;
+      pointer-events: none;
+    }
+
+    .search-input {
+      height: 38px;
+      padding-left: 2.2rem;
+      border-radius: 10px;
+      border: 1.5px solid $border;
+      font-size: 0.85rem;
+      width: 300px;
+      transition: all 0.15s;
+
+      &:focus {
+        border-color: $indigo;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        outline: none;
+      }
+    }
+  }
+}
+
+.vendedores-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+
+.vendedor-card {
+  background: $card;
+  border: 1.5px solid $border;
+  border-radius: 16px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: $indigo;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+  }
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.vendedor-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, $indigo, #818cf8);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.vendedor-info {
+  flex: 1;
+
+  .vendedor-nombre {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: $text;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .vendedor-doc {
+    margin: 0.25rem 0 0;
+    font-size: 0.8rem;
+    color: $muted;
+    font-family: "JetBrains Mono", monospace;
+  }
+}
+
+.online-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #10b981;
+  display: inline-block;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.5);
+  animation: pulse-online 2s infinite;
+}
+
+@keyframes pulse-online {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.card-stats {
+  display: flex;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid $border;
+  border-bottom: 1px solid $border;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  i {
+    color: $indigo;
+    font-size: 0.9rem;
+  }
+
+  .stat-value {
+    font-weight: 700;
+    color: $text;
+    font-size: 1.1rem;
+  }
+
+  .stat-label {
+    color: $muted;
+    font-size: 0.8rem;
+  }
+}
+
+.card-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.card-location {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    background: rgba(99, 102, 241, 0.12);
+    border-color: rgba(99, 102, 241, 0.3);
+  }
+
+  i {
+    color: $indigo;
+    font-size: 0.85rem;
+  }
+
+  .location-coords {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.75rem;
+    color: $text;
+  }
+
+  .location-battery {
+    margin-left: auto;
+    font-size: 0.72rem;
+    color: $muted;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+
+    i {
+      color: #f59e0b;
+      font-size: 0.75rem;
+    }
+  }
+}
+
+.action-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.75rem 0.5rem;
+  border-radius: 10px;
+  background: $bg;
+  text-decoration: none;
+  transition: all 0.15s;
+
+  i {
+    font-size: 1rem;
+    color: $indigo;
+  }
+
+  span {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: $text;
+  }
+
+  &:hover {
+    background: rgba(99, 102, 241, 0.1);
+  }
+}
+
+.paginator-container {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0;
+}
+
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: 16px;
+
+  i {
+    font-size: 2rem;
+    color: $indigo;
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: $muted;
+
+  i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+
+  p {
+    margin: 0;
+    font-size: 1rem;
+  }
+}
+
+::ng-deep .paginator-custom {
+  .p-paginator {
+    background: transparent;
+    border: none;
+    padding: 0;
+  }
+}

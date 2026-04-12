@@ -1,0 +1,159 @@
+<div class="rutas-container">
+  <div class="toolbar">
+    <span class="search-wrap">
+      <i class="pi pi-search"></i>
+      <input
+        type="text"
+        pInputText
+        placeholder="Buscar rutas..."
+        [(ngModel)]="search"
+        (input)="onSearch()"
+        class="search-input"
+      />
+    </span>
+    <button
+      pButton
+      label="Nueva Ruta"
+      icon="pi pi-plus"
+      class="btn-aura"
+      (click)="nuevo()"
+    ></button>
+  </div>
+
+  <div class="table-card">
+    <p-table
+      [value]="rows"
+      [lazy]="true"
+      [loading]="loading"
+      [totalRecords]="totalRows"
+      [rows]="pageSize"
+      [paginator]="true"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      (onPage)="onPage($event)"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords}"
+      styleClass="p-datatable-sm p-datatable-gridlines"
+      showGridlines
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 80px">#</th>
+          <th>Nombre</th>
+          <th>Día</th>
+          <th>Locales</th>
+          <th style="width: 100px">Estado</th>
+          <th style="width: 80px">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-r>
+        <tr>
+          <td class="mono text-muted">{{ r.id }}</td>
+          <td class="fw-600">{{ r.nombre }}</td>
+          <td>{{ getDiaSemanaNombre(r.diaSemana) }}</td>
+          <td>{{ r.totalLocales }} locale(s)</td>
+          <td>
+            <p-tag
+              [value]="r.activo ? 'Activo' : 'Inactivo'"
+              [severity]="getSeverity(r.activo)"
+            />
+          </td>
+          <td>
+            <div class="actions">
+              <button
+                pButton
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm"
+                pTooltip="Editar"
+                (click)="editRuta(r)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="empty-row">No hay rutas creadas</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<p-dialog
+  [header]="editingRuta ? 'Editar Ruta' : 'Nueva Ruta'"
+  [(visible)]="showForm"
+  [modal]="true"
+  [style]="{ width: '560px' }"
+  [draggable]="false"
+  (onHide)="closeForm()"
+>
+  <div class="form-fields">
+    <div class="field">
+      <label>Nombre <span class="required">*</span></label>
+      <input
+        type="text"
+        pInputText
+        [(ngModel)]="form.nombre"
+        placeholder="Nombre de la ruta"
+        class="w-full"
+      />
+    </div>
+    <div class="field">
+      <label>Descripción</label>
+      <textarea
+        pInputTextarea
+        [(ngModel)]="form.descripcion"
+        placeholder="Descripción..."
+        rows="2"
+        class="w-full"
+      ></textarea>
+    </div>
+    <div class="field">
+      <label>Días de la semana</label>
+      <p-multiSelect
+        [(ngModel)]="form.diaSemana"
+        [options]="diasSemana"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Seleccione días"
+        styleClass="w-full"
+        appendTo="body"
+        display="chip"
+      />
+    </div>
+    <div class="field">
+      <label>Locales</label>
+      <p-multiSelect
+        [(ngModel)]="form.localIds"
+        [options]="locales"
+        optionLabel="nombre"
+        optionValue="id"
+        placeholder="Seleccione locales"
+        [loading]="loadingLocales"
+        styleClass="w-full"
+        appendTo="body"
+        display="chip"
+      />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="closeForm()"
+    ></button>
+    <button
+      pButton
+      [label]="editingRuta ? 'Actualizar' : 'Guardar'"
+      icon="pi pi-check"
+      class="btn-aura"
+      [loading]="saving"
+      (click)="save()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<p-toast />

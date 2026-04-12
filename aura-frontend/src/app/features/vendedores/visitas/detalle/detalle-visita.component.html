@@ -1,0 +1,96 @@
+<p-dialog
+  header="Detalle de Visita"
+  [(visible)]="visible"
+  (onHide)="close()"
+  [modal]="true"
+  [style]="{ width: '700px' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="detalle-content" *ngIf="visita">
+    <div class="info-section">
+      <div class="info-row">
+        <i class="pi pi-map-marker"></i>
+        <div>
+          <strong>{{ visita.localNombre }}</strong>
+          <p class="text-muted">{{ visita.localDireccion }}</p>
+        </div>
+      </div>
+      
+      <div class="info-row">
+        <i class="pi pi-calendar"></i>
+        <span>Programada: {{ visita.fechaProgramada | date: "dd/MM/yyyy" }}
+          <span *ngIf="visita.horaProgramada"> - {{ visita.horaProgramada }}</span>
+        </span>
+      </div>
+
+      <div class="info-row" *ngIf="visita.fechaReal">
+        <i class="pi pi-clock"></i>
+        <span>Real: {{ visita.fechaReal | date: "dd/MM/yyyy HH:mm" }}</span>
+      </div>
+
+      <div class="info-row" *ngIf="visita.rutaNombre">
+        <i class="pi pi-map"></i>
+        <span>{{ visita.rutaNombre }}</span>
+      </div>
+
+      <div class="info-row">
+        <i class="pi pi-user"></i>
+        <span>{{ visita.vendedorNombre }}</span>
+      </div>
+
+      <div class="info-row">
+        <i class="pi pi-tag"></i>
+        <p-tag [value]="visita.estado" [severity]="getSeverity(visita.estado)" />
+      </div>
+
+      <div class="info-row" *ngIf="visita.distanciaMetros">
+        <i class="pi pi-compass"></i>
+        <span>Distancia: {{ visita.distanciaMetros }}m desde el local</span>
+      </div>
+
+      <div class="observaciones" *ngIf="visita.observaciones">
+        <strong>Observaciones:</strong>
+        <p>{{ visita.observaciones }}</p>
+      </div>
+    </div>
+
+    <div class="maps-section">
+      <div class="map-item" *ngIf="visita.localLatitud && visita.localLongitud">
+        <label>Ubicación del Local</label>
+        <app-map-picker
+          [lat]="visita.localLatitud"
+          [lng]="visita.localLongitud"
+          [readonly]="true"
+          [zoom]="15"
+          markerColor="#6366f1"
+        />
+      </div>
+
+      <div class="map-item" *ngIf="visita.latitudLlegada && visita.longitudLlegada">
+        <label>Lugar de Llegada</label>
+        <app-map-picker
+          [lat]="visita.latitudLlegada"
+          [lng]="visita.longitudLlegada"
+          [readonly]="true"
+          [zoom]="15"
+          markerColor="#10b981"
+        />
+      </div>
+
+      <div class="no-ubicacion" *ngIf="!visita.localLatitud && !visita.latitudLlegada">
+        <i class="pi pi-map"></i>
+        <p>Sin ubicación registrada</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="loading" *ngIf="loading">
+    <i class="pi pi-spin pi-spinner"></i>
+    <p>Cargando detalles...</p>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Cerrar" class="p-button-text" (click)="close()"></button>
+  </ng-template>
+</p-dialog>

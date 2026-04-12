@@ -1,0 +1,232 @@
+.module-wrapper {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.module-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    h2 { margin: 0; font-size: 1.4rem; font-weight: 700; color: #1e293b; }
+    p  { margin: 0; color: #64748b; font-size: 0.85rem; }
+  }
+}
+
+.header-icon {
+  width: 3rem; height: 3rem;
+  background: #6366f1;
+  border-radius: 12px;
+  display: grid; place-items: center;
+  i { color: #fff; font-size: 1.3rem; }
+}
+
+.periodo-activo-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.25rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  color: #15803d;
+  font-size: 0.9rem;
+
+  i { font-size: 1.1rem; }
+  span { flex: 1; }
+
+  &.banner-warn {
+    background: #fffbeb;
+    border-color: #fde68a;
+    color: #92400e;
+  }
+}
+
+.table-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+
+.badge-count {
+  display: inline-block;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 0.15rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.empty-row {
+  text-align: center;
+  color: #94a3b8;
+  padding: 2.5rem;
+  i { margin-right: 0.5rem; }
+}
+
+.text-muted { color: #cbd5e1; }
+.req { color: #ef4444; }
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  label { font-size: 0.82rem; font-weight: 600; color: #374151; }
+
+  &.full-width { grid-column: 1 / -1; }
+}
+
+// ── Balance de Comprobación ──────────────────────────────────────────────────
+
+.balance-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.balance-selector {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+
+  label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 0.35rem;
+  }
+}
+
+.balance-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.balance-periodo-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cuadrado-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 700;
+
+  &.cuadrado-ok {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #15803d;
+  }
+
+  &.cuadrado-err {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+  }
+}
+
+.balance-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 4rem 2rem;
+  color: #94a3b8;
+  text-align: center;
+
+  i { font-size: 2.5rem; }
+  p { font-size: 0.9rem; margin: 0; }
+}
+
+.num-cell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+}
+
+.saldo-cell { font-weight: 600; }
+.saldo-neg  { color: #dc2626; }
+.text-danger { color: #dc2626; }
+
+.totals-row td {
+  background: #f8fafc;
+  border-top: 2px solid #e2e8f0;
+  font-size: 0.85rem;
+}
+
+.cuenta-code {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  background: #f1f5f9;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  color: #475569;
+}
+
+.tipo-badge {
+  display: inline-block;
+  padding: 0.1rem 0.55rem;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+
+  &.tipo-activo    { background: #eff6ff; color: #1d4ed8; }
+  &.tipo-pasivo    { background: #fef3c7; color: #92400e; }
+  &.tipo-patrimonio { background: #fdf4ff; color: #7e22ce; }
+  &.tipo-ingreso   { background: #f0fdf4; color: #15803d; }
+  &.tipo-gasto     { background: #fff1f2; color: #be123c; }
+  &.tipo-costo     { background: #fff7ed; color: #c2410c; }
+}
+
+// ── Cierre dialog ─────────────────────────────────────────────────────────────
+
+.aviso-cierre {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  color: #9a3412;
+  font-size: 0.88rem;
+
+  i { font-size: 1.2rem; color: #ea580c; }
+  p { margin: 0; line-height: 1.5; }
+}

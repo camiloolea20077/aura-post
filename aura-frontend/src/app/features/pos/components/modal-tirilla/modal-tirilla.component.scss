@@ -1,4 +1,4 @@
-$indigo: #6366f1;
+$indigo: #2563eb;
 $border: #e2e8f0;
 $muted: #64748b;
 
@@ -212,7 +212,7 @@ $muted: #64748b;
   white-space: nowrap;
 }
 .t-cufe-value {
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
 }
 
 // Tabla productos — columnas: Artículo | Cant | Valor | Total
@@ -302,8 +302,12 @@ $muted: #64748b;
   margin-top: 2px;
   padding-top: 2px;
 }
-.t-cambio-label { font-weight: bold; }
-.t-cambio-val   { font-weight: bold; }
+.t-cambio-label {
+  font-weight: bold;
+}
+.t-cambio-val {
+  font-weight: bold;
+}
 
 // Legal
 .t-legal {
@@ -335,7 +339,7 @@ $muted: #64748b;
   gap: 0.6rem;
 }
 ::ng-deep .btn-print.p-button {
-  background: linear-gradient(135deg, $indigo, #818cf8) !important;
+  background: #2563eb !important;
   border: none !important;
   font-weight: 600 !important;
 }

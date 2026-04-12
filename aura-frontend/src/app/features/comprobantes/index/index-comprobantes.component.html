@@ -69,12 +69,12 @@
       (onLazyLoad)="onPageChange($event)"
       [paginator]="true"
       [rows]="rowSize"
+      showGridlines
       [totalRecords]="totalRecords"
       [loading]="loadingTable"
       [rowsPerPageOptions]="[10, 20, 50]"
       [showCurrentPageReport]="true"
       currentPageReportTemplate="{first}-{last} de {totalRecords}"
-      styleClass="aura-table"
       [tableStyle]="{ 'min-width': '850px' }"
     >
       <ng-template pTemplate="header">
@@ -107,16 +107,22 @@
             <span class="concepto-text">{{ item.concepto }}</span>
           </td>
           <td class="text-right">
-            <span class="monto-val" [class.monto-ingreso]="item.tipo === 'INGRESO'" [class.monto-egreso]="item.tipo === 'EGRESO'">
+            <span
+              class="monto-val"
+              [class.monto-ingreso]="item.tipo === 'INGRESO'"
+              [class.monto-egreso]="item.tipo === 'EGRESO'"
+            >
               {{ formatCOP(item.monto) }}
             </span>
           </td>
           <td>
-            <span class="metodo-badge" *ngIf="item.metodoPago">{{ item.metodoPago }}</span>
+            <span class="metodo-badge" *ngIf="item.metodoPago">{{
+              item.metodoPago
+            }}</span>
             <span class="text-muted" *ngIf="!item.metodoPago">—</span>
           </td>
           <td>
-            <span class="entregado-text">{{ item.entregadoA || '—' }}</span>
+            <span class="entregado-text">{{ item.entregadoA || "—" }}</span>
           </td>
           <td>
             <span class="origen-text">{{ getOrigenLabel(item.origen) }}</span>
@@ -151,14 +157,20 @@
       <ng-template pTemplate="loadingbody">
         <tr *ngFor="let s of [1, 2, 3, 4, 5]">
           <td><p-skeleton width="110px" /></td>
-          <td class="text-center"><p-skeleton width="70px" styleClass="mx-auto" /></td>
+          <td class="text-center">
+            <p-skeleton width="70px" styleClass="mx-auto" />
+          </td>
           <td><p-skeleton /></td>
-          <td class="text-right"><p-skeleton width="90px" styleClass="ml-auto" /></td>
+          <td class="text-right">
+            <p-skeleton width="90px" styleClass="ml-auto" />
+          </td>
           <td><p-skeleton width="90px" /></td>
           <td><p-skeleton width="120px" /></td>
           <td><p-skeleton width="80px" /></td>
           <td><p-skeleton width="110px" /></td>
-          <td class="text-center"><p-skeleton width="32px" styleClass="mx-auto" /></td>
+          <td class="text-center">
+            <p-skeleton width="32px" styleClass="mx-auto" />
+          </td>
         </tr>
       </ng-template>
     </p-table>

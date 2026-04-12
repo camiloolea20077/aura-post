@@ -1,0 +1,74 @@
+.login-body {
+    display: flex;
+    box-sizing: border-box;
+    min-height: 96vh;
+
+    .login-header-left {
+        min-height: 8vh;
+        background-color: #f4f4f6;
+    }
+
+    .login-header-right {
+        min-height: 8vh;
+        background-color: #f8f9fa;
+    }
+
+    .login-panel-left {
+        min-height: 70vh;
+        background-color: #f4f4f6;
+        padding: 0 0 15px 0;
+
+        .login-panel-content {
+            height: 100%;
+            background-image: $loginDefaultImage;
+            border-bottom-left-radius: 2rem;
+            border-top-left-radius: 2rem;
+        }
+    }
+
+    .login-panel-right {
+        min-height: 70vh;
+        background-color: #f8f9fa;
+        padding: 0 0 15px 0;
+
+        .login-panel-content {
+            height: 100%;
+            border-bottom-right-radius: 2rem;
+            border-top-right-radius: 2rem;
+        }
+
+        .login-logo {
+            height: 70px;
+        }
+    }
+
+    .login-footer-left {
+        min-height: 20vh;
+        text-align: right;
+        background-color: #f4f4f6;
+        padding-top: 2%;
+
+    }
+    .login-footer-right {
+        min-height: 20vh;
+        text-align: left;
+        background-color: #f8f9fa;
+        padding-top: 2%;
+    }
+}
+
+@media (max-width: $tabletBreakpoint) {
+    .login-body {
+
+        .login-panel-left {
+            display: none;
+        }
+
+        .login-panel-right {
+            .login-panel-content {
+                border-bottom-left-radius: 2rem;
+                border-top-left-radius: 2rem;
+            }
+        }
+    }
+}

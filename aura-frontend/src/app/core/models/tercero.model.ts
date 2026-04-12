@@ -1,6 +1,18 @@
 // ─── Tipos de documento ───────────────────────────────────────
 export type TipoDocumento = 'NIT' | 'CC' | 'CE' | 'PAS' | 'TI' | 'RUT';
 
+// ─── Constantes fiscales ──────────────────────────────────────
+export const TIPO_PERSONA_OPTIONS = [
+  { label: 'Persona Natural', value: 'NATURAL' },
+  { label: 'Persona Jurídica', value: 'JURIDICA' },
+];
+export const REGIMEN_OPTIONS = [
+  { label: 'No responsable de IVA', value: 'NO_RESPONSABLE_IVA' },
+  { label: 'Responsable de IVA', value: 'RESPONSABLE_IVA' },
+  { label: 'Gran Contribuyente', value: 'GRAN_CONTRIBUYENTE' },
+  { label: 'Régimen Simple', value: 'REGIMEN_SIMPLE' },
+];
+
 export const TIPO_DOCUMENTO_OPTIONS: { label: string; value: TipoDocumento }[] =
   [
     { label: 'NIT', value: 'NIT' },
@@ -39,6 +51,15 @@ export interface TerceroModel {
   esProveedor: boolean;
   esEmpleado: boolean;
   activo: boolean;
+  // Campos fiscales (V52)
+  tipoPersona: 'NATURAL' | 'JURIDICA';
+  regimen: string;
+  granContribuyente: boolean;
+  autoRetenedor: boolean;
+  codigoCIIU: string | null;
+  actividadEconomica: string | null;
+  pais: string;
+  codigoPais: string;
 }
 
 // ─── Tabla ───────────────────────────────────────────────────
@@ -73,6 +94,15 @@ export interface CreateTerceroDto {
   esProveedor: boolean;
   esEmpleado: boolean;
   activo: boolean;
+  // Campos fiscales (V52)
+  tipoPersona: 'NATURAL' | 'JURIDICA';
+  regimen: string;
+  granContribuyente: boolean;
+  autoRetenedor: boolean;
+  codigoCIIU: string | null;
+  actividadEconomica: string | null;
+  pais: string;
+  codigoPais: string;
 }
 
 export interface UpdateTerceroDto extends CreateTerceroDto {

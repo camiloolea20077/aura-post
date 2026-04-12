@@ -61,6 +61,11 @@ export class IndexDBService {
     return data?.usuarioId ?? null;
   }
 
+  async getEmpresaId(): Promise<number | null> {
+    const data = await this.loadDataAuthDB();
+    return data?.empresaId ?? null;
+  }
+
   async getUserNombre(): Promise<string | null> {
     const data = await this.loadDataAuthDB();
     return data?.nombreCompleto ?? null;
