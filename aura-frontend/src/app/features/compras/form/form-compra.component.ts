@@ -17,7 +17,10 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { CalendarModule } from 'primeng/calendar';
 import { DropdownModule } from 'primeng/dropdown';
-import { AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
+import {
+  AutoCompleteModule,
+  AutoCompleteSelectEvent,
+} from 'primeng/autocomplete';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TextareaModule } from 'primeng/textarea';
@@ -48,7 +51,10 @@ import { IndexDBService } from '../../../core/services/index-db.service';
 import { CuentaBancariaService } from '../../../core/services/cuenta-bancaria.service';
 import { CuentaBancariaModel } from '../../../core/models/cuenta-bancaria.model';
 import { TarifaRetencionService } from '../../../core/services/tarifa-retencion.service';
-import { PageableDto, ProductoTableModel } from '../../../core/models/producto.model';
+import {
+  PageableDto,
+  ProductoTableModel,
+} from '../../../core/models/producto.model';
 
 @Component({
   selector: 'app-form-compra',
@@ -123,15 +129,17 @@ export class FormCompraComponent implements OnInit, OnChanges {
   public cuentasBancarias: CuentaBancariaModel[] = [];
 
   readonly metodosPagoOpts = [
-    { label: 'Efectivo',      value: 'EFECTIVO',      icon: 'pi-wallet' },
-    { label: 'Transferencia', value: 'TRANSFERENCIA',  icon: 'pi-send' },
-    { label: 'Nequi',         value: 'NEQUI',          icon: 'pi-mobile' },
-    { label: 'Tarjeta',       value: 'TARJETA',        icon: 'pi-credit-card' },
-    { label: 'Cheque',        value: 'CHEQUE',         icon: 'pi-file' },
+    { label: 'Efectivo', value: 'EFECTIVO', icon: 'pi-wallet' },
+    { label: 'Transferencia', value: 'TRANSFERENCIA', icon: 'pi-send' },
+    { label: 'Nequi', value: 'NEQUI', icon: 'pi-mobile' },
+    { label: 'Tarjeta', value: 'TARJETA', icon: 'pi-credit-card' },
+    { label: 'Cheque', value: 'CHEQUE', icon: 'pi-file' },
   ];
 
   get requiereBanco(): boolean {
-    return ['TRANSFERENCIA', 'NEQUI', 'TARJETA', 'CHEQUE'].includes(this.metodoPago);
+    return ['TRANSFERENCIA', 'NEQUI', 'TARJETA', 'CHEQUE'].includes(
+      this.metodoPago,
+    );
   }
 
   // ─── Tipo de documento ────────────────────────────────────────────
@@ -269,21 +277,23 @@ export class FormCompraComponent implements OnInit, OnChanges {
     this.proveedorQuery = oc.proveedorNombre;
     this.sucursalId = oc.sucursalId;
     this.observaciones = oc.observaciones ?? '';
-    this.lineas = oc.lineas.map((l): CompraLineaUI => ({
-      _id: uuidv4(),
-      productoId: l.productoId,
-      productoNombre: l.productoNombre,
-      cantidad: l.cantidad,
-      costoUnitario: l.costoUnitario,
-      descuentoPct: 0,
-      descuentoValor: 0,
-      ivaPorcentaje: 0,
-      impuestoValor: 0,
-      subtotal: l.cantidad * l.costoUnitario,
-      precioVenta1: null,
-      precioVenta2: null,
-      precioVenta3: null,
-    }));
+    this.lineas = oc.lineas.map(
+      (l): CompraLineaUI => ({
+        _id: uuidv4(),
+        productoId: l.productoId,
+        productoNombre: l.productoNombre,
+        cantidad: l.cantidad,
+        costoUnitario: l.costoUnitario,
+        descuentoPct: 0,
+        descuentoValor: 0,
+        ivaPorcentaje: 0,
+        impuestoValor: 0,
+        subtotal: l.cantidad * l.costoUnitario,
+        precioVenta1: null,
+        precioVenta2: null,
+        precioVenta3: null,
+      }),
+    );
     this.cdr.markForCheck();
   }
 
@@ -323,8 +333,10 @@ export class FormCompraComponent implements OnInit, OnChanges {
     this.dialogLoading = true;
     this.cdr.markForCheck();
 
-    const page = event.first != null && event.rows
-      ? Math.floor(event.first / event.rows) : 0;
+    const page =
+      event.first != null && event.rows
+        ? Math.floor(event.first / event.rows)
+        : 0;
 
     const dto: PageableDto = {
       page,
@@ -378,7 +390,10 @@ export class FormCompraComponent implements OnInit, OnChanges {
       const res = await lastValueFrom(this.productoService.search(q));
       const productos = res?.data ?? [];
       if (productos.length === 0) {
-        this.alertService.showWarn('Sin resultados', `No se encontró producto con código "${q}".`);
+        this.alertService.showWarn(
+          'Sin resultados',
+          `No se encontró producto con código "${q}".`,
+        );
         return;
       }
       // Selecciona el producto para la línea actual y cierra el modal
@@ -456,7 +471,11 @@ export class FormCompraComponent implements OnInit, OnChanges {
   }
 
   // ─── Selección de producto ────────────────────────────────────────
-  async onProductoChange(idx: number, productoId: number, preloaded?: ProductoOpcion): Promise<void> {
+  async onProductoChange(
+    idx: number,
+    productoId: number,
+    preloaded?: ProductoOpcion,
+  ): Promise<void> {
     let prod = preloaded;
 
     if (!prod) {
@@ -503,7 +522,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
               productoId,
               productoNombre: prod!.label,
               costoUnitario,
-              ivaPorcentaje: 0,  // IVA ya incluido en el costo
+              ivaPorcentaje: 0, // IVA ya incluido en el costo
               impuestoValor: 0,
               subtotal: Math.round(subtotal * 100) / 100,
               precioVenta1: prod!.precio ?? null,
@@ -575,12 +594,14 @@ export class FormCompraComponent implements OnInit, OnChanges {
     const neto = bruto - descVal;
     this.lineas = this.lineas.map(
       (l, i): CompraLineaUI =>
-        i !== idx ? l : {
-          ...l,
-          descuentoPct: pct,
-          descuentoValor: descVal,
-          subtotal: Math.round(neto * 100) / 100,
-        },
+        i !== idx
+          ? l
+          : {
+              ...l,
+              descuentoPct: pct,
+              descuentoValor: descVal,
+              subtotal: Math.round(neto * 100) / 100,
+            },
     );
   }
 
@@ -659,7 +680,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
       if (this.formaPago === 'CREDITO' && this.plazoDias > 0) {
         const fv = new Date(this.fechaCompra);
         fv.setDate(fv.getDate() + this.plazoDias);
-        fechaVencimientoStr = fv.toISOString().split('T')[0];
+        fechaVencimientoStr = fv.toISOString().slice(0, 19);
       }
 
       const dto: CreateCompraDto = {
@@ -678,9 +699,18 @@ export class FormCompraComponent implements OnInit, OnChanges {
         formaPago: this.formaPago,
         tipoDocumento: this.tipoDocumento,
         fletes: this.fletes || null,
-        pagos: this.formaPago === 'CONTADO'
-          ? [{ metodoPago: this.metodoPago, monto: this.totalRetenciones > 0 ? this.netaAPagar : this.total, banco: this.banco.trim() || null, cuentaBancariaId: this.cuentaBancariaId }]
-          : null,
+        pagos:
+          this.formaPago === 'CONTADO'
+            ? [
+                {
+                  metodoPago: this.metodoPago,
+                  monto:
+                    this.totalRetenciones > 0 ? this.netaAPagar : this.total,
+                  banco: this.banco.trim() || null,
+                  cuentaBancariaId: this.cuentaBancariaId,
+                },
+              ]
+            : null,
       };
 
       let res;
