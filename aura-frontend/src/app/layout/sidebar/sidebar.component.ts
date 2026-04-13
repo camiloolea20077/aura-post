@@ -57,6 +57,7 @@ export class SidebarComponent implements OnInit {
   ) {
     effect(() => {
       this.menuGroups = this.stateStore.menuGroups();
+      this.abrirGrupoActivo();
     });
   }
 
