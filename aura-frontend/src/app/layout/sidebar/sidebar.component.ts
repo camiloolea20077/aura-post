@@ -57,7 +57,6 @@ export class SidebarComponent implements OnInit {
   ) {
     effect(() => {
       this.menuGroups = this.stateStore.menuGroups();
-      console.log(this.menuGroups);
     });
   }
 
