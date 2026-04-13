@@ -5,6 +5,8 @@ import {
   OnInit,
   Output,
   ChangeDetectorRef,
+  inject,
+  effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule, NavigationEnd } from '@angular/router';
@@ -34,6 +36,8 @@ export class SidebarComponent implements OnInit {
   @Input() collapsed = false;
   @Output() toggleCollapse = new EventEmitter<void>();
 
+  readonly stateStore = inject(StateStore);
+
   logoSafeUrl: string | null = null;
   public menuGroups: SidebarMenuGroup[] = [];
   public userName = '';
@@ -48,13 +52,16 @@ export class SidebarComponent implements OnInit {
     private readonly indexDBService: IndexDBService,
     private readonly http: HttpClient,
     private readonly router: Router,
-    private readonly stateStore: StateStore,
     private readonly confirmationService: ConfirmationService,
     private readonly cdr: ChangeDetectorRef,
-  ) {}
+  ) {
+    effect(() => {
+      this.menuGroups = this.stateStore.menuGroups();
+      console.log(this.menuGroups);
+    });
+  }
 
   async ngOnInit(): Promise<void> {
-    this.menuGroups = this.stateStore.menuGroups();
     await this.loadUserInfo();
 
     // Cuando navega, abrir el grupo de la ruta activa
