@@ -1,13 +1,14 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { IndexDBService } from '../../../core/services/index-db.service'; // ← agregar
+import { ToastModule } from 'primeng/toast';
+import { IndexDBService } from '../../../core/services/index-db.service';
 
 @Component({
   selector: 'app-platform-layout',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ToastModule],
   templateUrl: './platform-layout.component.html',
   styleUrl: './platform-layout.component.scss',
 })

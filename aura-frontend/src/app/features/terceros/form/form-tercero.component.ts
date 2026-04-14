@@ -20,7 +20,7 @@ import {
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
-import { InputSwitchModule } from 'primeng/inputswitch';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { DropdownModule } from 'primeng/dropdown';
 import { DividerModule } from 'primeng/divider';
 import { TabViewModule } from 'primeng/tabview';
@@ -54,7 +54,7 @@ import { AlertService } from '../../../shared/pipes/alert.service';
     ReactiveFormsModule,
     DialogModule,
     InputTextModule,
-    InputSwitchModule,
+    ToggleSwitchModule,
     DropdownModule,
     DividerModule,
     TabViewModule,
@@ -327,8 +327,8 @@ export class FormTerceroComponent implements OnInit, OnChanges {
       activo: v.activo,
       tipoPersona: v.tipoPersona,
       regimen: v.regimen,
-      granContribuyente: v.granContribuyente ?? false,
-      autoRetenedor: v.autoRetenedor ?? false,
+      granContribuyente: v.granContribuyente,
+      autoRetenedor: v.autoRetenedor,
       codigoCIIU: v.codigoCIIU?.trim() || null,
       actividadEconomica: v.actividadEconomica?.trim() || null,
       pais: v.pais?.trim() || 'Colombia',

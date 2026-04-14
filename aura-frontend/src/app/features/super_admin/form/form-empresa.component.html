@@ -205,6 +205,16 @@
 
     <div class="form-row two-col">
       <div class="field">
+        <label class="field-label required">Tipo de documento</label>
+        <p-dropdown
+          formControlName="tipoDocumentoAdmin"
+          [options]="tipoDocOpts"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+        />
+      </div>
+      <div class="field">
         <label class="field-label required">Documento</label>
         <input
           pInputText
@@ -214,6 +224,66 @@
           [class.ng-invalid]="isInvalid('documentoAdmin')"
         />
       </div>
+    </div>
+
+    <div class="form-row two-col">
+      <div class="field">
+        <label class="field-label">Tipo de persona</label>
+        <p-dropdown
+          formControlName="tipoPersonaAdmin"
+          [options]="tipoPersonaOpts"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+        />
+      </div>
+      <div class="field">
+        <label class="field-label">Régimen tributario</label>
+        <p-dropdown
+          formControlName="regimenAdmin"
+          [options]="regimenOpts"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+        />
+      </div>
+    </div>
+
+    <div class="form-row two-col">
+      <div class="field">
+        <label class="field-label">País</label>
+        <input
+          pInputText
+          formControlName="paisAdmin"
+          placeholder="Colombia"
+          class="w-full"
+        />
+      </div>
+      <div class="field">
+        <label class="field-label">Código país</label>
+        <input
+          pInputText
+          formControlName="codigoPaisAdmin"
+          placeholder="CO"
+          maxlength="5"
+          class="w-full"
+          style="text-transform: uppercase"
+        />
+      </div>
+    </div>
+
+    <div class="form-row two-col" style="align-items: center">
+      <div class="field">
+        <label class="field-label">Gran Contribuyente</label>
+        <p-toggleswitch formControlName="granContribuyenteAdmin" />
+      </div>
+      <div class="field">
+        <label class="field-label">Autorretenedor</label>
+        <p-toggleswitch formControlName="autoRetenedorAdmin" />
+      </div>
+    </div>
+
+    <div class="form-row two-col">
       <div class="field">
         <label class="field-label required">Sucursal principal</label>
         <input
