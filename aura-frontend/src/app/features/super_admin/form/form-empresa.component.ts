@@ -19,11 +19,18 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { ToggleButtonModule } from 'primeng/togglebutton';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { DropdownModule } from 'primeng/dropdown';
 import { DividerModule } from 'primeng/divider';
 import { AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { lastValueFrom } from 'rxjs';
 import { CreateEmpresaResponseDto, EmpresaPlataformaModel } from '../../../core/models/platform.model';
-import { MunicipioDto } from '../../../core/models/tercero.model';
+import {
+  MunicipioDto,
+  TIPO_DOCUMENTO_OPTIONS,
+  TIPO_PERSONA_OPTIONS,
+  REGIMEN_OPTIONS,
+} from '../../../core/models/tercero.model';
 import { PlatformService } from '../../../core/services/platform.service';
 import { TerceroService } from '../../../core/services/tercero.service';
 import { StorageService } from '../../../core/services/storage.service';
@@ -40,6 +47,8 @@ import { AlertService } from '../../../shared/pipes/alert.service';
     InputTextModule,
     PasswordModule,
     ToggleButtonModule,
+    ToggleSwitchModule,
+    DropdownModule,
     DividerModule,
     AutoCompleteModule,
   ],
@@ -57,6 +66,10 @@ export class FormEmpresaComponent implements OnChanges {
   uploadingLogo = false;
   logoPreview: string | null = null;
   municipioSugerencias: MunicipioDto[] = [];
+
+  readonly tipoDocOpts = TIPO_DOCUMENTO_OPTIONS;
+  readonly tipoPersonaOpts = TIPO_PERSONA_OPTIONS;
+  readonly regimenOpts = REGIMEN_OPTIONS;
 
   get isEdit(): boolean {
     return !!this.empresa;
@@ -88,6 +101,13 @@ export class FormEmpresaComponent implements OnChanges {
       nombresAdmin: [''],
       apellidosAdmin: [''],
       documentoAdmin: [''],
+      tipoDocumentoAdmin: ['CC'],
+      tipoPersonaAdmin: ['NATURAL'],
+      regimenAdmin: ['NO_RESPONSABLE_IVA'],
+      granContribuyenteAdmin: [false],
+      autoRetenedorAdmin: [false],
+      paisAdmin: ['Colombia'],
+      codigoPaisAdmin: ['CO'],
       // Sucursal — solo en creación
       nombreSucursal: [''],
       // Factus — Facturación electrónica
@@ -177,6 +197,13 @@ export class FormEmpresaComponent implements OnChanges {
         nombresAdmin: '',
         apellidosAdmin: '',
         documentoAdmin: '',
+        tipoDocumentoAdmin: 'CC',
+        tipoPersonaAdmin: 'NATURAL',
+        regimenAdmin: 'NO_RESPONSABLE_IVA',
+        granContribuyenteAdmin: false,
+        autoRetenedorAdmin: false,
+        paisAdmin: 'Colombia',
+        codigoPaisAdmin: 'CO',
         nombreSucursal: 'Sede Principal',
         facturaElectronica: false,
         factusClientId: '',
@@ -270,6 +297,13 @@ export class FormEmpresaComponent implements OnChanges {
           nombresAdmin,
           apellidosAdmin,
           documentoAdmin,
+          tipoDocumentoAdmin,
+          tipoPersonaAdmin,
+          regimenAdmin,
+          granContribuyenteAdmin,
+          autoRetenedorAdmin,
+          paisAdmin,
+          codigoPaisAdmin,
           nombreSucursal,
           facturaElectronica,
           factusClientId,
@@ -294,6 +328,13 @@ export class FormEmpresaComponent implements OnChanges {
             nombresAdmin,
             apellidosAdmin,
             documentoAdmin,
+            tipoDocumentoAdmin,
+            tipoPersonaAdmin,
+            regimenAdmin,
+            granContribuyenteAdmin,
+            autoRetenedorAdmin,
+            paisAdmin,
+            codigoPaisAdmin,
             nombreSucursal,
             facturaElectronica,
             factusClientId,

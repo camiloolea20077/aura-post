@@ -57,6 +57,13 @@ export interface CreateEmpresaDto {
   nombresAdmin: string;
   apellidosAdmin: string;
   documentoAdmin: string;
+  tipoDocumentoAdmin: string;
+  tipoPersonaAdmin: string;
+  regimenAdmin: string;
+  granContribuyenteAdmin: boolean;
+  autoRetenedorAdmin: boolean;
+  paisAdmin: string;
+  codigoPaisAdmin: string;
   nombreSucursal: string;
   // Facturación electrónica (Factus)
   facturaElectronica?: boolean;
