@@ -79,14 +79,22 @@ export interface RecepcionOrdenDto {
 
 export const ESTADO_OC_CONFIG: Record<
   EstadoOrdenCompra,
-  { label: string; severity: 'info' | 'warn' | 'success' | 'danger' | 'secondary' | 'contrast'; icon: string }
+  {
+    label: string;
+    severity: 'info' | 'warn' | 'success' | 'danger' | 'secondary' | 'contrast';
+    icon: string;
+  }
 > = {
-  BORRADOR:        { label: 'Borrador',          severity: 'secondary', icon: 'pi pi-pencil' },
-  ENVIADA:         { label: 'Enviada',            severity: 'info',      icon: 'pi pi-send' },
-  CONFIRMADA:      { label: 'Confirmada',         severity: 'warn',      icon: 'pi pi-check' },
-  RECIBIDA_PARCIAL:{ label: 'Recib. Parcial',     severity: 'warn',      icon: 'pi pi-clock' },
-  CERRADA:         { label: 'Cerrada',            severity: 'success',   icon: 'pi pi-lock' },
-  ANULADA:         { label: 'Anulada',            severity: 'danger',    icon: 'pi pi-ban' },
+  BORRADOR: { label: 'Borrador', severity: 'secondary', icon: 'pi pi-pencil' },
+  ENVIADA: { label: 'Enviada', severity: 'info', icon: 'pi pi-send' },
+  CONFIRMADA: { label: 'Confirmada', severity: 'warn', icon: 'pi pi-check' },
+  RECIBIDA_PARCIAL: {
+    label: 'Recib. Parcial',
+    severity: 'warn',
+    icon: 'pi pi-clock',
+  },
+  CERRADA: { label: 'Cerrada', severity: 'success', icon: 'pi pi-lock' },
+  ANULADA: { label: 'Anulada', severity: 'danger', icon: 'pi pi-ban' },
 };
 
 /** Product line row used in the create/edit form */
@@ -95,7 +103,5 @@ export interface LineaFormOC {
   productoNombre: string;
   cantidad: number;
   costoUnitario: number;
-  ivaPorcentaje: number;
-  ivaIncluido: boolean;
   subtotal: number;
 }
