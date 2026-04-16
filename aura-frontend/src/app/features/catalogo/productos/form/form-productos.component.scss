@@ -255,7 +255,75 @@
         font-size: 0.95rem;
       }
     }
+
+    &.pr-iva-badge {
+      background: #f0fdf4;
+      border-bottom: 1px solid #bbf7d0;
+      padding: 0.4rem 1rem;
+    }
   }
+}
+
+// ─── Toggle IVA incluido ──────────────────────────────────────
+.iva-incluido-switch {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  transition: background 0.2s, border-color 0.2s;
+
+  .label-text {
+    color: #64748b;
+    font-weight: 600;
+
+    i { color: #94a3b8; }
+  }
+
+  .label-sub {
+    color: #94a3b8;
+  }
+
+  &.iva-incluido-switch--on {
+    background: #fffbeb;
+    border-color: #fde68a;
+
+    .label-text {
+      color: #92400e;
+      i { color: #d97706; }
+    }
+
+    .label-sub {
+      color: #78350f;
+    }
+  }
+}
+
+.iva-base-hint {
+  color: #15803d !important;
+  font-size: 0.8rem !important;
+
+  strong { color: #166534; }
+}
+
+.iva-incluido-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #15803d;
+
+  i { color: #22c55e; }
+}
+
+.iva-modo-hint {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: #22c55e;
+  background: #dcfce7;
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-left: 4px;
 }
 
 .divider-label {

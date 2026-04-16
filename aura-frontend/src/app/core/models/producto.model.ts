@@ -23,6 +23,7 @@ export interface ProductoModel {
   precio2: number | null;
   precio3: number | null;
   ivaPorcentaje: number;
+  ivaIncluido: boolean;
   impoconsumo: number;
   activo: boolean;
   visibleEnPos: boolean;
@@ -71,6 +72,7 @@ export interface CreateProductoDto {
   precio2?: number | null;
   precio3?: number | null;
   ivaPorcentaje: number;
+  ivaIncluido: boolean;
   impoconsumo: number;
   activo: boolean;
   visibleEnPos: boolean;

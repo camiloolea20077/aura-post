@@ -181,6 +181,7 @@ export interface ProductoPOS {
   id: number;
   imagenUrl: string | null;
   ivaPorcentaje: number;
+  ivaIncluido: boolean;
   nombre: string;
   sku: string | null;
   precio: number;

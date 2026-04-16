@@ -21,23 +21,42 @@
   >
     <!-- Producto -->
     <div class="field">
-      <label for="productoId">
+      <label>
         Producto <span class="required">*</span>
         <span class="badge-edit" *ngIf="isEditMode">No modificable</span>
       </label>
-      <p-dropdown
-        inputId="productoId"
-        formControlName="productoId"
-        [options]="productosOpts"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="Escribe para buscar..."
-        [filter]="true"
-        filterPlaceholder="Escribe 2+ letras..."
-        (onFilter)="onFiltroProducto($event)"
-        styleClass="w-full"
-        [class.ng-invalid]="isInvalid('productoId')"
-      />
+
+      <!-- Producto seleccionado -->
+      <div class="producto-seleccionado" *ngIf="productoSeleccionado">
+        <div class="ps-info">
+          <span class="ps-nombre">{{ productoSeleccionado.nombre }}</span>
+          <span class="ps-sku" *ngIf="productoSeleccionado.sku">
+            <i class="pi pi-tag"></i> {{ productoSeleccionado.sku }}
+          </span>
+        </div>
+        <button
+          *ngIf="!isEditMode"
+          pButton
+          type="button"
+          icon="pi pi-pencil"
+          class="p-button-text p-button-sm p-button-rounded"
+          pTooltip="Cambiar producto"
+          (click)="showBuscador = true"
+        ></button>
+      </div>
+
+      <!-- Botón cuando no hay producto -->
+      <button
+        *ngIf="!productoSeleccionado && !isEditMode"
+        pButton
+        type="button"
+        label="Seleccionar producto"
+        icon="pi pi-search"
+        class="p-button-outlined w-full btn-buscar-producto"
+        [class.p-invalid]="isInvalid('productoId')"
+        (click)="showBuscador = true"
+      ></button>
+
       <small class="p-error" *ngIf="isInvalid('productoId')"
         >El producto es obligatorio.</small
       >
@@ -194,3 +213,8 @@
   </ng-template>
 </p-dialog>
 <p-toast />
+
+<app-buscador-producto-dialog
+  [(visible)]="showBuscador"
+  (productoSelected)="onProductoSelected($event)"
+/>

@@ -136,3 +136,48 @@
   justify-content: flex-end;
   gap: 0.6rem;
 }
+
+// ─── Producto seleccionado (buscador avanzado) ────────────────
+.producto-seleccionado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 0.875rem;
+  background: #f0f4ff;
+  border: 1.5px solid #c7d7fc;
+  border-radius: 10px;
+}
+
+.ps-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ps-nombre {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ps-sku {
+  font-size: 0.72rem;
+  color: #3730a3;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  i { font-size: 0.68rem; }
+}
+
+.btn-buscar-producto {
+  height: 42px;
+  border-radius: 10px !important;
+  border-style: dashed !important;
+  font-size: 0.85rem !important;
+  justify-content: center;
+}

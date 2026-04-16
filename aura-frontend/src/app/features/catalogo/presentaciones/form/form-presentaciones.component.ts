@@ -19,7 +19,6 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputSwitchModule } from 'primeng/inputswitch';
-import { DropdownModule } from 'primeng/dropdown';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
@@ -31,6 +30,8 @@ import {
 import { ProductoPresentacionService } from '../../../../core/services/producto-presentacion.service';
 import { ProductoService } from '../../../../core/services/producto.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
+import { BuscadorProductoDialogComponent } from '../../../../shared/components/buscador-producto-dialog/buscador-producto-dialog.component';
+import { ProductoTableModel } from '../../../../core/models/producto.model';
 
 @Component({
   selector: 'app-form-presentaciones',
@@ -42,9 +43,9 @@ import { AlertService } from '../../../../shared/pipes/alert.service';
     InputTextModule,
     InputNumberModule,
     InputSwitchModule,
-    DropdownModule,
     ButtonModule,
     ToastModule,
+    BuscadorProductoDialogComponent,
   ],
   providers: [MessageService],
   templateUrl: './form-presentaciones.component.html',
@@ -64,7 +65,9 @@ export class FormPresentacionesComponent implements OnInit, OnChanges {
   public isSubmitting = false;
   public isLoading = false;
 
-  public productosOpts: { label: string; value: number }[] = [];
+  // Buscador avanzado de producto
+  public showBuscador = false;
+  public productoSeleccionado: { id: number; nombre: string; sku: string | null } | null = null;
 
   constructor(
     private readonly fb: FormBuilder,
@@ -86,9 +89,8 @@ export class FormPresentacionesComponent implements OnInit, OnChanges {
         this.resetForm();
         // Preseleccionar producto si viene de contexto
         if (this.preselProductoId) {
-          this.frmPresentacion.patchValue({
-            productoId: this.preselProductoId,
-          });
+          this.frmPresentacion.patchValue({ productoId: this.preselProductoId });
+          this.precargarProducto(this.preselProductoId);
         }
       }
     }
@@ -113,6 +115,7 @@ export class FormPresentacionesComponent implements OnInit, OnChanges {
   }
 
   private resetForm(): void {
+    this.productoSeleccionado = null;
     this.frmPresentacion?.reset({
       productoId: null,
       nombre: null,
@@ -128,23 +131,19 @@ export class FormPresentacionesComponent implements OnInit, OnChanges {
     return !!(ctrl?.invalid && ctrl?.touched);
   }
 
-  async onFiltroProducto(event: { filter: string }): Promise<void> {
-    const q = event.filter?.trim();
-    if (!q || q.length < 2) { this.productosOpts = []; return; }
-    try {
-      const res = await lastValueFrom(this.productoService.search(q));
-      this.productosOpts = (res?.data ?? []).map((p: any) => ({
-        label: p.nombre + (p.sku ? ` [${p.sku}]` : ''),
-        value: p.id,
-      }));
-    } catch { /* no bloquear */ }
+  onProductoSelected(p: ProductoTableModel): void {
+    this.productoSeleccionado = { id: p.id, nombre: p.nombre, sku: p.sku ?? null };
+    this.frmPresentacion.patchValue({ productoId: p.id });
+    this.frmPresentacion.get('productoId')?.markAsTouched();
   }
 
   private async precargarProducto(id: number): Promise<void> {
     try {
       const res = await lastValueFrom(this.productoService.getById(id));
-      if (res?.data)
-        this.productosOpts = [{ label: res.data.nombre, value: res.data.id }];
+      if (res?.data) {
+        const d = res.data;
+        this.productoSeleccionado = { id: d.id, nombre: d.nombre, sku: d.sku ?? null };
+      }
     } catch { /* silencioso */ }
   }
 
@@ -244,6 +243,7 @@ export class FormPresentacionesComponent implements OnInit, OnChanges {
 
   closeModal(): void {
     this.frmPresentacion.get('productoId')?.enable();
+    this.productoSeleccionado = null;
     this.resetForm();
     this.modalClosed.emit();
   }

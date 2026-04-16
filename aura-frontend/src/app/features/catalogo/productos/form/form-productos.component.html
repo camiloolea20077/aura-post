@@ -29,7 +29,6 @@
         <div class="form-container">
           <!-- ── Imagen superior ──────────────────────────── -->
           <div class="imagen-top">
-
             <!-- Preview -->
             <div class="imagen-box-top">
               <img
@@ -56,7 +55,7 @@
                 #fileInput
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
-                style="display:none"
+                style="display: none"
                 (change)="onFileSelected($event)"
               />
 
@@ -64,8 +63,16 @@
                 <button
                   pButton
                   type="button"
-                  [label]="uploadingImage ? 'Subiendo...' : (frmProducto.get('imagenUrl')?.value ? 'Cambiar imagen' : 'Subir imagen')"
-                  [icon]="uploadingImage ? 'pi pi-spin pi-spinner' : 'pi pi-upload'"
+                  [label]="
+                    uploadingImage
+                      ? 'Subiendo...'
+                      : frmProducto.get('imagenUrl')?.value
+                        ? 'Cambiar imagen'
+                        : 'Subir imagen'
+                  "
+                  [icon]="
+                    uploadingImage ? 'pi pi-spin pi-spinner' : 'pi pi-upload'
+                  "
                   class="p-button-outlined p-button-sm"
                   [disabled]="uploadingImage"
                   (click)="fileInput.click()"
@@ -87,7 +94,6 @@
                 JPG, PNG, WebP, GIF o AVIF · máx. 10 MB
               </small>
             </div>
-
           </div>
 
           <!-- ── Estado ─────────────────────────────────────── -->
@@ -265,94 +271,15 @@
           </div>
         </div>
       </p-tabPanel>
-      <!-- ─── Tab 2: Precios e impuestos ─────────────────────────────────
-──────────────────────────────────────────────────────────────────── -->
-
+      <!-- ─── Tab 2: Precios e IVA ──────────────────────────── -->
       <p-tabPanel>
         <ng-template pTemplate="header">
           <span class="tab-label">
-            <i class="pi pi-dollar"></i> Impuestos
+            <i class="pi pi-dollar"></i> Precios e IVA
           </span>
         </ng-template>
 
         <div class="form-container">
-          <!-- Nota informativa — precio se define en presentaciones -->
-          <div class="precio-info-card">
-            <div class="precio-info-icon">
-              <i class="pi pi-lightbulb"></i>
-            </div>
-            <div class="precio-info-content">
-              <span class="precio-info-title"
-                >El precio se define en las presentaciones</span
-              >
-              <span class="precio-info-sub">
-                Ve al tab <strong>Presentaciones</strong>, agrega la
-                presentación de compra (ej: Caja x 100) con su costo y precio, y
-                el sistema calculará automáticamente el precio por unidad base.
-              </span>
-            </div>
-          </div>
-
-          <!-- Precio y costo base — solo lectura, calculado desde presentación de compra -->
-          <div
-            class="field-row"
-            *ngIf="
-              frmProducto.get('precio')?.value > 0 ||
-              frmProducto.get('costo')?.value > 0
-            "
-          >
-            <div class="field">
-              <label>Precio unitario base</label>
-              <div class="precio-calculado">
-                <span class="precio-calculado-valor">
-                  {{
-                    frmProducto.get("precio")?.value
-                      | currency: "COP" : "symbol-narrow" : "1.0-2"
-                  }}
-                </span>
-                <span class="precio-calculado-hint">
-                  <i class="pi pi-info-circle"></i>
-                  Calculado desde la presentación de compra
-                </span>
-              </div>
-            </div>
-            <div class="field">
-              <label>Costo unitario base</label>
-              <div class="precio-calculado">
-                <span class="precio-calculado-valor">
-                  {{
-                    frmProducto.get("costo")?.value
-                      | currency: "COP" : "symbol-narrow" : "1.0-2"
-                  }}
-                </span>
-                <span class="precio-calculado-hint">
-                  <i class="pi pi-info-circle"></i>
-                  Calculado desde la presentación de compra
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Margen — solo si ya hay precio calculado -->
-          <div class="margen-card" *ngIf="frmProducto.get('precio')?.value > 0">
-            <div class="margen-info">
-              <i class="pi pi-percentage"></i>
-              <span>Margen de utilidad estimado (por unidad base)</span>
-            </div>
-            <span
-              class="margen-value"
-              [class.margen-ok]="margenUtilidad >= 20"
-              [class.margen-warn]="margenUtilidad > 0 && margenUtilidad < 20"
-              [class.margen-neg]="margenUtilidad <= 0"
-            >
-              {{ margenUtilidad }}%
-            </span>
-          </div>
-
-          <p-divider align="left">
-            <span class="divider-label">Impuestos</span>
-          </p-divider>
-
           <!-- IVA + Impoconsumo -->
           <div class="field-row">
             <div class="field">
@@ -368,6 +295,7 @@
                 suffix="%"
                 styleClass="w-full"
                 placeholder="0"
+                (onInput)="onIvaInput($event)"
               />
               <small class="field-hint">
                 <i class="pi pi-info-circle"></i> Valores comunes: 0%, 5%, 19%
@@ -394,57 +322,192 @@
             </div>
           </div>
 
-          <!-- Resumen precio final — solo si hay precio calculado -->
+          <!-- Toggle IVA incluido — solo cuando IVA > 0 -->
+          <div
+            class="field-inline iva-incluido-switch"
+            [class.iva-incluido-switch--on]="ivaIncluidoValue"
+            *ngIf="ivaActivo"
+          >
+            <div class="switch-label">
+              <span class="label-text">
+                <i class="pi pi-percentage"></i>
+                El precio ya incluye IVA
+              </span>
+              <span class="label-sub" *ngIf="!ivaIncluidoValue">
+                Actívalo si el precio que ingresas ya tiene el IVA adentro
+                (precio final al cliente).
+              </span>
+              <span class="label-sub" *ngIf="ivaIncluidoValue">
+                El precio ingresado ya tiene el IVA incluido. El sistema extrae
+                la base automáticamente.
+              </span>
+            </div>
+            <p-toggleswitch formControlName="ivaIncluido"></p-toggleswitch>
+          </div>
+
+          <!-- Costo + Precio de venta -->
+          <div class="field-row">
+            <div class="field">
+              <label for="costo"
+                >Costo unitario <span class="required">*</span></label
+              >
+              <p-inputNumber
+                inputId="costo"
+                formControlName="costo"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [minFractionDigits]="0"
+                [min]="0"
+                styleClass="w-full"
+                placeholder="0"
+              />
+              <small class="field-hint">
+                <i class="pi pi-info-circle"></i> Costo por unidad base
+              </small>
+            </div>
+            <div class="field">
+              <label for="precio">
+                {{
+                  ivaIncluidoValue
+                    ? "Precio de venta (IVA incluido)"
+                    : "Precio de venta"
+                }}
+                <span class="required">*</span>
+              </label>
+              <p-inputNumber
+                inputId="precio"
+                formControlName="precio"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [minFractionDigits]="0"
+                [min]="0"
+                styleClass="w-full"
+                placeholder="0"
+              />
+              <small class="field-hint" *ngIf="!ivaIncluidoValue">
+                <i class="pi pi-info-circle"></i> Precio por unidad base (sin
+                IVA)
+              </small>
+              <small
+                class="field-hint iva-base-hint"
+                *ngIf="
+                  ivaIncluidoValue &&
+                  frmProducto.get('ivaPorcentaje')?.value > 0 &&
+                  frmProducto.get('precio')?.value > 0
+                "
+              >
+                <i class="pi pi-calculator"></i>
+                Base sin IVA ({{ frmProducto.get("ivaPorcentaje")?.value }}%):
+                <strong>{{
+                  precioBaseSinIva | currency: "COP" : "symbol-narrow" : "1.0-0"
+                }}</strong>
+                · IVA:
+                <strong>{{
+                  ivaCalculado | currency: "COP" : "symbol-narrow" : "1.0-0"
+                }}</strong>
+              </small>
+            </div>
+          </div>
+
+          <!-- Precio 2 y Precio 3 -->
+          <div class="field-row">
+            <div class="field">
+              <label>Precio 2 <span class="optional">(opcional)</span></label>
+              <p-inputNumber
+                formControlName="precio2"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [minFractionDigits]="0"
+                [min]="0"
+                styleClass="w-full"
+                placeholder="0"
+              />
+            </div>
+            <div class="field">
+              <label>Precio 3 <span class="optional">(opcional)</span></label>
+              <p-inputNumber
+                formControlName="precio3"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [minFractionDigits]="0"
+                [min]="0"
+                styleClass="w-full"
+                placeholder="0"
+              />
+            </div>
+          </div>
+
+          <!-- Margen de utilidad -->
+          <div class="margen-card" *ngIf="frmProducto.get('precio')?.value > 0">
+            <div class="margen-info">
+              <i class="pi pi-percentage"></i>
+              <span>Margen de utilidad</span>
+            </div>
+            <span
+              class="margen-value"
+              [class.margen-ok]="margenUtilidad >= 20"
+              [class.margen-warn]="margenUtilidad > 0 && margenUtilidad < 20"
+              [class.margen-neg]="margenUtilidad <= 0"
+            >
+              {{ margenUtilidad }}%
+            </span>
+          </div>
+
+          <!-- Resumen precio final -->
           <div
             class="precio-resumen"
             *ngIf="frmProducto.get('precio')?.value > 0"
           >
-            <div class="pr-row">
-              <span>Precio unitario base</span>
-              <span class="numeric">
-                {{
-                  frmProducto.get("precio")?.value
-                    | currency: "COP" : "symbol-narrow" : "1.0-0"
-                }}
+            <div
+              class="pr-row pr-iva-badge"
+              *ngIf="
+                ivaIncluidoValue && frmProducto.get('ivaPorcentaje')?.value > 0
+              "
+            >
+              <span class="iva-incluido-tag">
+                <i class="pi pi-check-circle"></i> IVA incluido en el precio
               </span>
             </div>
-            <div
-              class="pr-row"
-              *ngIf="frmProducto.get('ivaPorcentaje')?.value > 0"
-            >
-              <span>IVA ({{ frmProducto.get("ivaPorcentaje")?.value }}%)</span>
-              <span class="numeric">
-                {{
-                  (frmProducto.get("precio")?.value *
-                    frmProducto.get("ivaPorcentaje")?.value) /
-                    100 | currency: "COP" : "symbol-narrow" : "1.0-0"
-                }}
+            <div class="pr-row">
+              <span>{{
+                ivaIncluidoValue && frmProducto.get("ivaPorcentaje")?.value > 0
+                  ? "Base sin IVA"
+                  : "Precio unitario base"
+              }}</span>
+              <span class="numeric">{{
+                precioBaseSinIva | currency: "COP" : "symbol-narrow" : "1.0-0"
+              }}</span>
+            </div>
+            <div class="pr-row" *ngIf="ivaActivo">
+              <span
+                >IVA ({{ frmProducto.get("ivaPorcentaje")?.value }}%)
+                <small *ngIf="ivaIncluidoValue" class="iva-modo-hint"
+                  >incluido</small
+                >
               </span>
+              <span class="numeric">{{
+                ivaCalculado | currency: "COP" : "symbol-narrow" : "1.0-0"
+              }}</span>
             </div>
             <div
               class="pr-row"
               *ngIf="frmProducto.get('impoconsumo')?.value > 0"
             >
               <span>Impoconsumo</span>
-              <span class="numeric">
-                {{
-                  frmProducto.get("impoconsumo")?.value
-                    | currency: "COP" : "symbol-narrow" : "1.0-0"
-                }}
-              </span>
+              <span class="numeric">{{
+                frmProducto.get("impoconsumo")?.value
+                  | currency: "COP" : "symbol-narrow" : "1.0-0"
+              }}</span>
             </div>
             <div class="pr-row pr-total">
               <span>Precio final al cliente (por unidad base)</span>
-              <span class="numeric">
-                {{
-                  frmProducto.get("precio")?.value +
-                    (frmProducto.get("precio")?.value *
-                      frmProducto.get("ivaPorcentaje")?.value) /
-                      100 +
-                    frmProducto.get("impoconsumo")?.value
-                    | currency: "COP" : "symbol-narrow" : "1.0-0"
-                }}
-              </span>
+              <span class="numeric">{{
+                precioFinalTotal | currency: "COP" : "symbol-narrow" : "1.0-0"
+              }}</span>
             </div>
           </div>
         </div>
@@ -497,10 +560,7 @@
                   alimentos y medicamentos.
                 </span>
               </div>
-              <p-inputSwitch
-                formControlName="manejaLotes"
-                [disabled]="!manejaInventarioValue"
-              />
+              <p-inputSwitch formControlName="manejaLotes" />
             </div>
 
             <!-- Maneja serial -->
@@ -515,10 +575,7 @@
                   electrónicos y maquinaria.
                 </span>
               </div>
-              <p-inputSwitch
-                formControlName="manejaSerial"
-                [disabled]="!manejaInventarioValue"
-              />
+              <p-inputSwitch formControlName="manejaSerial" />
             </div>
 
             <!-- Permitir stock negativo -->
@@ -530,14 +587,12 @@
                 </span>
                 <span class="label-sub">
                   Permite vender aunque no haya stock. El inventario quedará en
-                  negativo hasta que se registre la compra. Útil para carnicerías
-                  y negocios que reciben y venden antes de registrar la compra.
+                  negativo hasta que se registre la compra. Útil para
+                  carnicerías y negocios que reciben y venden antes de registrar
+                  la compra.
                 </span>
               </div>
-              <p-inputSwitch
-                formControlName="permitirStockNegativo"
-                [disabled]="!manejaInventarioValue"
-              />
+              <p-inputSwitch formControlName="permitirStockNegativo" />
             </div>
           </div>
 
@@ -904,117 +959,6 @@
               [disabled]="presentacionEnEdicion !== null"
               (click)="agregarPresentacion()"
             ></button>
-          </div>
-        </div>
-      </p-tabPanel>
-      <p-tabPanel>
-        <ng-template pTemplate="header">
-          <span class="tab-label"> <i class="pi pi-dollar"></i> Precios </span>
-        </ng-template>
-
-        <div class="form-container">
-          <!-- Nota informativa -->
-          <div class="precio-info-card">
-            <div class="precio-info-icon">
-              <i class="pi pi-lightbulb"></i>
-            </div>
-            <div class="precio-info-content">
-              <span class="precio-info-title"
-                >Definir precios base por unidad</span
-              >
-              <span class="precio-info-sub">
-                Estos precios se usarán como base para calcular los precios de
-                las presentaciones.
-              </span>
-            </div>
-          </div>
-
-          <!-- Costo + Precio de venta -->
-          <div class="field-row">
-            <div class="field">
-              <label for="costo"
-                >Costo unitario <span class="required">*</span></label
-              >
-              <p-inputNumber
-                inputId="costo"
-                formControlName="costo"
-                mode="currency"
-                currency="COP"
-                locale="es-CO"
-                [minFractionDigits]="0"
-                [min]="0"
-                styleClass="w-full"
-                placeholder="0"
-              />
-              <small class="field-hint">
-                <i class="pi pi-info-circle"></i> Costo por unidad base
-              </small>
-            </div>
-            <div class="field">
-              <label for="precio"
-                >Precio de venta <span class="required">*</span></label
-              >
-              <p-inputNumber
-                inputId="precio"
-                formControlName="precio"
-                mode="currency"
-                currency="COP"
-                locale="es-CO"
-                [minFractionDigits]="0"
-                [min]="0"
-                styleClass="w-full"
-                placeholder="0"
-              />
-              <small class="field-hint">
-                <i class="pi pi-info-circle"></i> Precio por unidad base
-              </small>
-            </div>
-          </div>
-
-          <!-- Precio 2 y Precio 3 -->
-          <div class="field-row">
-            <div class="field">
-              <label>Precio 2 <span class="optional">(opcional)</span></label>
-              <p-inputNumber
-                formControlName="precio2"
-                mode="currency"
-                currency="COP"
-                locale="es-CO"
-                [minFractionDigits]="0"
-                [min]="0"
-                styleClass="w-full"
-                placeholder="0"
-              />
-            </div>
-            <div class="field">
-              <label>Precio 3 <span class="optional">(opcional)</span></label>
-              <p-inputNumber
-                formControlName="precio3"
-                mode="currency"
-                currency="COP"
-                locale="es-CO"
-                [minFractionDigits]="0"
-                [min]="0"
-                styleClass="w-full"
-                placeholder="0"
-              />
-            </div>
-          </div>
-
-          <!-- Margen de utilidad -->
-          <div class="margen-card" *ngIf="frmProducto.get('precio')?.value > 0">
-            <div class="margen-info">
-              <i class="pi pi-percentage"></i>
-              <span>Margen de utilidad</span>
-            </div>
-            <span
-              class="margen-value"
-              [class.margen-ok]="margenUtilidad >= 20"
-              [class.margen-warn]="margenUtilidad > 0 && margenUtilidad < 20"
-              [class.margen-neg]="margenUtilidad <= 0"
-            >
-              {{ margenUtilidad }}%
-            </span>
           </div>
         </div>
       </p-tabPanel>

@@ -18,7 +18,6 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { DropdownModule } from 'primeng/dropdown';
 import { DividerModule } from 'primeng/divider';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
@@ -32,6 +31,9 @@ import { InventarioService } from '../../../../core/services/inventario.service'
 import { ProductoService } from '../../../../core/services/producto.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 import { IndexDBService } from '../../../../core/services/index-db.service';
+import { BuscadorProductoDialogComponent } from '../../../../shared/components/buscador-producto-dialog/buscador-producto-dialog.component';
+import { ProductoTableModel } from '../../../../core/models/producto.model';
+import { SelectModule } from 'primeng/select';
 
 @Component({
   selector: 'app-form-inventario',
@@ -42,10 +44,11 @@ import { IndexDBService } from '../../../../core/services/index-db.service';
     DialogModule,
     InputTextModule,
     InputNumberModule,
-    DropdownModule,
     DividerModule,
     ButtonModule,
     ToastModule,
+    SelectModule,
+    BuscadorProductoDialogComponent,
   ],
   providers: [MessageService],
   templateUrl: './form-inventario.component.html',
@@ -64,12 +67,17 @@ export class FormInventarioComponent implements OnInit, OnChanges {
   public isSubmitting = false;
   public isLoading = false;
 
-  public productosOpts: { label: string; value: number }[] = [];
   public sucursalesOpts: { label: string; value: number }[] = [];
   private defaultSucursalId: number | null = null;
 
-  // Datos del producto seleccionado para preview
-  public productoPreview: { sku: string | null; tipo: string } | null = null;
+  // Buscador avanzado de producto
+  public showBuscador = false;
+  public productoSeleccionado: {
+    id: number;
+    nombre: string;
+    sku: string | null;
+    tipo: string;
+  } | null = null;
 
   constructor(
     private readonly fb: FormBuilder,
@@ -99,17 +107,10 @@ export class FormInventarioComponent implements OnInit, OnChanges {
       stockActual: [0, [Validators.required, Validators.min(0)]],
       ubicacion: [null, Validators.maxLength(100)],
     });
-
-    this.frmInv.get('productoId')?.valueChanges.subscribe((id) => {
-      const prod = (this as any)._productosData?.find((p: any) => p.id === id);
-      this.productoPreview = prod
-        ? { sku: prod.sku ?? null, tipo: prod.tipoProducto ?? '' }
-        : null;
-    });
   }
 
   private resetForm(): void {
-    this.productoPreview = null;
+    this.productoSeleccionado = null;
     this.frmInv?.reset({
       productoId: null,
       sucursalId: this.isEditMode ? null : this.defaultSucursalId,
@@ -148,24 +149,32 @@ export class FormInventarioComponent implements OnInit, OnChanges {
     }
   }
 
-  async onFiltroProducto(event: { filter: string }): Promise<void> {
-    const q = event.filter?.trim();
-    if (!q || q.length < 2) { this.productosOpts = []; return; }
-    try {
-      const res = await lastValueFrom(this.productoService.search(q));
-      this.productosOpts = (res?.data ?? []).map((p: any) => ({
-        label: p.nombre + (p.sku ? ` [${p.sku}]` : ''),
-        value: p.id,
-      }));
-    } catch { /* no bloquear */ }
+  onProductoSelected(p: ProductoTableModel): void {
+    this.productoSeleccionado = {
+      id: p.id,
+      nombre: p.nombre,
+      sku: p.sku ?? null,
+      tipo: p.tipoProducto ?? '',
+    };
+    this.frmInv.patchValue({ productoId: p.id });
+    this.frmInv.get('productoId')?.markAsTouched();
   }
 
   private async precargarProducto(id: number): Promise<void> {
     try {
       const res = await lastValueFrom(this.productoService.getById(id));
-      if (res?.data)
-        this.productosOpts = [{ label: res.data.nombre, value: res.data.id }];
-    } catch { /* silencioso */ }
+      if (res?.data) {
+        const d = res.data;
+        this.productoSeleccionado = {
+          id: d.id,
+          nombre: d.nombre,
+          sku: d.sku ?? null,
+          tipo: d.tipoProducto ?? '',
+        };
+      }
+    } catch {
+      /* silencioso */
+    }
   }
 
   private async loadData(id: number): Promise<void> {

@@ -46,6 +46,7 @@ import {
   ProductoPresentacionModel,
   UpdateProductoPresentacionDto,
 } from '../../../../core/models/producto-presentacion.model';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 
 // ─── Interfaz local para manejar presentaciones en el form ────────
 export interface PresentacionFormItem {
@@ -78,6 +79,7 @@ export interface PresentacionFormItem {
     ButtonModule,
     DividerModule,
     ToastModule,
+    ToggleSwitchModule,
     ConfirmDialogModule,
   ],
   providers: [MessageService, ConfirmationService],
@@ -106,7 +108,7 @@ export class FormProductosComponent implements OnInit, OnChanges {
   public activeTab = 0;
   public imageError = false;
   public uploadingImage = false;
-
+  public ivaValue = 0;
   // ─── Opciones de dropdowns ───────────────────────────────────────
   public tipoOptions = TIPO_PRODUCTO_OPTIONS;
   public categoriasOpts: { label: string; value: number | null }[] = [
@@ -179,6 +181,7 @@ export class FormProductosComponent implements OnInit, OnChanges {
         0,
         [Validators.required, Validators.min(0), Validators.max(100)],
       ],
+      ivaIncluido: [false],
       impoconsumo: [0, [Validators.required, Validators.min(0)]],
       manejaInventario: [true, Validators.required],
       manejaLotes: [false, Validators.required],
@@ -188,11 +191,32 @@ export class FormProductosComponent implements OnInit, OnChanges {
     });
 
     this.frmProducto.get('manejaInventario')?.valueChanges.subscribe((val) => {
+      const subControls = [
+        'manejaLotes',
+        'manejaSerial',
+        'permitirStockNegativo',
+      ];
       if (!val) {
         this.frmProducto.patchValue({
           manejaLotes: false,
           manejaSerial: false,
+          permitirStockNegativo: false,
         });
+        subControls.forEach((c) =>
+          this.frmProducto.get(c)?.disable({ emitEvent: false }),
+        );
+      } else {
+        subControls.forEach((c) =>
+          this.frmProducto.get(c)?.enable({ emitEvent: false }),
+        );
+      }
+    });
+    this.frmProducto.get('ivaPorcentaje')?.valueChanges.subscribe((val) => {
+      if (!val || val <= 0) {
+        this.frmProducto.patchValue(
+          { ivaIncluido: false },
+          { emitEvent: false },
+        );
       }
     });
   }
@@ -214,6 +238,7 @@ export class FormProductosComponent implements OnInit, OnChanges {
       precio2: null,
       precio3: null,
       ivaPorcentaje: 0,
+      ivaIncluido: false,
       impoconsumo: 0,
       // precio y costo se recalculan desde la presentación de compra
       manejaInventario: true,
@@ -227,6 +252,12 @@ export class FormProductosComponent implements OnInit, OnChanges {
   isInvalid(field: string): boolean {
     const ctrl = this.frmProducto.get(field);
     return !!(ctrl?.invalid && ctrl?.touched);
+  }
+  get ivaActivo(): boolean {
+    return this.ivaValue > 0;
+  }
+  onIvaInput(event: any): void {
+    this.ivaValue = event.value ?? 0;
   }
 
   // ─── Form presentaciones ─────────────────────────────────────────
@@ -597,6 +628,7 @@ export class FormProductosComponent implements OnInit, OnChanges {
           precio2: d.precio2 ?? null,
           precio3: d.precio3 ?? null,
           ivaPorcentaje: d.ivaPorcentaje,
+          ivaIncluido: d.ivaIncluido,
           impoconsumo: d.impoconsumo,
           manejaInventario: d.manejaInventario,
           manejaLotes: d.manejaLotes,
@@ -606,7 +638,22 @@ export class FormProductosComponent implements OnInit, OnChanges {
         },
         { emitEvent: false },
       );
-    }, 0);
+      // Sync enable/disable state for inventory sub-controls
+      const subControls = [
+        'manejaLotes',
+        'manejaSerial',
+        'permitirStockNegativo',
+      ];
+      if (!d.manejaInventario) {
+        subControls.forEach((c) =>
+          this.frmProducto.get(c)?.disable({ emitEvent: false }),
+        );
+      } else {
+        subControls.forEach((c) =>
+          this.frmProducto.get(c)?.enable({ emitEvent: false }),
+        );
+      }
+    }, 0.5);
   }
 
   // ─── Guardar producto ────────────────────────────────────────────
@@ -675,7 +722,7 @@ export class FormProductosComponent implements OnInit, OnChanges {
 
   // ─── Helpers ─────────────────────────────────────────────────────
   private buildDto(): CreateProductoDto {
-    const v = this.frmProducto.value;
+    const v = this.frmProducto.getRawValue();
     return {
       nombre: v.nombre?.trim(),
       sku: v.sku?.trim() || null,
@@ -692,6 +739,7 @@ export class FormProductosComponent implements OnInit, OnChanges {
       precio2: v.precio2 ?? null,
       precio3: v.precio3 ?? null,
       ivaPorcentaje: v.ivaPorcentaje ?? 0,
+      ivaIncluido: v.ivaIncluido ?? false,
       impoconsumo: v.impoconsumo ?? 0,
       manejaInventario: v.manejaInventario,
       manejaLotes: v.manejaLotes,
@@ -706,6 +754,39 @@ export class FormProductosComponent implements OnInit, OnChanges {
     const costo = this.frmProducto.get('costo')?.value ?? 0;
     if (!costo || !precio) return 0;
     return Math.round(((precio - costo) / precio) * 100 * 10) / 10;
+  }
+
+  get ivaIncluidoValue(): boolean {
+    return this.frmProducto.get('ivaIncluido')?.value ?? false;
+  }
+
+  /** Precio base sin IVA: si ivaIncluido=true, extrae la base; si no, es el mismo precio */
+  get precioBaseSinIva(): number {
+    const precio = this.frmProducto.get('precio')?.value ?? 0;
+    const iva = this.frmProducto.get('ivaPorcentaje')?.value ?? 0;
+    if (!this.ivaIncluidoValue || !iva) return precio;
+    return Math.round(precio / (1 + iva / 100));
+  }
+
+  /** Monto del IVA calculado */
+  get ivaCalculado(): number {
+    const precio = this.frmProducto.get('precio')?.value ?? 0;
+    const iva = this.frmProducto.get('ivaPorcentaje')?.value ?? 0;
+    if (!iva) return 0;
+    if (this.ivaIncluidoValue) {
+      return precio - this.precioBaseSinIva;
+    }
+    return Math.round((precio * iva) / 100);
+  }
+
+  /** Precio final que paga el cliente */
+  get precioFinalTotal(): number {
+    const precio = this.frmProducto.get('precio')?.value ?? 0;
+    const impoconsumo = this.frmProducto.get('impoconsumo')?.value ?? 0;
+    if (this.ivaIncluidoValue) {
+      return precio + impoconsumo;
+    }
+    return precio + this.ivaCalculado + impoconsumo;
   }
 
   get manejaInventarioValue(): boolean {
@@ -735,13 +816,25 @@ export class FormProductosComponent implements OnInit, OnChanges {
 
     if (!file) return;
 
-    const tiposPermitidos = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif'];
+    const tiposPermitidos = [
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'image/gif',
+      'image/avif',
+    ];
     if (!tiposPermitidos.includes(file.type)) {
-      this.alertService.showError('Formato inválido', 'Solo se permiten imágenes JPG, PNG, WebP, GIF o AVIF.');
+      this.alertService.showError(
+        'Formato inválido',
+        'Solo se permiten imágenes JPG, PNG, WebP, GIF o AVIF.',
+      );
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      this.alertService.showError('Archivo muy grande', 'La imagen no puede superar los 10 MB.');
+      this.alertService.showError(
+        'Archivo muy grande',
+        'La imagen no puede superar los 10 MB.',
+      );
       return;
     }
 
@@ -753,7 +846,10 @@ export class FormProductosComponent implements OnInit, OnChanges {
         this.uploadingImage = false;
       },
       error: () => {
-        this.alertService.showError('Error', 'No se pudo subir la imagen. Intenta de nuevo.');
+        this.alertService.showError(
+          'Error',
+          'No se pudo subir la imagen. Intenta de nuevo.',
+        );
         this.uploadingImage = false;
       },
     });
