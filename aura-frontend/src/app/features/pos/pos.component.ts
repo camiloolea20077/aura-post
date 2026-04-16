@@ -815,12 +815,15 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       // presentacionPrecio viene CON IVA incluido → dividimos para obtener el base
       // calcLine luego le suma el IVA y el subtotal coincide con el precio configurado
       let precioBase: number;
+      const ivaFactor = 1 + (p.ivaPorcentaje ?? 0) / 100;
       if (p.presentacionPrecio != null && p.presentacionPrecio > 0) {
-        const ivaFactor = 1 + (p.ivaPorcentaje ?? 0) / 100;
         precioBase =
           ivaFactor > 0
             ? round2(p.presentacionPrecio / ivaFactor)
             : p.presentacionPrecio;
+      } else if (p.ivaIncluido && ivaFactor > 1) {
+        // El precio del producto ya tiene IVA adentro → extraemos la base
+        precioBase = round2((p.precioFinal ?? p.precio ?? 0) / ivaFactor);
       } else {
         precioBase = p.precioFinal ?? p.precio ?? 0;
       }

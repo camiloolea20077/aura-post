@@ -95,5 +95,7 @@ export interface LineaFormOC {
   productoNombre: string;
   cantidad: number;
   costoUnitario: number;
+  ivaPorcentaje: number;
+  ivaIncluido: boolean;
   subtotal: number;
 }

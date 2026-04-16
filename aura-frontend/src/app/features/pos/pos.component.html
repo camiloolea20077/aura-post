@@ -177,8 +177,9 @@
                 formatCOP(
                   p.presentacionPrecio != null && p.presentacionPrecio > 0
                     ? p.presentacionPrecio
-                    : (p.precioFinal || p.precio) *
-                        (1 + (p.ivaPorcentaje || 0) / 100)
+                    : p.ivaIncluido
+                      ? (p.precioFinal || p.precio)
+                      : (p.precioFinal || p.precio) * (1 + (p.ivaPorcentaje || 0) / 100)
                 )
               }}
             </span>
