@@ -7,13 +7,6 @@
         <p class="page-sub">Pedidos tomados por vendedores en campo</p>
       </div>
     </div>
-    <button
-      pButton
-      icon="pi pi-plus"
-      label="Nueva venta"
-      class="btn-aura"
-      (click)="abrirNueva()"
-    ></button>
   </div>
 
   <div class="card">
@@ -35,9 +28,7 @@
             <i class="pi pi-times"></i>
           </button>
         </span>
-        <span class="total-badge" *ngIf="!loadingTable"
-          >{{ totalRecords }} pedidos</span
-        >
+        <span class="total-badge" *ngIf="!loadingTable">{{ totalRecords }} pedidos</span>
       </div>
     </div>
 
@@ -76,8 +67,8 @@
           <th style="min-width: 140px">Cliente</th>
           <th style="width: 120px" class="text-right">Total</th>
           <th style="width: 110px" class="text-center">Estado</th>
-          <th pSortableColumn="pv.fecha_creacion" style="min-width: 120px">
-            Fecha <p-sortIcon field="pv.fecha_creacion" />
+          <th pSortableColumn="pv.created_at" style="min-width: 120px">
+            Fecha <p-sortIcon field="pv.created_at" />
           </th>
           <th style="min-width: 160px" class="text-center">Acciones</th>
         </tr>
@@ -89,32 +80,30 @@
             <span class="id-badge">#{{ item.id }}</span>
           </td>
           <td>
-            <span class="numero-pedido">{{ item.numeroPedido ?? "—" }}</span>
+            <span class="numero-pedido">{{ item.numeroPedido ?? '—' }}</span>
           </td>
           <td>
             <div class="cell-persona">
               <div class="persona-av vendedor-av">
-                {{ item.vendedorNombre.charAt(0).toUpperCase() }}
+                {{ item.vendedorNombre ? item.vendedorNombre.charAt(0).toUpperCase() : '?' }}
               </div>
-              <span class="persona-n">{{ item.vendedorNombre }}</span>
+              <span class="persona-n">{{ item.vendedorNombre ?? '—' }}</span>
             </div>
           </td>
           <td>
-            <div
-              class="cell-persona"
-              *ngIf="item.clienteNombre; else sinCliente"
-            >
+            <div class="cell-persona"
+              *ngIf="item.clienteNombre && item.clienteNombre !== 'Consumidor final'; else sinCliente">
               <div class="persona-av">
-                {{ item.clienteNombre.charAt(0).toUpperCase() }}
+                {{ item.clienteNombre!.charAt(0).toUpperCase() }}
               </div>
               <span class="persona-n">{{ item.clienteNombre }}</span>
             </div>
             <ng-template #sinCliente>
-              <span class="text-muted">Consumidor final</span>
+              <span class="text-muted">{{ item.clienteNombre ?? 'Consumidor final' }}</span>
             </ng-template>
           </td>
           <td class="text-right">
-            <span class="monto-val">{{ formatCOP(item.totalPagar) }}</span>
+            <span class="monto-val">{{ formatCOP(item.total) }}</span>
           </td>
           <td class="text-center">
             <p-tag
@@ -124,19 +113,27 @@
             />
           </td>
           <td>
-            <span class="fecha-val">{{ formatFecha(item.fechaCreacion) }}</span>
+            <span class="fecha-val">{{ formatFecha(item.createdAt) }}</span>
           </td>
           <td class="text-center">
-            <!-- PENDIENTE_DESPACHO -->
-            <ng-container *ngIf="item.estado === 'PENDIENTE_DESPACHO'">
+            <!-- CREADA o PENDIENTE_DESPACHO -->
+            <ng-container *ngIf="item.estado === 'CREADA' || item.estado === 'PENDIENTE_DESPACHO'">
               <button
                 pButton
                 icon="pi pi-truck"
                 class="p-button-text p-button-sm action-despachar"
                 pTooltip="Despachar"
                 tooltipPosition="top"
-                [loading]="loadingAccion"
-                (click)="confirmarDespachar(item, $event)"
+                (click)="abrirDespachar(item, $event)"
+              ></button>
+              <button
+                *ngIf="item.ventaId"
+                pButton
+                icon="pi pi-print"
+                class="p-button-text p-button-sm action-print"
+                pTooltip="Imprimir tirilla"
+                tooltipPosition="top"
+                (click)="imprimirTirilla(item, $event)"
               ></button>
               <button
                 pButton
@@ -159,6 +156,15 @@
                 (click)="abrirCobro(item, $event)"
               ></button>
               <button
+                *ngIf="item.ventaId"
+                pButton
+                icon="pi pi-print"
+                class="p-button-text p-button-sm action-print"
+                pTooltip="Imprimir tirilla"
+                tooltipPosition="top"
+                (click)="imprimirTirilla(item, $event)"
+              ></button>
+              <button
                 pButton
                 icon="pi pi-times-circle"
                 class="p-button-text p-button-sm action-anular"
@@ -168,10 +174,8 @@
               ></button>
             </ng-container>
 
-            <!-- COBRADA o ANULADA -->
-            <ng-container
-              *ngIf="item.estado === 'COBRADA' || item.estado === 'ANULADA'"
-            >
+            <!-- COBRADA -->
+            <ng-container *ngIf="item.estado === 'COBRADA'">
               <button
                 pButton
                 icon="pi pi-eye"
@@ -179,6 +183,44 @@
                 pTooltip="Ver detalle"
                 tooltipPosition="top"
                 (click)="abrirDetalle(item, $event)"
+              ></button>
+              <button
+                *ngIf="item.ventaId"
+                pButton
+                icon="pi pi-print"
+                class="p-button-text p-button-sm action-print"
+                pTooltip="Imprimir tirilla"
+                tooltipPosition="top"
+                (click)="imprimirTirilla(item, $event)"
+              ></button>
+              <button
+                pButton
+                icon="pi pi-times-circle"
+                class="p-button-text p-button-sm action-anular"
+                pTooltip="Anular"
+                tooltipPosition="top"
+                (click)="confirmarAnular(item, $event)"
+              ></button>
+            </ng-container>
+
+            <!-- ANULADA -->
+            <ng-container *ngIf="item.estado === 'ANULADA'">
+              <button
+                pButton
+                icon="pi pi-eye"
+                class="p-button-text p-button-sm action-view"
+                pTooltip="Ver detalle"
+                tooltipPosition="top"
+                (click)="abrirDetalle(item, $event)"
+              ></button>
+              <button
+                *ngIf="item.ventaId"
+                pButton
+                icon="pi pi-print"
+                class="p-button-text p-button-sm action-print"
+                pTooltip="Imprimir tirilla"
+                tooltipPosition="top"
+                (click)="imprimirTirilla(item, $event)"
               ></button>
             </ng-container>
           </td>
@@ -190,13 +232,7 @@
           <td colspan="8">
             <div class="empty-state">
               <i class="pi pi-car"></i>
-              <p>
-                {{
-                  searchQuery || filtroEstado
-                    ? "Sin resultados"
-                    : "No hay pedidos registrados"
-                }}
-              </p>
+              <p>{{ searchQuery || filtroEstado ? 'Sin resultados' : 'No hay pedidos registrados' }}</p>
             </div>
           </td>
         </tr>
@@ -208,28 +244,95 @@
           <td><p-skeleton width="90px" /></td>
           <td><p-skeleton /></td>
           <td><p-skeleton /></td>
-          <td class="text-right">
-            <p-skeleton width="90px" styleClass="ml-auto" />
-          </td>
-          <td class="text-center">
-            <p-skeleton width="80px" styleClass="mx-auto" />
-          </td>
+          <td class="text-right"><p-skeleton width="90px" styleClass="ml-auto" /></td>
+          <td class="text-center"><p-skeleton width="80px" styleClass="mx-auto" /></td>
           <td><p-skeleton width="100px" /></td>
-          <td class="text-center">
-            <p-skeleton width="80px" styleClass="mx-auto" />
-          </td>
+          <td class="text-center"><p-skeleton width="80px" styleClass="mx-auto" /></td>
         </tr>
       </ng-template>
     </p-table>
   </div>
 </div>
 
-<!-- Modal Nueva Venta -->
-<app-form-pedido-vendedor
-  [displayModal]="showNueva"
-  (modalClosed)="onNuevaModalClosed()"
-  (pedidoCreado)="onPedidoCreado()"
-/>
+<!-- Modal Despachar -->
+<p-dialog
+  header="Despachar pedido"
+  [(visible)]="showDespachar"
+  [modal]="true"
+  [style]="{ width: '560px' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="cerrarDespachar()"
+>
+  <div class="despachar-body" *ngIf="pedidoADespachar">
+    <!-- Cabecera del pedido -->
+    <div class="despachar-info">
+      <i class="pi pi-truck despachar-icon"></i>
+      <div>
+        <p class="despachar-pedido-num">
+          Pedido <strong>{{ pedidoADespachar.numeroPedido ?? '#' + pedidoADespachar.id }}</strong>
+        </p>
+        <p class="despachar-vendedor">
+          Vendedor: {{ pedidoADespachar.vendedorNombre ?? '—' }}
+        </p>
+        <p class="despachar-vendedor">
+          Cliente: <strong>{{ pedidoADespachar.clienteNombre ?? 'Consumidor final' }}</strong>
+        </p>
+        <p class="despachar-total">
+          Total: <strong>{{ formatCOP(pedidoADespachar.total) }}</strong>
+        </p>
+      </div>
+    </div>
+
+    <!-- Productos a despachar -->
+    <div class="despachar-productos-titulo">
+      <i class="pi pi-box"></i> Productos a despachar
+    </div>
+
+    <!-- Loading -->
+    <div class="despachar-loading" *ngIf="loadingDespacharDetalle">
+      <p-skeleton height="36px" styleClass="mb-2" />
+      <p-skeleton height="36px" styleClass="mb-2" />
+      <p-skeleton height="36px" />
+    </div>
+
+    <!-- Lista de productos -->
+    <div class="despachar-items" *ngIf="!loadingDespacharDetalle && pedidoADespacharDetalle?.detalles?.length">
+      <div class="despachar-item" *ngFor="let det of pedidoADespacharDetalle!.detalles">
+        <div class="despachar-item-left">
+          <span class="despachar-item-qty">{{ det.cantidad }}</span>
+          <div class="despachar-item-info">
+            <span class="despachar-item-nombre">{{ det.productoNombre }}</span>
+            <span class="despachar-item-sku" *ngIf="det.productoSku">{{ det.productoSku }}</span>
+          </div>
+        </div>
+        <span class="despachar-item-precio">{{ formatCOP(det.subtotalLinea) }}</span>
+      </div>
+    </div>
+
+    <p class="despachar-confirm-text">
+      ¿Confirmar el despacho? El estado cambiará a <strong>Despachada</strong>.
+    </p>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      class="p-button-text"
+      (click)="cerrarDespachar()"
+      [disabled]="loadingDespachar"
+    ></button>
+    <button
+      pButton
+      label="Confirmar despacho"
+      icon="pi pi-truck"
+      class="p-button-primary"
+      [loading]="loadingDespachar"
+      (click)="confirmarDespachar()"
+    ></button>
+  </ng-template>
+</p-dialog>
 
 <!-- Modal Registrar Cobro -->
 <p-dialog
@@ -243,12 +346,8 @@
 >
   <div class="cobro-body" *ngIf="pedidoSeleccionado">
     <p class="cobro-pedido-info">
-      Pedido
-      <strong>{{
-        pedidoSeleccionado.numeroPedido ?? "#" + pedidoSeleccionado.id
-      }}</strong>
-      &mdash; Total:
-      <strong>{{ formatCOP(pedidoSeleccionado.totalPagar) }}</strong>
+      Pedido <strong>{{ pedidoSeleccionado.numeroPedido ?? '#' + pedidoSeleccionado.id }}</strong>
+      &mdash; Total: <strong>{{ formatCOP(pedidoSeleccionado.total) }}</strong>
     </p>
 
     <div class="form-field">
@@ -314,9 +413,7 @@
       <div class="detalle-meta-row">
         <div class="detalle-meta">
           <span class="meta-label">N° Pedido</span>
-          <span class="meta-value mono">{{
-            pedidoDetalle.numeroPedido ?? "—"
-          }}</span>
+          <span class="meta-value mono">{{ pedidoDetalle.numeroPedido ?? '—' }}</span>
         </div>
         <div class="detalle-meta">
           <span class="meta-label">Estado</span>
@@ -328,21 +425,17 @@
         </div>
         <div class="detalle-meta">
           <span class="meta-label">Fecha</span>
-          <span class="meta-value">{{
-            formatFecha(pedidoDetalle.fechaCreacion)
-          }}</span>
+          <span class="meta-value">{{ formatFecha(pedidoDetalle.createdAt) }}</span>
         </div>
       </div>
       <div class="detalle-meta-row">
         <div class="detalle-meta">
           <span class="meta-label">Vendedor</span>
-          <span class="meta-value">{{ pedidoDetalle.vendedorNombre }}</span>
+          <span class="meta-value">{{ pedidoDetalle.vendedorNombre ?? '—' }}</span>
         </div>
         <div class="detalle-meta">
           <span class="meta-label">Cliente</span>
-          <span class="meta-value">{{
-            pedidoDetalle.clienteNombre ?? "Consumidor final"
-          }}</span>
+          <span class="meta-value">{{ pedidoDetalle.clienteNombre ?? 'Consumidor final' }}</span>
         </div>
       </div>
       <div class="detalle-meta-row" *ngIf="pedidoDetalle.observaciones">
@@ -368,9 +461,7 @@
         <tr *ngFor="let det of pedidoDetalle.detalles">
           <td>
             <div class="item-nombre">{{ det.productoNombre }}</div>
-            <div class="item-sku" *ngIf="det.productoSku">
-              {{ det.productoSku }}
-            </div>
+            <div class="item-sku" *ngIf="det.productoSku">{{ det.productoSku }}</div>
           </td>
           <td class="text-center">{{ det.cantidad }}</td>
           <td class="text-right">{{ formatCOP(det.precioUnitario) }}</td>
@@ -388,30 +479,30 @@
       </div>
       <div class="total-row" *ngIf="pedidoDetalle.descuentoTotal > 0">
         <span>Descuento</span>
-        <span class="text-danger"
-          >-{{ formatCOP(pedidoDetalle.descuentoTotal) }}</span
-        >
+        <span class="text-danger">-{{ formatCOP(pedidoDetalle.descuentoTotal) }}</span>
       </div>
       <div class="total-row">
         <span>IVA</span>
-        <span>{{ formatCOP(pedidoDetalle.impuestosTotal) }}</span>
+        <span>{{ formatCOP(pedidoDetalle.impuestoTotal) }}</span>
       </div>
       <div class="total-row total-final">
         <span>Total</span>
-        <span>{{ formatCOP(pedidoDetalle.totalPagar) }}</span>
+        <span>{{ formatCOP(pedidoDetalle.total) }}</span>
       </div>
     </div>
   </div>
 
   <ng-template pTemplate="footer">
-    <button
-      pButton
-      label="Cerrar"
-      class="p-button-text"
-      (click)="cerrarDetalle()"
-    ></button>
+    <button pButton label="Cerrar" class="p-button-text" (click)="cerrarDetalle()"></button>
   </ng-template>
 </p-dialog>
+
+<!-- Modal Tirilla -->
+<app-modal-tirilla
+  [displayModal]="showTirilla"
+  [venta]="ventaTirilla"
+  (modalClosed)="cerrarTirilla()"
+/>
 
 <p-toast />
 <p-confirmDialog />

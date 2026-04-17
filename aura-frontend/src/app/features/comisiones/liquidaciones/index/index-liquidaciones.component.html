@@ -9,8 +9,8 @@
         <i class="pi pi-wallet"></i>
       </div>
       <div>
-        <h2 class="header-title">Liquidaciones de Técnicos</h2>
-        <p class="header-sub">Pagos de comisiones por servicios realizados</p>
+        <h2 class="header-title">Liquidaciones de Comisiones</h2>
+        <p class="header-sub">Pagos de comisiones a técnicos y vendedores</p>
       </div>
     </div>
     <button
@@ -30,6 +30,17 @@
         <p-dropdown
           [(ngModel)]="filtroEstado"
           [options]="estadoOptions"
+          optionLabel="label"
+          optionValue="value"
+          (onChange)="onFiltroChange()"
+          styleClass="filter-dropdown"
+        />
+      </div>
+      <div class="filter-wrap">
+        <label class="filter-label">Tipo:</label>
+        <p-dropdown
+          [(ngModel)]="filtroTipo"
+          [options]="tipoOptions"
           optionLabel="label"
           optionValue="value"
           (onChange)="onFiltroChange()"
@@ -56,13 +67,14 @@
     >
       <ng-template pTemplate="header">
         <tr>
+          <th style="width: 90px; text-align: center">Tipo</th>
           <th pSortableColumn="tecnicoNombre">
-            Técnico <p-sortIcon field="tecnicoNombre" />
+            Persona <p-sortIcon field="tecnicoNombre" />
           </th>
           <th style="width: 130px">Desde</th>
           <th style="width: 130px">Hasta</th>
-          <th style="width: 100px; text-align: center">Servicios</th>
-          <th style="width: 150px; text-align: right">Total técnico</th>
+          <th style="width: 100px; text-align: center">Ítems</th>
+          <th style="width: 150px; text-align: right">Total</th>
           <th style="width: 100px; text-align: center">Estado</th>
           <th style="width: 110px; text-align: center">Fecha pago</th>
           <th style="width: 100px; text-align: center">Acciones</th>
@@ -71,6 +83,12 @@
 
       <ng-template pTemplate="body" let-liq>
         <tr class="clickable-row" (click)="verDetalle(liq.id, $event)">
+          <td style="text-align: center">
+            <p-tag
+              [value]="liq.tipo === 'VENDEDOR' ? 'Vendedor' : 'Técnico'"
+              [severity]="liq.tipo === 'VENDEDOR' ? 'info' : 'secondary'"
+            />
+          </td>
           <td class="fw-600">{{ liq.tecnicoNombre }}</td>
           <td class="text-muted mono">{{ liq.fechaDesde }}</td>
           <td class="text-muted mono">{{ liq.fechaHasta }}</td>
@@ -113,7 +131,7 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="8" class="empty-row">
+          <td colspan="9" class="empty-row">
             <i class="pi pi-wallet" style="font-size: 2rem; opacity: 0.2"></i>
             <p>No hay liquidaciones registradas</p>
           </td>
@@ -122,6 +140,7 @@
 
       <ng-template pTemplate="loadingbody">
         <tr *ngFor="let i of [1, 2, 3, 4, 5]">
+          <td><p-skeleton /></td>
           <td><p-skeleton /></td>
           <td><p-skeleton /></td>
           <td><p-skeleton /></td>
