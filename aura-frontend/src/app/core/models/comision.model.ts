@@ -51,6 +51,7 @@ export interface UpdateComisionConfigDto extends CreateComisionConfigDto {
 
 export type TipoComision = 'PORCENTAJE' | 'VALOR_FIJO';
 export type ModalidadComision = 'SERVICIO' | 'VENTA';
+export type TipoLiquidacion = 'TECNICO' | 'VENDEDOR';
 
 export interface ComisionConfigFilterParams {
   search?: string | null;
@@ -64,6 +65,8 @@ export interface ComisionVentaModel {
   id: number;
   ventaId: number;
   ventaDetalleId: number;
+  ventaConsecutivo: number | null;
+  ventaFecha: string | null;
   productoNombre: string;
   tecnicoNombre: string;
   valorTotal: number;
@@ -85,6 +88,7 @@ export interface ComisionLiquidacionModel {
   totalServicios: number;
   valorTotal: number;
   estado: EstadoLiquidacion;
+  tipo: TipoLiquidacion;
   observaciones: string | null;
   fechaPago: string | null;
   createdAt: string;
@@ -99,13 +103,17 @@ export interface ComisionLiquidacionTableModel {
   totalServicios: number;
   valorTotal: number;
   estado: EstadoLiquidacion;
+  tipo: TipoLiquidacion;
   fechaPago: string | null;
 }
 
 export interface CreateLiquidacionDto {
-  tecnicoId: number;
+  tecnicoId?: number | null;    // Para tipo TECNICO
+  vendedorId?: number | null;   // Para tipo VENDEDOR (empleado.id)
   fechaDesde: string;
   fechaHasta: string;
+  tipo: TipoLiquidacion;
+  comisionIds?: number[] | null; // Selección manual; si null/vacío → todas las pendientes
   observaciones?: string | null;
 }
 
@@ -118,6 +126,7 @@ export interface MarcarPagadaDto {
 export interface LiquidacionFilterParams {
   estado?: EstadoLiquidacion | null;
   tecnicoId?: number | null;
+  tipo?: TipoLiquidacion | null;
 }
 
 export type LiquidacionPageableDto = IFilterTable<LiquidacionFilterParams>;

@@ -26,6 +26,7 @@ import { AlertService } from '../../../../shared/pipes/alert.service';
 import {
   ComisionLiquidacionTableModel,
   EstadoLiquidacion,
+  TipoLiquidacion,
 } from '../../../../core/models/comision.model';
 import { CuentaBancariaModel } from '../../../../core/models/cuenta-bancaria.model';
 import { DetalleLiquidacionComponent } from '../detalle/detalle-liquidacion.component';
@@ -63,6 +64,7 @@ export class IndexLiquidacionesComponent implements OnInit {
   lastEvent!: TableLazyLoadEvent;
 
   filtroEstado: EstadoLiquidacion | null = null;
+  filtroTipo: TipoLiquidacion | null = null;
 
   showForm = false;
   showDetalle = false;
@@ -93,6 +95,12 @@ export class IndexLiquidacionesComponent implements OnInit {
     { label: 'Todos', value: null },
     { label: 'Pendiente', value: 'PENDIENTE' },
     { label: 'Pagada', value: 'PAGADA' },
+  ];
+
+  readonly tipoOptions = [
+    { label: 'Todos', value: null },
+    { label: 'Técnico', value: 'TECNICO' },
+    { label: 'Vendedor', value: 'VENDEDOR' },
   ];
 
   constructor(
@@ -138,7 +146,7 @@ export class IndexLiquidacionesComponent implements OnInit {
           rows: event.rows ?? this.rowSize,
           order_by: sortField ?? 'id',
           order: event.sortOrder === 1 ? 'ASC' : 'DESC',
-          params: { estado: this.filtroEstado },
+          params: { estado: this.filtroEstado, tipo: this.filtroTipo },
         }),
       );
       this.rows = res?.data?.content ?? [];

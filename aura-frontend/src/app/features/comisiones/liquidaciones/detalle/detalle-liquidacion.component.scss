@@ -1,144 +1,223 @@
 $indigo: #6366f1;
+$green: #10b981;
 $border: #e2e8f0;
 $text: #1e293b;
 $muted: #94a3b8;
-$green: #10b981;
 $bg: #f8fafc;
-$font: "Outfit", sans-serif;
-$mono: "JetBrains Mono", monospace;
+$font: 'Outfit', sans-serif;
+$mono: 'JetBrains Mono', monospace;
 
-.loading-wrap {
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.skeleton-block {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-// ── Detalle wrapper ───────────────────────────────────────────
-.detalle-wrap {
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-// ── Header ────────────────────────────────────────────────────
-.detalle-header {
+// ── Header del dialog ─────────────────────────────────────────
+.dialog-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.25rem;
-  background: #fff;
-  border-bottom: 1.5px solid $border;
+  width: 100%;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
-.tecnico-info {
+.dialog-header-left {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(99, 102, 241, 0.1);
+.dialog-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
   display: flex;
   align-items: center;
   justify-content: center;
-  i { color: $indigo; font-size: 1rem; }
+  flex-shrink: 0;
+  i { color: white; font-size: 1rem; }
 }
 
-.tecnico-nombre {
-  margin: 0;
+.dialog-title {
+  display: block;
+  font-size: 1rem;
   font-weight: 700;
-  font-size: 0.95rem;
   color: $text;
+  line-height: 1.2;
 }
 
-.tecnico-sub {
-  margin: 0;
-  font-size: 0.75rem;
-  color: $muted;
-}
-
-// ── Resumen ───────────────────────────────────────────────────
-.resumen-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 0 1.25rem;
-}
-
-.resumen-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  padding: 0.4rem 0;
-  border-bottom: 1px dashed $border;
-
-  &:last-child { border-bottom: none; }
-}
-
-.resumen-label {
+.dialog-sub {
+  display: block;
   font-size: 0.78rem;
   color: $muted;
-  font-weight: 500;
+  margin-top: 0.15rem;
 }
 
-.resumen-value {
-  font-size: 0.85rem;
-  color: $text;
-  font-weight: 600;
+.dialog-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
 
-  &.valor-highlight {
-    color: $green;
-    font-family: $mono;
-    font-size: 1rem;
+::ng-deep .btn-pdf.p-button {
+  border: 1.5px solid #c7d2fe !important;
+  background: #eef2ff !important;
+  color: $indigo !important;
+  font-family: $font;
+  font-size: 0.82rem !important;
+
+  &:hover {
+    background: #e0e7ff !important;
+    border-color: $indigo !important;
   }
 }
 
-// ── Servicios ─────────────────────────────────────────────────
-.servicios-section {
-  padding: 0 1.25rem 1.25rem;
+// ── Loading ───────────────────────────────────────────────────
+.loading-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 0.5rem 0;
 }
 
-.section-title {
-  font-size: 0.72rem;
+.skel-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+// ── Body ──────────────────────────────────────────────────────
+.detalle-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+// ── Info grid ─────────────────────────────────────────────────
+.info-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.info-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  background: $bg;
+  border: 1px solid $border;
+  border-radius: 10px;
+  padding: 0.6rem 0.9rem;
+  min-width: 130px;
+  flex: 1;
+
+  &.highlight {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+  }
+
+  &.full {
+    flex: 100%;
+    min-width: 100%;
+  }
+}
+
+.info-label {
+  font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: $muted;
-  margin: 0 0 0.5rem 0;
 }
 
-::ng-deep .detalle-table {
+.info-value {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: $text;
+
+  &.mono { font-family: $mono; }
+  &.green { color: $green; font-size: 1rem; }
+  &.muted { color: #64748b; font-weight: 400; font-size: 0.84rem; }
+}
+
+// ── Section title ─────────────────────────────────────────────
+.section-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: $muted;
+  margin: 0 0 0.5rem;
+}
+
+// ── Tabla ─────────────────────────────────────────────────────
+::ng-deep .liq-table {
   border: 1.5px solid $border;
   border-radius: 10px;
   overflow: hidden;
+  font-family: $font;
 
-  .p-datatable-tbody > tr > td {
-    font-size: 0.78rem;
-    padding: 0.35rem 0.65rem;
-  }
   .p-datatable-thead > tr > th {
-    font-size: 0.72rem;
-    padding: 0.35rem 0.65rem;
     background: $bg;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: $muted;
+    padding: 0.45rem 0.7rem;
+    border-bottom: 1.5px solid $border;
+    border-top: none;
+  }
+
+  .p-datatable-tbody > tr {
+    border-bottom: 1px solid #f1f5f9;
+
+    > td {
+      font-size: 0.83rem;
+      padding: 0.45rem 0.7rem;
+      border: none;
+    }
+
+    &:last-child { border-bottom: none; }
+    &:hover > td { background: rgba(99,102,241,0.025); }
   }
 }
 
-.empty-detalle {
+.text-right { text-align: right !important; }
+.text-center { text-align: center !important; }
+.mono { font-family: $mono; }
+.fw-500 { font-weight: 500; }
+.fw-700 { font-weight: 700; }
+.muted-sm { color: #64748b; font-size: 0.8rem; }
+.color-primary { color: $indigo; }
+
+.empty-msg {
   text-align: center;
   color: $muted;
-  font-size: 0.82rem;
-  padding: 1rem !important;
+  font-size: 0.83rem;
+  padding: 1.5rem !important;
+}
+
+// ── Total footer ──────────────────────────────────────────────
+.total-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1.5rem;
+  border-top: 2px solid $border;
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.total-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.total-val {
+  font-family: $mono;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: $green;
 }
 
 // ── Empty state ───────────────────────────────────────────────
@@ -150,12 +229,6 @@ $mono: "JetBrains Mono", monospace;
   gap: 0.5rem;
   padding: 3rem 1rem;
   color: $muted;
-  i { font-size: 2rem; opacity: 0.2; }
+  i { font-size: 2.5rem; opacity: 0.2; }
   p { margin: 0; font-size: 0.85rem; }
 }
-
-.fw-500 { font-weight: 500; }
-.fw-600 { font-weight: 600; }
-.mono { font-family: $mono; }
-.text-muted { color: $muted; }
-.color-tecnico { color: $indigo; }

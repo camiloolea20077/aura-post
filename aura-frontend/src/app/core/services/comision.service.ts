@@ -16,6 +16,7 @@ import {
   MarcarPagadaDto,
   ReporteTecnicoItem,
   TecnicoDto,
+  TipoLiquidacion,
 } from '../models/comision.model';
 import { environment } from '../../../environments/environment';
 import { ResponseTableModel } from '../../shared/utils/response-table.model';
@@ -31,6 +32,13 @@ export class ComisionService {
   listTecnicos(): Observable<ResponseModel<TecnicoDto[]>> {
     return this.http.get<ResponseModel<TecnicoDto[]>>(
       `${this.baseUrl}/tecnicos`,
+    );
+  }
+
+  // ─── Vendedores disponibles (usuarios de la empresa) ─────
+  listVendedores(): Observable<ResponseModel<TecnicoDto[]>> {
+    return this.http.get<ResponseModel<TecnicoDto[]>>(
+      `${this.baseUrl}/vendedores`,
     );
   }
 
@@ -117,12 +125,27 @@ export class ComisionService {
     );
   }
 
-  // ─── Comisiones pendientes (para crear liquidación) ───────
+  // ─── Comisiones pendientes de técnico (SERVICIO) ─────────
   getVentasPendientes(
     tecnicoId: number,
+    fechaDesde?: string | null,
+    fechaHasta?: string | null,
   ): Observable<ResponseModel<ComisionVentaModel[]>> {
-    return this.http.get<ResponseModel<ComisionVentaModel[]>>(
-      `${this.baseUrl}/pendientes?tecnicoId=${tecnicoId}`,
-    );
+    let url = `${this.baseUrl}/pendientes?tecnicoId=${tecnicoId}`;
+    if (fechaDesde) url += `&fechaDesde=${fechaDesde}`;
+    if (fechaHasta) url += `&fechaHasta=${fechaHasta}`;
+    return this.http.get<ResponseModel<ComisionVentaModel[]>>(url);
+  }
+
+  // ─── Comisiones pendientes de vendedor (VENTA) ───────────
+  getVentasPendientesVendedor(
+    vendedorId: number,
+    fechaDesde?: string | null,
+    fechaHasta?: string | null,
+  ): Observable<ResponseModel<ComisionVentaModel[]>> {
+    let url = `${this.baseUrl}/pendientes/vendedor?vendedorId=${vendedorId}`;
+    if (fechaDesde) url += `&fechaDesde=${fechaDesde}`;
+    if (fechaHasta) url += `&fechaHasta=${fechaHasta}`;
+    return this.http.get<ResponseModel<ComisionVentaModel[]>>(url);
   }
 }

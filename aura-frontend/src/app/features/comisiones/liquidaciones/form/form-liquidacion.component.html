@@ -3,60 +3,66 @@
   [(visible)]="visible"
   (onHide)="close()"
   [modal]="true"
-  [style]="{ width: '680px' }"
+  [style]="{ width: '780px' }"
   [draggable]="false"
   [resizable]="false"
 >
   <form [formGroup]="frm" class="dialog-form">
-    <!-- Técnico -->
+    <!-- Tipo de liquidación -->
     <div class="field">
-      <label class="field-label required">Técnico</label>
+      <label class="field-label">Tipo de liquidación</label>
+      <p-selectButton
+        [options]="tipoOptions"
+        [(ngModel)]="tipo"
+        [ngModelOptions]="{ standalone: true }"
+        (onChange)="onTipoChange()"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+      />
+    </div>
+
+    <!-- Técnico / Vendedor -->
+    <div class="field">
+      <label class="field-label required">
+        {{ tipo === 'VENDEDOR' ? 'Vendedor' : 'Técnico' }}
+      </label>
       <p-dropdown
         formControlName="tecnicoId"
         [options]="tecnicos"
         optionLabel="nombreCompleto"
         optionValue="id"
-        placeholder="Selecciona un técnico..."
+        [placeholder]="tipo === 'VENDEDOR' ? 'Selecciona un vendedor...' : 'Selecciona un técnico...'"
         [filter]="true"
         filterPlaceholder="Buscar..."
         styleClass="w-full"
         [loading]="loadingTecnicos"
         [class.ng-invalid]="isInvalid('tecnicoId')"
       />
-      <small class="field-error" *ngIf="isInvalid('tecnicoId')"
-        >Requerido</small
-      >
+      <small class="field-error" *ngIf="isInvalid('tecnicoId')">Requerido</small>
     </div>
 
-    <!-- Rango de fechas -->
+    <!-- Filtro por rango de fechas (opcional) -->
     <div class="form-row two-col">
       <div class="field">
-        <label class="field-label required">Fecha desde</label>
+        <label class="field-label">Desde (filtro)</label>
         <p-calendar
           formControlName="fechaDesde"
           [showIcon]="true"
           dateFormat="yy-mm-dd"
-          placeholder="AAAA-MM-DD"
+          placeholder="Sin filtro"
           styleClass="w-full"
-          [class.ng-invalid]="isInvalid('fechaDesde')"
         />
-        <small class="field-error" *ngIf="isInvalid('fechaDesde')"
-          >Requerido</small
-        >
       </div>
       <div class="field">
-        <label class="field-label required">Fecha hasta</label>
+        <label class="field-label">Hasta (filtro)</label>
         <p-calendar
           formControlName="fechaHasta"
           [showIcon]="true"
           dateFormat="yy-mm-dd"
-          placeholder="AAAA-MM-DD"
+          placeholder="Sin filtro"
           styleClass="w-full"
-          [class.ng-invalid]="isInvalid('fechaHasta')"
         />
-        <small class="field-error" *ngIf="isInvalid('fechaHasta')"
-          >Requerido</small
-        >
       </div>
     </div>
 
@@ -72,13 +78,13 @@
       ></textarea>
     </div>
 
-    <!-- Preview comisiones pendientes -->
+    <!-- Panel de comisiones pendientes -->
     <div class="pendientes-panel" *ngIf="frm.get('tecnicoId')?.value">
       <div class="pendientes-header">
         <span class="pendientes-title">Comisiones pendientes</span>
         <span class="pendientes-total" *ngIf="!loadingPendientes">
-          {{ ventasPendientes.length }} servicios —
-          <strong>{{ formatCOP(totalPendiente) }}</strong>
+          {{ seleccionados.size }} / {{ ventasPendientes.length }} seleccionadas —
+          <strong>{{ formatCOP(totalSeleccionado) }}</strong>
         </span>
       </div>
 
@@ -86,12 +92,9 @@
         <i class="pi pi-spin pi-spinner"></i> Cargando...
       </div>
 
-      <div
-        *ngIf="!loadingPendientes && ventasPendientes.length === 0"
-        class="pendientes-empty"
-      >
+      <div *ngIf="!loadingPendientes && ventasPendientes.length === 0" class="pendientes-empty">
         <i class="pi pi-inbox"></i>
-        <span>No hay comisiones pendientes para este técnico</span>
+        <span>No hay comisiones pendientes para este {{ tipo === 'VENDEDOR' ? 'vendedor' : 'técnico' }}</span>
       </div>
 
       <p-table
@@ -99,26 +102,48 @@
         [value]="ventasPendientes"
         styleClass="p-datatable-sm pendientes-table"
         [scrollable]="true"
-        scrollHeight="200px"
+        scrollHeight="240px"
         showGridlines
       >
         <ng-template pTemplate="header">
           <tr>
-            <th>Servicio</th>
+            <th style="width: 44px; text-align: center">
+              <p-checkbox
+                [binary]="true"
+                [ngModel]="todosSeleccionados"
+                [ngModelOptions]="{ standalone: true }"
+                (onChange)="toggleTodos()"
+              />
+            </th>
+            <th style="width: 80px; text-align: center">Factura</th>
+            <th style="width: 100px">Fecha venta</th>
+            <th>Producto / Servicio</th>
             <th style="width: 110px; text-align: right">Venta</th>
-            <th style="width: 80px; text-align: center">%</th>
-            <th style="width: 120px; text-align: right">Técnico</th>
+            <th style="width: 75px; text-align: center">%</th>
+            <th style="width: 120px; text-align: right">
+              {{ tipo === 'VENDEDOR' ? 'Vendedor' : 'Técnico' }}
+            </th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-v>
-          <tr>
+          <tr [class.row-deselected]="!seleccionados.has(v.id)">
+            <td style="text-align: center">
+              <p-checkbox
+                [binary]="true"
+                [ngModel]="seleccionados.has(v.id)"
+                [ngModelOptions]="{ standalone: true }"
+                (onChange)="toggleSeleccion(v.id)"
+              />
+            </td>
+            <td style="text-align: center" class="mono text-muted">
+              {{ v.ventaConsecutivo ?? '—' }}
+            </td>
+            <td class="mono text-muted">
+              {{ v.ventaFecha ? (v.ventaFecha | slice:0:10) : '—' }}
+            </td>
             <td class="fw-500">{{ v.productoNombre }}</td>
-            <td style="text-align: right" class="mono">
-              {{ formatCOP(v.valorTotal) }}
-            </td>
-            <td style="text-align: center" class="mono">
-              {{ v.porcentajeTecnico }}%
-            </td>
+            <td style="text-align: right" class="mono">{{ formatCOP(v.valorTotal) }}</td>
+            <td style="text-align: center" class="mono">{{ v.porcentajeTecnico }}%</td>
             <td style="text-align: right" class="mono fw-600 color-tecnico">
               {{ formatCOP(v.valorTecnico) }}
             </td>
@@ -142,7 +167,7 @@
       icon="pi pi-check"
       class="btn-aura"
       [loading]="loading"
-      [disabled]="ventasPendientes.length === 0"
+      [disabled]="seleccionados.size === 0"
       (click)="save()"
     ></button>
   </ng-template>

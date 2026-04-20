@@ -1,105 +1,133 @@
-<p-sidebar
+<p-dialog
   [(visible)]="visible"
-  position="right"
-  [style]="{ width: '520px' }"
+  [modal]="true"
+  [style]="{ width: '780px', maxWidth: '96vw' }"
+  [draggable]="false"
+  [resizable]="false"
   (onHide)="close()"
+  styleClass="liq-dialog"
 >
+  <!-- Header personalizado -->
+  <ng-template pTemplate="header">
+    <div class="dialog-header">
+      <div class="dialog-header-left">
+        <div class="dialog-icon"><i class="pi pi-wallet"></i></div>
+        <div>
+          <span class="dialog-title">Detalle de liquidación</span>
+          <span class="dialog-sub" *ngIf="data">
+            #{{ data.id }} &mdash; {{ data.tecnicoNombre }}
+          </span>
+        </div>
+      </div>
+      <div class="dialog-header-right" *ngIf="data && !loading">
+        <p-tag
+          [value]="data.estado === 'PAGADA' ? 'Pagada' : 'Pendiente'"
+          [severity]="getEstadoSeverity(data.estado)"
+          [rounded]="true"
+        />
+        <button
+          pButton
+          icon="pi pi-file-pdf"
+          label="Descargar PDF"
+          class="p-button-outlined p-button-sm btn-pdf"
+          [loading]="generandoPdf"
+          (click)="generarPdf()"
+          pTooltip="Genera un comprobante para firmas"
+          tooltipPosition="bottom"
+        ></button>
+      </div>
+    </div>
+  </ng-template>
+
   <!-- Loading -->
   <div *ngIf="loading" class="loading-wrap">
-    <div class="skeleton-block" *ngFor="let i of [1, 2, 3, 4]">
-      <p-skeleton height="1.2rem" styleClass="mb-2" />
-      <p-skeleton height="0.9rem" width="60%" />
+    <div class="skel-row" *ngFor="let i of [1,2,3,4]">
+      <p-skeleton height="14px" width="30%" styleClass="mb-1" />
+      <p-skeleton height="10px" width="55%" />
     </div>
   </div>
 
   <!-- Contenido -->
-  <div *ngIf="!loading && data" class="detalle-wrap">
+  <div *ngIf="!loading && data" class="detalle-body">
 
-    <!-- Header info -->
-    <div class="detalle-header">
-      <div class="tecnico-info">
-        <div class="avatar"><i class="pi pi-user"></i></div>
-        <div>
-          <p class="tecnico-nombre">{{ data.tecnicoNombre }}</p>
-          <p class="tecnico-sub">Liquidación #{{ data.id }}</p>
-        </div>
+    <!-- Resumen info -->
+    <div class="info-grid">
+      <div class="info-card">
+        <span class="info-label">Período</span>
+        <span class="info-value mono">{{ data.fechaDesde }} → {{ data.fechaHasta }}</span>
       </div>
-      <p-tag
-        [value]="data.estado === 'PAGADA' ? 'Pagada' : 'Pendiente'"
-        [severity]="getEstadoSeverity(data.estado)"
-        styleClass="estado-tag"
-      />
-    </div>
-
-    <!-- Resumen -->
-    <div class="resumen-grid">
-      <div class="resumen-item">
-        <span class="resumen-label">Período</span>
-        <span class="resumen-value mono">{{ data.fechaDesde }} → {{ data.fechaHasta }}</span>
+      <div class="info-card">
+        <span class="info-label">Tipo</span>
+        <span class="info-value">{{ data.tipo === 'VENDEDOR' ? 'Vendedor' : 'Técnico' }}</span>
       </div>
-      <div class="resumen-item">
-        <span class="resumen-label">Total servicios</span>
-        <span class="resumen-value">{{ data.totalServicios }}</span>
+      <div class="info-card">
+        <span class="info-label">Total items</span>
+        <span class="info-value">{{ data.totalServicios }}</span>
       </div>
-      <div class="resumen-item">
-        <span class="resumen-label">Total técnico</span>
-        <span class="resumen-value valor-highlight">
-          {{ formatCOP(data.valorTotal) }}
-        </span>
+      <div class="info-card highlight">
+        <span class="info-label">Total a pagar</span>
+        <span class="info-value green mono">{{ formatCOP(data.valorTotal) }}</span>
       </div>
-      <div class="resumen-item" *ngIf="data.fechaPago">
-        <span class="resumen-label">Fecha pago</span>
-        <span class="resumen-value mono">{{ data.fechaPago }}</span>
+      <div class="info-card" *ngIf="data.fechaPago">
+        <span class="info-label">Fecha pago</span>
+        <span class="info-value mono">{{ data.fechaPago }}</span>
       </div>
-      <div class="resumen-item" *ngIf="data.observaciones">
-        <span class="resumen-label">Observaciones</span>
-        <span class="resumen-value">{{ data.observaciones }}</span>
+      <div class="info-card full" *ngIf="data.observaciones">
+        <span class="info-label">Observaciones</span>
+        <span class="info-value muted">{{ data.observaciones }}</span>
       </div>
     </div>
 
-    <!-- Detalle servicios -->
-    <div class="servicios-section">
-      <p class="section-title">Servicios incluidos</p>
-      <p-table
-        [value]="data.detalles ?? []"
-        styleClass="p-datatable-sm detalle-table"
-        [scrollable]="true"
-        scrollHeight="360px"
-        showGridlines
-      >
-        <ng-template pTemplate="header">
-          <tr>
-            <th>Servicio</th>
-            <th style="width: 100px; text-align: right">Venta</th>
-            <th style="width: 70px; text-align: center">%</th>
-            <th style="width: 110px; text-align: right">Técnico</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-v>
-          <tr>
-            <td class="fw-500">{{ v.productoNombre }}</td>
-            <td style="text-align: right" class="mono text-muted">
-              {{ formatCOP(v.valorTotal) }}
-            </td>
-            <td style="text-align: center" class="mono text-muted">{{ v.porcentajeTecnico }}%</td>
-            <td style="text-align: right" class="mono fw-600 color-tecnico">
-              {{ formatCOP(v.valorTecnico) }}
-            </td>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="emptymessage">
-          <tr>
-            <td colspan="4" class="empty-detalle">Sin servicios registrados</td>
-          </tr>
-        </ng-template>
-      </p-table>
+    <p-divider />
+
+    <!-- Tabla detalles -->
+    <p class="section-title">Items incluidos</p>
+    <p-table
+      [value]="data.detalles ?? []"
+      styleClass="p-datatable-sm liq-table"
+      [scrollable]="true"
+      scrollHeight="340px"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="min-width: 60px">Fecha</th>
+          <th>Producto / Servicio</th>
+          <th style="width: 90px; text-align: right">Valor venta</th>
+          <th style="width: 55px; text-align: center">%</th>
+          <th style="width: 105px; text-align: right">Valor {{ data.tipo === 'VENDEDOR' ? 'vendedor' : 'técnico' }}</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-v>
+        <tr>
+          <td class="mono muted-sm">{{ v.ventaFecha ? v.ventaFecha.substring(0, 10) : '—' }}</td>
+          <td class="fw-500">{{ v.productoNombre }}</td>
+          <td class="text-right mono muted-sm">{{ formatCOP(v.valorTotal) }}</td>
+          <td class="text-center mono muted-sm">{{ v.porcentajeTecnico }}%</td>
+          <td class="text-right mono fw-700 color-primary">{{ formatCOP(v.valorTecnico) }}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5" class="empty-msg">Sin items registrados</td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <!-- Total footer -->
+    <div class="total-footer">
+      <span class="total-label">Total a pagar</span>
+      <span class="total-val">{{ formatCOP(data.valorTotal) }}</span>
     </div>
 
   </div>
 
-  <!-- Empty -->
+  <!-- Empty state -->
   <div *ngIf="!loading && !data" class="empty-state">
     <i class="pi pi-inbox"></i>
     <p>No se encontró la liquidación</p>
   </div>
-</p-sidebar>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Cerrar" class="p-button-text" (click)="close()"></button>
+  </ng-template>
+</p-dialog>

@@ -1,18 +1,14 @@
-export type EstadoPedido = 'PENDIENTE_DESPACHO' | 'DESPACHADA' | 'COBRADA' | 'ANULADA';
+export type EstadoPedido = 'CREADA' | 'PENDIENTE_DESPACHO' | 'DESPACHADA' | 'COBRADA' | 'ANULADA';
 
 export interface PedidoVendedorTableModel {
   id: number;
   numeroPedido: string | null;
-  vendedorId: number;
-  vendedorNombre: string;
-  clienteId: number | null;
+  vendedorNombre: string | null;
   clienteNombre: string | null;
-  totalPagar: number;
+  total: number;
   estado: EstadoPedido;
-  fechaCreacion: string;
-  fechaDespacho: string | null;
-  fechaCobro: string | null;
-  cantidadItems: number;
+  createdAt: string;
+  ventaId: number | null;
 }
 
 export interface PedidoVendedorDetalleModel {
@@ -31,19 +27,18 @@ export interface PedidoVendedorDetalleModel {
 export interface PedidoVendedorModel {
   id: number;
   numeroPedido: string | null;
-  vendedorId: number;
-  vendedorNombre: string;
+  vendedorNombre: string | null;
   clienteId: number | null;
   clienteNombre: string | null;
   subtotal: number;
   descuentoTotal: number;
-  impuestosTotal: number;
-  totalPagar: number;
+  impuestoTotal: number;
+  total: number;
   estado: EstadoPedido;
   observaciones: string | null;
-  fechaCreacion: string;
-  fechaDespacho: string | null;
+  createdAt: string;
   fechaCobro: string | null;
+  ventaId: number | null;
   detalles: PedidoVendedorDetalleModel[];
 }
 
