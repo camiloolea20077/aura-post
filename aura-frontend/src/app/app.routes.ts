@@ -292,6 +292,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'cotizaciones/editar/:id',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN', 'CAJERO'])],
+        loadComponent: () =>
+          import('./features/cotizaciones/form/form-cotizacion.component').then(
+            (m) => m.FormCotizacionComponent,
+          ),
+      },
+      {
         path: 'devoluciones',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN', 'CAJERO'])],
         loadComponent: () =>

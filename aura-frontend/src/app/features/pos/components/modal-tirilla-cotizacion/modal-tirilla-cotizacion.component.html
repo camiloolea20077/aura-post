@@ -60,7 +60,9 @@
         <div class="t-doc-row">
           <span class="t-doc-tipo">COTIZACIÓN</span>
           <span>{{ cotizacion.numero }}</span>
-          <span class="t-doc-fecha">{{ formatFecha(cotizacion.fecha) }}</span>
+          <span class="t-doc-fecha">{{
+            cotizacion.fecha | date: "dd/MM/yyyy"
+          }}</span>
         </div>
 
         <div class="t-separator-thin"></div>
@@ -132,7 +134,7 @@
         <div class="t-vigencia-box">
           <div class="t-vigencia-label">Válida hasta</div>
           <div class="t-vigencia-fecha">
-            {{ formatFecha(cotizacion.fechaVencimiento) }}
+            {{ cotizacion.fechaVencimiento | date: "dd/MM/yyyy" }}
           </div>
           <div class="t-dato">({{ cotizacion.diasVigencia }} día(s))</div>
         </div>

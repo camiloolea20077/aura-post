@@ -50,6 +50,7 @@ export interface ProductoTableModel {
   precio: number;
   costo: number;
   activo: boolean;
+  ivaPorcentaje: number;
 }
 
 // ─── DTOs ────────────────────────────────────────────────────

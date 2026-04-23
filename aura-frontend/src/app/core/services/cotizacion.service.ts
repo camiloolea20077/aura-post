@@ -9,6 +9,7 @@ import {
   CotizacionTableModel,
   CreateCotizacionDto,
   CotizacionPageableDto,
+  UpdateCotizacionDto,
 } from '../models/cotizacion.model';
 
 @Injectable({ providedIn: 'root' })
@@ -45,6 +46,13 @@ export class CotizacionService {
   convertirAVenta(id: number): Observable<ResponseModel<CotizacionModel>> {
     return this.http.get<ResponseModel<CotizacionModel>>(
       `${this.apiUrl}/${id}/convertir`,
+    );
+  }
+
+  update(id: number, dto: UpdateCotizacionDto): Observable<ResponseModel<CotizacionModel>> {
+    return this.http.put<ResponseModel<CotizacionModel>>(
+      `${this.apiUrl}/${id}`,
+      dto,
     );
   }
 }

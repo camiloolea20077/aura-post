@@ -1,0 +1,424 @@
+<div class="page-container" *ngIf="!isLoading; else loadingTpl">
+  <!-- Header -->
+  <div class="form-header">
+    <div class="header-left">
+      <button
+        pButton
+        icon="pi pi-arrow-left"
+        class="p-button-text p-button-sm"
+        label="Volver"
+        (click)="router.navigate(['/cotizaciones'])"
+      ></button>
+      <div class="header-title-area">
+        <h3 class="page-title">Editar Cotización #{{ cotizacion?.numero }}</h3>
+        <p-tag
+          *ngIf="cotizacion"
+          [value]="getEstadoLabel(cotizacion.estado)"
+          [severity]="getEstadoSeverity(cotizacion.estado)"
+          [rounded]="true"
+        />
+      </div>
+    </div>
+    <div class="header-actions">
+      <button
+        pButton
+        icon="pi pi-check"
+        label="Guardar cambios"
+        class="btn-aura"
+        [loading]="isSaving"
+        [disabled]="!puedeEditar"
+        (click)="guardar()"
+      ></button>
+    </div>
+  </div>
+
+  <!-- Alerta si no editable -->
+  <div class="alert alert-warning" *ngIf="!puedeEditar && cotizacion">
+    <i class="pi pi-exclamation-triangle"></i>
+    <span>
+      Esta cotización no se puede editar porque ya está
+      <strong>{{ getEstadoLabel(cotizacion.estado) | lowercase }}</strong
+      >.
+    </span>
+  </div>
+
+  <!-- Datos básicos -->
+  <div class="card form-card">
+    <h4 class="section-title">Datos del cliente</h4>
+    <div class="form-grid">
+      <div class="form-field">
+        <label class="field-label">Cliente</label>
+        <p-autoComplete
+          [(ngModel)]="terceroQuery"
+          [suggestions]="tercerosSugeridos"
+          (completeMethod)="buscarTerceros($event.query)"
+          (onSelect)="seleccionarTercero($event)"
+          field="nombreCompleto"
+          [dropdown]="false"
+          [disabled]="!puedeEditar"
+          placeholder="Buscar cliente..."
+          styleClass="w-full"
+        >
+          <ng-template let-tercero pTemplate="item">
+            <div class="suggestion-item">
+              <div class="suggestion-nombre">{{ tercero.nombreCompleto }}</div>
+              <div class="suggestion-doc">{{ tercero.numeroDocumento }}</div>
+            </div>
+          </ng-template>
+        </p-autoComplete>
+        <button
+          *ngIf="puedeEditar"
+          class="p-button-outlined p-button-sm btn-buscar-tercero"
+          pTooltip="Buscar tercero"
+          (click)="openTerceroDialog()"
+        >
+          <i class="pi pi-search"></i>
+        </button>
+        <button
+          *ngIf="terceroSeleccionado && puedeEditar"
+          class="p-button-text p-button-sm clear-tercero"
+          (click)="limpiarTercero()"
+        >
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+
+      <div class="form-field">
+        <label class="field-label">Días de vigencia</label>
+        <p-inputNumber
+          [(ngModel)]="diasVigencia"
+          [min]="1"
+          [max]="365"
+          [disabled]="!puedeEditar"
+          placeholder="30"
+          styleClass="w-full"
+        />
+        <small class="field-hint">
+          Vence el {{ formatFecha(fechaVencimiento) }}
+        </small>
+      </div>
+
+      <div class="form-field span-full">
+        <label class="field-label">Observaciones</label>
+        <textarea
+          pTextarea
+          [(ngModel)]="observaciones"
+          [rows]="2"
+          [disabled]="!puedeEditar"
+          placeholder="Notas adicionales..."
+          class="w-full"
+        ></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Productos -->
+  <div class="card form-card">
+    <div class="section-header">
+      <h4 class="section-title">Productos</h4>
+      <div class="section-actions">
+        <button
+          pButton
+          icon="pi pi-plus"
+          label="Agregar producto"
+          class="p-button-outlined"
+          [disabled]="!puedeEditar"
+          (click)="agregarLinea()"
+        ></button>
+      </div>
+    </div>
+
+    <!-- Tabla de líneas -->
+    <div class="lines-table" *ngIf="lineas.length > 0">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 40px"></th>
+            <th style="min-width: 280px">Producto</th>
+            <th style="width: 100px">Cantidad</th>
+            <th style="width: 130px">Precio Unit.</th>
+            <th style="width: 100px">Descuento $</th>
+            <th style="width: 80px">IVA %</th>
+            <th style="width: 130px" class="text-right">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let linea of lineas; let idx = index; trackBy: trackById">
+            <td class="text-center">
+              <button
+                pButton
+                icon="pi pi-trash"
+                class="p-button-text p-button-danger p-button-sm"
+                [disabled]="!puedeEditar"
+                (click)="eliminarLinea(idx)"
+              ></button>
+            </td>
+            <td>
+              <div
+                class="prod-selector"
+                [class.sin-seleccion]="!linea.productoId"
+                [class.clickable]="puedeEditar"
+                (click)="puedeEditar && openProductDialog(idx)"
+              >
+                <span *ngIf="!linea.productoId" class="placeholder">
+                  Seleccionar producto...
+                </span>
+                <div *ngIf="linea.productoId" class="prod-info">
+                  <div class="prod-nombre">{{ linea.productoNombre }}</div>
+                  <div class="prod-sku" *ngIf="linea.productoSku">
+                    {{ linea.productoSku }}
+                  </div>
+                </div>
+                <i
+                  *ngIf="linea.productoId && puedeEditar"
+                  class="pi pi-search prod-search-icon"
+                ></i>
+              </div>
+            </td>
+            <td>
+              <p-inputNumber
+                [(ngModel)]="linea.cantidad"
+                [min]="1"
+                [disabled]="!puedeEditar"
+                (ngModelChange)="onCantidadChange(linea)"
+                mode="decimal"
+                [minFractionDigits]="0"
+                [maxFractionDigits]="4"
+                styleClass="w-full"
+              />
+            </td>
+            <td>
+              <p-inputNumber
+                [(ngModel)]="linea.precioUnitario"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [min]="0"
+                (ngModelChange)="onPrecioChange(linea)"
+                [disabled]="!puedeEditar"
+                styleClass="w-full"
+              />
+            </td>
+            <td>
+              <p-inputNumber
+                [(ngModel)]="linea.descuentoValor"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [min]="0"
+                (ngModelChange)="onDescuentoChange(linea)"
+                [disabled]="!puedeEditar"
+                styleClass="w-full"
+              />
+            </td>
+            <td class="text-center">
+              <span class="iva-pct">{{ linea.ivaPorcentaje }}%</span>
+            </td>
+            <td class="text-right">
+              <span class="subtotal">{{ formatCOP(linea.subtotal) }}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Empty state -->
+    <div class="empty-lines" *ngIf="lineas.length === 0">
+      <i class="pi pi-shopping-cart"></i>
+      <p>Agrega productos haciendo click en "Agregar producto".</p>
+      <button
+        pButton
+        label="Agregar primer producto"
+        class="p-button-outlined"
+        [disabled]="!puedeEditar"
+        (click)="agregarLinea()"
+      ></button>
+    </div>
+
+    <!-- Totales -->
+    <div class="totals-section" *ngIf="lineas.length > 0">
+      <div class="totals-row">
+        <span>Subtotal</span>
+        <span class="mono">{{ formatCOP(subtotal) }}</span>
+      </div>
+      <div class="totals-row">
+        <span>Descuento</span>
+        <span class="mono text-danger">-{{ formatCOP(descuento) }}</span>
+      </div>
+      <div class="totals-row">
+        <span>IVA</span>
+        <span class="mono">{{ formatCOP(iva) }}</span>
+      </div>
+      <div class="totals-row total-final">
+        <span>Total</span>
+        <span class="mono">{{ formatCOP(total) }}</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading -->
+<ng-template #loadingTpl>
+  <div class="page-container">
+    <div class="card">
+      <p-skeleton width="200px" height="1.5rem" />
+      <p-skeleton width="100px" height="1rem" class="mt-2" />
+    </div>
+  </div>
+</ng-template>
+
+<!-- Modal selector producto -->
+<p-dialog
+  header="Seleccionar producto"
+  [(visible)]="showProductDialog"
+  [modal]="true"
+  [style]="{ width: '800px' }"
+  [draggable]="false"
+>
+  <div class="dialog-search">
+    <span class="p-input-icon-left">
+      <p-iconfield>
+        <p-inputicon class="pi pi-search" />
+        <input
+          pInputText
+          [(ngModel)]="dialogSearch"
+          (keyup.enter)="onDialogSearch()"
+        />
+      </p-iconfield>
+    </span>
+    <button pButton label="Buscar" (click)="onDialogSearch()"></button>
+  </div>
+
+  <p-table
+    [value]="dialogItems"
+    [lazy]="true"
+    (onLazyLoad)="loadDialogTable($event)"
+    [paginator]="true"
+    [rows]="10"
+    [totalRecords]="dialogTotal"
+    [loading]="dialogLoading"
+    [rowsPerPageOptions]="[10, 20, 50]"
+    [showGridlines]="true"
+    selectionMode="single"
+    (onRowSelect)="selectProductFromDialog($event.data)"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 60px">ID</th>
+        <th>Nombre</th>
+        <th style="width: 120px">SKU</th>
+        <th style="width: 100px">Precio</th>
+        <th style="width: 80px">IVA</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-item>
+      <tr
+        [class.selected]="
+          lineas[dialogLineIdx] && item.id === lineas[dialogLineIdx].productoId
+        "
+        (click)="selectProductFromDialog(item)"
+        style="cursor: pointer"
+      >
+        <td>
+          <span class="id-badge">#{{ item.id }}</span>
+        </td>
+        <td>{{ item.nombre }}</td>
+        <td>{{ item.sku ?? "—" }}</td>
+        <td>{{ formatCOP(item.precio ?? 0) }}</td>
+        <td>{{ getIvaPorcentaje(item) }}%</td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="5">
+          <div class="empty-state">
+            <i class="pi pi-search"></i>
+            <p>
+              {{
+                dialogSearch
+                  ? 'Sin resultados para "' + dialogSearch + '"'
+                  : "Escribe para buscar productos"
+              }}
+            </p>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-dialog>
+
+<!-- Modal selector terceros -->
+<p-dialog
+  header="Seleccionar cliente"
+  [(visible)]="showTerceroDialog"
+  [modal]="true"
+  [style]="{ width: '800px' }"
+  [draggable]="false"
+>
+  <div class="dialog-search">
+    <span class="p-input-icon-left">
+      <p-iconfield>
+        <p-inputicon class="pi pi-search" />
+        <input
+          pInputText
+          [(ngModel)]="dialogSearch"
+          (keyup.enter)="onTercerosSearch()"
+        />
+      </p-iconfield>
+    </span>
+    <button pButton label="Buscar" (click)="onTercerosSearch()"></button>
+  </div>
+
+  <p-table
+    [value]="tercerosItems"
+    [lazy]="true"
+    (onLazyLoad)="loadTercerosTable($event)"
+    [paginator]="true"
+    [rows]="10"
+    [totalRecords]="tercerosTotal"
+    [loading]="tercerosLoading"
+    [rowsPerPageOptions]="[10, 20, 50]"
+    [showGridlines]="true"
+    selectionMode="single"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 60px">ID</th>
+        <th>Nombre</th>
+        <th style="width: 130px">Documento</th>
+        <th style="width: 100px">Tipo</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-item>
+      <tr (click)="selectTerceroFromDialog(item)" style="cursor: pointer">
+        <td>
+          <span class="id-badge">#{{ item.id }}</span>
+        </td>
+        <td>{{ item.nombreCompleto }}</td>
+        <td>{{ item.numeroDocumento }}</td>
+        <td>{{ item.tipoDocumento }}</td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="4">
+          <div class="empty-state">
+            <p-iconfield>
+              <p-inputicon class="pi pi-search" />
+              <input pInputText />
+            </p-iconfield>
+            <p>
+              {{
+                dialogSearch
+                  ? 'Sin resultados para "' + dialogSearch + '"'
+                  : "Escribe para buscar terceros"
+              }}
+            </p>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-dialog>
+
+<p-toast />
