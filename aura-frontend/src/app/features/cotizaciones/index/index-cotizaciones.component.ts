@@ -113,6 +113,11 @@ export class IndexCotizacionesComponent implements OnInit {
     this.showDetalle = true;
   }
 
+  editar(item: CotizacionTableModel, event: Event): void {
+    event.stopPropagation();
+    this.router.navigate(['/cotizaciones/editar', item.id]);
+  }
+
   onDetalleClosed(): void {
     this.showDetalle = false;
   }

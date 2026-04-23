@@ -69,3 +69,30 @@ export interface CotizacionPageableDto {
   order_by?: string;
   order?: string;
 }
+
+export interface UpdateCotizacionDto {
+  terceroId: number | null;
+  observaciones: string | null;
+  diasVigencia: number;
+  detalles: CreateCotizacionDetalleDto[];
+}
+
+export interface CotizacionLineaUI {
+  _id: string;
+  id: number | null;
+  productoId: number | null;
+  productoNombre: string;
+  productoSku: string | null;
+  cantidad: number;
+  precioUnitario: number;
+  ivaPorcentaje: number;
+  descuentoValor: number;
+  subtotal: number;
+}
+
+export interface ProductoOpcion {
+  label: string;
+  value: number;
+  sku: string | null;
+  ivaPorcentaje: number;
+}

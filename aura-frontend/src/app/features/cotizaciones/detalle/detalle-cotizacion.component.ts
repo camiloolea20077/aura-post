@@ -63,6 +63,7 @@ export class DetalleCotizacionComponent implements OnChanges {
   public empresaTelefono = '';
   public empresaEmail = '';
   public municipio = '';
+  public logoUrl = '';
 
   constructor(
     private readonly cotizacionService: CotizacionService,
@@ -155,6 +156,7 @@ export class DetalleCotizacionComponent implements OnChanges {
       this.empresaTelefono = empresa?.telefono ?? '';
       this.empresaEmail = empresa?.correo ?? '';
       this.municipio = empresa?.municipio ?? '';
+      this.logoUrl = empresa?.logoUrl ?? '';
       this.showTirilla = true;
     } catch {
       this.alertService.showError('Error', 'No se pudo cargar los datos de la empresa.');
