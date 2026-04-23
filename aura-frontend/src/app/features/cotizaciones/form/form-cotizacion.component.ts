@@ -462,7 +462,6 @@ export class FormCotizacionComponent implements OnInit {
         this.cotizacionService.update(this.cotizacionId!, dto),
       );
       this.alertService.showSuccess('Cotización actualizada', '');
-      this.router.navigate(['/cotizaciones']);
     } catch (err: any) {
       this.alertService.showError(
         'Error',
