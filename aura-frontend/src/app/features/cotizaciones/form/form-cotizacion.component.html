@@ -22,6 +22,16 @@
     <div class="header-actions">
       <button
         pButton
+        icon="pi pi-file-pdf"
+        label="Generar PDF"
+        class="p-button-outlined"
+        style="color: #ef4444; border-color: #ef4444"
+        [loading]="generandoPDF"
+        [disabled]="!cotizacion"
+        (click)="generarPDF()"
+      ></button>
+      <button
+        pButton
         icon="pi pi-check"
         label="Guardar cambios"
         class="btn-aura"
@@ -134,12 +144,12 @@
         <thead>
           <tr>
             <th style="width: 40px"></th>
-            <th style="min-width: 280px">Producto</th>
-            <th style="width: 100px">Cantidad</th>
-            <th style="width: 130px">Precio Unit.</th>
-            <th style="width: 100px">Descuento $</th>
-            <th style="width: 80px">IVA %</th>
-            <th style="width: 130px" class="text-right">Subtotal</th>
+            <th style="min-width: 180px">Producto</th>
+            <th style="width: 90px">Cantidad</th>
+            <th style="width: 120px">Precio Unit.</th>
+            <th style="width: 120px">Descuento $</th>
+            <th style="width: 60px">IVA</th>
+            <th style="width: 140px" class="text-right">Subtotal</th>
           </tr>
         </thead>
         <tbody>

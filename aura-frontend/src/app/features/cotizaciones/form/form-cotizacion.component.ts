@@ -27,6 +27,8 @@ import { DialogModule } from 'primeng/dialog';
 import { MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
+import pdfMake from 'pdfmake/build/pdfmake';
+import pdfFonts from 'pdfmake/build/vfs_fonts';
 import {
   CotizacionModel,
   CotizacionLineaUI,
@@ -39,6 +41,7 @@ import { TerceroTableModel } from '../../../core/models/tercero.model';
 import { CotizacionService } from '../../../core/services/cotizacion.service';
 import { TerceroService } from '../../../core/services/tercero.service';
 import { ProductoService } from '../../../core/services/producto.service';
+import { EmpresaService } from '../../../core/services/empresa.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
 import {
   PageableDto,
@@ -81,6 +84,7 @@ export class FormCotizacionComponent implements OnInit {
   cotizacion: CotizacionModel | null = null;
   isLoading = true;
   isSaving = false;
+  generandoPDF = false;
 
   // Header
   terceroQuery = '';
@@ -145,8 +149,11 @@ export class FormCotizacionComponent implements OnInit {
     private readonly cotizacionService: CotizacionService,
     private readonly terceroService: TerceroService,
     private readonly productoService: ProductoService,
+    private readonly empresaService: EmpresaService,
     private readonly alertService: AlertService,
-  ) {}
+  ) {
+    (pdfMake as any).vfs = (pdfFonts as any).pdfMake?.vfs || pdfFonts;
+  }
 
   async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id');
@@ -519,5 +526,381 @@ export class FormCotizacionComponent implements OnInit {
 
   getIvaPorcentaje(item: ProductoTableModel): number {
     return (item as any).ivaPorcentaje ?? 0;
+  }
+
+  // ─── PDF ─────────────────────────────────────────────────────
+  async generarPDF(): Promise<void> {
+    if (!this.cotizacion) return;
+    this.generandoPDF = true;
+    this.cdr.markForCheck();
+    try {
+      const empRes = await lastValueFrom(this.empresaService.getConfig());
+      const emp: any = empRes?.data ?? {};
+      if (emp.logoUrl) {
+        emp.logoBase64 = await this.urlToBase64(emp.logoUrl);
+      }
+      const doc = this.buildCotizacionDoc(this.cotizacion, emp);
+      const nombreArchivo = this.cotizacion?.numero ?? `COT-${this.cotizacionId}`;
+      pdfMake.createPdf(doc).download(`${nombreArchivo}.pdf`);
+    } catch {
+      this.alertService.showError('Error', 'No se pudo generar el PDF.');
+    } finally {
+      this.generandoPDF = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  private async urlToBase64(url: string): Promise<string> {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+
+  private buildCotizacionDoc(c: CotizacionModel, emp: any): any {
+    const numero = c.numero ?? `COT-${String(c.id).padStart(6, '0')}`;
+    const fecha = c.fecha
+      ? new Date(c.fecha).toLocaleDateString('es-CO', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        })
+      : '—';
+    const vencimiento = c.fechaVencimiento
+      ? new Date(c.fechaVencimiento).toLocaleDateString('es-CO', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        })
+      : '—';
+
+    const headerContent = [
+      { text: numero, fontSize: 20, bold: true, color: '#1e293b' },
+      {
+        text: `Fecha: ${fecha}   Vence: ${vencimiento}`,
+        fontSize: 10,
+        color: '#64748b',
+        margin: [0, 2, 0, 0],
+      },
+      {
+        text: 'Estado: COMPLETADA',
+        fontSize: 10,
+        color: '#10b981',
+        margin: [0, 2, 0, 0],
+      },
+    ];
+
+    const clientContent = c.terceroNombre
+      ? [
+          {
+            text: 'CLIENTE',
+            fontSize: 8,
+            bold: true,
+            color: '#94a3b8',
+            margin: [0, 0, 0, 4],
+          },
+          { text: c.terceroNombre, fontSize: 11, bold: true },
+          {
+            text: c.terceroDocumento ?? '',
+            fontSize: 9,
+            color: '#64748b',
+            margin: [0, 2, 0, 0],
+          },
+        ]
+      : [
+          {
+            text: 'CLIENTE',
+            fontSize: 8,
+            bold: true,
+            color: '#94a3b8',
+            margin: [0, 0, 0, 4],
+          },
+          { text: 'Sin cliente', fontSize: 11, color: '#94a3b8' },
+        ];
+
+    const detalleRows = c.detalles.map((d, i) => [
+      {
+        text: String(i + 1),
+        fontSize: 9,
+        alignment: 'center',
+        margin: [0, 4, 0, 4],
+      },
+      {
+        text: d.productoNombre,
+        fontSize: 9,
+        margin: [0, 4, 0, 4],
+        width: '*',
+      },
+      {
+        text:
+          d.cantidad % 1 === 0 ? d.cantidad.toFixed(0) : d.cantidad.toFixed(2),
+        fontSize: 9,
+        alignment: 'right',
+        margin: [0, 4, 0, 4],
+      },
+      {
+        text: this.formatCOP(d.precioUnitario),
+        fontSize: 9,
+        alignment: 'right',
+        margin: [0, 4, 0, 4],
+      },
+      {
+        text:
+          d.descuentoValor > 0 ? `-${this.formatCOP(d.descuentoValor)}` : '—',
+        fontSize: 9,
+        alignment: 'right',
+        margin: [0, 4, 0, 4],
+        color: '#ef4444',
+      },
+      {
+        text: `${d.ivaPorcentaje}%`,
+        fontSize: 9,
+        alignment: 'center',
+        margin: [0, 4, 0, 4],
+      },
+      {
+        text: this.formatCOP(d.subtotal),
+        fontSize: 9,
+        alignment: 'right',
+        margin: [0, 4, 0, 4],
+        bold: true,
+      },
+    ]);
+
+    const tablaBody = [
+      [
+        {
+          text: '#',
+          fontSize: 8,
+          bold: true,
+          color: '#94a3b8',
+          margin: [0, 4, 0, 4],
+        },
+        {
+          text: 'Producto',
+          fontSize: 8,
+          bold: true,
+          color: '#94a3b8',
+          margin: [0, 4, 0, 4],
+        },
+        {
+          text: 'Cant.',
+          fontSize: 8,
+          bold: true,
+          color: '#94a3b8',
+          margin: [0, 4, 0, 4],
+          alignment: 'right',
+        },
+        {
+          text: 'Precio',
+          fontSize: 8,
+          bold: true,
+          color: '#94a3b8',
+          margin: [0, 4, 0, 4],
+          alignment: 'right',
+        },
+        {
+          text: 'Desc.',
+          fontSize: 8,
+          bold: true,
+          color: '#94a3b8',
+          margin: [0, 4, 0, 4],
+          alignment: 'right',
+        },
+        {
+          text: 'IVA',
+          fontSize: 8,
+          bold: true,
+          color: '#94a3b8',
+          margin: [0, 4, 0, 4],
+          alignment: 'center',
+        },
+        {
+          text: 'Subtotal',
+          fontSize: 8,
+          bold: true,
+          color: '#94a3b8',
+          margin: [0, 4, 0, 4],
+          alignment: 'right',
+        },
+      ],
+      ...detalleRows,
+    ];
+
+    const doc: any = {
+      pageSize: 'A4',
+      pageMargins: [20, 20, 20, 60],
+      content: [
+        {
+          columns: [
+            {
+              width: 70,
+              image: emp.logoUrl ? 'LOGO' : undefined,
+              fit: [60, 60],
+            },
+            {
+              width: 5,
+              text: '',
+            },
+            {
+              width: '*',
+              stack: [
+                {
+                  text: emp.nombreComercial ?? emp.razonSocial ?? 'Mi Empresa',
+                  fontSize: 14,
+                  bold: true,
+                },
+                {
+                  text: emp.direccion ?? '',
+                  fontSize: 9,
+                  color: '#64748b',
+                  margin: [0, 2, 0, 0],
+                },
+                { text: emp.telefono ?? '', fontSize: 9, color: '#64748b' },
+              ],
+            },
+            { width: 'auto', stack: headerContent, alignment: 'right' },
+          ],
+        },
+        {
+          canvas: [
+            {
+              type: 'line',
+              x1: 0,
+              y1: 5,
+              x2: 515,
+              y2: 5,
+              lineWidth: 0.5,
+              lineColor: '#e2e8f0',
+            },
+          ],
+        },
+        {
+          columns: [
+            { width: '*', stack: clientContent },
+            { width: '*', stack: [], alignment: 'right' },
+          ],
+          margin: [0, 15, 0, 0],
+        },
+        c.observaciones
+          ? {
+              text: `Notas: ${c.observaciones}`,
+              fontSize: 9,
+              color: '#64748b',
+              margin: [0, 10, 0, 0],
+            }
+          : {},
+        {
+          table: {
+            headerRows: 1,
+            widths: [25, '*', 55, 75, 70, 35, 80],
+            body: tablaBody,
+          },
+          layout: {
+            hLineWidth: () => 0.5,
+            vLineWidth: () => 0,
+            hLineColor: () => '#e2e8f0',
+            paddingTop: () => 0,
+            paddingBottom: () => 0,
+          },
+          margin: [0, 15, 0, 0],
+        },
+        {
+          columns: [
+            { width: '*', text: '' },
+            {
+              width: 180,
+              stack: [
+                {
+                  columns: [
+                    { text: 'Subtotal:', fontSize: 10, color: '#64748b' },
+                    {
+                      text: this.formatCOP(c.subtotal),
+                      fontSize: 10,
+                      alignment: 'right',
+                    },
+                  ],
+                  margin: [0, 4, 0, 0],
+                },
+                {
+                  columns: [
+                    { text: 'Descuento:', fontSize: 10, color: '#64748b' },
+                    {
+                      text: `-${this.formatCOP(c.descuento)}`,
+                      fontSize: 10,
+                      alignment: 'right',
+                      color: '#ef4444',
+                    },
+                  ],
+                  margin: [0, 2, 0, 0],
+                },
+                {
+                  columns: [
+                    { text: 'IVA:', fontSize: 10, color: '#64748b' },
+                    {
+                      text: this.formatCOP(c.iva),
+                      fontSize: 10,
+                      alignment: 'right',
+                    },
+                  ],
+                  margin: [0, 2, 0, 0],
+                },
+                {
+                  canvas: [
+                    {
+                      type: 'line',
+                      x1: 0,
+                      y1: 2,
+                      x2: 180,
+                      y2: 2,
+                      lineWidth: 0.5,
+                      lineColor: '#cbd5e1',
+                    },
+                  ],
+                },
+                {
+                  columns: [
+                    { text: 'TOTAL:', fontSize: 12, bold: true },
+                    {
+                      text: this.formatCOP(c.total),
+                      fontSize: 12,
+                      bold: true,
+                      alignment: 'right',
+                      color: '#1e293b',
+                    },
+                  ],
+                  margin: [0, 4, 0, 0],
+                },
+              ],
+            },
+          ],
+          margin: [0, 15, 0, 0],
+        },
+      ],
+      footer: (currentPage: number, pageCount: number) => ({
+        columns: [
+          {
+            text: `${emp.nit ? 'NIT: ' + emp.nit : ''}`,
+            fontSize: 8,
+            color: '#94a3b8',
+          },
+          {
+            text: `Página ${currentPage} de ${pageCount}`,
+            fontSize: 8,
+            color: '#94a3b8',
+            alignment: 'right',
+          },
+        ],
+        margin: [20, 0, 20, 0],
+      }),
+      images: emp.logoUrl ? { LOGO: emp.logoBase64 } : {},
+      styles: {},
+    };
+
+    return doc;
   }
 }
