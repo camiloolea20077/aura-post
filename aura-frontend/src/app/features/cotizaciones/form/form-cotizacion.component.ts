@@ -127,14 +127,20 @@ export class FormCotizacionComponent implements OnInit {
 
   // Totales
   get subtotal(): number {
-    return this.lineas.reduce((a, l) => a + l.subtotal, 0);
+    return this.lineas.reduce(
+      (a, l) => a + Math.max(0, l.precioUnitario * l.cantidad - l.descuentoValor),
+      0,
+    );
   }
   get descuento(): number {
     return this.lineas.reduce((a, l) => a + l.descuentoValor, 0);
   }
   get iva(): number {
     return this.lineas.reduce(
-      (a, l) => a + (l.precioUnitario * l.cantidad * l.ivaPorcentaje) / 100,
+      (a, l) => {
+        const baseNeta = Math.max(0, l.precioUnitario * l.cantidad - l.descuentoValor);
+        return a + (baseNeta * l.ivaPorcentaje) / 100;
+      },
       0,
     );
   }
