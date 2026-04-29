@@ -225,7 +225,7 @@
 
       <!-- Tabla con scroll interno -->
       <div class="lineas-wrap">
-        <div class="lineas-container" *ngIf="lineas.length > 0">
+        <div class="lineas-container" *ngIf="lineasArray.length > 0">
           <div class="lineas-header">
             <span class="col-producto">Producto</span>
             <span class="col-cant">Cant.</span>
@@ -242,13 +242,13 @@
 
           <div
             class="linea-row"
-            *ngFor="let l of lineas; let i = index; trackBy: trackByLinea"
+            *ngFor="let l of lineasArray; let i = index; trackBy: trackByLinea"
           >
             <!-- Producto -->
             <div class="col-producto">
               <div class="prod-selector" [class.sin-seleccion]="!l.productoId">
                 <span class="prod-sel-nombre">
-                  {{ l.productoNombre || 'Seleccionar producto...' }}
+                  {{ l.productoNombre || "Seleccionar producto..." }}
                 </span>
                 <button
                   type="button"
@@ -409,7 +409,7 @@
         </div>
 
         <!-- Estado vacío -->
-        <div class="lineas-empty" *ngIf="lineas.length === 0">
+        <div class="lineas-empty" *ngIf="lineasArray.length === 0">
           <i class="pi pi-inbox"></i>
           <p>Agrega productos haciendo click en "Agregar producto".</p>
           <button
@@ -425,13 +425,13 @@
       <!-- /lineas-wrap -->
 
       <!-- Totales siempre visibles abajo -->
-      <div class="totales-panel" *ngIf="lineas.length > 0">
+      <div class="totales-panel" *ngIf="lineasArray.length > 0">
         <div class="totales-left">
           <div class="items-count">
             <i class="pi pi-box"></i>
-            {{ lineas.length }}
-            {{ lineas.length === 1 ? "producto" : "productos" }} —
-            <strong>{{ totalUnidades | number: "1.0-0" }}</strong> unidades
+            {{ lineasArray.length }}
+            {{ lineasArray.length === 1 ? "producto" : "productos" }} —
+            <strong>{{ totalUnidadesValue | number: "1.0-0" }}</strong> unidades
           </div>
           <!-- Retenciones -->
           <div class="ret-section">
@@ -448,7 +448,7 @@
                   <small *ngIf="retefuentePct > 0" class="ret-val"
                     >=
                     {{
-                      retefuenteValor
+                      retefuenteValorValue
                         | currency: "COP" : "symbol-narrow" : "1.0-0"
                     }}</small
                   >
@@ -468,7 +468,7 @@
                   <small *ngIf="reteivaPct > 0" class="ret-val"
                     >=
                     {{
-                      reteivaValor | currency: "COP" : "symbol-narrow" : "1.0-0"
+                      reteivaValorValue | currency: "COP" : "symbol-narrow" : "1.0-0"
                     }}</small
                   >
                 </div>
@@ -487,7 +487,7 @@
                   <small *ngIf="reteicaPct > 0" class="ret-val"
                     >=
                     {{
-                      reteicaValor | currency: "COP" : "symbol-narrow" : "1.0-0"
+                      reteicaValorValue | currency: "COP" : "symbol-narrow" : "1.0-0"
                     }}</small
                   >
                 </div>
@@ -504,39 +504,39 @@
           </div>
         </div>
         <div class="totales-right">
-          <div class="tot-row" *ngIf="descuentoTotal > 0">
+          <div class="tot-row" *ngIf="descuentoTotalValue > 0">
             <span class="tot-lbl">Subtotal bruto</span>
             <span class="tot-val">{{
-              subtotalBruto | currency: "COP" : "symbol-narrow" : "1.0-0"
+              subtotalBrutoValue | currency: "COP" : "symbol-narrow" : "1.0-0"
             }}</span>
           </div>
-          <div class="tot-row discount-row" *ngIf="descuentoTotal > 0">
+          <div class="tot-row discount-row" *ngIf="descuentoTotalValue > 0">
             <span class="tot-lbl">Descuento</span>
             <span class="tot-val red"
               >-{{
-                descuentoTotal | currency: "COP" : "symbol-narrow" : "1.0-0"
+                descuentoTotalValue | currency: "COP" : "symbol-narrow" : "1.0-0"
               }}</span
             >
           </div>
           <div class="tot-row">
             <span class="tot-lbl">{{
-              descuentoTotal > 0 ? "Subtotal neto" : "Subtotal"
+              descuentoTotalValue > 0 ? "Subtotal neto" : "Subtotal"
             }}</span>
             <span class="tot-val">{{
-              subtotal | currency: "COP" : "symbol-narrow" : "1.0-0"
+              subtotalValue | currency: "COP" : "symbol-narrow" : "1.0-0"
             }}</span>
           </div>
-          <div class="tot-row" *ngIf="impuestosTotal > 0">
+          <div class="tot-row" *ngIf="impuestosTotalValue > 0">
             <span class="tot-lbl">IVA</span>
             <span class="tot-val amber">{{
-              impuestosTotal | currency: "COP" : "symbol-narrow" : "1.0-0"
+              impuestosTotalValue | currency: "COP" : "symbol-narrow" : "1.0-0"
             }}</span>
           </div>
-          <div class="tot-row" *ngIf="totalRetenciones > 0">
+          <div class="tot-row" *ngIf="totalRetencionesValue > 0">
             <span class="tot-lbl">Retenciones</span>
             <span class="tot-val red"
               >-{{
-                totalRetenciones | currency: "COP" : "symbol-narrow" : "1.0-0"
+                totalRetencionesValue | currency: "COP" : "symbol-narrow" : "1.0-0"
               }}</span
             >
           </div>
@@ -563,10 +563,10 @@
           <div class="tot-divider"></div>
           <div class="tot-row tot-final">
             <span class="tot-lbl">{{
-              totalRetenciones > 0 ? "Neto a pagar" : "Total a pagar"
+              totalRetencionesValue > 0 ? "Neto a pagar" : "Total a pagar"
             }}</span>
             <span class="tot-val green">{{
-              (totalRetenciones > 0 ? netaAPagar : total)
+              (totalRetencionesValue > 0 ? netaAPagarValue : totalValue)
                 | currency: "COP" : "symbol-narrow" : "1.0-0"
             }}</span>
           </div>
@@ -594,7 +594,7 @@
         [label]="modoEdicion ? 'Actualizar compra' : 'Registrar compra'"
         [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
         class="btn-aura"
-        [disabled]="isSubmitting || lineas.length === 0"
+        [disabled]="isSubmitting || lineasArray.length === 0"
         (click)="saveCompra()"
       ></button>
     </div>
@@ -627,7 +627,11 @@
         class="search-input-dialog"
         autocomplete="off"
       />
-      <button *ngIf="dialogSearch" class="clear-btn-dialog" (click)="dialogSearch = ''; onDialogSearch()">
+      <button
+        *ngIf="dialogSearch"
+        class="clear-btn-dialog"
+        (click)="dialogSearch = ''; onDialogSearch()"
+      >
         <i class="pi pi-times"></i>
       </button>
     </span>
@@ -650,7 +654,11 @@
         pTooltip="Buscar por código de barras"
         tooltipPosition="top"
       >
-        <i [class]="barcodeSearching ? 'pi pi-spin pi-spinner' : 'pi pi-arrow-right'"></i>
+        <i
+          [class]="
+            barcodeSearching ? 'pi pi-spin pi-spinner' : 'pi pi-arrow-right'
+          "
+        ></i>
       </button>
     </div>
   </div>
@@ -700,10 +708,14 @@
           <span class="text-muted" *ngIf="!item.categoriaNombre">—</span>
         </td>
         <td class="text-right">
-          <span class="price-cell">{{ item.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+          <span class="price-cell">{{
+            item.precio | currency: "COP" : "symbol-narrow" : "1.0-0"
+          }}</span>
         </td>
         <td class="text-right">
-          <span class="cost-cell">{{ item.costo | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+          <span class="cost-cell">{{
+            item.costo | currency: "COP" : "symbol-narrow" : "1.0-0"
+          }}</span>
         </td>
       </tr>
     </ng-template>
@@ -713,14 +725,20 @@
         <td colspan="5">
           <div class="dialog-empty">
             <i class="pi pi-search"></i>
-            <p>{{ dialogSearch ? 'Sin resultados para "' + dialogSearch + '"' : 'Escribe para buscar productos' }}</p>
+            <p>
+              {{
+                dialogSearch
+                  ? 'Sin resultados para "' + dialogSearch + '"'
+                  : "Escribe para buscar productos"
+              }}
+            </p>
           </div>
         </td>
       </tr>
     </ng-template>
 
     <ng-template pTemplate="loadingbody">
-      <tr *ngFor="let s of [1,2,3,4,5]">
+      <tr *ngFor="let s of [1, 2, 3, 4, 5]">
         <td><p-skeleton /></td>
         <td><p-skeleton width="70px" /></td>
         <td><p-skeleton /></td>
