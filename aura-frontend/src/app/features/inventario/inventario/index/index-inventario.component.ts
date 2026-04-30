@@ -14,6 +14,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
 import { FormInventarioComponent } from '../form/form-inventario.component';
+import { HistorialProductoComponent } from '../historial/historial-producto.component';
 import {
   InventarioPageableDto,
   InventarioTableModel,
@@ -37,6 +38,7 @@ import { AlertService } from '../../../../shared/pipes/alert.service';
     SkeletonModule,
     SidebarModule,
     FormInventarioComponent,
+    HistorialProductoComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './index-inventario.component.html',
@@ -46,6 +48,13 @@ export class IndexInventarioComponent implements OnInit {
   public showModal = false;
   public selectedId: number | null = null;
   public modalSlug = 'create';
+
+  // Modal historial
+  public showHistorial = false;
+  public historialProductoId: number | null = null;
+  public historialProductoNombre = '';
+  public historialProductoSku: string | null = null;
+  public historialSucursalId: number | null = null;
 
   public items: InventarioTableModel[] = [];
   public loadingTable = true;
@@ -120,6 +129,13 @@ export class IndexInventarioComponent implements OnInit {
     this.selectedId = item.id;
     this.modalSlug = 'edit';
     this.showModal = true;
+  }
+  openHistorial(item: InventarioTableModel): void {
+    this.historialProductoId = item.productoId;
+    this.historialProductoNombre = item.productoNombre;
+    this.historialProductoSku = item.productoSku;
+    this.historialSucursalId = item.sucursalId;
+    this.showHistorial = true;
   }
   onModalClosed(): void {
     this.showModal = false;
