@@ -1,0 +1,103 @@
+<p-dialog
+  [(visible)]="visible"
+  [header]="'Historial: ' + productoNombre"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '900px' }"
+  [contentStyle]="{ padding: '0' }"
+  styleClass="aura-dialog historial-dialog"
+  (onHide)="close()"
+>
+  <div class="historial-header">
+    <div class="prod-info">
+      <span class="prod-nombre">{{ productoNombre }}</span>
+      <span class="prod-sku" *ngIf="productoSku">SKU: {{ productoSku }}</span>
+    </div>
+  </div>
+
+  <div class="historial-content">
+    <div class="loading-state" *ngIf="loading">
+      <i class="pi pi-spin pi-spinner"></i>
+      <span>Cargando historial...</span>
+    </div>
+
+    <div class="empty-state" *ngIf="!loading && movimientos.length === 0">
+      <i class="pi pi-history"></i>
+      <p>No hay movimientos registrados para este producto.</p>
+    </div>
+
+    <p-table
+      *ngIf="!loading && movimientos.length > 0"
+      [value]="movimientos"
+      [tableStyle]="{ 'min-width': '100%' }"
+      styleClass="historial-table"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 100px">Tipo</th>
+          <th style="width: 130px">Documento</th>
+          <th style="width: 150px">Fecha</th>
+          <th style="width: 90px" class="text-right">Cantidad</th>
+          <th style="width: 110px" class="text-right">Costo</th>
+          <th style="width: 110px" class="text-right">Precio</th>
+          <th style="width: 100px" class="text-right">Saldo ant.</th>
+          <th style="width: 100px" class="text-right">Saldo nuevo</th>
+          <th style="min-width: 120px">Tercero</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-mov>
+        <tr>
+          <td>
+            <p-tag
+              [value]="getTipoLabel(mov.tipo)"
+              [severity]="getTipoSeverity(mov.tipo)"
+              styleClass="tipo-tag"
+            />
+          </td>
+          <td>
+            <span class="doc-num" *ngIf="mov.documentoNumero">
+              {{ mov.documentoNumero }}
+            </span>
+            <span class="doc-id" *ngIf="!mov.documentoNumero">
+              #{{ mov.documentoId }}
+            </span>
+          </td>
+          <td>
+            <span class="fecha">{{ formatDate(mov.fecha) }}</span>
+          </td>
+          <td class="text-right">
+            <span class="cantidad" [class.negativo]="mov.cantidad < 0">
+              {{ mov.cantidad | number: '1.0-2' }}
+            </span>
+          </td>
+          <td class="text-right">
+            <span class="costo" *ngIf="mov.costoUnitario">
+              {{ formatCOP(mov.costoUnitario) }}
+            </span>
+            <span class="sin-dato" *ngIf="!mov.costoUnitario">—</span>
+          </td>
+          <td class="text-right">
+            <span class="precio" *ngIf="mov.precioUnitario">
+              {{ formatCOP(mov.precioUnitario) }}
+            </span>
+            <span class="sin-dato" *ngIf="!mov.precioUnitario">—</span>
+          </td>
+          <td class="text-right">
+            <span class="saldo">{{ mov.saldoAnterior | number: '1.0-2' }}</span>
+          </td>
+          <td class="text-right">
+            <span class="saldo">{{ mov.saldoNuevo | number: '1.0-2' }}</span>
+          </td>
+          <td>
+            <span class="tercero" *ngIf="mov.terceroNombre">
+              {{ mov.terceroNombre }}
+            </span>
+            <span class="sin-dato" *ngIf="!mov.terceroNombre">—</span>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</p-dialog>

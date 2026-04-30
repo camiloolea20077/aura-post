@@ -8,6 +8,8 @@ import {
   OnInit,
   Output,
   SimpleChanges,
+  signal,
+  computed,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -104,8 +106,29 @@ export class FormCompraComponent implements OnInit, OnChanges {
   public numeroCompra = '';
   public fechaCompra: Date = new Date();
   public observaciones = '';
-  // ─── Líneas ───────────────────────────────────────────────────────
-  public lineas: CompraLineaUI[] = [];
+  // ─── Líneas con signals ───────────────────────────────────────────
+  lineas = signal<CompraLineaUI[]>([]);
+
+  // Computed totals
+  subtotalBruto = computed(() =>
+    this.lineas().reduce(
+      (a, l) => a + (l.cantidad ?? 0) * (l.costoUnitario ?? 0),
+      0,
+    ),
+  );
+  descuentoTotal = computed(() =>
+    this.lineas().reduce((a, l) => a + (l.descuentoValor || 0), 0),
+  );
+  subtotal = computed(() => this.subtotalBruto() - this.descuentoTotal());
+  impuestosTotal = computed(() =>
+    this.lineas().reduce((a, l) => a + (l.impuestoValor || 0), 0),
+  );
+  total = computed(
+    () => this.subtotal() + this.impuestosTotal() + (this.fletes || 0),
+  );
+  totalUnidades = computed(() =>
+    this.lineas().reduce((a, l) => a + (l.cantidad ?? 0), 0),
+  );
 
   // ─── Modal selector de producto ───────────────────────────────────
   public showProductDialog = false;
@@ -162,48 +185,113 @@ export class FormCompraComponent implements OnInit, OnChanges {
   public reteivaPct: number = 0;
   public reteicaPct: number = 0;
 
-  get retefuenteValor(): number {
-    return Math.round(this.subtotal * (this.retefuentePct / 100) * 100) / 100;
-  }
-  get reteivaValor(): number {
-    return (
-      Math.round(this.impuestosTotal * (this.reteivaPct / 100) * 100) / 100
-    );
-  }
-  get reteicaValor(): number {
-    return Math.round(this.subtotal * (this.reteicaPct / 100) * 100) / 100;
-  }
-  get totalRetenciones(): number {
-    return this.retefuenteValor + this.reteivaValor + this.reteicaValor;
-  }
-  get netaAPagar(): number {
-    return this.total - this.totalRetenciones;
-  }
+  retefuenteValor = computed(
+    () => Math.round(this.subtotal() * (this.retefuentePct / 100) * 100) / 100,
+  );
+  reteivaValor = computed(
+    () =>
+      Math.round(this.impuestosTotal() * (this.reteivaPct / 100) * 100) / 100,
+  );
+  reteicaValor = computed(
+    () => Math.round(this.subtotal() * (this.reteicaPct / 100) * 100) / 100,
+  );
+  totalRetenciones = computed(
+    () => this.retefuenteValor() + this.reteivaValor() + this.reteicaValor(),
+  );
+  netaAPagar = computed(() => this.total() - this.totalRetenciones());
 
   // ─── Estado ───────────────────────────────────────────────────────
   public isSubmitting = false;
 
-  // ─── Totales ──────────────────────────────────────────────────────
-  get subtotalBruto(): number {
-    return this.lineas.reduce(
-      (a, l) => a + (l.cantidad ?? 0) * (l.costoUnitario ?? 0),
-      0,
-    );
+  private readonly DRAFT_KEY = 'compra_draft';
+
+  // Helper para el template
+  get lineasArray(): CompraLineaUI[] {
+    return this.lineas();
   }
-  get descuentoTotal(): number {
-    return this.lineas.reduce((a, l) => a + (l.descuentoValor || 0), 0);
+
+  get subtotalValue(): number { return this.subtotal(); }
+  get impuestosTotalValue(): number { return this.impuestosTotal(); }
+  get totalValue(): number { return this.total(); }
+  get descuentoTotalValue(): number { return this.descuentoTotal(); }
+  get subtotalBrutoValue(): number { return this.subtotalBruto(); }
+  get totalRetencionesValue(): number { return this.totalRetenciones(); }
+  get netaAPagarValue(): number { return this.netaAPagar(); }
+  get totalUnidadesValue(): number { return this.totalUnidades(); }
+  get retefuenteValorValue(): number { return this.retefuenteValor(); }
+  get reteivaValorValue(): number { return this.reteivaValor(); }
+  get reteicaValorValue(): number { return this.reteicaValor(); }
+
+  ngOnInit(): void {
+    this.loadDropdowns();
   }
-  get subtotal(): number {
-    return this.subtotalBruto - this.descuentoTotal;
+
+  // ─── Draft / LocalStorage ─────────────────────────────────────────────
+  private cargarDraft(): void {
+    try {
+      const saved = localStorage.getItem(this.DRAFT_KEY);
+      if (!saved) return;
+      const draft = JSON.parse(saved);
+      if (!draft || !draft.lineas?.length) return;
+      
+      // Restaurar datos
+      if (draft.proveedorSeleccionado) {
+        this.proveedorSeleccionado = draft.proveedorSeleccionado;
+        this.proveedorQuery = draft.proveedorQuery || '';
+      }
+      this.sucursalId = draft.sucursalId || this.defaultSucursalId;
+      this.numeroCompra = draft.numeroCompra || '';
+      if (draft.fechaCompra) this.fechaCompra = new Date(draft.fechaCompra);
+      this.observaciones = draft.observaciones || '';
+      this.lineas.set(draft.lineas || []);
+      
+      this.formaPago = draft.formaPago || 'CONTADO';
+      this.plazoDias = draft.plazoDias || 30;
+      this.metodoPago = draft.metodoPago || 'EFECTIVO';
+      this.banco = draft.banco || '';
+      this.cuentaBancariaId = draft.cuentaBancariaId || null;
+      this.tipoDocumento = draft.tipoDocumento || 'FACTURA_COMPRA';
+      this.fletes = draft.fletes || 0;
+      
+      this.retefuentePct = draft.retefuentePct || 0;
+      this.reteivaPct = draft.reteivaPct || 0;
+      this.reteicaPct = draft.reteicaPct || 0;
+      
+      this.alertService.showInfo('Borrador recuperado', 'Se restauraron los datos del formulario.');
+    } catch {
+      // Silencioso
+    }
   }
-  get impuestosTotal(): number {
-    return this.lineas.reduce((a, l) => a + (l.impuestoValor || 0), 0);
+
+  private guardarDraft(): void {
+    try {
+      const draft = {
+        proveedorSeleccionado: this.proveedorSeleccionado,
+        proveedorQuery: this.proveedorQuery,
+        sucursalId: this.sucursalId,
+        numeroCompra: this.numeroCompra,
+        fechaCompra: this.fechaCompra?.toISOString(),
+        observaciones: this.observaciones,
+        lineas: this.lineas(),
+        formaPago: this.formaPago,
+        plazoDias: this.plazoDias,
+        metodoPago: this.metodoPago,
+        banco: this.banco,
+        cuentaBancariaId: this.cuentaBancariaId,
+        tipoDocumento: this.tipoDocumento,
+        fletes: this.fletes,
+        retefuentePct: this.retefuentePct,
+        reteivaPct: this.reteivaPct,
+        reteicaPct: this.reteicaPct,
+      };
+      localStorage.setItem(this.DRAFT_KEY, JSON.stringify(draft));
+    } catch {
+      // Silencioso
+    }
   }
-  get total(): number {
-    return this.subtotal + this.impuestosTotal + (this.fletes || 0);
-  }
-  get totalUnidades(): number {
-    return this.lineas.reduce((a, l) => a + (l.cantidad ?? 0), 0);
+
+  private limpiarDraft(): void {
+    localStorage.removeItem(this.DRAFT_KEY);
   }
 
   constructor(
@@ -217,15 +305,16 @@ export class FormCompraComponent implements OnInit, OnChanges {
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
-  ngOnInit(): void {
-    this.loadDropdowns();
-  }
-
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['displayModal'] && this.displayModal) {
       this.resetForm();
-      if (this.compraToEdit) this.cargarEdicion(this.compraToEdit);
-      else if (this.prefilledFromOC) this.cargarDesdeOC(this.prefilledFromOC);
+      if (this.compraToEdit) {
+        this.cargarEdicion(this.compraToEdit);
+      } else if (this.prefilledFromOC) {
+        this.cargarDesdeOC(this.prefilledFromOC);
+      } else {
+        this.cargarDraft();  // Solo si es nuevo, cargar draft
+      }
     }
   }
 
@@ -243,22 +332,24 @@ export class FormCompraComponent implements OnInit, OnChanges {
     this.fechaCompra = new Date(compra.fecha);
     this.observaciones = compra.observaciones ?? '';
 
-    this.lineas = compra.detalles.map(
-      (d: CompraDetalleModel): CompraLineaUI => ({
-        _id: uuidv4(),
-        productoId: d.productoId,
-        productoNombre: d.productoNombre,
-        cantidad: d.cantidad,
-        costoUnitario: d.costoUnitario,
-        descuentoPct: d.descuentoPct ?? 0,
-        descuentoValor: d.descuentoValor ?? 0,
-        ivaPorcentaje: 0,
-        impuestoValor: d.impuestoValor,
-        subtotal: d.subtotalLinea,
-        precioVenta1: d.precioVenta1 ?? null,
-        precioVenta2: d.precioVenta2 ?? null,
-        precioVenta3: d.precioVenta3 ?? null,
-      }),
+    this.lineas.set(
+      compra.detalles.map(
+        (d: CompraDetalleModel): CompraLineaUI => ({
+          _id: uuidv4(),
+          productoId: d.productoId,
+          productoNombre: d.productoNombre,
+          cantidad: d.cantidad,
+          costoUnitario: d.costoUnitario,
+          descuentoPct: d.descuentoPct ?? 0,
+          descuentoValor: d.descuentoValor ?? 0,
+          ivaPorcentaje: 0,
+          impuestoValor: d.impuestoValor,
+          subtotal: d.subtotalLinea,
+          precioVenta1: d.precioVenta1 ?? null,
+          precioVenta2: d.precioVenta2 ?? null,
+          precioVenta3: d.precioVenta3 ?? null,
+        }),
+      ),
     );
     this.formaPago = compra.formaPago ?? 'CONTADO';
     this.tipoDocumento = compra.tipoDocumento ?? 'FACTURA_COMPRA';
@@ -277,22 +368,24 @@ export class FormCompraComponent implements OnInit, OnChanges {
     this.proveedorQuery = oc.proveedorNombre;
     this.sucursalId = oc.sucursalId;
     this.observaciones = oc.observaciones ?? '';
-    this.lineas = oc.lineas.map(
-      (l): CompraLineaUI => ({
-        _id: uuidv4(),
-        productoId: l.productoId,
-        productoNombre: l.productoNombre,
-        cantidad: l.cantidad,
-        costoUnitario: l.costoUnitario,
-        descuentoPct: 0,
-        descuentoValor: 0,
-        ivaPorcentaje: 0,
-        impuestoValor: 0,
-        subtotal: l.cantidad * l.costoUnitario,
-        precioVenta1: null,
-        precioVenta2: null,
-        precioVenta3: null,
-      }),
+    this.lineas.set(
+      oc.lineas.map(
+        (l): CompraLineaUI => ({
+          _id: uuidv4(),
+          productoId: l.productoId,
+          productoNombre: l.productoNombre,
+          cantidad: l.cantidad,
+          costoUnitario: l.costoUnitario,
+          descuentoPct: 0,
+          descuentoValor: 0,
+          ivaPorcentaje: 0,
+          impuestoValor: 0,
+          subtotal: l.cantidad * l.costoUnitario,
+          precioVenta1: null,
+          precioVenta2: null,
+          precioVenta3: null,
+        }),
+      ),
     );
     this.cdr.markForCheck();
   }
@@ -462,12 +555,14 @@ export class FormCompraComponent implements OnInit, OnChanges {
       precioVenta2: null,
       precioVenta3: null,
     };
-    this.lineas = [...this.lineas, nueva];
+    this.lineas.set([...this.lineas(), nueva]);
+    this.guardarDraft();
     this.cdr.markForCheck();
   }
 
   eliminarLinea(idx: number): void {
-    this.lineas = this.lineas.filter((_, i) => i !== idx);
+    this.lineas.set(this.lineas().filter((_, i) => i !== idx));
+    this.guardarDraft();
   }
 
   // ─── Selección de producto ────────────────────────────────────────
@@ -510,25 +605,35 @@ export class FormCompraComponent implements OnInit, OnChanges {
       costoBase != null
         ? Math.round(costoBase * (1 + ivaPorcentaje / 100) * 100) / 100
         : null;
-    const cantidad = this.lineas[idx].cantidad ?? 0;
-    const subtotal = cantidad * (costoUnitario ?? 0);
+    const cantidad = this.lineas()[idx].cantidad ?? 0;
+    const ivaPct = ivaPorcentaje;
+    const descuento = this.lineas()[idx].descuentoValor ?? 0;
+    const base = cantidad * (costoUnitario ?? 0);
+    const descuentoPct = base > 0 ? (descuento / base) * 100 : 0;
+    const baseNeta = base - descuento;
+    const impuestoValor = Math.round(baseNeta * (ivaPct / 100) * 100) / 100;
+    const subtotal = Math.round(baseNeta * 100) / 100;
 
-    this.lineas = this.lineas.map(
-      (l, i): CompraLineaUI =>
-        i !== idx
-          ? l
-          : {
-              ...l,
-              productoId,
-              productoNombre: prod!.label,
-              costoUnitario,
-              ivaPorcentaje: 0, // IVA ya incluido en el costo
-              impuestoValor: 0,
-              subtotal: Math.round(subtotal * 100) / 100,
-              precioVenta1: prod!.precio ?? null,
-              precioVenta2: prod!.precio2 ?? null,
-              precioVenta3: prod!.precio3 ?? null,
-            },
+    this.lineas.set(
+      this.lineas().map(
+        (l, i): CompraLineaUI =>
+          i !== idx
+            ? l
+            : {
+                ...l,
+                productoId,
+                productoNombre: prod!.label,
+                costoUnitario,
+                ivaPorcentaje: ivaPct,
+                descuentoPct,
+                descuentoValor: descuento,
+                impuestoValor,
+                subtotal,
+                precioVenta1: prod!.precio ?? null,
+                precioVenta2: prod!.precio2 ?? null,
+                precioVenta3: prod!.precio3 ?? null,
+              },
+      ),
     );
     this.cdr.markForCheck();
   }
@@ -544,97 +649,123 @@ export class FormCompraComponent implements OnInit, OnChanges {
     const descuentoValor =
       Math.round(bruto * ((l.descuentoPct ?? 0) / 100) * 100) / 100;
     const neto = bruto - descuentoValor;
+    const ivaPct = l.ivaPorcentaje ?? 0;
+    const impuestoValor = Math.round(neto * (ivaPct / 100) * 100) / 100;
     return {
       subtotal: Math.round(neto * 100) / 100,
       descuentoValor,
-      impuestoValor: l.impuestoValor ?? 0,
+      impuestoValor,
     };
   }
 
   // ─── Cambios en campos numéricos ─────────────────────────────────
   onCantidadChange(idx: number, val: number | null): void {
-    const linea = this.lineas[idx];
+    const linea = this.lineas()[idx];
     const calc = this.calcLinea({ ...linea, cantidad: val ?? 0 });
-    this.lineas = this.lineas.map(
-      (l, i): CompraLineaUI =>
-        i !== idx
-          ? l
-          : {
-              ...l,
-              cantidad: val,
-              descuentoValor: calc.descuentoValor,
-              subtotal: calc.subtotal,
-              impuestoValor: calc.impuestoValor,
-            },
+    this.lineas.set(
+      this.lineas().map(
+        (l, i): CompraLineaUI =>
+          i !== idx
+            ? l
+            : {
+                ...l,
+                cantidad: val,
+                descuentoValor: calc.descuentoValor,
+                subtotal: calc.subtotal,
+                impuestoValor: calc.impuestoValor,
+              },
+      ),
     );
+    this.guardarDraft();
   }
 
   onCostoChange(idx: number, val: number | null): void {
-    const linea = this.lineas[idx];
+    const linea = this.lineas()[idx];
     const calc = this.calcLinea({ ...linea, costoUnitario: val });
-    this.lineas = this.lineas.map(
-      (l, i): CompraLineaUI =>
-        i !== idx
-          ? l
-          : {
-              ...l,
-              costoUnitario: val,
-              descuentoValor: calc.descuentoValor,
-              subtotal: calc.subtotal,
-              impuestoValor: calc.impuestoValor,
-            },
+    this.lineas.set(
+      this.lineas().map(
+        (l, i): CompraLineaUI =>
+          i !== idx
+            ? l
+            : {
+                ...l,
+                costoUnitario: val,
+                descuentoValor: calc.descuentoValor,
+                subtotal: calc.subtotal,
+                impuestoValor: calc.impuestoValor,
+              },
+      ),
     );
+    this.guardarDraft();
   }
 
   onDescuentoValorChange(idx: number, val: number | null): void {
-    const linea = this.lineas[idx];
+    const linea = this.lineas()[idx];
     const bruto = (linea.cantidad ?? 0) * (linea.costoUnitario ?? 0);
     const descVal = Math.min(val ?? 0, bruto);
     const pct = bruto > 0 ? (descVal / bruto) * 100 : 0;
     const neto = bruto - descVal;
-    this.lineas = this.lineas.map(
-      (l, i): CompraLineaUI =>
-        i !== idx
-          ? l
-          : {
-              ...l,
-              descuentoPct: pct,
-              descuentoValor: descVal,
-              subtotal: Math.round(neto * 100) / 100,
-            },
+    const ivaPct = linea.ivaPorcentaje ?? 0;
+    const impuestoValor = Math.round(neto * (ivaPct / 100) * 100) / 100;
+    this.lineas.set(
+      this.lineas().map(
+        (l, i): CompraLineaUI =>
+          i !== idx
+            ? l
+            : {
+                ...l,
+                descuentoPct: pct,
+                descuentoValor: descVal,
+                subtotal: Math.round(neto * 100) / 100,
+                impuestoValor,
+              },
+      ),
     );
+    this.guardarDraft();
   }
 
   onImpuestoChange(idx: number, val: number): void {
-    this.lineas = this.lineas.map(
-      (l, i): CompraLineaUI =>
-        i !== idx ? l : { ...l, impuestoValor: val ?? 0 },
+    this.lineas.set(
+      this.lineas().map(
+        (l, i): CompraLineaUI =>
+          i !== idx ? l : { ...l, impuestoValor: val ?? 0 },
+      ),
     );
+    this.guardarDraft();
   }
 
   onPrecioVenta1Change(idx: number, val: number | null): void {
-    this.lineas = this.lineas.map(
-      (l, i): CompraLineaUI => (i !== idx ? l : { ...l, precioVenta1: val }),
+    this.lineas.set(
+      this.lineas().map(
+        (l, i): CompraLineaUI => (i !== idx ? l : { ...l, precioVenta1: val }),
+      ),
     );
+    this.guardarDraft();
   }
 
   onPrecioVenta2Change(idx: number, val: number | null): void {
-    this.lineas = this.lineas.map(
-      (l, i): CompraLineaUI => (i !== idx ? l : { ...l, precioVenta2: val }),
+    this.lineas.set(
+      this.lineas().map(
+        (l, i): CompraLineaUI => (i !== idx ? l : { ...l, precioVenta2: val }),
+      ),
     );
+    this.guardarDraft();
   }
 
   onPrecioVenta3Change(idx: number, val: number | null): void {
-    this.lineas = this.lineas.map(
-      (l, i): CompraLineaUI => (i !== idx ? l : { ...l, precioVenta3: val }),
+    this.lineas.set(
+      this.lineas().map(
+        (l, i): CompraLineaUI => (i !== idx ? l : { ...l, precioVenta3: val }),
+      ),
     );
+    this.guardarDraft();
   }
 
   duplicarLinea(idx: number): void {
-    const l: CompraLineaUI = { ...this.lineas[idx], _id: uuidv4() };
-    const nuevo = [...this.lineas];
+    const l: CompraLineaUI = { ...this.lineas()[idx], _id: uuidv4() };
+    const nuevo = [...this.lineas()];
     nuevo.splice(idx + 1, 0, l);
-    this.lineas = nuevo;
+    this.lineas.set(nuevo);
   }
 
   trackByLinea(_: number, l: CompraLineaUI): string {
@@ -645,9 +776,9 @@ export class FormCompraComponent implements OnInit, OnChanges {
   private validar(): string | null {
     if (!this.proveedorSeleccionado) return 'Selecciona un proveedor.';
     if (!this.sucursalId) return 'Selecciona una sucursal.';
-    if (this.lineas.length === 0) return 'Agrega al menos un producto.';
+    if (this.lineas().length === 0) return 'Agrega al menos un producto.';
 
-    for (const [i, l] of this.lineas.entries()) {
+    for (const [i, l] of this.lineas().entries()) {
       const n = i + 1;
       if (!l.productoId) return `Línea ${n}: selecciona un producto.`;
       if (!l.cantidad || l.cantidad <= 0)
@@ -663,9 +794,10 @@ export class FormCompraComponent implements OnInit, OnChanges {
     const err = this.validar();
     if (err) return void this.alertService.showWarn('Compra incompleta', err);
 
+    this.guardarDraft();
     this.isSubmitting = true;
     try {
-      const detalles: CreateCompraDetalleDto[] = this.lineas.map((l) => ({
+      const detalles: CreateCompraDetalleDto[] = this.lineas().map((l) => ({
         productoId: l.productoId!,
         cantidad: l.cantidad!,
         costoUnitario: l.costoUnitario!,
@@ -705,7 +837,9 @@ export class FormCompraComponent implements OnInit, OnChanges {
                 {
                   metodoPago: this.metodoPago,
                   monto:
-                    this.totalRetenciones > 0 ? this.netaAPagar : this.total,
+                    this.totalRetenciones() > 0
+                      ? this.netaAPagar()
+                      : this.total(),
                   banco: this.banco.trim() || null,
                   cuentaBancariaId: this.cuentaBancariaId,
                 },
@@ -719,6 +853,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
           this.compraService.update(this.compraToEdit.id, dto),
         );
         if (res?.data) {
+          this.limpiarDraft();
           this.alertService.showSuccess(
             'Compra actualizada',
             `Compra #${res.data.id} actualizada. Stock recalculado.`,
@@ -755,7 +890,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
     this.numeroCompra = '';
     this.fechaCompra = new Date();
     this.observaciones = '';
-    this.lineas = [];
+    this.lineas.set([]);
     this.barcodeQuery = '';
     this.barcodeSearching = false;
     this.showProductDialog = false;
@@ -772,6 +907,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
   }
 
   closeModal(): void {
+    this.guardarDraft();
     this.resetForm();
     this.modalClosed.emit();
   }
