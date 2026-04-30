@@ -47,3 +47,26 @@ export interface InventarioPageableDto {
   order_by?: string | null;
   order?: string | null;
 }
+
+// ─── Historial de producto ────────────────────────────────────
+export interface HistorialMovimiento {
+  id: number;
+  tipo: 'COMPRA' | 'VENTA' | 'MERMA' | 'TRASLADO_ENTRADA' | 'TRASLADO_SALIDA' | 'AJUSTE';
+  documentoId: number;
+  documentoNumero: string | null;
+  fecha: string;
+  cantidad: number;
+  costoUnitario: number | null;
+  precioUnitario: number | null;
+  saldoAnterior: number;
+  saldoNuevo: number;
+  terceroNombre: string | null;
+  sucursalNombre: string;
+}
+
+export interface HistorialProductoResponse {
+  productoId: number;
+  productoNombre: string;
+  sku: string | null;
+  movimientos: HistorialMovimiento[];
+}

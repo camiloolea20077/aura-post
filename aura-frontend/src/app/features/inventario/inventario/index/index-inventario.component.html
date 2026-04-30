@@ -141,7 +141,16 @@
           </td>
 
           <!-- Acciones -->
-          <td class="text-center">
+          <td class="text-center flex">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-history"
+              class="p-button-text p-button-sm action-historial"
+              pTooltip="Ver historial de movimientos"
+              tooltipPosition="top"
+              (click)="openHistorial(item)"
+            ></button>
             <button
               pButton
               type="button"
@@ -268,5 +277,13 @@
   (itemSaved)="onItemSaved()"
 >
 </app-form-inventario>
+
+<app-historial-producto
+  [(visible)]="showHistorial"
+  [productoId]="historialProductoId"
+  [productoNombre]="historialProductoNombre"
+  [productoSku]="historialProductoSku"
+  [sucursalId]="historialSucursalId"
+></app-historial-producto>
 <p-toast />
 <p-confirmDialog />

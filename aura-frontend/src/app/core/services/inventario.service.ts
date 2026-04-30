@@ -8,6 +8,7 @@ import {
   CreateInventarioDto,
   UpdateInventarioDto,
   InventarioPageableDto,
+  HistorialProductoResponse,
 } from '../models/inventario.model';
 import { environment } from '../../../environments/environment';
 import { ResponseTableModel } from '../../shared/utils/response-table.model';
@@ -49,6 +50,14 @@ export class InventarioService {
     return this.http.put<ResponseModel<InventarioModel>>(
       `${this.apiUrl}/${id}`,
       dto,
+    );
+  }
+  historialProducto(
+    productoId: number,
+    sucursalId: number,
+  ): Observable<ResponseModel<HistorialProductoResponse>> {
+    return this.http.get<ResponseModel<HistorialProductoResponse>>(
+      `${this.apiUrl}/historial?productoId=${productoId}&sucursalId=${sucursalId}`,
     );
   }
 }
