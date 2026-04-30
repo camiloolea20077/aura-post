@@ -203,6 +203,8 @@ export class FormCompraComponent implements OnInit, OnChanges {
   // ─── Estado ───────────────────────────────────────────────────────
   public isSubmitting = false;
 
+  private readonly DRAFT_KEY = 'compra_draft';
+
   // Helper para el template
   get lineasArray(): CompraLineaUI[] {
     return this.lineas();
@@ -220,6 +222,78 @@ export class FormCompraComponent implements OnInit, OnChanges {
   get reteivaValorValue(): number { return this.reteivaValor(); }
   get reteicaValorValue(): number { return this.reteicaValor(); }
 
+  ngOnInit(): void {
+    this.loadDropdowns();
+  }
+
+  // ─── Draft / LocalStorage ─────────────────────────────────────────────
+  private cargarDraft(): void {
+    try {
+      const saved = localStorage.getItem(this.DRAFT_KEY);
+      if (!saved) return;
+      const draft = JSON.parse(saved);
+      if (!draft || !draft.lineas?.length) return;
+      
+      // Restaurar datos
+      if (draft.proveedorSeleccionado) {
+        this.proveedorSeleccionado = draft.proveedorSeleccionado;
+        this.proveedorQuery = draft.proveedorQuery || '';
+      }
+      this.sucursalId = draft.sucursalId || this.defaultSucursalId;
+      this.numeroCompra = draft.numeroCompra || '';
+      if (draft.fechaCompra) this.fechaCompra = new Date(draft.fechaCompra);
+      this.observaciones = draft.observaciones || '';
+      this.lineas.set(draft.lineas || []);
+      
+      this.formaPago = draft.formaPago || 'CONTADO';
+      this.plazoDias = draft.plazoDias || 30;
+      this.metodoPago = draft.metodoPago || 'EFECTIVO';
+      this.banco = draft.banco || '';
+      this.cuentaBancariaId = draft.cuentaBancariaId || null;
+      this.tipoDocumento = draft.tipoDocumento || 'FACTURA_COMPRA';
+      this.fletes = draft.fletes || 0;
+      
+      this.retefuentePct = draft.retefuentePct || 0;
+      this.reteivaPct = draft.reteivaPct || 0;
+      this.reteicaPct = draft.reteicaPct || 0;
+      
+      this.alertService.showInfo('Borrador recuperado', 'Se restauraron los datos del formulario.');
+    } catch {
+      // Silencioso
+    }
+  }
+
+  private guardarDraft(): void {
+    try {
+      const draft = {
+        proveedorSeleccionado: this.proveedorSeleccionado,
+        proveedorQuery: this.proveedorQuery,
+        sucursalId: this.sucursalId,
+        numeroCompra: this.numeroCompra,
+        fechaCompra: this.fechaCompra?.toISOString(),
+        observaciones: this.observaciones,
+        lineas: this.lineas(),
+        formaPago: this.formaPago,
+        plazoDias: this.plazoDias,
+        metodoPago: this.metodoPago,
+        banco: this.banco,
+        cuentaBancariaId: this.cuentaBancariaId,
+        tipoDocumento: this.tipoDocumento,
+        fletes: this.fletes,
+        retefuentePct: this.retefuentePct,
+        reteivaPct: this.reteivaPct,
+        reteicaPct: this.reteicaPct,
+      };
+      localStorage.setItem(this.DRAFT_KEY, JSON.stringify(draft));
+    } catch {
+      // Silencioso
+    }
+  }
+
+  private limpiarDraft(): void {
+    localStorage.removeItem(this.DRAFT_KEY);
+  }
+
   constructor(
     private readonly compraService: CompraService,
     private readonly terceroService: TerceroService,
@@ -231,15 +305,16 @@ export class FormCompraComponent implements OnInit, OnChanges {
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
-  ngOnInit(): void {
-    this.loadDropdowns();
-  }
-
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['displayModal'] && this.displayModal) {
       this.resetForm();
-      if (this.compraToEdit) this.cargarEdicion(this.compraToEdit);
-      else if (this.prefilledFromOC) this.cargarDesdeOC(this.prefilledFromOC);
+      if (this.compraToEdit) {
+        this.cargarEdicion(this.compraToEdit);
+      } else if (this.prefilledFromOC) {
+        this.cargarDesdeOC(this.prefilledFromOC);
+      } else {
+        this.cargarDraft();  // Solo si es nuevo, cargar draft
+      }
     }
   }
 
@@ -481,11 +556,13 @@ export class FormCompraComponent implements OnInit, OnChanges {
       precioVenta3: null,
     };
     this.lineas.set([...this.lineas(), nueva]);
+    this.guardarDraft();
     this.cdr.markForCheck();
   }
 
   eliminarLinea(idx: number): void {
     this.lineas.set(this.lineas().filter((_, i) => i !== idx));
+    this.guardarDraft();
   }
 
   // ─── Selección de producto ────────────────────────────────────────
@@ -599,6 +676,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
               },
       ),
     );
+    this.guardarDraft();
   }
 
   onCostoChange(idx: number, val: number | null): void {
@@ -618,6 +696,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
               },
       ),
     );
+    this.guardarDraft();
   }
 
   onDescuentoValorChange(idx: number, val: number | null): void {
@@ -642,6 +721,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
               },
       ),
     );
+    this.guardarDraft();
   }
 
   onImpuestoChange(idx: number, val: number): void {
@@ -651,6 +731,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
           i !== idx ? l : { ...l, impuestoValor: val ?? 0 },
       ),
     );
+    this.guardarDraft();
   }
 
   onPrecioVenta1Change(idx: number, val: number | null): void {
@@ -659,6 +740,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
         (l, i): CompraLineaUI => (i !== idx ? l : { ...l, precioVenta1: val }),
       ),
     );
+    this.guardarDraft();
   }
 
   onPrecioVenta2Change(idx: number, val: number | null): void {
@@ -667,6 +749,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
         (l, i): CompraLineaUI => (i !== idx ? l : { ...l, precioVenta2: val }),
       ),
     );
+    this.guardarDraft();
   }
 
   onPrecioVenta3Change(idx: number, val: number | null): void {
@@ -675,6 +758,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
         (l, i): CompraLineaUI => (i !== idx ? l : { ...l, precioVenta3: val }),
       ),
     );
+    this.guardarDraft();
   }
 
   duplicarLinea(idx: number): void {
@@ -710,6 +794,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
     const err = this.validar();
     if (err) return void this.alertService.showWarn('Compra incompleta', err);
 
+    this.guardarDraft();
     this.isSubmitting = true;
     try {
       const detalles: CreateCompraDetalleDto[] = this.lineas().map((l) => ({
@@ -768,6 +853,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
           this.compraService.update(this.compraToEdit.id, dto),
         );
         if (res?.data) {
+          this.limpiarDraft();
           this.alertService.showSuccess(
             'Compra actualizada',
             `Compra #${res.data.id} actualizada. Stock recalculado.`,
@@ -821,6 +907,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
   }
 
   closeModal(): void {
+    this.guardarDraft();
     this.resetForm();
     this.modalClosed.emit();
   }
