@@ -70,4 +70,11 @@ export class VentaService {
       responseType: 'blob',
     });
   }
+
+  // ── QR para tirilla ─────────────────────────────────────
+  getQRData(ventaId: number): Observable<ResponseModel<{ qr: string }>> {
+    return this.http.get<ResponseModel<{ qr: string }>>(
+      `${this.apiUrl}/${ventaId}/qr`,
+    );
+  }
 }

@@ -115,7 +115,7 @@
               style="color: #6366f1"
               pTooltip="Reimprimir tirilla"
               tooltipPosition="left"
-              *ngIf="item.estadoVenta === 'COMPLETADA'"
+              *ngIf="item.estadoVenta === 'COMPLETADA' || item.estadoVenta === 'PAGO_PARCIAL'"
               [loading]="loadingTirilla"
               (click)="reimprimir(item, $event)"
             ></button>
@@ -202,6 +202,8 @@
 <app-modal-tirilla
   [displayModal]="showTirilla"
   [venta]="ventaImpresion"
+  [qrData]="qrDataTirilla"
+  [cufeCode]="cufeCodeTirilla"
   (modalClosed)="onTirillaClose()"
 />
 <app-modal-factura
