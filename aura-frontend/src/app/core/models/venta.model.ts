@@ -61,6 +61,7 @@ export interface VentaModel {
   totalPagar: number;
   estadoVenta: EstadoVenta;
   cufe: string | null;
+  qrData?: string | null;
   estadoDian: string | null;
   detalles: VentaDetalleModel[];
   pagos: VentaPagoModel[];
@@ -93,6 +94,7 @@ export interface VentaTableModel {
   estadoVenta: EstadoVenta;
   estadoDian?: string;
   cufe?: string;
+  qrData?: string | null;
   factusUrl?: string;
   factusNumero?: string;
 }

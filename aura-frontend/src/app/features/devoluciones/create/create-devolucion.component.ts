@@ -27,10 +27,13 @@ import {
   CreateDevolucionDetalleDto,
   CreateDevolucionDto,
 } from '../../../core/models/devolucion.model';
-import { VentaModel } from '../../../core/models/venta.model';
+import { VentaDetalleModel, VentaModel } from '../../../core/models/venta.model';
 import { DevolucionService } from '../../../core/services/devolucion.service';
 import { VentaService } from '../../../core/services/venta.service';
+import { EmpresaService } from '../../../core/services/empresa.service';
+import { IndexDBService } from '../../../core/services/index-db.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
+import { ModalTirillaComponent } from '../../pos/components/modal-tirilla/modal-tirilla.component';
 
 interface DetalleRow {
   productoId: number;
@@ -59,6 +62,7 @@ interface DetalleRow {
     DividerModule,
     TableModule,
     TextareaModule,
+    ModalTirillaComponent,
   ],
   providers: [MessageService],
   templateUrl: './create-devolucion.component.html',
@@ -85,6 +89,10 @@ export class CreateDevolucionComponent implements OnChanges {
 
   public isSaving = false;
 
+  // Tirilla post-devolución
+  public showTirilla = false;
+  public ventaImpresion: VentaModel | null = null;
+
   readonly tipoOpciones = [
     { label: 'Parcial', value: 'PARCIAL' },
     { label: 'Total', value: 'TOTAL' },
@@ -101,6 +109,8 @@ export class CreateDevolucionComponent implements OnChanges {
     private readonly cdr: ChangeDetectorRef,
     private readonly devolucionService: DevolucionService,
     private readonly ventaService: VentaService,
+    private readonly empresaService: EmpresaService,
+    private readonly indexDBService: IndexDBService,
     private readonly alertService: AlertService,
   ) {}
 
@@ -216,6 +226,7 @@ export class CreateDevolucionComponent implements OnChanges {
         'Devolución creada',
         'La devolución fue registrada exitosamente.',
       );
+      await this.abrirTirillaPostDevolucion();
       this.created.emit();
     } catch (err: any) {
       this.alertService.showError(
@@ -226,6 +237,104 @@ export class CreateDevolucionComponent implements OnChanges {
       this.isSaving = false;
       this.cdr.markForCheck();
     }
+  }
+
+  private async abrirTirillaPostDevolucion(): Promise<void> {
+    if (!this.ventaCargada) return;
+
+    const restantes = this.calcularDetallesRestantes(this.ventaCargada);
+    if (restantes.length === 0) {
+      this.alertService.showSuccess(
+        'Sin productos restantes',
+        'La devolución cubre todos los productos de la venta, no hay tirilla por reimprimir.',
+      );
+      return;
+    }
+
+    try {
+      const [empresaRes, auth] = await Promise.all([
+        lastValueFrom(this.empresaService.getConfig()),
+        this.indexDBService.loadDataAuthDB(),
+      ]);
+      const empresa = empresaRes?.data;
+
+      const newImpuestosTotal = restantes.reduce((s, d) => s + d.impuestoValor, 0);
+      const newDescuentoTotal = restantes.reduce((s, d) => s + d.montoDescuento, 0);
+      const newTotalPagar = restantes.reduce((s, d) => s + d.subtotalLinea, 0);
+      const newSubtotal = newTotalPagar + newDescuentoTotal - newImpuestosTotal;
+
+      const factorPagos =
+        this.ventaCargada.totalPagar > 0
+          ? newTotalPagar / this.ventaCargada.totalPagar
+          : 1;
+      const pagosEscalados = (this.ventaCargada.pagos ?? []).map((p) => ({
+        ...p,
+        monto: p.monto * factorPagos,
+        montoRecibido:
+          p.montoRecibido != null ? p.montoRecibido * factorPagos : null,
+      }));
+
+      this.ventaImpresion = {
+        ...this.ventaCargada,
+        detalles: restantes,
+        pagos: pagosEscalados,
+        subtotal: newSubtotal,
+        descuentoTotal: newDescuentoTotal,
+        impuestosTotal: newImpuestosTotal,
+        totalPagar: newTotalPagar,
+        cufe: null,
+        qrData: null,
+        logoUrl: empresa?.logoUrl ?? '',
+        razonSocial: empresa?.razonSocial ?? '',
+        empresaNit: empresa?.nit ?? '',
+        empresaDireccion: empresa?.direccion ?? '',
+        empresaEmail: empresa?.correo ?? '',
+        empresaTelefono: empresa?.telefono ?? '',
+        municipio: empresa?.municipio ?? '',
+        cajeroNombre: auth?.nombreCompleto ?? '',
+        resolucionNumero: empresa?.resolucionNumero ?? undefined,
+        resolucionPrefijo: empresa?.resolucionPrefijo ?? undefined,
+        resolucionDesde: empresa?.resolucionDesde ?? undefined,
+        resolucionHasta: empresa?.resolucionHasta ?? undefined,
+        resolucionFechaDesde: empresa?.resolucionFechaDesde ?? undefined,
+        resolucionFechaHasta: empresa?.resolucionFechaHasta ?? undefined,
+      } as VentaModel;
+      this.showTirilla = true;
+      this.cdr.markForCheck();
+    } catch {
+      this.alertService.showError(
+        'Error',
+        'No se pudo preparar la tirilla post-devolución.',
+      );
+    }
+  }
+
+  private calcularDetallesRestantes(venta: VentaModel): VentaDetalleModel[] {
+    const result: VentaDetalleModel[] = [];
+    for (const original of venta.detalles) {
+      const row = this.detalles.find((d) => d.productoId === original.productoId);
+      let cantRestante = original.cantidad;
+      if (row?.seleccionado && row.cantidad > 0) {
+        cantRestante = original.cantidad - row.cantidad;
+      }
+      if (cantRestante <= 0 || original.cantidad <= 0) continue;
+
+      const factor = cantRestante / original.cantidad;
+      result.push({
+        ...original,
+        cantidad: cantRestante,
+        subtotalLinea: original.subtotalLinea * factor,
+        impuestoValor: original.impuestoValor * factor,
+        montoDescuento: original.montoDescuento * factor,
+      });
+    }
+    return result;
+  }
+
+  onTirillaClose(): void {
+    this.showTirilla = false;
+    this.ventaImpresion = null;
+    this.cdr.markForCheck();
   }
 
   close(): void {
