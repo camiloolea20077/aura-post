@@ -70,6 +70,8 @@ export class IndexVentasComponent implements OnInit {
   ventaParaFE: VentaTableModel | null = null;
   showTirilla = false;
   ventaImpresion: VentaModel | null = null;
+  qrDataTirilla: string | null = null;
+  cufeCodeTirilla: string | null = null;
   loadingTirilla = false;
   public showDetalle = false;
   public selectedId: number | null = null;
@@ -185,6 +187,9 @@ export class IndexVentasComponent implements OnInit {
   async reimprimir(item: VentaTableModel, event: Event): Promise<void> {
     event.stopPropagation();
     this.loadingTirilla = true;
+    this.qrDataTirilla = null;
+    this.cufeCodeTirilla = null;
+
     try {
       // Cargar venta + empresa + cajero en paralelo
       const [ventaRes, empresaRes, auth] = await Promise.all([
@@ -194,9 +199,10 @@ export class IndexVentasComponent implements OnInit {
       ]);
 
       const empresa = empresaRes?.data;
+      const ventaFull = ventaRes?.data;
 
       this.ventaImpresion = {
-        ...ventaRes?.data,
+        ...ventaFull,
         // Datos empresa
         logoUrl: empresa?.logoUrl ?? '',
         razonSocial: empresa?.razonSocial ?? '',
@@ -216,6 +222,13 @@ export class IndexVentasComponent implements OnInit {
         resolucionFechaDesde: empresa?.resolucionFechaDesde ?? null,
         resolucionFechaHasta: empresa?.resolucionFechaHasta ?? null,
       } as unknown as VentaModel;
+
+      // Si la venta tiene FE, usar los datos que ya vienen del backend
+      if (ventaFull?.cufe) {
+        this.qrDataTirilla = ventaFull.qrData ?? null;
+        this.cufeCodeTirilla = ventaFull.cufe;
+      }
+
       this.showTirilla = true;
       this.cdr.markForCheck();
     } catch {

@@ -223,4 +223,10 @@
   </ng-template>
 </p-dialog>
 
+<app-modal-tirilla
+  [displayModal]="showTirilla"
+  [venta]="ventaImpresion"
+  (modalClosed)="onTirillaClose()"
+/>
+
 <p-toast />
