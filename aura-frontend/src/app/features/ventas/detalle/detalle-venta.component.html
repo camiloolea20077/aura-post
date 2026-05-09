@@ -18,8 +18,8 @@
         <span class="header-fecha">{{ formatFecha(venta.fechaEmision) }}</span>
       </div>
       <p-tag
-        [value]="venta.estadoVenta === 'COMPLETADA' ? 'Completada' : 'Anulada'"
-        [severity]="venta.estadoVenta === 'COMPLETADA' ? 'success' : 'danger'"
+        [value]="getEstadoLabel(venta.estadoVenta)"
+        [severity]="getEstadoSeverity(venta.estadoVenta)"
         [rounded]="true"
       />
     </div>
@@ -121,7 +121,7 @@
     </div>
 
     <!-- Zona anular -->
-    <div class="anular-zone" *ngIf="venta.estadoVenta === 'COMPLETADA' && puedeAnular">
+    <div class="anular-zone" *ngIf="(venta.estadoVenta === 'COMPLETADA' || venta.estadoVenta === 'PAGO_PARCIAL') && puedeAnular">
       <div class="anular-warn">
         <i class="pi pi-exclamation-triangle"></i>
         <div>
