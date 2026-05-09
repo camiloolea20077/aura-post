@@ -16,7 +16,9 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
-import { METODOS_PAGO, VentaModel } from '../../../core/models/venta.model';
+import { EstadoVenta, METODOS_PAGO, VentaModel } from '../../../core/models/venta.model';
+
+type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' | undefined;
 import { VentaService } from '../../../core/services/venta.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
 import { IndexDBService } from '../../../core/services/index-db.service';
@@ -144,5 +146,22 @@ export class DetalleVentaComponent implements OnChanges {
       hour: '2-digit',
       minute: '2-digit',
     });
+  }
+
+  getEstadoSeverity(e: EstadoVenta): TagSeverity {
+    const map: Record<EstadoVenta, TagSeverity> = {
+      COMPLETADA: 'success',
+      ANULADA: 'danger',
+      PAGO_PARCIAL: 'warn',
+    };
+    return map[e] ?? 'secondary';
+  }
+
+  getEstadoLabel(e: EstadoVenta): string {
+    return e === 'COMPLETADA'
+      ? 'Completada'
+      : e === 'PAGO_PARCIAL'
+        ? 'Pago Parcial'
+        : 'Anulada';
   }
 }
