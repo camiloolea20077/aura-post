@@ -128,6 +128,7 @@ export class DashboardComponent implements OnInit {
       const colores: Record<string, string> = {
         EFECTIVO: '#10B981',
         TARJETA: '#2E6CF6',
+        CREDITO: '#F59E0B',
         NEQUI: '#7B4DFF',
       };
 
@@ -266,6 +267,7 @@ export class DashboardComponent implements OnInit {
       TARJETA: 'Tarjeta',
       NEQUI: 'Nequi',
       TRANSFERENCIA: 'Transferencia',
+      CREDITO: 'Crédito',
       CHEQUE: 'Cheque',
     };
     return map[metodo] ?? metodo;
