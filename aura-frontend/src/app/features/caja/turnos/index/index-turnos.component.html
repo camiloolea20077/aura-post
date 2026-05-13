@@ -272,7 +272,7 @@
           <th style="width: 120px" class="text-right">Base inicial</th>
           <th style="width: 120px" class="text-right">Diferencia</th>
           <th style="width: 90px" class="text-center">Estado</th>
-          <th style="width: 80px" class="text-center">Acciones</th>
+          <th style="width: 120px" class="text-center">Acciones</th>
         </tr>
       </ng-template>
 
@@ -335,15 +335,30 @@
             />
           </td>
           <td class="text-center">
-            <button
-              *ngIf="item.estado === 'ABIERTA'"
-              pButton
-              icon="pi pi-lock"
-              class="p-button-rounded p-button-sm p-button-danger p-button-outlined"
-              pTooltip="Cerrar turno"
-              tooltipPosition="left"
-              (click)="openCerrarDesdeTabla(item)"
-            ></button>
+            <div class="row-actions">
+              <button
+                pButton
+                [icon]="
+                  generandoPdfId === item.id
+                    ? 'pi pi-spin pi-spinner'
+                    : 'pi pi-file-pdf'
+                "
+                class="p-button-rounded p-button-sm p-button-outlined p-button-secondary"
+                [disabled]="generandoPdfId === item.id"
+                pTooltip="Descargar cierre PDF"
+                tooltipPosition="left"
+                (click)="descargarPdf(item)"
+              ></button>
+              <button
+                *ngIf="item.estado === 'ABIERTA'"
+                pButton
+                icon="pi pi-lock"
+                class="p-button-rounded p-button-sm p-button-danger p-button-outlined"
+                pTooltip="Cerrar turno"
+                tooltipPosition="left"
+                (click)="openCerrarDesdeTabla(item)"
+              ></button>
+            </div>
           </td>
         </tr>
       </ng-template>
@@ -391,7 +406,7 @@
             <p-skeleton width="70px" styleClass="mx-auto" />
           </td>
           <td class="text-center">
-            <p-skeleton width="36px" styleClass="mx-auto" />
+            <p-skeleton width="80px" styleClass="mx-auto" />
           </td>
         </tr>
       </ng-template>

@@ -720,3 +720,10 @@ $muted: #64748b;
 .text-right {
   text-align: right !important;
 }
+
+.row-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
