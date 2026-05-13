@@ -24,6 +24,7 @@ import {
   TurnoCajaTableModel,
   TurnoPageableDto,
   ResumenTurnoDto, // ← NUEVO
+  MovimientoCajaDto,
 } from '../../../../core/models/caja.model';
 import { CerrarTurnoComponent } from '../cerdad/cerrar-turno.component';
 import { AbrirTurnoComponent } from '../abrir/abrir-turno.component';
@@ -78,6 +79,9 @@ export class IndexTurnosComponent implements OnInit, OnDestroy {
   rowSize = 15;
   searchQuery = '';
   lastLazyEvent!: TableLazyLoadEvent;
+
+  // ── PDF cierre ────────────────────────────────────────────
+  generandoPdfId: number | null = null;
 
   constructor(
     private readonly turnoCajaService: TurnoCajaService,
@@ -275,5 +279,680 @@ export class IndexTurnosComponent implements OnInit, OnDestroy {
   getDiferenciaClass(d: number | null | undefined): string {
     if (!d) return '';
     return d > 0 ? 'dif-sobrante' : 'dif-faltante';
+  }
+
+  // ── Descargar PDF de cierre ───────────────────────────────
+  async descargarPdf(item: TurnoCajaTableModel): Promise<void> {
+    if (this.generandoPdfId) return;
+    this.generandoPdfId = item.id;
+    this.cdr.markForCheck();
+    try {
+      const res = await lastValueFrom(this.turnoCajaService.resumen(item.id));
+      const data = res?.data;
+      if (!data) {
+        this.alertService.showError(
+          'Error',
+          'No se pudo obtener el resumen del turno',
+        );
+        return;
+      }
+      await this.generarPdfCierre(data);
+    } catch {
+      this.alertService.showError('Error', 'No se pudo generar el PDF');
+    } finally {
+      this.generandoPdfId = null;
+      this.cdr.markForCheck();
+    }
+  }
+
+  private async generarPdfCierre(d: ResumenTurnoDto): Promise<void> {
+    const pdfMake = (await import('pdfmake/build/pdfmake')).default;
+    const pdfFonts = (await import('pdfmake/build/vfs_fonts')).default;
+    (pdfMake as any).vfs =
+      (pdfFonts as any)['vfs'] ?? (pdfFonts as any).pdfMake?.vfs;
+
+    const cerrado = d.estado === 'CERRADA';
+    const f = (v: number | null | undefined) => this.formatCOP(v);
+    const ventasEfectivo =
+      d.ventasPorMetodoPago?.find((m) => m.metodoPago === 'EFECTIVO')
+        ?.totalMonto ?? 0;
+
+    // ── Tabla categorías ──────────────────────────────────
+    const catBody: any[][] = [
+      [
+        { text: 'Categoría', style: 'thCell' },
+        { text: 'Uds', style: 'thCell', alignment: 'center' },
+        { text: 'Bruto', style: 'thCell', alignment: 'right' },
+        { text: 'Desc.', style: 'thCell', alignment: 'right' },
+        { text: 'Neto', style: 'thCell', alignment: 'right' },
+      ],
+      ...(d.ventasPorCategoria?.length
+        ? d.ventasPorCategoria.map((c) => [
+            { text: c.categoriaNombre, style: 'tdCell' },
+            {
+              text: String(c.totalProductosVendidos),
+              style: 'tdCell',
+              alignment: 'center',
+            },
+            { text: f(c.totalBruto), style: 'tdCell', alignment: 'right' },
+            { text: f(c.totalDescuentos), style: 'tdCell', alignment: 'right' },
+            {
+              text: f(c.totalNeto),
+              style: 'tdCell',
+              alignment: 'right',
+              bold: true,
+            },
+          ])
+        : [
+            [
+              {
+                text: 'Sin ventas en este turno',
+                colSpan: 5,
+                alignment: 'center',
+                color: '#94a3b8',
+                fontSize: 8,
+                margin: [0, 4, 0, 4],
+              },
+              {},
+              {},
+              {},
+              {},
+            ],
+          ]),
+    ];
+
+    // ── Tabla métodos de pago ─────────────────────────────
+    const mpBody: any[][] = [
+      [
+        { text: 'Método de pago', style: 'thCell' },
+        { text: 'Pagos', style: 'thCell', alignment: 'center' },
+        { text: 'Monto', style: 'thCell', alignment: 'right' },
+      ],
+      ...(d.ventasPorMetodoPago?.length
+        ? d.ventasPorMetodoPago.map((m) => [
+            { text: m.metodoPago, style: 'tdCell' },
+            {
+              text: String(m.totalPagos),
+              style: 'tdCell',
+              alignment: 'center',
+            },
+            {
+              text: f(m.totalMonto),
+              style: 'tdCell',
+              alignment: 'right',
+              bold: true,
+            },
+          ])
+        : [
+            [
+              {
+                text: 'Sin pagos registrados',
+                colSpan: 3,
+                alignment: 'center',
+                color: '#94a3b8',
+                fontSize: 8,
+                margin: [0, 4, 0, 4],
+              },
+              {},
+              {},
+            ],
+          ]),
+    ];
+
+    // ── Movimientos (ingresos / egresos) ──────────────────
+    const ingresos = (d.movimientos ?? []).filter((m) => m.tipo === 'INGRESO');
+    const egresos = (d.movimientos ?? []).filter((m) => m.tipo === 'EGRESO');
+    const movBody = (lista: MovimientoCajaDto[]): any[][] => [
+      [
+        { text: '#', style: 'thCell', alignment: 'center' },
+        { text: 'Fecha', style: 'thCell' },
+        { text: 'Concepto', style: 'thCell' },
+        { text: 'Método', style: 'thCell' },
+        { text: 'Monto', style: 'thCell', alignment: 'right' },
+      ],
+      ...(lista.length
+        ? lista.map((m, i) => [
+            {
+              text: String(i + 1),
+              style: 'tdCell',
+              alignment: 'center',
+            },
+            {
+              text: m.fecha
+                ? new Date(m.fecha).toLocaleString('es-CO', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
+                : '—',
+              style: 'tdCell',
+            },
+            { text: m.concepto ?? '—', style: 'tdCell' },
+            { text: m.metodoPago ?? '—', style: 'tdCell' },
+            {
+              text: f(m.monto),
+              style: 'tdCell',
+              alignment: 'right',
+              bold: true,
+            },
+          ])
+        : [
+            [
+              {
+                text: 'Sin movimientos',
+                colSpan: 5,
+                alignment: 'center',
+                color: '#94a3b8',
+                fontSize: 8,
+                margin: [0, 4, 0, 4],
+              },
+              {},
+              {},
+              {},
+              {},
+            ],
+          ]),
+    ];
+
+    // ── Comisiones ────────────────────────────────────────
+    const comBody: any[][] = [
+      [
+        { text: 'Técnico', style: 'thCell' },
+        { text: 'Servicios', style: 'thCell', alignment: 'center' },
+        { text: 'Comisión', style: 'thCell', alignment: 'right' },
+        { text: 'Estado', style: 'thCell', alignment: 'center' },
+      ],
+      ...((d.comisiones ?? []).length
+        ? d.comisiones.map((c) => [
+            { text: c.tecnicoNombre, style: 'tdCell' },
+            {
+              text: String(c.totalServicios),
+              style: 'tdCell',
+              alignment: 'center',
+            },
+            {
+              text: f(c.totalComision),
+              style: 'tdCell',
+              alignment: 'right',
+              bold: true,
+            },
+            {
+              text: c.estadoLiquidacion,
+              style: 'tdCell',
+              alignment: 'center',
+              fontSize: 7.5,
+            },
+          ])
+        : [
+            [
+              {
+                text: 'Sin comisiones generadas',
+                colSpan: 4,
+                alignment: 'center',
+                color: '#94a3b8',
+                fontSize: 8,
+                margin: [0, 4, 0, 4],
+              },
+              {},
+              {},
+              {},
+            ],
+          ]),
+    ];
+
+    const docDefinition: any = {
+      pageSize: 'A4',
+      pageMargins: [40, 50, 40, 50],
+      defaultStyle: { font: 'Roboto', fontSize: 9, color: '#1e293b' },
+      styles: {
+        titulo: { fontSize: 16, bold: true, color: '#1e293b' },
+        subtitulo: { fontSize: 10, color: '#64748b' },
+        section: {
+          fontSize: 10,
+          bold: true,
+          color: '#4f46e5',
+          characterSpacing: 0.5,
+        },
+        label: {
+          fontSize: 7.5,
+          color: '#94a3b8',
+          bold: true,
+          characterSpacing: 0.5,
+        },
+        value: { fontSize: 9.5, color: '#1e293b', bold: true },
+        thCell: {
+          fontSize: 8,
+          bold: true,
+          color: '#475569',
+          fillColor: '#f1f5f9',
+        },
+        tdCell: { fontSize: 8.5, color: '#374151' },
+      },
+      content: [
+        // ── Encabezado ───────────────────────────────────
+        {
+          columns: [
+            {
+              stack: [
+                { text: 'Cierre de Turno', style: 'titulo' },
+                {
+                  text: `${d.cajaNombre} — ${d.usuarioNombre}`,
+                  style: 'subtitulo',
+                  margin: [0, 4, 0, 0],
+                },
+              ],
+            },
+            {
+              stack: [
+                {
+                  text: `N° ${d.turnoId}`,
+                  style: 'titulo',
+                  alignment: 'right',
+                  color: '#6366f1',
+                },
+                {
+                  text: cerrado ? 'CERRADO' : 'EN CURSO',
+                  alignment: 'right',
+                  fontSize: 9,
+                  bold: true,
+                  color: cerrado ? '#10b981' : '#f59e0b',
+                  margin: [0, 4, 0, 0],
+                },
+              ],
+            },
+          ],
+          margin: [0, 0, 0, 14],
+        },
+        {
+          canvas: [
+            {
+              type: 'line',
+              x1: 0,
+              y1: 0,
+              x2: 515,
+              y2: 0,
+              lineWidth: 1.5,
+              lineColor: '#e2e8f0',
+            },
+          ],
+          margin: [0, 0, 0, 14],
+        },
+
+        // ── Info turno ───────────────────────────────────
+        {
+          columns: [
+            {
+              stack: [
+                { text: 'APERTURA', style: 'label', margin: [0, 0, 0, 2] },
+                { text: this.formatFecha(d.fechaApertura), style: 'value' },
+              ],
+            },
+            {
+              stack: [
+                { text: 'BASE INICIAL', style: 'label', margin: [0, 0, 0, 2] },
+                { text: f(d.baseInicial), style: 'value' },
+              ],
+            },
+            {
+              stack: [
+                { text: 'TRANSACCIONES', style: 'label', margin: [0, 0, 0, 2] },
+                { text: String(d.totalTransacciones ?? 0), style: 'value' },
+              ],
+            },
+            {
+              stack: [
+                { text: 'TOTAL NETO', style: 'label', margin: [0, 0, 0, 2] },
+                {
+                  text: f(d.totalNeto),
+                  style: 'value',
+                  color: '#10b981',
+                  fontSize: 11,
+                },
+              ],
+            },
+          ],
+          columnGap: 16,
+          margin: [0, 0, 0, 18],
+        },
+
+        // ── Ventas por categoría ─────────────────────────
+        { text: 'VENTAS POR CATEGORÍA', style: 'section', margin: [0, 0, 0, 6] },
+        {
+          table: {
+            headerRows: 1,
+            widths: ['*', 35, 70, 70, 75],
+            body: catBody,
+          },
+          layout: this.tableLayout(),
+          margin: [0, 0, 0, 14],
+        },
+
+        // ── Métodos de pago ──────────────────────────────
+        {
+          columns: [
+            {
+              width: '*',
+              stack: [
+                {
+                  text: 'MÉTODOS DE PAGO',
+                  style: 'section',
+                  margin: [0, 0, 0, 6],
+                },
+                {
+                  table: {
+                    headerRows: 1,
+                    widths: ['*', 40, 75],
+                    body: mpBody,
+                  },
+                  layout: this.tableLayout(),
+                },
+              ],
+            },
+            { width: 12, text: '' },
+            {
+              width: '*',
+              stack: [
+                {
+                  text: 'RESUMEN VENTAS',
+                  style: 'section',
+                  margin: [0, 0, 0, 6],
+                },
+                {
+                  table: {
+                    widths: ['*', 'auto'],
+                    body: [
+                      [
+                        { text: 'Total bruto', style: 'tdCell' },
+                        {
+                          text: f(d.totalVentasBruto),
+                          style: 'tdCell',
+                          alignment: 'right',
+                        },
+                      ],
+                      [
+                        { text: 'Descuentos', style: 'tdCell' },
+                        {
+                          text: f(d.totalDescuentos),
+                          style: 'tdCell',
+                          alignment: 'right',
+                          color: '#ef4444',
+                        },
+                      ],
+                      [
+                        { text: 'Impuestos', style: 'tdCell' },
+                        {
+                          text: f(d.totalImpuestos),
+                          style: 'tdCell',
+                          alignment: 'right',
+                        },
+                      ],
+                      [
+                        {
+                          text: 'Ventas en efectivo',
+                          style: 'tdCell',
+                          bold: true,
+                        },
+                        {
+                          text: f(ventasEfectivo),
+                          style: 'tdCell',
+                          alignment: 'right',
+                          bold: true,
+                          color: '#10b981',
+                        },
+                      ],
+                      [
+                        {
+                          text: `Ventas a crédito (${d.cantidadVentasCredito ?? 0})`,
+                          style: 'tdCell',
+                          bold: true,
+                        },
+                        {
+                          text: f(d.totalVentasCredito),
+                          style: 'tdCell',
+                          alignment: 'right',
+                          bold: true,
+                          color: '#6366f1',
+                        },
+                      ],
+                      [
+                        {
+                          text: 'TOTAL NETO',
+                          style: 'tdCell',
+                          bold: true,
+                          fillColor: '#f1f5f9',
+                        },
+                        {
+                          text: f(d.totalNeto),
+                          style: 'tdCell',
+                          alignment: 'right',
+                          bold: true,
+                          color: '#10b981',
+                          fillColor: '#f1f5f9',
+                        },
+                      ],
+                    ],
+                  },
+                  layout: this.tableLayout(),
+                },
+              ],
+            },
+          ],
+          margin: [0, 0, 0, 14],
+        },
+
+        // ── Ingresos ─────────────────────────────────────
+        {
+          text: `INGRESOS DE CAJA — ${f(d.totalIngresos)}`,
+          style: 'section',
+          color: '#10b981',
+          margin: [0, 0, 0, 6],
+        },
+        {
+          table: {
+            headerRows: 1,
+            widths: [25, 75, '*', 60, 70],
+            body: movBody(ingresos),
+          },
+          layout: this.tableLayout(),
+          margin: [0, 0, 0, 14],
+        },
+
+        // ── Egresos ──────────────────────────────────────
+        {
+          text: `EGRESOS DE CAJA — ${f(d.totalEgresos)}`,
+          style: 'section',
+          color: '#ef4444',
+          margin: [0, 0, 0, 6],
+        },
+        {
+          table: {
+            headerRows: 1,
+            widths: [25, 75, '*', 60, 70],
+            body: movBody(egresos),
+          },
+          layout: this.tableLayout(),
+          margin: [0, 0, 0, 14],
+        },
+
+        // ── Comisiones ───────────────────────────────────
+        {
+          text: `COMISIONES GENERADAS — ${f(d.totalComisiones)}`,
+          style: 'section',
+          margin: [0, 0, 0, 6],
+        },
+        {
+          table: {
+            headerRows: 1,
+            widths: ['*', 50, 75, 65],
+            body: comBody,
+          },
+          layout: this.tableLayout(),
+          margin: [0, 0, 0, 14],
+        },
+
+        // ── Cuadre efectivo (si está cerrado) ────────────
+        ...(cerrado
+          ? [
+              {
+                text: 'CUADRE DE EFECTIVO',
+                style: 'section',
+                margin: [0, 0, 0, 6],
+              },
+              {
+                table: {
+                  widths: ['*', 'auto'],
+                  body: [
+                    [
+                      { text: 'Efectivo esperado', style: 'tdCell' },
+                      {
+                        text: f(d.totalEsperado),
+                        style: 'tdCell',
+                        alignment: 'right',
+                      },
+                    ],
+                    [
+                      { text: 'Efectivo en sistema', style: 'tdCell' },
+                      {
+                        text: f(d.totalEfectivoSistema),
+                        style: 'tdCell',
+                        alignment: 'right',
+                      },
+                    ],
+                    [
+                      { text: 'Efectivo declarado', style: 'tdCell' },
+                      {
+                        text: f(d.totalEfectivoReal),
+                        style: 'tdCell',
+                        alignment: 'right',
+                      },
+                    ],
+                    [
+                      {
+                        text: 'DIFERENCIA',
+                        style: 'tdCell',
+                        bold: true,
+                        fillColor: '#f1f5f9',
+                      },
+                      {
+                        text:
+                          (d.diferencia ?? 0) >= 0
+                            ? `+${f(d.diferencia)}`
+                            : f(d.diferencia),
+                        style: 'tdCell',
+                        alignment: 'right',
+                        bold: true,
+                        color: (d.diferencia ?? 0) >= 0 ? '#10b981' : '#ef4444',
+                        fillColor: '#f1f5f9',
+                      },
+                    ],
+                  ],
+                },
+                layout: this.tableLayout(),
+                margin: [0, 0, 0, 14],
+              },
+            ]
+          : []),
+
+        // ── Firmas ───────────────────────────────────────
+        {
+          canvas: [
+            {
+              type: 'line',
+              x1: 0,
+              y1: 0,
+              x2: 515,
+              y2: 0,
+              lineWidth: 0.5,
+              lineColor: '#e2e8f0',
+            },
+          ],
+          margin: [0, 10, 0, 24],
+        },
+        {
+          columns: [
+            {
+              stack: [
+                {
+                  canvas: [
+                    {
+                      type: 'line',
+                      x1: 0,
+                      y1: 0,
+                      x2: 180,
+                      y2: 0,
+                      lineWidth: 1,
+                      lineColor: '#334155',
+                    },
+                  ],
+                },
+                {
+                  text: 'CAJERO',
+                  style: 'label',
+                  margin: [0, 6, 0, 2],
+                },
+                {
+                  text: d.usuarioNombre,
+                  fontSize: 8,
+                  color: '#64748b',
+                },
+              ],
+            },
+            { text: '', width: '*' },
+            {
+              stack: [
+                {
+                  canvas: [
+                    {
+                      type: 'line',
+                      x1: 0,
+                      y1: 0,
+                      x2: 180,
+                      y2: 0,
+                      lineWidth: 1,
+                      lineColor: '#334155',
+                    },
+                  ],
+                },
+                {
+                  text: 'SUPERVISOR / ADMIN',
+                  style: 'label',
+                  margin: [0, 6, 0, 2],
+                },
+                {
+                  text: 'Nombre: ____________________________',
+                  fontSize: 8,
+                  color: '#64748b',
+                },
+              ],
+            },
+          ],
+        },
+
+        // ── Pie ──────────────────────────────────────────
+        {
+          text: `Generado el ${new Date().toLocaleString('es-CO')} — Aura POS`,
+          fontSize: 7.5,
+          color: '#94a3b8',
+          alignment: 'center',
+          margin: [0, 24, 0, 0],
+        },
+      ],
+    };
+
+    const filename = `cierre-turno-${d.turnoId}-${d.cajaNombre.replace(/\s+/g, '-')}.pdf`;
+    pdfMake.createPdf(docDefinition).download(filename);
+  }
+
+  private tableLayout() {
+    return {
+      hLineWidth: (i: number) => (i === 0 || i === 1 ? 1 : 0.5),
+      vLineWidth: () => 0,
+      hLineColor: () => '#e2e8f0',
+      paddingLeft: () => 6,
+      paddingRight: () => 6,
+      paddingTop: () => 4,
+      paddingBottom: () => 4,
+    };
   }
 }

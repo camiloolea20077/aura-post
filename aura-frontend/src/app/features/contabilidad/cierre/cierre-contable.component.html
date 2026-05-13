@@ -57,42 +57,23 @@
   <ng-container *ngIf="!loading && data">
     <!-- ══ KPIs ════════════════════════════════════════════════════════ -->
     <div class="kpi-grid">
-      <!-- Ventas -->
+      <!-- Ventas (sin IVA) -->
       <div class="kpi-card kpi-ventas">
         <div class="kpi-accent"></div>
         <div class="kpi-content">
           <div class="kpi-top">
-            <span class="kpi-label">Ventas netas</span>
+            <span class="kpi-label">Ventas sin IVA</span>
             <div class="kpi-badge kpi-badge-indigo">
               <i class="pi pi-receipt"></i>
             </div>
           </div>
-          <div class="kpi-val">{{ formatCOP(data.totalVentasNeto) }}</div>
+          <div class="kpi-val">{{ formatCOP(data.totalVentasSinIva) }}</div>
           <div class="kpi-meta">
             <span class="kpi-chip kpi-chip-indigo"
               >{{ data.cantidadVentas }} transacciones</span
             >
             <span class="kpi-muted"
-              >Bruto {{ formatCOP(data.totalVentasBruto) }}</span
-            >
-          </div>
-        </div>
-      </div>
-
-      <!-- Compras -->
-      <div class="kpi-card kpi-compras">
-        <div class="kpi-accent"></div>
-        <div class="kpi-content">
-          <div class="kpi-top">
-            <span class="kpi-label">Compras recibidas</span>
-            <div class="kpi-badge kpi-badge-blue">
-              <i class="pi pi-truck"></i>
-            </div>
-          </div>
-          <div class="kpi-val">{{ formatCOP(data.totalComprasNeto) }}</div>
-          <div class="kpi-meta">
-            <span class="kpi-chip kpi-chip-blue"
-              >{{ data.cantidadCompras }} órdenes</span
+              >IVA {{ formatCOP(data.totalImpuestos) }}</span
             >
           </div>
         </div>
@@ -124,6 +105,38 @@
             >
               Margen {{ pct(data.margenBruto) }}
             </span>
+            <span class="kpi-muted">vs costo de venta</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Utilidad operativa -->
+      <div
+        class="kpi-card"
+        [ngClass]="'kpi-util-op kpi-util-' + utilClass(data.utilidadOperativa)"
+      >
+        <div class="kpi-accent"></div>
+        <div class="kpi-content">
+          <div class="kpi-top">
+            <span class="kpi-label">Utilidad operativa</span>
+            <div
+              class="kpi-badge"
+              [ngClass]="'kpi-badge-' + utilClass(data.utilidadOperativa)"
+            >
+              <i class="pi pi-cog"></i>
+            </div>
+          </div>
+          <div class="kpi-val" [ngClass]="utilClass(data.utilidadOperativa)">
+            {{ formatCOP(data.utilidadOperativa) }}
+          </div>
+          <div class="kpi-meta">
+            <span
+              class="kpi-chip"
+              [ngClass]="'kpi-chip-' + utilClass(data.utilidadOperativa)"
+            >
+              Margen {{ pct(data.margenOperativo) }}
+            </span>
+            <span class="kpi-muted">inc. gastos deducibles</span>
           </div>
         </div>
       </div>
@@ -136,7 +149,7 @@
         <div class="kpi-accent"></div>
         <div class="kpi-content">
           <div class="kpi-top">
-            <span class="kpi-label">Utilidad neta aprox.</span>
+            <span class="kpi-label">Utilidad neta</span>
             <div
               class="kpi-badge"
               [ngClass]="'kpi-badge-' + utilClass(data.utilidadNeta)"
@@ -157,9 +170,21 @@
             >
               Margen {{ pct(data.margenNeto) }}
             </span>
-            <span class="kpi-muted">inc. comisiones y mermas</span>
+            <span class="kpi-muted">final, todo descontado</span>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- ══ WARNING productos sin costo ════════════════════════════ -->
+    <div class="cc-warning" *ngIf="(data.productosSinCosto ?? 0) > 0">
+      <i class="pi pi-exclamation-triangle"></i>
+      <div class="cc-warning-body">
+        <strong>{{ data.productosSinCosto }}</strong> ítem(s) vendido(s) sin
+        costo configurado — representan
+        <strong>{{ formatCOP(data.valorVentasSinCosto) }}</strong> en ventas.
+        El cálculo del COGS los toma como costo cero (margen inflado). Configura
+        el costo unitario en el módulo de productos para mejorar la precisión.
       </div>
     </div>
 
@@ -181,9 +206,9 @@
         <div class="pl-body">
           <!-- Sección: Ingresos -->
           <div class="pl-section">
-            <div class="pl-section-tag pl-tag-ingreso">INGRESOS</div>
+            <div class="pl-section-tag pl-tag-ingreso">INGRESOS (sin IVA)</div>
             <div class="pl-line">
-              <span class="pl-line-label">Ventas brutas</span>
+              <span class="pl-line-label">Ventas brutas (subtotal)</span>
               <span class="pl-line-val">{{
                 formatCOP(data.totalVentasBruto)
               }}</span>
@@ -200,35 +225,45 @@
               >
             </div>
             <div class="pl-line pl-line-info">
-              <span class="pl-line-label pl-muted">Impuestos incluidos</span>
+              <span class="pl-line-label pl-muted"
+                >IVA cobrado (no es utilidad)</span
+              >
               <span class="pl-line-val pl-muted">{{
                 formatCOP(data.totalImpuestos)
               }}</span>
             </div>
             <div class="pl-result pl-result-ingreso">
-              <span>Ventas netas</span>
+              <span>= Ventas netas sin IVA</span>
               <span class="pl-result-val">{{
-                formatCOP(data.totalVentasNeto)
+                formatCOP(data.totalVentasSinIva)
               }}</span>
             </div>
           </div>
 
-          <!-- Sección: Costos -->
+          <!-- Sección: COGS y mermas -->
           <div class="pl-section">
-            <div class="pl-section-tag pl-tag-costo">COSTOS</div>
+            <div class="pl-section-tag pl-tag-costo">COSTO DE VENTAS</div>
             <div class="pl-line pl-line-deduct">
               <span class="pl-line-label"
-                ><i class="pi pi-minus-circle"></i> Costo de compras</span
+                ><i class="pi pi-minus-circle"></i> Costo de lo vendido (COGS)
+              </span>
+              <span class="pl-line-val negativo"
+                >({{ formatCOP(data.costoVentas) }})</span
+              >
+            </div>
+            <div class="pl-line pl-line-deduct" *ngIf="data.totalMermas > 0">
+              <span class="pl-line-label"
+                ><i class="pi pi-minus-circle"></i> Mermas aprobadas</span
               >
               <span class="pl-line-val negativo"
-                >({{ formatCOP(data.totalComprasNeto) }})</span
+                >({{ formatCOP(data.totalMermas) }})</span
               >
             </div>
             <div
               class="pl-result pl-result-bruta"
               [ngClass]="utilClass(data.utilidadBruta)"
             >
-              <span>Utilidad bruta</span>
+              <span>= Utilidad bruta</span>
               <div class="pl-result-right">
                 <span class="pl-result-val">{{
                   formatCOP(data.utilidadBruta)
@@ -241,7 +276,9 @@
           <!-- Sección: Gastos operativos -->
           <div
             class="pl-section"
-            *ngIf="data.totalComisionesTecnicos > 0 || data.totalMermas > 0"
+            *ngIf="
+              data.totalComisionesTecnicos > 0 || data.totalGastosDeducibles > 0
+            "
           >
             <div class="pl-section-tag pl-tag-gasto">GASTOS OPERATIVOS</div>
             <div
@@ -255,23 +292,53 @@
                 >({{ formatCOP(data.totalComisionesTecnicos) }})</span
               >
             </div>
-            <div class="pl-line pl-line-deduct" *ngIf="data.totalMermas > 0">
+            <div
+              class="pl-line pl-line-deduct"
+              *ngIf="data.totalGastosDeducibles > 0"
+            >
               <span class="pl-line-label"
-                ><i class="pi pi-minus-circle"></i> Mermas aprobadas</span
+                ><i class="pi pi-minus-circle"></i> Gastos deducibles</span
               >
               <span class="pl-line-val negativo"
-                >({{ formatCOP(data.totalMermas) }})</span
+                >({{ formatCOP(data.totalGastosDeducibles) }})</span
+              >
+            </div>
+            <div
+              class="pl-result pl-result-bruta"
+              [ngClass]="utilClass(data.utilidadOperativa)"
+            >
+              <span>= Utilidad operativa</span>
+              <div class="pl-result-right">
+                <span class="pl-result-val">{{
+                  formatCOP(data.utilidadOperativa)
+                }}</span>
+                <span class="pl-result-pct">{{
+                  pct(data.margenOperativo)
+                }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sección: Gastos no deducibles -->
+          <div class="pl-section" *ngIf="data.totalGastosNoDeducibles > 0">
+            <div class="pl-section-tag pl-tag-gasto">GASTOS NO DEDUCIBLES</div>
+            <div class="pl-line pl-line-deduct">
+              <span class="pl-line-label"
+                ><i class="pi pi-minus-circle"></i> Gastos no deducibles</span
+              >
+              <span class="pl-line-val negativo"
+                >({{ formatCOP(data.totalGastosNoDeducibles) }})</span
               >
             </div>
           </div>
 
           <!-- Resultado final -->
           <div class="pl-final" [ngClass]="utilClass(data.utilidadNeta)">
-            <div class="pl-final-label">Utilidad neta aprox.</div>
+            <div class="pl-final-label">Utilidad neta final</div>
             <div class="pl-final-right">
               <div class="pl-final-val">{{ formatCOP(data.utilidadNeta) }}</div>
               <div class="pl-final-pct">
-                {{ pct(data.margenNeto) }} sobre ventas
+                {{ pct(data.margenNeto) }} sobre ventas sin IVA
               </div>
             </div>
           </div>
