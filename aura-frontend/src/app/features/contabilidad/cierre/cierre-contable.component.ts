@@ -243,13 +243,13 @@ export class CierreContableComponent implements OnInit {
     ws.mergeCells(`A${rowKpiH.number}:E${rowKpiH.number}`);
     styleSectionHeader(rowKpiH, C.dark);
 
-    const rowKpiCols = ws.addRow(['Ventas netas', 'Compras', 'Utilidad bruta', 'Utilidad neta', 'Margen neto']);
+    const rowKpiCols = ws.addRow(['Ventas sin IVA', 'COGS', 'Utilidad bruta', 'Utilidad operativa', 'Utilidad neta']);
     styleColHeader(rowKpiCols);
 
     const rowKpiVals = ws.addRow([
-      n(d.totalVentasNeto), n(d.totalComprasNeto),
-      n(d.utilidadBruta),   n(d.utilidadNeta),
-      (n(d.margenNeto) / 100),
+      n(d.totalVentasSinIva), n(d.costoVentas),
+      n(d.utilidadBruta),     n(d.utilidadOperativa),
+      n(d.utilidadNeta),
     ]);
     rowKpiVals.height = 18;
     rowKpiVals.eachCell({ includeEmpty: true }, (cell, col) => {
@@ -257,13 +257,10 @@ export class CierreContableComponent implements OnInit {
       cell.font   = { bold: true, size: 11, name: 'Calibri' };
       cell.border = allBorders();
       cell.alignment = { vertical: 'middle', horizontal: 'center' };
-      if (col <= 4) cell.numFmt = `"$"#,##0`;
-      if (col === 5) {
-        cell.numFmt = '0.00"%"';
-        cell.font.color = { argb: n(d.margenNeto) >= 0 ? C.green : C.red };
-      }
-      if (col === 3) cell.font.color = { argb: n(d.utilidadBruta) >= 0 ? C.greenDark : C.red };
-      if (col === 4) cell.font.color = { argb: n(d.utilidadNeta)  >= 0 ? C.greenDark : C.red };
+      cell.numFmt = `"$"#,##0`;
+      if (col === 3) cell.font.color = { argb: n(d.utilidadBruta)     >= 0 ? C.greenDark : C.red };
+      if (col === 4) cell.font.color = { argb: n(d.utilidadOperativa) >= 0 ? C.greenDark : C.red };
+      if (col === 5) cell.font.color = { argb: n(d.utilidadNeta)      >= 0 ? C.greenDark : C.red };
     });
 
     addEmpty(ws);
@@ -300,24 +297,32 @@ export class CierreContableComponent implements OnInit {
       if (margen) cellD.font = { ...cellD.font, size: 9, color: { argb: C.muted } };
     };
 
-    addPlRow('Ventas brutas',             n(d.totalVentasBruto));
+    addPlRow('Ventas brutas (subtotal)',  n(d.totalVentasBruto));
     if (n(d.totalDescuentos) > 0)
       addPlRow('(−) Descuentos',          n(d.totalDescuentos), '', false, false, true, true);
-    addPlRow('Impuestos incluidos',       n(d.totalImpuestos), '', false, false, false, false);
-    addPlRow('= Ventas netas',            n(d.totalVentasNeto), '', true);
+    addPlRow('IVA cobrado (no utilidad)', n(d.totalImpuestos), '', false, false, false, false);
+    addPlRow('= Ventas netas sin IVA',    n(d.totalVentasSinIva), '', true);
 
     addEmpty(ws);
-    addPlRow('(−) Costo de compras',      n(d.totalComprasNeto), '', false, false, true, true);
+    addPlRow('(−) Costo de lo vendido (COGS)', n(d.costoVentas), '', false, false, true, true);
+    if (n(d.totalMermas) > 0) {
+      addPlRow('(−) Mermas aprobadas',    n(d.totalMermas), '', false, false, true, false);
+    }
     addPlRow('= Utilidad bruta',          n(d.utilidadBruta),   `${this.pct(d.margenBruto)} sobre ventas`, true);
 
-    if (n(d.totalComisionesTecnicos) > 0) {
+    if (n(d.totalComisionesTecnicos) > 0 || n(d.totalGastosDeducibles) > 0) {
       addEmpty(ws);
-      addPlRow('(−) Comisiones técnicos', n(d.totalComisionesTecnicos), '', false, false, true, false);
+      if (n(d.totalComisionesTecnicos) > 0)
+        addPlRow('(−) Comisiones técnicos', n(d.totalComisionesTecnicos), '', false, false, true, false);
+      if (n(d.totalGastosDeducibles) > 0)
+        addPlRow('(−) Gastos deducibles', n(d.totalGastosDeducibles), '', false, false, true, true);
+      addPlRow('= Utilidad operativa',    n(d.utilidadOperativa), `${this.pct(d.margenOperativo)} sobre ventas`, true);
     }
-    if (n(d.totalMermas) > 0) {
-      addPlRow('(−) Mermas aprobadas',    n(d.totalMermas), '', false, false, true, true);
+    if (n(d.totalGastosNoDeducibles) > 0) {
+      addEmpty(ws);
+      addPlRow('(−) Gastos no deducibles', n(d.totalGastosNoDeducibles), '', false, false, true, false);
     }
-    addPlRow('= Utilidad neta aprox.',    n(d.utilidadNeta), `${this.pct(d.margenNeto)} sobre ventas`, false, true);
+    addPlRow('= Utilidad neta final',     n(d.utilidadNeta), `${this.pct(d.margenNeto)} sobre ventas`, false, true);
 
     addEmpty(ws);
 

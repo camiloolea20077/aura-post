@@ -928,6 +928,39 @@ $shadow-md:
   margin: 0;
 }
 
+// ══════════════════════════════════════════════════════════════
+//  WARNING (productos sin costo, etc.)
+// ══════════════════════════════════════════════════════════════
+.cc-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.85rem 1.1rem;
+  margin: 0.5rem 0 0.25rem;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-left: 4px solid #f59e0b;
+  border-radius: 12px;
+  color: #78350f;
+  font-size: 0.85rem;
+  line-height: 1.45;
+
+  i {
+    color: #b45309;
+    font-size: 1.1rem;
+    margin-top: 1px;
+  }
+
+  strong {
+    color: #92400e;
+    font-weight: 700;
+  }
+
+  .cc-warning-body {
+    flex: 1;
+  }
+}
+
 // ── Gastos del período ────────────────────────────────────────
 .gastos-grid {
   display: flex;

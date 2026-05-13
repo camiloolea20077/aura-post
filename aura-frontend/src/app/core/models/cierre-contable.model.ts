@@ -8,10 +8,18 @@ export interface CierreContableDto {
   totalDescuentos: number;
   totalImpuestos: number;
   totalVentasNeto: number;
+  totalVentasSinIva: number;
 
   // Compras
   cantidadCompras: number;
   totalComprasNeto: number;
+  totalComprasSinIva: number;
+  totalIvaCompras: number;
+
+  // COGS (costo real de lo vendido)
+  costoVentas: number;
+  productosSinCosto: number;
+  valorVentasSinCosto: number;
 
   // Comisiones
   cantidadComisiones: number;
@@ -21,10 +29,12 @@ export interface CierreContableDto {
   cantidadMermas: number;
   totalMermas: number;
 
-  // Resultados
+  // Resultados (P&L sin IVA con COGS real)
   utilidadBruta: number;
+  utilidadOperativa: number;
   utilidadNeta: number;
   margenBruto: number;
+  margenOperativo: number;
   margenNeto: number;
 
   // CxC
