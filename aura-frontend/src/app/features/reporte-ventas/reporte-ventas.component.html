@@ -37,6 +37,16 @@
       </div>
 
       <div class="download-group">
+        <p-selectButton
+          [(ngModel)]="modoReporte"
+          [options]="modoOptions"
+          optionLabel="label"
+          optionValue="value"
+          [allowEmpty]="false"
+          styleClass="modo-reporte-btn"
+          pTooltip="Detallado: una línea por ítem. Simple: una línea por factura con valores sumados."
+          tooltipPosition="bottom"
+        />
         <p-button
           icon="pi pi-file-excel"
           label="Excel"

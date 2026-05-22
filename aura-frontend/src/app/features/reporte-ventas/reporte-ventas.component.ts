@@ -7,6 +7,7 @@ import { TagModule } from 'primeng/tag';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
 import { TableModule } from 'primeng/table';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { lastValueFrom } from 'rxjs';
 import { ReporteService } from '../../core/services/reporte.service';
 import { VentaService } from '../../core/services/venta.service';
@@ -38,6 +39,7 @@ interface VentaResumen {
     SkeletonModule,
     TooltipModule,
     TableModule,
+    SelectButtonModule,
   ],
   templateUrl: './reporte-ventas.component.html',
   styleUrls: ['./reporte-ventas.component.scss'],
@@ -45,6 +47,13 @@ interface VentaResumen {
 export class ReporteVentasComponent implements OnInit {
   desde: Date | null = null;
   hasta: Date | null = null;
+
+  // Modo del reporte exportado: detallado (una línea por ítem) o simple (una línea por factura)
+  modoReporte: 'detallado' | 'simple' = 'detallado';
+  readonly modoOptions = [
+    { label: 'Detallado', value: 'detallado' },
+    { label: 'Simple', value: 'simple' },
+  ];
 
   loadingStats = true;
   loadingTabla = true;
@@ -175,9 +184,10 @@ export class ReporteVentasComponent implements OnInit {
   descargarExcel(): void {
     this.loadingExcel = true;
     this.reporteService
-      .ventasExcel(this.fmtDate(this.desde), this.fmtDate(this.hasta))
+      .ventasExcel(this.fmtDate(this.desde), this.fmtDate(this.hasta), this.modoReporte)
       .subscribe({
-        next: (b) => this.reporteService.descargar(b, 'reporte_ventas.xlsx'),
+        next: (b) =>
+          this.reporteService.descargar(b, `reporte_ventas_${this.modoReporte}.xlsx`),
         complete: () => (this.loadingExcel = false),
         error: () => (this.loadingExcel = false),
       });
@@ -186,7 +196,7 @@ export class ReporteVentasComponent implements OnInit {
   descargarPdf(): void {
     this.loadingPdf = true;
     this.reporteService
-      .ventasPdf(this.fmtDate(this.desde), this.fmtDate(this.hasta))
+      .ventasPdf(this.fmtDate(this.desde), this.fmtDate(this.hasta), this.modoReporte)
       .subscribe({
         next: (b) => this.reporteService.visualizarPdf(b),
         complete: () => (this.loadingPdf = false),

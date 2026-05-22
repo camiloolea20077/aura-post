@@ -167,10 +167,14 @@ export class CerrarTurnoComponent implements OnChanges {
 
   // ── Helpers comisiones ────────────────────────────────────
   get hayComisionesSinLiquidar(): boolean {
-    return !!this.resumen?.comisiones?.some(c => c.estadoLiquidacion !== 'PAGADA');
+    return !!this.resumen?.comisiones?.some(
+      (c) => c.estadoLiquidacion !== 'PAGADA',
+    );
   }
 
-  comisionSeverity(estado: EstadoLiquidacionTurno): 'success' | 'warn' | 'danger' {
+  comisionSeverity(
+    estado: EstadoLiquidacionTurno,
+  ): 'success' | 'warn' | 'danger' {
     if (estado === 'PAGADA') return 'success';
     if (estado === 'PENDIENTE') return 'warn';
     return 'danger';

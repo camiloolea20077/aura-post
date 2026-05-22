@@ -160,6 +160,7 @@ export interface ResumenTurnoDto {
   // Ventas a crédito del turno
   cantidadVentasCredito: number;
   totalVentasCredito: number;
+  detalleVentasCredito: DetalleVentaCreditoItem[];
 
   // Diagnóstico: detalle de cada pago en efectivo del turno
   detalleEfectivo: DetalleEfectivoItem[];
@@ -171,4 +172,15 @@ export interface DetalleEfectivoItem {
   montoEfectivo: number;
   totalVenta: number;
   estadoVenta: string;
+}
+
+export interface DetalleVentaCreditoItem {
+  ventaId: number;
+  prefijo: string;
+  consecutivo: number;
+  clienteNombre: string;
+  clienteDocumento: string | null;
+  totalVenta: number;
+  montoAbonado: number;
+  montoCredito: number;
 }
