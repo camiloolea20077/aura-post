@@ -77,7 +77,14 @@
 
 .download-group {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
+
+  :host ::ng-deep .modo-reporte-btn .p-button {
+    height: 34px;
+    font-size: 0.8rem;
+    padding: 0 0.85rem;
+  }
 }
 
 // ── Stats grid ────────────────────────────────────────────────

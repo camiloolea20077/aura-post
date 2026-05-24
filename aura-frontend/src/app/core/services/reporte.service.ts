@@ -10,17 +10,25 @@ export class ReporteService {
   constructor(private http: HttpClient) {}
 
   // ── Ventas ────────────────────────────────────────────────
-  ventasExcel(desde?: string, hasta?: string): Observable<Blob> {
+  ventasExcel(
+    desde?: string,
+    hasta?: string,
+    tipo: 'detallado' | 'simple' = 'detallado',
+  ): Observable<Blob> {
     return this.http.get(`${this.api}/ventas/excel`, {
       responseType: 'blob',
-      params: this.params(desde, hasta),
+      params: this.params(desde, hasta, tipo),
     });
   }
 
-  ventasPdf(desde?: string, hasta?: string): Observable<Blob> {
+  ventasPdf(
+    desde?: string,
+    hasta?: string,
+    tipo: 'detallado' | 'simple' = 'detallado',
+  ): Observable<Blob> {
     return this.http.get(`${this.api}/ventas/pdf`, {
       responseType: 'blob',
-      params: this.params(desde, hasta),
+      params: this.params(desde, hasta, tipo),
     });
   }
 
@@ -52,10 +60,15 @@ export class ReporteService {
     window.open(url, '_blank');
   }
 
-  private params(desde?: string, hasta?: string): Record<string, string> {
+  private params(
+    desde?: string,
+    hasta?: string,
+    tipo?: string,
+  ): Record<string, string> {
     const p: Record<string, string> = {};
     if (desde) p['desde'] = desde;
     if (hasta) p['hasta'] = hasta;
+    if (tipo) p['tipo'] = tipo;
     return p;
   }
 }
