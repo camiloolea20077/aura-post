@@ -42,6 +42,11 @@ import {
   CajaService,
   TurnoCajaService,
 } from '../../../core/services/caja.service';
+import { ModalTirillaComponent } from '../../pos/components/modal-tirilla/modal-tirilla.component';
+import { VentaService } from '../../../core/services/venta.service';
+import { EmpresaService } from '../../../core/services/empresa.service';
+import { IndexDBService } from '../../../core/services/index-db.service';
+import { VentaModel } from '../../../core/models/venta.model';
 
 type TagSeverity =
   | 'success'
@@ -71,6 +76,7 @@ type TagSeverity =
     ProgressBarModule,
     ConfirmDialogModule,
     TooltipModule,
+    ModalTirillaComponent,
   ],
   providers: [ConfirmationService],
   templateUrl: './detalle-cuenta-cobrar.component.html',
@@ -89,6 +95,13 @@ export class DetalleCuentaCobrarComponent implements OnInit {
   turnoActivo: TurnoCajaModel | null = null;
   loadingTurno = false;
 
+  // Tirilla POS
+  showTirilla = false;
+  loadingTirilla = false;
+  ventaImpresion: VentaModel | null = null;
+  qrDataTirilla: string | null = null;
+  cufeCodeTirilla: string | null = null;
+
   metodosPago = [
     { label: 'Efectivo', value: 'efectivo' },
     { label: 'Transferencia', value: 'transferencia' },
@@ -103,6 +116,9 @@ export class DetalleCuentaCobrarComponent implements OnInit {
     private readonly alert: AlertService,
     private readonly confirm: ConfirmationService,
     private readonly cdr: ChangeDetectorRef,
+    private readonly ventaService: VentaService,
+    private readonly empresaService: EmpresaService,
+    private readonly indexDBService: IndexDBService,
   ) {
     this.abonoForm = this.fb.group({
       monto: [null, [Validators.required, Validators.min(1)]],
@@ -135,6 +151,73 @@ export class DetalleCuentaCobrarComponent implements OnInit {
     } catch (err: any) {
       this.alert.showError('Error', 'No se pudo generar el recibo de caja');
     }
+  }
+
+  async imprimirTirilla(): Promise<void> {
+    if (!this.cuenta?.ventaId) {
+      this.alert.showError(
+        'Sin venta asociada',
+        'Esta cuenta no tiene una venta relacionada para imprimir la tirilla',
+      );
+      return;
+    }
+
+    this.loadingTirilla = true;
+    this.qrDataTirilla = null;
+    this.cufeCodeTirilla = null;
+
+    try {
+      // Cargar venta + empresa + cajero en paralelo
+      const [ventaRes, empresaRes, auth] = await Promise.all([
+        lastValueFrom(this.ventaService.getById(this.cuenta.ventaId)),
+        lastValueFrom(this.empresaService.getConfig()),
+        this.indexDBService.loadDataAuthDB(),
+      ]);
+
+      const empresa = empresaRes?.data;
+      const ventaFull = ventaRes?.data;
+
+      this.ventaImpresion = {
+        ...ventaFull,
+        // Datos empresa
+        logoUrl: empresa?.logoUrl ?? '',
+        razonSocial: empresa?.razonSocial ?? '',
+        empresaNombre: empresa?.razonSocial ?? '',
+        empresaNit: empresa?.nit ?? '',
+        empresaDireccion: empresa?.direccion ?? '',
+        empresaEmail: empresa?.correo ?? '',
+        empresaTelefono: empresa?.telefono ?? '',
+        municipio: empresa?.municipio ?? '',
+        // Cajero del usuario logueado
+        cajeroNombre: auth?.nombreCompleto ?? '',
+        // Resolución FE
+        resolucionNumero: empresa?.resolucionNumero ?? null,
+        resolucionPrefijo: empresa?.resolucionPrefijo ?? null,
+        resolucionDesde: empresa?.resolucionDesde ?? null,
+        resolucionHasta: empresa?.resolucionHasta ?? null,
+        resolucionFechaDesde: empresa?.resolucionFechaDesde ?? null,
+        resolucionFechaHasta: empresa?.resolucionFechaHasta ?? null,
+      } as unknown as VentaModel;
+
+      // Si la venta tiene FE, usar los datos que ya vienen del backend
+      if (ventaFull?.cufe) {
+        this.qrDataTirilla = ventaFull.qrData ?? null;
+        this.cufeCodeTirilla = ventaFull.cufe;
+      }
+
+      this.showTirilla = true;
+      this.cdr.markForCheck();
+    } catch {
+      this.alert.showError('Error', 'No se pudo cargar la venta');
+    } finally {
+      this.loadingTirilla = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  onTirillaClose(): void {
+    this.showTirilla = false;
+    this.ventaImpresion = null;
   }
   ngOnInit(): void {
     this.loadTurnoActivo();
