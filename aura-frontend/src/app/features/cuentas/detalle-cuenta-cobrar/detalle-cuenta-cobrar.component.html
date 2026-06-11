@@ -46,6 +46,16 @@
             class="p-button-outlined p-button-sm"
             (click)="imprimirFactura()"
           ></button>
+          &nbsp;
+          <button
+            pButton
+            icon="pi pi-receipt"
+            label="Imprimir Tirilla"
+            class="p-button-outlined p-button-sm"
+            [loading]="loadingTirilla"
+            [disabled]="!cuenta.ventaId"
+            (click)="imprimirTirilla()"
+          ></button>
         </div>
       </div>
     </div>
@@ -255,3 +265,11 @@
     </div>
   </div>
 </p-dialog>
+
+<app-modal-tirilla
+  [displayModal]="showTirilla"
+  [venta]="ventaImpresion"
+  [qrData]="qrDataTirilla"
+  [cufeCode]="cufeCodeTirilla"
+  (modalClosed)="onTirillaClose()"
+></app-modal-tirilla>
