@@ -117,12 +117,35 @@ export class ModalPagoComponent implements OnChanges {
     return m === 'TRANSFERENCIA' || m === 'NEQUI' || m === 'DAVIPLATA';
   }
 
+  // ¿Hay una línea a crédito distinta a la indicada? (evita dos créditos)
+  creditoEnOtraLinea(pago: PagoUI): boolean {
+    return this.pagos.some((p) => p !== pago && p.metodoPago === 'CREDITO');
+  }
+
+  // El crédito siempre representa "lo que falta": total − pagos de contado.
+  // Se recalcula cada vez que cambian los demás montos.
+  private recalcularCredito(): void {
+    const credito = this.pagos.find((p) => p.metodoPago === 'CREDITO');
+    if (!credito) return;
+    const otros = this.pagos
+      .filter((p) => p !== credito)
+      .reduce((s, p) => s + (p.monto ?? 0), 0);
+    credito.monto = Math.max(this.totalConDescuento - otros, 0);
+  }
+
+  onMontoChange(): void {
+    this.recalcularCredito();
+  }
+
   setMetodo(pago: PagoUI, m: MetodoPago): void {
+    // No permitir dos líneas a crédito
+    if (m === 'CREDITO' && this.creditoEnOtraLinea(pago)) return;
     pago.metodoPago = m;
     pago.cuentaBancariaId = null;
     if (m === 'CREDITO') {
-      pago.monto = this.total;
+      pago.monto = 0; // se completa con el resto en recalcularCredito()
     }
+    this.recalcularCredito();
   }
 
   addPago(): void {
@@ -132,17 +155,20 @@ export class ModalPagoComponent implements OnChanges {
       referencia: null,
       cuentaBancariaId: null,
     });
+    this.recalcularCredito();
   }
 
   removePago(i: number): void {
     if (this.pagos.length > 1) this.pagos.splice(i, 1);
+    this.recalcularCredito();
   }
 
   distribuirRestante(pago: PagoUI): void {
     const otros = this.pagos
-      .filter((p) => p !== pago)
+      .filter((p) => p !== pago && p.metodoPago !== 'CREDITO')
       .reduce((s, p) => s + (p.monto ?? 0), 0);
     pago.monto = Math.max(this.totalConDescuento - otros, 0);
+    this.recalcularCredito();
   }
 
   formatCOP = (v: number) =>
