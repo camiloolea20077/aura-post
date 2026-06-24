@@ -80,9 +80,9 @@
               class="metodo-btn"
               *ngFor="let m of metodos"
               [class.active]="pago.metodoPago === m.value"
-              [class.disabled-metodo]="m.value === 'CREDITO' && !esCreditoSeleccionable()"
+              [class.disabled-metodo]="m.value === 'CREDITO' && (!esCreditoSeleccionable() || creditoEnOtraLinea(pago))"
               [style.--mcolor]="m.color"
-              [disabled]="m.value === 'CREDITO' && !esCreditoSeleccionable()"
+              [disabled]="m.value === 'CREDITO' && (!esCreditoSeleccionable() || creditoEnOtraLinea(pago))"
               [title]="m.value === 'CREDITO' && !esCreditoSeleccionable() ? (creditoInfo?.motivoBloqueo ?? 'Crédito no disponible') : ''"
               (click)="setMetodo(pago, m.value)"
             >
@@ -115,6 +115,7 @@
               <div class="monto-inp-wrap">
                 <p-inputNumber
                   [(ngModel)]="pago.monto"
+                  (ngModelChange)="onMontoChange()"
                   mode="decimal"
                   [min]="0"
                   [maxFractionDigits]="2"
@@ -154,7 +155,7 @@
       <!-- Agregar método -->
       <button
         class="add-metodo-btn"
-        *ngIf="pagos.length < 4 && !tieneCredito"
+        *ngIf="pagos.length < 4"
         (click)="addPago()"
       >
         <i class="pi pi-plus"></i> Agregar otro método

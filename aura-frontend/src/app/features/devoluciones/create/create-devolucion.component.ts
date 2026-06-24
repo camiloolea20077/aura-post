@@ -150,9 +150,8 @@ export class CreateDevolucionComponent implements OnChanges {
       const venta = res?.data ?? null;
       if (!venta) {
         this.errorVenta = 'No se encontró la venta.';
-      } else if (venta.estadoVenta !== 'COMPLETADA') {
-        this.errorVenta =
-          'Solo se pueden devolver ventas en estado COMPLETADA.';
+      } else if (venta.estadoVenta === 'ANULADA') {
+        this.errorVenta = 'No se puede devolver una venta anulada.';
       } else {
         this.ventaCargada = venta;
         this.buildDetalles(venta);
