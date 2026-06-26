@@ -501,7 +501,9 @@ export class IndexTurnosComponent implements OnInit, OnDestroy {
           ]),
     ];
 
+    const filename = `cierre-turno-${d.turnoId}-${d.cajaNombre.replace(/\s+/g, '-')}`;
     const docDefinition: any = {
+      info: { title: filename },
       pageSize: 'A4',
       pageMargins: [40, 50, 40, 50],
       defaultStyle: { font: 'Roboto', fontSize: 9, color: '#1e293b' },
@@ -940,8 +942,9 @@ export class IndexTurnosComponent implements OnInit, OnDestroy {
       ],
     };
 
-    const filename = `cierre-turno-${d.turnoId}-${d.cajaNombre.replace(/\s+/g, '-')}.pdf`;
-    pdfMake.createPdf(docDefinition).download(filename);
+    // Abre el PDF en una pestaña nueva (visor del navegador) en vez de descargarlo
+    // automáticamente. Así el usuario decide si imprimirlo o guardarlo y dónde.
+    pdfMake.createPdf(docDefinition).open();
   }
 
   private tableLayout() {
