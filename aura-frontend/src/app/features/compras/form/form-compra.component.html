@@ -1,29 +1,46 @@
-<p-dialog
-  [(visible)]="displayModal"
-  [header]="modoEdicion ? 'Editar compra' : 'Registrar compra'"
-  [modal]="true"
-  [draggable]="false"
-  [resizable]="false"
-  [maximizable]="true"
-  [style]="{ width: '1400px' }"
-  [contentStyle]="{
-    height: 'calc(88vh - 130px)',
-    overflow: 'hidden',
-    padding: '0',
-  }"
-  styleClass="aura-dialog compra-dialog"
-  (onHide)="closeModal()"
->
-  <div class="compra-layout">
-    <!-- ═══════ HEADER (campos del documento) ════════════════════════ -->
-    <div class="compra-header">
-      <!-- Fila 1: Proveedor + metadatos del documento -->
-      <div class="header-row">
-        <!-- Proveedor -->
-        <div class="field field-proveedor">
+<div class="page">
+  <div class="card">
+    <!-- ═══════ HEADER ════════════════════════════════════════════════ -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <p-button
+          icon="pi pi-arrow-left"
+          [rounded]="true"
+          [text]="true"
+          (onClick)="cancelar()"
+        />
+        <span class="header-icon"><i class="pi pi-shopping-bag"></i></span>
+        <div>
+          <h1 class="title">
+            {{ modoEdicion ? "Editar compra" : "Registrar compra" }}
+          </h1>
+          <p class="subtitle">
+            Compra a proveedor — actualiza stock y kardex automáticamente
+          </p>
+        </div>
+      </div>
+      <button
+        pButton
+        type="button"
+        [label]="modoEdicion ? 'Actualizar compra' : 'Registrar compra'"
+        [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+        class="btn-aura"
+        [disabled]="isSubmitting || lineasArray.length === 0"
+        (click)="saveCompra()"
+      ></button>
+    </div>
+
+    <!-- ═══════ CUERPO ════════════════════════════════════════════════ -->
+    <div class="form-body">
+      <!-- ── Proveedor ─────────────────────────────────────────────── -->
+      <h3 class="section">Proveedor</h3>
+      <div class="campos">
+        <!-- Selección de proveedor -->
+        <div class="campo-row campo-row--full">
           <label>Proveedor <span class="required">*</span></label>
-          <div class="proveedor-wrap" *ngIf="!proveedorSeleccionado">
+          <div class="campo-control">
             <p-autoComplete
+              *ngIf="!proveedorSeleccionado"
               [(ngModel)]="proveedorQuery"
               [suggestions]="proveedoresSugerencias"
               field="nombreCompleto"
@@ -43,174 +60,188 @@
                 </div>
               </ng-template>
             </p-autoComplete>
+
+            <div class="proveedor-chip" *ngIf="proveedorSeleccionado">
+              <i class="pi pi-truck"></i>
+              <div class="chip-info">
+                <span class="chip-nombre">{{
+                  proveedorSeleccionado.nombreCompleto
+                }}</span>
+                <span class="chip-doc"
+                  >{{ proveedorSeleccionado.tipoDocumento }}
+                  {{ proveedorSeleccionado.numeroDocumento }}</span
+                >
+              </div>
+              <button
+                type="button"
+                class="chip-clear"
+                (click)="limpiarProveedor()"
+                pTooltip="Cambiar proveedor"
+              >
+                <i class="pi pi-times"></i>
+              </button>
+            </div>
           </div>
-          <div class="proveedor-chip" *ngIf="proveedorSeleccionado">
-            <i class="pi pi-truck"></i>
-            <div class="chip-info">
-              <span class="chip-nombre">{{
-                proveedorSeleccionado.nombreCompleto
-              }}</span>
-              <span class="chip-doc"
-                >{{ proveedorSeleccionado.tipoDocumento }}
-                {{ proveedorSeleccionado.numeroDocumento }}</span
+        </div>
+
+        <!-- Datos del proveedor (al seleccionarlo) -->
+        <ng-container *ngIf="proveedorSeleccionado">
+          <div class="campo-row" *ngIf="esJuridica">
+            <label>Razón social</label>
+            <div class="campo-readonly">
+              {{ terceroFull?.razonSocial || "—" }}
+            </div>
+          </div>
+          <div class="campo-row">
+            <label>Correo</label>
+            <div class="campo-readonly">{{ terceroFull?.email || "—" }}</div>
+          </div>
+          <div class="campo-row">
+            <label>Teléfono</label>
+            <div class="campo-readonly">{{ terceroFull?.telefono || "—" }}</div>
+          </div>
+          <div class="campo-row campo-row--full">
+            <label>Dirección</label>
+            <div class="campo-readonly">
+              {{ terceroFull?.direccion || "—" }}
+              <span *ngIf="terceroFull?.municipio">
+                · {{ terceroFull?.municipio }}</span
               >
             </div>
-            <button
-              type="button"
-              class="chip-clear"
-              (click)="limpiarProveedor()"
-              pTooltip="Cambiar proveedor"
-            >
-              <i class="pi pi-times"></i>
-            </button>
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- ── Documento ─────────────────────────────────────────────── -->
+      <h3 class="section">Documento</h3>
+      <div class="campos">
+        <div class="campo-row">
+          <label>Tipo de documento</label>
+          <div class="campo-control">
+            <p-dropdown
+              [(ngModel)]="tipoDocumento"
+              [options]="tipoDocumentoOpts"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-full"
+            />
           </div>
         </div>
-
-        <!-- Tipo de documento -->
-        <div class="field field-tipodoc">
-          <label>Tipo Doc.</label>
-          <p-dropdown
-            [(ngModel)]="tipoDocumento"
-            [options]="tipoDocumentoOpts"
-            optionLabel="label"
-            optionValue="value"
-            styleClass="w-full"
-          />
-        </div>
-
-        <!-- Sucursal -->
-        <div class="field field-sucursal">
+        <div class="campo-row">
           <label>Sucursal <span class="required">*</span></label>
-          <p-dropdown
-            [(ngModel)]="sucursalId"
-            [options]="sucursalesOpts"
-            optionLabel="label"
-            optionValue="value"
-            placeholder="Selecciona..."
-            styleClass="w-full"
-          />
+          <div class="campo-control">
+            <p-dropdown
+              [(ngModel)]="sucursalId"
+              [options]="sucursalesOpts"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Selecciona..."
+              styleClass="w-full"
+            />
+          </div>
         </div>
-
-        <!-- N° Documento -->
-        <div class="field field-ndoc">
+        <div class="campo-row">
           <label>N° Documento <span class="optional">(opc.)</span></label>
-          <input
-            type="text"
-            pInputText
-            [(ngModel)]="numeroCompra"
-            placeholder="FC-001-2025"
-            maxlength="50"
-            autocomplete="off"
-          />
+          <div class="campo-control">
+            <input
+              type="text"
+              pInputText
+              [(ngModel)]="numeroCompra"
+              placeholder="FC-001-2025"
+              maxlength="50"
+              autocomplete="off"
+              class="w-full"
+            />
+          </div>
         </div>
-      </div>
-      <!-- /header-row -->
-
-      <!-- Fila 2: Fecha, forma de pago, plazo -->
-      <div class="header-row header-row2">
-        <!-- Fecha -->
-        <div class="field field-fecha">
+        <div class="campo-row">
           <label>Fecha</label>
-          <p-calendar
-            [(ngModel)]="fechaCompra"
-            [showTime]="true"
-            hourFormat="12"
-            dateFormat="dd/mm/yy"
-            styleClass="w-full"
-          />
+          <div class="campo-control">
+            <p-calendar
+              [(ngModel)]="fechaCompra"
+              [showTime]="true"
+              hourFormat="12"
+              dateFormat="dd/mm/yy"
+              styleClass="w-full"
+            />
+          </div>
         </div>
+      </div>
 
-        <!-- Forma de pago -->
-        <div class="field field-formapago">
+      <!-- ── Pago ──────────────────────────────────────────────────── -->
+      <h3 class="section">Pago</h3>
+      <div class="campos">
+        <div class="campo-row">
           <label>Forma de pago</label>
-          <div class="forma-pago-btns">
-            <button
-              type="button"
-              class="fp-btn"
-              [class.active]="formaPago === 'CONTADO'"
-              (click)="formaPago = 'CONTADO'"
-            >
-              <i class="pi pi-money-bill"></i> Contado
-            </button>
-            <button
-              type="button"
-              class="fp-btn"
-              [class.active]="formaPago === 'CREDITO'"
-              (click)="formaPago = 'CREDITO'"
-            >
-              <i class="pi pi-credit-card"></i> Crédito
-            </button>
+          <div class="campo-control">
+            <p-dropdown
+              [(ngModel)]="formaPago"
+              [options]="formaPagoOpts"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-full"
+            />
           </div>
         </div>
 
-        <!-- Método de pago (solo contado) -->
-        <div class="field field-metodopago" *ngIf="formaPago === 'CONTADO'">
+        <div class="campo-row" *ngIf="formaPago === 'CONTADO'">
           <label>Método de pago</label>
-          <div class="metodo-pago-btns">
-            <button
-              *ngFor="let m of metodosPagoOpts"
-              type="button"
-              class="mp-btn"
-              [class.active]="metodoPago === m.value"
-              (click)="metodoPago = m.value"
-            >
-              <i class="pi {{ m.icon }}"></i> {{ m.label }}
-            </button>
+          <div class="campo-control">
+            <p-dropdown
+              [(ngModel)]="metodoPago"
+              [options]="metodosPagoOpts"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-full"
+            />
           </div>
         </div>
 
-        <!-- Cuenta bancaria (transferencia/nequi/tarjeta/cheque) -->
-        <div
-          class="field field-banco"
-          *ngIf="formaPago === 'CONTADO' && requiereBanco"
-        >
+        <div class="campo-row" *ngIf="formaPago === 'CONTADO' && requiereBanco">
           <label>Cuenta bancaria <span class="required">*</span></label>
-          <p-dropdown
-            [(ngModel)]="cuentaBancariaId"
-            [options]="cuentasBancarias"
-            optionLabel="nombre"
-            optionValue="id"
-            placeholder="Seleccionar cuenta..."
-            styleClass="w-full"
-          />
+          <div class="campo-control">
+            <p-dropdown
+              [(ngModel)]="cuentaBancariaId"
+              [options]="cuentasBancarias"
+              optionLabel="nombre"
+              optionValue="id"
+              placeholder="Seleccionar cuenta..."
+              styleClass="w-full"
+            />
+          </div>
         </div>
 
-        <!-- Plazo (solo crédito) -->
-        <div class="field field-plazo" *ngIf="formaPago === 'CREDITO'">
+        <div class="campo-row" *ngIf="formaPago === 'CREDITO'">
           <label>Plazo <span class="optional">(días)</span></label>
-          <p-inputNumber
-            [(ngModel)]="plazoDias"
-            [min]="1"
-            [max]="365"
-            [showButtons]="true"
-            suffix=" días"
-            styleClass="w-full plazo-inp"
-          />
+          <div class="campo-control">
+            <p-inputNumber
+              [(ngModel)]="plazoDias"
+              [min]="1"
+              [max]="365"
+              [showButtons]="true"
+              suffix=" días"
+              styleClass="w-full plazo-inp"
+            />
+          </div>
+        </div>
+
+        <div class="campo-row campo-row--full">
+          <label>Observaciones <span class="optional">(opc.)</span></label>
+          <div class="campo-control">
+            <input
+              type="text"
+              pInputText
+              [(ngModel)]="observaciones"
+              placeholder="Notas internas..."
+              maxlength="500"
+              autocomplete="off"
+              class="w-full"
+            />
+          </div>
         </div>
       </div>
-      <!-- /header-row2 -->
 
-      <!-- Fila 3: Observaciones -->
-      <div class="header-row header-row3">
-        <div class="field field-obs">
-          <label>Observaciones <span class="optional">(opcional)</span></label>
-          <input
-            type="text"
-            pInputText
-            [(ngModel)]="observaciones"
-            placeholder="Notas internas..."
-            maxlength="500"
-            autocomplete="off"
-          />
-        </div>
-      </div>
-      <!-- /header-row3 -->
-    </div>
-    <!-- /compra-header -->
-
-    <!-- ═══════ PANEL PRINCIPAL ══════════════════════════════════════ -->
-    <div class="compra-main">
-      <!-- Encabezado tabla -->
+      <!-- ── Productos ─────────────────────────────────────────────── -->
       <div class="detalle-header">
         <div class="seccion-title"><i class="pi pi-list"></i> Productos</div>
         <button
@@ -223,7 +254,6 @@
         ></button>
       </div>
 
-      <!-- Tabla con scroll interno -->
       <div class="lineas-wrap">
         <div class="lineas-container" *ngIf="lineasArray.length > 0">
           <div class="lineas-header">
@@ -232,11 +262,9 @@
             <span class="col-vlrunit">Vlr. Unitario</span>
             <span class="col-desc">Desc. $</span>
             <span class="col-costo">Costo</span>
+            <span class="col-ivapct">IVA %</span>
             <span class="col-imp">IVA $</span>
             <span class="col-neto">Vlr. Neto</span>
-            <span class="col-p1">P. Venta 1</span>
-            <span class="col-p2">P. Venta 2</span>
-            <span class="col-p3">P. Venta 3</span>
             <span class="col-acc"></span>
           </div>
 
@@ -311,7 +339,21 @@
               </span>
             </div>
 
-            <!-- IVA $ -->
+            <!-- IVA % (editable) -->
+            <div class="col-ivapct">
+              <p-inputNumber
+                [ngModel]="l.ivaPorcentaje"
+                (ngModelChange)="onIvaPctChange(i, $event)"
+                suffix=" %"
+                [min]="0"
+                [max]="100"
+                [maxFractionDigits]="2"
+                styleClass="w-full input-num"
+                placeholder="0 %"
+              />
+            </div>
+
+            <!-- IVA $ (editable) -->
             <div class="col-imp">
               <p-inputNumber
                 [ngModel]="l.impuestoValor"
@@ -338,51 +380,6 @@
                     | currency: "COP" : "symbol-narrow" : "1.0-0"
                 }}
               </span>
-            </div>
-
-            <!-- P. Venta 1 -->
-            <div class="col-p1">
-              <p-inputNumber
-                [ngModel]="l.precioVenta1"
-                (ngModelChange)="onPrecioVenta1Change(i, $event)"
-                mode="currency"
-                currency="COP"
-                locale="es-CO"
-                [minFractionDigits]="0"
-                [min]="0"
-                styleClass="w-full input-num"
-                placeholder="$ 0"
-              />
-            </div>
-
-            <!-- P. Venta 2 -->
-            <div class="col-p2">
-              <p-inputNumber
-                [ngModel]="l.precioVenta2"
-                (ngModelChange)="onPrecioVenta2Change(i, $event)"
-                mode="currency"
-                currency="COP"
-                locale="es-CO"
-                [minFractionDigits]="0"
-                [min]="0"
-                styleClass="w-full input-num"
-                placeholder="$ 0"
-              />
-            </div>
-
-            <!-- P. Venta 3 -->
-            <div class="col-p3">
-              <p-inputNumber
-                [ngModel]="l.precioVenta3"
-                (ngModelChange)="onPrecioVenta3Change(i, $event)"
-                mode="currency"
-                currency="COP"
-                locale="es-CO"
-                [minFractionDigits]="0"
-                [min]="0"
-                styleClass="w-full input-num"
-                placeholder="$ 0"
-              />
             </div>
 
             <!-- Acciones -->
@@ -423,9 +420,8 @@
           ></button>
         </div>
       </div>
-      <!-- /lineas-wrap -->
 
-      <!-- Totales siempre visibles abajo -->
+      <!-- Totales -->
       <div class="totales-panel" *ngIf="lineasArray.length > 0">
         <div class="totales-left">
           <div class="items-count">
@@ -444,62 +440,68 @@
             </div>
             <div class="ret-inline">
               <div class="ret-item">
-                <div class="ret-header">
-                  <label>Retefuente</label>
-                  <small *ngIf="retefuentePct > 0" class="ret-val"
-                    >=
-                    {{
-                      retefuenteValorValue
-                        | currency: "COP" : "symbol-narrow" : "1.0-0"
-                    }}</small
-                  >
-                </div>
-                <p-inputNumber
-                  [(ngModel)]="retefuentePct"
-                  suffix=" %"
-                  [min]="0"
-                  [max]="100"
-                  [maxFractionDigits]="2"
+                <label>Retefuente</label>
+                <p-dropdown
+                  [ngModel]="retefuenteSel"
+                  (ngModelChange)="onTarifaRetencion('RETEFUENTE', $event)"
+                  [options]="retefuenteOpts"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Sin retención"
+                  [showClear]="true"
+                  [filter]="true"
+                  appendTo="body"
                   styleClass="w-full"
                 />
+                <small *ngIf="retefuentePct > 0" class="ret-val">
+                  {{ retefuentePct }}% =
+                  {{
+                    retefuenteValorValue
+                      | currency: "COP" : "symbol-narrow" : "1.0-0"
+                  }}
+                </small>
               </div>
               <div class="ret-item">
-                <div class="ret-header">
-                  <label>Reteiva</label>
-                  <small *ngIf="reteivaPct > 0" class="ret-val"
-                    >=
-                    {{
-                      reteivaValorValue | currency: "COP" : "symbol-narrow" : "1.0-0"
-                    }}</small
-                  >
-                </div>
-                <p-inputNumber
-                  [(ngModel)]="reteivaPct"
-                  suffix=" %"
-                  [min]="0"
-                  [max]="100"
-                  [maxFractionDigits]="2"
+                <label>ReteIVA</label>
+                <p-dropdown
+                  [ngModel]="reteivaSel"
+                  (ngModelChange)="onTarifaRetencion('RETEIVA', $event)"
+                  [options]="reteivaOpts"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Sin retención"
+                  [showClear]="true"
+                  appendTo="body"
                   styleClass="w-full"
                 />
+                <small *ngIf="reteivaPct > 0" class="ret-val">
+                  {{ reteivaPct }}% =
+                  {{
+                    reteivaValorValue
+                      | currency: "COP" : "symbol-narrow" : "1.0-0"
+                  }}
+                </small>
               </div>
               <div class="ret-item">
-                <div class="ret-header">
-                  <label>Reteica</label>
-                  <small *ngIf="reteicaPct > 0" class="ret-val"
-                    >=
-                    {{
-                      reteicaValorValue | currency: "COP" : "symbol-narrow" : "1.0-0"
-                    }}</small
-                  >
-                </div>
-                <p-inputNumber
-                  [(ngModel)]="reteicaPct"
-                  suffix=" %"
-                  [min]="0"
-                  [max]="100"
-                  [maxFractionDigits]="2"
+                <label>ReteICA</label>
+                <p-dropdown
+                  [ngModel]="reteicaSel"
+                  (ngModelChange)="onTarifaRetencion('RETEICA', $event)"
+                  [options]="reteicaOpts"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Sin retención"
+                  [showClear]="true"
+                  appendTo="body"
                   styleClass="w-full"
                 />
+                <small *ngIf="reteicaPct > 0" class="ret-val">
+                  {{ reteicaPct }}% =
+                  {{
+                    reteicaValorValue
+                      | currency: "COP" : "symbol-narrow" : "1.0-0"
+                  }}
+                </small>
               </div>
             </div>
           </div>
@@ -515,7 +517,8 @@
             <span class="tot-lbl">Descuento</span>
             <span class="tot-val red"
               >-{{
-                descuentoTotalValue | currency: "COP" : "symbol-narrow" : "1.0-0"
+                descuentoTotalValue
+                  | currency: "COP" : "symbol-narrow" : "1.0-0"
               }}</span
             >
           </div>
@@ -537,7 +540,8 @@
             <span class="tot-lbl">Retenciones</span>
             <span class="tot-val red"
               >-{{
-                totalRetencionesValue | currency: "COP" : "symbol-narrow" : "1.0-0"
+                totalRetencionesValue
+                  | currency: "COP" : "symbol-narrow" : "1.0-0"
               }}</span
             >
           </div>
@@ -574,12 +578,10 @@
         </div>
       </div>
     </div>
-    <!-- /compra-main -->
-  </div>
-  <!-- /compra-layout -->
+    <!-- /form-body -->
 
-  <ng-template pTemplate="footer">
-    <div class="dialog-footer">
+    <!-- ═══════ FOOTER ════════════════════════════════════════════════ -->
+    <div class="card-footer">
       <button
         pButton
         type="button"
@@ -587,7 +589,7 @@
         icon="pi pi-times"
         class="p-button-outlined p-button-secondary"
         [disabled]="isSubmitting"
-        (click)="closeModal()"
+        (click)="cancelar()"
       ></button>
       <button
         pButton
@@ -599,8 +601,9 @@
         (click)="saveCompra()"
       ></button>
     </div>
-  </ng-template>
-</p-dialog>
+  </div>
+</div>
+
 <!-- ═══════ MODAL SELECTOR DE PRODUCTO ═══════════════════════════ -->
 <p-dialog
   [(visible)]="showProductDialog"

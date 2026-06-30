@@ -363,7 +363,7 @@ export class IndexOrdenesComponent implements OnInit {
       this.showRecepcionModal = false;
       this.showDetalleModal = false;
 
-      this.router.navigate(['/compras'], {
+      this.router.navigate(['/compras/nueva'], {
         state: {
           fromOC: {
             proveedorId: this.ordenDetalle.proveedorId,

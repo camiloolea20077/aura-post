@@ -3,127 +3,77 @@
 // ══════════════════════════════════════════════════════════════════
 
 // ─── Columnas tabla (1 sola fuente de verdad) ─────────────────────
-// producto | cant | vlrunit | desc$ | costo | iva | neto | p1 | p2 | p3 | acc
-$cols: 1.6fr 0.4fr 0.85fr 0.7fr 0.7fr 0.65fr 0.75fr 0.8fr 0.8fr 0.8fr 52px;
-
-// ─── Dialogo ──────────────────────────────────────────────────────
-::ng-deep .compra-dialog {
-  .p-dialog-header {
-    padding: 0.9rem 1.5rem;
-    border-bottom: 1px solid #e2e8f0;
-  }
-  .p-dialog-content {
-    padding: 0 !important;
-    overflow: hidden !important;
-  }
-  .p-dialog-footer {
-    padding: 0.75rem 1.5rem;
-    border-top: 1px solid #e2e8f0;
-  }
-}
-
-// ─── Layout raíz ──────────────────────────────────────────────────
-.compra-layout {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-}
+// producto | cant | vlrunit | desc$ | costo | iva% | iva$ | neto | acc
+// Todo en fr → reparte el ancho del contenedor (sin scroll horizontal).
+// El nombre largo del producto envuelve hacia abajo dentro de su columna.
+$cols: 1.7fr 0.5fr 0.9fr 0.8fr 0.8fr 0.55fr 0.9fr 0.9fr 50px;
 
 // ════════════════════════════════════════════════════════════════
-// HEADER SUPERIOR (todos los campos en horizontal)
+// LAYOUT PLANO (dentro de la .card)
 // ════════════════════════════════════════════════════════════════
-.compra-header {
-  flex-shrink: 0;
-  background: #fafbfe;
-  border-bottom: 1px solid #e2e8f0;
-  padding: 0.65rem 1.25rem 0.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
+.form-body {
+  padding: 1.25rem 1.5rem;
 }
 
-.header-row {
-  display: flex;
-  align-items: flex-end;
-  gap: 0.65rem;
-  flex-wrap: nowrap;
-}
+// Encabezado de sección
+.section {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 1.4rem 0 0.75rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid #f1f5f9;
 
-// ─── Anchos de campos del header ─────────────────────────────────
-// Fila 1
-.field-proveedor {
-  flex: 3 1 220px;
-  min-width: 0;
-}
-.field-tipodoc {
-  flex: 1 1 130px;
-  min-width: 0;
-}
-.field-sucursal {
-  flex: 1 1 150px;
-  min-width: 0;
-}
-.field-ndoc {
-  flex: 1 1 130px;
-  min-width: 0;
-}
-// Fila 2
-.field-fecha {
-  flex: 0 1 175px;
-  min-width: 0;
-}
-.field-formapago {
-  flex: 0 0 auto;
-}
-.field-plazo {
-  flex: 0 1 130px;
-  min-width: 0;
-}
-.field-obs {
-  flex: 3 1 200px;
-  min-width: 0;
-}
-
-.header-row2 {
-  border-top: 1px solid #f1f5f9;
-  padding-top: 0.4rem;
-}
-
-.header-row3 {
-  border-top: 1px solid #f1f5f9;
-  padding-top: 0.4rem;
-  .field-obs {
-    flex: 1;
+  &:first-child {
+    margin-top: 0;
   }
 }
 
-// ─── Campos del sidebar ───────────────────────────────────────────
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  min-width: 0;
+// Bloque de campos con label al lado (estilo terceros)
+.campos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem 2rem;
 
-  label {
-    font-size: 0.75rem;
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.campo-row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.35rem 0;
+
+  &.campo-row--full {
+    grid-column: 1 / -1;
+  }
+
+  > label {
+    font-size: 0.8rem;
     font-weight: 600;
     color: #374151;
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
     .required {
       color: #ef4444;
+      margin-left: 2px;
     }
     .optional {
-      font-size: 0.68rem;
+      font-size: 0.7rem;
       font-weight: 400;
       color: #9ca3af;
     }
   }
+}
+
+.campo-control {
+  min-width: 0;
 
   input.p-inputtext {
-    height: 32px;
+    height: 34px;
     border-radius: 8px;
     border: 1.5px solid #e0e3eb;
     padding: 0 0.75rem;
@@ -131,16 +81,36 @@ $cols: 1.6fr 0.4fr 0.85fr 0.7fr 0.7fr 0.65fr 0.75fr 0.8fr 0.8fr 0.8fr 52px;
     font-size: 0.82rem;
     width: 100%;
     box-sizing: border-box;
-    transition: all 0.2s;
-    &::placeholder {
-      color: #9ca3af;
-    }
     &:focus {
-      border-color: #10b981;
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
       outline: none;
     }
   }
+}
+
+// Dato del proveedor solo lectura — con apariencia de input deshabilitado
+.campo-readonly {
+  display: flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 0.75rem;
+  border: 1.5px solid #e0e3eb;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.84rem;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.required {
+  color: #ef4444;
+}
+.optional {
+  font-size: 0.7rem;
+  font-weight: 400;
+  color: #9ca3af;
 }
 
 // ─── Autocomplete proveedor ───────────────────────────────────────
@@ -232,74 +202,6 @@ $cols: 1.6fr 0.4fr 0.85fr 0.7fr 0.7fr 0.65fr 0.75fr 0.8fr 0.8fr 0.8fr 52px;
   }
 }
 
-// ─── Forma de pago ────────────────────────────────────────────────
-.forma-pago-btns {
-  display: flex;
-  gap: 0.4rem;
-}
-.fp-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.85rem;
-  border-radius: 7px;
-  border: 1.5px solid #e2e8f0;
-  background: #fff;
-  color: #64748b;
-  font-size: 0.79rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  &:hover {
-    border-color: #2563eb;
-    color: #2563eb;
-  }
-  &.active {
-    border-color: #2563eb;
-    background: #eef2ff;
-    color: #2563eb;
-    font-weight: 600;
-  }
-}
-
-// ─── Método de pago ────────────────────────────────────────────────
-.metodo-pago-btns {
-  display: flex;
-  gap: 0.35rem;
-  flex-wrap: wrap;
-}
-.mp-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.3rem 0.75rem;
-  border-radius: 7px;
-  border: 1.5px solid #e2e8f0;
-  background: #fff;
-  color: #64748b;
-  font-size: 0.78rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  i {
-    font-size: 0.72rem;
-  }
-  &:hover {
-    border-color: #374151;
-    color: #374151;
-  }
-  &.active {
-    border-color: #374151;
-    background: #1e293b;
-    color: #fff;
-    font-weight: 600;
-    box-shadow: 0 2px 6px rgba(30, 41, 59, 0.25);
-  }
-}
-.field-banco {
-  min-width: 220px;
-}
-
 // ─── Plazo ────────────────────────────────────────────────────────
 ::ng-deep .plazo-inp {
   .p-inputnumber-input {
@@ -372,23 +274,12 @@ $cols: 1.6fr 0.4fr 0.85fr 0.7fr 0.7fr 0.65fr 0.75fr 0.8fr 0.8fr 0.8fr 52px;
 // ════════════════════════════════════════════════════════════════
 // PANEL PRINCIPAL (tabla + totales)
 // ════════════════════════════════════════════════════════════════
-.compra-main {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  padding: 0.75rem 1.25rem;
-  gap: 0.6rem;
-  min-width: 0;
-  overflow: hidden;
-}
-
 // ─── Encabezado de la tabla ───────────────────────────────────────
 .detalle-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-shrink: 0;
+  margin: 1.4rem 0 0.75rem;
 }
 
 // ─── Selector de producto por línea ──────────────────────────────
@@ -396,10 +287,10 @@ $cols: 1.6fr 0.4fr 0.85fr 0.7fr 0.7fr 0.65fr 0.75fr 0.8fr 0.8fr 0.8fr 52px;
   display: flex;
   align-items: center;
   gap: 0.35rem;
-  height: 32px;
+  min-height: 32px;
   border: 1.5px solid #e0e3eb;
   border-radius: 6px;
-  padding: 0 0.4rem 0 0.6rem;
+  padding: 0.25rem 0.4rem 0.25rem 0.6rem;
   background: #fff;
   transition: border-color 0.15s;
 
@@ -420,14 +311,15 @@ $cols: 1.6fr 0.4fr 0.85fr 0.7fr 0.7fr 0.65fr 0.75fr 0.8fr 0.8fr 0.8fr 52px;
   flex: 1;
   font-size: 0.8rem;
   color: #1e293b;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.25;
   min-width: 0;
 }
 
 .prod-sel-btn {
   flex-shrink: 0;
+  align-self: center;
   width: 24px;
   height: 24px;
   border-radius: 5px;
@@ -666,16 +558,12 @@ $cols: 1.6fr 0.4fr 0.85fr 0.7fr 0.7fr 0.65fr 0.75fr 0.8fr 0.8fr 0.8fr 52px;
 
 // ─── Tabla de líneas ──────────────────────────────────────────────
 .lineas-wrap {
-  flex: 1;
-  min-height: 0; // CRÍTICO: permite que el flex child se encoja y haga scroll
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .lineas-container {
-  flex: 1;
-  min-height: 0;
+  max-height: 55vh;
   overflow-y: auto;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
@@ -730,11 +618,9 @@ $cols: 1.6fr 0.4fr 0.85fr 0.7fr 0.7fr 0.65fr 0.75fr 0.8fr 0.8fr 0.8fr 52px;
   .col-vlrunit,
   .col-desc,
   .col-costo,
+  .col-ivapct,
   .col-imp,
-  .col-neto,
-  .col-p1,
-  .col-p2,
-  .col-p3 {
+  .col-neto {
     justify-content: flex-end;
   }
 }
@@ -759,17 +645,15 @@ $cols: 1.6fr 0.4fr 0.85fr 0.7fr 0.7fr 0.65fr 0.75fr 0.8fr 0.8fr 0.8fr 52px;
 
 // ── Celdas individuales ───────────────────────────────────────────
 .col-producto {
-  overflow: hidden;
+  overflow: visible;
   align-self: center;
 }
 
 .col-cant,
 .col-vlrunit,
 .col-desc,
-.col-imp,
-.col-p1,
-.col-p2,
-.col-p3 {
+.col-ivapct,
+.col-imp {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -820,10 +704,8 @@ $cols: 1.6fr 0.4fr 0.85fr 0.7fr 0.7fr 0.65fr 0.75fr 0.8fr 0.8fr 0.8fr 52px;
   .col-cant,
   .col-vlrunit,
   .col-imp,
-  .col-desc,
-  .col-p1,
-  .col-p2,
-  .col-p3 {
+  .col-ivapct,
+  .col-desc {
     .p-inputnumber {
       width: 100%;
     }
@@ -884,11 +766,11 @@ $cols: 1.6fr 0.4fr 0.85fr 0.7fr 0.7fr 0.65fr 0.75fr 0.8fr 0.8fr 0.8fr 52px;
 // TOTALES (parte inferior del panel principal)
 // ════════════════════════════════════════════════════════════════
 .totales-panel {
-  flex-shrink: 0;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 1rem;
+  margin-top: 0.75rem;
   padding: 0.6rem 0.85rem;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
@@ -920,12 +802,26 @@ $cols: 1.6fr 0.4fr 0.85fr 0.7fr 0.7fr 0.65fr 0.75fr 0.8fr 0.8fr 0.8fr 52px;
 
 .ret-inline {
   display: flex;
-  gap: 0.5rem;
-  align-items: flex-end;
+  gap: 0.75rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
 
   .ret-item {
     flex: 1;
-    min-width: 80px;
+    min-width: 200px;
+    gap: 0.3rem;
+
+    > label {
+      font-size: 0.73rem;
+      font-weight: 600;
+      color: #374151;
+    }
+    .ret-val {
+      font-size: 0.7rem;
+      color: #2563eb;
+      font-family: "JetBrains Mono", monospace;
+      font-weight: 600;
+    }
   }
 }
 

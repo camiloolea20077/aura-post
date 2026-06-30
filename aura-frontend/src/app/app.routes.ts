@@ -290,6 +290,22 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'compras/nueva',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/compras/form/form-compra.component').then(
+            (m) => m.FormCompraComponent,
+          ),
+      },
+      {
+        path: 'compras/:id/editar',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/compras/form/form-compra.component').then(
+            (m) => m.FormCompraComponent,
+          ),
+      },
+      {
         path: 'ventas',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN', 'CAJERO'])],
         loadComponent: () =>

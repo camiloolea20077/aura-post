@@ -215,15 +215,6 @@
   </div>
 </div>
 
-<app-form-compra
-  [displayModal]="showFormModal"
-  [compraToEdit]="compraEnEdicion"
-  [prefilledFromOC]="prefilledFromOC"
-  (modalClosed)="onFormClosed()"
-  (compraSaved)="onCompraSaved($event)"
->
-</app-form-compra>
-
 <app-comprobante-egreso
   [compra]="compraComprobante"
   [visible]="showComprobante"
