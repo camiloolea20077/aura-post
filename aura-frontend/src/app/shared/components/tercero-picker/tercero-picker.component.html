@@ -1,0 +1,84 @@
+<!-- Input con lupa -->
+<p-iconfield iconPosition="right" styleClass="w-full">
+  <input
+    pInputText
+    type="text"
+    readonly
+    [value]="terceroNombre || ''"
+    [placeholder]="placeholder"
+    (click)="abrir()"
+    class="w-full picker-input"
+    style="cursor: pointer; width: 100%"
+  />
+  <p-inputicon>
+    @if (terceroId) {
+      <i class="pi pi-times" style="cursor: pointer" (click)="limpiar($event)"></i>
+    } @else {
+      <i class="pi pi-search" style="cursor: pointer" (click)="abrir()"></i>
+    }
+  </p-inputicon>
+</p-iconfield>
+
+<!-- Modal con tabla + búsqueda -->
+<p-dialog
+  [(visible)]="showModal"
+  [modal]="true"
+  [style]="{ width: '720px', maxWidth: '95vw' }"
+  header="Seleccionar tercero"
+  [dismissableMask]="true"
+>
+  <div style="margin-bottom: 0.75rem">
+    <p-iconfield iconPosition="left" styleClass="w-full">
+      <p-inputicon><i class="pi pi-search"></i></p-inputicon>
+      <input
+        pInputText
+        [(ngModel)]="search"
+        (ngModelChange)="onSearch()"
+        placeholder="Buscar por documento, nombre, razón social, email..."
+        class="w-full"
+        style="width: 100%"
+      />
+    </p-iconfield>
+  </div>
+
+  <p-table
+    [value]="items"
+    [lazy]="true"
+    (onLazyLoad)="cargar($event)"
+    [paginator]="true"
+    [rows]="rows"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    styleClass="p-datatable-sm"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 130px">Documento</th>
+        <th>Nombre</th>
+        <th style="width: 160px">Tipo</th>
+        <th style="width: 90px"></th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-t>
+      <tr>
+        <td>{{ t.numeroDocumento }}</td>
+        <td>{{ t.nombreCompleto }}</td>
+        <td>
+          @for (r of roles(t); track r) {
+            <p-tag [value]="r" styleClass="mr-1" />
+          }
+        </td>
+        <td>
+          <p-button label="Elegir" size="small" (onClick)="elegir(t)" />
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="4" style="text-align: center; padding: 1.5rem; color: #94a3b8">
+          Sin resultados.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-dialog>

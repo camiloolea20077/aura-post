@@ -1,20 +1,19 @@
-<div class="page-container">
-  <div class="page-header">
-    <div class="page-title-area">
-      <div class="page-icon"><i class="pi pi-file-check"></i></div>
-      <div>
-        <h3 class="page-title">Comprobantes</h3>
-        <p class="page-sub">Comprobantes de ingreso y egreso de caja</p>
-      </div>
-    </div>
-  </div>
-
+<div class="page">
   <div class="card">
-    <!-- Toolbar con filtros -->
-    <div class="table-toolbar">
-      <div class="toolbar-left">
-        <div class="filter-row">
-          <!-- Filtro tipo -->
+    <!-- ── Header ─────────────────────────────────────────────────── -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon">
+          <i class="pi pi-file-check"></i>
+        </span>
+        <div>
+          <h1 class="title">Comprobantes</h1>
+          <p class="subtitle">Comprobantes de ingreso y egreso de caja</p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <!-- ── Filtros ───────────────────────────────────────────── -->
+        <div class="card-head__search">
           <p-dropdown
             [options]="tipoOpciones"
             [(ngModel)]="filtroTipo"
@@ -24,8 +23,6 @@
             styleClass="filter-dropdown"
             (onChange)="onFiltroChange()"
           />
-
-          <!-- Desde -->
           <p-calendar
             [(ngModel)]="filtroDesdeFecha"
             dateFormat="dd/mm/yy"
@@ -35,8 +32,6 @@
             (onSelect)="onFiltroChange()"
             (onClearClick)="onFiltroChange()"
           />
-
-          <!-- Hasta -->
           <p-calendar
             [(ngModel)]="filtroHastaFecha"
             dateFormat="dd/mm/yy"
@@ -46,7 +41,6 @@
             (onSelect)="onFiltroChange()"
             (onClearClick)="onFiltroChange()"
           />
-
           <button
             pButton
             type="button"
@@ -55,10 +49,6 @@
             class="p-button-outlined p-button-secondary p-button-sm"
             (click)="limpiarFiltros()"
           ></button>
-
-          <span class="total-badge" *ngIf="!loadingTable">
-            {{ totalRecords }} comprobantes
-          </span>
         </div>
       </div>
     </div>

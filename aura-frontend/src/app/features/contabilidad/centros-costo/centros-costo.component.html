@@ -1,51 +1,51 @@
 <p-toast />
 
-<div class="module-wrapper">
-  <!-- Header -->
-  <div class="module-header">
-    <div class="header-left">
-      <span class="header-icon"><i class="pi pi-sitemap"></i></span>
-      <div>
-        <h2>Centros de Costo</h2>
-        <p>Unidades de análisis para asignación de gastos e ingresos</p>
+<div class="page">
+  <div class="card">
+    <!-- Header -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-sitemap"></i></span>
+        <div>
+          <h1 class="title">Centros de Costo</h1>
+          <p class="subtitle">
+            Unidades de análisis para asignación de gastos e ingresos
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          label="Nuevo Centro"
+          icon="pi pi-plus"
+          class="btn-aura"
+          (click)="abrirNuevo()"
+        ></button>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              class="search-input"
+              [(ngModel)]="search"
+              (keyup.enter)="onSearch()"
+              placeholder="Buscar por código o descripción..."
+            />
+            <button
+              *ngIf="search"
+              class="clear-btn"
+              (click)="search = ''; onSearch()"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+        </div>
       </div>
     </div>
-    <button
-      pButton
-      label="Nuevo Centro"
-      icon="pi pi-plus"
-      class="btn-aura"
-      (click)="abrirNuevo()"
-    ></button>
-  </div>
 
-  <!-- Búsqueda -->
-  <div class="table-toolbar">
-    <div class="search-wrap">
-      <span class="p-input-icon-left">
-        <p-iconfield>
-          <p-inputicon class="pi pi-search" />
-          <input
-            pInputText
-            [(ngModel)]="search"
-            (keyup.enter)="onSearch()"
-            placeholder="Buscar por código o descripción..."
-          />
-        </p-iconfield>
-      </span>
-      <button
-        pButton
-        icon="pi pi-search"
-        class="p-button-outlined p-button-sm"
-        (click)="onSearch()"
-      ></button>
-    </div>
-
-    <span class="total-badge">{{ totalRecords }} registros</span>
-  </div>
-
-  <!-- Tabla -->
-  <div class="table-card">
+    <!-- Tabla -->
     <p-table
       [value]="rows"
       [loading]="loading"

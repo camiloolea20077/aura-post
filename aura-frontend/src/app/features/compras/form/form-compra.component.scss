@@ -405,10 +405,15 @@ $cols: 1.6fr 0.4fr 0.85fr 0.7fr 0.7fr 0.65fr 0.75fr 0.8fr 0.8fr 0.8fr 52px;
 
   &.sin-seleccion {
     border-color: #e0e3eb;
-    .prod-sel-nombre { color: #9ca3af; font-style: italic; }
+    .prod-sel-nombre {
+      color: #9ca3af;
+      font-style: italic;
+    }
   }
 
-  &:hover { border-color: #c7d0e0; }
+  &:hover {
+    border-color: #c7d0e0;
+  }
 }
 
 .prod-sel-nombre {
@@ -434,13 +439,20 @@ $cols: 1.6fr 0.4fr 0.85fr 0.7fr 0.7fr 0.65fr 0.75fr 0.8fr 0.8fr 0.8fr 52px;
   align-items: center;
   justify-content: center;
   transition: all 0.15s;
-  i { font-size: 0.72rem; }
-  &:hover { background: #2563eb; color: #fff; }
+  i {
+    font-size: 0.72rem;
+  }
+  &:hover {
+    background: #2563eb;
+    color: #fff;
+  }
 }
 
 // ─── Modal selector de producto ───────────────────────────────────
 ::ng-deep .prod-dialog.p-dialog {
-  .p-dialog-content { padding: 0 !important; }
+  .p-dialog-content {
+    padding: 0 !important;
+  }
 }
 
 .prod-dialog-search {
@@ -474,8 +486,16 @@ $cols: 1.6fr 0.4fr 0.85fr 0.7fr 0.7fr 0.65fr 0.75fr 0.8fr 0.8fr 0.8fr 52px;
   font-size: 0.8rem;
   font-family: "JetBrains Mono", monospace;
   color: #1e293b;
-  &::placeholder { color: #9ca3af; font-family: "Outfit", sans-serif; font-size: 0.76rem; }
-  &:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.1); outline: none; }
+  &::placeholder {
+    color: #9ca3af;
+    font-family: "Outfit", sans-serif;
+    font-size: 0.76rem;
+  }
+  &:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+    outline: none;
+  }
 }
 
 .barcode-btn {
@@ -491,9 +511,16 @@ $cols: 1.6fr 0.4fr 0.85fr 0.7fr 0.7fr 0.65fr 0.75fr 0.8fr 0.8fr 0.8fr 52px;
   justify-content: center;
   flex-shrink: 0;
   transition: background 0.15s;
-  &:hover:not(:disabled) { background: #1d4ed8; }
-  &:disabled { opacity: 0.5; cursor: default; }
-  i { font-size: 0.76rem; }
+  &:hover:not(:disabled) {
+    background: #1d4ed8;
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+  i {
+    font-size: 0.76rem;
+  }
 }
 
 .search-wrap-dialog {
@@ -501,7 +528,12 @@ $cols: 1.6fr 0.4fr 0.85fr 0.7fr 0.7fr 0.65fr 0.75fr 0.8fr 0.8fr 0.8fr 52px;
   align-items: center;
   position: relative;
   flex: 1;
-  i { position: absolute; left: 0.75rem; color: #94a3b8; font-size: 0.85rem; }
+  i {
+    position: absolute;
+    left: 0.75rem;
+    color: #94a3b8;
+    font-size: 0.85rem;
+  }
 }
 
 .search-input-dialog {
@@ -512,7 +544,11 @@ $cols: 1.6fr 0.4fr 0.85fr 0.7fr 0.7fr 0.65fr 0.75fr 0.8fr 0.8fr 0.8fr 52px;
   padding: 0 2.25rem 0 2.25rem;
   font-size: 0.83rem;
   font-family: "Outfit", sans-serif;
-  &:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,0.1); outline: none; }
+  &:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+    outline: none;
+  }
 }
 
 .clear-btn-dialog {
@@ -525,8 +561,12 @@ $cols: 1.6fr 0.4fr 0.85fr 0.7fr 0.7fr 0.65fr 0.75fr 0.8fr 0.8fr 0.8fr 52px;
   display: flex;
   align-items: center;
   padding: 0.2rem;
-  &:hover { color: #ef4444; }
-  i { font-size: 0.72rem; }
+  &:hover {
+    color: #ef4444;
+  }
+  i {
+    font-size: 0.72rem;
+  }
 }
 
 ::ng-deep .prod-select-table {
@@ -543,13 +583,18 @@ $cols: 1.6fr 0.4fr 0.85fr 0.7fr 0.7fr 0.65fr 0.75fr 0.8fr 0.8fr 0.8fr 52px;
     font-size: 0.82rem;
     border-bottom: 1px solid #f1f5f9;
   }
-  .p-paginator { padding: 0.4rem 0.75rem; font-size: 0.78rem; }
+  .p-paginator {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.78rem;
+  }
 }
 
 .prod-dialog-row {
   cursor: pointer;
   transition: background 0.1s;
-  &:hover { background: #f0f4ff !important; }
+  &:hover {
+    background: #f0f4ff !important;
+  }
 }
 
 .prod-info-cell {
@@ -566,7 +611,9 @@ $cols: 1.6fr 0.4fr 0.85fr 0.7fr 0.7fr 0.65fr 0.75fr 0.8fr 0.8fr 0.8fr 52px;
 .prod-info-barras {
   font-size: 0.7rem;
   color: #94a3b8;
-  i { font-size: 0.7rem; }
+  i {
+    font-size: 0.7rem;
+  }
 }
 
 .sku-chip {
@@ -578,9 +625,18 @@ $cols: 1.6fr 0.4fr 0.85fr 0.7fr 0.7fr 0.65fr 0.75fr 0.8fr 0.8fr 0.8fr 52px;
   border-radius: 5px;
 }
 
-.price-cell { font-weight: 600; color: #1e293b; font-family: "JetBrains Mono", monospace; }
-.cost-cell  { color: #64748b; font-family: "JetBrains Mono", monospace; }
-.text-muted { color: #cbd5e1; }
+.price-cell {
+  font-weight: 600;
+  color: #1e293b;
+  font-family: "JetBrains Mono", monospace;
+}
+.cost-cell {
+  color: #64748b;
+  font-family: "JetBrains Mono", monospace;
+}
+.text-muted {
+  color: #cbd5e1;
+}
 
 .dialog-empty {
   display: flex;
@@ -589,8 +645,13 @@ $cols: 1.6fr 0.4fr 0.85fr 0.7fr 0.7fr 0.65fr 0.75fr 0.8fr 0.8fr 0.8fr 52px;
   gap: 0.5rem;
   padding: 2.5rem 1rem;
   color: #94a3b8;
-  i { font-size: 2rem; }
-  p { font-size: 0.83rem; margin: 0; }
+  i {
+    font-size: 2rem;
+  }
+  p {
+    font-size: 0.83rem;
+    margin: 0;
+  }
 }
 
 ::ng-deep .btn-add-linea.p-button {
@@ -966,7 +1027,6 @@ $cols: 1.6fr 0.4fr 0.85fr 0.7fr 0.7fr 0.65fr 0.75fr 0.8fr 0.8fr 0.8fr 52px;
 ::ng-deep .btn-aura.p-button {
   background: #2563eb !important;
   border: none !important;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3) !important;
   border-radius: 8px !important;
   &:hover {
     opacity: 0.92;

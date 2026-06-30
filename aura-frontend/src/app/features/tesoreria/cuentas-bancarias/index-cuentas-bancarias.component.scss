@@ -1,235 +1,22 @@
-.module-wrapper {
-  padding: 1.5rem;
-  max-width: 1400px;
-  margin: 0 auto;
+// ── Tabla ────────────────────────────────────────────────────────────
+.text-right {
+  text-align: right;
 }
 
-// ── Header ──────────────────────────────────────────────────────────
-.module-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.header-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  color: white;
-  font-size: 1.3rem;
-}
-
-.module-header h2 {
-  margin: 0;
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: #1e293b;
-}
-
-.module-header p {
-  margin: 0;
-  font-size: 0.875rem;
-  color: #64748b;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-// ── Cuentas grid ────────────────────────────────────────────────────
-.cuentas-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.25rem;
-}
-
-// ── Cuenta card ─────────────────────────────────────────────────────
-.cuenta-card {
-  position: relative;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 1.25rem 1.25rem 1rem;
-  overflow: hidden;
-  transition: box-shadow 0.2s, transform 0.2s;
-
-  &:hover {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-    transform: translateY(-2px);
-  }
-
-  &.inactiva {
-    opacity: 0.55;
-    background: #f8fafc;
-  }
-}
-
-// Borde de color izquierdo
-.tipo-accent {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 5px;
-  height: 100%;
-  border-radius: 14px 0 0 14px;
-}
-
-// Header
-.card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
-}
-
-.card-tipo {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.tipo-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  font-size: 0.9rem;
-}
-
-.tipo-label {
-  font-size: 0.78rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #64748b;
-}
-
-// Estado badge
-.estado-badge {
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 0.2rem 0.6rem;
-  border-radius: 20px;
-  background: #fee2e2;
-  color: #dc2626;
-
-  &.activa {
-    background: #dcfce7;
-    color: #16a34a;
-  }
-}
-
-// Nombre
-.card-nombre {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin-bottom: 0.3rem;
-  padding-left: 0.3rem;
-}
-
-.card-banco,
-.card-numero,
-.card-titular {
-  font-size: 0.82rem;
-  color: #64748b;
-  padding-left: 0.3rem;
-  margin-bottom: 0.15rem;
-}
-
-.card-numero {
-  font-family: 'Courier New', monospace;
-  font-size: 0.85rem;
-  color: #475569;
-  font-weight: 600;
-}
-
-// Saldo
-.card-saldo {
-  display: flex;
-  flex-direction: column;
-  margin-top: 1rem;
-  margin-bottom: 0.75rem;
-  padding: 0.75rem 1rem;
-  background: #f8fafc;
-  border-radius: 10px;
-}
-
-.saldo-label {
-  font-size: 0.72rem;
-  color: #94a3b8;
-  text-transform: uppercase;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  margin-bottom: 0.2rem;
-}
-
-.saldo-valor {
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: #1e293b;
-
-  &.negativo {
-    color: #dc2626;
-  }
-}
-
-// Acciones
-.card-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.25rem;
-  border-top: 1px solid #f1f5f9;
-  padding-top: 0.6rem;
-  margin-top: 0.25rem;
-}
-
-// Skeleton card
-.skeleton-card {
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  padding: 1.25rem;
-  min-height: 200px;
-}
-
-// ── Empty state ─────────────────────────────────────────────────────
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
+.text-center {
   text-align: center;
-  gap: 1rem;
-  color: #94a3b8;
+}
 
-  .empty-icon {
-    font-size: 3rem;
-    color: #cbd5e1;
-  }
+// Saldo negativo en la celda
+td.negativo {
+  color: #dc2626;
+  font-weight: 600;
+}
 
-  p {
-    font-size: 1rem;
-    margin: 0;
-  }
+// Fila de cuenta inactiva
+tr.inactiva-row {
+  opacity: 0.55;
+  background: #f8fafc;
 }
 
 // ── Modal ────────────────────────────────────────────────────────────
@@ -253,17 +40,5 @@
 
   .req {
     color: #ef4444;
-  }
-}
-
-// ── Botones ──────────────────────────────────────────────────────────
-.btn-aura.btn-primary {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  border: none;
-  color: white;
-  font-weight: 600;
-
-  &:hover {
-    background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
   }
 }

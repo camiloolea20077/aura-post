@@ -1,73 +1,83 @@
 <p-toast />
 <p-confirmDialog />
 
-<div class="module-wrapper">
-  <!-- ── Header ────────────────────────────────────────────────── -->
-  <div class="module-header">
-    <div class="header-left">
-      <span class="header-icon recaudo-icon"><i class="pi pi-arrow-down-left"></i></span>
-      <div>
-        <h2>Recaudos</h2>
-        <p>Entradas de dinero a tus cuentas</p>
+<div class="page">
+  <div class="card">
+    <!-- ── Header ────────────────────────────────────────────────── -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon">
+          <i class="pi pi-arrow-down-left"></i>
+        </span>
+        <div>
+          <h1 class="title">Recaudos</h1>
+          <p class="subtitle">Entradas de dinero a tus cuentas</p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          label="Nuevo Recaudo"
+          icon="pi pi-plus"
+          class="btn-aura"
+          (click)="abrirNuevo()"
+        ></button>
+        <!-- ── Filtros ───────────────────────────────────────────── -->
+        <div class="card-head__search">
+          <p-calendar
+            [(ngModel)]="rangoFechas"
+            selectionMode="range"
+            [readonlyInput]="true"
+            dateFormat="dd/mm/yy"
+            placeholder="Desde — Hasta"
+            (onSelect)="cargar()"
+          />
+          <p-dropdown
+            [(ngModel)]="cuentaFiltroId"
+            [options]="cuentasOpts()"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todas las cuentas"
+            [showClear]="true"
+            (onChange)="cargar()"
+          />
+          <button
+            pButton
+            type="button"
+            icon="pi pi-refresh"
+            class="p-button-text p-button-rounded"
+            pTooltip="Recargar"
+            (click)="cargar()"
+            [loading]="loading"
+          ></button>
+        </div>
       </div>
     </div>
-    <button pButton label="Nuevo Recaudo" icon="pi pi-plus"
-      class="btn-aura btn-success" (click)="abrirNuevo()"></button>
-  </div>
 
-  <!-- ── Filtros ────────────────────────────────────────────────── -->
-  <div class="filters-bar">
-    <div class="filter-item">
-      <label>Período</label>
-      <p-calendar
-        [(ngModel)]="rangoFechas"
-        selectionMode="range"
-        [readonlyInput]="true"
-        dateFormat="dd/mm/yy"
-        placeholder="Desde — Hasta"
-        styleClass="w-full"
-        (onSelect)="cargar()"
-      />
+    <!-- ── KPI ───────────────────────────────────────────────────── -->
+    <div class="kpi-bar">
+      <div class="kpi-card">
+        <span class="kpi-label">Total recaudado en el período</span>
+        <span class="kpi-valor">{{ formatCOP(totalPeriodo) }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-label">Número de movimientos</span>
+        <span class="kpi-valor">{{ movimientos.length }}</span>
+      </div>
     </div>
-    <div class="filter-item">
-      <label>Cuenta</label>
-      <p-dropdown
-        [(ngModel)]="cuentaFiltroId"
-        [options]="cuentasOpts()"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="Todas las cuentas"
-        styleClass="w-full"
-        [showClear]="true"
-        (onChange)="cargar()"
-      />
-    </div>
-    <button pButton icon="pi pi-refresh" class="p-button-text p-button-rounded"
-      pTooltip="Recargar" (click)="cargar()" [loading]="loading"></button>
-  </div>
 
-  <!-- ── KPI ───────────────────────────────────────────────────── -->
-  <div class="kpi-bar">
-    <div class="kpi-card">
-      <span class="kpi-label">Total recaudado en el período</span>
-      <span class="kpi-valor success">{{ formatCOP(totalPeriodo) }}</span>
-    </div>
-    <div class="kpi-card">
-      <span class="kpi-label">Número de movimientos</span>
-      <span class="kpi-valor">{{ movimientos.length }}</span>
-    </div>
-  </div>
-
-  <!-- ── Tabla ─────────────────────────────────────────────────── -->
-  <div class="table-card">
+    <!-- ── Tabla ─────────────────────────────────────────────────── -->
     <p-table
       [value]="movimientos"
       [loading]="loading"
-      [paginator]="movimientos.length > 20"
-      [rows]="20"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords} registros"
       styleClass="p-datatable-sm"
       [rowHover]="true"
-      showGridlines
     >
       <ng-template pTemplate="header">
         <tr>
@@ -173,7 +183,7 @@
     <button pButton label="Cancelar" class="p-button-text"
       (click)="showModal = false" [disabled]="saving"></button>
     <button pButton label="Registrar Recaudo" icon="pi pi-check"
-      class="btn-aura btn-success" (click)="guardar()" [loading]="saving"
+      class="btn-aura" (click)="guardar()" [loading]="saving"
       [disabled]="!form.cuentaBancariaId || !form.monto || !form.concepto?.trim() || !form.categoria">
     </button>
   </ng-template>

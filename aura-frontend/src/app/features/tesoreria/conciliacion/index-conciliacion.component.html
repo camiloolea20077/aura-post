@@ -4,55 +4,61 @@
 <input id="csv-input" type="file" accept=".csv,.txt" style="display:none"
   (change)="onFileSelected($event)" />
 
-<div class="module-wrapper">
-  <!-- ── Header ────────────────────────────────────────────────── -->
-  <div class="module-header">
-    <div class="header-left">
-      <span class="header-icon conciliacion-icon"><i class="pi pi-check-square"></i></span>
-      <div>
-        <h2>Conciliación Bancaria</h2>
-        <p>Compara los movimientos del sistema con tu extracto bancario</p>
+<div class="page">
+  <div class="card">
+    <!-- ── Header ────────────────────────────────────────────────── -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon">
+          <i class="pi pi-check-square"></i>
+        </span>
+        <div>
+          <h1 class="title">Conciliación Bancaria</h1>
+          <p class="subtitle">
+            Compara los movimientos del sistema con tu extracto bancario
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          icon="pi pi-upload"
+          label="Importar CSV"
+          class="p-button-outlined"
+          pTooltip="Formato: fecha,concepto,monto"
+          [loading]="importando"
+          (click)="triggerFileInput()"
+        ></button>
+        <!-- ── Filtros ───────────────────────────────────────────── -->
+        <div class="card-head__search">
+          <p-dropdown
+            [(ngModel)]="cuentaId"
+            [options]="cuentasOpts"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Selecciona una cuenta *"
+            (onChange)="cargar()"
+          />
+          <p-calendar
+            [(ngModel)]="rangoFechas"
+            selectionMode="range"
+            [readonlyInput]="true"
+            dateFormat="dd/mm/yy"
+            placeholder="Desde — Hasta"
+            (onSelect)="cargar()"
+          />
+          <button
+            pButton
+            type="button"
+            icon="pi pi-refresh"
+            class="p-button-text p-button-rounded"
+            pTooltip="Recargar"
+            (click)="cargar()"
+            [loading]="loading"
+          ></button>
+        </div>
       </div>
     </div>
-    <div class="header-actions">
-      <button pButton icon="pi pi-upload" label="Importar CSV"
-        class="p-button-outlined p-button-sm"
-        pTooltip="Formato: fecha,concepto,monto"
-        [loading]="importando"
-        (click)="triggerFileInput()">
-      </button>
-    </div>
-  </div>
-
-  <!-- ── Filtros ────────────────────────────────────────────────── -->
-  <div class="filters-bar">
-    <div class="filter-item">
-      <label>Cuenta <span class="req">*</span></label>
-      <p-dropdown
-        [(ngModel)]="cuentaId"
-        [options]="cuentasOpts"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="Selecciona una cuenta"
-        styleClass="w-full"
-        (onChange)="cargar()"
-      />
-    </div>
-    <div class="filter-item">
-      <label>Período</label>
-      <p-calendar
-        [(ngModel)]="rangoFechas"
-        selectionMode="range"
-        [readonlyInput]="true"
-        dateFormat="dd/mm/yy"
-        placeholder="Desde — Hasta"
-        styleClass="w-full"
-        (onSelect)="cargar()"
-      />
-    </div>
-    <button pButton icon="pi pi-refresh" class="p-button-text p-button-rounded"
-      pTooltip="Recargar" (click)="cargar()" [loading]="loading"></button>
-  </div>
 
   <!-- ── Sin cuenta seleccionada ───────────────────────────────── -->
   @if (!cuentaId) {
@@ -300,4 +306,5 @@
       </div>
     </div>
   }
+  </div>
 </div>

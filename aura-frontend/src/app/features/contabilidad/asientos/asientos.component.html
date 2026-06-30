@@ -1,30 +1,36 @@
 <p-toast />
 
-<div class="module-wrapper">
+<div class="page">
   <!-- Header -->
-  <div class="module-header">
-    <div class="header-left">
-      <span class="header-icon"><i class="pi pi-book"></i></span>
-      <div>
-        <h2>Asientos Contables</h2>
-        <p>Libro diario, P&G y Libro Mayor</p>
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-book"></i></span>
+        <div>
+          <h1 class="title">Asientos Contables</h1>
+          <p class="subtitle">Libro diario, P&G y Libro Mayor</p>
+        </div>
       </div>
-    </div>
-    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap">
-      <button
-        pButton
-        label="Balance General"
-        icon="pi pi-chart-pie"
-        class="p-button-outlined p-button-sm"
-        (click)="verBalance()"
-      ></button>
-      <button
-        pButton
-        label="Nuevo Asiento"
-        icon="pi pi-plus"
-        class="btn-aura"
-        (click)="abrirCrear()"
-      ></button>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button
+            pButton
+            type="button"
+            label="Balance General"
+            icon="pi pi-chart-pie"
+            class="p-button-outlined p-button-sm"
+            (click)="verBalance()"
+          ></button>
+          <button
+            pButton
+            type="button"
+            label="Nuevo Asiento"
+            icon="pi pi-plus"
+            class="btn-aura"
+            (click)="abrirCrear()"
+          ></button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -64,7 +70,7 @@
         ></button>
       </div>
 
-      <div class="table-card">
+      <div class="table-card mt-5">
         <p-table
           [value]="loading ? [1, 2, 3, 4, 5] : asientos"
           [loading]="loading"
@@ -332,7 +338,7 @@
         ></button>
       </div>
 
-      <div class="table-card">
+      <div class="table-card mt-5">
         <p-table
           [value]="loadingMayor ? [1, 2, 3, 4, 5] : libroMayorLineas"
           [loading]="loadingMayor"
@@ -839,7 +845,11 @@
     </div>
 
     <div class="table-card" style="margin-top: 0.75rem">
-      <p-table [value]="formAsiento.detalles" styleClass="p-datatable-sm" showGridlines>
+      <p-table
+        [value]="formAsiento.detalles"
+        styleClass="p-datatable-sm"
+        showGridlines
+      >
         <ng-template pTemplate="header">
           <tr>
             <th style="min-width: 200px">Cuenta</th>

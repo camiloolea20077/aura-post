@@ -205,6 +205,30 @@ export const routes: Routes = [
             (m) => m.FormGastoComponent,
           ),
       },
+      {
+        path: 'obligaciones',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/obligaciones/index/index-obligaciones.component').then(
+            (m) => m.IndexObligacionesComponent,
+          ),
+      },
+      {
+        path: 'obligaciones/nuevo',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/obligaciones/form/form-obligacion.component').then(
+            (m) => m.FormObligacionComponent,
+          ),
+      },
+      {
+        path: 'obligaciones/:id',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/obligaciones/detalle/detalle-obligacion.component').then(
+            (m) => m.DetalleObligacionComponent,
+          ),
+      },
 
       // Inventario
       {
@@ -331,6 +355,22 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/terceros/index/index-terceros.component').then(
             (m) => m.IndexTercerosComponent,
+          ),
+      },
+      {
+        path: 'terceros/nuevo',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/terceros/form-plano/form-tercero-plano.component').then(
+            (m) => m.FormTerceroPlanoComponent,
+          ),
+      },
+      {
+        path: 'terceros/editar/:id',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/terceros/form-plano/form-tercero-plano.component').then(
+            (m) => m.FormTerceroPlanoComponent,
           ),
       },
 

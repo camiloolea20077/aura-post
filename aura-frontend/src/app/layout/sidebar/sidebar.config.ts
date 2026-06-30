@@ -261,6 +261,11 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         icon: 'pi pi-check-square',
         route: '/tesoreria/conciliacion',
       },
+      {
+        label: 'Obligaciones',
+        icon: 'pi pi-money-bill',
+        route: '/obligaciones',
+      },
     ],
   },
 
@@ -403,7 +408,7 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
     icon: 'pi pi-sliders-h',
     items: [
       {
-        label: 'Clientes y Proveedores',
+        label: 'Terceros',
         icon: 'pi pi-users',
         route: '/terceros',
         roles: ['SUPER_ADMIN', 'ADMIN'],

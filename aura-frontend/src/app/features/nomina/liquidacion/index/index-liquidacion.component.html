@@ -1,72 +1,72 @@
-<div class="page-container">
-  <div class="page-header">
-    <div class="page-title-area">
-      <div class="page-icon"><i class="pi pi-calculator"></i></div>
-      <div>
-        <h3 class="page-title">Liquidación de Nómina</h3>
-        <p class="page-sub">Liquidación, novedades y aprobación de pagos</p>
-      </div>
-    </div>
-    <!-- Barra de liquidación rápida -->
-    <div class="liquidar-bar">
-      <p-dropdown
-        [options]="periodos"
-        [(ngModel)]="periodoSeleccionado"
-        [optionLabel]="'id'"
-        placeholder="Seleccionar período"
-        [style]="{ minWidth: '220px' }"
-        [loading]="loadingPeriodos"
-      >
-        <ng-template pTemplate="selectedItem" let-p>
-          <span *ngIf="p">{{ periodoLabel(p) }}</span>
-        </ng-template>
-        <ng-template pTemplate="item" let-p>
-          <div class="periodo-opt">
-            <span>{{ periodoLabel(p) }}</span>
-            <span
-              class="periodo-estado"
-              [class]="'estado-' + p.estado.toLowerCase()"
-              >{{ p.estado }}</span
-            >
-          </div>
-        </ng-template>
-      </p-dropdown>
-      <button
-        pButton
-        type="button"
-        label="Liquidar todos"
-        icon="pi pi-bolt"
-        class="btn-nomina"
-        [loading]="liquidandoTodos"
-        [disabled]="!periodoSeleccionado || liquidandoTodos"
-        pTooltip="Liquida la nómina para todos los empleados activos del período seleccionado"
-        tooltipPosition="bottom"
-        (click)="liquidarTodos()"
-      ></button>
-    </div>
-  </div>
-
+<div class="page">
   <div class="card">
-    <div class="table-toolbar">
-      <div class="toolbar-left">
-        <span class="p-input-icon-left search-wrap">
-          <i class="pi pi-search"></i>
-          <input
-            type="text"
-            pInputText
-            class="search-input"
-            placeholder="Buscar por empleado o estado..."
-            [(ngModel)]="searchQuery"
-            (input)="onSearch()"
-            (keydown.escape)="clearSearch()"
-          />
-          <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">
-            <i class="pi pi-times"></i>
-          </button>
-        </span>
-        <span class="total-badge" *ngIf="!loadingTable">
-          {{ totalRecords }} {{ totalRecords === 1 ? "nómina" : "nóminas" }}
-        </span>
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-calculator"></i></span>
+        <div>
+          <h1 class="title">Liquidación de Nómina</h1>
+          <p class="subtitle">Liquidación, novedades y aprobación de pagos</p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <!-- Barra de liquidación rápida -->
+        <div class="liquidar-bar">
+          <p-dropdown
+            [options]="periodos"
+            [(ngModel)]="periodoSeleccionado"
+            [optionLabel]="'id'"
+            placeholder="Seleccionar período"
+            [style]="{ minWidth: '220px' }"
+            [loading]="loadingPeriodos"
+          >
+            <ng-template pTemplate="selectedItem" let-p>
+              <span *ngIf="p">{{ periodoLabel(p) }}</span>
+            </ng-template>
+            <ng-template pTemplate="item" let-p>
+              <div class="periodo-opt">
+                <span>{{ periodoLabel(p) }}</span>
+                <span
+                  class="periodo-estado"
+                  [class]="'estado-' + p.estado.toLowerCase()"
+                  >{{ p.estado }}</span
+                >
+              </div>
+            </ng-template>
+          </p-dropdown>
+          <button
+            pButton
+            type="button"
+            label="Liquidar todos"
+            icon="pi pi-bolt"
+            class="btn-aura"
+            [loading]="liquidandoTodos"
+            [disabled]="!periodoSeleccionado || liquidandoTodos"
+            pTooltip="Liquida la nómina para todos los empleados activos del período seleccionado"
+            tooltipPosition="bottom"
+            (click)="liquidarTodos()"
+          ></button>
+        </div>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              class="search-input"
+              placeholder="Buscar por empleado o estado..."
+              [(ngModel)]="searchQuery"
+              (input)="onSearch()"
+              (keydown.escape)="clearSearch()"
+            />
+            <button
+              *ngIf="searchQuery"
+              class="clear-btn"
+              (click)="clearSearch()"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+        </div>
       </div>
     </div>
 

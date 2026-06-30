@@ -1,68 +1,68 @@
 <p-toast />
 <p-confirmDialog />
 
-<div class="module-wrapper">
-  <!-- Header -->
-  <div class="module-header">
-    <div class="header-left">
-      <span class="header-icon"><i class="pi pi-wallet"></i></span>
-      <div>
-        <h2>Gastos</h2>
-        <p>Registro de gastos deducibles y no deducibles</p>
+<div class="page">
+  <div class="card">
+    <!-- Header -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-wallet"></i></span>
+        <div>
+          <h1 class="title">Gastos</h1>
+          <p class="subtitle">Registro de gastos deducibles y no deducibles</p>
+        </div>
       </div>
-    </div>
-    <button
-      pButton
-      label="Registrar gasto"
-      icon="pi pi-plus"
-      class="btn-aura"
-      (click)="openForm()"
-    ></button>
-  </div>
-
-  <!-- Resumen cards -->
-  <div class="resumen-cards">
-    <div class="res-card deducible-card">
-      <div class="res-icon"><i class="pi pi-check-circle"></i></div>
-      <div class="res-info">
-        <span class="res-label">Deducibles (página actual)</span>
-        <span class="res-value">{{ formatCOP(totalDeducibles) }}</span>
-      </div>
-    </div>
-    <div class="res-card no-deducible-card">
-      <div class="res-icon"><i class="pi pi-times-circle"></i></div>
-      <div class="res-info">
-        <span class="res-label">No deducibles (página actual)</span>
-        <span class="res-value">{{ formatCOP(totalNoDeducibles) }}</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Tabla -->
-  <div class="table-card">
-    <div class="table-toolbar">
-      <div class="toolbar-left">
-        <span class="p-input-icon-left search-wrap">
-          <p-iconfield>
-            <p-inputicon class="pi pi-search" />
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          label="Registrar gasto"
+          icon="pi pi-plus"
+          class="btn-aura"
+          (click)="openForm()"
+        ></button>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
             <input
+              type="text"
               pInputText
+              class="search-input"
               [(ngModel)]="searchQuery"
               (input)="onSearch()"
-              (keyup.enter)="onSearch()"
               placeholder="Buscar por código o descripción..."
             />
-          </p-iconfield>
-          <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">
-            <i class="pi pi-times"></i>
-          </button>
-        </span>
-        <span class="total-badge" *ngIf="!loadingTable">
-          {{ totalRecords }} {{ totalRecords === 1 ? "gasto" : "gastos" }}
-        </span>
+            <button
+              *ngIf="searchQuery"
+              class="clear-btn"
+              (click)="clearSearch()"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+        </div>
       </div>
     </div>
 
+    <!-- Resumen cards -->
+    <div class="resumen-cards mt-4">
+      <div class="res-card deducible-card">
+        <div class="res-icon"><i class="pi pi-check-circle"></i></div>
+        <div class="res-info">
+          <span class="res-label">Deducibles (página actual)</span>
+          <span class="res-value">{{ formatCOP(totalDeducibles) }}</span>
+        </div>
+      </div>
+      <div class="res-card no-deducible-card">
+        <div class="res-icon"><i class="pi pi-times-circle"></i></div>
+        <div class="res-info">
+          <span class="res-label">No deducibles (página actual)</span>
+          <span class="res-value">{{ formatCOP(totalNoDeducibles) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla -->
     <p-table
       [value]="items"
       [lazy]="true"
@@ -116,7 +116,7 @@
               [rounded]="true"
             />
           </td>
-          <td class="text-center">
+          <td class="text-center flex">
             <button
               pButton
               type="button"
@@ -157,7 +157,7 @@
                 type="button"
                 label="Registrar primer gasto"
                 icon="pi pi-plus"
-                class="btn-aura btn-primary p-button-sm"
+                class="btn-aura p-button-sm"
                 (click)="openForm()"
               ></button>
             </div>

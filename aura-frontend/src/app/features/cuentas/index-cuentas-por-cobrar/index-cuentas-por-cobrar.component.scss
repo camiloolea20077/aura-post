@@ -37,79 +37,16 @@ $mono: 'JetBrains Mono', monospace;
   width: 100%;
 }
 
-.module-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.5rem;
-
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-  }
-  .header-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    background: rgba(99, 102, 241, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    i {
-      font-size: 1.1rem;
-      color: $indigo;
-    }
-  }
-  .header-title {
-    font-size: 1.15rem;
-    font-weight: 800;
-    color: $text;
-    margin: 0;
-  }
-  .header-sub {
-    font-size: 0.78rem;
-    color: $muted;
-    margin: 0;
-  }
-}
-
-.filters-bar {
-  background: $card;
-  border: 1.5px solid $border;
-  border-radius: 12px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-
-  .filter-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    align-items: center;
-  }
-
-  .filter-field {
-    &.search-field {
-      flex: 1;
-      min-width: 280px;
-    }
-
-    .search-input {
-      width: 100%;
-    }
-  }
-
-  .filter-actions {
-    display: flex;
-    gap: 0.25rem;
-  }
-}
-
-.table-card {
-  background: $card;
-  border: 1.5px solid $border;
-  border-radius: 16px;
+// Header + tabla en una sola .card global. Anchos mínimos de filtros.
+.card {
   overflow: hidden;
+}
+
+.card-head__search.filtros {
+  ::ng-deep .p-datepicker,
+  ::ng-deep .p-select {
+    min-width: 150px;
+  }
 }
 
 .clickable-row {
@@ -129,12 +66,6 @@ $mono: 'JetBrains Mono', monospace;
     display: block;
     margin-bottom: 0.5rem;
   }
-}
-
-::ng-deep .btn-primary.p-button {
-  background: linear-gradient(135deg, $indigo, #818cf8) !important;
-  border: none !important;
-  font-weight: 600 !important;
 }
 
 ::ng-deep .p-datatable .p-datatable-tbody > tr > td {

@@ -43,6 +43,7 @@ export interface TerceroModel {
   apellidos: string | null;
   direccion: string | null;
   municipioId: number | null;
+  municipio?: string | null;
   telefono: string | null;
   email: string | null;
   emailFe: string | null;
@@ -50,6 +51,7 @@ export interface TerceroModel {
   esCliente: boolean;
   esProveedor: boolean;
   esEmpleado: boolean;
+  esBanco?: boolean;
   activo: boolean;
   // Campos fiscales (V52)
   tipoPersona: 'NATURAL' | 'JURIDICA';
@@ -73,6 +75,7 @@ export interface TerceroTableModel {
   esCliente: boolean;
   esProveedor: boolean;
   esEmpleado: boolean;
+  esBanco?: boolean;
   activo: boolean;
 }
 
@@ -86,6 +89,7 @@ export interface CreateTerceroDto {
   apellidos: string | null;
   direccion: string | null;
   municipioId: number;
+  municipio?: string | null;
   telefono: string | null;
   email: string | null;
   emailFe: string | null;
@@ -93,6 +97,7 @@ export interface CreateTerceroDto {
   esCliente: boolean;
   esProveedor: boolean;
   esEmpleado: boolean;
+  esBanco?: boolean;
   activo: boolean;
   // Campos fiscales (V52)
   tipoPersona: 'NATURAL' | 'JURIDICA';

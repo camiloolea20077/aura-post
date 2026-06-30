@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -70,6 +71,7 @@ export class IndexTercerosComponent implements OnInit {
     private readonly terceroService: TerceroService,
     private readonly alertService: AlertService,
     private readonly confirmationService: ConfirmationService,
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {}
@@ -131,14 +133,10 @@ export class IndexTercerosComponent implements OnInit {
   }
 
   openCreate(): void {
-    this.selectedId = null;
-    this.modalSlug = 'create';
-    this.showModal = true;
+    this.router.navigate(['/terceros/nuevo']);
   }
   openEdit(item: TerceroTableModel): void {
-    this.selectedId = item.id;
-    this.modalSlug = 'edit';
-    this.showModal = true;
+    this.router.navigate(['/terceros/editar', item.id]);
   }
   onModalClosed(): void {
     this.showModal = false;

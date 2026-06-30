@@ -1,31 +1,5 @@
-.module-wrapper {
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.module-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-
-  .header-left {
-    display: flex; align-items: center; gap: 1rem;
-    h2 { margin: 0; font-size: 1.4rem; font-weight: 700; color: #1e293b; }
-    p  { margin: 0; color: #64748b; font-size: 0.85rem; }
-  }
-}
-
-.header-icon {
-  width: 3rem; height: 3rem;
-  background: #6366f1;
-  border-radius: 12px;
-  display: grid; place-items: center;
-  i { color: #fff; font-size: 1.3rem; }
-}
+// Separación entre la card del header y el tabView
+.page > p-tabView { display: block; margin-top: 1.5rem; }
 
 .filters-bar {
   display: flex;
@@ -127,7 +101,7 @@
 // ── Comprobante ──────────────────────────────────────────────────────
 .comprobante {
   font-size: 0.78rem; background: #f1f5f9;
-  padding: 2px 6px; border-radius: 4px; color: #4f46e5;
+  padding: 2px 6px; border-radius: 4px; color: #2563eb;
 }
 
 // ── P&G (Estado de Resultados) ───────────────────────────────────────

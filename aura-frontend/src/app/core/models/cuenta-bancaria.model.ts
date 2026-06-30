@@ -7,6 +7,10 @@ export interface CuentaBancariaModel {
   banco: string | null;
   numeroCuenta: string | null;
   titular: string | null;
+  terceroId: number | null;
+  terceroNombre: string | null;
+  cuentaContableId: number | null;
+  cuentaContableNombre: string | null;
   saldoInicial: number;
   saldoActual: number;
   activa: boolean;
@@ -18,6 +22,8 @@ export interface CreateCuentaBancariaDto {
   banco?: string | null;
   numeroCuenta?: string | null;
   titular?: string | null;
+  terceroId?: number | null;
+  cuentaContableId?: number | null;
   saldoInicial: number;
 }
 

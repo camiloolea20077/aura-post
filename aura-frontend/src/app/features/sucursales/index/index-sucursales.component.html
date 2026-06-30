@@ -1,45 +1,44 @@
 <p-toast />
 <p-confirmDialog />
 
-<div class="module-wrapper">
-  <!-- ─── Header ─────────────────────────────────────────────── -->
-  <div class="module-header">
-    <div class="header-left">
-      <div class="header-icon">
-        <i class="pi pi-building"></i>
+<div class="page">
+  <div class="card">
+    <!-- ─── Header ─────────────────────────────────────────────── -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon">
+          <i class="pi pi-building"></i>
+        </span>
+        <div>
+          <h1 class="title">Sucursales</h1>
+          <p class="subtitle">Gestión de sedes de la empresa</p>
+        </div>
       </div>
-      <div>
-        <h2 class="header-title">Sucursales</h2>
-        <p class="header-sub">Gestión de sedes de la empresa</p>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-plus"
+          label="Nueva sucursal"
+          class="btn-aura"
+          (click)="nueva()"
+        ></button>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              pInputText
+              [(ngModel)]="search"
+              placeholder="Buscar por nombre, código o ciudad..."
+              (input)="onSearch()"
+              class="search-input"
+            />
+            <button *ngIf="search" class="clear-btn" (click)="clearSearch()">
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+        </div>
       </div>
-    </div>
-    <button
-      pButton
-      icon="pi pi-plus"
-      label="Nueva sucursal"
-      class="btn-aura"
-      (click)="nueva()"
-    ></button>
-  </div>
-
-  <!-- ─── Tabla ───────────────────────────────────────────────── -->
-  <div class="table-card">
-    <!-- Barra búsqueda -->
-    <div class="table-toolbar">
-      <div class="search-wrap">
-        <i class="pi pi-search"></i>
-        <input
-          pInputText
-          [(ngModel)]="search"
-          placeholder="Buscar por nombre, código o ciudad..."
-          (input)="onSearch()"
-          class="search-input"
-        />
-        <button *ngIf="search" class="clear-btn" (click)="clearSearch()">
-          <i class="pi pi-times"></i>
-        </button>
-      </div>
-      <span class="total-badge">{{ totalRows }} registros</span>
     </div>
 
     <!-- p-table lazy -->

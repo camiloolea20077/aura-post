@@ -1,16 +1,17 @@
-<div class="page-container">
-  <div class="page-header">
-    <div class="page-title-area">
-      <div class="page-icon"><i class="pi pi-clock"></i></div>
-      <div>
-        <h3 class="page-title">Turnos de caja</h3>
-        <p class="page-sub">
-          Historial de aperturas y cierres — cuadre de efectivo
-        </p>
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-clock"></i></span>
+        <div>
+          <h1 class="title">Turnos de caja</h1>
+          <p class="subtitle">
+            Historial de aperturas y cierres — cuadre de efectivo
+          </p>
+        </div>
       </div>
-    </div>
-    <div class="header-actions">
-      <div class="turno-activo-chip" *ngIf="turnoActivo">
+      <div class="header-actions">
+        <div class="turno-activo-chip" *ngIf="turnoActivo">
         <span class="chip-dot"></span>
         <div class="chip-info">
           <span class="chip-caja">{{ turnoActivo.cajaNombre }}</span>
@@ -37,6 +38,7 @@
         }}"
         (click)="openAbrir()"
       ></button>
+      </div>
     </div>
   </div>
 
@@ -239,9 +241,6 @@
             <i class="pi pi-times"></i>
           </button>
         </span>
-        <span class="total-badge" *ngIf="!loadingTable"
-          >{{ totalRecords }} turnos</span
-        >
       </div>
     </div>
 
@@ -378,7 +377,7 @@
                 pButton
                 label="Abrir primer turno"
                 icon="pi pi-unlock"
-                class="btn-aura btn-orange p-button-sm"
+                class="btn-aura p-button-sm"
                 (click)="openAbrir()"
               ></button>
             </div>

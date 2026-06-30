@@ -1,132 +1,7 @@
-.page-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-.page-title-area {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-}
+// Header (.card-head), card (.card), buscador (.search-wrap) y total
+// (.total-badge) son estándar global en styles.scss.
 
-.page-icon {
-  width: 46px;
-  height: 46px;
-  background: #2563eb;
-  border-radius: 13px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 12px rgba(46, 108, 246, 0.3);
-
-  i {
-    font-size: 1.15rem;
-    color: white;
-  }
-}
-
-.page-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0 0 0.15rem;
-}
-.page-sub {
-  font-size: 0.8rem;
-  color: #64748b;
-  margin: 0;
-}
-
-// ::ng-deep .btn-teal.p-button {
-//   background: linear-gradient(135deg, #0d9488, #14b8a6) !important;
-//   border: none !important;
-//   color: white !important;
-//   box-shadow: 0 2px 8px rgba(13, 148, 136, 0.3) !important;
-//   &:hover {
-//     opacity: 0.92;
-//   }
-// }
-
-.card {
-  background: white;
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-}
-
-.table-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid #f1f5f9;
-  gap: 0.75rem;
-  .toolbar-left {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    flex: 1;
-    flex-wrap: wrap;
-  }
-}
-
-.search-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-  .pi-search {
-    position: absolute;
-    left: 0.8rem;
-    font-size: 0.85rem;
-    color: #94a3b8;
-    z-index: 1;
-    pointer-events: none;
-  }
-  .search-input {
-    height: 38px;
-    width: 280px;
-    border-radius: 10px;
-    border: 1.5px solid #e0e3eb;
-    padding: 0 2.2rem;
-    font-size: 0.85rem;
-    font-family: "Outfit", sans-serif;
-    color: #1e293b;
-    &::placeholder {
-      color: #9ca3af;
-    }
-    &:focus {
-      border-color: #0d9488;
-      box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
-      outline: none;
-    }
-  }
-  .clear-btn {
-    position: absolute;
-    right: 0.6rem;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #9ca3af;
-    display: flex;
-    align-items: center;
-    padding: 0.25rem;
-    i {
-      font-size: 0.75rem;
-    }
-    &:hover {
-      color: #ef4444;
-    }
-  }
-}
-
+// Filtro por estado (se mantiene dentro del header)
 ::ng-deep .estado-filter .p-dropdown {
   height: 38px;
   border-radius: 10px;
@@ -137,15 +12,6 @@
   .p-dropdown-label {
     font-size: 0.82rem;
   }
-}
-
-.total-badge {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #64748b;
-  background: #f1f5f9;
-  padding: 0.25rem 0.65rem;
-  border-radius: 20px;
 }
 
 ::ng-deep .aura-table {
@@ -169,7 +35,7 @@
       color: #cbd5e1;
     }
     &.p-highlight .p-sortable-column-icon {
-      color: #0d9488;
+      color: #2563eb;
     }
   }
   .p-datatable-tbody > tr {
@@ -192,7 +58,7 @@
     background: #fafbfe;
     padding: 0.6rem 1rem;
     .p-paginator-page.p-highlight {
-      background: linear-gradient(135deg, #0d9488, #14b8a6);
+      background: #2563eb;
       color: white;
       border-radius: 8px;
     }
@@ -203,7 +69,7 @@
   font-family: "JetBrains Mono", monospace;
   font-size: 0.85rem;
   font-weight: 700;
-  color: #0d9488;
+  color: #2563eb;
   letter-spacing: 0.03em;
 }
 
@@ -219,16 +85,16 @@
   border-radius: 8px;
   background: linear-gradient(
     135deg,
-    rgba(13, 148, 136, 0.1),
-    rgba(20, 184, 166, 0.1)
+    rgba(37, 99, 235, 0.1),
+    rgba(37, 99, 235, 0.1)
   );
-  border: 1px solid rgba(13, 148, 136, 0.2);
+  border: 1px solid rgba(37, 99, 235, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.82rem;
   font-weight: 700;
-  color: #0d9488;
+  color: #2563eb;
 }
 .prod-nombre {
   font-weight: 600;

@@ -1,44 +1,44 @@
-<div class="page-container">
-  <div class="page-header">
-    <div class="page-title-area">
-      <div class="page-icon purple">
-        <i class="pi pi-tag"></i>
-      </div>
-      <div>
-        <h3 class="page-title">Marcas</h3>
-        <p class="page-sub">Administra las marcas de tus productos</p>
-      </div>
-    </div>
-    <button
-      pButton
-      type="button"
-      label="Nueva marca"
-      icon="pi pi-plus"
-      class="btn-aura"
-      (click)="openCreate()"
-    ></button>
-  </div>
-
+<div class="page">
   <div class="card">
-    <div class="table-toolbar">
-      <div class="toolbar-left">
-        <span class="p-input-icon-left search-wrap">
-          <i class="pi pi-search"></i>
-          <input
-            type="text"
-            pInputText
-            class="search-input"
-            placeholder="Buscar marca..."
-            [(ngModel)]="searchQuery"
-            (input)="filterGlobal($event)"
-          />
-          <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">
-            <i class="pi pi-times"></i>
-          </button>
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon">
+          <i class="pi pi-tag"></i>
         </span>
-        <span class="total-badge" *ngIf="!loadingTable">
-          {{ totalRecords }} {{ totalRecords === 1 ? "marca" : "marcas" }}
-        </span>
+        <div>
+          <h1 class="title">Marcas</h1>
+          <p class="subtitle">Administra las marcas de tus productos</p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          label="Nueva marca"
+          icon="pi pi-plus"
+          class="btn-aura"
+          (click)="openCreate()"
+        ></button>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              class="search-input"
+              placeholder="Buscar marca..."
+              [(ngModel)]="searchQuery"
+              (input)="filterGlobal($event)"
+            />
+            <button
+              *ngIf="searchQuery"
+              class="clear-btn"
+              (click)="clearSearch()"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+        </div>
       </div>
     </div>
 

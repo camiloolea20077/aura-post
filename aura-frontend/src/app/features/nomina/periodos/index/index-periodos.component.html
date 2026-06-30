@@ -1,40 +1,36 @@
-<div class="page-container">
-  <div class="page-header">
-    <div class="page-title-area">
-      <div class="page-icon"><i class="pi pi-calendar"></i></div>
-      <div>
-        <h3 class="page-title">Períodos de Nómina</h3>
-        <p class="page-sub">
-          Define los períodos de pago para liquidar la nómina
-        </p>
+<div class="page">
+  <div class="card">
+    <!-- Header -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-calendar"></i></span>
+        <div>
+          <h1 class="title">Períodos de Nómina</h1>
+          <p class="subtitle">
+            Define los períodos de pago para liquidar la nómina
+          </p>
+        </div>
       </div>
+      <button
+        pButton
+        type="button"
+        label="Nuevo período"
+        icon="pi pi-plus"
+        class="btn-aura"
+        (click)="openModal()"
+      ></button>
     </div>
-    <button
-      pButton
-      type="button"
-      label="Nuevo período"
-      icon="pi pi-plus"
-      class="btn-nomina"
-      (click)="openModal()"
-    ></button>
-  </div>
 
-  <!-- Skeleton -->
-  <div class="card" *ngIf="loading">
+    <!-- Skeleton -->
     <div
-      style="
-        padding: 1.5rem;
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-      "
+      *ngIf="loading"
+      style="padding: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem"
     >
       <p-skeleton height="60px" *ngFor="let s of [1, 2, 3]" />
     </div>
-  </div>
 
-  <div class="card" *ngIf="!loading">
-    <div *ngIf="periodos.length === 0" class="empty-state">
+    <!-- Empty -->
+    <div *ngIf="!loading && periodos.length === 0" class="empty-state">
       <i class="pi pi-calendar"></i>
       <p>
         No hay períodos creados. Crea el primero para empezar a liquidar nómina.
@@ -44,11 +40,11 @@
         type="button"
         label="Crear período"
         icon="pi pi-plus"
-        class="btn-nomina p-button-sm"
+        class="btn-aura p-button-sm"
         (click)="openModal()"
       ></button>
     </div>
-    <div class="periodo-list" *ngIf="periodos.length > 0">
+    <div class="periodo-list" *ngIf="!loading && periodos.length > 0">
       <div
         *ngFor="let p of periodos"
         class="periodo-item"
@@ -136,7 +132,7 @@
       type="button"
       label="Crear período"
       icon="pi pi-check"
-      class="btn-nomina"
+      class="btn-aura"
       [loading]="saving"
       (click)="crear()"
     ></button>

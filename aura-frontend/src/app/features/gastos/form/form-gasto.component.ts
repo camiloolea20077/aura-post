@@ -166,6 +166,7 @@ export class FormGastoComponent implements OnInit {
           descripcion:       g.descripcion ?? '',
           tipoDocSoporte:    g.tipoDocSoporte ?? null,
           numeroDocSoporte:  g.numeroDocSoporte ?? '',
+          cuentaContableId:  g.cuentaContableId ?? null,
           baseIva:           g.baseIva ?? 0,
           tarifaIva:         g.tarifaIva ?? 0,
           valorIva:          g.valorIva ?? 0,
@@ -176,6 +177,10 @@ export class FormGastoComponent implements OnInit {
           tarifaReteica:     g.tarifaReteica ?? 0,
           valorReteica:      g.valorReteica ?? 0,
         });
+        // Reconstruir el tercero seleccionado para el autocomplete (muestra nombreCompleto)
+        this.terceroSeleccionado = g.terceroId
+          ? ({ id: g.terceroId, nombreCompleto: g.terceroNombre ?? '' } as unknown as TerceroTableModel)
+          : null;
       }
     } catch {
       this.alertService.showError('Error', 'No se pudo cargar el gasto.');
