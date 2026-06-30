@@ -6,6 +6,7 @@ import {
   CreateObligacionDto,
   CuotaAmortizacionModel,
   ObligacionModel,
+  PagarCuotaDto,
 } from '../models/obligacion.model';
 import { environment } from '../../../environments/environment';
 import { ResponseModel } from '../../shared/utils/responde.models';
@@ -31,10 +32,11 @@ export class ObligacionService {
   pagarCuota(
     obligacionId: number,
     cuotaId: number,
+    pago: PagarCuotaDto = {},
   ): Observable<ResponseModel<CuotaAmortizacionModel>> {
     return this.http.post<ResponseModel<CuotaAmortizacionModel>>(
       `${this.apiUrl}/${obligacionId}/cuotas/${cuotaId}/pagar`,
-      {},
+      pago,
     );
   }
 

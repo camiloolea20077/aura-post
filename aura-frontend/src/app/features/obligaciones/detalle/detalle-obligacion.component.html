@@ -1,5 +1,67 @@
 <div class="page">
-  <p-confirmDialog />
+  <!-- Diálogo: origen del pago de la cuota -->
+  <p-dialog
+    header="Pagar cuota"
+    [(visible)]="pagoDialogVisible"
+    [modal]="true"
+    [style]="{ width: '420px' }"
+    [draggable]="false"
+  >
+    <div *ngIf="cuotaSel" [formGroup]="pagoForm" class="pago-form">
+      <p class="pago-hint">
+        Cuota #{{ cuotaSel.numeroCuota }} —
+        {{ cuotaSel.cuota | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+      </p>
+
+      <div class="pago-field">
+        <label>Medio de pago <span class="required">*</span></label>
+        <p-dropdown
+          formControlName="metodoPago"
+          [options]="metodosPago"
+          optionLabel="label"
+          optionValue="value"
+          appendTo="body"
+          (onChange)="onMetodoChange()"
+          styleClass="w-full"
+        ></p-dropdown>
+      </div>
+
+      <div class="pago-field" *ngIf="!esEfectivo">
+        <label>Cuenta de origen <span class="required">*</span></label>
+        <p-dropdown
+          formControlName="cuentaBancariaId"
+          [options]="cuentasBancariasOpts"
+          optionLabel="label"
+          optionValue="value"
+          appendTo="body"
+          placeholder="Selecciona la cuenta"
+          [filter]="true"
+          styleClass="w-full"
+        ></p-dropdown>
+      </div>
+
+      <small *ngIf="esEfectivo" class="pago-cash">
+        El pago saldrá de caja (efectivo).
+      </small>
+    </div>
+
+    <ng-template pTemplate="footer">
+      <p-button
+        label="Cancelar"
+        [text]="true"
+        (onClick)="pagoDialogVisible = false"
+      />
+      <p-button
+        label="Pagar"
+        icon="pi pi-check"
+        [loading]="paying === cuotaSel?.id"
+        [disabled]="
+          pagoForm.invalid || (!esEfectivo && !pagoForm.value.cuentaBancariaId)
+        "
+        (onClick)="confirmarPago()"
+      />
+    </ng-template>
+  </p-dialog>
 
   <div class="card">
     <!-- Header -->
@@ -26,7 +88,9 @@
           <div class="metric">
             <div class="k">Monto</div>
             <div class="v">
-              {{ o.montoPrincipal | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+              {{
+                o.montoPrincipal | currency: "COP" : "symbol-narrow" : "1.0-0"
+              }}
             </div>
           </div>
           <div class="metric">
@@ -46,45 +110,60 @@
         </div>
 
         <h3 style="font-size: 0.9rem; color: #475569">Tabla de amortización</h3>
-    <p-table [value]="o.cuotas" styleClass="p-datatable-sm" [paginator]="o.cuotas.length > 12" [rows]="12">
-      <ng-template pTemplate="header">
-        <tr>
-          <th class="text-center">#</th>
-          <th>Vencimiento</th>
-          <th class="text-right">Cuota</th>
-          <th class="text-right">Capital</th>
-          <th class="text-right">Interés</th>
-          <th class="text-right">Saldo</th>
-          <th class="text-center">Estado</th>
-          <th class="text-center">Acción</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-c>
-        <tr [class.paid]="c.estado === 'PAGADA'">
-          <td class="text-center">{{ c.numeroCuota }}</td>
-          <td>{{ c.fechaVencimiento }}</td>
-          <td class="text-right">{{ c.cuota | currency: 'COP':'symbol-narrow':'1.0-0' }}</td>
-          <td class="text-right">{{ c.abonoCapital | currency: 'COP':'symbol-narrow':'1.0-0' }}</td>
-          <td class="text-right">{{ c.interes | currency: 'COP':'symbol-narrow':'1.0-0' }}</td>
-          <td class="text-right">{{ c.saldo | currency: 'COP':'symbol-narrow':'1.0-0' }}</td>
-          <td class="text-center">
-            <p-tag
-              [value]="c.estado"
-              [severity]="c.estado === 'PAGADA' ? 'success' : 'warn'"
-            />
-          </td>
-          <td class="text-center">
-            <p-button
-              *ngIf="c.estado !== 'PAGADA'"
-              label="Pagar"
-              size="small"
-              [loading]="paying === c.id"
-              (onClick)="pagar(c)"
-            />
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
+        <p-table
+          [value]="o.cuotas"
+          styleClass="p-datatable-sm"
+          [paginator]="o.cuotas.length > 12"
+          [rows]="12"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th class="text-center">#</th>
+              <th>Vencimiento</th>
+              <th class="text-right">Cuota</th>
+              <th class="text-right">Capital</th>
+              <th class="text-right">Interés</th>
+              <th class="text-right">Saldo</th>
+              <th class="text-center">Estado</th>
+              <th class="text-center">Acción</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-c>
+            <tr [class.paid]="c.estado === 'PAGADA'">
+              <td class="text-center">{{ c.numeroCuota }}</td>
+              <td>{{ c.fechaVencimiento }}</td>
+              <td class="text-right">
+                {{ c.cuota | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+              </td>
+              <td class="text-right">
+                {{
+                  c.abonoCapital | currency: "COP" : "symbol-narrow" : "1.0-0"
+                }}
+              </td>
+              <td class="text-right">
+                {{ c.interes | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+              </td>
+              <td class="text-right">
+                {{ c.saldo | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+              </td>
+              <td class="text-center">
+                <p-tag
+                  [value]="c.estado"
+                  [severity]="c.estado === 'PAGADA' ? 'success' : 'warn'"
+                />
+              </td>
+              <td class="text-center">
+                <p-button
+                  *ngIf="c.estado !== 'PAGADA'"
+                  label="Pagar"
+                  size="small"
+                  [loading]="paying === c.id"
+                  (onClick)="pagar(c)"
+                />
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
       </ng-container>
     </div>
   </div>

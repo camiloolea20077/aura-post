@@ -6,15 +6,22 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { SkeletonModule } from 'primeng/skeleton';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService } from 'primeng/api';
+import { DialogModule } from 'primeng/dialog';
+import { DropdownModule } from 'primeng/dropdown';
 import { lastValueFrom } from 'rxjs';
 
 import { ObligacionService } from '../../../core/services/obligacion.service';
+import { CuentaBancariaService } from '../../../core/services/cuenta-bancaria.service';
 import {
   CuotaAmortizacionModel,
   ObligacionModel,
@@ -27,13 +34,14 @@ import { AlertService } from '../../../shared/pipes/alert.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
+    ReactiveFormsModule,
     ButtonModule,
     TableModule,
     TagModule,
     SkeletonModule,
-    ConfirmDialogModule,
+    DialogModule,
+    DropdownModule,
   ],
-  providers: [ConfirmationService],
   templateUrl: './detalle-obligacion.component.html',
   styles: [
     `
@@ -66,6 +74,34 @@ import { AlertService } from '../../../shared/pipes/alert.service';
         color: #94a3b8;
         text-decoration: line-through;
       }
+      .pago-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        padding-top: 0.25rem;
+      }
+      .pago-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+      }
+      .pago-field label {
+        font-size: 0.8rem;
+        color: #475569;
+        font-weight: 600;
+      }
+      .pago-field .required {
+        color: #ef4444;
+      }
+      .pago-hint {
+        margin: 0;
+        font-size: 0.85rem;
+        color: #64748b;
+      }
+      .pago-cash {
+        color: #0e7490;
+        font-size: 0.8rem;
+      }
     `,
   ],
 })
@@ -74,18 +110,53 @@ export class DetalleObligacionComponent implements OnInit {
   loading = false;
   paying: number | null = null;
 
+  // Diálogo de pago de cuota (origen del dinero)
+  pagoDialogVisible = false;
+  cuotaSel: CuotaAmortizacionModel | null = null;
+  pagoForm: FormGroup;
+  cuentasBancariasOpts: { label: string; value: number }[] = [];
+  metodosPago = [
+    { label: 'Transferencia', value: 'TRANSFERENCIA' },
+    { label: 'Efectivo', value: 'EFECTIVO' },
+    { label: 'Consignación', value: 'CONSIGNACION' },
+    { label: 'Cheque', value: 'CHEQUE' },
+  ];
+
   constructor(
+    private readonly fb: FormBuilder,
     private readonly service: ObligacionService,
+    private readonly cuentaBancariaService: CuentaBancariaService,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly alert: AlertService,
-    private readonly confirm: ConfirmationService,
     private readonly cdr: ChangeDetectorRef,
-  ) {}
+  ) {
+    this.pagoForm = this.fb.group({
+      metodoPago: ['TRANSFERENCIA', Validators.required],
+      cuentaBancariaId: [null as number | null],
+    });
+  }
+
+  /** Sin cuenta bancaria cuando el pago es en efectivo. */
+  get esEfectivo(): boolean {
+    return this.pagoForm.get('metodoPago')?.value === 'EFECTIVO';
+  }
 
   async ngOnInit(): Promise<void> {
     const id = +this.route.snapshot.params['id'];
-    await this.cargar(id);
+    await Promise.all([this.cargar(id), this.loadCuentasBancarias()]);
+  }
+
+  private async loadCuentasBancarias(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.cuentaBancariaService.list());
+      this.cuentasBancariasOpts = (res?.data ?? [])
+        .filter((c) => c.activa)
+        .map((c) => ({ label: c.nombre, value: c.id }));
+      this.cdr.markForCheck();
+    } catch {
+      this.cuentasBancariasOpts = [];
+    }
   }
 
   private async cargar(id: number): Promise<void> {
@@ -102,32 +173,51 @@ export class DetalleObligacionComponent implements OnInit {
     }
   }
 
+  /** Abre el diálogo para elegir el origen del pago de la cuota. */
   pagar(cuota: CuotaAmortizacionModel): void {
     if (!this.obligacion) return;
-    const obligacionId = this.obligacion.id;
-    this.confirm.confirm({
-      header: 'Pagar cuota',
-      message: `¿Confirmas el pago de la cuota #${cuota.numeroCuota}?`,
-      acceptLabel: 'Pagar',
-      rejectLabel: 'Cancelar',
-      accept: async () => {
-        this.paying = cuota.id;
-        this.cdr.markForCheck();
-        try {
-          await lastValueFrom(this.service.pagarCuota(obligacionId, cuota.id));
-          this.alert.showSuccess(
-            'Listo',
-            `Cuota #${cuota.numeroCuota} pagada.`,
-          );
-          await this.cargar(obligacionId);
-        } catch {
-          this.alert.showError('Error', 'No se pudo pagar la cuota.');
-        } finally {
-          this.paying = null;
-          this.cdr.markForCheck();
-        }
-      },
+    this.cuotaSel = cuota;
+    // Por defecto se sugiere pagar desde la cuenta del desembolso por transferencia.
+    this.pagoForm.reset({
+      metodoPago: 'TRANSFERENCIA',
+      cuentaBancariaId: this.obligacion.cuentaBancariaId ?? null,
     });
+    this.pagoDialogVisible = true;
+    this.cdr.markForCheck();
+  }
+
+  /** Al cambiar a efectivo, se limpia la cuenta bancaria (sale de caja). */
+  onMetodoChange(): void {
+    if (this.esEfectivo) {
+      this.pagoForm.patchValue({ cuentaBancariaId: null });
+    }
+  }
+
+  async confirmarPago(): Promise<void> {
+    if (!this.obligacion || !this.cuotaSel) return;
+    const obligacionId = this.obligacion.id;
+    const cuota = this.cuotaSel;
+    const { metodoPago, cuentaBancariaId } = this.pagoForm.value;
+
+    this.paying = cuota.id;
+    this.cdr.markForCheck();
+    try {
+      await lastValueFrom(
+        this.service.pagarCuota(obligacionId, cuota.id, {
+          metodoPago,
+          cuentaBancariaId: this.esEfectivo ? null : cuentaBancariaId,
+        }),
+      );
+      this.alert.showSuccess('Listo', `Cuota #${cuota.numeroCuota} pagada.`);
+      this.pagoDialogVisible = false;
+      this.cuotaSel = null;
+      await this.cargar(obligacionId);
+    } catch {
+      this.alert.showError('Error', 'No se pudo pagar la cuota.');
+    } finally {
+      this.paying = null;
+      this.cdr.markForCheck();
+    }
   }
 
   volver(): void {

@@ -12,6 +12,7 @@ export interface AbonoPagarModel {
   metodoPago: MetodoPago;
   referencia: string | null;
   banco: string | null;
+  cuentaBancariaId: number | null;
   fechaPago: string;
   usuarioId: number;
   usuarioNombre: string;
@@ -74,6 +75,8 @@ export interface CreateAbonoPagarDto {
   metodoPago: MetodoPago;
   referencia?: string | null;
   banco?: string | null;
+  /** Cuenta bancaria de origen del abono (null si es efectivo). */
+  cuentaBancariaId?: number | null;
   fechaPago: string;
   turnoCajaId?: number | null;
 }
