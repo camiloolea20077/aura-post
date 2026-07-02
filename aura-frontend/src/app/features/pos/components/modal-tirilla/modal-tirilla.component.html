@@ -65,7 +65,7 @@
 
         <!-- Documento + número + fecha en misma línea -->
         <div class="t-doc-row">
-          <span class="t-doc-tipo">{{ venta.tipoDocumento ?? "D.E POS" }}</span>
+          <span class="t-doc-tipo">{{ venta.tipoDocumento || "D.E POS" }}</span>
           <span class="t-doc-num">{{ numeroVenta }}</span>
           <span class="t-doc-fecha">{{ formatFecha(venta.fechaEmision) }}</span>
         </div>

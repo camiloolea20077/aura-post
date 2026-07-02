@@ -9,6 +9,7 @@ export interface CierreContableDto {
   totalImpuestos: number;
   totalVentasNeto: number;
   totalVentasSinIva: number;
+  ventasBrutasConDisponible: number;
 
   // Compras
   cantidadCompras: number;
@@ -64,6 +65,16 @@ export interface CierreContableDto {
   totalGastosDeducibles: number;
   totalGastosNoDeducibles: number;
   totalGastos: number;
+
+  // Posición de efectivo (saldos del mayor caja/bancos 11xx)
+  disponible: SaldoDisponibleItem[];
+  totalDisponible: number;
+}
+
+export interface SaldoDisponibleItem {
+  codigo: string;
+  nombre: string;
+  saldo: number;
 }
 
 export interface ReporteIvaDto {

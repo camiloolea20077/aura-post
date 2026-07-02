@@ -24,7 +24,12 @@
     <!-- Skeleton -->
     <div
       *ngIf="loading"
-      style="padding: 1.5rem; display: flex; flex-direction: column; gap: 0.75rem"
+      style="
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      "
     >
       <p-skeleton height="60px" *ngFor="let s of [1, 2, 3]" />
     </div>
@@ -140,3 +145,4 @@
 </p-dialog>
 
 <p-toast />
+<p-confirmDialog />

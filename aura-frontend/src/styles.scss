@@ -670,3 +670,17 @@ body {
 .card {
   overflow: visible;
 }
+
+// Panel de dropdown que envuelve etiquetas largas: crece hacia ABAJO, no a lo ancho.
+// Se usa vía panelStyleClass en selects con textos largos (cuenta, tercero, centro de costo).
+.cmp-dd-panel {
+  max-width: 360px;
+
+  .p-dropdown-items .p-dropdown-item,
+  .p-dropdown-item {
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.25;
+    height: auto;
+  }
+}

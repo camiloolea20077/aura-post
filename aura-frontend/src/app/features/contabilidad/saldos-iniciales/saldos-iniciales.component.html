@@ -1,0 +1,143 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-database"></i></span>
+        <div>
+          <h1 class="title">Saldos iniciales</h1>
+          <p class="subtitle">Carga los saldos con los que la empresa migra al sistema (apertura)</p>
+        </div>
+      </div>
+      <button
+        *ngIf="!apertura"
+        pButton
+        type="button"
+        label="Guardar apertura"
+        icon="pi pi-check"
+        class="btn-aura"
+        [loading]="saving"
+        (click)="guardar()"
+      ></button>
+      <button
+        *ngIf="apertura"
+        pButton
+        type="button"
+        label="Rehacer"
+        icon="pi pi-refresh"
+        class="p-button-outlined"
+        (click)="rehacer()"
+      ></button>
+    </div>
+
+    <!-- Estado: apertura ya cargada -->
+    <div *ngIf="apertura as a" class="si-body">
+      <div class="si-banner">
+        <i class="pi pi-check-circle"></i>
+        <span>
+          Saldos iniciales cargados — comprobante <strong>{{ a.numeroComprobante }}</strong>,
+          fecha {{ a.fecha }}. Total: {{ formatCOP(a.totalDebito) }}.
+        </span>
+      </div>
+      <p-table [value]="a.detalles || []" styleClass="p-datatable-sm" showGridlines>
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Cuenta</th>
+            <th class="text-right">Débito</th>
+            <th class="text-right">Crédito</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-d>
+          <tr>
+            <td>{{ d.cuentaCodigo }} - {{ d.cuentaNombre }}</td>
+            <td class="text-right">{{ d.debito ? formatCOP(d.debito) : "" }}</td>
+            <td class="text-right">{{ d.credito ? formatCOP(d.credito) : "" }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <!-- Estado: cargar saldos -->
+    <div *ngIf="!apertura" class="si-body">
+      <div class="si-grid">
+        <div class="field">
+          <label>Fecha de apertura <span class="req">*</span></label>
+          <input pInputText type="date" [(ngModel)]="fechaApertura" />
+        </div>
+        <div class="field span-2">
+          <label>Cuenta para la diferencia (patrimonio)</label>
+          <p-dropdown
+            [(ngModel)]="cuentaAjusteId"
+            [options]="patrimonioOpts"
+            optionLabel="label"
+            optionValue="value"
+            appendTo="body"
+            [filter]="true"
+            [showClear]="true"
+            placeholder="Resultados de ejercicios anteriores (por defecto)"
+            styleClass="w-full"
+          ></p-dropdown>
+        </div>
+      </div>
+
+      <div class="si-lineas-head">
+        <span>Saldos por cuenta</span>
+        <button pButton type="button" label="Agregar cuenta" icon="pi pi-plus"
+          class="p-button-text" (click)="agregarLinea()"></button>
+      </div>
+
+      <p-table [value]="lineas" styleClass="p-datatable-sm" showGridlines>
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="min-width: 280px">Cuenta</th>
+            <th class="text-right" style="width: 180px">Saldo</th>
+            <th class="text-right" style="width: 140px">Débito</th>
+            <th class="text-right" style="width: 140px">Crédito</th>
+            <th style="width: 40px"></th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-l let-i="rowIndex">
+          <tr>
+            <td>
+              <p-dropdown [(ngModel)]="l.cuentaId" [options]="cuentasOpts"
+                optionLabel="label" optionValue="value" appendTo="body"
+                panelStyleClass="cmp-dd-panel"
+                placeholder="Seleccionar cuenta" [filter]="true" styleClass="w-full"></p-dropdown>
+            </td>
+            <td>
+              <p-inputNumber [(ngModel)]="l.saldo" mode="currency" currency="COP"
+                locale="es-CO" [minFractionDigits]="2" [maxFractionDigits]="2"
+                styleClass="w-full"></p-inputNumber>
+            </td>
+            <td class="text-right">{{ lineDebito(l) ? formatCOP(lineDebito(l)) : "" }}</td>
+            <td class="text-right">{{ lineCredito(l) ? formatCOP(lineCredito(l)) : "" }}</td>
+            <td>
+              <button pButton type="button" icon="pi pi-trash"
+                class="p-button-text p-button-danger p-button-sm p-button-rounded"
+                [disabled]="lineas.length <= 1" (click)="quitarLinea(i)"></button>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+
+      <div class="si-totales">
+        <span>Débitos (activos): <strong>{{ formatCOP(totalDebito) }}</strong></span>
+        <span>Créditos (pasivos): <strong>{{ formatCOP(totalCredito) }}</strong></span>
+        <span class="si-dif">
+          Diferencia → patrimonio: <strong>{{ formatCOP(diferencia) }}</strong>
+        </span>
+      </div>
+      <p class="si-hint">
+        La diferencia entre activos y pasivos es el patrimonio; se lleva automáticamente a la
+        cuenta de ajuste seleccionada. No necesitas cuadrar manualmente.
+      </p>
+
+      <div class="card-footer">
+        <button pButton type="button" label="Guardar apertura" icon="pi pi-check"
+          class="btn-aura" [loading]="saving" (click)="guardar()"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p-confirmDialog />
+

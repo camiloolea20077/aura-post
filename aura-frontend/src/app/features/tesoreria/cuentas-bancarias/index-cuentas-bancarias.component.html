@@ -272,7 +272,7 @@
       class="btn-aura"
       (click)="guardar()"
       [loading]="saving"
-      [disabled]="!form.nombre?.trim() || !form.tipo"
+      [disabled]="!form.nombre.trim() || !form.tipo"
     ></button>
   </ng-template>
 </p-dialog>

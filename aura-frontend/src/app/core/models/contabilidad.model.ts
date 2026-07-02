@@ -59,6 +59,14 @@ export interface AsientoContableModel {
   estado: string;
   createdAt: string;
   totalRows?: number;
+  // Cabecera de comprobante manual (null en asientos automáticos)
+  tipoComprobante?: string | null;
+  beneficiarioTerceroId?: number | null;
+  beneficiarioNombre?: string | null;
+  beneficiarioDireccion?: string | null;
+  beneficiarioTelefono?: string | null;
+  ciudad?: string | null;
+  fechaVencimiento?: string | null;
   detalles?: AsientoDetalleModel[];
 }
 
@@ -66,6 +74,35 @@ export interface CreateAsientoDto {
   fecha: string;
   descripcion: string;
   detalles: CreateAsientoDetalleDto[];
+}
+
+/** TipoComprobante: CD=Diario, CE=Egreso, RC=Ingreso/Recibo de caja. */
+export type TipoComprobante = 'CD' | 'CE' | 'RC';
+
+export interface CreateComprobanteDto {
+  tipoComprobante: TipoComprobante;
+  fecha: string;
+  concepto: string;
+  beneficiarioTerceroId?: number | null;
+  beneficiarioNombre?: string | null;
+  beneficiarioDireccion?: string | null;
+  beneficiarioTelefono?: string | null;
+  ciudad?: string | null;
+  fechaVencimiento?: string | null;
+  detalles: CreateAsientoDetalleDto[];
+}
+
+export interface SaldoInicialLineaDto {
+  cuentaId: number;
+  debito: number;
+  credito: number;
+  terceroId?: number | null;
+}
+
+export interface CreateSaldosInicialesDto {
+  fechaApertura: string;
+  cuentaAjusteId?: number | null;
+  lineas: SaldoInicialLineaDto[];
 }
 
 export interface EstadoResultadosLineaModel {

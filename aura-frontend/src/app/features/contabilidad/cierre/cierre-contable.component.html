@@ -182,9 +182,9 @@
       <div class="cc-warning-body">
         <strong>{{ data.productosSinCosto }}</strong> ítem(s) vendido(s) sin
         costo configurado — representan
-        <strong>{{ formatCOP(data.valorVentasSinCosto) }}</strong> en ventas.
-        El cálculo del COGS los toma como costo cero (margen inflado). Configura
-        el costo unitario en el módulo de productos para mejorar la precisión.
+        <strong>{{ formatCOP(data.valorVentasSinCosto) }}</strong> en ventas. El
+        cálculo del COGS los toma como costo cero (margen inflado). Configura el
+        costo unitario en el módulo de productos para mejorar la precisión.
       </div>
     </div>
 
@@ -211,6 +211,20 @@
               <span class="pl-line-label">Ventas brutas (subtotal)</span>
               <span class="pl-line-val">{{
                 formatCOP(data.totalVentasBruto)
+              }}</span>
+            </div>
+            <div class="pl-line pl-line-info">
+              <span class="pl-line-label pl-muted"
+                >+ Disponible (caja/bancos)</span
+              >
+              <span class="pl-line-val pl-muted">{{
+                formatCOP(data.totalDisponible)
+              }}</span>
+            </div>
+            <div class="pl-line">
+              <span class="pl-line-label">Ventas brutas + disponible</span>
+              <span class="pl-line-val">{{
+                formatCOP(data.ventasBrutasConDisponible)
               }}</span>
             </div>
             <div

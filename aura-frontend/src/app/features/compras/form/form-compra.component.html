@@ -254,26 +254,32 @@
         ></button>
       </div>
 
-      <div class="lineas-wrap">
-        <div class="lineas-container" *ngIf="lineasArray.length > 0">
-          <div class="lineas-header">
-            <span class="col-producto">Producto</span>
-            <span class="col-cant">Cant.</span>
-            <span class="col-vlrunit">Vlr. Unitario</span>
-            <span class="col-desc">Desc. $</span>
-            <span class="col-costo">Costo</span>
-            <span class="col-ivapct">IVA %</span>
-            <span class="col-imp">IVA $</span>
-            <span class="col-neto">Vlr. Neto</span>
-            <span class="col-acc"></span>
-          </div>
+      <p-table
+        *ngIf="lineasArray.length > 0"
+        [value]="lineasArray"
+        styleClass="p-datatable-sm lineas-table"
+        showGridlines
+        [scrollable]="true"
+        scrollHeight="55vh"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th class="th-producto">Producto</th>
+            <th class="text-right">Cant.</th>
+            <th class="text-right">Vlr. Unitario</th>
+            <th class="text-right">Desc. $</th>
+            <th class="text-right">Costo</th>
+            <th class="text-right">IVA %</th>
+            <th class="text-right">IVA $</th>
+            <th class="text-right">Vlr. Neto</th>
+            <th class="text-center th-acc">Acciones</th>
+          </tr>
+        </ng-template>
 
-          <div
-            class="linea-row"
-            *ngFor="let l of lineasArray; let i = index; trackBy: trackByLinea"
-          >
+        <ng-template pTemplate="body" let-l let-i="rowIndex">
+          <tr>
             <!-- Producto -->
-            <div class="col-producto">
+            <td class="td-producto">
               <div class="prod-selector" [class.sin-seleccion]="!l.productoId">
                 <span class="prod-sel-nombre">
                   {{ l.productoNombre || "Seleccionar producto..." }}
@@ -288,10 +294,10 @@
                   <i class="pi pi-search"></i>
                 </button>
               </div>
-            </div>
+            </td>
 
             <!-- Cantidad -->
-            <div class="col-cant">
+            <td class="td-num">
               <p-inputNumber
                 [ngModel]="l.cantidad"
                 (ngModelChange)="onCantidadChange(i, $event)"
@@ -300,10 +306,10 @@
                 styleClass="w-full input-num"
                 placeholder="0"
               />
-            </div>
+            </td>
 
             <!-- Vlr. Unitario -->
-            <div class="col-vlrunit">
+            <td class="td-num">
               <p-inputNumber
                 [ngModel]="l.costoUnitario"
                 (ngModelChange)="onCostoChange(i, $event)"
@@ -315,10 +321,10 @@
                 [min]="0"
                 styleClass="w-full input-num"
               />
-            </div>
+            </td>
 
             <!-- Descuento $ -->
-            <div class="col-desc">
+            <td class="td-num">
               <p-inputNumber
                 [ngModel]="l.descuentoValor"
                 (ngModelChange)="onDescuentoValorChange(i, $event)"
@@ -330,17 +336,17 @@
                 styleClass="w-full input-num"
                 placeholder="$ 0"
               />
-            </div>
+            </td>
 
             <!-- Costo (calculado) -->
-            <div class="col-costo">
+            <td class="text-right">
               <span class="val-calc" [class.cero]="!l.subtotal">
                 {{ l.subtotal | currency: "COP" : "symbol-narrow" : "1.0-0" }}
               </span>
-            </div>
+            </td>
 
             <!-- IVA % (editable) -->
-            <div class="col-ivapct">
+            <td class="td-num">
               <p-inputNumber
                 [ngModel]="l.ivaPorcentaje"
                 (ngModelChange)="onIvaPctChange(i, $event)"
@@ -351,10 +357,10 @@
                 styleClass="w-full input-num"
                 placeholder="0 %"
               />
-            </div>
+            </td>
 
             <!-- IVA $ (editable) -->
-            <div class="col-imp">
+            <td class="td-num">
               <p-inputNumber
                 [ngModel]="l.impuestoValor"
                 (ngModelChange)="onImpuestoChange(i, $event)"
@@ -367,10 +373,10 @@
                 styleClass="w-full input-num"
                 placeholder="$ 0"
               />
-            </div>
+            </td>
 
             <!-- Vlr. Neto (calculado) -->
-            <div class="col-neto">
+            <td class="text-right">
               <span
                 class="val-calc neto"
                 [class.cero]="!l.subtotal && !l.impuestoValor"
@@ -380,10 +386,10 @@
                     | currency: "COP" : "symbol-narrow" : "1.0-0"
                 }}
               </span>
-            </div>
+            </td>
 
             <!-- Acciones -->
-            <div class="col-acc">
+            <td class="text-center td-acc">
               <button
                 pButton
                 type="button"
@@ -402,23 +408,23 @@
                 tooltipPosition="top"
                 (click)="eliminarLinea(i)"
               ></button>
-            </div>
-          </div>
-        </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
 
-        <!-- Estado vacío -->
-        <div class="lineas-empty" *ngIf="lineasArray.length === 0">
-          <i class="pi pi-inbox"></i>
-          <p>Agrega productos haciendo click en "Agregar producto".</p>
-          <button
-            pButton
-            type="button"
-            label="Agregar primer producto"
-            icon="pi pi-plus"
-            class="p-button-outlined p-button-sm btn-add-linea"
-            (click)="agregarLinea()"
-          ></button>
-        </div>
+      <!-- Estado vacío -->
+      <div class="lineas-empty" *ngIf="lineasArray.length === 0">
+        <i class="pi pi-inbox"></i>
+        <p>Agrega productos haciendo click en "Agregar producto".</p>
+        <button
+          pButton
+          type="button"
+          label="Agregar primer producto"
+          icon="pi pi-plus"
+          class="p-button-outlined p-button-sm btn-add-linea"
+          (click)="agregarLinea()"
+        ></button>
       </div>
 
       <!-- Totales -->

@@ -207,10 +207,20 @@ export class FormTerceroPlanoComponent implements OnInit {
         if (d.esBanco) this.roles = ['BANCO'];
         this.rolesPrevHadBanco = this.esBanco;
         // Sembrar la opción del municipio guardado para que el select lo muestre.
-        if (d.municipioId && d.municipio) {
-          const opt = { label: d.municipio, value: d.municipioId };
-          if (!this.municipioOpts.some((o) => o.value === d.municipioId)) {
-            this.municipioOpts = [opt, ...this.municipioOpts];
+        // El nombre puede no venir en el tercero (no se persiste); si falta, se
+        // resuelve por id para poder mostrar la etiqueta seleccionada.
+        if (d.municipioId) {
+          let nombre: string | null = d.municipio ?? null;
+          if (!nombre) {
+            try {
+              const mRes = await lastValueFrom(this.service.getMunicipioById(d.municipioId));
+              nombre = mRes?.data?.label ?? mRes?.data?.nombre ?? null;
+            } catch {
+              nombre = null;
+            }
+          }
+          if (nombre && !this.municipioOpts.some((o) => o.value === d.municipioId)) {
+            this.municipioOpts = [{ label: nombre, value: d.municipioId }, ...this.municipioOpts];
           }
         }
         this.frm.patchValue({

@@ -67,7 +67,7 @@
           <td class="mono text-muted">{{ r.id }}</td>
           <td class="fw-600">{{ r.nombre }}</td>
           <td>{{ r.descripcion ?? "-" }}</td>
-          <td>{{ semanaMap[r.diaSemana] ?? "-" }}</td>
+          <td>{{ semanaMap[r.diaSemana] || "-" }}</td>
           <td>{{ r.vendedorNombre }}</td>
           <td class="mono">{{ r.cantidadLocales }}</td>
           <td>

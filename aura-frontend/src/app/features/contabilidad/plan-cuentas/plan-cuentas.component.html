@@ -50,6 +50,11 @@
     <p-table
       [value]="cuentasFiltradas"
       [loading]="loading"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 30, 50, 100]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords} cuentas"
       styleClass="p-datatable-sm"
       responsiveLayout="scroll"
       [rowHover]="true"

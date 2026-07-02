@@ -9,7 +9,8 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
 import { DropdownModule } from 'primeng/dropdown';
-import { MessageService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { MessageService, ConfirmationService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
 import { DetalleNominaComponent } from '../detail/detalle-nomina.component';
@@ -30,9 +31,9 @@ type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contr
   imports: [
     CommonModule, FormsModule, TableModule, ButtonModule, InputTextModule,
     TagModule, ToastModule, TooltipModule, SkeletonModule, DropdownModule,
-    DetalleNominaComponent,
+    ConfirmDialogModule, DetalleNominaComponent,
   ],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './index-liquidacion.component.html',
   styleUrls: ['./index-liquidacion.component.scss'],
 })
@@ -58,6 +59,7 @@ export class IndexLiquidacionComponent implements OnInit {
   constructor(
     private readonly nominaService: NominaService,
     private readonly alertService: AlertService,
+    private readonly confirmationService: ConfirmationService,
   ) {}
 
   ngOnInit(): void {
@@ -105,23 +107,31 @@ export class IndexLiquidacionComponent implements OnInit {
   clearSearch(): void { this.searchQuery = ''; this.onSearch(); }
   private reloadTable(): void { if (this.lastLazyEvent) this.loadTable(this.lastLazyEvent); }
 
-  async liquidarTodos(): Promise<void> {
+  liquidarTodos(): void {
     if (!this.periodoSeleccionado) {
       this.alertService.showWarn('Período requerido', 'Selecciona un período para liquidar');
       return;
     }
-    if (!confirm(`¿Liquidar nómina para todos los empleados activos del período ${this.formatFecha(this.periodoSeleccionado.fechaInicio)} - ${this.formatFecha(this.periodoSeleccionado.fechaFin)}?`)) return;
-
-    this.liquidandoTodos = true;
-    try {
-      await lastValueFrom(this.nominaService.liquidarTodos(this.periodoSeleccionado.id));
-      this.alertService.showSuccess('Liquidado', 'Nómina liquidada para todos los empleados activos');
-      this.reloadTable();
-    } catch {
-      this.alertService.showError('Error', 'No se pudo liquidar la nómina');
-    } finally {
-      this.liquidandoTodos = false;
-    }
+    const periodo = this.periodoSeleccionado;
+    this.confirmationService.confirm({
+      message: `¿Liquidar nómina para todos los empleados activos del período ${this.formatFecha(periodo.fechaInicio)} - ${this.formatFecha(periodo.fechaFin)}?`,
+      header: 'Confirmar',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, liquidar',
+      rejectLabel: 'Cancelar',
+      accept: async () => {
+        this.liquidandoTodos = true;
+        try {
+          await lastValueFrom(this.nominaService.liquidarTodos(periodo.id));
+          this.alertService.showSuccess('Liquidado', 'Nómina liquidada para todos los empleados activos');
+          this.reloadTable();
+        } catch {
+          this.alertService.showError('Error', 'No se pudo liquidar la nómina');
+        } finally {
+          this.liquidandoTodos = false;
+        }
+      },
+    });
   }
 
   verDetalle(item: NominaTableModel): void {

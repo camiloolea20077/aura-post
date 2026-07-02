@@ -557,6 +557,22 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'contabilidad/conceptos-caja',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/conceptos-caja/conceptos-caja.component').then(
+            (m) => m.ConceptosCajaComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/saldos-iniciales',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/saldos-iniciales/saldos-iniciales.component').then(
+            (m) => m.SaldosInicialesComponent,
+          ),
+      },
+      {
         path: 'contabilidad/centros-costo',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
@@ -596,6 +612,15 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/comprobantes/index/index-comprobantes.component').then(
             (m) => m.IndexComprobantesComponent,
+          ),
+      },
+      // Comprobante contable (formulario plano)
+      {
+        path: 'comprobantes/contable/nuevo',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/comprobantes/contable/form/form-comprobante-contable.component').then(
+            (m) => m.FormComprobanteContableComponent,
           ),
       },
 

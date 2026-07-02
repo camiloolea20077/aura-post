@@ -97,6 +97,7 @@ export interface CreateMovimientoCajaDto {
   monto: number;
   cuentaCobrarId?: number | null;
   cuentaPagarId?: number | null;
+  conceptoCajaId?: number | null; // concepto de caja (movimiento manual contabilizado)
   metodoPago?: string;   // EFECTIVO | TRANSFERENCIA
   entregadoA?: string;   // opcional
 }

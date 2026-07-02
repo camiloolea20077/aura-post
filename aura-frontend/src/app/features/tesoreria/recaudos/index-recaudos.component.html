@@ -97,22 +97,37 @@
           <td>{{ m.fecha }}</td>
           <td>{{ m.cuentaBancariaNombre }}</td>
           <td>{{ m.concepto }}</td>
-          <td>{{ m.beneficiario ?? '—' }}</td>
+          <td>{{ m.beneficiario ?? "—" }}</td>
           <td>
             <span class="categoria-tag">{{ categoriaLabel(m.categoria) }}</span>
           </td>
-          <td>{{ m.referencia ?? '—' }}</td>
+          <td>{{ m.referencia ?? "—" }}</td>
           <td class="text-right monto-recaudo">{{ formatCOP(m.monto) }}</td>
           <td>
-            <span class="estado-badge" [class.conciliado]="m.conciliado" [class.anulado]="m.anulado">
-              {{ m.anulado ? 'Anulado' : m.conciliado ? 'Conciliado' : 'Pendiente' }}
+            <span
+              class="estado-badge"
+              [class.conciliado]="m.conciliado"
+              [class.anulado]="m.anulado"
+            >
+              {{
+                m.anulado
+                  ? "Anulado"
+                  : m.conciliado
+                    ? "Conciliado"
+                    : "Pendiente"
+              }}
             </span>
           </td>
           <td>
             <button
-              pButton icon="pi pi-ban"
+              pButton
+              icon="pi pi-ban"
               class="p-button-text p-button-sm p-button-danger"
-              [pTooltip]="m.conciliado ? 'No se puede anular: ya está conciliado' : 'Anular'"
+              [pTooltip]="
+                m.conciliado
+                  ? 'No se puede anular: ya está conciliado'
+                  : 'Anular'
+              "
               [disabled]="m.anulado || m.conciliado"
               (click)="anular(m)"
             ></button>
@@ -122,7 +137,10 @@
       <ng-template pTemplate="emptymessage">
         <tr>
           <td colspan="9" class="empty-row">
-            <i class="pi pi-arrow-down-left" style="font-size:2rem;color:#cbd5e1"></i>
+            <i
+              class="pi pi-arrow-down-left"
+              style="font-size: 2rem; color: #cbd5e1"
+            ></i>
             <p>No hay recaudos en el período seleccionado</p>
           </td>
         </tr>
@@ -142,49 +160,96 @@
   <div class="modal-body">
     <div class="field">
       <label>Cuenta destino <span class="req">*</span></label>
-      <p-dropdown [(ngModel)]="form.cuentaBancariaId"
-        [options]="cuentasOpts()" optionLabel="label" optionValue="value"
-        placeholder="Selecciona cuenta" styleClass="w-full" />
+      <p-dropdown
+        [(ngModel)]="form.cuentaBancariaId"
+        [options]="cuentasOpts()"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona cuenta"
+        styleClass="w-full"
+      />
     </div>
     <div class="field">
       <label>Fecha <span class="req">*</span></label>
-      <p-calendar [(ngModel)]="form.fecha" dateFormat="yy-mm-dd"
-        [showIcon]="true" styleClass="w-full" />
+      <p-calendar
+        [(ngModel)]="form.fecha"
+        dateFormat="yy-mm-dd"
+        [showIcon]="true"
+        styleClass="w-full"
+      />
     </div>
     <div class="field">
       <label>Monto <span class="req">*</span></label>
-      <p-inputNumber [(ngModel)]="form.monto" mode="currency" currency="COP"
-        locale="es-CO" [minFractionDigits]="0" styleClass="w-full" />
+      <p-inputNumber
+        [(ngModel)]="form.monto"
+        mode="currency"
+        currency="COP"
+        locale="es-CO"
+        [minFractionDigits]="0"
+        styleClass="w-full"
+      />
     </div>
     <div class="field">
       <label>Concepto <span class="req">*</span></label>
-      <input pInputText [(ngModel)]="form.concepto"
-        placeholder="Ej: Cobro factura #001" class="w-full" />
+      <input
+        pInputText
+        [(ngModel)]="form.concepto"
+        placeholder="Ej: Cobro factura #001"
+        class="w-full"
+      />
     </div>
     <div class="field">
       <label>Categoría <span class="req">*</span></label>
-      <p-dropdown [(ngModel)]="form.categoria"
-        [options]="categoriasOpts" optionLabel="label" optionValue="value"
-        placeholder="Selecciona categoría" styleClass="w-full" />
+      <p-dropdown
+        [(ngModel)]="form.categoria"
+        [options]="categoriasOpts"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona categoría"
+        styleClass="w-full"
+      />
     </div>
     <div class="field">
       <label>Origen / Quién pagó</label>
-      <input pInputText [(ngModel)]="form.beneficiario"
-        placeholder="Nombre del cliente o pagador" class="w-full" />
+      <input
+        pInputText
+        [(ngModel)]="form.beneficiario"
+        placeholder="Nombre del cliente o pagador"
+        class="w-full"
+      />
     </div>
     <div class="field">
       <label>Referencia</label>
-      <input pInputText [(ngModel)]="form.referencia"
-        placeholder="# transferencia, cheque..." class="w-full" />
+      <input
+        pInputText
+        [(ngModel)]="form.referencia"
+        placeholder="# transferencia, cheque..."
+        class="w-full"
+      />
     </div>
   </div>
 
   <ng-template pTemplate="footer">
-    <button pButton label="Cancelar" class="p-button-text"
-      (click)="showModal = false" [disabled]="saving"></button>
-    <button pButton label="Registrar Recaudo" icon="pi pi-check"
-      class="btn-aura" (click)="guardar()" [loading]="saving"
-      [disabled]="!form.cuentaBancariaId || !form.monto || !form.concepto?.trim() || !form.categoria">
-    </button>
+    <button
+      pButton
+      label="Cancelar"
+      class="p-button-text"
+      (click)="showModal = false"
+      [disabled]="saving"
+    ></button>
+    <button
+      pButton
+      label="Registrar Recaudo"
+      icon="pi pi-check"
+      class="btn-aura"
+      (click)="guardar()"
+      [loading]="saving"
+      [disabled]="
+        !form.cuentaBancariaId ||
+        !form.monto ||
+        !form.concepto.trim() ||
+        !form.categoria
+      "
+    ></button>
   </ng-template>
 </p-dialog>

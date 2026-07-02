@@ -314,6 +314,16 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         route: '/contabilidad/asientos',
       },
       {
+        label: 'Conceptos de Caja',
+        icon: 'pi pi-tags',
+        route: '/contabilidad/conceptos-caja',
+      },
+      {
+        label: 'Saldos Iniciales',
+        icon: 'pi pi-database',
+        route: '/contabilidad/saldos-iniciales',
+      },
+      {
         label: 'Centros de Costo',
         icon: 'pi pi-sitemap',
         route: '/contabilidad/centros-costo',
