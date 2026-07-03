@@ -80,7 +80,11 @@
           [lazy]="true"
           [totalRecords]="totalRows"
           [rows]="rows"
-          [paginator]="totalRows > rows"
+          [first]="page * rows"
+          [paginator]="true"
+          [rowsPerPageOptions]="[20, 50, 100]"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="{first}-{last} de {totalRecords}"
           (onPage)="onPage($event)"
           showGridlines
         >
@@ -344,6 +348,11 @@
           [loading]="loadingMayor"
           styleClass="p-datatable-sm"
           responsiveLayout="scroll"
+          [paginator]="!loadingMayor && libroMayorLineas.length > 20"
+          [rows]="20"
+          [rowsPerPageOptions]="[20, 50, 100]"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="{first}-{last} de {totalRecords}"
           showGridlines
         >
           <ng-template pTemplate="header">
