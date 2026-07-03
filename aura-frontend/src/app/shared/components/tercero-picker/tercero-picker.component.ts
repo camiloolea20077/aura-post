@@ -49,7 +49,10 @@ export class TerceroPickerComponent {
   @Input() placeholder = 'Buscar tercero...';
   @Input() filtro: 'TODOS' | 'CLIENTE' | 'PROVEEDOR' | 'BANCO' = 'TODOS';
 
-  @Output() seleccionado = new EventEmitter<{ id: number; nombre: string } | null>();
+  @Output() seleccionado = new EventEmitter<{
+    id: number;
+    nombre: string;
+  } | null>();
 
   showModal = false;
   loading = false;
@@ -75,17 +78,23 @@ export class TerceroPickerComponent {
     this.lastEvent = event;
     this.loading = true;
     this.cdr.markForCheck();
-    const page = Math.floor((event.first ?? 0) / (event.rows ?? this.rows));
     try {
-      const res = await lastValueFrom(
-        this.service.page({
-          page,
-          rows: event.rows ?? this.rows,
-          search: this.search || null,
-        }),
-      );
-      this.items = res?.data?.content ?? [];
-      this.totalRecords = res?.data?.totalElements ?? 0;
+      if (this.filtro === 'BANCO') {
+        const res = await lastValueFrom(this.service.bancos(this.search || ''));
+        this.items = res?.data ?? [];
+        this.totalRecords = this.items.length;
+      } else {
+        const page = Math.floor((event.first ?? 0) / (event.rows ?? this.rows));
+        const res = await lastValueFrom(
+          this.service.page({
+            page,
+            rows: event.rows ?? this.rows,
+            search: this.search || null,
+          }),
+        );
+        this.items = res?.data?.content ?? [];
+        this.totalRecords = res?.data?.totalElements ?? 0;
+      }
     } catch {
       this.items = [];
     } finally {

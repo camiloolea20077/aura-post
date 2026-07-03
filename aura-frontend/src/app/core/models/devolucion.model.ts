@@ -23,6 +23,9 @@ export interface DevolucionModel {
   estado: 'COMPLETADA' | 'ANULADA';
   motivo: string;
   totalDevolucion: number;
+  totalAgregado?: number;
+  netoDiferencia?: number;
+  fechaDevolucion?: string;
   reintegraInventario: boolean;
   observaciones?: string;
   metodoDevolucion?: string;
@@ -51,14 +54,28 @@ export interface CreateDevolucionDetalleDto {
   cantidad: number;
 }
 
+export interface CreateDevolucionAgregadoDto {
+  productoId: number;
+  productoPresentacionId?: number;
+  cantidad: number;
+  /** Precio unitario SIN IVA. */
+  precioUnitario: number;
+  /** Valor total de IVA de la línea (por la cantidad). */
+  impuestoValor: number;
+}
+
 export interface CreateDevolucionDto {
   ventaId: number;
   tipo: 'TOTAL' | 'PARCIAL';
   motivo: string;
   reintegraInventario: boolean;
   observaciones?: string;
+  /** Fecha de registro de la devolución (yyyy-MM-dd). */
+  fechaDevolucion?: string;
   metodoDevolucion: string;
   detalles: CreateDevolucionDetalleDto[];
+  /** Productos que se lleva el cliente en un cambio (se suman a la venta). */
+  productosAgregados?: CreateDevolucionAgregadoDto[];
 }
 
 export interface DevolucionPageableDto {

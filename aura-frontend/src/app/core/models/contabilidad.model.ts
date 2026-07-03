@@ -90,6 +90,13 @@ export interface CreateComprobanteDto {
   ciudad?: string | null;
   fechaVencimiento?: string | null;
   detalles: CreateAsientoDetalleDto[];
+  aplicaciones?: AplicacionCarteraDto[];
+}
+
+export interface AplicacionCarteraDto {
+  tipo: 'CXC' | 'CXP';
+  cuentaId: number;
+  monto: number;
 }
 
 export interface SaldoInicialLineaDto {

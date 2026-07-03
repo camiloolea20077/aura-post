@@ -1,4 +1,4 @@
-<div class="page">
+<div class="page" *ngIf="!showCreate">
   <div class="card">
     <div class="card-head">
       <div class="card-head__title">
@@ -179,11 +179,13 @@
   (anulada)="onAnulada()"
 />
 
-<app-create-devolucion
-  [visible]="showCreate"
-  (closed)="onCreateClosed()"
-  (created)="onCreated()"
-/>
+<div class="page" *ngIf="showCreate">
+  <app-create-devolucion
+    [visible]="showCreate"
+    (closed)="onCreateClosed()"
+    (created)="onCreated()"
+  />
+</div>
 
 <p-toast />
 <p-confirmDialog />

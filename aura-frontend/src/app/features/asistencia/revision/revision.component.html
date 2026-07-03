@@ -1,0 +1,375 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head__title">
+      <span class="header-icon"><i class="pi pi-check-square"></i></span>
+      <div>
+        <h1 class="title">Revisión de asistencia</h1>
+        <p class="subtitle">
+          Incidencias, aprobación de días y período de asistencia
+        </p>
+      </div>
+    </div>
+
+    <p-tabView [(activeIndex)]="activeTab" styleClass="rev-tabs">
+      <!-- ══ Períodos ══ -->
+      <p-tabPanel>
+        <ng-template pTemplate="header"
+          ><i class="pi pi-calendar"></i
+          ><span class="tl">Períodos de asistencia</span></ng-template
+        >
+
+        <div class="tab-actions">
+          <button
+            pButton
+            label="Nuevo período"
+            icon="pi pi-plus"
+            class="btn-aura"
+            (click)="showFormPeriodo = true"
+          ></button>
+        </div>
+
+        <p-table [value]="periodos" [loading]="loadingPeriodos" showGridlines>
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Período</th>
+              <th class="text-center">Estado</th>
+              <th class="text-center" style="width: 320px">Acciones</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-p>
+            <tr>
+              <td>{{ p.fechaInicio }} → {{ p.fechaFin }}</td>
+              <td class="text-center">
+                <p-tag
+                  [value]="p.estado"
+                  [severity]="periodoSeverity(p.estado)"
+                  [rounded]="true"
+                />
+              </td>
+              <td class="text-center acc">
+                <button
+                  pButton
+                  label="A revisión"
+                  icon="pi pi-send"
+                  class="p-button-sm p-button-outlined"
+                  *ngIf="p.estado === 'ABIERTO'"
+                  (click)="accionPeriodo(p, 'cerrar')"
+                ></button>
+                <button
+                  pButton
+                  label="Aprobar"
+                  icon="pi pi-check"
+                  class="p-button-sm btn-aura"
+                  *ngIf="p.estado === 'EN_REVISION'"
+                  (click)="accionPeriodo(p, 'aprobar')"
+                ></button>
+                <button
+                  pButton
+                  label="Enviar a nómina"
+                  icon="pi pi-arrow-right"
+                  class="p-button-sm p-button-secondary"
+                  *ngIf="p.estado === 'APROBADO'"
+                  (click)="accionPeriodo(p, 'enviar')"
+                ></button>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="3">
+                <div class="empty-state">
+                  <i class="pi pi-calendar"></i>
+                  <p>Sin períodos de asistencia.</p>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-tabPanel>
+
+      <!-- ══ Incidencias & días ══ -->
+      <p-tabPanel>
+        <ng-template pTemplate="header"
+          ><i class="pi pi-exclamation-triangle"></i
+          ><span class="tl">Incidencias y días</span></ng-template
+        >
+
+        <div class="sel-bar">
+          <div class="field">
+            <label>Empleado</label>
+            <p-dropdown
+              [options]="empleadosOpts"
+              [(ngModel)]="empleadoSel"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Empleado"
+              [filter]="true"
+              [style]="{ minWidth: '220px' }"
+            />
+          </div>
+          <div class="field">
+            <label>Desde</label
+            ><p-calendar
+              [(ngModel)]="desde"
+              dateFormat="yy-mm-dd"
+              [showIcon]="true"
+            />
+          </div>
+          <div class="field">
+            <label>Hasta</label
+            ><p-calendar
+              [(ngModel)]="hasta"
+              dateFormat="yy-mm-dd"
+              [showIcon]="true"
+            />
+          </div>
+          <button
+            pButton
+            label="Cargar"
+            icon="pi pi-search"
+            class="btn-aura"
+            [loading]="loadingRev"
+            (click)="cargarRevision()"
+          ></button>
+        </div>
+
+        <div class="section-title">
+          <i class="pi pi-calendar-clock"></i> Días consolidados
+        </div>
+        <p-table
+          [value]="dias"
+          showGridlines
+          [tableStyle]="{ 'min-width': '760px' }"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Fecha</th>
+              <th class="text-center">Asistencia</th>
+              <th class="text-center">Tarde</th>
+              <th class="text-center">Extra</th>
+              <th class="text-center">Aprobación</th>
+              <th class="text-center" style="width: 260px">Acciones</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-d>
+            <tr>
+              <td>{{ d.fecha }}</td>
+              <td class="text-center">{{ d.estadoAsistencia }}</td>
+              <td class="text-center">{{ d.minutosTarde }} min</td>
+              <td class="text-center">
+                {{ d.minutosExtraDiurna + d.minutosExtraNocturna }} min
+              </td>
+              <td class="text-center">
+                <p-tag
+                  [value]="d.estadoAprobacion"
+                  [severity]="aprobSeverity(d.estadoAprobacion)"
+                  [rounded]="true"
+                />
+              </td>
+              <td class="text-center acc">
+                <button
+                  pButton
+                  icon="pi pi-flag"
+                  class="p-button-sm p-button-outlined"
+                  pTooltip="Generar incidencias"
+                  (click)="generarIncidencias(d)"
+                ></button>
+                <button
+                  pButton
+                  icon="pi pi-check"
+                  class="p-button-sm btn-aura"
+                  pTooltip="Aprobar"
+                  *ngIf="d.estadoAprobacion !== 'ENVIADO_A_NOMINA'"
+                  (click)="aprobarDia(d)"
+                ></button>
+                <button
+                  pButton
+                  icon="pi pi-times"
+                  class="p-button-sm p-button-danger p-button-outlined"
+                  pTooltip="Rechazar"
+                  *ngIf="d.estadoAprobacion !== 'ENVIADO_A_NOMINA'"
+                  (click)="rechazarDia(d)"
+                ></button>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <p>Sin días. Carga un empleado y rango.</p>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+
+        <div class="section-title">
+          <i class="pi pi-exclamation-triangle"></i> Incidencias
+        </div>
+        <p-table
+          [value]="incidencias"
+          showGridlines
+          [tableStyle]="{ 'min-width': '760px' }"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Fecha</th>
+              <th>Tipo</th>
+              <th>Descripción</th>
+              <th class="text-center">Soporte</th>
+              <th class="text-center">Estado</th>
+              <th class="text-center" style="width: 110px">Revisar</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-i>
+            <tr>
+              <td>{{ i.fecha }}</td>
+              <td>{{ i.tipoIncidencia }}</td>
+              <td>{{ i.descripcion || "—" }}</td>
+              <td class="text-center">
+                <i
+                  class="pi"
+                  [ngClass]="i.requiereSoporte ? 'pi-paperclip' : 'pi-minus'"
+                ></i>
+              </td>
+              <td class="text-center">
+                <p-tag
+                  [value]="i.estado"
+                  [severity]="incSeverity(i.estado)"
+                  [rounded]="true"
+                />
+              </td>
+              <td class="text-center">
+                <button
+                  pButton
+                  icon="pi pi-pencil"
+                  class="p-button-text p-button-sm"
+                  pTooltip="Revisar"
+                  (click)="abrirRevisar(i)"
+                ></button>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <p>Sin incidencias en el rango.</p>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-tabPanel>
+    </p-tabView>
+  </div>
+</div>
+
+<!-- Nuevo período de asistencia -->
+<p-dialog
+  [(visible)]="showFormPeriodo"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '440px' }"
+  header="Nuevo período de asistencia"
+>
+  <div class="form-grid">
+    <div class="field">
+      <label>Desde</label
+      ><p-calendar
+        [(ngModel)]="periodoForm.fechaInicio"
+        dateFormat="yy-mm-dd"
+        appendTo="body"
+        [showIcon]="true"
+      />
+    </div>
+    <div class="field">
+      <label>Hasta</label
+      ><p-calendar
+        [(ngModel)]="periodoForm.fechaFin"
+        dateFormat="yy-mm-dd"
+        appendTo="body"
+        [showIcon]="true"
+      />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      class="p-button-text"
+      (click)="showFormPeriodo = false"
+    ></button>
+    <button
+      pButton
+      label="Crear"
+      icon="pi pi-check"
+      class="btn-aura"
+      [loading]="savingPeriodo"
+      (click)="crearPeriodo()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Revisar incidencia -->
+<p-dialog
+  [(visible)]="showRevisar"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '480px' }"
+  header="Revisar incidencia"
+>
+  <div *ngIf="incSel" class="rev-info">
+    <span class="tipo-chip">{{ incSel.tipoIncidencia }}</span>
+    <span class="rev-fecha">{{ incSel.fecha }}</span>
+  </div>
+  <div class="form-grid">
+    <div class="field span2">
+      <label>Resultado de la revisión</label>
+      <p-dropdown
+        [options]="estadosRevision"
+        [(ngModel)]="revForm.estado"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Estado"
+        [style]="{ width: '100%' }"
+      />
+    </div>
+    <div class="field span2">
+      <label>Observación</label>
+      <input
+        pInputText
+        [(ngModel)]="revForm.observacionRevision"
+        placeholder="Opcional"
+      />
+    </div>
+    <div class="field span2">
+      <label>URL de soporte</label>
+      <input
+        pInputText
+        [(ngModel)]="revForm.soporteUrl"
+        placeholder="Opcional"
+      />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      class="p-button-text"
+      (click)="showRevisar = false"
+    ></button>
+    <button
+      pButton
+      label="Guardar"
+      icon="pi pi-check"
+      class="btn-aura"
+      [loading]="revisando"
+      (click)="guardarRevision()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<p-toast />
+<p-confirmDialog />

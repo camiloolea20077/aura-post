@@ -21,7 +21,13 @@ type AnchoTirilla = 58 | 80;
   selector: 'app-comprobante-egreso',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, ButtonModule, DialogModule, SelectButtonModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ButtonModule,
+    DialogModule,
+    SelectButtonModule,
+  ],
   templateUrl: './comprobante-egreso.component.html',
   styleUrls: ['./comprobante-egreso.component.scss'],
 })
@@ -51,7 +57,10 @@ export class ComprobanteEgresoComponent implements OnChanges {
 
   get numeroDisplay(): string {
     if (!this.compra) return '';
-    return this.compra.numeroCompra ?? `CE-${String(this.compra.id).padStart(6, '0')}`;
+    return (
+      this.compra.numeroCompra ??
+      `CE-${String(this.compra.id).padStart(6, '0')}`
+    );
   }
 
   get montoEgreso(): number {
@@ -270,7 +279,7 @@ export class ComprobanteEgresoComponent implements OnChanges {
   </div>
 
   <div class="footer">
-    <div style="margin-top:10px;font-size:0.75em;color:#444;">Powered by Aura POS</div>
+    <div style="margin-top:10px;font-size:0.75em;color:#444;">Powered by Aura NUBE</div>
   </div>
 
 </body>

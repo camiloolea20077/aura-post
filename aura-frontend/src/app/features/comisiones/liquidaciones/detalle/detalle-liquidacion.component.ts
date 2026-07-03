@@ -104,7 +104,8 @@ export class DetalleLiquidacionComponent implements OnChanges {
     try {
       const pdfMake = (await import('pdfmake/build/pdfmake')).default;
       const pdfFonts = (await import('pdfmake/build/vfs_fonts')).default;
-      (pdfMake as any).vfs = (pdfFonts as any)['vfs'] ?? (pdfFonts as any).pdfMake?.vfs;
+      (pdfMake as any).vfs =
+        (pdfFonts as any)['vfs'] ?? (pdfFonts as any).pdfMake?.vfs;
 
       const d = this.data;
       const tipo = d.tipo === 'VENDEDOR' ? 'Vendedor' : 'Técnico';
@@ -121,11 +122,28 @@ export class DetalleLiquidacionComponent implements OnChanges {
         ],
         ...detalles.map((v, i) => [
           { text: String(i + 1), style: 'tdCell', alignment: 'center' },
-          { text: v.ventaFecha ? v.ventaFecha.substring(0, 10) : '—', style: 'tdCell' },
+          {
+            text: v.ventaFecha ? v.ventaFecha.substring(0, 10) : '—',
+            style: 'tdCell',
+          },
           { text: v.productoNombre, style: 'tdCell' },
-          { text: this.formatCOP(v.valorTotal), style: 'tdCell', alignment: 'right' },
-          { text: `${v.porcentajeTecnico}%`, style: 'tdCell', alignment: 'center' },
-          { text: this.formatCOP(v.valorTecnico), style: 'tdCell', alignment: 'right', bold: true, color: '#4f46e5' },
+          {
+            text: this.formatCOP(v.valorTotal),
+            style: 'tdCell',
+            alignment: 'right',
+          },
+          {
+            text: `${v.porcentajeTecnico}%`,
+            style: 'tdCell',
+            alignment: 'center',
+          },
+          {
+            text: this.formatCOP(v.valorTecnico),
+            style: 'tdCell',
+            alignment: 'right',
+            bold: true,
+            color: '#4f46e5',
+          },
         ]),
       ];
 
@@ -136,11 +154,27 @@ export class DetalleLiquidacionComponent implements OnChanges {
         styles: {
           titulo: { fontSize: 16, bold: true, color: '#1e293b' },
           subtitulo: { fontSize: 10, color: '#64748b' },
-          label: { fontSize: 8, color: '#94a3b8', bold: true, characterSpacing: 0.5 },
+          label: {
+            fontSize: 8,
+            color: '#94a3b8',
+            bold: true,
+            characterSpacing: 0.5,
+          },
           value: { fontSize: 9.5, color: '#1e293b', bold: true },
-          thCell: { fontSize: 8, bold: true, color: '#94a3b8', characterSpacing: 0.3, fillColor: '#f8fafc' },
+          thCell: {
+            fontSize: 8,
+            bold: true,
+            color: '#94a3b8',
+            characterSpacing: 0.3,
+            fillColor: '#f8fafc',
+          },
           tdCell: { fontSize: 8.5, color: '#374151' },
-          firmaLabel: { fontSize: 8, color: '#94a3b8', bold: true, characterSpacing: 0.5 },
+          firmaLabel: {
+            fontSize: 8,
+            color: '#94a3b8',
+            bold: true,
+            characterSpacing: 0.5,
+          },
         },
         content: [
           // ── Encabezado ───────────────────────────────────────
@@ -149,12 +183,21 @@ export class DetalleLiquidacionComponent implements OnChanges {
               {
                 stack: [
                   { text: 'Liquidación de Comisiones', style: 'titulo' },
-                  { text: `${tipo}: ${d.tecnicoNombre}`, style: 'subtitulo', margin: [0, 4, 0, 0] },
+                  {
+                    text: `${tipo}: ${d.tecnicoNombre}`,
+                    style: 'subtitulo',
+                    margin: [0, 4, 0, 0],
+                  },
                 ],
               },
               {
                 stack: [
-                  { text: `N° ${d.id}`, style: 'titulo', alignment: 'right', color: '#6366f1' },
+                  {
+                    text: `N° ${d.id}`,
+                    style: 'titulo',
+                    alignment: 'right',
+                    color: '#6366f1',
+                  },
                   {
                     text: d.estado === 'PAGADA' ? 'PAGADA' : 'PENDIENTE',
                     alignment: 'right',
@@ -170,7 +213,20 @@ export class DetalleLiquidacionComponent implements OnChanges {
           },
 
           // ── Separador ────────────────────────────────────────
-          { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 1.5, lineColor: '#e2e8f0' }], margin: [0, 0, 0, 16] },
+          {
+            canvas: [
+              {
+                type: 'line',
+                x1: 0,
+                y1: 0,
+                x2: 515,
+                y2: 0,
+                lineWidth: 1.5,
+                lineColor: '#e2e8f0',
+              },
+            ],
+            margin: [0, 0, 0, 16],
+          },
 
           // ── Info resumen ─────────────────────────────────────
           {
@@ -178,7 +234,10 @@ export class DetalleLiquidacionComponent implements OnChanges {
               {
                 stack: [
                   { text: 'PERÍODO', style: 'label', margin: [0, 0, 0, 2] },
-                  { text: `${d.fechaDesde}  →  ${d.fechaHasta}`, style: 'value' },
+                  {
+                    text: `${d.fechaDesde}  →  ${d.fechaHasta}`,
+                    style: 'value',
+                  },
                 ],
               },
               {
@@ -195,8 +254,17 @@ export class DetalleLiquidacionComponent implements OnChanges {
               },
               {
                 stack: [
-                  { text: 'TOTAL A PAGAR', style: 'label', margin: [0, 0, 0, 2] },
-                  { text: this.formatCOP(d.valorTotal), style: 'value', color: '#10b981', fontSize: 11 },
+                  {
+                    text: 'TOTAL A PAGAR',
+                    style: 'label',
+                    margin: [0, 0, 0, 2],
+                  },
+                  {
+                    text: this.formatCOP(d.valorTotal),
+                    style: 'value',
+                    color: '#10b981',
+                    fontSize: 11,
+                  },
                 ],
               },
             ],
@@ -213,9 +281,9 @@ export class DetalleLiquidacionComponent implements OnChanges {
               body: tableBody,
             },
             layout: {
-              hLineWidth: (i: number) => (i === 0 || i === 1) ? 1.5 : 0.5,
+              hLineWidth: (i: number) => (i === 0 || i === 1 ? 1.5 : 0.5),
               vLineWidth: () => 0,
-              hLineColor: (i: number) => i === 1 ? '#e2e8f0' : '#e2e8f0',
+              hLineColor: (i: number) => (i === 1 ? '#e2e8f0' : '#e2e8f0'),
               paddingLeft: () => 6,
               paddingRight: () => 6,
               paddingTop: () => 5,
@@ -233,8 +301,21 @@ export class DetalleLiquidacionComponent implements OnChanges {
                   widths: ['*', 'auto'],
                   body: [
                     [
-                      { text: `TOTAL A PAGAR AL ${tipo.toUpperCase()}`, style: 'label', border: [false, false, false, false], margin: [0, 4, 16, 4] },
-                      { text: this.formatCOP(d.valorTotal), fontSize: 13, bold: true, color: '#10b981', alignment: 'right', border: [false, false, false, false], margin: [0, 4, 0, 4] },
+                      {
+                        text: `TOTAL A PAGAR AL ${tipo.toUpperCase()}`,
+                        style: 'label',
+                        border: [false, false, false, false],
+                        margin: [0, 4, 16, 4],
+                      },
+                      {
+                        text: this.formatCOP(d.valorTotal),
+                        fontSize: 13,
+                        bold: true,
+                        color: '#10b981',
+                        alignment: 'right',
+                        border: [false, false, false, false],
+                        margin: [0, 4, 0, 4],
+                      },
                     ],
                   ],
                 },
@@ -246,31 +327,116 @@ export class DetalleLiquidacionComponent implements OnChanges {
           },
 
           // ── Observaciones ────────────────────────────────────
-          ...(d.observaciones ? [
-            { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5, lineColor: '#e2e8f0' }], margin: [0, 8, 0, 8] },
-            { text: 'OBSERVACIONES', style: 'label', margin: [0, 0, 0, 4] },
-            { text: d.observaciones, fontSize: 9, color: '#475569', italics: true },
-          ] : []),
+          ...(d.observaciones
+            ? [
+                {
+                  canvas: [
+                    {
+                      type: 'line',
+                      x1: 0,
+                      y1: 0,
+                      x2: 515,
+                      y2: 0,
+                      lineWidth: 0.5,
+                      lineColor: '#e2e8f0',
+                    },
+                  ],
+                  margin: [0, 8, 0, 8],
+                },
+                { text: 'OBSERVACIONES', style: 'label', margin: [0, 0, 0, 4] },
+                {
+                  text: d.observaciones,
+                  fontSize: 9,
+                  color: '#475569',
+                  italics: true,
+                },
+              ]
+            : []),
 
           // ── Firmas ───────────────────────────────────────────
-          { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 0.5, lineColor: '#e2e8f0' }], margin: [0, 24, 0, 32] },
+          {
+            canvas: [
+              {
+                type: 'line',
+                x1: 0,
+                y1: 0,
+                x2: 515,
+                y2: 0,
+                lineWidth: 0.5,
+                lineColor: '#e2e8f0',
+              },
+            ],
+            margin: [0, 24, 0, 32],
+          },
           {
             columns: [
               {
                 stack: [
-                  { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 180, y2: 0, lineWidth: 1, lineColor: '#334155' }] },
-                  { text: 'FIRMA ADMINISTRADOR', style: 'firmaLabel', margin: [0, 6, 0, 2] },
-                  { text: 'Nombre: ____________________________', fontSize: 8, color: '#64748b', margin: [0, 4, 0, 0] },
-                  { text: 'Cargo: _____________________________', fontSize: 8, color: '#64748b', margin: [0, 4, 0, 0] },
+                  {
+                    canvas: [
+                      {
+                        type: 'line',
+                        x1: 0,
+                        y1: 0,
+                        x2: 180,
+                        y2: 0,
+                        lineWidth: 1,
+                        lineColor: '#334155',
+                      },
+                    ],
+                  },
+                  {
+                    text: 'FIRMA ADMINISTRADOR',
+                    style: 'firmaLabel',
+                    margin: [0, 6, 0, 2],
+                  },
+                  {
+                    text: 'Nombre: ____________________________',
+                    fontSize: 8,
+                    color: '#64748b',
+                    margin: [0, 4, 0, 0],
+                  },
+                  {
+                    text: 'Cargo: _____________________________',
+                    fontSize: 8,
+                    color: '#64748b',
+                    margin: [0, 4, 0, 0],
+                  },
                 ],
               },
               { text: '', width: '*' },
               {
                 stack: [
-                  { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 180, y2: 0, lineWidth: 1, lineColor: '#334155' }] },
-                  { text: `FIRMA ${tipo.toUpperCase()}`, style: 'firmaLabel', margin: [0, 6, 0, 2] },
-                  { text: `Nombre: ${d.tecnicoNombre}`, fontSize: 8, color: '#64748b', margin: [0, 4, 0, 0] },
-                  { text: 'Cédula: _____________________________', fontSize: 8, color: '#64748b', margin: [0, 4, 0, 0] },
+                  {
+                    canvas: [
+                      {
+                        type: 'line',
+                        x1: 0,
+                        y1: 0,
+                        x2: 180,
+                        y2: 0,
+                        lineWidth: 1,
+                        lineColor: '#334155',
+                      },
+                    ],
+                  },
+                  {
+                    text: `FIRMA ${tipo.toUpperCase()}`,
+                    style: 'firmaLabel',
+                    margin: [0, 6, 0, 2],
+                  },
+                  {
+                    text: `Nombre: ${d.tecnicoNombre}`,
+                    fontSize: 8,
+                    color: '#64748b',
+                    margin: [0, 4, 0, 0],
+                  },
+                  {
+                    text: 'Cédula: _____________________________',
+                    fontSize: 8,
+                    color: '#64748b',
+                    margin: [0, 4, 0, 0],
+                  },
                 ],
               },
             ],
@@ -278,7 +444,7 @@ export class DetalleLiquidacionComponent implements OnChanges {
 
           // ── Pie de página ────────────────────────────────────
           {
-            text: `Generado el ${new Date().toLocaleDateString('es-CO')} — Aura POS`,
+            text: `Generado el ${new Date().toLocaleDateString('es-CO')} — Aura NUBE`,
             fontSize: 7.5,
             color: '#94a3b8',
             alignment: 'center',
@@ -287,7 +453,11 @@ export class DetalleLiquidacionComponent implements OnChanges {
         ],
       };
 
-      pdfMake.createPdf(docDefinition).download(`liquidacion-${d.id}-${d.tecnicoNombre?.replace(/\s+/g, '-') ?? ''}.pdf`);
+      pdfMake
+        .createPdf(docDefinition)
+        .download(
+          `liquidacion-${d.id}-${d.tecnicoNombre?.replace(/\s+/g, '-') ?? ''}.pdf`,
+        );
     } catch (err) {
       console.error(err);
       this.alertService.showError('Error', 'No se pudo generar el PDF');

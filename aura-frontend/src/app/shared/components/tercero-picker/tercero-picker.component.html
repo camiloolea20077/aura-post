@@ -12,7 +12,11 @@
   />
   <p-inputicon>
     @if (terceroId) {
-      <i class="pi pi-times" style="cursor: pointer" (click)="limpiar($event)"></i>
+      <i
+        class="pi pi-times"
+        style="cursor: pointer"
+        (click)="limpiar($event)"
+      ></i>
     } @else {
       <i class="pi pi-search" style="cursor: pointer" (click)="abrir()"></i>
     }
@@ -75,7 +79,10 @@
     </ng-template>
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="4" style="text-align: center; padding: 1.5rem; color: #94a3b8">
+        <td
+          colspan="4"
+          style="text-align: center; padding: 1.5rem; color: #94a3b8"
+        >
           Sin resultados.
         </td>
       </tr>

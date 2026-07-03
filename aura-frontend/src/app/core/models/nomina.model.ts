@@ -1,6 +1,10 @@
 // ─── Tipos ────────────────────────────────────────────────────
 export type ModoNomina = 'COMPLETO' | 'SIMPLIFICADO';
 export type Periodicidad = 'MENSUAL' | 'QUINCENAL' | 'SEMANAL';
+export type ModoLiquidacion =
+  | 'SIN_ASISTENCIA'
+  | 'CON_ASISTENCIA_OBLIGATORIA'
+  | 'MIXTA';
 export type EstadoNomina = 'BORRADOR' | 'APROBADO' | 'PAGADO' | 'ANULADO';
 export type EstadoPeriodo = 'ABIERTO' | 'LIQUIDADO' | 'PAGADO' | 'ANULADO';
 export type TipoContrato =
@@ -27,6 +31,7 @@ export interface NominaConfigModel {
   id: number;
   modoNomina: ModoNomina;
   periodicidad: Periodicidad;
+  modoLiquidacion: ModoLiquidacion;
   smmlv: number;
   auxilioTransporte: number;
   pctSaludEmpleado: number;
@@ -41,6 +46,7 @@ export interface NominaConfigModel {
 export interface UpdateNominaConfigDto {
   modoNomina?: ModoNomina;
   periodicidad?: Periodicidad;
+  modoLiquidacion?: ModoLiquidacion;
   smmlv?: number;
   auxilioTransporte?: number;
   pctSaludEmpleado?: number;
@@ -64,12 +70,14 @@ export interface EmpleadoModel {
   tipoEmpleadoNombre: string | null;
   fechaIngreso: string;
   fechaRetiro: string | null;
+  fechaFinContrato: string | null;
   salarioBase: number;
   tipoContrato: TipoContrato;
   banco: string | null;
   numeroCuenta: string | null;
   tipoCuenta: string | null;
   activo: boolean;
+  requiereControlAsistencia: boolean;
   nivelRiesgoArl: number | null;
   porcentajeArl: number | null;
   createdAt: string;
@@ -108,12 +116,14 @@ export interface CreateEmpleadoDto {
   cargo?: string | null;
   tipoEmpleadoId?: number | null;
   fechaIngreso: string;
+  fechaFinContrato?: string | null;
   salarioBase: number;
   tipoContrato: TipoContrato;
   banco?: string | null;
   numeroCuenta?: string | null;
   tipoCuenta?: string | null;
   nivelRiesgoArl?: number | null;
+  requiereControlAsistencia?: boolean;
 }
 
 // ─── Períodos ─────────────────────────────────────────────────
@@ -128,6 +138,13 @@ export interface PeriodoNominaModel {
 export interface CreatePeriodoDto {
   fechaInicio: string;
   fechaFin: string;
+}
+
+export type MedioPagoNomina = 'EFECTIVO' | 'TRANSFERENCIA';
+
+export interface PagoNominaDto {
+  medioPago: MedioPagoNomina;
+  cuentaBancariaId?: number | null;
 }
 
 // ─── Novedades ────────────────────────────────────────────────
@@ -159,6 +176,9 @@ export interface NominaModel {
   empleadoDocumento: string;
   cargo: string | null;
   tipoContrato: TipoContrato;
+  banco: string | null;
+  numeroCuenta: string | null;
+  tipoCuenta: string | null;
   salarioBase: number;
   diasTrabajados: number;
   salarioProporcional: number;
@@ -195,12 +215,42 @@ export interface NominaTableModel {
   empleadoNombre: string;
   empleadoDocumento: string;
   cargo: string | null;
+  banco: string | null;
+  numeroCuenta: string | null;
   diasTrabajados: number;
   totalDevengado: number;
   totalDeducciones: number;
   netoPagar: number;
   estado: EstadoNomina;
   totalRows: number;
+}
+
+// ─── Documento de período (maestro-detalle) ──────────────────
+export interface NovedadResumenModel {
+  nominaId: number;
+  empleadoId: number;
+  empleadoNombre: string;
+  tipo: string;
+  descripcion: string | null;
+  cantidad: number;
+  valorUnitario: number;
+  valorTotal: number;
+  esDeduccion: boolean;
+  origen: string;
+}
+
+export interface PeriodoResumenModel {
+  periodoId: number;
+  documento: string;
+  fechaInicio: string;
+  fechaFin: string;
+  estado: EstadoPeriodo;
+  cantidadEmpleados: number;
+  totalDevengado: number;
+  totalDeducciones: number;
+  totalNeto: number;
+  empleados: NominaTableModel[];
+  novedades: NovedadResumenModel[];
 }
 
 // ─── Pageable ─────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-export type EstadoCuentaPagar = 'activa' | 'pagada' | 'vencida';
+export type EstadoCuentaPagar = 'activa' | 'parcial' | 'pagada' | 'vencida';
 export type MetodoPago =
   | 'efectivo'
   | 'transferencia'
@@ -44,6 +44,7 @@ export interface CuentaPagarTableModel {
   id: number;
   numeroCuenta: string;
   numeroFacturaExterno: string | null;
+  proveedorId: number | null;
   proveedorNombre: string;
   proveedorDocumento: string;
   fechaEmision: string;

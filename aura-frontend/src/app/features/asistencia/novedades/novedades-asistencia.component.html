@@ -1,0 +1,122 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-bolt"></i></span>
+        <div>
+          <h1 class="title">Novedades de asistencia</h1>
+          <p class="subtitle">
+            Genera y aprueba las novedades del período antes de liquidar
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="sel-bar">
+      <div class="field">
+        <label>Período de nómina</label>
+        <p-dropdown
+          [options]="periodosOpts"
+          [(ngModel)]="periodoSel"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Seleccionar período"
+          [style]="{ minWidth: '280px' }"
+          (onChange)="cargar()"
+        />
+      </div>
+      <button
+        pButton
+        label="Generar desde asistencia"
+        icon="pi pi-cog"
+        class="btn-aura"
+        [loading]="generando"
+        [disabled]="periodoSel == null"
+        (click)="generar()"
+      ></button>
+      <button
+        pButton
+        label="Aprobar pendientes"
+        icon="pi pi-check-circle"
+        class="p-button-outlined"
+        [disabled]="periodoSel == null"
+        (click)="aprobarPendientes()"
+      ></button>
+    </div>
+
+    <p-table
+      [value]="novedades"
+      [loading]="loading"
+      showGridlines
+      [tableStyle]="{ 'min-width': '760px' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Empleado</th>
+          <th>Tipo</th>
+          <th class="text-center">Unidad</th>
+          <th class="text-right">Cantidad</th>
+          <th class="text-center">Origen</th>
+          <th class="text-center">Estado</th>
+          <th class="text-center" style="width: 130px">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-n>
+        <tr>
+          <td>{{ n.empleadoNombre }}</td>
+          <td>
+            <span class="tipo-chip">{{ n.tipoNovedad }}</span>
+          </td>
+          <td class="text-center">{{ n.unidad }}</td>
+          <td class="text-right">{{ n.cantidad }}</td>
+          <td class="text-center">{{ n.origen }}</td>
+          <td class="text-center">
+            <p-tag
+              [value]="n.estado"
+              [severity]="estadoSeverity(n.estado)"
+              [rounded]="true"
+            />
+          </td>
+          <td class="text-center acc">
+            <button
+              pButton
+              icon="pi pi-check"
+              class="p-button-sm btn-aura"
+              pTooltip="Aprobar"
+              *ngIf="n.estado === 'PENDIENTE'"
+              (click)="aprobar(n)"
+            ></button>
+            <button
+              pButton
+              icon="pi pi-times"
+              class="p-button-sm p-button-danger p-button-outlined"
+              pTooltip="Rechazar"
+              *ngIf="n.estado === 'PENDIENTE'"
+              (click)="rechazar(n)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              <i class="pi pi-bolt"></i>
+              <p>
+                Sin novedades. Selecciona un período y genera desde asistencia.
+              </p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <p class="hint">
+      <i class="pi pi-info-circle"></i>
+      Solo las novedades <b>APROBADA</b> se aplican al liquidar. Requiere que
+      los días de asistencia estén aprobados en el rango del período.
+    </p>
+  </div>
+</div>
+
+<p-toast />

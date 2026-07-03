@@ -13,7 +13,9 @@ import {
   NominaModel,
   NominaPageableDto,
   NominaTableModel,
+  PagoNominaDto,
   PeriodoNominaModel,
+  PeriodoResumenModel,
   UpdateNominaConfigDto,
 } from '../models/nomina.model';
 import { environment } from '../../../environments/environment';
@@ -129,6 +131,34 @@ export class NominaService {
   getNominaById(id: number): Observable<ResponseModel<NominaModel>> {
     return this.http.get<ResponseModel<NominaModel>>(
       `${this.base}nomina/${id}`,
+    );
+  }
+
+  getResumenPeriodo(
+    periodoId: number,
+  ): Observable<ResponseModel<PeriodoResumenModel>> {
+    return this.http.get<ResponseModel<PeriodoResumenModel>>(
+      `${this.base}nomina/periodo/${periodoId}/resumen`,
+    );
+  }
+
+  pagarNomina(
+    id: number,
+    dto?: PagoNominaDto,
+  ): Observable<ResponseModel<NominaModel>> {
+    return this.http.put<ResponseModel<NominaModel>>(
+      `${this.base}nomina/${id}/pagar`,
+      dto ?? {},
+    );
+  }
+
+  pagarPeriodo(
+    periodoId: number,
+    dto: PagoNominaDto,
+  ): Observable<ResponseModel<void>> {
+    return this.http.post<ResponseModel<void>>(
+      `${this.base}nomina/periodo/${periodoId}/pagar-todos`,
+      dto,
     );
   }
 

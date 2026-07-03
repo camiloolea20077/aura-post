@@ -485,6 +485,64 @@ export const routes: Routes = [
           ),
       },
 
+      // Asistencia
+      {
+        path: 'asistencia/turnos',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/asistencia/turnos/turnos.component').then(
+            (m) => m.TurnosComponent,
+          ),
+      },
+      {
+        path: 'asistencia/marcaje',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/asistencia/marcaje/marcaje.component').then(
+            (m) => m.MarcajeComponent,
+          ),
+      },
+      {
+        path: 'asistencia/revision',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/asistencia/revision/revision.component').then(
+            (m) => m.RevisionAsistenciaComponent,
+          ),
+      },
+      {
+        path: 'asistencia/novedades',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/asistencia/novedades/novedades-asistencia.component').then(
+            (m) => m.NovedadesAsistenciaComponent,
+          ),
+      },
+      {
+        path: 'asistencia/autorizaciones',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/asistencia/autorizaciones/autorizaciones.component').then(
+            (m) => m.AutorizacionesComponent,
+          ),
+      },
+      {
+        path: 'nomina/preliquidacion',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/asistencia/cierre/preliquidacion.component').then(
+            (m) => m.PreliquidacionComponent,
+          ),
+      },
+      {
+        path: 'nomina/prestaciones',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/nomina/prestaciones/prestaciones.component').then(
+            (m) => m.PrestacionesComponent,
+          ),
+      },
+
       // Ventas de campo
       {
         path: 'ventas-campo',

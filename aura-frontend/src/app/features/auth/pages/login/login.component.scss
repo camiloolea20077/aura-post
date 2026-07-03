@@ -1,156 +1,213 @@
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap");
+
+$brand: #2563eb;
+$brand-dark: #1d4ed8;
+$ink: #0f172a;
+$muted: #64748b;
 
 .login-wrapper {
   display: flex;
   min-height: 100vh;
   font-family: "Outfit", sans-serif;
+  color: $ink;
 }
 
-// ─── LEFT PANEL ──────────────────────────────────────────────
+/* ═══ PANEL IZQUIERDO — MARCA ═══════════════════════════════ */
 .login-left {
-  flex: 0 0 50%;
-  background: linear-gradient(145deg, #1a2f6b 0%, #2e6cf6 45%, #7b4dff 100%);
+  flex: 0 0 55%;
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 3rem;
-  position: relative;
-  overflow: hidden;
+  padding: 3.5rem;
+  color: #fff;
+  background:
+    radial-gradient(1100px 600px at 15% -10%, rgba(59, 130, 246, 0.55), transparent 60%),
+    linear-gradient(160deg, #0a1a3f 0%, #12327d 45%, #{$brand} 100%);
 
-  // Círculos decorativos de fondo
+  /* patrón de puntos sutil */
   &::before {
     content: "";
     position: absolute;
-    top: -120px;
-    right: -120px;
-    width: 400px;
-    height: 400px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 50%;
-  }
-
-  &::after {
-    content: "";
-    position: absolute;
-    bottom: -80px;
-    left: -80px;
-    width: 300px;
-    height: 300px;
-    background: rgba(255, 255, 255, 0.04);
-    border-radius: 50%;
+    inset: 0;
+    background-image: radial-gradient(rgba(255, 255, 255, 0.10) 1px, transparent 1.4px);
+    background-size: 22px 22px;
+    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9), transparent 85%);
+    pointer-events: none;
   }
 }
 
-.branding {
+/* glow flotante */
+.aurora {
+  position: absolute;
+  width: 520px;
+  height: 520px;
+  right: -160px;
+  bottom: -180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(96, 165, 250, 0.45), transparent 65%);
+  filter: blur(10px);
+  pointer-events: none;
+}
+
+.brand {
   position: relative;
   z-index: 1;
 }
 
-.logo-container {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 3.5rem;
-}
-
-.logo-icon {
-  width: 56px;
-  height: 56px;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  span {
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: white;
-    font-family: "Outfit", sans-serif;
-  }
-}
-
-.logo-text {
-  h1 {
-    font-size: 1.75rem;
-    font-weight: 800;
-    color: white;
-    margin: 0;
-    letter-spacing: -0.02em;
-
-    span {
-      color: rgba(255, 255, 255, 0.7);
-      font-weight: 400;
-    }
-  }
-
-  p {
-    font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.6);
-    margin: 0;
-    font-weight: 400;
-  }
-}
-
-.features-list {
+.brand-mark {
   display: flex;
   flex-direction: column;
-  gap: 1.75rem;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+  margin-bottom: 3rem;
 }
 
-.feature-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
+.brand-logo {
+  position: relative;
+  width: 76px;
+  height: 76px;
+  border-radius: 22px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
 
-  .feature-icon {
-    width: 42px;
-    height: 42px;
-    min-width: 42px;
-    background: rgba(255, 255, 255, 0.12);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+  span {
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+  i {
+    position: absolute;
+    right: -8px;
+    bottom: -6px;
+    font-size: 0.95rem;
+    background: #fff;
+    color: $brand;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  }
+}
 
-    i {
-      font-size: 1.1rem;
-      color: rgba(255, 255, 255, 0.9);
+.brand-name {
+  h1 {
+    margin: 0;
+    font-size: 2.1rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    span {
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.72);
     }
   }
-
-  h3 {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: white;
-    margin: 0 0 0.2rem;
-  }
-
   p {
-    font-size: 0.78rem;
-    color: rgba(255, 255, 255, 0.6);
-    margin: 0;
-    line-height: 1.4;
+    margin: 0.25rem 0 0;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.62);
   }
 }
 
-.left-footer {
+.brand-headline {
+  margin-bottom: 2.5rem;
+  h2 {
+    margin: 0 0 0.6rem;
+    font-size: 2.35rem;
+    line-height: 1.12;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  p {
+    margin: 0;
+    max-width: 30rem;
+    font-size: 0.98rem;
+    color: rgba(255, 255, 255, 0.72);
+    line-height: 1.55;
+  }
+}
+
+.brand-features {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+
+    > i {
+      margin-top: 2px;
+      width: 24px;
+      height: 24px;
+      min-width: 24px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      color: #fff;
+    }
+
+    h3 {
+      margin: 0 0 0.1rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    p {
+      margin: 0;
+      font-size: 0.82rem;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.45;
+    }
+  }
+}
+
+.brand-footer {
   position: relative;
   z-index: 1;
 
-  span {
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.4);
+  .trust {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin-bottom: 1rem;
+
+    span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.78rem;
+      color: rgba(255, 255, 255, 0.8);
+      i {
+        color: #93c5fd;
+        font-size: 0.85rem;
+      }
+    }
+  }
+  small {
+    font-size: 0.74rem;
+    color: rgba(255, 255, 255, 0.42);
   }
 }
 
-// ─── RIGHT PANEL ─────────────────────────────────────────────
+/* ═══ PANEL DERECHO — FORMULARIO ═══════════════════════════ */
 .login-right {
-  flex: 0 0 50%;
-  background: #f4f6fa;
+  flex: 0 0 45%;
+  background: #f8fafc;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -158,174 +215,246 @@
 }
 
 .login-card {
-  background: white;
-  border-radius: 24px;
-  padding: 2.5rem;
   width: 100%;
-  max-width: 440px;
-  box-shadow: 0 8px 40px rgba(46, 108, 246, 0.1);
-  border: 1px solid #e0e3eb;
+  max-width: 420px;
+  background: #fff;
+  border: 1px solid #eef2f7;
+  border-radius: 22px;
+  padding: 2.75rem 2.5rem;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+  animation: rise 0.5s ease both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .mobile-logo {
   display: none;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  gap: 0.6rem;
   justify-content: center;
+  margin-bottom: 1.5rem;
 
   .logo-icon-sm {
     width: 38px;
     height: 38px;
-    background: #2563eb;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
+    background: $brand;
+    border-radius: 11px;
+    display: grid;
+    place-items: center;
+    color: #fff;
     font-weight: 800;
     font-size: 1.1rem;
   }
-
   span {
-    font-size: 1.1rem;
-    font-weight: 700;
-    background: #2563eb;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: $ink;
   }
 }
 
 .login-header {
-  margin-bottom: 2rem;
+  margin-bottom: 1.75rem;
 
-  h2 {
-    font-size: 1.6rem;
+  .eyebrow {
+    display: inline-block;
+    font-size: 0.7rem;
     font-weight: 700;
-    color: #2d2d2d;
-    margin: 0 0 0.4rem;
-    letter-spacing: -0.02em;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: $brand;
+    background: rgba(37, 99, 235, 0.08);
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    margin-bottom: 0.85rem;
   }
-
+  h2 {
+    margin: 0 0 0.35rem;
+    font-size: 1.7rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: $ink;
+  }
   p {
-    font-size: 0.875rem;
-    color: #6b7280;
     margin: 0;
+    font-size: 0.88rem;
+    color: $muted;
   }
 }
 
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.1rem;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.45rem;
 
   label {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: 600;
-    color: #374151;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-
-    i {
-      font-size: 0.8rem;
-      color: #2e6cf6;
-    }
+    color: #334155;
   }
 
-  input.p-inputtext {
-    width: 100%;
-    height: 46px;
-    border-radius: 12px;
-    border: 1.5px solid #e0e3eb;
-    font-family: "Outfit", sans-serif;
-    font-size: 0.9rem;
-    padding: 0 1rem;
-    transition: all 0.2s;
-    color: #2d2d2d;
+  .input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
 
-    &:focus {
-      border-color: #2e6cf6;
-      box-shadow: 0 0 0 3px rgba(46, 108, 246, 0.12);
-      outline: none;
+    /* que el input y el p-password ocupen todo el ancho */
+    > input,
+    > p-password {
+      flex: 1 1 auto;
+      width: 100%;
+      display: block;
+      min-width: 0;
     }
 
-    &.ng-invalid.ng-dirty {
-      border-color: #ef4444;
-      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    > i {
+      position: absolute;
+      left: 0.9rem;
+      color: #94a3b8;
+      font-size: 0.9rem;
+      z-index: 2;
+      pointer-events: none;
+      transition: color 0.2s;
     }
 
-    &::placeholder {
-      color: #9ca3af;
+    &:focus-within > i {
+      color: $brand;
+    }
+    &.has-error > i {
+      color: #ef4444;
     }
   }
 
   .p-error {
-    font-size: 0.78rem;
+    font-size: 0.76rem;
     color: #ef4444;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
   }
 }
 
-// Override p-password
-::ng-deep {
+/* inputs (texto y password) */
+::ng-deep .login-card {
+  input.p-inputtext {
+    width: 100%;
+    height: 48px;
+    border-radius: 12px;
+    border: 1.5px solid #e2e8f0;
+    background: #fff;
+    font-family: "Outfit", sans-serif;
+    font-size: 0.92rem;
+    padding: 0 1rem 0 2.6rem;
+    color: $ink;
+    transition: border-color 0.2s, box-shadow 0.2s;
+
+    &::placeholder {
+      color: #9ca3af;
+    }
+    &:focus {
+      border-color: $brand;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+      outline: none;
+    }
+  }
+
   .p-password {
     width: 100%;
+    display: block;
+
+    /* wrapper interno que PrimeNG genera alrededor del input */
+    .p-inputwrapper,
+    .p-password-input,
+    .p-icon-field {
+      width: 100%;
+      display: block;
+    }
 
     input.p-inputtext {
       width: 100%;
-      height: 46px;
-      border-radius: 12px;
-      border: 1.5px solid #e0e3eb;
-      font-family: "Outfit", sans-serif;
-      font-size: 0.9rem;
-      transition: all 0.2s;
-
-      &:focus {
-        border-color: #2e6cf6;
-        box-shadow: 0 0 0 3px rgba(46, 108, 246, 0.12);
-      }
+      padding-right: 2.6rem;
     }
+    .p-password-toggle-mask-icon,
+    .p-icon-field .p-input-icon {
+      color: #94a3b8;
+    }
+  }
 
-    &.ng-invalid.ng-dirty input.p-inputtext {
-      border-color: #ef4444;
+  .has-error input.p-inputtext {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+  }
+}
+
+/* opciones: recordarme / olvidé */
+.form-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: -0.15rem 0 0.25rem;
+
+  .remember {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    color: #475569;
+    cursor: pointer;
+    user-select: none;
+
+    input {
+      width: 16px;
+      height: 16px;
+      accent-color: $brand;
+    }
+  }
+
+  .forgot {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: $brand;
+    cursor: pointer;
+    &:hover {
+      text-decoration: underline;
     }
   }
 }
 
-// Botón de login
+/* botón */
 ::ng-deep .btn-login.p-button {
-  background: linear-gradient(135deg, #2e6cf6 0%, #7b4dff 100%);
+  background: $brand;
   border: none;
   border-radius: 12px;
-  height: 48px;
+  height: 50px;
   font-size: 0.95rem;
-  font-weight: 600;
+  font-weight: 700;
   font-family: "Outfit", sans-serif;
-  box-shadow: 0 4px 16px rgba(46, 108, 246, 0.35);
-  transition: all 0.2s;
-  margin-top: 0.5rem;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.32);
+  transition: transform 0.15s, box-shadow 0.2s, background 0.2s;
+  margin-top: 0.35rem;
 
   &:hover:not(:disabled) {
-    background: linear-gradient(135deg, #1a5ae8 0%, #6a3df0 100%);
+    background: $brand-dark;
     transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(46, 108, 246, 0.45);
+    box-shadow: 0 14px 30px rgba(37, 99, 235, 0.42);
   }
-
   &:active {
     transform: translateY(0);
   }
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.65;
     box-shadow: none;
   }
 }
@@ -336,23 +465,26 @@
   justify-content: center;
   gap: 0.4rem;
   margin-top: 1.5rem;
-  font-size: 0.75rem;
-  color: #9ca3af;
+  font-size: 0.76rem;
+  color: #94a3b8;
 
   i {
-    font-size: 0.75rem;
     color: #10b981;
+    font-size: 0.78rem;
   }
 }
 
-// ─── RESPONSIVE ──────────────────────────────────────────────
+/* ═══ RESPONSIVE ═══════════════════════════════════════════ */
 @media (max-width: 1024px) {
   .login-left {
-    flex: 0 0 45%;
+    flex: 0 0 48%;
     padding: 2.5rem;
   }
   .login-right {
-    flex: 0 0 55%;
+    flex: 0 0 52%;
+  }
+  .brand-headline h2 {
+    font-size: 2rem;
   }
 }
 
@@ -360,24 +492,21 @@
   .login-wrapper {
     flex-direction: column;
   }
-
   .login-left {
     display: none;
   }
-
   .login-right {
     flex: 1;
-    padding: 1.5rem;
-    background: linear-gradient(145deg, #1a2f6b 0%, #2e6cf6 45%, #7b4dff 100%);
     align-items: flex-start;
-    padding-top: 3rem;
+    padding: 2.5rem 1.25rem;
+    background:
+      radial-gradient(800px 400px at 50% -20%, rgba(59, 130, 246, 0.5), transparent 60%),
+      linear-gradient(160deg, #0a1a3f 0%, #12327d 50%, $brand 100%);
   }
-
   .login-card {
     max-width: 100%;
     padding: 2rem 1.5rem;
   }
-
   .mobile-logo {
     display: flex;
   }

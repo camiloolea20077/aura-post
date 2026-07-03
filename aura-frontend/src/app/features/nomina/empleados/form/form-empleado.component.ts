@@ -18,6 +18,8 @@ import { CalendarModule } from 'primeng/calendar';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { lastValueFrom } from 'rxjs';
 
+import { TerceroPickerComponent } from '../../../../shared/components/tercero-picker/tercero-picker.component';
+
 import { NominaService } from '../../../../core/services/nomina.service';
 import { TipoEmpleadoService } from '../../../configuracion/tipos-empleado/services/tipo-empleado.service';
 import {
@@ -39,6 +41,7 @@ import { AlertService } from '../../../../shared/pipes/alert.service';
     InputNumberModule,
     DropdownModule,
     CalendarModule,
+    TerceroPickerComponent,
   ],
   templateUrl: './form-empleado.component.html',
   styleUrls: ['./form-empleado.component.scss'],
@@ -83,6 +86,7 @@ export class FormEmpleadoComponent implements OnChanges, OnInit {
   public tipoEmpleadoOpts: { label: string; value: number }[] = [];
 
   public fechaIngreso: Date | null = null;
+  public fechaFinContrato: Date | null = null;
 
   public showNewTipoEmpleado = false;
   public newTipoEmpleado = { nombre: '', descripcion: '' };
@@ -119,19 +123,26 @@ export class FormEmpleadoComponent implements OnChanges, OnInit {
           cargo: this.empleadoEdit.cargo,
           tipoEmpleadoId: this.empleadoEdit.tipoEmpleadoId,
           fechaIngreso: this.empleadoEdit.fechaIngreso,
+          fechaFinContrato: this.empleadoEdit.fechaFinContrato,
           salarioBase: this.empleadoEdit.salarioBase,
           tipoContrato: this.empleadoEdit.tipoContrato,
           banco: this.empleadoEdit.banco,
           numeroCuenta: this.empleadoEdit.numeroCuenta,
           tipoCuenta: this.empleadoEdit.tipoCuenta as any,
           nivelRiesgoArl: this.empleadoEdit.nivelRiesgoArl,
+          requiereControlAsistencia:
+            this.empleadoEdit.requiereControlAsistencia ?? false,
         };
         this.fechaIngreso = this.empleadoEdit.fechaIngreso
           ? new Date(this.empleadoEdit.fechaIngreso)
           : null;
+        this.fechaFinContrato = this.empleadoEdit.fechaFinContrato
+          ? new Date(this.empleadoEdit.fechaFinContrato)
+          : null;
       } else {
         this.form = this.emptyForm();
         this.fechaIngreso = null;
+        this.fechaFinContrato = null;
       }
     }
   }
@@ -153,6 +164,18 @@ export class FormEmpleadoComponent implements OnChanges, OnInit {
     if (this.fechaIngreso) {
       this.form.fechaIngreso = this.fechaIngreso.toISOString().split('T')[0];
     }
+
+    if (this.form.tipoContrato === 'FIJO' && !this.fechaFinContrato) {
+      this.alertService.showWarn(
+        'Campo requerido',
+        'En contrato a término fijo debes indicar la fecha fin de contrato',
+      );
+      return;
+    }
+    this.form.fechaFinContrato =
+      this.form.tipoContrato === 'FIJO' && this.fechaFinContrato
+        ? this.fechaFinContrato.toISOString().split('T')[0]
+        : null;
 
     this.saving = true;
     try {
@@ -204,6 +227,10 @@ export class FormEmpleadoComponent implements OnChanges, OnInit {
     }
   }
 
+  onBancoSeleccionado(ev: { id: number; nombre: string } | null): void {
+    this.form.banco = ev ? ev.nombre : null;
+  }
+
   close(): void {
     this.modalClosed.emit();
   }
@@ -217,12 +244,14 @@ export class FormEmpleadoComponent implements OnChanges, OnInit {
       cargo: null,
       tipoEmpleadoId: null,
       fechaIngreso: '',
+      fechaFinContrato: null,
       salarioBase: 0,
       tipoContrato: 'INDEFINIDO',
       banco: null,
       numeroCuenta: null,
       tipoCuenta: null,
       nivelRiesgoArl: 1,
+      requiereControlAsistencia: false,
     };
   }
 }

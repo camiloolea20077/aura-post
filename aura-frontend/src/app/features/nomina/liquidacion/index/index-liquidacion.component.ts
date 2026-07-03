@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TableLazyLoadEvent, TableModule } from 'primeng/table';
+import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
@@ -14,11 +14,10 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
 import { DetalleNominaComponent } from '../detail/detalle-nomina.component';
+import { DocumentoPeriodoComponent } from '../documento/documento-periodo.component';
 import { NominaService } from '../../../../core/services/nomina.service';
 import {
-  EstadoNomina,
-  NominaPageableDto,
-  NominaTableModel,
+  EstadoPeriodo,
   PeriodoNominaModel,
 } from '../../../../core/models/nomina.model';
 import { AlertService } from '../../../../shared/pipes/alert.service';
@@ -31,29 +30,25 @@ type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contr
   imports: [
     CommonModule, FormsModule, TableModule, ButtonModule, InputTextModule,
     TagModule, ToastModule, TooltipModule, SkeletonModule, DropdownModule,
-    ConfirmDialogModule, DetalleNominaComponent,
+    ConfirmDialogModule, DetalleNominaComponent, DocumentoPeriodoComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './index-liquidacion.component.html',
   styleUrls: ['./index-liquidacion.component.scss'],
 })
 export class IndexLiquidacionComponent implements OnInit {
-  // Detalle
+  // Detalle de un empleado (nómina individual)
   public showDetalle = false;
   public selectedNominaId: number | null = null;
 
-  // Tabla
-  public items: NominaTableModel[] = [];
-  public loadingTable = true;
-  public totalRecords = 0;
-  public rowSize = 15;
-  public searchQuery = '';
-  public lastLazyEvent!: TableLazyLoadEvent;
+  // Documento del período (maestro-detalle)
+  public showDocumento = false;
+  public selectedPeriodoId: number | null = null;
 
-  // Períodos
+  // Períodos (maestro de la tabla)
   public periodos: PeriodoNominaModel[] = [];
+  public loadingPeriodos = true;
   public periodoSeleccionado: PeriodoNominaModel | null = null;
-  public loadingPeriodos = false;
   public liquidandoTodos = false;
 
   constructor(
@@ -66,46 +61,22 @@ export class IndexLiquidacionComponent implements OnInit {
     this.cargarPeriodos();
   }
 
+  get periodosParaLiquidar(): PeriodoNominaModel[] {
+    return this.periodos.filter(p => p.estado !== 'ANULADO' && p.estado !== 'PAGADO');
+  }
+
   async cargarPeriodos(): Promise<void> {
     this.loadingPeriodos = true;
     try {
       const res = await lastValueFrom(this.nominaService.listPeriodos());
-      this.periodos = (res?.data ?? []).filter(p => p.estado !== 'ANULADO');
+      this.periodos = res?.data ?? [];
     } catch {
       this.alertService.showError('Error', 'No se pudieron cargar los períodos');
+      this.periodos = [];
     } finally {
       this.loadingPeriodos = false;
     }
   }
-
-  async loadTable(event: TableLazyLoadEvent): Promise<void> {
-    this.lastLazyEvent = event;
-    this.loadingTable = true;
-    const page = event.first != null && event.rows ? Math.floor(event.first / event.rows) : 0;
-
-    const dto: NominaPageableDto = {
-      page,
-      rows: event.rows ?? this.rowSize,
-      search: this.searchQuery || null,
-    };
-
-    try {
-      const res = await lastValueFrom(this.nominaService.pageNomina(dto));
-      this.items = res?.data?.content ?? [];
-      this.totalRecords = res?.data?.totalElements ?? 0;
-    } catch (err: any) {
-      if (err?.status !== 206)
-        this.alertService.showError('Error', 'No se pudieron cargar las nóminas');
-      this.items = [];
-      this.totalRecords = 0;
-    } finally {
-      this.loadingTable = false;
-    }
-  }
-
-  onSearch(): void { if (this.lastLazyEvent) this.loadTable({ ...this.lastLazyEvent, first: 0 }); }
-  clearSearch(): void { this.searchQuery = ''; this.onSearch(); }
-  private reloadTable(): void { if (this.lastLazyEvent) this.loadTable(this.lastLazyEvent); }
 
   liquidarTodos(): void {
     if (!this.periodoSeleccionado) {
@@ -124,7 +95,9 @@ export class IndexLiquidacionComponent implements OnInit {
         try {
           await lastValueFrom(this.nominaService.liquidarTodos(periodo.id));
           this.alertService.showSuccess('Liquidado', 'Nómina liquidada para todos los empleados activos');
-          this.reloadTable();
+          await this.cargarPeriodos();
+          // Abre el documento recién liquidado
+          this.abrirDocumento(periodo);
         } catch {
           this.alertService.showError('Error', 'No se pudo liquidar la nómina');
         } finally {
@@ -134,32 +107,52 @@ export class IndexLiquidacionComponent implements OnInit {
     });
   }
 
-  verDetalle(item: NominaTableModel): void {
-    this.selectedNominaId = item.id;
-    this.showDetalle = true;
+  // ── Documento del período ──
+  abrirDocumento(p: PeriodoNominaModel): void {
+    this.selectedPeriodoId = p.id;
+    this.showDocumento = true;
+  }
+  onDocumentoClosed(): void {
+    this.showDocumento = false;
+    this.selectedPeriodoId = null;
   }
 
+  // ── Detalle de empleado (desde dentro del documento) ──
+  onVerNomina(nominaId: number): void {
+    this.selectedNominaId = nominaId;
+    this.showDetalle = true;
+  }
   onDetalleClosed(): void { this.showDetalle = false; this.selectedNominaId = null; }
-  onNominaActualizada(): void { this.showDetalle = false; this.selectedNominaId = null; this.reloadTable(); }
+  onNominaActualizada(): void {
+    this.showDetalle = false;
+    this.selectedNominaId = null;
+    // Recarga el documento abierto para reflejar cambios de estado/valores
+    if (this.selectedPeriodoId != null) {
+      const id = this.selectedPeriodoId;
+      this.showDocumento = false;
+      setTimeout(() => { this.selectedPeriodoId = id; this.showDocumento = true; }, 0);
+    }
+    this.cargarPeriodos();
+  }
 
   formatFecha(f: string): string {
     return new Date(f).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
-  formatMonto(v: number): string {
-    return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(v);
+  documentoLabel(p: PeriodoNominaModel): string {
+    return `NOM-${p.id}`;
   }
 
-  estadoLabel(e: EstadoNomina): string {
-    const m: Record<EstadoNomina, string> = {
-      BORRADOR: 'Borrador', APROBADO: 'Aprobado', PAGADO: 'Pagado', ANULADO: 'Anulado',
+  estadoLabel(e: EstadoPeriodo): string {
+    const m: Record<EstadoPeriodo, string> = {
+      ABIERTO: 'Abierto', LIQUIDADO: 'Liquidado', PAGADO: 'Pagado', ANULADO: 'Anulado',
     };
     return m[e] ?? e;
   }
 
-  estadoSeverity(e: EstadoNomina): TagSeverity {
-    const m: Record<EstadoNomina, TagSeverity> = {
-      BORRADOR: 'warn', APROBADO: 'success', PAGADO: 'info', ANULADO: 'danger',
+  estadoSeverity(e: EstadoPeriodo): TagSeverity {
+    const m: Record<EstadoPeriodo, TagSeverity> = {
+      ABIERTO: 'success', LIQUIDADO: 'info', PAGADO: 'secondary', ANULADO: 'danger',
     };
     return m[e];
   }

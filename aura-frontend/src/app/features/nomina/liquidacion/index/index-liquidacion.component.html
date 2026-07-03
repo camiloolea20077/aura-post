@@ -1,20 +1,19 @@
-<div class="page">
+<div class="page" *ngIf="!showDocumento">
   <div class="card">
     <div class="card-head">
       <div class="card-head__title">
         <span class="header-icon"><i class="pi pi-calculator"></i></span>
         <div>
           <h1 class="title">Liquidación de Nómina</h1>
-          <p class="subtitle">Liquidación, novedades y aprobación de pagos</p>
+          <p class="subtitle">Documentos de nómina por período</p>
         </div>
       </div>
       <div class="card-head__actions">
         <!-- Barra de liquidación rápida -->
         <div class="liquidar-bar">
           <p-dropdown
-            [options]="periodos"
+            [options]="periodosParaLiquidar"
             [(ngModel)]="periodoSeleccionado"
-            [optionLabel]="'id'"
             placeholder="Seleccionar período"
             [style]="{ minWidth: '220px' }"
             [loading]="loadingPeriodos"
@@ -46,106 +45,49 @@
             (click)="liquidarTodos()"
           ></button>
         </div>
-        <div class="card-head__search">
-          <span class="search-wrap">
-            <i class="pi pi-search"></i>
-            <input
-              type="text"
-              pInputText
-              class="search-input"
-              placeholder="Buscar por empleado o estado..."
-              [(ngModel)]="searchQuery"
-              (input)="onSearch()"
-              (keydown.escape)="clearSearch()"
-            />
-            <button
-              *ngIf="searchQuery"
-              class="clear-btn"
-              (click)="clearSearch()"
-            >
-              <i class="pi pi-times"></i>
-            </button>
-          </span>
-        </div>
       </div>
     </div>
 
     <p-table
-      [value]="items"
-      [lazy]="true"
-      (onLazyLoad)="loadTable($event)"
-      [paginator]="true"
-      [rows]="rowSize"
+      [value]="periodos"
+      [loading]="loadingPeriodos"
       showGridlines
-      [totalRecords]="totalRecords"
-      [loading]="loadingTable"
-      [rowsPerPageOptions]="[10, 15, 25, 50]"
-      [showCurrentPageReport]="true"
-      currentPageReportTemplate="{first}-{last} de {totalRecords}"
-      [tableStyle]="{ 'min-width': '750px' }"
+      [tableStyle]="{ 'min-width': '640px' }"
+      [paginator]="periodos.length > 10"
+      [rows]="10"
     >
       <ng-template pTemplate="header">
         <tr>
-          <th style="width: 70px">#</th>
-          <th style="min-width: 180px">Empleado</th>
-          <th style="min-width: 150px">Período</th>
-          <th style="width: 90px" class="text-center">Días</th>
-          <th style="min-width: 130px" class="text-right">Devengado</th>
-          <th style="min-width: 120px" class="text-right">Deducciones</th>
-          <th style="min-width: 130px" class="text-right">Neto a pagar</th>
-          <th style="width: 100px" class="text-center">Estado</th>
-          <th style="width: 70px" class="text-center">Ver</th>
+          <th style="width: 120px">Documento</th>
+          <th style="min-width: 220px">Período</th>
+          <th style="width: 130px" class="text-center">Estado</th>
+          <th style="width: 120px" class="text-center">Ver documento</th>
         </tr>
       </ng-template>
 
-      <ng-template pTemplate="body" let-item>
-        <tr [class.row-anulado]="item.estado === 'ANULADO'">
+      <ng-template pTemplate="body" let-p>
+        <tr
+          [class.row-anulado]="p.estado === 'ANULADO'"
+          class="doc-row"
+          (click)="abrirDocumento(p)"
+        >
           <td>
-            <span class="id-badge">#{{ item.id }}</span>
-          </td>
-          <td>
-            <div class="cell-empleado">
-              <div class="emp-avatar">{{ item.empleadoNombre.charAt(0) }}</div>
-              <div>
-                <div class="emp-nombre">{{ item.empleadoNombre }}</div>
-                <div class="emp-doc">{{ item.empleadoDocumento }}</div>
-              </div>
-            </div>
+            <span class="id-badge">{{ documentoLabel(p) }}</span>
           </td>
           <td>
             <div class="periodo-cell">
-              <span class="periodo-fecha">{{
-                formatFecha(item.periodoFechaInicio)
-              }}</span>
+              <span class="periodo-fecha">{{ formatFecha(p.fechaInicio) }}</span>
               <i
                 class="pi pi-arrow-right"
                 style="font-size: 0.6rem; color: #94a3b8"
               ></i>
-              <span class="periodo-fecha">{{
-                formatFecha(item.periodoFechaFin)
-              }}</span>
+              <span class="periodo-fecha">{{ formatFecha(p.fechaFin) }}</span>
             </div>
           </td>
           <td class="text-center">
-            <span class="dias-badge">{{ item.diasTrabajados }}d</span>
-          </td>
-          <td class="text-right">
-            <span class="monto-dev">{{
-              formatMonto(item.totalDevengado)
-            }}</span>
-          </td>
-          <td class="text-right">
-            <span class="monto-ded">{{
-              formatMonto(item.totalDeducciones)
-            }}</span>
-          </td>
-          <td class="text-right">
-            <span class="monto-neto">{{ formatMonto(item.netoPagar) }}</span>
-          </td>
-          <td class="text-center">
             <p-tag
-              [value]="estadoLabel(item.estado)"
-              [severity]="estadoSeverity(item.estado)"
+              [value]="estadoLabel(p.estado)"
+              [severity]="estadoSeverity(p.estado)"
               [rounded]="true"
             />
           </td>
@@ -153,11 +95,11 @@
             <button
               pButton
               type="button"
-              icon="pi pi-eye"
+              icon="pi pi-folder-open"
               class="p-button-text p-button-sm action-view"
-              pTooltip="Ver detalle"
+              pTooltip="Abrir documento"
               tooltipPosition="top"
-              (click)="verDetalle(item)"
+              (click)="$event.stopPropagation(); abrirDocumento(p)"
             ></button>
           </td>
         </tr>
@@ -165,15 +107,12 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="9">
+          <td colspan="4">
             <div class="empty-state">
               <i class="pi pi-calculator"></i>
               <p>
-                {{
-                  searchQuery
-                    ? 'Sin resultados para "' + searchQuery + '"'
-                    : 'No hay nóminas liquidadas. Selecciona un período y haz clic en "Liquidar todos".'
-                }}
+                No hay períodos. Crea un período y liquídalo con "Liquidar
+                todos".
               </p>
             </div>
           </td>
@@ -182,23 +121,10 @@
 
       <ng-template pTemplate="loadingbody">
         <tr *ngFor="let s of [1, 2, 3, 4, 5]">
-          <td><p-skeleton width="40px" /></td>
-          <td><p-skeleton /></td>
+          <td><p-skeleton width="80px" /></td>
           <td><p-skeleton /></td>
           <td class="text-center">
-            <p-skeleton width="40px" styleClass="mx-auto" />
-          </td>
-          <td class="text-right">
-            <p-skeleton width="100px" styleClass="ml-auto" />
-          </td>
-          <td class="text-right">
-            <p-skeleton width="100px" styleClass="ml-auto" />
-          </td>
-          <td class="text-right">
-            <p-skeleton width="110px" styleClass="ml-auto" />
-          </td>
-          <td class="text-center">
-            <p-skeleton width="70px" styleClass="mx-auto" />
+            <p-skeleton width="80px" styleClass="mx-auto" />
           </td>
           <td class="text-center">
             <p-skeleton width="36px" styleClass="mx-auto" />
@@ -209,6 +135,16 @@
   </div>
 </div>
 
+<!-- Documento del período (plano, reemplaza la tabla): formulario + tabs -->
+<app-documento-periodo
+  *ngIf="showDocumento"
+  [periodoId]="selectedPeriodoId"
+  (closed)="onDocumentoClosed()"
+  (verNomina)="onVerNomina($event)"
+  (pagado)="cargarPeriodos()"
+/>
+
+<!-- Detalle de un empleado -->
 <app-detalle-nomina
   [visible]="showDetalle"
   [nominaId]="selectedNominaId"

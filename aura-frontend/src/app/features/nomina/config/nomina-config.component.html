@@ -1,47 +1,53 @@
-<div class="page-container">
-  <div class="page-header">
-    <div class="page-title-area">
-      <div class="page-icon"><i class="pi pi-cog"></i></div>
-      <div>
-        <h3 class="page-title">Configuración de Nómina</h3>
-        <p class="page-sub">
-          Define el modo de liquidación y los porcentajes de aportes
-        </p>
+<div class="page">
+  <!-- Header AURA -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-cog"></i></span>
+        <div>
+          <h1 class="title">Configuración de Nómina</h1>
+          <p class="subtitle">
+            Define el modo de liquidación y los porcentajes de aportes
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          label="Guardar cambios"
+          icon="pi pi-save"
+          class="btn-aura"
+          [loading]="saving"
+          [disabled]="loading || saving"
+          (click)="save()"
+        ></button>
       </div>
     </div>
-    <button
-      pButton
-      type="button"
-      label="Guardar cambios"
-      icon="pi pi-save"
-      class="btn-nomina"
-      [loading]="saving"
-      [disabled]="loading || saving"
-      (click)="save()"
-    ></button>
   </div>
 
   <!-- Skeleton -->
   <ng-container *ngIf="loading">
-    <div class="card">
+    <div class="card sec">
       <div style="padding: 2rem"><p-skeleton height="300px" /></div>
     </div>
   </ng-container>
 
   <ng-container *ngIf="!loading && config">
-    <!-- Modo y periodicidad -->
-    <div class="card">
+    <!-- Modo, periodicidad y liquidación -->
+    <div class="card sec">
       <div class="section-title">
         <i class="pi pi-sliders-h"></i> Modo de nómina
       </div>
-      <div class="form-grid">
+      <div class="form-grid three-cols">
         <div class="field">
-          <label>Modo de liquidación</label>
-          <p-selectButton
+          <label>Modo de nómina</label>
+          <p-dropdown
             [options]="modoOpts"
             [(ngModel)]="config.modoNomina"
             optionLabel="label"
             optionValue="value"
+            [style]="{ width: '100%' }"
           />
           <small
             class="field-hint"
@@ -57,54 +63,89 @@
             automáticamente.
           </small>
         </div>
+
         <div class="field">
           <label>Periodicidad de pago</label>
-          <p-selectButton
+          <p-dropdown
             [options]="periodicidadOpts"
             [(ngModel)]="config.periodicidad"
             optionLabel="label"
             optionValue="value"
+            [style]="{ width: '100%' }"
           />
+        </div>
+
+        <div class="field">
+          <label>Modo de liquidación (asistencia)</label>
+          <p-dropdown
+            [options]="modoLiquidacionOpts"
+            [(ngModel)]="config.modoLiquidacion"
+            optionLabel="label"
+            optionValue="value"
+            [style]="{ width: '100%' }"
+          />
+          <small
+            class="field-hint"
+            *ngIf="config.modoLiquidacion === 'SIN_ASISTENCIA'"
+          >
+            Se liquida sin exigir asistencia aprobada.
+          </small>
+          <small
+            class="field-hint completo"
+            *ngIf="config.modoLiquidacion === 'CON_ASISTENCIA_OBLIGATORIA'"
+          >
+            Exige asistencia aprobada para todos antes de liquidar.
+          </small>
+          <small
+            class="field-hint completo"
+            *ngIf="config.modoLiquidacion === 'MIXTA'"
+          >
+            Solo exige asistencia a los empleados con control de asistencia.
+          </small>
         </div>
       </div>
     </div>
 
     <!-- Valores legales -->
-    <div class="card">
+    <div class="card sec">
       <div class="section-title">
         <i class="pi pi-dollar"></i> Valores legales
       </div>
       <div class="form-grid">
         <div class="field">
           <label>SMMLV (Salario mínimo)</label>
-          <div class="input-prefix">
-            <span>$</span>
-            <input
-              type="number"
-              pInputText
-              [(ngModel)]="config.smmlv"
-              min="0"
-            />
-          </div>
+          <p-inputNumber
+            [(ngModel)]="config.smmlv"
+            mode="currency"
+            currency="COP"
+            locale="es-CO"
+            [minFractionDigits]="0"
+            [maxFractionDigits]="0"
+            [min]="0"
+            [style]="{ width: '100%' }"
+            styleClass="money-input"
+          />
         </div>
         <div class="field">
           <label>Auxilio de transporte</label>
-          <div class="input-prefix">
-            <span>$</span>
-            <input
-              type="number"
-              pInputText
-              [(ngModel)]="config.auxilioTransporte"
-              min="0"
-            />
-          </div>
+          <p-inputNumber
+            [(ngModel)]="config.auxilioTransporte"
+            mode="currency"
+            currency="COP"
+            locale="es-CO"
+            [minFractionDigits]="0"
+            [maxFractionDigits]="0"
+            [min]="0"
+            [style]="{ width: '100%' }"
+            styleClass="money-input"
+          />
           <small class="field-hint">Se aplica si el salario es ≤ 2 SMMLV</small>
         </div>
       </div>
     </div>
 
-    <!-- Aportes (solo visibles en modo COMPLETO) -->
-    <div class="card" *ngIf="esCompleto">
+    <!-- Aportes empleado (solo COMPLETO) -->
+    <div class="card sec" *ngIf="esCompleto">
       <div class="section-title">
         <i class="pi pi-users"></i> Aportes del empleado (%)
       </div>
@@ -140,7 +181,8 @@
       </div>
     </div>
 
-    <div class="card" *ngIf="esCompleto">
+    <!-- Aportes empleador (solo COMPLETO) -->
+    <div class="card sec" *ngIf="esCompleto">
       <div class="section-title">
         <i class="pi pi-building"></i> Aportes del empleador (%)
       </div>

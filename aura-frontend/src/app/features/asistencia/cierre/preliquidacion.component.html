@@ -1,0 +1,157 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head__title">
+      <span class="header-icon"><i class="pi pi-verified"></i></span>
+      <div>
+        <h1 class="title">Preliquidación y auditoría</h1>
+        <p class="subtitle">
+          Vista previa con alertas antes de aprobar, y trazabilidad de acciones
+        </p>
+      </div>
+    </div>
+
+    <p-tabView [(activeIndex)]="activeTab" styleClass="pl-tabs">
+      <!-- Preliquidación -->
+      <p-tabPanel>
+        <ng-template pTemplate="header"
+          ><i class="pi pi-list-check"></i
+          ><span class="tl">Preliquidación</span></ng-template
+        >
+
+        <div class="sel-bar">
+          <div class="field">
+            <label>Período de nómina</label>
+            <p-dropdown
+              [options]="periodosOpts"
+              [(ngModel)]="periodoSel"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Seleccionar período"
+              [style]="{ minWidth: '280px' }"
+              (onChange)="cargar()"
+            />
+          </div>
+        </div>
+
+        <p-table
+          [value]="items"
+          [loading]="loading"
+          showGridlines
+          [tableStyle]="{ 'min-width': '900px' }"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Empleado</th>
+              <th class="text-center">Días</th>
+              <th class="text-right">Devengado</th>
+              <th class="text-right">Deducciones</th>
+              <th class="text-right">Neto</th>
+              <th class="text-center">Estado</th>
+              <th>Alertas</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-it>
+            <tr>
+              <td>{{ it.empleadoNombre }}</td>
+              <td class="text-center">{{ it.diasTrabajados ?? "—" }}</td>
+              <td class="text-right">{{ formatMonto(it.totalDevengado) }}</td>
+              <td class="text-right">{{ formatMonto(it.totalDeducciones) }}</td>
+              <td class="text-right monto-neto">
+                {{ formatMonto(it.netoPagar) }}
+              </td>
+              <td class="text-center">{{ it.estado }}</td>
+              <td>
+                <div class="alertas">
+                  <p-tag
+                    *ngFor="let a of it.alertas"
+                    [value]="alertLabel(a)"
+                    [severity]="alertSev(a)"
+                    [rounded]="true"
+                  />
+                  <span *ngIf="it.alertas.length === 0" class="ok"
+                    ><i class="pi pi-check-circle"></i> OK</span
+                  >
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="7">
+                <div class="empty-state">
+                  <i class="pi pi-list-check"></i>
+                  <p>Selecciona un período para ver la preliquidación.</p>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-tabPanel>
+
+      <!-- Auditoría -->
+      <p-tabPanel>
+        <ng-template pTemplate="header"
+          ><i class="pi pi-history"></i
+          ><span class="tl">Auditoría</span></ng-template
+        >
+
+        <div class="tab-actions">
+          <button
+            pButton
+            label="Actualizar"
+            icon="pi pi-refresh"
+            class="p-button-outlined"
+            [loading]="loadingAud"
+            (click)="cargarAuditoria()"
+          ></button>
+        </div>
+
+        <p-table
+          [value]="auditoria"
+          [loading]="loadingAud"
+          showGridlines
+          [paginator]="auditoria.length > 15"
+          [rows]="15"
+          [tableStyle]="{ 'min-width': '820px' }"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th class="text-center">Fecha</th>
+              <th>Entidad</th>
+              <th class="text-center">ID</th>
+              <th>Acción</th>
+              <th>Anterior → Nuevo</th>
+              <th class="text-center">Usuario</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-a>
+            <tr>
+              <td class="text-center">{{ a.fechaHora | date: "short" }}</td>
+              <td>{{ a.entidad }}</td>
+              <td class="text-center">{{ a.entidadId ?? "—" }}</td>
+              <td>
+                <span class="acc-chip">{{ a.accion }}</span>
+              </td>
+              <td>
+                {{ a.valorAnterior || "—" }} → <b>{{ a.valorNuevo || "—" }}</b>
+              </td>
+              <td class="text-center">{{ a.usuarioId ?? "—" }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6">
+                <div class="empty-state">
+                  <i class="pi pi-history"></i>
+                  <p>Sin registros de auditoría.</p>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-tabPanel>
+    </p-tabView>
+  </div>
+</div>
+
+<p-toast />

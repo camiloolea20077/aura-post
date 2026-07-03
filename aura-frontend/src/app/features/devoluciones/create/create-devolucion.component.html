@@ -1,77 +1,76 @@
-<p-dialog
-  [(visible)]="visible"
-  [modal]="true"
-  [draggable]="false"
-  [resizable]="false"
-  [style]="{ width: '680px' }"
-  [contentStyle]="{ 'overflow-y': 'auto', 'max-height': '80vh' }"
-  styleClass="aura-dialog"
-  (onHide)="close()"
->
-  <ng-template pTemplate="header">
-    <div class="dialog-header">
-      <div class="header-icon"><i class="pi pi-replay"></i></div>
-      <div class="header-meta">
-        <span class="header-titulo">Nueva Devolución</span>
-        <span class="header-sub">Registrar devolución de una venta</span>
+<div class="dev-page">
+  <!-- Encabezado -->
+  <div class="dev-head">
+    <button
+      pButton
+      type="button"
+      icon="pi pi-arrow-left"
+      class="p-button-text p-button-plain btn-back"
+      (click)="close()"
+      [disabled]="isSaving"
+    ></button>
+    <div class="head-icon"><i class="pi pi-replay"></i></div>
+    <div class="head-meta">
+      <span class="head-titulo">Nueva Devolución</span>
+      <span class="head-sub">Registrar devolución o cambio de una venta</span>
+    </div>
+  </div>
+
+  <!-- Búsqueda de venta -->
+  <div class="card-block">
+    <p class="section-label">Venta a devolver</p>
+    <div class="search-venta-row">
+      <input
+        type="text"
+        pInputText
+        class="input-venta"
+        placeholder="N° ID de la venta (ej: 123)"
+        [(ngModel)]="ventaSearch"
+        (keydown.enter)="buscarVenta()"
+      />
+      <button
+        pButton
+        type="button"
+        icon="pi pi-search"
+        label="Buscar"
+        class="p-button-outlined p-button-sm btn-buscar"
+        [loading]="isSearchingVenta"
+        (click)="buscarVenta()"
+      ></button>
+    </div>
+    <small class="error-msg" *ngIf="errorVenta">
+      <i class="pi pi-exclamation-circle"></i> {{ errorVenta }}
+    </small>
+
+    <div class="venta-info-card" *ngIf="ventaCargada">
+      <div class="venta-info-row">
+        <span class="vi-label">N° Venta</span>
+        <span class="vi-val numero-venta">{{
+          ventaCargada.numeroVenta ?? "Venta #" + ventaCargada.id
+        }}</span>
+      </div>
+      <div class="venta-info-row">
+        <span class="vi-label">Cliente</span>
+        <span class="vi-val">{{
+          ventaCargada.clienteNombre ?? "Consumidor final"
+        }}</span>
+      </div>
+      <div class="venta-info-row">
+        <span class="vi-label">Fecha venta</span>
+        <span class="vi-val">{{
+          ventaCargada.fechaEmision.substring(0, 10)
+        }}</span>
+      </div>
+      <div class="venta-info-row">
+        <span class="vi-label">Total venta</span>
+        <span class="vi-val monto">{{ formatCOP(ventaCargada.totalPagar) }}</span>
       </div>
     </div>
-  </ng-template>
+  </div>
 
-  <div class="dialog-body">
-    <!-- Búsqueda de venta -->
-    <div class="section-block">
-      <p class="section-label">Venta a devolver</p>
-      <div class="search-venta-row">
-        <input
-          type="text"
-          pInputText
-          class="input-venta"
-          placeholder="N° ID de la venta (ej: 123)"
-          [(ngModel)]="ventaSearch"
-          (keydown.enter)="buscarVenta()"
-        />
-        <button
-          pButton
-          type="button"
-          icon="pi pi-search"
-          label="Buscar"
-          class="p-button-outlined p-button-sm btn-buscar"
-          [loading]="isSearchingVenta"
-          (click)="buscarVenta()"
-        ></button>
-      </div>
-      <small class="error-msg" *ngIf="errorVenta">
-        <i class="pi pi-exclamation-circle"></i> {{ errorVenta }}
-      </small>
-
-      <!-- Info de la venta cargada -->
-      <div class="venta-info-card" *ngIf="ventaCargada">
-        <div class="venta-info-row">
-          <span class="vi-label">N° Venta</span>
-          <span class="vi-val numero-venta">{{
-            ventaCargada.numeroVenta ?? "Venta #" + ventaCargada.id
-          }}</span>
-        </div>
-        <div class="venta-info-row">
-          <span class="vi-label">Cliente</span>
-          <span class="vi-val">{{
-            ventaCargada.clienteNombre ?? "Consumidor final"
-          }}</span>
-        </div>
-        <div class="venta-info-row">
-          <span class="vi-label">Total venta</span>
-          <span class="vi-val monto">{{
-            formatCOP(ventaCargada.totalPagar)
-          }}</span>
-        </div>
-      </div>
-    </div>
-
-    <ng-container *ngIf="ventaCargada">
-      <p-divider />
-
-      <!-- Tipo + Método devolución + Reintegra -->
+  <ng-container *ngIf="ventaCargada">
+    <!-- Datos de la devolución -->
+    <div class="card-block">
       <div class="form-grid">
         <div class="form-field">
           <label class="field-label"
@@ -87,7 +86,16 @@
           />
         </div>
         <div class="form-field">
-          <label class="field-label">Método de devolución de dinero</label>
+          <label class="field-label">Fecha de devolución <span class="req">*</span></label>
+          <input
+            type="date"
+            pInputText
+            class="w-full"
+            [(ngModel)]="fechaDevolucion"
+          />
+        </div>
+        <div class="form-field">
+          <label class="field-label">Método de dinero (reembolso / cobro)</label>
           <p-dropdown
             [options]="metodoDevolucionOpciones"
             [(ngModel)]="metodoDevolucion"
@@ -136,20 +144,19 @@
           [(ngModel)]="observaciones"
         ></textarea>
       </div>
+    </div>
 
-      <p-divider align="left"
-        ><span class="div-label">Productos a devolver</span></p-divider
-      >
-
-      <!-- Tabla de detalles -->
+    <!-- Productos a devolver -->
+    <div class="card-block">
+      <p class="section-label">Productos a devolver</p>
       <div class="detalles-table">
         <table class="tabla-det">
           <thead>
             <tr>
               <th style="width: 40px"></th>
               <th>Producto</th>
-              <th class="text-right" style="width: 100px">Cant. orig.</th>
-              <th class="text-right" style="width: 110px">Precio unit.</th>
+              <th class="text-right" style="width: 90px">Cant. orig.</th>
+              <th class="text-right" style="width: 120px">Precio (IVA inc.)</th>
               <th class="text-right" style="width: 120px">Cant. a dev.</th>
             </tr>
           </thead>
@@ -165,16 +172,12 @@
                   [inputId]="'det-' + i"
                 />
               </td>
-              <td>
-                <span class="det-nombre">{{ det.productoNombre }}</span>
-              </td>
+              <td><span class="det-nombre">{{ det.productoNombre }}</span></td>
               <td class="text-right">
                 <span class="det-cant-orig">{{ det.cantidadOriginal }}</span>
               </td>
               <td class="text-right">
-                <span class="det-precio">{{
-                  formatCOP(det.precioUnitario)
-                }}</span>
+                <span class="det-precio">{{ formatCOP(precioConIva(det)) }}</span>
               </td>
               <td class="text-right">
                 <p-inputNumber
@@ -195,11 +198,90 @@
           </tbody>
         </table>
       </div>
-    </ng-container>
-  </div>
+    </div>
 
-  <ng-template pTemplate="footer">
-    <div class="dialog-footer">
+    <!-- Cambio: agregar productos -->
+    <div class="card-block">
+      <p class="section-label">
+        Cambio — agregar productos
+        <span class="section-hint">(se suman a la venta)</span>
+      </p>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-search-plus"
+        label="Buscar producto"
+        class="p-button-outlined btn-buscar-prod"
+        (click)="openProductDialog()"
+      ></button>
+
+      <div class="detalles-table mt-1" *ngIf="agregados.length">
+        <table class="tabla-det">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th class="text-right" style="width: 120px">Precio (IVA inc.)</th>
+              <th class="text-right" style="width: 120px">Cantidad</th>
+              <th class="text-right" style="width: 120px">Subtotal</th>
+              <th style="width: 44px"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let ag of agregados; let i = index">
+              <td><span class="det-nombre">{{ ag.productoNombre }}</span></td>
+              <td class="text-right">
+                <span class="det-precio">{{
+                  formatCOP(precioConIvaAgregado(ag))
+                }}</span>
+              </td>
+              <td class="text-right">
+                <p-inputNumber
+                  [(ngModel)]="ag.cantidad"
+                  [min]="1"
+                  [step]="1"
+                  [showButtons]="false"
+                  styleClass="cant-input"
+                  inputStyleClass="cant-input-inner"
+                />
+              </td>
+              <td class="text-right">
+                <span class="det-precio">{{ formatCOP(subtotalAgregado(ag)) }}</span>
+              </td>
+              <td class="text-center">
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-trash"
+                  class="p-button-text p-button-danger p-button-sm"
+                  (click)="quitarAgregado(i)"
+                ></button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Resumen / neto -->
+    <div class="card-block resumen-block">
+      <div class="resumen-row">
+        <span>Total a devolver</span>
+        <span class="r-val">{{ formatCOP(totalDevuelto) }}</span>
+      </div>
+      <div class="resumen-row" *ngIf="totalAgregado > 0">
+        <span>Total productos del cambio</span>
+        <span class="r-val">{{ formatCOP(totalAgregado) }}</span>
+      </div>
+      <div class="resumen-row neto" [class.faltante]="faltante > 0">
+        <span>{{ faltante > 0 ? "Faltante a cobrar al cliente" : "A reembolsar al cliente" }}</span>
+        <span class="r-val big">{{
+          formatCOP(faltante > 0 ? faltante : aReembolsar)
+        }}</span>
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="dev-footer">
       <button
         pButton
         type="button"
@@ -220,8 +302,130 @@
         (click)="guardar()"
       ></button>
     </div>
-  </ng-template>
+  </ng-container>
+</div>
+
+<!-- ═══ MODAL SELECTOR DE PRODUCTO (igual al de compras) ═══ -->
+<p-dialog
+  [(visible)]="showProductDialog"
+  header="Seleccionar producto"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '720px' }"
+  [contentStyle]="{ padding: '0' }"
+  styleClass="aura-dialog prod-dialog"
+  (onHide)="showProductDialog = false"
+>
+  <!-- Buscadores -->
+  <div class="prod-dialog-search">
+    <span class="p-input-icon-left search-wrap-dialog">
+      <i class="pi pi-search"></i>
+      <input
+        type="text"
+        pInputText
+        placeholder="Buscar por nombre, SKU..."
+        [(ngModel)]="dialogSearch"
+        (input)="onDialogSearch()"
+        (keydown.escape)="dialogSearch = ''; onDialogSearch()"
+        class="search-input-dialog"
+        autocomplete="off"
+      />
+      <button
+        *ngIf="dialogSearch"
+        class="clear-btn-dialog"
+        (click)="dialogSearch = ''; onDialogSearch()"
+      >
+        <i class="pi pi-times"></i>
+      </button>
+    </span>
+    <div class="barcode-wrap">
+      <i class="pi pi-barcode barcode-icon"></i>
+      <input
+        type="text"
+        class="barcode-inp"
+        placeholder="Código de barras..."
+        [(ngModel)]="barcodeQuery"
+        (keydown.enter)="buscarPorBarcode()"
+        autocomplete="off"
+      />
+      <button
+        type="button"
+        class="barcode-btn"
+        [disabled]="!barcodeQuery || barcodeSearching"
+        (click)="buscarPorBarcode()"
+        pTooltip="Buscar por código de barras"
+        tooltipPosition="top"
+      >
+        <i
+          [class]="
+            barcodeSearching ? 'pi pi-spin pi-spinner' : 'pi pi-arrow-right'
+          "
+        ></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <p-table
+    [value]="dialogItems"
+    [lazy]="true"
+    (onLazyLoad)="loadDialogTable($event)"
+    [paginator]="true"
+    [rows]="10"
+    [totalRecords]="dialogTotal"
+    [loading]="dialogLoading"
+    [rowsPerPageOptions]="[10, 25]"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="{first}-{last} de {totalRecords}"
+    [tableStyle]="{ 'min-width': '100%' }"
+    styleClass="prod-select-table"
+    selectionMode="single"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="min-width: 200px">Producto</th>
+        <th style="width: 90px">SKU</th>
+        <th style="width: 110px">Categoría</th>
+        <th style="width: 110px" class="text-right">Precio</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-item>
+      <tr class="prod-dialog-row" (click)="selectProductFromDialog(item)">
+        <td>
+          <div class="prod-info-cell">
+            <span class="prod-info-nombre">{{ item.nombre }}</span>
+            <span class="prod-info-barras" *ngIf="item.codigoBarras">
+              <i class="pi pi-barcode"></i> {{ item.codigoBarras }}
+            </span>
+          </div>
+        </td>
+        <td>
+          <span class="sku-chip" *ngIf="item.sku">{{ item.sku }}</span>
+          <span class="text-muted" *ngIf="!item.sku">—</span>
+        </td>
+        <td>
+          <span *ngIf="item.categoriaNombre">{{ item.categoriaNombre }}</span>
+          <span class="text-muted" *ngIf="!item.categoriaNombre">—</span>
+        </td>
+        <td class="text-right">
+          <span class="price-cell">{{ formatCOP(item.precio) }}</span>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="4" class="empty-row">
+          {{ dialogSearch ? "Sin resultados" : "Escribe para buscar productos" }}
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
 </p-dialog>
+
+<p-confirmDialog />
 
 <app-modal-tirilla
   [displayModal]="showTirilla"
