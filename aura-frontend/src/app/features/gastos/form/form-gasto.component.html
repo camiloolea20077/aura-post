@@ -5,34 +5,38 @@
 </div>
 
 <!-- ═══════ PÁGINA ════════════════════════════════════════════════ -->
-<div *ngIf="!loadingPage">
-  <!-- Page Header -->
-  <div class="page-header">
-    <button
-      type="button"
-      class="btn-back"
-      (click)="cancelar()"
-      pTooltip="Volver a gastos"
-      tooltipPosition="right"
-    >
-      <i class="pi pi-arrow-left"></i>
-    </button>
-    <div>
-      <h2 class="page-title">
-        {{ modoEdicion ? "Editar gasto" : "Nuevo gasto" }}
-      </h2>
-      <p class="page-sub">
-        {{
-          modoEdicion
-            ? "Modifica los datos del gasto"
-            : "Registra un nuevo gasto operativo"
-        }}
-      </p>
+<div *ngIf="!loadingPage" class="page">
+  <div class="card">
+    <!-- Header -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <button
+          type="button"
+          class="btn-back"
+          (click)="cancelar()"
+          pTooltip="Volver a gastos"
+          tooltipPosition="right"
+        >
+          <i class="pi pi-arrow-left"></i>
+        </button>
+        <span class="header-icon"><i class="pi pi-wallet"></i></span>
+        <div>
+          <h1 class="title">
+            {{ modoEdicion ? "Editar gasto" : "Nuevo gasto" }}
+          </h1>
+          <p class="subtitle">
+            {{
+              modoEdicion
+                ? "Modifica los datos del gasto"
+                : "Registra un nuevo gasto operativo"
+            }}
+          </p>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <!-- Form -->
-  <form name="frm" id="frm" [formGroup]="frm" class="gasto-form">
+    <!-- Form -->
+    <form name="frm" id="frm" [formGroup]="frm" class="gasto-form">
     <!-- ── Sección 1: Datos del gasto ────────────────────────────── -->
     <p-fieldset legend="Datos del gasto" styleClass="fs-section">
       <div class="p-grid p-fluid">
@@ -396,6 +400,7 @@
       ></button>
     </div>
   </form>
+  </div>
 </div>
 
 <p-toast />

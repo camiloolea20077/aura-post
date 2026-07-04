@@ -1,5 +1,8 @@
 import {
-  Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef,
+  Component,
+  OnInit,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -33,10 +36,19 @@ import { CuentaBancariaModel } from '../../../core/models/cuenta-bancaria.model'
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CommonModule, FormsModule,
-    ButtonModule, InputTextModule, InputNumberModule,
-    DropdownModule, CalendarModule, TableModule, TagModule,
-    ToastModule, TooltipModule, DialogModule, ConfirmDialogModule,
+    CommonModule,
+    FormsModule,
+    ButtonModule,
+    InputTextModule,
+    InputNumberModule,
+    DropdownModule,
+    CalendarModule,
+    TableModule,
+    TagModule,
+    ToastModule,
+    TooltipModule,
+    DialogModule,
+    ConfirmDialogModule,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './index-egresos.component.html',
@@ -61,7 +73,9 @@ export class IndexEgresosComponent implements OnInit {
 
   readonly categoriasOpts = CATEGORIAS_EGRESO;
   readonly cuentasOpts = () =>
-    this.cuentas.filter((c) => c.activa).map((c) => ({ label: c.nombre, value: c.id }));
+    this.cuentas
+      .filter((c) => c.activa)
+      .map((c) => ({ label: c.nombre, value: c.id }));
 
   get totalPeriodo(): number {
     return this.movimientos.reduce((s, m) => s + m.monto, 0);
@@ -79,7 +93,9 @@ export class IndexEgresosComponent implements OnInit {
   }
 
   async cargarCuentas(): Promise<void> {
-    const res = await lastValueFrom(this.cuentaService.list()).catch(() => null);
+    const res = await lastValueFrom(this.cuentaService.list()).catch(
+      () => null,
+    );
     this.cuentas = res?.data ?? [];
   }
 
@@ -110,7 +126,13 @@ export class IndexEgresosComponent implements OnInit {
   }
 
   async guardar(): Promise<void> {
-    if (!this.form.cuentaBancariaId || !this.form.monto || !this.form.concepto?.trim() || !this.form.categoria) return;
+    if (
+      !this.form.cuentaBancariaId ||
+      !this.form.monto ||
+      !this.form.concepto?.trim() ||
+      !this.form.categoria
+    )
+      return;
     this.saving = true;
     this.cdr.markForCheck();
     try {
@@ -119,7 +141,10 @@ export class IndexEgresosComponent implements OnInit {
       this.showModal = false;
       this.cargar();
     } catch (err: any) {
-      this.alertService.showError('Error', err?.message ?? 'No se pudo guardar');
+      this.alertService.showError(
+        'Error',
+        err?.message ?? 'No se pudo guardar',
+      );
     } finally {
       this.saving = false;
       this.cdr.markForCheck();
@@ -142,7 +167,11 @@ export class IndexEgresosComponent implements OnInit {
   }
 
   formatCOP(v: number): string {
-    return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(v);
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      maximumFractionDigits: 0,
+    }).format(v);
   }
 
   toISO(d: Date): string {

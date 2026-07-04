@@ -51,12 +51,28 @@ export class TerceroService {
     );
   }
 
-  /** Selector estado de cuenta — clientes y proveedores activos */
+  /** Selector de banco — terceros marcados como banco. */
+  bancos(search = ''): Observable<ResponseModel<TerceroTableModel[]>> {
+    const params = new HttpParams().set('search', search);
+    return this.http.get<ResponseModel<TerceroTableModel[]>>(
+      `${this.apiUrl}/bancos`,
+      { params },
+    );
+  }
+
+  /** Selector estado de cuenta — clientes y proveedores activos (requiere búsqueda ≥ 2). */
   terceros(search = ''): Observable<ResponseModel<TerceroTableModel[]>> {
     const params = new HttpParams().set('search', search);
     return this.http.get<ResponseModel<TerceroTableModel[]>>(
       `${this.apiUrl}/todos`,
       { params },
+    );
+  }
+
+  /** Selector completo (todos los clientes y proveedores activos) para dropdowns. */
+  tercerosSelector(): Observable<ResponseModel<TerceroTableModel[]>> {
+    return this.http.get<ResponseModel<TerceroTableModel[]>>(
+      `${this.apiUrl}/selector`,
     );
   }
 

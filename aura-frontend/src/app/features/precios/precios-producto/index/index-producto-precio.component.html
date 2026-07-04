@@ -1,57 +1,56 @@
-<div class="page-container">
-  <div class="page-header">
-    <div class="page-title-area">
-      <div class="page-icon">
-        <i class="pi pi-dollar"></i>
-      </div>
-      <div>
-        <h3 class="page-title">Precios por presentación</h3>
-        <p class="page-sub">
-          Precios asignados a cada presentación en las distintas listas
-        </p>
-      </div>
-    </div>
-    <button
-      pButton
-      type="button"
-      label="Asignar precio"
-      icon="pi pi-plus"
-      class="btn-aura"
-      (click)="openCreate()"
-    ></button>
-  </div>
-
+<div class="page">
   <div class="card">
-    <div class="table-toolbar">
-      <div class="toolbar-left">
-        <span class="p-input-icon-left search-wrap">
-          <i class="pi pi-search"></i>
-          <input
-            type="text"
-            pInputText
-            class="search-input"
-            placeholder="Buscar por producto, presentación, lista..."
-            [(ngModel)]="searchQuery"
-            (input)="onSearch()"
-            (keydown.escape)="clearSearch()"
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon">
+          <i class="pi pi-dollar"></i>
+        </span>
+        <div>
+          <h1 class="title">Precios por presentación</h1>
+          <p class="subtitle">
+            Precios asignados a cada presentación en las distintas listas
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          label="Asignar precio"
+          icon="pi pi-plus"
+          class="btn-aura"
+          (click)="openCreate()"
+        ></button>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              class="search-input"
+              placeholder="Buscar por producto, presentación, lista..."
+              [(ngModel)]="searchQuery"
+              (input)="onSearch()"
+              (keydown.escape)="clearSearch()"
+            />
+            <button
+              *ngIf="searchQuery"
+              class="clear-btn"
+              (click)="clearSearch()"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+
+          <p-dropdown
+            [options]="listasOpts"
+            [(ngModel)]="listaFiltro"
+            optionLabel="label"
+            optionValue="value"
+            (onChange)="onListaChange()"
+            styleClass="lista-filter"
           />
-          <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">
-            <i class="pi pi-times"></i>
-          </button>
-        </span>
-
-        <p-dropdown
-          [options]="listasOpts"
-          [(ngModel)]="listaFiltro"
-          optionLabel="label"
-          optionValue="value"
-          (onChange)="onListaChange()"
-          styleClass="lista-filter"
-        />
-
-        <span class="total-badge" *ngIf="!loadingTable">
-          {{ totalRecords }} {{ totalRecords === 1 ? "precio" : "precios" }}
-        </span>
+        </div>
       </div>
     </div>
 

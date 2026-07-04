@@ -1,4 +1,4 @@
-export type EstadoCuentaPagar = 'activa' | 'pagada' | 'vencida';
+export type EstadoCuentaPagar = 'activa' | 'parcial' | 'pagada' | 'vencida';
 export type MetodoPago =
   | 'efectivo'
   | 'transferencia'
@@ -12,6 +12,7 @@ export interface AbonoPagarModel {
   metodoPago: MetodoPago;
   referencia: string | null;
   banco: string | null;
+  cuentaBancariaId: number | null;
   fechaPago: string;
   usuarioId: number;
   usuarioNombre: string;
@@ -43,6 +44,7 @@ export interface CuentaPagarTableModel {
   id: number;
   numeroCuenta: string;
   numeroFacturaExterno: string | null;
+  proveedorId: number | null;
   proveedorNombre: string;
   proveedorDocumento: string;
   fechaEmision: string;
@@ -74,6 +76,8 @@ export interface CreateAbonoPagarDto {
   metodoPago: MetodoPago;
   referencia?: string | null;
   banco?: string | null;
+  /** Cuenta bancaria de origen del abono (null si es efectivo). */
+  cuentaBancariaId?: number | null;
   fechaPago: string;
   turnoCajaId?: number | null;
 }

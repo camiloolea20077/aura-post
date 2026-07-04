@@ -52,7 +52,7 @@
       <div class="info-item">
         <span class="info-label">N° Venta</span>
         <span class="info-val mono">{{
-          devolucion.numeroVenta ?? "Venta #" + devolucion.ventaId
+          devolucion.numeroVenta || "Venta #" + devolucion.ventaId
         }}</span>
       </div>
       <div class="info-item">
@@ -86,9 +86,18 @@
           {{ devolucion.reintegraInventario ? "Sí" : "No" }}
         </span>
       </div>
-      <div class="info-item" *ngIf="devolucion.metodoDevolucion && devolucion.metodoDevolucion !== 'SIN_DEVOLUCION'">
+      <div
+        class="info-item"
+        *ngIf="
+          devolucion.metodoDevolucion &&
+          devolucion.metodoDevolucion !== 'SIN_DEVOLUCION'
+        "
+      >
         <span class="info-label">Método devolución dinero</span>
-        <span class="info-val"><i class="pi pi-money-bill"></i> {{ getMetodoLabel(devolucion.metodoDevolucion) }}</span>
+        <span class="info-val"
+          ><i class="pi pi-money-bill"></i>
+          {{ getMetodoLabel(devolucion.metodoDevolucion) }}</span
+        >
       </div>
     </div>
 
@@ -97,7 +106,10 @@
       <div class="cartera-icon"><i class="pi pi-wallet"></i></div>
       <div class="cartera-info">
         <span class="cartera-titulo">Cartera reducida automáticamente</span>
-        <span class="cartera-monto">{{ formatCOP(devolucion.montoCarteraAfectado ?? 0) }} descontados de la cuenta por cobrar</span>
+        <span class="cartera-monto"
+          >{{ formatCOP(devolucion.montoCarteraAfectado ?? 0) }} descontados de
+          la cuenta por cobrar</span
+        >
       </div>
     </div>
 

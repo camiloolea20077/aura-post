@@ -1,45 +1,9 @@
-.module-wrapper {
-  padding: 1.5rem;
-  max-width: 1100px;
-  margin: 0 auto;
+.page {
 }
 
-.module-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+// La card del header no necesita el margin extra inferior (lo dan las secciones)
+.page > .card:first-child {
   margin-bottom: 1.5rem;
-
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  .header-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #6366f1, #4f46e5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-size: 1.2rem;
-  }
-
-  h2 {
-    margin: 0;
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #1e293b;
-  }
-
-  p {
-    margin: 0;
-    font-size: 0.8rem;
-    color: #64748b;
-  }
 }
 
 // Filtros
@@ -106,7 +70,7 @@
   overflow: hidden;
 
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
@@ -115,21 +79,39 @@
     border-radius: 14px 14px 0 0;
   }
 
-  &.ventas::before { background: linear-gradient(90deg, #10b981, #059669); }
-  &.compras::before { background: linear-gradient(90deg, #f59e0b, #d97706); }
-  &.a-pagar::before { background: linear-gradient(90deg, #ef4444, #dc2626); }
-  &.a-favor::before { background: linear-gradient(90deg, #10b981, #059669); }
-  &.equilibrio::before { background: linear-gradient(90deg, #64748b, #475569); }
+  &.ventas::before {
+    background: linear-gradient(90deg, #10b981, #059669);
+  }
+  &.compras::before {
+    background: linear-gradient(90deg, #f59e0b, #d97706);
+  }
+  &.a-pagar::before {
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+  }
+  &.a-favor::before {
+    background: linear-gradient(90deg, #10b981, #059669);
+  }
+  &.equilibrio::before {
+    background: linear-gradient(90deg, #64748b, #475569);
+  }
 
   .card-icon {
     font-size: 1.1rem;
     color: #94a3b8;
   }
 
-  &.ventas .card-icon { color: #10b981; }
-  &.compras .card-icon { color: #f59e0b; }
-  &.a-pagar .card-icon { color: #ef4444; }
-  &.a-favor .card-icon { color: #10b981; }
+  &.ventas .card-icon {
+    color: #10b981;
+  }
+  &.compras .card-icon {
+    color: #f59e0b;
+  }
+  &.a-pagar .card-icon {
+    color: #ef4444;
+  }
+  &.a-favor .card-icon {
+    color: #10b981;
+  }
 
   .card-label {
     font-size: 0.75rem;
@@ -195,14 +177,18 @@
       color: #475569;
       border-bottom: 1px solid #e2e8f0;
 
-      &.num { text-align: right; }
+      &.num {
+        text-align: right;
+      }
     }
   }
 
   tbody tr {
     border-bottom: 1px solid #f1f5f9;
 
-    &.alt { background: #f8fafc; }
+    &.alt {
+      background: #f8fafc;
+    }
 
     td {
       padding: 1rem 1.25rem;
@@ -210,9 +196,16 @@
       display: table-cell;
       vertical-align: middle;
 
-      &.num { text-align: right; font-weight: 600; }
-      &.positivo { color: #10b981; }
-      &.negativo { color: #f59e0b; }
+      &.num {
+        text-align: right;
+        font-weight: 600;
+      }
+      &.positivo {
+        color: #10b981;
+      }
+      &.negativo {
+        color: #f59e0b;
+      }
     }
   }
 
@@ -225,9 +218,15 @@
       font-weight: 700;
       font-size: 0.95rem;
 
-      &.num { text-align: right; }
-      &.a-pagar-text { color: #fca5a5; }
-      &.a-favor-text { color: #6ee7b7; }
+      &.num {
+        text-align: right;
+      }
+      &.a-pagar-text {
+        color: #fca5a5;
+      }
+      &.a-favor-text {
+        color: #6ee7b7;
+      }
     }
   }
 }
@@ -240,8 +239,12 @@
   margin-right: 0.5rem;
   vertical-align: middle;
 
-  &.ventas-dot { background: #10b981; }
-  &.compras-dot { background: #f59e0b; }
+  &.ventas-dot {
+    background: #10b981;
+  }
+  &.compras-dot {
+    background: #f59e0b;
+  }
 }
 
 .nota-legal {
@@ -255,7 +258,10 @@
   color: #1d4ed8;
   line-height: 1.5;
 
-  i { margin-top: 2px; flex-shrink: 0; }
+  i {
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
 }
 
 .empty-state {
@@ -268,8 +274,13 @@
   text-align: center;
   gap: 1rem;
 
-  i { font-size: 3rem; }
-  p { font-size: 0.9rem; margin: 0; }
+  i {
+    font-size: 3rem;
+  }
+  p {
+    font-size: 0.9rem;
+    margin: 0;
+  }
 }
 
 .btn-aura {
@@ -277,12 +288,4 @@
   border-radius: 8px;
   font-weight: 600;
   font-size: 0.85rem;
-
-  &.btn-primary {
-    background: linear-gradient(135deg, #6366f1, #4f46e5);
-    border: none;
-    color: #fff;
-
-    &:hover { background: linear-gradient(135deg, #4f46e5, #4338ca); }
-  }
 }

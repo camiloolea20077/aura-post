@@ -1,19 +1,21 @@
-<div class="page-container">
+<div class="page">
   <!-- Header -->
-  <div class="page-header">
-    <div class="page-title-area">
-      <div class="page-icon"><i class="pi pi-file-edit"></i></div>
-      <div>
-        <h3 class="page-title">Estado de cuenta</h3>
-        <p class="page-sub">
-          Consulta el historial de movimientos de un cliente
-        </p>
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-file-edit"></i></span>
+        <div>
+          <h1 class="title">Estado de cuenta</h1>
+          <p class="subtitle">
+            Consulta el historial de movimientos de un cliente
+          </p>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- Barra de búsqueda y filtros -->
-  <div class="search-bar card">
+  <div class="search-bar ec-card">
     <div class="search-grid">
       <!-- Selector de cliente -->
       <div class="field-group field-cliente">
@@ -85,7 +87,7 @@
             type="button"
             label="Consultar"
             icon="pi pi-search"
-            class="btn-aura btn-indigo"
+            class="btn-aura"
             (click)="cargar()"
             [disabled]="!clienteSeleccionado || loading"
           ></button>
@@ -94,7 +96,7 @@
             type="button"
             label="PDF"
             icon="pi pi-file-pdf"
-            class="btn-aura p-button-outlined"
+            class="btn-aura"
             pTooltip="Descargar estado de cuenta en PDF"
             (click)="descargarPdf()"
             [disabled]="!estado || loadingPdf"
@@ -127,7 +129,7 @@
         <p-skeleton height="80px" />
       </div>
     </div>
-    <div class="card mt-4"><p-skeleton height="300px" /></div>
+    <div class="ec-card mt-4"><p-skeleton height="300px" /></div>
   </ng-container>
 
   <!-- Contenido -->
@@ -209,7 +211,7 @@
     </div>
 
     <!-- Tabla movimientos -->
-    <div class="card mt-4">
+    <div class="ec-card mt-4">
       <div class="card-header-row">
         <h4 class="section-title"><i class="pi pi-list"></i> Movimientos</h4>
         <span class="total-badge"

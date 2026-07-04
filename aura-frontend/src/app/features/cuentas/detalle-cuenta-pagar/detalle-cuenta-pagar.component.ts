@@ -42,6 +42,7 @@ import {
   CajaService,
   TurnoCajaService,
 } from '../../../core/services/caja.service';
+import { CuentaBancariaService } from '../../../core/services/cuenta-bancaria.service';
 
 type TagSeverity =
   | 'success'
@@ -95,10 +96,13 @@ export class DetalleCuentaPagarComponent implements OnInit {
     { label: 'Cheque', value: 'cheque' },
   ];
 
+  cuentasBancariasOpts: { label: string; value: number }[] = [];
+
   constructor(
     private readonly fb: FormBuilder,
     private readonly service: CuentaPagarService,
     private readonly cajaService: TurnoCajaService,
+    private readonly cuentaBancariaService: CuentaBancariaService,
     private readonly alert: AlertService,
     private readonly confirm: ConfirmationService,
     private readonly cdr: ChangeDetectorRef,
@@ -108,8 +112,32 @@ export class DetalleCuentaPagarComponent implements OnInit {
       metodoPago: ['efectivo', Validators.required],
       referencia: [null],
       banco: [null],
+      cuentaBancariaId: [null as number | null],
       fechaPago: [new Date(), Validators.required],
     });
+  }
+
+  /** Sin cuenta bancaria cuando el abono es en efectivo. */
+  get esEfectivo(): boolean {
+    return this.abonoForm.get('metodoPago')?.value === 'efectivo';
+  }
+
+  onMetodoChange(): void {
+    if (this.esEfectivo) {
+      this.abonoForm.patchValue({ cuentaBancariaId: null });
+    }
+  }
+
+  private async loadCuentasBancarias(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.cuentaBancariaService.list());
+      this.cuentasBancariasOpts = (res?.data ?? [])
+        .filter((c) => c.activa)
+        .map((c) => ({ label: c.nombre, value: c.id }));
+      this.cdr.markForCheck();
+    } catch {
+      this.cuentasBancariasOpts = [];
+    }
   }
 
   async imprimirFactura(): Promise<void> {
@@ -141,6 +169,7 @@ export class DetalleCuentaPagarComponent implements OnInit {
   }
   ngOnInit(): void {
     this.loadTurnoActivo();
+    this.loadCuentasBancarias();
   }
 
   get progressPercent(): number {
@@ -195,6 +224,7 @@ export class DetalleCuentaPagarComponent implements OnInit {
       metodoPago: 'efectivo',
       referencia: null,
       banco: null,
+      cuentaBancariaId: null,
       fechaPago: new Date(),
     });
     this.showAbonoForm = true;
@@ -236,6 +266,7 @@ export class DetalleCuentaPagarComponent implements OnInit {
       metodoPago: formValue.metodoPago as MetodoPago,
       referencia: formValue.referencia || null,
       banco: formValue.banco || null,
+      cuentaBancariaId: this.esEfectivo ? null : formValue.cuentaBancariaId || null,
       fechaPago: formValue.fechaPago.toISOString(),
       turnoCajaId: this.turnoActivo?.id ?? null,
     };

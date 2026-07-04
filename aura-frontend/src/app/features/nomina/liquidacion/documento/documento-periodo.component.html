@@ -1,0 +1,333 @@
+<div class="page">
+  <div class="card">
+    <!-- Header -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-file"></i></span>
+        <div>
+          <h1 class="title">Documento de nómina</h1>
+          <p class="subtitle" *ngIf="data">{{ data.documento }}</p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          label="Volver"
+          icon="pi pi-arrow-left"
+          class="p-button-text"
+          (click)="onHide()"
+        ></button>
+      </div>
+    </div>
+
+    <div class="doc-body">
+      <!-- Skeleton -->
+      <div class="doc-loading" *ngIf="loading">
+        <p-skeleton height="120px" borderRadius="12px" />
+        <p-skeleton height="260px" borderRadius="12px" />
+      </div>
+
+      <ng-container *ngIf="!loading && data">
+        <!-- ══ Formulario plano (cabecera del documento) ══ -->
+        <div class="doc-form">
+          <div class="doc-field">
+            <label>Documento</label>
+            <div class="doc-value">{{ data.documento }}</div>
+          </div>
+          <div class="doc-field">
+            <label>Período</label>
+            <div class="doc-value">
+              {{ formatFecha(data.fechaInicio) }} →
+              {{ formatFecha(data.fechaFin) }}
+            </div>
+          </div>
+          <div class="doc-field">
+            <label>Estado</label>
+            <div class="doc-value">
+              <p-tag
+                [value]="estadoLabel(data.estado)"
+                [severity]="estadoSeverity(data.estado)"
+                [rounded]="true"
+              />
+            </div>
+          </div>
+          <div class="doc-field">
+            <label>Empleados</label>
+            <div class="doc-value">{{ data.cantidadEmpleados }}</div>
+          </div>
+          <div class="doc-field">
+            <label>Total devengado</label>
+            <div class="doc-value monto-dev">
+              {{ formatMonto(data.totalDevengado) }}
+            </div>
+          </div>
+          <div class="doc-field">
+            <label>Total deducciones</label>
+            <div class="doc-value monto-ded">
+              {{ formatMonto(data.totalDeducciones) }}
+            </div>
+          </div>
+          <div class="doc-field doc-field--neto">
+            <label>Total neto a pagar</label>
+            <div class="doc-value monto-neto">
+              {{ formatMonto(data.totalNeto) }}
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ Barra de acciones (encima de los tabs, a la derecha) ══ -->
+        <div class="doc-toolbar">
+          <button
+            *ngIf="hayAprobadas"
+            pButton
+            type="button"
+            label="Pagar período"
+            icon="pi pi-money-bill"
+            class="btn-aura"
+            (click)="abrirPago()"
+          ></button>
+          <button
+            pButton
+            type="button"
+            label="PDF nómina"
+            icon="pi pi-file-pdf"
+            class="p-button-outlined"
+            [loading]="generandoPdf"
+            [disabled]="!data"
+            (click)="descargarDispersion()"
+          ></button>
+        </div>
+
+        <!-- ══ Tabs debajo del formulario ══ -->
+        <p-tabView [(activeIndex)]="activeTab" styleClass="doc-tabs">
+          <!-- Empleados -->
+          <p-tabPanel>
+            <ng-template pTemplate="header">
+              <i class="pi pi-users"></i>
+              <span class="tab-label"
+                >Empleados ({{ data.empleados.length }})</span
+              >
+            </ng-template>
+
+            <p-table
+              [value]="data.empleados"
+              [scrollable]="true"
+              scrollHeight="420px"
+              showGridlines
+            >
+              <ng-template pTemplate="header">
+                <tr>
+                  <th style="min-width: 180px">Empleado</th>
+                  <th style="width: 80px" class="text-center">Días</th>
+                  <th style="min-width: 120px" class="text-right">Devengado</th>
+                  <th style="min-width: 120px" class="text-right">
+                    Deducciones
+                  </th>
+                  <th style="min-width: 120px" class="text-right">Neto</th>
+                  <th style="width: 100px" class="text-center">Estado</th>
+                  <th style="width: 110px" class="text-center">Acciones</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-e>
+                <tr [class.row-anulado]="e.estado === 'ANULADO'">
+                  <td>
+                    <div class="cell-empleado">
+                      <div class="emp-avatar">
+                        {{ e.empleadoNombre.charAt(0) }}
+                      </div>
+                      <div>
+                        <div class="emp-nombre">{{ e.empleadoNombre }}</div>
+                        <div class="emp-doc">{{ e.empleadoDocumento }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="text-center">{{ e.diasTrabajados }}d</td>
+                  <td class="text-right monto-dev">
+                    {{ formatMonto(e.totalDevengado) }}
+                  </td>
+                  <td class="text-right monto-ded">
+                    {{ formatMonto(e.totalDeducciones) }}
+                  </td>
+                  <td class="text-right monto-neto">
+                    {{ formatMonto(e.netoPagar) }}
+                  </td>
+                  <td class="text-center">
+                    <p-tag
+                      [value]="estadoLabel(e.estado)"
+                      [severity]="estadoSeverity(e.estado)"
+                      [rounded]="true"
+                    />
+                  </td>
+                  <td class="text-center">
+                    <button
+                      pButton
+                      type="button"
+                      icon="pi pi-eye"
+                      class="p-button-text p-button-sm"
+                      pTooltip="Ver detalle del empleado"
+                      tooltipPosition="top"
+                      (click)="abrirEmpleado(e.id)"
+                    ></button>
+                    <button
+                      pButton
+                      type="button"
+                      icon="pi pi-file-pdf"
+                      class="p-button-text p-button-sm"
+                      pTooltip="Descargar desprendible"
+                      tooltipPosition="top"
+                      (click)="descargarDesprendible(e.id)"
+                    ></button>
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td colspan="7">
+                    <div class="empty-state">
+                      <i class="pi pi-users"></i>
+                      <p>No hay empleados liquidados en este período.</p>
+                    </div>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </p-tabPanel>
+
+          <!-- Novedades -->
+          <p-tabPanel>
+            <ng-template pTemplate="header">
+              <i class="pi pi-bolt"></i>
+              <span class="tab-label"
+                >Novedades ({{ data.novedades.length }})</span
+              >
+            </ng-template>
+
+            <p-table
+              [value]="data.novedades"
+              [scrollable]="true"
+              scrollHeight="420px"
+              showGridlines
+            >
+              <ng-template pTemplate="header">
+                <tr>
+                  <th style="min-width: 160px">Empleado</th>
+                  <th style="min-width: 150px">Tipo</th>
+                  <th style="min-width: 140px">Descripción</th>
+                  <th style="width: 90px" class="text-center">Cantidad</th>
+                  <th style="min-width: 120px" class="text-right">Valor</th>
+                  <th style="width: 110px" class="text-center">Naturaleza</th>
+                  <th style="width: 110px" class="text-center">Origen</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-n>
+                <tr>
+                  <td>{{ n.empleadoNombre }}</td>
+                  <td>
+                    <span class="tipo-chip">{{ n.tipo }}</span>
+                  </td>
+                  <td>{{ n.descripcion || "—" }}</td>
+                  <td class="text-center">{{ formatCantidad(n.cantidad) }}</td>
+                  <td
+                    class="text-right"
+                    [class.monto-ded]="n.esDeduccion"
+                    [class.monto-dev]="!n.esDeduccion"
+                  >
+                    {{
+                      n.esDeduccion
+                        ? "(" + formatMonto(n.valorTotal) + ")"
+                        : formatMonto(n.valorTotal)
+                    }}
+                  </td>
+                  <td class="text-center">
+                    <p-tag
+                      [value]="n.esDeduccion ? 'Deducción' : 'Devengado'"
+                      [severity]="n.esDeduccion ? 'danger' : 'success'"
+                      [rounded]="true"
+                    />
+                  </td>
+                  <td class="text-center">
+                    <span
+                      class="origen-chip"
+                      [class.origen-asistencia]="n.origen === 'ASISTENCIA'"
+                    >
+                      {{ n.origen }}
+                    </span>
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td colspan="7">
+                    <div class="empty-state">
+                      <i class="pi pi-bolt"></i>
+                      <p>Sin novedades en este período.</p>
+                    </div>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </p-tabPanel>
+        </p-tabView>
+      </ng-container>
+    </div>
+  </div>
+</div>
+
+<!-- Pago del período -->
+<p-dialog
+  [(visible)]="showPago"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '460px' }"
+  header="Pagar nóminas aprobadas del período"
+>
+  <div class="pago-form">
+    <div class="field">
+      <label>Medio de pago</label>
+      <p-dropdown
+        [options]="mediosPago"
+        [(ngModel)]="medioPago"
+        optionLabel="label"
+        optionValue="value"
+        [style]="{ width: '100%' }"
+      />
+    </div>
+    <div class="field" *ngIf="medioPago === 'TRANSFERENCIA'">
+      <label>Cuenta bancaria de origen</label>
+      <p-dropdown
+        [options]="cuentasOpts"
+        [(ngModel)]="cuentaBancariaId"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona la cuenta"
+        [filter]="true"
+        [style]="{ width: '100%' }"
+      />
+    </div>
+    <p class="pago-hint">
+      <i class="pi pi-info-circle"></i>
+      Se paga el neto de cada empleado y se genera el asiento
+      <b
+        >DB Salarios por pagar / CR
+        {{ medioPago === "EFECTIVO" ? "Caja" : "Banco" }}</b
+      >.
+    </p>
+  </div>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      class="p-button-text"
+      (click)="showPago = false"
+    ></button>
+    <button
+      pButton
+      label="Confirmar pago"
+      icon="pi pi-check"
+      class="btn-aura"
+      [loading]="pagando"
+      (click)="confirmarPago()"
+    ></button>
+  </ng-template>
+</p-dialog>

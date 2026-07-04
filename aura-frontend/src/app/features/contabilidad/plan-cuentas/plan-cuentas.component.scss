@@ -1,46 +1,4 @@
-.module-wrapper {
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.module-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    h2 { margin: 0; font-size: 1.4rem; font-weight: 700; color: #1e293b; }
-    p  { margin: 0; color: #64748b; font-size: 0.85rem; }
-  }
-}
-
-.header-icon {
-  width: 3rem; height: 3rem;
-  background: #6366f1;
-  border-radius: 12px;
-  display: grid; place-items: center;
-  i { color: #fff; font-size: 1.3rem; }
-}
-
-.search-wrap {
-  span { width: 100%; max-width: 360px; }
-  input { width: 100%; }
-}
-
-.table-card {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-  overflow: hidden;
-}
-
+// ── Tabla ────────────────────────────────────────────────────────────
 .empty-row {
   text-align: center;
   color: #94a3b8;
@@ -61,6 +19,7 @@
 .text-muted { color: #cbd5e1; }
 .req { color: #ef4444; }
 
+// ── Dialog (modal) ───────────────────────────────────────────────────
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

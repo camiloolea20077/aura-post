@@ -8,7 +8,8 @@ import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
-import { MessageService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { MessageService, ConfirmationService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
 import { NominaService } from '../../../../core/services/nomina.service';
@@ -40,8 +41,9 @@ type TagSeverity =
     ToastModule,
     TooltipModule,
     SkeletonModule,
+    ConfirmDialogModule,
   ],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './index-periodos.component.html',
   styleUrls: ['./index-periodos.component.scss'],
 })
@@ -57,6 +59,7 @@ export class IndexPeriodosComponent implements OnInit {
   constructor(
     private readonly nominaService: NominaService,
     private readonly alertService: AlertService,
+    private readonly confirmationService: ConfirmationService,
   ) {}
 
   ngOnInit(): void {
@@ -117,20 +120,24 @@ export class IndexPeriodosComponent implements OnInit {
     }
   }
 
-  async anular(p: PeriodoNominaModel): Promise<void> {
-    if (
-      !confirm(
-        `¿Anular el período del ${this.fmt(p.fechaInicio)} al ${this.fmt(p.fechaFin)}?`,
-      )
-    )
-      return;
-    try {
-      await lastValueFrom(this.nominaService.anularPeriodo(p.id));
-      this.alertService.showSuccess('Anulado', 'Período anulado');
-      await this.load();
-    } catch {
-      this.alertService.showError('Error', 'No se pudo anular el período');
-    }
+  anular(p: PeriodoNominaModel): void {
+    this.confirmationService.confirm({
+      message: `¿Anular el período del ${this.fmt(p.fechaInicio)} al ${this.fmt(p.fechaFin)}?`,
+      header: 'Confirmar',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, anular',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: async () => {
+        try {
+          await lastValueFrom(this.nominaService.anularPeriodo(p.id));
+          this.alertService.showSuccess('Anulado', 'Período anulado');
+          await this.load();
+        } catch {
+          this.alertService.showError('Error', 'No se pudo anular el período');
+        }
+      },
+    });
   }
 
   fmt(f: string): string {

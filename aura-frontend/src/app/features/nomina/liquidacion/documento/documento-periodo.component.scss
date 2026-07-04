@@ -1,0 +1,215 @@
+.doc-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    font-size: 1.1rem;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1e293b;
+  }
+
+  &__sub {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #64748b;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+}
+
+.doc-body {
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.doc-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.pago-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding-top: 0.5rem;
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+
+    label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #475569;
+    }
+  }
+  .pago-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.45rem;
+    margin: 0;
+    font-size: 0.78rem;
+    color: #64748b;
+  }
+}
+
+.doc-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+/* ── Formulario plano ── */
+.doc-form {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.85rem 1.25rem;
+  padding: 1rem 1.1rem;
+  margin-bottom: 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+
+  @media (max-width: 720px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.doc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #94a3b8;
+  }
+
+  .doc-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  &--neto .doc-value {
+    font-size: 1.05rem;
+    font-weight: 800;
+  }
+}
+
+/* ── Tabs ── */
+:host ::ng-deep .doc-tabs .p-tabview-nav {
+  border-bottom: 2px solid #eef2f7;
+}
+:host ::ng-deep .doc-tabs .tab-label {
+  margin-left: 0.4rem;
+}
+
+/* ── Celdas ── */
+.cell-empleado {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.emp-avatar {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #eef2ff;
+  color: #4f46e5;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+.emp-nombre {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.88rem;
+}
+.emp-doc {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.text-center {
+  text-align: center;
+}
+.text-right {
+  text-align: right;
+}
+
+.monto-dev {
+  color: #059669;
+  font-weight: 600;
+}
+.monto-ded {
+  color: #dc2626;
+  font-weight: 600;
+}
+.monto-neto {
+  color: #1e293b;
+  font-weight: 800;
+}
+
+.tipo-chip {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.origen-chip {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #64748b;
+
+  &.origen-asistencia {
+    color: #7c3aed;
+  }
+}
+
+.row-anulado {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem 1rem;
+  color: #94a3b8;
+
+  i {
+    font-size: 1.8rem;
+  }
+  p {
+    margin: 0;
+    font-size: 0.88rem;
+  }
+}

@@ -1,0 +1,298 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-clock"></i></span>
+        <div>
+          <h1 class="title">Turnos de trabajo</h1>
+          <p class="subtitle">Horarios y asignación por empleado</p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          label="Asignar a empleado"
+          icon="pi pi-user-plus"
+          class="p-button-outlined"
+          (click)="abrirAsignar()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          label="Nuevo turno"
+          icon="pi pi-plus"
+          class="btn-aura"
+          (click)="nuevo()"
+        ></button>
+      </div>
+    </div>
+
+    <p-table
+      [value]="turnos"
+      [loading]="loading"
+      showGridlines
+      [tableStyle]="{ 'min-width': '700px' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Turno</th>
+          <th class="text-center">Horario</th>
+          <th class="text-center">Descanso</th>
+          <th class="text-center">Tolerancia</th>
+          <th class="text-center">Nocturno</th>
+          <th class="text-center">Estado</th>
+          <th class="text-center" style="width: 110px">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-t>
+        <tr [class.row-off]="!t.activo">
+          <td>
+            <strong>{{ t.nombre }}</strong>
+          </td>
+          <td class="text-center">
+            {{ hhmm(t.horaInicio) }} – {{ hhmm(t.horaFin) }}
+          </td>
+          <td class="text-center">{{ t.minutosDescanso }} min</td>
+          <td class="text-center">{{ t.toleraLlegadaTardeMin }} min</td>
+          <td class="text-center">
+            <i
+              class="pi"
+              [ngClass]="t.cruzaMedianoche ? 'pi-moon' : 'pi-minus'"
+            ></i>
+          </td>
+          <td class="text-center">
+            <p-tag
+              [value]="t.activo ? 'Activo' : 'Inactivo'"
+              [severity]="t.activo ? 'success' : 'secondary'"
+              [rounded]="true"
+            />
+          </td>
+          <td class="text-center">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-pencil"
+              class="p-button-text p-button-sm"
+              pTooltip="Editar"
+              (click)="editar(t)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-trash"
+              class="p-button-text p-button-sm p-button-danger"
+              pTooltip="Desactivar"
+              (click)="eliminar(t)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              <i class="pi pi-clock"></i>
+              <p>No hay turnos. Crea el primero.</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- Form turno -->
+<p-dialog
+  [(visible)]="showForm"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '520px' }"
+  [header]="editId ? 'Editar turno' : 'Nuevo turno'"
+>
+  <div class="form-grid">
+    <div class="field span2">
+      <label>Nombre</label>
+      <input pInputText [(ngModel)]="form.nombre" placeholder="Ej: Turno Día" />
+    </div>
+    <div class="field">
+      <label>Hora inicio</label>
+      <p-calendar
+        [(ngModel)]="horaInicioD"
+        [timeOnly]="true"
+        hourFormat="24"
+        [showIcon]="true"
+      />
+    </div>
+    <div class="field">
+      <label>Hora fin</label>
+      <p-calendar
+        [(ngModel)]="horaFinD"
+        [timeOnly]="true"
+        hourFormat="24"
+        [showIcon]="true"
+      />
+    </div>
+    <div class="field">
+      <label>Descanso (min)</label>
+      <p-inputNumber [(ngModel)]="form.minutosDescanso" [min]="0" />
+    </div>
+    <div class="field">
+      <label>Tolerancia tarde (min)</label>
+      <p-inputNumber [(ngModel)]="form.toleraLlegadaTardeMin" [min]="0" />
+    </div>
+    <div class="field span2">
+      <label class="switch-inline">
+        <input type="checkbox" [(ngModel)]="form.cruzaMedianoche" />
+        <span>Cruza medianoche (turno nocturno)</span>
+      </label>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      class="p-button-text"
+      (click)="showForm = false"
+    ></button>
+    <button
+      pButton
+      label="Guardar"
+      icon="pi pi-check"
+      class="btn-aura"
+      [loading]="saving"
+      (click)="guardar()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Asignaciones -->
+<p-dialog
+  [(visible)]="showAsignar"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '760px' }"
+  header="Asignar turnos a empleado"
+>
+  <div class="field">
+    <label>Empleado</label>
+    <p-dropdown
+      [options]="empleadosOpts"
+      [(ngModel)]="empleadoSel"
+      optionLabel="label"
+      optionValue="value"
+      appendTo="body"
+      placeholder="Seleccionar empleado"
+      [filter]="true"
+      [style]="{ width: '100%' }"
+      (onChange)="onEmpleadoChange()"
+    />
+  </div>
+
+  <ng-container *ngIf="empleadoSel != null">
+    <div class="asign-form">
+      <div class="field">
+        <label>Turno</label>
+        <p-dropdown
+          [options]="turnosOpts"
+          [(ngModel)]="asignForm.turnoId"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Turno"
+          [style]="{ width: '100%' }"
+        />
+      </div>
+      <div class="field">
+        <label>Desde</label>
+        <p-calendar
+          [(ngModel)]="asignForm.fechaInicio"
+          dateFormat="yy-mm-dd"
+          appendTo="body"
+          [showIcon]="true"
+        />
+      </div>
+      <div class="field">
+        <label>Hasta (opcional)</label>
+        <p-calendar
+          [(ngModel)]="asignForm.fechaFin"
+          dateFormat="yy-mm-dd"
+          appendTo="body"
+          [showIcon]="true"
+        />
+      </div>
+      <div class="field">
+        <label>Días (ISO)</label>
+        <input
+          pInputText
+          appendTo="body"
+          [(ngModel)]="asignForm.diasSemana"
+          placeholder="1,2,3,4,5"
+        />
+      </div>
+      <div class="field asign-btn">
+        <button
+          pButton
+          label="Asignar"
+          icon="pi pi-plus"
+          class="btn-aura"
+          [loading]="asignando"
+          (click)="asignar()"
+        ></button>
+      </div>
+    </div>
+
+    <p-table
+      [value]="asignaciones"
+      [loading]="loadingAsign"
+      showGridlines
+      [tableStyle]="{ 'min-width': '500px' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Turno</th>
+          <th class="text-center">Desde</th>
+          <th class="text-center">Hasta</th>
+          <th class="text-center">Días</th>
+          <th class="text-center">Estado</th>
+          <th></th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-a>
+        <tr [class.row-off]="!a.activo">
+          <td>{{ a.turnoNombre }}</td>
+          <td class="text-center">{{ a.fechaInicio }}</td>
+          <td class="text-center">{{ a.fechaFin || "—" }}</td>
+          <td class="text-center">{{ a.diasSemana }}</td>
+          <td class="text-center">
+            <p-tag
+              [value]="a.activo ? 'Activa' : 'Inactiva'"
+              [severity]="a.activo ? 'success' : 'secondary'"
+              [rounded]="true"
+            />
+          </td>
+          <td class="text-center">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-trash"
+              class="p-button-text p-button-sm p-button-danger"
+              (click)="quitarAsignacion(a)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6">
+            <div class="empty-state">
+              <p>Sin asignaciones para este empleado.</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </ng-container>
+</p-dialog>
+
+<p-toast />
+<p-confirmDialog />

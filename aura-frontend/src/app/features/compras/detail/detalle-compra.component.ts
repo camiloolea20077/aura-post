@@ -17,10 +17,16 @@ import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
-import { CompraModel, CompraPagoModel } from '../../../core/models/compra.model';
+import {
+  CompraModel,
+  CompraPagoModel,
+} from '../../../core/models/compra.model';
 import { CompraService } from '../../../core/services/compra.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
-import { EmpresaConfig, EmpresaService } from '../../../core/services/empresa.service';
+import {
+  EmpresaConfig,
+  EmpresaService,
+} from '../../../core/services/empresa.service';
 import { TerceroModel } from '../../../core/models/tercero.model';
 import { TerceroService } from '../../../core/services/tercero.service';
 
@@ -213,7 +219,8 @@ export class DetalleCompraComponent implements OnChanges {
 
     // Datos del proveedor
     const provNombre = prov
-      ? (prov.razonSocial ?? `${prov.nombres ?? ''} ${prov.apellidos ?? ''}`.trim())
+      ? (prov.razonSocial ??
+        `${prov.nombres ?? ''} ${prov.apellidos ?? ''}`.trim())
       : c.proveedorNombre;
     const provDoc = prov
       ? `${prov.tipoDocumento}: ${prov.numeroDocumento}${prov.dv ? '-' + prov.dv : ''}`
@@ -225,20 +232,41 @@ export class DetalleCompraComponent implements OnChanges {
     // Logo o nombre empresa como fallback
     const logoElement = logoBase64
       ? { image: logoBase64, fit: [90, 55] }
-      : { text: emp.nombreComercial ?? emp.razonSocial ?? 'Empresa', fontSize: 15, bold: true, color: '#374151' };
+      : {
+          text: emp.nombreComercial ?? emp.razonSocial ?? 'Empresa',
+          fontSize: 15,
+          bold: true,
+          color: '#374151',
+        };
 
     // Filas de productos
     const bodyRows = c.detalles.map((d, i) => [
-      { text: String(i + 1), fontSize: 9, alignment: 'center', margin: [0, 4, 0, 4] },
-      { text: d.productoSku ?? '—', fontSize: 9, margin: [0, 4, 0, 4], color: '#64748b' },
+      {
+        text: String(i + 1),
+        fontSize: 9,
+        alignment: 'center',
+        margin: [0, 4, 0, 4],
+      },
+      {
+        text: d.productoSku ?? '—',
+        fontSize: 9,
+        margin: [0, 4, 0, 4],
+        color: '#64748b',
+      },
       { text: d.productoNombre, fontSize: 9, margin: [0, 4, 0, 4] },
       {
-        text: d.cantidad % 1 === 0 ? d.cantidad.toFixed(0) : d.cantidad.toFixed(3),
-        fontSize: 9, alignment: 'right', margin: [0, 4, 0, 4],
+        text:
+          d.cantidad % 1 === 0 ? d.cantidad.toFixed(0) : d.cantidad.toFixed(3),
+        fontSize: 9,
+        alignment: 'right',
+        margin: [0, 4, 0, 4],
       },
       {
         text: this.fmtCOP(d.subtotalLinea),
-        fontSize: 9, alignment: 'right', margin: [0, 4, 0, 4], bold: true,
+        fontSize: 9,
+        alignment: 'right',
+        margin: [0, 4, 0, 4],
+        bold: true,
       },
     ]);
 
@@ -246,29 +274,98 @@ export class DetalleCompraComponent implements OnChanges {
     const retenRows: any[] = [];
     if ((c.retefuenteValor ?? 0) > 0)
       retenRows.push([
-        { text: `Retefuente (${c.retefuentePct}%)`, fontSize: 9, color: '#64748b', border: [false,false,false,false] },
-        { text: `-${this.fmtCOP(c.retefuenteValor)}`, fontSize: 9, alignment: 'right', color: '#dc2626', border: [false,false,false,false] },
+        {
+          text: `Retefuente (${c.retefuentePct}%)`,
+          fontSize: 9,
+          color: '#64748b',
+          border: [false, false, false, false],
+        },
+        {
+          text: `-${this.fmtCOP(c.retefuenteValor)}`,
+          fontSize: 9,
+          alignment: 'right',
+          color: '#dc2626',
+          border: [false, false, false, false],
+        },
       ]);
     if ((c.reteivaValor ?? 0) > 0)
       retenRows.push([
-        { text: `ReteIVA (${c.reteivaPct}%)`, fontSize: 9, color: '#64748b', border: [false,false,false,false] },
-        { text: `-${this.fmtCOP(c.reteivaValor)}`, fontSize: 9, alignment: 'right', color: '#dc2626', border: [false,false,false,false] },
+        {
+          text: `ReteIVA (${c.reteivaPct}%)`,
+          fontSize: 9,
+          color: '#64748b',
+          border: [false, false, false, false],
+        },
+        {
+          text: `-${this.fmtCOP(c.reteivaValor)}`,
+          fontSize: 9,
+          alignment: 'right',
+          color: '#dc2626',
+          border: [false, false, false, false],
+        },
       ]);
     if ((c.reteicaValor ?? 0) > 0)
       retenRows.push([
-        { text: `ReteICA (${c.reteicaPct}%)`, fontSize: 9, color: '#64748b', border: [false,false,false,false] },
-        { text: `-${this.fmtCOP(c.reteicaValor)}`, fontSize: 9, alignment: 'right', color: '#dc2626', border: [false,false,false,false] },
+        {
+          text: `ReteICA (${c.reteicaPct}%)`,
+          fontSize: 9,
+          color: '#64748b',
+          border: [false, false, false, false],
+        },
+        {
+          text: `-${this.fmtCOP(c.reteicaValor)}`,
+          fontSize: 9,
+          alignment: 'right',
+          color: '#dc2626',
+          border: [false, false, false, false],
+        },
       ]);
 
     // Stack de datos del proveedor (dinámico)
     const provStack: any[] = [
-      { text: 'PROVEEDOR', fontSize: 7, bold: true, color: '#94a3b8', margin: [0, 0, 0, 3] },
-      { text: provNombre, fontSize: 11, bold: true, color: '#1e293b', margin: [0, 0, 0, 5] },
+      {
+        text: 'PROVEEDOR',
+        fontSize: 7,
+        bold: true,
+        color: '#94a3b8',
+        margin: [0, 0, 0, 3],
+      },
+      {
+        text: provNombre,
+        fontSize: 11,
+        bold: true,
+        color: '#1e293b',
+        margin: [0, 0, 0, 5],
+      },
     ];
-    if (provDoc)   provStack.push({ text: provDoc,   fontSize: 8, color: '#475569', margin: [0, 0, 0, 2] });
-    if (provDir)   provStack.push({ text: provDir,   fontSize: 8, color: '#475569', margin: [0, 0, 0, 2] });
-    if (provTel)   provStack.push({ text: `Tel: ${provTel}`, fontSize: 8, color: '#475569', margin: [0, 0, 0, 2] });
-    if (provEmail) provStack.push({ text: provEmail, fontSize: 8, color: '#64748b', italics: true });
+    if (provDoc)
+      provStack.push({
+        text: provDoc,
+        fontSize: 8,
+        color: '#475569',
+        margin: [0, 0, 0, 2],
+      });
+    if (provDir)
+      provStack.push({
+        text: provDir,
+        fontSize: 8,
+        color: '#475569',
+        margin: [0, 0, 0, 2],
+      });
+    if (provTel)
+      provStack.push({
+        text: `Tel: ${provTel}`,
+        fontSize: 8,
+        color: '#475569',
+        margin: [0, 0, 0, 2],
+      });
+    if (provEmail)
+      provStack.push({
+        text: provEmail,
+        fontSize: 8,
+        color: '#64748b',
+        italics: true,
+      });
 
     return {
       pageSize: 'A4',
@@ -276,8 +373,19 @@ export class DetalleCompraComponent implements OnChanges {
 
       footer: (currentPage: number, pageCount: number) => ({
         columns: [
-          { text: 'AURA POS — Software de gestión empresarial', fontSize: 7, color: '#94a3b8', margin: [30, 0, 0, 0] },
-          { text: `Pág. ${currentPage} / ${pageCount}`, fontSize: 7, color: '#94a3b8', alignment: 'right', margin: [0, 0, 30, 0] },
+          {
+            text: 'AURA NUBE — Software de gestión empresarial',
+            fontSize: 7,
+            color: '#94a3b8',
+            margin: [30, 0, 0, 0],
+          },
+          {
+            text: `Pág. ${currentPage} / ${pageCount}`,
+            fontSize: 7,
+            color: '#94a3b8',
+            alignment: 'right',
+            margin: [0, 0, 30, 0],
+          },
         ],
         margin: [0, 10, 0, 0],
       }),
@@ -289,27 +397,72 @@ export class DetalleCompraComponent implements OnChanges {
             { stack: [logoElement], width: 100 },
             {
               stack: [
-                { text: emp.razonSocial ?? '', fontSize: 13, bold: true, color: '#1e293b', alignment: 'center' },
-                { text: `NIT: ${emp.nit ?? ''}${emp.dv ? '-' + emp.dv : ''}`, fontSize: 8, color: '#64748b', alignment: 'center', margin: [0, 3, 0, 0] },
-                { text: emp.direccion ?? '', fontSize: 8, color: '#64748b', alignment: 'center', margin: [0, 2, 0, 0] },
-                { text: emp.telefono ?? '', fontSize: 8, color: '#64748b', alignment: 'center', margin: [0, 2, 0, 0] },
-                { text: emp.municipio ?? '', fontSize: 8, color: '#64748b', alignment: 'center', margin: [0, 2, 0, 0] },
+                {
+                  text: emp.razonSocial ?? '',
+                  fontSize: 13,
+                  bold: true,
+                  color: '#1e293b',
+                  alignment: 'center',
+                },
+                {
+                  text: `NIT: ${emp.nit ?? ''}${emp.dv ? '-' + emp.dv : ''}`,
+                  fontSize: 8,
+                  color: '#64748b',
+                  alignment: 'center',
+                  margin: [0, 3, 0, 0],
+                },
+                {
+                  text: emp.direccion ?? '',
+                  fontSize: 8,
+                  color: '#64748b',
+                  alignment: 'center',
+                  margin: [0, 2, 0, 0],
+                },
+                {
+                  text: emp.telefono ?? '',
+                  fontSize: 8,
+                  color: '#64748b',
+                  alignment: 'center',
+                  margin: [0, 2, 0, 0],
+                },
+                {
+                  text: emp.municipio ?? '',
+                  fontSize: 8,
+                  color: '#64748b',
+                  alignment: 'center',
+                  margin: [0, 2, 0, 0],
+                },
               ],
               width: '*',
             },
             {
               table: {
                 widths: ['*'],
-                body: [[
-                  {
-                    stack: [
-                      { text: 'Compra', fontSize: 9, bold: true, color: '#475569', alignment: 'center', margin: [0, 0, 0, 4] },
-                      { text: `No. ${num}`, fontSize: 14, bold: true, color: '#1e293b', alignment: 'center' },
-                    ],
-                    margin: [10, 10, 10, 10],
-                    border: [true, true, true, true],
-                  },
-                ]],
+                body: [
+                  [
+                    {
+                      stack: [
+                        {
+                          text: 'Compra',
+                          fontSize: 9,
+                          bold: true,
+                          color: '#475569',
+                          alignment: 'center',
+                          margin: [0, 0, 0, 4],
+                        },
+                        {
+                          text: `No. ${num}`,
+                          fontSize: 14,
+                          bold: true,
+                          color: '#1e293b',
+                          alignment: 'center',
+                        },
+                      ],
+                      margin: [10, 10, 10, 10],
+                      border: [true, true, true, true],
+                    },
+                  ],
+                ],
               },
               layout: {
                 hLineColor: () => '#cbd5e1',
@@ -326,7 +479,17 @@ export class DetalleCompraComponent implements OnChanges {
 
         // ── Línea divisora gris ─────────────────────────────────
         {
-          canvas: [{ type: 'line', x1: 0, y1: 0, x2: 535, y2: 0, lineWidth: 2, lineColor: '#374151' }],
+          canvas: [
+            {
+              type: 'line',
+              x1: 0,
+              y1: 0,
+              x2: 535,
+              y2: 0,
+              lineWidth: 2,
+              lineColor: '#374151',
+            },
+          ],
           margin: [0, 0, 0, 14],
         },
 
@@ -334,50 +497,102 @@ export class DetalleCompraComponent implements OnChanges {
         {
           table: {
             widths: ['*', 195],
-            body: [[
-              {
-                stack: provStack,
-                border: [false, false, false, false],
-                margin: [0, 6, 0, 6],
-              },
-              {
-                table: {
-                  widths: ['*', 'auto'],
-                  body: [
-                    [
-                      { text: 'Fecha de compra', fontSize: 8, bold: true, color: '#64748b', border: [false,false,false,false] },
-                      { text: fecha, fontSize: 8, color: '#1e293b', alignment: 'right', border: [false,false,false,false] },
-                    ],
-                    [
-                      { text: 'Forma de pago', fontSize: 8, bold: true, color: '#64748b', border: [false,false,false,false] },
-                      {
-                        text: c.formaPago === 'CONTADO' ? 'Contado' : c.formaPago === 'CREDITO' ? 'Crédito' : '—',
-                        fontSize: 8, bold: true, alignment: 'right',
-                        color: c.formaPago === 'CONTADO' ? '#059669' : '#d97706',
-                        border: [false,false,false,false],
-                      },
-                    ],
-                    [
-                      { text: 'Estado', fontSize: 8, bold: true, color: '#64748b', border: [false,false,false,false] },
-                      {
-                        text: c.estado === 'RECIBIDA' ? '● Recibida' : '● Anulada',
-                        fontSize: 8, bold: true, alignment: 'right',
-                        color: c.estado === 'RECIBIDA' ? '#059669' : '#dc2626',
-                        border: [false,false,false,false],
-                      },
-                    ],
-                    [
-                      { text: 'Sucursal destino', fontSize: 8, bold: true, color: '#64748b', border: [false,false,false,false] },
-                      { text: c.sucursalNombre, fontSize: 8, alignment: 'right', color: '#1e293b', border: [false,false,false,false] },
-                    ],
-                  ],
+            body: [
+              [
+                {
+                  stack: provStack,
+                  border: [false, false, false, false],
+                  margin: [0, 6, 0, 6],
                 },
-                layout: 'noBorders',
-                border: [false, false, false, false],
-                fillColor: '#f8fafc',
-                margin: [8, 6, 8, 6],
-              },
-            ]],
+                {
+                  table: {
+                    widths: ['*', 'auto'],
+                    body: [
+                      [
+                        {
+                          text: 'Fecha de compra',
+                          fontSize: 8,
+                          bold: true,
+                          color: '#64748b',
+                          border: [false, false, false, false],
+                        },
+                        {
+                          text: fecha,
+                          fontSize: 8,
+                          color: '#1e293b',
+                          alignment: 'right',
+                          border: [false, false, false, false],
+                        },
+                      ],
+                      [
+                        {
+                          text: 'Forma de pago',
+                          fontSize: 8,
+                          bold: true,
+                          color: '#64748b',
+                          border: [false, false, false, false],
+                        },
+                        {
+                          text:
+                            c.formaPago === 'CONTADO'
+                              ? 'Contado'
+                              : c.formaPago === 'CREDITO'
+                                ? 'Crédito'
+                                : '—',
+                          fontSize: 8,
+                          bold: true,
+                          alignment: 'right',
+                          color:
+                            c.formaPago === 'CONTADO' ? '#059669' : '#d97706',
+                          border: [false, false, false, false],
+                        },
+                      ],
+                      [
+                        {
+                          text: 'Estado',
+                          fontSize: 8,
+                          bold: true,
+                          color: '#64748b',
+                          border: [false, false, false, false],
+                        },
+                        {
+                          text:
+                            c.estado === 'RECIBIDA'
+                              ? '● Recibida'
+                              : '● Anulada',
+                          fontSize: 8,
+                          bold: true,
+                          alignment: 'right',
+                          color:
+                            c.estado === 'RECIBIDA' ? '#059669' : '#dc2626',
+                          border: [false, false, false, false],
+                        },
+                      ],
+                      [
+                        {
+                          text: 'Sucursal destino',
+                          fontSize: 8,
+                          bold: true,
+                          color: '#64748b',
+                          border: [false, false, false, false],
+                        },
+                        {
+                          text: c.sucursalNombre,
+                          fontSize: 8,
+                          alignment: 'right',
+                          color: '#1e293b',
+                          border: [false, false, false, false],
+                        },
+                      ],
+                    ],
+                  },
+                  layout: 'noBorders',
+                  border: [false, false, false, false],
+                  fillColor: '#f8fafc',
+                  margin: [8, 6, 8, 6],
+                },
+              ],
+            ],
           },
           layout: {
             hLineWidth: () => 1,
@@ -394,11 +609,11 @@ export class DetalleCompraComponent implements OnChanges {
             widths: [22, 65, '*', 45, 85],
             body: [
               [
-                { text: 'Ítem',            style: 'th', alignment: 'center' },
-                { text: 'Referencia',      style: 'th' },
+                { text: 'Ítem', style: 'th', alignment: 'center' },
+                { text: 'Referencia', style: 'th' },
                 { text: 'Nombre producto', style: 'th' },
-                { text: 'Cantidad',        style: 'th', alignment: 'right' },
-                { text: 'Vr. Bruto',       style: 'th', alignment: 'right' },
+                { text: 'Cantidad', style: 'th', alignment: 'right' },
+                { text: 'Vr. Bruto', style: 'th', alignment: 'right' },
               ],
               ...bodyRows,
             ],
@@ -421,20 +636,61 @@ export class DetalleCompraComponent implements OnChanges {
           columns: [
             {
               stack: [
-                { text: 'Condiciones de Pago', fontSize: 8, bold: true, color: '#94a3b8', margin: [0, 0, 0, 4] },
                 {
-                  text: c.formaPago === 'CONTADO' ? 'Contado' : c.formaPago === 'CREDITO' ? 'Crédito' : '—',
-                  fontSize: 11, bold: true, color: '#1e293b',
+                  text: 'Condiciones de Pago',
+                  fontSize: 8,
+                  bold: true,
+                  color: '#94a3b8',
+                  margin: [0, 0, 0, 4],
+                },
+                {
+                  text:
+                    c.formaPago === 'CONTADO'
+                      ? 'Contado'
+                      : c.formaPago === 'CREDITO'
+                        ? 'Crédito'
+                        : '—',
+                  fontSize: 11,
+                  bold: true,
+                  color: '#1e293b',
                 },
                 // Métodos de pago usados
                 ...(c.pagos?.length > 0
                   ? [
-                      { text: 'Métodos de pago', fontSize: 8, bold: true, color: '#94a3b8', margin: [0, 10, 0, 4] },
+                      {
+                        text: 'Métodos de pago',
+                        fontSize: 8,
+                        bold: true,
+                        color: '#94a3b8',
+                        margin: [0, 10, 0, 4],
+                      },
                       ...c.pagos.map((p: CompraPagoModel) => ({
                         columns: [
-                          { text: this.metodoPagoLabel(p.metodoPago), fontSize: 9, color: '#475569', width: '*' },
-                          ...(p.banco ? [{ text: p.banco, fontSize: 8, color: '#94a3b8', width: 'auto', margin: [4, 1, 8, 0] }] : []),
-                          { text: this.fmtCOP(p.monto), fontSize: 9, bold: true, color: '#1e293b', alignment: 'right', width: 80 },
+                          {
+                            text: this.metodoPagoLabel(p.metodoPago),
+                            fontSize: 9,
+                            color: '#475569',
+                            width: '*',
+                          },
+                          ...(p.banco
+                            ? [
+                                {
+                                  text: p.banco,
+                                  fontSize: 8,
+                                  color: '#94a3b8',
+                                  width: 'auto',
+                                  margin: [4, 1, 8, 0],
+                                },
+                              ]
+                            : []),
+                          {
+                            text: this.fmtCOP(p.monto),
+                            fontSize: 9,
+                            bold: true,
+                            color: '#1e293b',
+                            alignment: 'right',
+                            width: 80,
+                          },
                         ],
                         margin: [0, 2, 0, 2],
                       })),
@@ -442,8 +698,19 @@ export class DetalleCompraComponent implements OnChanges {
                   : []),
                 ...(c.observaciones
                   ? [
-                      { text: 'Observaciones', fontSize: 8, bold: true, color: '#94a3b8', margin: [0, 10, 0, 4] },
-                      { text: c.observaciones, fontSize: 9, color: '#475569', italics: true },
+                      {
+                        text: 'Observaciones',
+                        fontSize: 8,
+                        bold: true,
+                        color: '#94a3b8',
+                        margin: [0, 10, 0, 4],
+                      },
+                      {
+                        text: c.observaciones,
+                        fontSize: 9,
+                        color: '#475569',
+                        italics: true,
+                      },
                     ]
                   : []),
               ],
@@ -454,34 +721,130 @@ export class DetalleCompraComponent implements OnChanges {
                 widths: [115, 90],
                 body: [
                   [
-                    { text: 'Subtotal', fontSize: 9, color: '#64748b', border: [false,false,false,false], margin: [0,3,0,3] },
-                    { text: this.fmtCOP(c.subtotal), fontSize: 9, alignment: 'right', border: [false,false,false,false], margin: [0,3,0,3] },
+                    {
+                      text: 'Subtotal',
+                      fontSize: 9,
+                      color: '#64748b',
+                      border: [false, false, false, false],
+                      margin: [0, 3, 0, 3],
+                    },
+                    {
+                      text: this.fmtCOP(c.subtotal),
+                      fontSize: 9,
+                      alignment: 'right',
+                      border: [false, false, false, false],
+                      margin: [0, 3, 0, 3],
+                    },
                   ],
-                  ...(c.impuestosTotal > 0 ? [[
-                    { text: 'IVA', fontSize: 9, color: '#64748b', border: [false,false,false,false], margin: [0,3,0,3] },
-                    { text: this.fmtCOP(c.impuestosTotal), fontSize: 9, alignment: 'right', border: [false,false,false,false], margin: [0,3,0,3] },
-                  ]] : []),
-                  ...(c.descuentoTotal > 0 ? [[
-                    { text: 'Descuento', fontSize: 9, color: '#dc2626', border: [false,false,false,false], margin: [0,3,0,3] },
-                    { text: `-${this.fmtCOP(c.descuentoTotal)}`, fontSize: 9, alignment: 'right', color: '#dc2626', border: [false,false,false,false], margin: [0,3,0,3] },
-                  ]] : []),
-                  ...(c.fletes > 0 ? [[
-                    { text: 'Fletes', fontSize: 9, color: '#64748b', border: [false,false,false,false], margin: [0,3,0,3] },
-                    { text: this.fmtCOP(c.fletes), fontSize: 9, alignment: 'right', border: [false,false,false,false], margin: [0,3,0,3] },
-                  ]] : []),
+                  ...(c.impuestosTotal > 0
+                    ? [
+                        [
+                          {
+                            text: 'IVA',
+                            fontSize: 9,
+                            color: '#64748b',
+                            border: [false, false, false, false],
+                            margin: [0, 3, 0, 3],
+                          },
+                          {
+                            text: this.fmtCOP(c.impuestosTotal),
+                            fontSize: 9,
+                            alignment: 'right',
+                            border: [false, false, false, false],
+                            margin: [0, 3, 0, 3],
+                          },
+                        ],
+                      ]
+                    : []),
+                  ...(c.descuentoTotal > 0
+                    ? [
+                        [
+                          {
+                            text: 'Descuento',
+                            fontSize: 9,
+                            color: '#dc2626',
+                            border: [false, false, false, false],
+                            margin: [0, 3, 0, 3],
+                          },
+                          {
+                            text: `-${this.fmtCOP(c.descuentoTotal)}`,
+                            fontSize: 9,
+                            alignment: 'right',
+                            color: '#dc2626',
+                            border: [false, false, false, false],
+                            margin: [0, 3, 0, 3],
+                          },
+                        ],
+                      ]
+                    : []),
+                  ...(c.fletes > 0
+                    ? [
+                        [
+                          {
+                            text: 'Fletes',
+                            fontSize: 9,
+                            color: '#64748b',
+                            border: [false, false, false, false],
+                            margin: [0, 3, 0, 3],
+                          },
+                          {
+                            text: this.fmtCOP(c.fletes),
+                            fontSize: 9,
+                            alignment: 'right',
+                            border: [false, false, false, false],
+                            margin: [0, 3, 0, 3],
+                          },
+                        ],
+                      ]
+                    : []),
                   ...retenRows,
                   [
-                    { text: 'Total Bruto', fontSize: 10, bold: true, color: '#1e293b', border: [false,true,false,false], fillColor: '#f1f5f9', margin: [6,6,0,6] },
-                    { text: this.fmtCOP(c.total), fontSize: 10, bold: true, alignment: 'right', color: '#1e293b', border: [false,true,false,false], fillColor: '#f1f5f9', margin: [0,6,6,6] },
+                    {
+                      text: 'Total Bruto',
+                      fontSize: 10,
+                      bold: true,
+                      color: '#1e293b',
+                      border: [false, true, false, false],
+                      fillColor: '#f1f5f9',
+                      margin: [6, 6, 0, 6],
+                    },
+                    {
+                      text: this.fmtCOP(c.total),
+                      fontSize: 10,
+                      bold: true,
+                      alignment: 'right',
+                      color: '#1e293b',
+                      border: [false, true, false, false],
+                      fillColor: '#f1f5f9',
+                      margin: [0, 6, 6, 6],
+                    },
                   ],
                   [
-                    { text: 'Total a Pagar', fontSize: 12, bold: true, color: '#fff', border: [false,false,false,false], fillColor: '#1e293b', margin: [6,8,0,8] },
-                    { text: this.fmtCOP(c.netaAPagar ?? c.total), fontSize: 12, bold: true, alignment: 'right', color: '#fff', border: [false,false,false,false], fillColor: '#1e293b', margin: [0,8,6,8] },
+                    {
+                      text: 'Total a Pagar',
+                      fontSize: 12,
+                      bold: true,
+                      color: '#fff',
+                      border: [false, false, false, false],
+                      fillColor: '#1e293b',
+                      margin: [6, 8, 0, 8],
+                    },
+                    {
+                      text: this.fmtCOP(c.netaAPagar ?? c.total),
+                      fontSize: 12,
+                      bold: true,
+                      alignment: 'right',
+                      color: '#fff',
+                      border: [false, false, false, false],
+                      fillColor: '#1e293b',
+                      margin: [0, 8, 6, 8],
+                    },
                   ],
                 ],
               },
               layout: {
-                hLineWidth: (i: number, node: any) => i === node.table.body.length - 2 ? 1.5 : 0,
+                hLineWidth: (i: number, node: any) =>
+                  i === node.table.body.length - 2 ? 1.5 : 0,
                 vLineWidth: () => 0,
                 hLineColor: () => '#cbd5e1',
               },

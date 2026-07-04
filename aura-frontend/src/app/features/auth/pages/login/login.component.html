@@ -1,88 +1,104 @@
 <div class="login-wrapper">
-
-  <!-- Left Panel - Branding -->
+  <!-- ══ Panel izquierdo — marca ══ -->
   <div class="login-left">
-    <div class="branding">
-      <div class="logo-container">
-        <div class="logo-icon">
+    <div class="aurora"></div>
+
+    <div class="brand">
+      <div class="brand-mark">
+        <div class="brand-logo">
           <span>A</span>
+          <i class="pi pi-cloud"></i>
         </div>
-        <div class="logo-text">
-          <h1>AURA <span>POS</span></h1>
-          <p>Sistema de Punto de Venta</p>
+        <div class="brand-name">
+          <h1>AURA <span>NUBE</span></h1>
+          <p>Gestión empresarial en la nube</p>
         </div>
       </div>
 
-      <div class="features-list">
-        <div class="feature-item">
-          <div class="feature-icon"><i class="pi pi-shopping-cart"></i></div>
+      <div class="brand-headline">
+        <h2>Tu negocio,<br />siempre bajo control.</h2>
+        <p>POS, inventario, contabilidad y nómina en una sola plataforma.</p>
+      </div>
+
+      <ul class="brand-features">
+        <li>
+          <i class="pi pi-check"></i>
           <div>
-            <h3>Ventas rápidas</h3>
-            <p>Factura en segundos con atajos de teclado</p>
+            <h3>Ventas y facturación electrónica</h3>
+            <p>Factura en segundos, con validación DIAN.</p>
           </div>
-        </div>
-        <div class="feature-item">
-          <div class="feature-icon"><i class="pi pi-warehouse"></i></div>
+        </li>
+        <li>
+          <i class="pi pi-check"></i>
           <div>
-            <h3>Inventario inteligente</h3>
-            <p>Kardex en tiempo real con trazabilidad total</p>
+            <h3>Inventario y contabilidad integrados</h3>
+            <p>Kardex en tiempo real y asientos automáticos.</p>
           </div>
-        </div>
-        <div class="feature-item">
-          <div class="feature-icon"><i class="pi pi-chart-line"></i></div>
+        </li>
+        <li>
+          <i class="pi pi-check"></i>
           <div>
-            <h3>Reportes en tiempo real</h3>
-            <p>Dashboard con métricas clave de tu negocio</p>
+            <h3>Nómina, tesorería y cartera</h3>
+            <p>Todo el ciclo financiero conectado.</p>
           </div>
-        </div>
-        <div class="feature-item">
-          <div class="feature-icon"><i class="pi pi-building"></i></div>
+        </li>
+        <li>
+          <i class="pi pi-check"></i>
           <div>
             <h3>Multi-empresa y multi-sede</h3>
-            <p>Administra todas tus sucursales en un solo lugar</p>
+            <p>Administra todas tus sucursales en un lugar.</p>
           </div>
-        </div>
-      </div>
+        </li>
+      </ul>
     </div>
 
-    <div class="left-footer">
-      <span>© {{ currentYear }} AURA POS. Todos los derechos reservados.</span>
+    <div class="brand-footer">
+      <div class="trust">
+        <span><i class="pi pi-verified"></i> Facturación DIAN</span>
+        <span><i class="pi pi-lock"></i> Datos cifrados</span>
+        <span><i class="pi pi-building"></i> Multi-empresa</span>
+      </div>
+      <small
+        >© {{ currentYear }} Aura Nube. Todos los derechos reservados.</small
+      >
     </div>
   </div>
 
-  <!-- Right Panel - Form -->
+  <!-- ══ Panel derecho — formulario ══ -->
   <div class="login-right">
     <div class="login-card">
-
-      <!-- Mobile logo -->
+      <!-- Logo móvil -->
       <div class="mobile-logo">
         <div class="logo-icon-sm">A</div>
-        <span>AURA POS</span>
+        <span>AURA NUBE</span>
       </div>
 
       <div class="login-header">
-        <h2>Bienvenido de vuelta</h2>
+        <span class="eyebrow">Panel de administración</span>
+        <h2>Bienvenido de nuevo</h2>
         <p>Ingresa tus credenciales para continuar</p>
       </div>
 
-      <form [formGroup]="frmLogin" (ngSubmit)="login()" class="login-form" autocomplete="off">
-
-        <!-- Email -->
+      <form
+        [formGroup]="frmLogin"
+        (ngSubmit)="login()"
+        class="login-form"
+        autocomplete="off"
+      >
+        <!-- Correo -->
         <div class="field">
-          <label for="email">
+          <label for="email">Correo electrónico</label>
+          <div class="input-wrap" [class.has-error]="isInvalid('email')">
             <i class="pi pi-envelope"></i>
-            Correo electrónico
-          </label>
-          <input
-            type="email"
-            pInputText
-            id="email"
-            formControlName="email"
-            placeholder="usuario@empresa.com"
-            [class.ng-invalid]="isInvalid('email')"
-            [class.ng-dirty]="frmLogin.get('email')?.touched"
-            autocomplete="email"
-          />
+            <input
+              type="email"
+              pInputText
+              id="email"
+              formControlName="email"
+              placeholder="usuario@empresa.com"
+              autocomplete="email"
+            />
+          </div>
           <small class="p-error" *ngIf="isInvalid('email')">
             <ng-container *ngIf="frmLogin.get('email')?.hasError('required')">
               El correo es obligatorio
@@ -93,53 +109,69 @@
           </small>
         </div>
 
-        <!-- Password -->
+        <!-- Contraseña -->
         <div class="field">
-          <label for="password">
+          <label for="password">Contraseña</label>
+          <div class="input-wrap" [class.has-error]="isInvalid('password')">
             <i class="pi pi-lock"></i>
-            Contraseña
-          </label>
-          <p-password
-            id="password"
-            formControlName="password"
-            placeholder="••••••••"
-            [feedback]="false"
-            [toggleMask]="true"
-            styleClass="w-full"
-            inputStyleClass="w-full"
-            [class.ng-invalid]="isInvalid('password')"
-            [class.ng-dirty]="frmLogin.get('password')?.touched"
-          />
+            <p-password
+              id="password"
+              width="100%"
+              formControlName="password"
+              placeholder="••••••••"
+              [feedback]="false"
+              [toggleMask]="true"
+              styleClass="w-full"
+              inputStyleClass="w-full"
+            />
+          </div>
           <small class="p-error" *ngIf="isInvalid('password')">
-            <ng-container *ngIf="frmLogin.get('password')?.hasError('required')">
+            <ng-container
+              *ngIf="frmLogin.get('password')?.hasError('required')"
+            >
               La contraseña es obligatoria
             </ng-container>
-            <ng-container *ngIf="frmLogin.get('password')?.hasError('minlength')">
+            <ng-container
+              *ngIf="frmLogin.get('password')?.hasError('minlength')"
+            >
               Mínimo 6 caracteres
             </ng-container>
           </small>
         </div>
 
-        <!-- Submit -->
+        <!-- Opciones -->
+        <div class="form-options">
+          <label class="remember">
+            <input
+              type="checkbox"
+              [(ngModel)]="recordar"
+              [ngModelOptions]="{ standalone: true }"
+            />
+            <span>Recordarme</span>
+          </label>
+          <a class="forgot" (click)="olvidePassword()"
+            >¿Olvidaste tu contraseña?</a
+          >
+        </div>
+
+        <!-- Ingresar -->
         <p-button
           type="submit"
           label="Ingresar al sistema"
-          icon="pi pi-sign-in"
+          icon="pi pi-arrow-right"
+          iconPos="right"
           styleClass="btn-login w-full"
           [loading]="isSubmitting"
           [disabled]="isSubmitting"
         />
-
       </form>
 
       <div class="login-footer">
         <i class="pi pi-shield"></i>
-        Conexión segura y cifrada
+        Conexión segura y cifrada de extremo a extremo
       </div>
-
     </div>
   </div>
-
 </div>
 
 <p-toast position="top-right" />

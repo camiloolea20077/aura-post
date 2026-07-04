@@ -6,66 +6,38 @@ $orange: #f59e0b;
 $border: #e2e8f0;
 $text: #1e293b;
 $muted: #94a3b8;
-$font: 'Outfit', sans-serif;
-$mono: 'JetBrains Mono', monospace;
+$font: "Outfit", sans-serif;
+$mono: "JetBrains Mono", monospace;
 
-.page-container {
-  padding: 24px;
-  max-width: 1200px;
+.page {
   margin: 0 auto;
   font-family: $font;
 }
 
-.page-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20px;
+// La card del header separa del bloque de búsqueda
+.page > .card:first-child {
+  margin-bottom: 1.25rem;
 }
 
-.page-title-area {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.page-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, $indigo, #818cf8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 20px;
-}
-
-.page-title {
-  font-size: 20px;
-  font-weight: 700;
-  color: $text;
-  margin: 0;
-}
-
-.page-sub {
-  font-size: 13px;
-  color: $muted;
-  margin: 2px 0 0;
-}
-
-// ─── Card ────────────────────────────────────────────────────
-.card {
+// ─── Card local (búsqueda, tabla) ─────────────────────────────
+.ec-card {
   background: #fff;
   border: 1px solid $border;
   border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
 }
 
-.search-bar { padding: 16px 20px; }
+.search-bar {
+  padding: 16px 20px;
+}
 
-.mt-3 { margin-top: 12px; }
-.mt-4 { margin-top: 20px; }
+.mt-3 {
+  margin-top: 12px;
+}
+.mt-4 {
+  margin-top: 20px;
+}
 
 // ─── Barra de búsqueda ───────────────────────────────────────
 .search-grid {
@@ -114,8 +86,13 @@ $mono: 'JetBrains Mono', monospace;
   gap: 2px;
 }
 
-.cliente-nombre { font-weight: 600; font-size: 13px; }
-.cliente-doc    { font-size: 11px; }
+.cliente-nombre {
+  font-weight: 600;
+  font-size: 13px;
+}
+.cliente-doc {
+  font-size: 11px;
+}
 
 // ─── Info cliente ─────────────────────────────────────────────
 .cliente-info-bar {
@@ -133,7 +110,7 @@ $mono: 'JetBrains Mono', monospace;
   height: 44px;
   min-width: 44px;
   border-radius: 12px;
-  background: linear-gradient(135deg, $indigo, #818cf8);
+  background: linear-gradient(135deg, #2563eb, #60a5fa);
   color: #fff;
   font-size: 18px;
   font-weight: 700;
@@ -174,7 +151,7 @@ $mono: 'JetBrains Mono', monospace;
   display: flex;
   align-items: center;
   gap: 14px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 
   &.card-alerta {
     border-color: lighten($red, 30%);
@@ -192,10 +169,22 @@ $mono: 'JetBrains Mono', monospace;
   font-size: 20px;
   flex-shrink: 0;
 
-  &.blue   { background: lighten($blue,   38%); color: $blue; }
-  &.orange { background: lighten($orange, 36%); color: darken($orange, 10%); }
-  &.green  { background: lighten($emerald,48%); color: $emerald; }
-  &.red    { background: lighten($red,    38%); color: $red; }
+  &.blue {
+    background: lighten($blue, 38%);
+    color: $blue;
+  }
+  &.orange {
+    background: lighten($orange, 36%);
+    color: darken($orange, 10%);
+  }
+  &.green {
+    background: lighten($emerald, 48%);
+    color: $emerald;
+  }
+  &.red {
+    background: lighten($red, 38%);
+    color: $red;
+  }
 }
 
 .resumen-body {
@@ -220,7 +209,10 @@ $mono: 'JetBrains Mono', monospace;
   font-family: $mono;
 }
 
-.resumen-sub { font-size: 11px; color: $muted; }
+.resumen-sub {
+  font-size: 11px;
+  color: $muted;
+}
 
 // ─── Tabla ───────────────────────────────────────────────────
 .card-header-row {
@@ -238,7 +230,9 @@ $mono: 'JetBrains Mono', monospace;
   display: flex;
   align-items: center;
   gap: 8px;
-  i { color: $indigo; }
+  i {
+    color: #2563eb;
+  }
 }
 
 .total-badge {
@@ -251,12 +245,25 @@ $mono: 'JetBrains Mono', monospace;
   color: $muted;
 }
 
-.text-right  { text-align: right !important; }
-.text-muted  { color: $muted; }
-.text-danger { color: $red; }
-.text-success{ color: $emerald; }
-.fw-600      { font-weight: 600; }
-.mono        { font-family: $mono; font-size: 13px; }
+.text-right {
+  text-align: right !important;
+}
+.text-muted {
+  color: $muted;
+}
+.text-danger {
+  color: $red;
+}
+.text-success {
+  color: $emerald;
+}
+.fw-600 {
+  font-weight: 600;
+}
+.mono {
+  font-family: $mono;
+  font-size: 13px;
+}
 
 .tipo-cell {
   display: flex;
@@ -288,8 +295,14 @@ $mono: 'JetBrains Mono', monospace;
   flex-direction: column;
   gap: 2px;
 }
-.desc-ref   { font-weight: 600; font-size: 13px; color: $text; }
-.desc-texto { font-size: 12px; }
+.desc-ref {
+  font-weight: 600;
+  font-size: 13px;
+  color: $text;
+}
+.desc-texto {
+  font-size: 12px;
+}
 
 // ─── Empty states ─────────────────────────────────────────────
 .empty-placeholder {
@@ -299,8 +312,13 @@ $mono: 'JetBrains Mono', monospace;
   gap: 12px;
   padding: 64px 24px;
   color: $muted;
-  i    { font-size: 56px; opacity: 0.2; }
-  p    { font-size: 15px; }
+  i {
+    font-size: 56px;
+    opacity: 0.2;
+  }
+  p {
+    font-size: 15px;
+  }
 }
 
 .empty-state {
@@ -310,6 +328,11 @@ $mono: 'JetBrains Mono', monospace;
   gap: 10px;
   padding: 40px;
   color: $muted;
-  i { font-size: 40px; opacity: 0.25; }
-  p { font-size: 14px; }
+  i {
+    font-size: 40px;
+    opacity: 0.25;
+  }
+  p {
+    font-size: 14px;
+  }
 }

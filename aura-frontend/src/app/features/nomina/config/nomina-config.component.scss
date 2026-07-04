@@ -1,60 +1,15 @@
-.page-container {
+/* El header, .page y .card son globales (src/styles.scss).
+   Aquí solo viven los estilos propios del formulario de configuración. */
+
+/* Separación entre cards apiladas (el .page global no trae gap) */
+:host .page {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
 }
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-.page-title-area {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-}
-.page-icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 13px;
-  background: linear-gradient(135deg, #7c3aed, #a78bfa);
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  i {
-    font-size: 1.15rem;
-    color: white;
-  }
-}
-.page-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0 0 0.15rem;
-}
-.page-sub {
-  font-size: 0.8rem;
-  color: #64748b;
-  margin: 0;
-}
 
-::ng-deep .btn-nomina.p-button {
-  background: linear-gradient(135deg, #7c3aed, #a78bfa) !important;
-  border: none !important;
-  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3) !important;
-  &:hover {
-    opacity: 0.92;
-  }
-}
-
-.card {
-  background: white;
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+/* El .card global no trae padding interno; las cards de sección lo necesitan */
+:host .card.sec {
   padding: 1.5rem;
 }
 
@@ -63,7 +18,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #7c3aed;
+  color: #2563eb;
   margin-bottom: 1.25rem;
   display: flex;
   align-items: center;
@@ -74,6 +29,14 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1.25rem;
+
+  &.three-cols {
+    grid-template-columns: repeat(3, 1fr);
+
+    @media (max-width: 820px) {
+      grid-template-columns: 1fr;
+    }
+  }
   &.four-cols {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   }
@@ -83,18 +46,36 @@
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+
   label {
     font-size: 0.82rem;
     font-weight: 600;
     color: #475569;
+  }
+
+  ::ng-deep .p-dropdown {
+    width: 100%;
+  }
+  ::ng-deep .p-inputnumber {
+    width: 100%;
+  }
+  ::ng-deep .p-inputnumber .p-inputnumber-input {
+    width: 100%;
   }
 }
 
 .field-hint {
   font-size: 0.74rem;
   color: #94a3b8;
+
   &.completo {
-    color: #7c3aed;
+    color: #2563eb;
+  }
+
+  &.money {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #2563eb;
   }
 }
 
@@ -102,6 +83,7 @@
 .input-suffix {
   display: flex;
   align-items: center;
+
   span {
     background: #f8fafc;
     border: 1.5px solid #e0e3eb;

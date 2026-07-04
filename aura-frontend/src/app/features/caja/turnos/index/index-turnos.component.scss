@@ -1,5 +1,5 @@
 // ── Variables ──────────────────────────────────────────────
-$indigo: #6366f1;
+$indigo: #2563eb;
 $green: #10b981;
 $orange: #f97316;
 $red: #ef4444;
@@ -10,52 +10,6 @@ $text: #1e293b;
 $muted: #64748b;
 
 // ── Layout ─────────────────────────────────────────────────
-.page-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.page-title-area {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-}
-
-.page-icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 13px;
-  background: linear-gradient(135deg, $indigo, #818cf8);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  i {
-    font-size: 1.15rem;
-    color: white;
-  }
-}
-
-.page-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: $text;
-  margin: 0 0 0.15rem;
-}
-.page-sub {
-  font-size: 0.8rem;
-  color: $muted;
-  margin: 0;
-}
 .header-actions {
   display: flex;
   align-items: center;
@@ -118,20 +72,7 @@ $muted: #64748b;
   font-size: 0.78rem !important;
   height: 32px !important;
   &:hover {
-    background: rgba(99, 102, 241, 0.08) !important;
-  }
-}
-
-::ng-deep .btn-orange.p-button {
-  background: linear-gradient(135deg, $orange, #fb923c) !important;
-  border: none !important;
-  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3) !important;
-  &:hover {
-    opacity: 0.92;
-  }
-  &:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
+    background: rgba(37, 99, 235, 0.08) !important;
   }
 }
 
@@ -177,7 +118,7 @@ $muted: #64748b;
 }
 
 .kpi-ventas .kpi-icon {
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(37, 99, 235, 0.1);
   i {
     color: $indigo;
   }
@@ -411,7 +352,7 @@ $muted: #64748b;
   width: 32px;
   height: 32px;
   border-radius: 9px;
-  background: rgba(99, 102, 241, 0.08);
+  background: rgba(37, 99, 235, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -463,21 +404,13 @@ $muted: #64748b;
 // TABLA HISTÓRICA (igual que antes)
 // ══════════════════════════════════════════════════════════
 
-.card {
-  background: white;
-  border-radius: 16px;
-  border: 1px solid $border;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-}
-
+// Toolbar de la tabla histórica (solo buscador)
 .table-toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 1rem 1.25rem;
   border-bottom: 1px solid #f1f5f9;
-  gap: 0.75rem;
+
   .toolbar-left {
     display: flex;
     align-items: center;
@@ -486,108 +419,11 @@ $muted: #64748b;
   }
 }
 
-.search-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-  .pi-search {
-    position: absolute;
-    left: 0.8rem;
-    font-size: 0.85rem;
-    color: #94a3b8;
-    z-index: 1;
-    pointer-events: none;
-  }
-  .search-input {
-    height: 38px;
-    width: 260px;
-    border-radius: 10px;
-    border: 1.5px solid #e0e3eb;
-    padding: 0 2.2rem;
-    font-size: 0.85rem;
-    font-family: "Outfit", sans-serif;
-    &::placeholder {
-      color: #9ca3af;
-    }
-    &:focus {
-      border-color: $indigo;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-      outline: none;
-    }
-  }
-  .clear-btn {
-    position: absolute;
-    right: 0.6rem;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #9ca3af;
-    display: flex;
-    align-items: center;
-    padding: 0.25rem;
-    i {
-      font-size: 0.75rem;
-    }
-    &:hover {
-      color: $red;
-    }
-  }
-}
-
-.total-badge {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: $muted;
-  background: #f1f5f9;
-  padding: 0.25rem 0.65rem;
-  border-radius: 20px;
-}
-
-::ng-deep .aura-table {
-  font-family: "Outfit", sans-serif;
-  .p-datatable-thead > tr > th {
-    background: #fafbfe;
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    color: #94a3b8;
-    border-bottom: 2px solid $border;
-    border-top: none;
-    padding: 0.8rem 1rem;
-    &.p-highlight .p-sortable-column-icon {
-      color: $indigo;
-    }
-  }
-  .p-datatable-tbody > tr {
-    border-bottom: 1px solid #f8fafc;
-    transition: background 0.12s;
-    > td {
-      padding: 0.75rem 1rem;
-      font-size: 0.84rem;
-      border: none;
-    }
-    &:hover > td {
-      background: rgba(99, 102, 241, 0.025);
-    }
-    &:last-child {
-      border-bottom: none;
-    }
-    &.row-activo {
-      background: rgba(16, 185, 129, 0.03);
-    }
-    &.row-activo:hover > td {
-      background: rgba(16, 185, 129, 0.05);
-    }
-  }
-  .p-paginator {
-    border-top: 1px solid #f1f5f9;
-    background: #fafbfe;
-    .p-paginator-page.p-highlight {
-      background: linear-gradient(135deg, $indigo, #818cf8);
-      color: white;
-      border-radius: 8px;
-    }
+// Resalta la fila del turno abierto en la tabla
+::ng-deep .p-datatable-tbody > tr.row-activo {
+  background: rgba(16, 185, 129, 0.03);
+  &:hover > td {
+    background: rgba(16, 185, 129, 0.05);
   }
 }
 
@@ -626,7 +462,7 @@ $muted: #64748b;
   height: 28px;
   border-radius: 8px;
   flex-shrink: 0;
-  background: linear-gradient(135deg, $indigo, #818cf8);
+  background: linear-gradient(135deg, $indigo, #60a5fa);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -665,7 +501,7 @@ $muted: #64748b;
   font-size: 0.72rem;
   font-weight: 700;
   color: $indigo;
-  background: rgba(99, 102, 241, 0.08);
+  background: rgba(37, 99, 235, 0.08);
   padding: 0.15rem 0.5rem;
   border-radius: 20px;
 }

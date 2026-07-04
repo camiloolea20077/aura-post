@@ -1,0 +1,321 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-gift"></i></span>
+        <div>
+          <h1 class="title">Prestaciones sociales</h1>
+          <p class="subtitle">
+            Prima y vacaciones — cálculo, aprobación y pago
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          label="Liquidación definitiva"
+          icon="pi pi-sign-out"
+          class="p-button-outlined"
+          (click)="abrirDefinitiva()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          label="Nueva liquidación"
+          icon="pi pi-plus"
+          class="btn-aura"
+          (click)="abrirForm()"
+        ></button>
+      </div>
+    </div>
+
+    <p-table
+      [value]="items"
+      [loading]="loading"
+      showGridlines
+      [tableStyle]="{ 'min-width': '860px' }"
+      [paginator]="items.length > 12"
+      [rows]="12"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Empleado</th>
+          <th class="text-center">Tipo</th>
+          <th class="text-center">Período</th>
+          <th class="text-center">Días</th>
+          <th class="text-right">Valor</th>
+          <th class="text-center">Estado</th>
+          <th class="text-center" style="width: 200px">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-p>
+        <tr [class.row-off]="p.estado === 'ANULADA'">
+          <td>
+            <div class="emp">
+              <div class="emp-nombre">{{ p.empleadoNombre }}</div>
+              <div class="emp-doc">{{ p.empleadoDocumento }}</div>
+            </div>
+          </td>
+          <td class="text-center">
+            <span class="tipo-chip">{{ tipoLabel(p.tipo) }}</span>
+          </td>
+          <td class="text-center">{{ p.fechaDesde }} → {{ p.fechaHasta }}</td>
+          <td class="text-center">{{ p.dias }}</td>
+          <td class="text-right monto">{{ formatMonto(p.valor) }}</td>
+          <td class="text-center">
+            <p-tag
+              [value]="p.estado"
+              [severity]="estadoSeverity(p.estado)"
+              [rounded]="true"
+            />
+          </td>
+          <td class="text-center acc">
+            <button
+              pButton
+              icon="pi pi-check"
+              class="p-button-sm btn-aura"
+              pTooltip="Aprobar"
+              *ngIf="p.estado === 'BORRADOR'"
+              (click)="aprobar(p)"
+            ></button>
+            <button
+              pButton
+              icon="pi pi-money-bill"
+              class="p-button-sm p-button-success"
+              pTooltip="Pagar"
+              *ngIf="p.estado === 'APROBADA'"
+              (click)="abrirPago(p)"
+            ></button>
+            <button
+              pButton
+              icon="pi pi-times"
+              class="p-button-sm p-button-danger p-button-outlined"
+              pTooltip="Anular"
+              *ngIf="p.estado !== 'PAGADA' && p.estado !== 'ANULADA'"
+              (click)="anular(p)"
+            ></button>
+            <button
+              pButton
+              icon="pi pi-file-pdf"
+              class="p-button-sm p-button-text"
+              pTooltip="Descargar comprobante"
+              (click)="descargarPdf(p)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              <i class="pi pi-gift"></i>
+              <p>Sin prestaciones. Crea la primera.</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- Nueva liquidación -->
+<p-dialog
+  [(visible)]="showForm"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '520px' }"
+  header="Nueva liquidación de prestación"
+>
+  <div class="form-grid">
+    <div class="field span2">
+      <label>Empleado</label>
+      <p-dropdown
+        [options]="empleadosOpts"
+        [(ngModel)]="form.empleadoId"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona empleado"
+        [filter]="true"
+        [style]="{ width: '100%' }"
+      />
+    </div>
+    <div class="field">
+      <label>Tipo</label>
+      <p-dropdown
+        [options]="tipos"
+        [(ngModel)]="form.tipo"
+        optionLabel="label"
+        optionValue="value"
+        [style]="{ width: '100%' }"
+      />
+    </div>
+    <div class="field">
+      <label>Desde</label
+      ><p-calendar
+        [(ngModel)]="form.fechaDesde"
+        appendTo="body"
+        dateFormat="yy-mm-dd"
+        [showIcon]="true"
+      />
+    </div>
+    <div class="field">
+      <label>Hasta</label
+      ><p-calendar
+        [(ngModel)]="form.fechaHasta"
+        appendTo="body"
+        dateFormat="yy-mm-dd"
+        [showIcon]="true"
+      />
+    </div>
+    <div class="field span2">
+      <label>Observación</label>
+      <input pInputText [(ngModel)]="form.observacion" placeholder="Opcional" />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      class="p-button-text"
+      (click)="showForm = false"
+    ></button>
+    <button
+      pButton
+      label="Calcular y guardar"
+      icon="pi pi-check"
+      class="btn-aura"
+      [loading]="saving"
+      (click)="guardar()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Liquidación definitiva -->
+<p-dialog
+  [(visible)]="showDefinitiva"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '520px' }"
+  header="Liquidación definitiva (retiro)"
+>
+  <div class="form-grid">
+    <div class="field span2">
+      <label>Empleado</label>
+      <p-dropdown
+        [options]="empleadosOpts"
+        [(ngModel)]="defEmpleadoId"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona empleado"
+        [filter]="true"
+        [style]="{ width: '100%' }"
+      />
+    </div>
+    <div class="field span2">
+      <label>Fecha de retiro</label>
+      <p-calendar
+        [(ngModel)]="defFechaRetiro"
+        dateFormat="yy-mm-dd"
+        [showIcon]="true"
+        appendTo="body"
+        [style]="{ width: '100%' }"
+      />
+      <small class="hint"
+        >Si la dejas vacía, se toma la fecha de retiro / fin de contrato del
+        empleado.</small
+      >
+    </div>
+    <div class="field span2">
+      <label>Motivo del retiro</label>
+      <p-dropdown
+        [options]="motivos"
+        [(ngModel)]="defMotivo"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona el motivo"
+        [style]="{ width: '100%' }"
+      />
+      <small class="hint"
+        >La indemnización solo se calcula si es
+        <b>despido sin justa causa</b>.</small
+      >
+    </div>
+  </div>
+  <p class="hint-box">
+    <i class="pi pi-info-circle"></i>
+    Se generan las prestaciones proporcionales (cesantías, intereses, prima,
+    vacaciones) desde la última pagada de cada tipo — o el ingreso — hasta el
+    retiro. Quedan en BORRADOR para revisar, aprobar y pagar.
+  </p>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      class="p-button-text"
+      (click)="showDefinitiva = false"
+    ></button>
+    <button
+      pButton
+      label="Calcular liquidación"
+      icon="pi pi-check"
+      class="btn-aura"
+      [loading]="savingDef"
+      (click)="liquidarDefinitiva()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Pago -->
+<p-dialog
+  [(visible)]="showPago"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '440px' }"
+  header="Pagar prestación"
+>
+  <div class="form-grid">
+    <div class="field span2">
+      <label>Medio de pago</label>
+      <p-dropdown
+        [options]="mediosPago"
+        [(ngModel)]="medioPago"
+        optionLabel="label"
+        optionValue="value"
+        [style]="{ width: '100%' }"
+      />
+    </div>
+    <div class="field span2" *ngIf="medioPago === 'TRANSFERENCIA'">
+      <label>Cuenta bancaria de origen</label>
+      <p-dropdown
+        [options]="cuentasOpts"
+        [(ngModel)]="cuentaBancariaId"
+        optionLabel="label"
+        optionValue="value"
+        appendTo="body"
+        placeholder="Selecciona la cuenta"
+        [filter]="true"
+        [style]="{ width: '100%' }"
+      />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      class="p-button-text"
+      (click)="showPago = false"
+    ></button>
+    <button
+      pButton
+      label="Confirmar pago"
+      icon="pi pi-check"
+      class="btn-aura"
+      [loading]="pagando"
+      (click)="confirmarPago()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<p-toast />
+<p-confirmDialog />

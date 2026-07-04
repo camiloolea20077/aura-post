@@ -31,6 +31,8 @@ import { CuentaCobrarService } from '../../../cuentas/services/cuenta-cobrar.ser
 import { CuentaPagarService } from '../../../cuentas/services/cuenta-pagar.service';
 import { CuentaCobrarTableModel } from '../../../cuentas/models/cuenta-cobrar.model';
 import { CuentaPagarTableModel } from '../../../cuentas/models/cuenta-pagar.model';
+import { ConceptoCajaService } from '../../../../core/services/concepto-caja.service';
+import { ConceptoCajaModel } from '../../../../core/models/concepto-caja.model';
 
 @Component({
   selector: 'app-modal-movimiento-caja',
@@ -80,10 +82,17 @@ export class ModalMovimientoCajaComponent implements OnChanges {
     null;
   loadingCuentas = false;
 
+  // Conceptos de caja (movimiento manual contabilizado)
+  conceptos: ConceptoCajaModel[] = [];
+  conceptoCajaId: number | null = null;
+  // Opciones del select ya filtradas por el tipo actual (ingreso/egreso)
+  conceptoOpts: { label: string; value: number }[] = [];
+
   constructor(
     private readonly turnoCajaService: TurnoCajaService,
     private readonly cuentaCobrarService: CuentaCobrarService,
     private readonly cuentaPagarService: CuentaPagarService,
+    private readonly conceptoCajaService: ConceptoCajaService,
     private readonly alertService: AlertService,
     private readonly cdr: ChangeDetectorRef,
   ) {}
@@ -91,6 +100,7 @@ export class ModalMovimientoCajaComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['displayModal'] && this.displayModal) {
       this.reset();
+      this.loadConceptos();
     }
   }
 
@@ -104,19 +114,48 @@ export class ModalMovimientoCajaComponent implements OnChanges {
     this.cuentaSearch = '';
     this.cuentasSugeridas = [];
     this.cuentaSeleccionada = null;
+    this.conceptoCajaId = null;
   }
 
   get formInvalid(): boolean {
     return !this.concepto.trim() || !this.monto || this.monto <= 0;
   }
 
+  /** Recalcula las opciones del select según el tipo actual (tolerante a mayúsculas). */
+  private rebuildConceptoOpts(): void {
+    const tipo = this.tipo?.toString().toUpperCase();
+    this.conceptoOpts = (this.conceptos ?? [])
+      .filter((c) => `${c.tipo}`.toUpperCase() === tipo)
+      .map((c) => ({ label: c.nombre, value: c.id }));
+  }
+
+  private async loadConceptos(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.conceptoCajaService.listar());
+      this.conceptos = res?.data ?? [];
+    } catch {
+      this.conceptos = [];
+    }
+    this.rebuildConceptoOpts();
+    this.cdr.markForCheck();
+  }
+
+  /** Al elegir un concepto, sugiere el texto del concepto del movimiento. */
+  onConceptoChange(): void {
+    const c = this.conceptos.find((x) => x.id === this.conceptoCajaId);
+    if (c) this.concepto = c.nombre;
+    this.cdr.markForCheck();
+  }
+
   onTipoChange(): void {
     this.cuentaSeleccionada = null;
     this.cuentaSearch = '';
     this.cuentasSugeridas = [];
-    this.cdr.markForCheck();
     this.concepto = '';
     this.monto = null;
+    this.conceptoCajaId = null;
+    this.rebuildConceptoOpts();
+    this.cdr.markForCheck();
   }
 
   async buscarCuentas(event: { query: string }): Promise<void> {
@@ -195,6 +234,8 @@ export class ModalMovimientoCajaComponent implements OnChanges {
         monto: this.monto!,
         cuentaCobrarId: this.tipo === 'INGRESO' ? this.cuentaSeleccionada?.id ?? null : null,
         cuentaPagarId: this.tipo === 'EGRESO' ? this.cuentaSeleccionada?.id ?? null : null,
+        // El concepto de caja aplica solo a movimientos manuales (sin CxC/CxP ligada).
+        conceptoCajaId: this.cuentaSeleccionada ? null : this.conceptoCajaId,
         metodoPago: this.metodoPago,
         entregadoA: this.entregadoA.trim() || undefined,
       };

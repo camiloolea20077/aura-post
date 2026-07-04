@@ -1,43 +1,54 @@
-<div class="module-wrapper">
-  <div class="module-header">
-    <div class="header-icon"><i class="pi pi-building"></i></div>
-    <div>
-      <h2>Activos Fijos</h2>
-      <p>Registro, depreciación y control de activos de la empresa</p>
-    </div>
-  </div>
-
-  <div class="table-card">
-    <div class="table-toolbar">
-      <div class="search-wrap">
-        <span class="p-input-icon-left">
-          <p-iconfield>
-            <p-inputicon class="pi pi-search" />
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-building"></i></span>
+        <div>
+          <h1 class="title">Activos Fijos</h1>
+          <p class="subtitle">
+            Registro, depreciación y control de activos de la empresa
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button
+            pButton
+            type="button"
+            icon="pi pi-calculator"
+            label="Calcular Depreciación"
+            class="p-button-outlined p-button-secondary"
+            (click)="openDepreciar()"
+          ></button>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-plus"
+            label="Nuevo Activo"
+            class="btn-aura"
+            (click)="openCreate()"
+          ></button>
+        </div>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
             <input
+              type="text"
               pInputText
+              class="search-input"
               [(ngModel)]="search"
               (keyup.enter)="onSearch()"
               placeholder="Buscar por código o descripción..."
             />
-          </p-iconfield>
-        </span>
-        <span class="total-badge">{{ total }} activos</span>
-      </div>
-      <div style="display: flex; gap: 0.5rem">
-        <button
-          pButton
-          icon="pi pi-calculator"
-          label="Calcular Depreciación"
-          class="p-button-outlined p-button-secondary"
-          (click)="openDepreciar()"
-        ></button>
-        <button
-          pButton
-          icon="pi pi-plus"
-          label="Nuevo Activo"
-          class="btn-aura"
-          (click)="openCreate()"
-        ></button>
+            <button
+              *ngIf="search"
+              class="clear-btn"
+              (click)="search = ''; onSearch()"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+        </div>
       </div>
     </div>
 

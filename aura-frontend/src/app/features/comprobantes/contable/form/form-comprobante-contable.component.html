@@ -1,0 +1,399 @@
+<div class="page">
+  <form [formGroup]="frm" (ngSubmit)="guardar()">
+    <div class="card">
+      <!-- Header -->
+      <div class="card-head">
+        <div class="card-head__title">
+          <span class="header-icon"><i class="pi pi-file-edit"></i></span>
+          <div>
+            <h1 class="title">Nuevo comprobante</h1>
+            <p class="subtitle">Egreso, recibo de caja o nota de diario</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cuerpo -->
+      <div class="cmp-body">
+        <!-- Cabecera -->
+        <div class="cmp-grid">
+          <div class="field">
+            <label>Tipo <span class="req">*</span></label>
+            <p-dropdown
+              formControlName="tipoComprobante"
+              [options]="tipoComprobanteOpts"
+              optionLabel="label"
+              optionValue="value"
+              (onChange)="onTipoChange()"
+              styleClass="w-full"
+            ></p-dropdown>
+          </div>
+          <div class="field">
+            <label>Consecutivo</label>
+            <input pInputText [value]="consecutivoPreview" disabled />
+          </div>
+          <div class="field">
+            <label>Fecha <span class="req">*</span></label>
+            <input pInputText type="date" formControlName="fecha" />
+          </div>
+          <div class="field">
+            <label>Vencimiento</label>
+            <input pInputText type="date" formControlName="fechaVencimiento" />
+          </div>
+
+          <div class="field span-2">
+            <label>Beneficiario</label>
+            <p-dropdown
+              formControlName="beneficiarioTerceroId"
+              [options]="terceroOpts"
+              optionLabel="label"
+              optionValue="value"
+              appendTo="body"
+              panelStyleClass="cmp-dd-panel"
+              placeholder="Selecciona un tercero"
+              [filter]="true"
+              [showClear]="true"
+              (onChange)="onBeneficiarioChange()"
+              styleClass="w-full"
+            ></p-dropdown>
+          </div>
+          <div class="field span-2">
+            <label>Nombre del beneficiario</label>
+            <input
+              pInputText
+              formControlName="beneficiarioNombre"
+              placeholder="Nombre"
+            />
+          </div>
+
+          <div class="field span-2">
+            <label>Dirección</label>
+            <input
+              pInputText
+              formControlName="beneficiarioDireccion"
+              placeholder="Dirección del beneficiario"
+            />
+          </div>
+          <div class="field">
+            <label>Teléfono</label>
+            <input
+              pInputText
+              formControlName="beneficiarioTelefono"
+              placeholder="Teléfono"
+            />
+          </div>
+          <div class="field">
+            <label>Ciudad</label>
+            <input
+              pInputText
+              formControlName="ciudad"
+              placeholder="Ciudad de emisión"
+            />
+          </div>
+
+          <div class="field span-4">
+            <label>Concepto <span class="req">*</span></label>
+            <input
+              pInputText
+              formControlName="concepto"
+              placeholder="Concepto general del comprobante"
+            />
+          </div>
+        </div>
+
+        <!-- Tabs: movimientos + estados de cuenta -->
+        <p-tabView [(activeIndex)]="activeTab" styleClass="cmp-tabs">
+          <p-tabPanel>
+            <ng-template pTemplate="header"
+              ><i class="pi pi-list"></i
+              ><span class="tl">Movimientos contables</span></ng-template
+            >
+            <!-- Líneas (asientos) -->
+            <div class="cmp-lineas">
+              <div class="cmp-lineas-head">
+                <span>Movimientos contables</span>
+                <button
+                  pButton
+                  type="button"
+                  label="Agregar línea"
+                  icon="pi pi-plus"
+                  class="p-button-text"
+                  (click)="agregarLinea()"
+                ></button>
+              </div>
+
+              <p-table
+                [value]="lineas.controls"
+                styleClass="p-datatable-sm"
+                showGridlines
+              >
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th style="min-width: 200px">Cuenta</th>
+                    <th style="min-width: 160px">Tercero</th>
+                    <th style="min-width: 150px">Centro Costo</th>
+                    <th>Descripción</th>
+                    <th class="text-right" style="width: 130px">Débito</th>
+                    <th class="text-right" style="width: 130px">Crédito</th>
+                    <th style="width: 40px"></th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-row let-i="rowIndex">
+                  <tr [formGroup]="row">
+                    <td>
+                      <p-dropdown
+                        formControlName="cuentaId"
+                        [options]="cuentasAuxOpts"
+                        optionLabel="label"
+                        optionValue="value"
+                        appendTo="body"
+                        panelStyleClass="cmp-dd-panel"
+                        placeholder="Seleccionar"
+                        [filter]="true"
+                        styleClass="w-full"
+                      ></p-dropdown>
+                    </td>
+                    <td>
+                      <p-dropdown
+                        formControlName="terceroId"
+                        [options]="terceroOpts"
+                        optionLabel="label"
+                        optionValue="value"
+                        appendTo="body"
+                        panelStyleClass="cmp-dd-panel"
+                        placeholder="Opcional"
+                        [filter]="true"
+                        [showClear]="true"
+                        styleClass="w-full"
+                      ></p-dropdown>
+                    </td>
+                    <td>
+                      <p-dropdown
+                        formControlName="centroCostoId"
+                        [options]="centroCostoOpts"
+                        optionLabel="label"
+                        optionValue="value"
+                        appendTo="body"
+                        panelStyleClass="cmp-dd-panel"
+                        placeholder="Opcional"
+                        [filter]="true"
+                        [showClear]="true"
+                        styleClass="w-full"
+                      ></p-dropdown>
+                    </td>
+                    <td>
+                      <input
+                        pInputText
+                        formControlName="descripcion"
+                        placeholder="Opcional"
+                        style="width: 100%"
+                      />
+                    </td>
+                    <td>
+                      <p-inputNumber
+                        formControlName="debito"
+                        mode="currency"
+                        currency="COP"
+                        locale="es-CO"
+                        [minFractionDigits]="0"
+                        styleClass="w-full"
+                      ></p-inputNumber>
+                    </td>
+                    <td>
+                      <p-inputNumber
+                        formControlName="credito"
+                        mode="currency"
+                        currency="COP"
+                        locale="es-CO"
+                        [minFractionDigits]="0"
+                        styleClass="w-full"
+                      ></p-inputNumber>
+                    </td>
+                    <td>
+                      <button
+                        pButton
+                        type="button"
+                        icon="pi pi-trash"
+                        class="p-button-text p-button-danger p-button-sm p-button-rounded"
+                        [disabled]="row.get('origen')?.value !== 'MANUAL'"
+                        pTooltip="Las líneas de cartera se editan desde 'Estados de cuenta'"
+                        (click)="quitarLinea(i)"
+                      ></button>
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+
+              <!-- Totales / cuadre -->
+              <div class="cmp-totales">
+                <span
+                  >Débito: <strong>{{ formatCOP(totalDebito) }}</strong></span
+                >
+                <span
+                  >Crédito: <strong>{{ formatCOP(totalCredito) }}</strong></span
+                >
+                <span [class.ok]="cuadrado" [class.bad]="!cuadrado">
+                  {{
+                    cuadrado
+                      ? "Cuadrado ✓"
+                      : "Diferencia: " + formatCOP(diferencia)
+                  }}
+                </span>
+              </div>
+            </div>
+          </p-tabPanel>
+
+          <!-- ══ Estados de cuenta ══ -->
+          <p-tabPanel [disabled]="!esCartera">
+            <ng-template pTemplate="header"
+              ><i class="pi pi-wallet"></i
+              ><span class="tl">Estados de cuenta</span></ng-template
+            >
+
+            <div *ngIf="!esCartera" class="cmp-nota">
+              Disponible solo para <b>Comprobante de Egreso</b> (cuentas por
+              pagar) o <b>Recibo de Caja</b> (cuentas por cobrar).
+            </div>
+
+            <ng-container *ngIf="esCartera">
+              <div class="cmp-cartera-bar">
+                <div class="field">
+                  <label
+                    >{{
+                      esCE
+                        ? "Cuenta de banco/caja (crédito)"
+                        : "Cuenta de banco/caja (débito)"
+                    }}
+                    <span class="req">*</span></label
+                  >
+                  <p-dropdown
+                    [options]="cuentasDisponibleOpts"
+                    [(ngModel)]="cuentaContrapartidaId"
+                    [ngModelOptions]="{ standalone: true }"
+                    optionLabel="label"
+                    optionValue="value"
+                    appendTo="body"
+                    placeholder="Banco / Caja"
+                    [filter]="true"
+                    (onChange)="sincronizarCartera()"
+                    styleClass="w-full"
+                  ></p-dropdown>
+                </div>
+                <div class="field cmp-cartera-search">
+                  <label>Buscar</label>
+                  <input
+                    pInputText
+                    [(ngModel)]="carteraSearch"
+                    [ngModelOptions]="{ standalone: true }"
+                    (keyup.enter)="buscarCartera()"
+                    placeholder="Documento o factura..."
+                  />
+                </div>
+                <div class="cmp-cartera-total">
+                  Aplicado: <strong>{{ formatCOP(totalAplicado) }}</strong>
+                </div>
+              </div>
+
+              <p-table
+                [value]="carteraItems"
+                [lazy]="true"
+                (onLazyLoad)="cargarCartera($event)"
+                [paginator]="true"
+                [rows]="carteraRows"
+                [totalRecords]="carteraTotal"
+                [loading]="carteraLoading"
+                styleClass="p-datatable-sm"
+                showGridlines
+              >
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th style="width: 44px"></th>
+                    <th>Documento</th>
+                    <th>{{ esCE ? "Proveedor" : "Cliente" }}</th>
+                    <th class="text-right">Saldo pendiente</th>
+                    <th class="text-right" style="width: 170px">
+                      Valor a aplicar
+                    </th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-c>
+                  <tr>
+                    <td class="text-center">
+                      <input
+                        type="checkbox"
+                        [checked]="estaSel(c.id)"
+                        (change)="toggleSel(c, $any($event.target).checked)"
+                      />
+                    </td>
+                    <td>
+                      {{ c.numeroCuenta
+                      }}<span *ngIf="c.numeroFacturaExterno">
+                        · {{ c.numeroFacturaExterno }}</span
+                      >
+                    </td>
+                    <td>{{ esCE ? c.proveedorNombre : c.clienteNombre }}</td>
+                    <td class="text-right">
+                      {{ formatCOP(c.saldoPendiente) }}
+                    </td>
+                    <td class="text-right">
+                      <p-inputNumber
+                        *ngIf="estaSel(c.id)"
+                        [(ngModel)]="sel[c.id].aplicado"
+                        [ngModelOptions]="{ standalone: true }"
+                        (onInput)="onAplicadoChange(c.id)"
+                        (onBlur)="onAplicadoChange(c.id)"
+                        mode="currency"
+                        currency="COP"
+                        locale="es-CO"
+                        [minFractionDigits]="0"
+                        [min]="0"
+                        [max]="c.saldoPendiente"
+                        styleClass="w-full"
+                      ></p-inputNumber>
+                      <span *ngIf="!estaSel(c.id)" class="cmp-muted">—</span>
+                    </td>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                  <tr>
+                    <td colspan="5">
+                      <div class="cmp-empty">Sin cuentas pendientes.</div>
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+
+              <p class="cmp-nota">
+                <i class="pi pi-info-circle"></i>
+                Las cuentas seleccionadas se agregan como movimientos y se
+                genera la línea consolidada de banco/caja. En esta fase
+                <b>solo se contabiliza</b>; el cruce de cartera (abonos) se
+                aplicará en una fase posterior.
+              </p>
+            </ng-container>
+          </p-tabPanel>
+        </p-tabView>
+      </div>
+      <!-- fin cuerpo -->
+
+      <!-- Pie -->
+      <div class="card-footer">
+        <button
+          pButton
+          type="button"
+          label="Cancelar"
+          class="p-button-text"
+          (click)="cancelar()"
+        ></button>
+        <button
+          pButton
+          type="submit"
+          label="Guardar y contabilizar"
+          icon="pi pi-check"
+          class="btn-aura"
+          [loading]="saving"
+          [disabled]="!cuadrado"
+        ></button>
+      </div>
+    </div>
+  </form>
+</div>

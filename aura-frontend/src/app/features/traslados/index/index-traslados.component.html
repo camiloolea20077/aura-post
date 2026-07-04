@@ -1,41 +1,37 @@
-<div class="module-container">
-  <!-- Header -->
-  <div class="module-header">
-    <div class="header-left">
-      <div class="header-icon">
-        <i class="pi pi-arrow-right-arrow-left"></i>
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-arrow-right-arrow-left"></i></span>
+        <div>
+          <h1 class="title">Traslados</h1>
+          <p class="subtitle">Transferencia de inventario entre sucursales</p>
+        </div>
       </div>
-      <div>
-        <h2 class="header-title">Traslados</h2>
-        <p class="header-sub">Transferencia de inventario entre sucursales</p>
+      <div class="card-head__actions">
+        <button
+          pButton
+          label="Nuevo traslado"
+          icon="pi pi-plus"
+          class="btn-aura"
+          (click)="nuevo()"
+        ></button>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              placeholder="Buscar por sucursal o usuario..."
+              [(ngModel)]="search"
+              (input)="onSearch()"
+              class="search-input"
+            />
+          </span>
+        </div>
       </div>
     </div>
-    <button
-      pButton
-      label="Nuevo traslado"
-      icon="pi pi-plus"
-      class="btn-aura"
-      (click)="nuevo()"
-    ></button>
-  </div>
 
-  <!-- Toolbar -->
-  <div class="table-toolbar">
-    <span class="search-wrap">
-      <i class="pi pi-search"></i>
-      <input
-        type="text"
-        pInputText
-        placeholder="Buscar por sucursal o usuario..."
-        [(ngModel)]="search"
-        (input)="onSearch()"
-        class="search-input"
-      />
-    </span>
-  </div>
-
-  <!-- Tabla -->
-  <div class="table-card">
     <p-table
       [value]="rows"
       [lazy]="true"

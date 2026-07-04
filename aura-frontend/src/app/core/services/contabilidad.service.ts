@@ -4,7 +4,8 @@ import { Observable } from 'rxjs';
 
 import {
   AsientoContableModel, BalanceGeneralModel,
-  CreateAsientoDto, CreatePlanCuentaDto, PlanCuentaModel,
+  CreateAsientoDto, CreateComprobanteDto, CreatePlanCuentaDto, PlanCuentaModel,
+  CreateSaldosInicialesDto,
   EstadoResultadosModel, FlujoCajaModel, LibroMayorLineaModel,
 } from '../models/contabilidad.model';
 import { environment } from '../../../environments/environment';
@@ -56,6 +57,29 @@ export class ContabilidadService {
 
   anularAsiento(id: number): Observable<ResponseModel<void>> {
     return this.http.patch<ResponseModel<void>>(`${this.api}/asientos/${id}/anular`, {});
+  }
+
+  // ── Comprobantes manuales (CD/CE/RC) ──────────────────────────────
+  crearComprobante(dto: CreateComprobanteDto): Observable<ResponseModel<AsientoContableModel>> {
+    return this.http.post<ResponseModel<AsientoContableModel>>(`${this.api}/comprobantes`, dto);
+  }
+
+  siguienteConsecutivo(tipo: string): Observable<ResponseModel<string>> {
+    const params = new HttpParams().set('tipo', tipo);
+    return this.http.get<ResponseModel<string>>(`${this.api}/comprobantes/siguiente`, { params });
+  }
+
+  // ── Saldos iniciales / apertura ────────────────────────────────────
+  obtenerApertura(): Observable<ResponseModel<AsientoContableModel | null>> {
+    return this.http.get<ResponseModel<AsientoContableModel | null>>(`${this.api}/saldos-iniciales`);
+  }
+
+  guardarApertura(dto: CreateSaldosInicialesDto): Observable<ResponseModel<AsientoContableModel>> {
+    return this.http.post<ResponseModel<AsientoContableModel>>(`${this.api}/saldos-iniciales`, dto);
+  }
+
+  eliminarApertura(): Observable<ResponseModel<void>> {
+    return this.http.delete<ResponseModel<void>>(`${this.api}/saldos-iniciales`);
   }
 
   // ── Balance ───────────────────────────────────────────────────────

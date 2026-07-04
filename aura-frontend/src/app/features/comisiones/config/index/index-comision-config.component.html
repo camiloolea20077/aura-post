@@ -1,46 +1,46 @@
 <p-toast />
 <p-confirmDialog />
 
-<div class="module-wrapper">
-  <!-- ─── Header ─────────────────────────────────────────────── -->
-  <div class="module-header">
-    <div class="header-left">
-      <div class="header-icon">
-        <i class="pi pi-percentage"></i>
+<div class="page">
+  <div class="card">
+    <!-- ─── Header ─────────────────────────────────────────────── -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon">
+          <i class="pi pi-percentage"></i>
+        </span>
+        <div>
+          <h1 class="title">Configuración de Comisiones</h1>
+          <p class="subtitle">
+            Asigna porcentajes de comisión por servicio y técnico
+          </p>
+        </div>
       </div>
-      <div>
-        <h2 class="header-title">Configuración de Comisiones</h2>
-        <p class="header-sub">
-          Asigna porcentajes de comisión por servicio y técnico
-        </p>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-plus"
+          label="Nueva configuración"
+          class="btn-aura"
+          (click)="nueva()"
+        ></button>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              pInputText
+              [(ngModel)]="search"
+              placeholder="Buscar por servicio o técnico..."
+              (input)="onSearch()"
+              class="search-input"
+            />
+            <button *ngIf="search" class="clear-btn" (click)="clearSearch()">
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+        </div>
       </div>
-    </div>
-    <button
-      pButton
-      icon="pi pi-plus"
-      label="Nueva configuración"
-      class="btn-aura"
-      (click)="nueva()"
-    ></button>
-  </div>
-
-  <!-- ─── Tabla ───────────────────────────────────────────────── -->
-  <div class="table-card">
-    <div class="table-toolbar">
-      <div class="search-wrap">
-        <i class="pi pi-search"></i>
-        <input
-          pInputText
-          [(ngModel)]="search"
-          placeholder="Buscar por servicio o técnico..."
-          (input)="onSearch()"
-          class="search-input"
-        />
-        <button *ngIf="search" class="clear-btn" (click)="clearSearch()">
-          <i class="pi pi-times"></i>
-        </button>
-      </div>
-      <span class="total-badge">{{ totalRows }} registros</span>
     </div>
 
     <p-table
@@ -80,7 +80,7 @@
           </td>
           <td class="fw-600">
             <span *ngIf="c.productoNombre">
-              <i class="pi pi-box" style="color: #6366f1; margin-right: 4px"></i
+              <i class="pi pi-box" style="color: #2563eb; margin-right: 4px"></i
               >{{ c.productoNombre }}
             </span>
             <span *ngIf="c.categoriaNombre && !c.productoNombre">

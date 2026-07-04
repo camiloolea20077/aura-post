@@ -1,58 +1,4 @@
-.page-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-.page-title-area {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-}
-.page-icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 13px;
-  background: linear-gradient(135deg, #7c3aed, #a78bfa);
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  i {
-    font-size: 1.15rem;
-    color: white;
-  }
-}
-.page-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0 0 0.15rem;
-}
-.page-sub {
-  font-size: 0.8rem;
-  color: #64748b;
-  margin: 0;
-}
-::ng-deep .btn-nomina.p-button {
-  background: linear-gradient(135deg, #7c3aed, #a78bfa) !important;
-  border: none !important;
-  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3) !important;
-  &:hover {
-    opacity: 0.92;
-  }
-}
-
 .card {
-  background: white;
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
   overflow: hidden;
 }
 
@@ -71,7 +17,7 @@
     border-bottom: none;
   }
   &:hover {
-    background: rgba(124, 58, 237, 0.02);
+    background: rgba(37, 99, 235, 0.02);
   }
   &.anulado {
     opacity: 0.5;
@@ -86,12 +32,12 @@
   width: 38px;
   height: 38px;
   border-radius: 10px;
-  background: rgba(124, 58, 237, 0.08);
+  background: rgba(37, 99, 235, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
   i {
-    color: #7c3aed;
+    color: #2563eb;
     font-size: 1rem;
   }
 }

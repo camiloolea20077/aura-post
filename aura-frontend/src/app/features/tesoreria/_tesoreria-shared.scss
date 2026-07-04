@@ -2,7 +2,6 @@
 
 .module-wrapper {
   padding: 1.5rem;
-  max-width: 1400px;
   margin: 0 auto;
 }
 
@@ -34,8 +33,17 @@
   flex-shrink: 0;
 }
 
-.module-header h2 { margin: 0; font-size: 1.35rem; font-weight: 700; color: #1e293b; }
-.module-header p  { margin: 0; font-size: 0.85rem; color: #64748b; }
+.module-header h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+.module-header p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
 
 // ── Filtros ──────────────────────────────────────────────────────────
 .filters-bar {
@@ -102,7 +110,9 @@
   overflow: hidden;
 }
 
-.text-right { text-align: right !important; }
+.text-right {
+  text-align: right !important;
+}
 
 .anulado-row {
   opacity: 0.5;
@@ -142,7 +152,10 @@
   padding: 3rem !important;
   color: #94a3b8;
 
-  p { margin: 0.5rem 0 0; font-size: 0.9rem; }
+  p {
+    margin: 0.5rem 0 0;
+    font-size: 0.9rem;
+  }
 }
 
 // ── Modal ────────────────────────────────────────────────────────────
@@ -158,8 +171,14 @@
   flex-direction: column;
   gap: 0.35rem;
 
-  label { font-size: 0.85rem; font-weight: 600; color: #374151; }
-  .req  { color: #ef4444; }
+  label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #374151;
+  }
+  .req {
+    color: #ef4444;
+  }
 }
 
 // ── Botón base ───────────────────────────────────────────────────────
