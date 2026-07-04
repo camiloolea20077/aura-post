@@ -1,167 +1,8 @@
-.page-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.page-title-area {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-}
-
-.page-icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 13px;
-  background: linear-gradient(135deg, #6366f1, #818cf8);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  i {
-    font-size: 1.1rem;
-    color: white;
-  }
-}
-
-.page-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0 0 0.15rem;
-}
-
-.page-sub {
-  font-size: 0.8rem;
-  color: #64748b;
-  margin: 0;
-}
-
-.btn-aura {
-  height: 38px;
-  border-radius: 10px;
-  font-size: 0.84rem;
-  font-weight: 600;
-  font-family: 'Outfit', sans-serif;
-  border: none;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0 1.1rem;
-  transition: all 0.15s;
-
-  &.btn-primary {
-    background: linear-gradient(135deg, #6366f1, #818cf8);
-    color: white;
-    box-shadow: 0 3px 10px rgba(99, 102, 241, 0.35);
-
-    &:hover {
-      box-shadow: 0 5px 15px rgba(99, 102, 241, 0.45);
-      transform: translateY(-1px);
-    }
-  }
-}
-
-.card {
-  background: white;
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
-}
-
-.table-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid #f1f5f9;
-  gap: 0.75rem;
-
-  .toolbar-left {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    flex: 1;
-  }
-}
-
-.search-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-
-  .pi-search {
-    position: absolute;
-    left: 0.8rem;
-    font-size: 0.85rem;
-    color: #94a3b8;
-    z-index: 1;
-    pointer-events: none;
-  }
-
-  .search-input {
-    height: 38px;
-    width: 300px;
-    border-radius: 10px;
-    border: 1.5px solid #e0e3eb;
-    padding: 0 2.2rem;
-    font-size: 0.85rem;
-    font-family: 'Outfit', sans-serif;
-
-    &::placeholder {
-      color: #9ca3af;
-    }
-
-    &:focus {
-      border-color: #6366f1;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-      outline: none;
-    }
-  }
-
-  .clear-btn {
-    position: absolute;
-    right: 0.6rem;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #9ca3af;
-    display: flex;
-    align-items: center;
-    padding: 0.25rem;
-
-    i {
-      font-size: 0.75rem;
-    }
-
-    &:hover {
-      color: #ef4444;
-    }
-  }
-}
-
-.total-badge {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #64748b;
-  background: #f1f5f9;
-  padding: 0.25rem 0.65rem;
-  border-radius: 20px;
-}
+// Header (.card-head), card (.card), buscador (.search-wrap), total
+// (.total-badge) y el botón (.btn-aura) son estándar global en styles.scss.
 
 ::ng-deep .aura-table {
-  font-family: 'Outfit', sans-serif;
+  font-family: "Outfit", sans-serif;
 
   .p-datatable-thead > tr > th {
     background: #fafbfe;
@@ -205,7 +46,7 @@
     background: #fafbfe;
 
     .p-paginator-page.p-highlight {
-      background: linear-gradient(135deg, #6366f1, #818cf8);
+      background: #2563eb;
       color: white;
       border-radius: 8px;
     }
@@ -213,7 +54,7 @@
 }
 
 .id-badge {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   font-size: 0.78rem;
   font-weight: 700;
   color: #64748b;
@@ -223,10 +64,10 @@
 }
 
 .numero-venta {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   font-size: 0.82rem;
   font-weight: 600;
-  color: #6366f1;
+  color: #2563eb;
 }
 
 .cell-cliente {
@@ -240,7 +81,7 @@
   height: 28px;
   border-radius: 8px;
   flex-shrink: 0;
-  background: linear-gradient(135deg, #6366f1, #818cf8);
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -260,7 +101,7 @@
 }
 
 .monto-val {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   font-size: 0.88rem;
   font-weight: 700;
   color: #1e293b;

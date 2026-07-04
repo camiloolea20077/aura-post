@@ -1,100 +1,113 @@
-<p-toast />
-
-<div class="module-wrapper">
-  <!-- ── Header ─────────────────────────────────────────────────── -->
-  <div class="module-header">
-    <div class="header-left">
-      <span class="header-icon"><i class="pi pi-credit-card"></i></span>
-      <div>
-        <h2>Cuentas Bancarias</h2>
-        <p>Administra tus cuentas, cajas y billeteras digitales</p>
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon">
+          <i class="pi pi-credit-card"></i>
+        </span>
+        <div>
+          <h1 class="title">Cuentas Bancarias</h1>
+          <p class="subtitle">
+            Administra tus cuentas, cajas y billeteras digitales
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          label="Nueva Cuenta"
+          icon="pi pi-plus"
+          class="btn-aura"
+          (click)="abrirNueva()"
+        ></button>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              class="search-input"
+              placeholder="Buscar cuenta, banco, número..."
+              [(ngModel)]="searchQuery"
+              (input)="dt.filterGlobal($any($event.target).value, 'contains')"
+            />
+            <button
+              *ngIf="searchQuery"
+              class="clear-btn"
+              (click)="clearSearch(dt)"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-refresh"
+            class="p-button-text p-button-rounded"
+            pTooltip="Recargar"
+            (click)="cargar()"
+            [loading]="loading"
+          ></button>
+        </div>
       </div>
     </div>
-    <div class="header-actions">
-      <button
-        pButton
-        icon="pi pi-refresh"
-        class="p-button-text p-button-rounded"
-        pTooltip="Recargar"
-        (click)="cargar()"
-        [loading]="loading"
-      ></button>
-      <button
-        pButton
-        label="Nueva Cuenta"
-        icon="pi pi-plus"
-        class="btn-aura"
-        (click)="abrirNueva()"
-      ></button>
-    </div>
-  </div>
 
-  <!-- ── Skeleton loading ───────────────────────────────────────── -->
-  @if (loading) {
-    <div class="cuentas-grid">
-      @for (sk of [1, 2, 3, 4]; track sk) {
-        <div class="cuenta-card skeleton-card">
-          <p-skeleton width="60%" height="1.2rem" styleClass="mb-2" />
-          <p-skeleton width="40%" height="0.9rem" styleClass="mb-3" />
-          <p-skeleton width="80%" height="2rem" styleClass="mb-2" />
-          <p-skeleton width="50%" height="0.85rem" />
-        </div>
-      }
-    </div>
-  }
-
-  <!-- ── Grid de cuentas ────────────────────────────────────────── -->
-  @if (!loading && cuentas.length > 0) {
-    <div class="cuentas-grid">
-      @for (c of cuentas; track c.id) {
-        <div class="cuenta-card" [class.inactiva]="!c.activa">
-          <!-- Borde de color por tipo -->
-          <div
-            class="tipo-accent"
-            [style.background]="getTipoMeta(c.tipo).color"
-          ></div>
-
-          <!-- Header de la card -->
-          <div class="card-top">
-            <div class="card-tipo">
-              <span
-                class="tipo-icon"
-                [style.background]="getTipoMeta(c.tipo).color + '20'"
-                [style.color]="getTipoMeta(c.tipo).color"
-              >
-                <i [class]="getTipoMeta(c.tipo).icon"></i>
-              </span>
-              <span class="tipo-label">{{ getTipoMeta(c.tipo).label }}</span>
-            </div>
-            <span class="estado-badge" [class.activa]="c.activa">
-              {{ c.activa ? "Activa" : "Inactiva" }}
-            </span>
-          </div>
-
-          <!-- Nombre -->
-          <div class="card-nombre">{{ c.nombre }}</div>
-
-          <!-- Banco / número -->
-          @if (c.banco) {
-            <div class="card-banco">{{ c.banco }}</div>
-          }
-          @if (c.numeroCuenta) {
-            <div class="card-numero">{{ maskCuenta(c.numeroCuenta) }}</div>
-          }
-          @if (c.titular) {
-            <div class="card-titular">{{ c.titular }}</div>
-          }
-
-          <!-- Saldo -->
-          <div class="card-saldo">
-            <span class="saldo-label">Saldo actual</span>
-            <span class="saldo-valor" [class.negativo]="c.saldoActual < 0">
-              {{ formatCOP(c.saldoActual) }}
-            </span>
-          </div>
-
-          <!-- Acciones -->
-          <div class="card-actions">
+    <!-- ── Tabla de cuentas ───────────────────────────────────────── -->
+    <p-table
+      #dt
+      [value]="cuentas"
+      [loading]="loading"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords} registros"
+      [globalFilterFields]="[
+        'nombre',
+        'banco',
+        'numeroCuenta',
+        'cuentaContableNombre',
+        'tipo',
+        'titular',
+      ]"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Nombre</th>
+          <th style="width: 110px">Tipo</th>
+          <th style="min-width: 140px">Banco</th>
+          <th style="width: 130px">N° cuenta</th>
+          <th style="min-width: 180px">Cuenta contable</th>
+          <th style="width: 150px" class="text-right">Saldo actual</th>
+          <th style="width: 90px" class="text-center">Estado</th>
+          <th style="width: 100px" class="text-center">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-c>
+        <tr [class.inactiva-row]="!c.activa">
+          <td>{{ c.nombre }}</td>
+          <td>
+            <p-tag
+              [value]="getTipoMeta(c.tipo).label"
+              [style.background]="'#2563eb'"
+              [style.color]="'#ffffff'"
+            />
+          </td>
+          <td>{{ c.banco || "—" }}</td>
+          <td>{{ maskCuenta(c.numeroCuenta) }}</td>
+          <td>{{ c.cuentaContableNombre || "—" }}</td>
+          <td class="text-right" [class.negativo]="c.saldoActual < 0">
+            {{ formatCOP(c.saldoActual) }}
+          </td>
+          <td class="text-center">
+            <p-tag
+              [value]="c.activa ? 'Activa' : 'Inactiva'"
+              [severity]="c.activa ? 'success' : 'danger'"
+            />
+          </td>
+          <td class="text-center flex">
             <button
               pButton
               icon="pi pi-pencil"
@@ -106,32 +119,27 @@
               pButton
               [icon]="c.activa ? 'pi pi-eye-slash' : 'pi pi-eye'"
               class="p-button-text p-button-sm"
-              [class.p-button-warning]="c.activa"
-              [class.p-button-success]="!c.activa"
               [pTooltip]="c.activa ? 'Desactivar' : 'Activar'"
               (click)="toggleActiva(c)"
             ></button>
-          </div>
-        </div>
-      }
-    </div>
-  }
-
-  <!-- ── Empty state ────────────────────────────────────────────── -->
-  @if (!loading && cuentas.length === 0) {
-    <div class="empty-state">
-      <i class="pi pi-credit-card empty-icon"></i>
-      <p>No hay cuentas bancarias registradas</p>
-      <button
-        pButton
-        label="Crear primera cuenta"
-        icon="pi pi-plus"
-        class="btn-aura"
-        (click)="abrirNueva()"
-      ></button>
-    </div>
-  }
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td
+            colspan="8"
+            style="text-align: center; padding: 2rem; color: #94a3b8"
+          >
+            No hay cuentas bancarias registradas.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
 </div>
+
+<p-toast />
 
 <!-- ── Modal crear / editar ───────────────────────────────────────── -->
 <p-dialog
@@ -201,6 +209,39 @@
       />
     </div>
 
+    <!-- Cuenta contable (PUC) -->
+    <div class="field">
+      <label
+        >Cuenta contable
+        <span style="color: #94a3b8">(para la contabilidad)</span></label
+      >
+      <p-dropdown
+        [(ngModel)]="form.cuentaContableId"
+        [options]="cuentasContablesOpts"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Seleccionar cuenta del PUC..."
+        [filter]="true"
+        filterBy="label"
+        [showClear]="true"
+        styleClass="w-full"
+      />
+    </div>
+
+    <!-- Tercero (banco) -->
+    <div class="field">
+      <label
+        >Banco / Tercero <span style="color: #94a3b8">(opcional)</span></label
+      >
+      <app-tercero-picker
+        [terceroId]="form.terceroId ?? null"
+        [terceroNombre]="terceroNombreSel"
+        placeholder="Buscar el banco como tercero..."
+        filtro="BANCO"
+        (seleccionado)="onTerceroSel($event)"
+      />
+    </div>
+
     <!-- Saldo inicial -->
     <div class="field">
       <label>Saldo inicial</label>
@@ -231,7 +272,7 @@
       class="btn-aura"
       (click)="guardar()"
       [loading]="saving"
-      [disabled]="!form.nombre?.trim() || !form.tipo"
+      [disabled]="!form.nombre.trim() || !form.tipo"
     ></button>
   </ng-template>
 </p-dialog>

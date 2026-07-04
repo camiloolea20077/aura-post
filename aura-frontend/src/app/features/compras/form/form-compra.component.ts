@@ -2,16 +2,12 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
-  EventEmitter,
-  Input,
-  OnChanges,
   OnInit,
-  Output,
-  SimpleChanges,
   signal,
   computed,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
@@ -44,7 +40,10 @@ import {
   ProductoOpcion,
   TipoDocumentoCompra,
 } from '../../../core/models/compra.model';
-import { TerceroTableModel } from '../../../core/models/tercero.model';
+import {
+  TerceroModel,
+  TerceroTableModel,
+} from '../../../core/models/tercero.model';
 import { CompraService } from '../../../core/services/compra.service';
 import { TerceroService } from '../../../core/services/tercero.service';
 import { ProductoService } from '../../../core/services/producto.service';
@@ -53,6 +52,13 @@ import { IndexDBService } from '../../../core/services/index-db.service';
 import { CuentaBancariaService } from '../../../core/services/cuenta-bancaria.service';
 import { CuentaBancariaModel } from '../../../core/models/cuenta-bancaria.model';
 import { TarifaRetencionService } from '../../../core/services/tarifa-retencion.service';
+import { TipoRetencion } from '../../../core/models/tarifa-retencion.model';
+
+interface RetencionOpcion {
+  value: string;
+  label: string;
+  pct: number;
+}
 import {
   PageableDto,
   ProductoTableModel,
@@ -85,21 +91,27 @@ import {
   templateUrl: './form-compra.component.html',
   styleUrls: ['./form-compra.component.scss'],
 })
-export class FormCompraComponent implements OnInit, OnChanges {
-  @Input() displayModal = false;
-  @Input() compraToEdit: CompraModel | null = null;
-  @Input() prefilledFromOC: PrefilledCompraOC | null = null;
-  @Output() modalClosed = new EventEmitter<void>();
-  @Output() compraSaved = new EventEmitter<CompraModel>();
+export class FormCompraComponent implements OnInit {
+  private editId: number | null = null;
 
   get modoEdicion(): boolean {
-    return this.compraToEdit != null;
+    return this.editId != null;
   }
 
   // ─── Cabecera ─────────────────────────────────────────────────────
   public proveedorQuery = '';
   public proveedorSeleccionado: TerceroTableModel | null = null;
   public proveedoresSugerencias: TerceroTableModel[] = [];
+  // Datos completos del proveedor (correo, teléfono, dirección, razón social)
+  public terceroFull: TerceroModel | null = null;
+
+  get esJuridica(): boolean {
+    return (
+      this.terceroFull?.tipoPersona === 'JURIDICA' ||
+      this.terceroFull?.tipoDocumento === 'NIT' ||
+      this.terceroFull?.tipoDocumento === 'RUT'
+    );
+  }
   public sucursalId: number | null = null;
   public sucursalesOpts: { label: string; value: number }[] = [];
   private defaultSucursalId: number | null = null;
@@ -122,9 +134,6 @@ export class FormCompraComponent implements OnInit, OnChanges {
   subtotal = computed(() => this.subtotalBruto() - this.descuentoTotal());
   impuestosTotal = computed(() =>
     this.lineas().reduce((a, l) => a + (l.impuestoValor || 0), 0),
-  );
-  total = computed(
-    () => this.subtotal() + this.impuestosTotal() + (this.fletes || 0),
   );
   totalUnidades = computed(() =>
     this.lineas().reduce((a, l) => a + (l.cantidad ?? 0), 0),
@@ -150,6 +159,11 @@ export class FormCompraComponent implements OnInit, OnChanges {
   public banco: string = '';
   public cuentaBancariaId: number | null = null;
   public cuentasBancarias: CuentaBancariaModel[] = [];
+
+  readonly formaPagoOpts: { label: string; value: FormaPago }[] = [
+    { label: 'Contado', value: 'CONTADO' },
+    { label: 'Crédito', value: 'CREDITO' },
+  ];
 
   readonly metodosPagoOpts = [
     { label: 'Efectivo', value: 'EFECTIVO', icon: 'pi-wallet' },
@@ -185,20 +199,64 @@ export class FormCompraComponent implements OnInit, OnChanges {
   public reteivaPct: number = 0;
   public reteicaPct: number = 0;
 
-  retefuenteValor = computed(
-    () => Math.round(this.subtotal() * (this.retefuentePct / 100) * 100) / 100,
-  );
-  reteivaValor = computed(
-    () =>
-      Math.round(this.impuestosTotal() * (this.reteivaPct / 100) * 100) / 100,
-  );
-  reteicaValor = computed(
-    () => Math.round(this.subtotal() * (this.reteicaPct / 100) * 100) / 100,
-  );
-  totalRetenciones = computed(
-    () => this.retefuenteValor() + this.reteivaValor() + this.reteicaValor(),
-  );
-  netaAPagar = computed(() => this.total() - this.totalRetenciones());
+  // Opción seleccionada por tipo
+  public retefuenteSel: string | null = null;
+  public reteivaSel: string | null = null;
+  public reteicaSel: string | null = null;
+
+  // ── Catálogo fijo de retenciones (definido por nosotros) ──────────
+  // Retefuente — tarifas nacionales aproximadas
+  readonly retefuenteOpts: RetencionOpcion[] = [
+    { value: 'compras_generales', label: 'Compras generales (mercancías) — 2.5%', pct: 2.5 },
+    { value: 'compras_no_declarantes', label: 'Compras a no declarantes — 3.5%', pct: 3.5 },
+    { value: 'servicios_general', label: 'Servicios en general — 4%', pct: 4 },
+    { value: 'servicios_declarantes', label: 'Servicios a declarantes — 4%', pct: 4 },
+    { value: 'honorarios_11', label: 'Honorarios — 11%', pct: 11 },
+    { value: 'honorarios_10', label: 'Honorarios (no declarante) — 10%', pct: 10 },
+    { value: 'comisiones_11', label: 'Comisiones — 11%', pct: 11 },
+    { value: 'comisiones_10', label: 'Comisiones (no declarante) — 10%', pct: 10 },
+    { value: 'arr_inmuebles', label: 'Arrendamiento bienes inmuebles — 3.5%', pct: 3.5 },
+    { value: 'arr_muebles', label: 'Arrendamiento bienes muebles — 4%', pct: 4 },
+    { value: 'transporte_carga', label: 'Transporte de carga — 1%', pct: 1 },
+    { value: 'transporte_pasajeros', label: 'Transporte de pasajeros — 3.5%', pct: 3.5 },
+    { value: 'servicios_temporales', label: 'Servicios temporales — 2%', pct: 2 },
+    { value: 'hoteles', label: 'Hoteles / hospedaje — 3.5%', pct: 3.5 },
+    { value: 'construccion', label: 'Construcción / obra material — 2%', pct: 2 },
+  ];
+
+  // ReteIVA — 15% del IVA generado
+  readonly reteivaOpts: RetencionOpcion[] = [
+    { value: 'reteiva_general', label: 'ReteIVA general — 15% del IVA', pct: 15 },
+  ];
+
+  // ReteICA — Montelíbano (Córdoba). ⚠ Verificar tarifas oficiales del municipio.
+  readonly reteicaOpts: RetencionOpcion[] = [
+    { value: 'ica_comercial', label: 'Montelíbano · Comercial — 10‰ (1%)', pct: 1 },
+    { value: 'ica_servicios', label: 'Montelíbano · Servicios — 10‰ (1%)', pct: 1 },
+    { value: 'ica_industrial', label: 'Montelíbano · Industrial — 7‰ (0.7%)', pct: 0.7 },
+  ];
+
+  onTarifaRetencion(tipo: TipoRetencion, value: string | null): void {
+    const lista =
+      tipo === 'RETEFUENTE'
+        ? this.retefuenteOpts
+        : tipo === 'RETEIVA'
+          ? this.reteivaOpts
+          : this.reteicaOpts;
+    const pct = lista.find((o) => o.value === value)?.pct ?? 0;
+    if (tipo === 'RETEFUENTE') {
+      this.retefuenteSel = value;
+      this.retefuentePct = pct;
+    } else if (tipo === 'RETEIVA') {
+      this.reteivaSel = value;
+      this.reteivaPct = pct;
+    } else {
+      this.reteicaSel = value;
+      this.reteicaPct = pct;
+    }
+    this.guardarDraft();
+    this.cdr.markForCheck();
+  }
 
   // ─── Estado ───────────────────────────────────────────────────────
   public isSubmitting = false;
@@ -212,18 +270,48 @@ export class FormCompraComponent implements OnInit, OnChanges {
 
   get subtotalValue(): number { return this.subtotal(); }
   get impuestosTotalValue(): number { return this.impuestosTotal(); }
-  get totalValue(): number { return this.total(); }
   get descuentoTotalValue(): number { return this.descuentoTotal(); }
   get subtotalBrutoValue(): number { return this.subtotalBruto(); }
-  get totalRetencionesValue(): number { return this.totalRetenciones(); }
-  get netaAPagarValue(): number { return this.netaAPagar(); }
   get totalUnidadesValue(): number { return this.totalUnidades(); }
-  get retefuenteValorValue(): number { return this.retefuenteValor(); }
-  get reteivaValorValue(): number { return this.reteivaValor(); }
-  get reteicaValorValue(): number { return this.reteicaValor(); }
 
-  ngOnInit(): void {
-    this.loadDropdowns();
+  // Valores que dependen de % retención y fletes (props normales) → getters
+  // para que se recalculen en cada ciclo de detección (flete/% reactivos)
+  get retefuenteValorValue(): number {
+    return Math.round(this.subtotal() * (this.retefuentePct / 100) * 100) / 100;
+  }
+  get reteivaValorValue(): number {
+    return (
+      Math.round(this.impuestosTotal() * (this.reteivaPct / 100) * 100) / 100
+    );
+  }
+  get reteicaValorValue(): number {
+    return Math.round(this.subtotal() * (this.reteicaPct / 100) * 100) / 100;
+  }
+  get totalRetencionesValue(): number {
+    return (
+      this.retefuenteValorValue + this.reteivaValorValue + this.reteicaValorValue
+    );
+  }
+  get totalValue(): number {
+    return this.subtotal() + this.impuestosTotal() + (this.fletes || 0);
+  }
+  get netaAPagarValue(): number {
+    return this.totalValue - this.totalRetencionesValue;
+  }
+
+  async ngOnInit(): Promise<void> {
+    await this.loadDropdowns();
+    this.resetForm();
+    const idParam = this.route.snapshot.paramMap.get('id');
+    if (idParam) {
+      this.editId = +idParam;
+      await this.cargarEdicionById(this.editId);
+    } else {
+      const fromOC = (history.state?.['fromOC'] ??
+        null) as PrefilledCompraOC | null;
+      if (fromOC) this.cargarDesdeOC(fromOC);
+      else this.cargarDraft();
+    }
   }
 
   // ─── Draft / LocalStorage ─────────────────────────────────────────────
@@ -238,6 +326,8 @@ export class FormCompraComponent implements OnInit, OnChanges {
       if (draft.proveedorSeleccionado) {
         this.proveedorSeleccionado = draft.proveedorSeleccionado;
         this.proveedorQuery = draft.proveedorQuery || '';
+        // Recuperar correo/teléfono/dirección/razón social tras refrescar (F5)
+        this.cargarTerceroFull(draft.proveedorSeleccionado.id);
       }
       this.sucursalId = draft.sucursalId || this.defaultSucursalId;
       this.numeroCompra = draft.numeroCompra || '';
@@ -256,7 +346,10 @@ export class FormCompraComponent implements OnInit, OnChanges {
       this.retefuentePct = draft.retefuentePct || 0;
       this.reteivaPct = draft.reteivaPct || 0;
       this.reteicaPct = draft.reteicaPct || 0;
-      
+      this.retefuenteSel = draft.retefuenteSel ?? null;
+      this.reteivaSel = draft.reteivaSel ?? null;
+      this.reteicaSel = draft.reteicaSel ?? null;
+
       this.alertService.showInfo('Borrador recuperado', 'Se restauraron los datos del formulario.');
     } catch {
       // Silencioso
@@ -283,6 +376,9 @@ export class FormCompraComponent implements OnInit, OnChanges {
         retefuentePct: this.retefuentePct,
         reteivaPct: this.reteivaPct,
         reteicaPct: this.reteicaPct,
+        retefuenteSel: this.retefuenteSel,
+        reteivaSel: this.reteivaSel,
+        reteicaSel: this.reteicaSel,
       };
       localStorage.setItem(this.DRAFT_KEY, JSON.stringify(draft));
     } catch {
@@ -302,19 +398,22 @@ export class FormCompraComponent implements OnInit, OnChanges {
     private readonly tarifaRetencionService: TarifaRetencionService,
     private readonly alertService: AlertService,
     private readonly indexDBService: IndexDBService,
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['displayModal'] && this.displayModal) {
-      this.resetForm();
-      if (this.compraToEdit) {
-        this.cargarEdicion(this.compraToEdit);
-      } else if (this.prefilledFromOC) {
-        this.cargarDesdeOC(this.prefilledFromOC);
-      } else {
-        this.cargarDraft();  // Solo si es nuevo, cargar draft
+  private async cargarEdicionById(id: number): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.compraService.getById(id));
+      if (res?.data) this.cargarEdicion(res.data);
+      else {
+        this.alertService.showError('Error', 'No se encontró la compra.');
+        this.router.navigate(['/compras']);
       }
+    } catch {
+      this.alertService.showError('Error', 'No se pudo cargar la compra.');
+      this.router.navigate(['/compras']);
     }
   }
 
@@ -327,6 +426,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
       tipoTercero: '',
     } as any;
     this.proveedorQuery = compra.proveedorNombre;
+    this.cargarTerceroFull(compra.proveedorId);
     this.sucursalId = compra.sucursalId;
     this.numeroCompra = compra.numeroCompra ?? '';
     this.fechaCompra = new Date(compra.fecha);
@@ -366,6 +466,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
       tipoTercero: '',
     } as any;
     this.proveedorQuery = oc.proveedorNombre;
+    this.cargarTerceroFull(oc.proveedorId);
     this.sucursalId = oc.sucursalId;
     this.observaciones = oc.observaciones ?? '';
     this.lineas.set(
@@ -514,7 +615,19 @@ export class FormCompraComponent implements OnInit, OnChanges {
     const t = event.value as TerceroTableModel;
     this.proveedorSeleccionado = t;
     this.proveedorQuery = t.nombreCompleto;
-    this.cargarRetencionesSugeridas(t.id);
+    this.cargarTerceroFull(t.id);
+  }
+
+  // Trae correo, teléfono, dirección y razón social del proveedor
+  private async cargarTerceroFull(terceroId: number): Promise<void> {
+    this.terceroFull = null;
+    try {
+      const res = await lastValueFrom(this.terceroService.getById(terceroId));
+      this.terceroFull = res?.data ?? null;
+      this.cdr.markForCheck();
+    } catch {
+      this.terceroFull = null;
+    }
   }
 
   private async cargarRetencionesSugeridas(terceroId: number): Promise<void> {
@@ -536,6 +649,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
   limpiarProveedor(): void {
     this.proveedorSeleccionado = null;
     this.proveedorQuery = '';
+    this.terceroFull = null;
   }
 
   // ─── Agregar línea vacía ──────────────────────────────────────────
@@ -734,6 +848,27 @@ export class FormCompraComponent implements OnInit, OnChanges {
     this.guardarDraft();
   }
 
+  // Cambio del % de IVA por línea → recalcula el IVA $ automáticamente
+  onIvaPctChange(idx: number, val: number | null): void {
+    const linea = this.lineas()[idx];
+    const calc = this.calcLinea({ ...linea, ivaPorcentaje: val ?? 0 });
+    this.lineas.set(
+      this.lineas().map(
+        (l, i): CompraLineaUI =>
+          i !== idx
+            ? l
+            : {
+                ...l,
+                ivaPorcentaje: val ?? 0,
+                descuentoValor: calc.descuentoValor,
+                subtotal: calc.subtotal,
+                impuestoValor: calc.impuestoValor,
+              },
+      ),
+    );
+    this.guardarDraft();
+  }
+
   onPrecioVenta1Change(idx: number, val: number | null): void {
     this.lineas.set(
       this.lineas().map(
@@ -837,9 +972,9 @@ export class FormCompraComponent implements OnInit, OnChanges {
                 {
                   metodoPago: this.metodoPago,
                   monto:
-                    this.totalRetenciones() > 0
-                      ? this.netaAPagar()
-                      : this.total(),
+                    this.totalRetencionesValue > 0
+                      ? this.netaAPagarValue
+                      : this.totalValue,
                   banco: this.banco.trim() || null,
                   cuentaBancariaId: this.cuentaBancariaId,
                 },
@@ -848,9 +983,9 @@ export class FormCompraComponent implements OnInit, OnChanges {
       };
 
       let res;
-      if (this.modoEdicion && this.compraToEdit) {
+      if (this.modoEdicion && this.editId) {
         res = await lastValueFrom(
-          this.compraService.update(this.compraToEdit.id, dto),
+          this.compraService.update(this.editId, dto),
         );
         if (res?.data) {
           this.limpiarDraft();
@@ -858,18 +993,21 @@ export class FormCompraComponent implements OnInit, OnChanges {
             'Compra actualizada',
             `Compra #${res.data.id} actualizada. Stock recalculado.`,
           );
-          this.compraSaved.emit(res.data);
-          this.closeModal();
+          this.router.navigate(['/compras'], {
+            state: { savedCompra: res.data },
+          });
         }
       } else {
         res = await lastValueFrom(this.compraService.create(dto));
         if (res?.status === 201) {
+          this.limpiarDraft();
           this.alertService.showSuccess(
             'Compra registrada',
             `Compra #${res.data?.id} creada. Stock actualizado.`,
           );
-          this.compraSaved.emit(res.data);
-          this.closeModal();
+          this.router.navigate(['/compras'], {
+            state: { savedCompra: res.data },
+          });
         }
       }
     } catch (err: any) {
@@ -885,6 +1023,7 @@ export class FormCompraComponent implements OnInit, OnChanges {
   private resetForm(): void {
     this.proveedorQuery = '';
     this.proveedorSeleccionado = null;
+    this.terceroFull = null;
     this.proveedoresSugerencias = [];
     this.sucursalId = this.defaultSucursalId;
     this.numeroCompra = '';
@@ -897,6 +1036,9 @@ export class FormCompraComponent implements OnInit, OnChanges {
     this.retefuentePct = 0;
     this.reteivaPct = 0;
     this.reteicaPct = 0;
+    this.retefuenteSel = null;
+    this.reteivaSel = null;
+    this.reteicaSel = null;
     this.formaPago = 'CONTADO';
     this.plazoDias = 30;
     this.metodoPago = 'EFECTIVO';
@@ -906,9 +1048,8 @@ export class FormCompraComponent implements OnInit, OnChanges {
     this.fletes = 0;
   }
 
-  closeModal(): void {
+  cancelar(): void {
     this.guardarDraft();
-    this.resetForm();
-    this.modalClosed.emit();
+    this.router.navigate(['/compras']);
   }
 }

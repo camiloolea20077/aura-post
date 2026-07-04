@@ -21,7 +21,13 @@ type AnchoTirilla = 58 | 80;
   selector: 'app-ticket-comprobante-caja',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, ButtonModule, DialogModule, SelectButtonModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ButtonModule,
+    DialogModule,
+    SelectButtonModule,
+  ],
   templateUrl: './ticket-comprobante-caja.component.html',
   styleUrls: ['./ticket-comprobante-caja.component.scss'],
 })
@@ -58,7 +64,9 @@ export class TicketComprobanteCajaComponent implements OnChanges {
 
   get totalLabel(): string {
     if (!this.comprobante) return '';
-    return this.comprobante.tipo === 'INGRESO' ? 'TOTAL INGRESO' : 'TOTAL EGRESO';
+    return this.comprobante.tipo === 'INGRESO'
+      ? 'TOTAL INGRESO'
+      : 'TOTAL EGRESO';
   }
 
   get fechaFormateada(): string {
@@ -79,7 +87,9 @@ export class TicketComprobanteCajaComponent implements OnChanges {
       ABONO_CXC: 'Abono CxC',
       ABONO_CXP: 'Abono CxP',
     };
-    return this.comprobante?.origen ? (map[this.comprobante.origen] ?? this.comprobante.origen) : '';
+    return this.comprobante?.origen
+      ? (map[this.comprobante.origen] ?? this.comprobante.origen)
+      : '';
   }
 
   get entregadoALabel(): string {
@@ -104,7 +114,8 @@ export class TicketComprobanteCajaComponent implements OnChanges {
     const anchoPage = this.ancho === 58 ? '58mm' : '80mm';
     const fontSize = this.ancho === 58 ? '11px' : '13px';
 
-    const titulo = c.tipo === 'INGRESO' ? 'COMPROBANTE DE INGRESO' : 'COMPROBANTE DE EGRESO';
+    const titulo =
+      c.tipo === 'INGRESO' ? 'COMPROBANTE DE INGRESO' : 'COMPROBANTE DE EGRESO';
     const totalLabel = c.tipo === 'INGRESO' ? 'TOTAL INGRESO' : 'TOTAL EGRESO';
 
     const metodoPagoHtml = c.metodoPago
@@ -228,7 +239,7 @@ export class TicketComprobanteCajaComponent implements OnChanges {
   </div>
 
   <div class="footer">
-    <div style="margin-top:10px;font-size:0.75em;color:#444;">Powered by Aura POS</div>
+    <div style="margin-top:10px;font-size:0.75em;color:#444;">Powered by Aura NUBE</div>
   </div>
 
 </body>

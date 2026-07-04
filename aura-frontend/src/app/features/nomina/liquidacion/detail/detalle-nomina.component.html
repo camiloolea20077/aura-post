@@ -1,9 +1,12 @@
-<p-sidebar
+<p-dialog
   [(visible)]="visible"
-  position="right"
-  [style]="{ width: '520px' }"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  [style]="{ width: '640px', maxWidth: '95vw' }"
   (onHide)="close()"
-  styleClass="nomina-sidebar"
+  styleClass="nomina-dialog"
 >
   <ng-template pTemplate="header">
     <div class="sidebar-header">
@@ -325,7 +328,17 @@
           [loading]="aprobando"
           (click)="aprobar()"
         ></button>
+        <button
+          *ngIf="puedePagar"
+          pButton
+          type="button"
+          label="Pagar nómina"
+          icon="pi pi-money-bill"
+          class="btn-nomina"
+          [loading]="pagando"
+          (click)="pagar()"
+        ></button>
       </div>
     </div>
   </ng-template>
-</p-sidebar>
+</p-dialog>

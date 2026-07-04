@@ -12,7 +12,7 @@
   font-weight: 700;
   color: #1e293b;
   i {
-    color: #7c3aed;
+    color: #2563eb;
   }
 }
 
@@ -35,7 +35,7 @@
   height: 44px;
   min-width: 44px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  background: #2563eb;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -79,7 +79,7 @@
   font-size: 0.72rem;
   font-weight: 700;
   background: rgba(124, 58, 237, 0.1);
-  color: #7c3aed;
+  color: #2563eb;
 }
 
 .comprobante {
@@ -109,7 +109,7 @@
     color: #2563eb;
   }
   &.provision {
-    color: #7c3aed;
+    color: #2563eb;
   }
 }
 
@@ -140,10 +140,10 @@
     color: #ef4444;
   }
   &.blue {
-    color: #2563eb;
+    color: black;
   }
   &.purple {
-    color: #7c3aed;
+    color: black;
   }
 }
 
@@ -151,7 +151,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, #7c3aed, #a78bfa);
+  background: #2563eb;
   padding: 0.9rem 1rem;
   font-size: 0.85rem;
   font-weight: 800;
@@ -184,7 +184,7 @@
   letter-spacing: 0.05em;
 }
 ::ng-deep .btn-add-nov {
-  color: #7c3aed !important;
+  color: #2563eb !important;
   &:hover {
     background: rgba(124, 58, 237, 0.08) !important;
   }
@@ -222,7 +222,7 @@
 }
 
 ::ng-deep .btn-nomina.p-button {
-  background: linear-gradient(135deg, #7c3aed, #a78bfa) !important;
+  background: #2563eb !important;
   border: none !important;
   &:hover {
     opacity: 0.9;

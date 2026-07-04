@@ -1,53 +1,53 @@
 <p-toast />
 <p-confirmDialog />
 
-<div class="module-wrapper">
-  <!-- ─── Header ─────────────────────────────────────────────── -->
-  <div class="module-header">
-    <div class="header-left">
-      <div class="header-icon">
-        <i class="pi pi-wallet"></i>
+<div class="page">
+  <div class="card">
+    <!-- ─── Header ─────────────────────────────────────────────── -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon">
+          <i class="pi pi-wallet"></i>
+        </span>
+        <div>
+          <h1 class="title">Liquidaciones de Comisiones</h1>
+          <p class="subtitle">Pagos de comisiones a técnicos y vendedores</p>
+        </div>
       </div>
-      <div>
-        <h2 class="header-title">Liquidaciones de Comisiones</h2>
-        <p class="header-sub">Pagos de comisiones a técnicos y vendedores</p>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-plus"
+          label="Nueva liquidación"
+          class="btn-aura"
+          (click)="nueva()"
+        ></button>
+        <div class="card-head__search">
+          <div class="filter-wrap">
+            <label class="filter-label">Estado:</label>
+            <p-dropdown
+              [(ngModel)]="filtroEstado"
+              [options]="estadoOptions"
+              optionLabel="label"
+              optionValue="value"
+              (onChange)="onFiltroChange()"
+              styleClass="filter-dropdown"
+            />
+          </div>
+          <div class="filter-wrap">
+            <label class="filter-label">Tipo:</label>
+            <p-dropdown
+              [(ngModel)]="filtroTipo"
+              [options]="tipoOptions"
+              optionLabel="label"
+              optionValue="value"
+              (onChange)="onFiltroChange()"
+              styleClass="filter-dropdown"
+            />
+          </div>
+        </div>
       </div>
-    </div>
-    <button
-      pButton
-      icon="pi pi-plus"
-      label="Nueva liquidación"
-      class="btn-aura"
-      (click)="nueva()"
-    ></button>
-  </div>
-
-  <!-- ─── Tabla ───────────────────────────────────────────────── -->
-  <div class="table-card">
-    <div class="table-toolbar">
-      <div class="filter-wrap">
-        <label class="filter-label">Estado:</label>
-        <p-dropdown
-          [(ngModel)]="filtroEstado"
-          [options]="estadoOptions"
-          optionLabel="label"
-          optionValue="value"
-          (onChange)="onFiltroChange()"
-          styleClass="filter-dropdown"
-        />
-      </div>
-      <div class="filter-wrap">
-        <label class="filter-label">Tipo:</label>
-        <p-dropdown
-          [(ngModel)]="filtroTipo"
-          [options]="tipoOptions"
-          optionLabel="label"
-          optionValue="value"
-          (onChange)="onFiltroChange()"
-          styleClass="filter-dropdown"
-        />
-      </div>
-      <span class="total-badge">{{ totalRows }} registros</span>
     </div>
 
     <p-table

@@ -1,43 +1,43 @@
-<div class="page-container">
-  <div class="page-header">
-    <div class="page-title-area">
-      <div class="page-icon"><i class="pi pi-replay"></i></div>
-      <div>
-        <h3 class="page-title">Devoluciones</h3>
-        <p class="page-sub">Gestión de devoluciones de ventas</p>
-      </div>
-    </div>
-    <button
-      pButton
-      type="button"
-      label="Nueva Devolución"
-      icon="pi pi-plus"
-      class="btn-aura"
-      (click)="openCreate()"
-    ></button>
-  </div>
-
+<div class="page" *ngIf="!showCreate">
   <div class="card">
-    <div class="table-toolbar">
-      <div class="toolbar-left">
-        <span class="p-input-icon-left search-wrap">
-          <i class="pi pi-search"></i>
-          <input
-            type="text"
-            pInputText
-            class="search-input"
-            placeholder="Buscar por N° dev, N° venta o cliente..."
-            [(ngModel)]="searchQuery"
-            (input)="onSearch()"
-            (keydown.escape)="clearSearch()"
-          />
-          <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">
-            <i class="pi pi-times"></i>
-          </button>
-        </span>
-        <span class="total-badge" *ngIf="!loadingTable">
-          {{ totalRecords }} devoluciones
-        </span>
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-replay"></i></span>
+        <div>
+          <h1 class="title">Devoluciones</h1>
+          <p class="subtitle">Gestión de devoluciones de ventas</p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          label="Nueva Devolución"
+          icon="pi pi-plus"
+          class="btn-aura"
+          (click)="openCreate()"
+        ></button>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              class="search-input"
+              placeholder="Buscar por N° dev, N° venta o cliente..."
+              [(ngModel)]="searchQuery"
+              (input)="onSearch()"
+              (keydown.escape)="clearSearch()"
+            />
+            <button
+              *ngIf="searchQuery"
+              class="clear-btn"
+              (click)="clearSearch()"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+        </div>
       </div>
     </div>
 
@@ -179,11 +179,13 @@
   (anulada)="onAnulada()"
 />
 
-<app-create-devolucion
-  [visible]="showCreate"
-  (closed)="onCreateClosed()"
-  (created)="onCreated()"
-/>
+<div class="page" *ngIf="showCreate">
+  <app-create-devolucion
+    [visible]="showCreate"
+    (closed)="onCreateClosed()"
+    (created)="onCreated()"
+  />
+</div>
 
 <p-toast />
 <p-confirmDialog />

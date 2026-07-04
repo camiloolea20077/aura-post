@@ -619,7 +619,11 @@ export class IndexTurnosComponent implements OnInit, OnDestroy {
         },
 
         // ── Ventas por categoría ─────────────────────────
-        { text: 'VENTAS POR CATEGORÍA', style: 'section', margin: [0, 0, 0, 6] },
+        {
+          text: 'VENTAS POR CATEGORÍA',
+          style: 'section',
+          margin: [0, 0, 0, 6],
+        },
         {
           table: {
             headerRows: 1,
@@ -933,7 +937,7 @@ export class IndexTurnosComponent implements OnInit, OnDestroy {
 
         // ── Pie ──────────────────────────────────────────
         {
-          text: `Generado el ${new Date().toLocaleString('es-CO')} — Aura POS`,
+          text: `Generado el ${new Date().toLocaleString('es-CO')} — Aura NUBE`,
           fontSize: 7.5,
           color: '#94a3b8',
           alignment: 'center',

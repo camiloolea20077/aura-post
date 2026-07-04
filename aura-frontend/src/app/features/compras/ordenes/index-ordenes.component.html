@@ -1,38 +1,37 @@
 <p-toast />
 
-<div class="module-wrapper">
-  <!-- Header -->
-  <div class="module-header">
-    <div class="header-left">
-      <span class="header-icon"><i class="pi pi-file-edit"></i></span>
-      <div>
-        <h1>Órdenes de Compra</h1>
-        <p>
-          Gestiona pedidos a proveedores con flujo de aprobación y recepción
-        </p>
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-file-edit"></i></span>
+        <div>
+          <h1 class="title">Órdenes de Compra</h1>
+          <p class="subtitle">
+            Gestiona pedidos a proveedores con flujo de aprobación y recepción
+          </p>
+        </div>
       </div>
-    </div>
-    <button
-      pButton
-      label="Nueva Orden"
-      icon="pi pi-plus"
-      class="btn-aura"
-      (click)="abrirNueva()"
-    ></button>
-  </div>
-
-  <!-- Tabla -->
-  <div class="table-card">
-    <div class="table-toolbar">
-      <div class="search-wrap">
-        <i class="pi pi-search"></i>
-        <input
-          pInputText
-          [(ngModel)]="searchText"
-          placeholder="Buscar por número, proveedor o sucursal..."
-        />
+      <div class="card-head__actions">
+        <button
+          pButton
+          label="Nueva Orden"
+          icon="pi pi-plus"
+          class="btn-aura"
+          (click)="abrirNueva()"
+        ></button>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              pInputText
+              class="search-input"
+              [(ngModel)]="searchText"
+              placeholder="Buscar por número, proveedor o sucursal..."
+            />
+          </span>
+        </div>
       </div>
-      <span class="total-badge">{{ ordenesFiltradas.length }} órdenes</span>
     </div>
 
     <p-table

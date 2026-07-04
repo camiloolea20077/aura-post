@@ -21,7 +21,7 @@
   width: 46px;
   height: 46px;
   border-radius: 13px;
-  background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+  background: #2563eb;
   box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
   display: flex;
   align-items: center;
@@ -48,7 +48,7 @@
 .btn-aura {
   border: none;
   border-radius: 10px;
-  font-family: 'Outfit', sans-serif;
+  font-family: "Outfit", sans-serif;
   font-size: 0.85rem;
   font-weight: 600;
   padding: 0.55rem 1.1rem;
@@ -59,11 +59,11 @@
   transition: all 0.15s;
 
   &.btn-primary {
-    background: linear-gradient(135deg, #6366f1, #818cf8);
+    background: #2563eb;
     color: white;
     box-shadow: 0 3px 10px rgba(99, 102, 241, 0.3);
     &:hover {
-      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      background: #2563eb;
       box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
     }
   }
@@ -113,14 +113,14 @@
     border: 1.5px solid #e0e3eb;
     padding: 0 2.2rem;
     font-size: 0.85rem;
-    font-family: 'Outfit', sans-serif;
+    font-family: "Outfit", sans-serif;
 
     &::placeholder {
       color: #9ca3af;
     }
 
     &:focus {
-      border-color: #6366f1;
+      border-color: #2563eb;
       box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
       outline: none;
     }
@@ -162,6 +162,7 @@
   gap: 0.4rem;
   padding: 0 1.25rem 0.75rem;
   flex-wrap: wrap;
+  margin-top: 8px;
   border-bottom: 1px solid #f1f5f9;
 }
 
@@ -173,24 +174,24 @@
   color: #64748b;
   font-size: 0.78rem;
   font-weight: 600;
-  font-family: 'Outfit', sans-serif;
+  font-family: "Outfit", sans-serif;
   cursor: pointer;
   transition: all 0.15s;
 
   &:hover {
-    border-color: #6366f1;
-    color: #6366f1;
+    border-color: #2563eb;
+    color: #2563eb;
   }
 
   &.active {
-    background: #6366f1;
-    border-color: #6366f1;
+    background: #2563eb;
+    border-color: #2563eb;
     color: white;
   }
 }
 
 ::ng-deep .aura-table {
-  font-family: 'Outfit', sans-serif;
+  font-family: "Outfit", sans-serif;
 
   .p-datatable-thead > tr > th {
     background: #fafbfe;
@@ -241,7 +242,7 @@
 }
 
 .id-badge {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   font-size: 0.78rem;
   font-weight: 700;
   color: #64748b;
@@ -251,7 +252,7 @@
 }
 
 .numero-pedido {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   font-size: 0.82rem;
   font-weight: 600;
   color: #0ea5e9;
@@ -268,7 +269,7 @@
   height: 28px;
   border-radius: 8px;
   flex-shrink: 0;
-  background: linear-gradient(135deg, #6366f1, #818cf8);
+  background: #2563eb;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -278,7 +279,7 @@
 }
 
 .vendedor-av {
-  background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+  background: #2563eb;
 }
 
 .persona-n {
@@ -292,7 +293,7 @@
 }
 
 .monto-val {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   font-size: 0.88rem;
   font-weight: 700;
   color: #1e293b;
@@ -440,8 +441,8 @@
   color: #1e293b;
 
   &.mono {
-    font-family: 'JetBrains Mono', monospace;
-    color: #0ea5e9;
+    font-family: "JetBrains Mono", monospace;
+    color: #2563eb;
     font-weight: 600;
   }
 }
@@ -488,7 +489,7 @@
 .item-sku {
   font-size: 0.75rem;
   color: #94a3b8;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
 }
 
 .detalle-totales {
@@ -507,7 +508,7 @@
   color: #475569;
 
   span:last-child {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: "JetBrains Mono", monospace;
     text-align: right;
     min-width: 110px;
   }
@@ -548,7 +549,7 @@
 
 .despachar-icon {
   font-size: 1.6rem;
-  color: #0ea5e9;
+  color: #2563eb;
   margin-top: 2px;
 }
 
@@ -583,7 +584,9 @@
   gap: 0.4rem;
   margin-top: 0.25rem;
 
-  i { font-size: 0.85rem; }
+  i {
+    font-size: 0.85rem;
+  }
 }
 
 .despachar-loading {
@@ -632,7 +635,7 @@
   color: #4338ca;
   font-weight: 700;
   font-size: 0.88rem;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   flex-shrink: 0;
 }
 
@@ -654,13 +657,13 @@
 .despachar-item-sku {
   font-size: 0.74rem;
   color: #94a3b8;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
 }
 
 .despachar-item-precio {
   font-size: 0.84rem;
   font-weight: 700;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: "JetBrains Mono", monospace;
   color: #475569;
   white-space: nowrap;
   flex-shrink: 0;

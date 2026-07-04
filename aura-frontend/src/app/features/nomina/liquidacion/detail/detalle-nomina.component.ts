@@ -9,7 +9,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
-import { SidebarModule } from 'primeng/sidebar';
+import { DialogModule } from 'primeng/dialog';
 import { TagModule } from 'primeng/tag';
 import { SkeletonModule } from 'primeng/skeleton';
 import { DropdownModule } from 'primeng/dropdown';
@@ -41,7 +41,7 @@ type TagSeverity =
   imports: [
     CommonModule,
     FormsModule,
-    SidebarModule,
+    DialogModule,
     ButtonModule,
     TagModule,
     SkeletonModule,
@@ -61,6 +61,7 @@ export class DetalleNominaComponent implements OnChanges {
   public nomina: NominaModel | null = null;
   public loading = false;
   public aprobando = false;
+  public pagando = false;
   public anulando = false;
   public agregando = false;
 
@@ -131,6 +132,23 @@ export class DetalleNominaComponent implements OnChanges {
     }
   }
 
+  async pagar(): Promise<void> {
+    if (!this.nomina) return;
+    this.pagando = true;
+    try {
+      const res = await lastValueFrom(
+        this.nominaService.pagarNomina(this.nomina.id),
+      );
+      this.nomina = res?.data ?? this.nomina;
+      this.alertService.showSuccess('Pagada', 'Nómina marcada como pagada');
+      this.actualizada.emit();
+    } catch {
+      this.alertService.showError('Error', 'No se pudo pagar la nómina');
+    } finally {
+      this.pagando = false;
+    }
+  }
+
   async anular(): Promise<void> {
     if (!this.nomina || !confirm('¿Anular esta nómina?')) return;
     this.anulando = true;
@@ -198,6 +216,10 @@ export class DetalleNominaComponent implements OnChanges {
 
   get puedeAprobar(): boolean {
     return this.nomina?.estado === 'BORRADOR';
+  }
+
+  get puedePagar(): boolean {
+    return this.nomina?.estado === 'APROBADO';
   }
 
   estadoSeverity(e: EstadoNomina): TagSeverity {

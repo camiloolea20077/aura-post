@@ -1,0 +1,87 @@
+.page {
+  padding: 1.5rem 2rem 3rem;
+  width: 100%;
+}
+
+// La card no lleva padding: lo aportan card-head / form-body / card-footer
+.card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+// Cuerpo del formulario con padding dentro de la card
+.form-body {
+  padding: 1.25rem 1.5rem;
+}
+
+.section {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 1.4rem 0 0.75rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid #f1f5f9;
+
+  &:first-child {
+    margin-top: 0;
+  }
+}
+
+// 2 campos por fila
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1.75rem;
+}
+
+// Cada campo: label a la izquierda, control a la derecha
+.field {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0;
+
+  label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #374151;
+
+    .req {
+      color: #ef4444;
+      margin-left: 2px;
+    }
+  }
+
+  // Campo que ocupa toda la fila
+  &.full {
+    grid-column: 1 / -1;
+  }
+
+  // Switch: control compacto a la izquierda
+  &.switch {
+    grid-template-columns: 130px auto;
+  }
+}
+
+.w-full {
+  width: 100%;
+}
+
+:host ::ng-deep .field {
+  .p-dropdown,
+  .p-multiselect,
+  .p-autocomplete,
+  .p-autocomplete input {
+    width: 100%;
+  }
+}
+
+@media (max-width: 720px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

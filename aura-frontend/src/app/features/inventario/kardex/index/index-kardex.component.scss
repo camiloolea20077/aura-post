@@ -16,53 +16,10 @@ $mono: "JetBrains Mono", monospace;
 }
 
 // ── Header ────────────────────────────────────────────────────
-.module-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-  }
-
-  .header-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    background: rgba(99, 102, 241, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    i {
-      font-size: 1.1rem;
-      color: $indigo;
-    }
-  }
-
-  .header-title {
-    font-size: 1.15rem;
-    font-weight: 800;
-    color: $text;
-    margin: 0;
-  }
-  .header-sub {
-    font-size: 0.78rem;
-    color: $muted;
-    margin: 0;
-  }
-}
-
-.total-badge {
-  font-family: $mono;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: $indigo;
-  background: rgba(99, 102, 241, 0.08);
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  border-radius: 20px;
-  padding: 0.25rem 0.85rem;
+// El header usa el estándar global (.card-head). Como esta card solo
+// contiene el título, quitamos el borde inferior.
+.kardex-head-card .card-head {
+  border-bottom: none;
 }
 
 // ── Filtros card ──────────────────────────────────────────────

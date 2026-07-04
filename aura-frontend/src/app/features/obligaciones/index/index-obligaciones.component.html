@@ -1,0 +1,103 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon">
+          <i class="pi pi-money-bill"></i>
+        </span>
+        <div>
+          <h1 class="title">Préstamos / Obligaciones financieras</h1>
+          <p class="subtitle">Crédito bancario con tabla de amortización</p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          label="Nuevo préstamo"
+          icon="pi pi-plus"
+          class="btn-aura"
+          (click)="nuevo()"
+        ></button>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              class="search-input"
+              placeholder="Buscar entidad, número, estado..."
+              [(ngModel)]="searchQuery"
+              (input)="dt.filterGlobal($any($event.target).value, 'contains')"
+            />
+            <button
+              *ngIf="searchQuery"
+              class="clear-btn"
+              (click)="clearSearch(dt)"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <p-table
+      #dt
+      [value]="items"
+      [loading]="loading"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords} registros"
+      [globalFilterFields]="['entidad', 'numero', 'estado']"
+      styleClass="p-datatable-sm"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Entidad</th>
+          <th>N°</th>
+          <th class="text-right">Monto</th>
+          <th class="text-right">Tasa mes</th>
+          <th class="text-center">Plazo</th>
+          <th>Desembolso</th>
+          <th class="text-right">Saldo capital</th>
+          <th class="text-center">Estado</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-o>
+        <tr
+          class="clickable"
+          (click)="abrir(o)"
+          pTooltip="Ver tabla de amortización"
+        >
+          <td>{{ o.entidad }}</td>
+          <td>{{ o.numero || "—" }}</td>
+          <td class="text-right">
+            {{ o.montoPrincipal | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+          </td>
+          <td class="text-right">{{ o.tasaMensual }}%</td>
+          <td class="text-center">{{ o.plazoMeses }} m</td>
+          <td>{{ o.fechaDesembolso }}</td>
+          <td class="text-right">
+            {{ o.saldoCapital | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+          </td>
+          <td class="text-center">
+            <p-tag [value]="o.estado" [severity]="estadoSeverity(o.estado)" />
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td
+            colspan="8"
+            style="text-align: center; padding: 2rem; color: #94a3b8"
+          >
+            No hay préstamos registrados.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

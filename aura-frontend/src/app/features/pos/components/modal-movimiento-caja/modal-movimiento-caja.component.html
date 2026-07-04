@@ -110,6 +110,26 @@
       </p-autoComplete>
     </div>
 
+    <!-- Concepto de caja (movimiento manual contabilizado) -->
+    <div class="form-group" *ngIf="!cuentaSeleccionada">
+      <label class="form-label">
+        <i class="pi pi-tags"></i> Concepto de caja
+        <span class="text-muted">(para contabilizar)</span>
+      </label>
+      <p-dropdown
+        [(ngModel)]="conceptoCajaId"
+        [options]="conceptoOpts"
+        optionLabel="label"
+        optionValue="value"
+        appendTo="body"
+        [filter]="true"
+        [showClear]="true"
+        placeholder="Ej: Matada de cerdo, Compra de jugos..."
+        (onChange)="onConceptoChange()"
+        styleClass="w-full"
+      ></p-dropdown>
+    </div>
+
     <!-- Concepto -->
     <div class="form-group">
       <label class="form-label">

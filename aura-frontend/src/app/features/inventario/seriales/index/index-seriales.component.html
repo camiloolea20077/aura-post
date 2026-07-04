@@ -1,55 +1,54 @@
-<div class="page-container">
-  <div class="page-header">
-    <div class="page-title-area">
-      <div class="page-icon"><i class="pi pi-barcode"></i></div>
-      <div>
-        <h3 class="page-title">Seriales</h3>
-        <p class="page-sub">
-          Control de productos por número de serie individual
-        </p>
-      </div>
-    </div>
-    <button
-      pButton
-      type="button"
-      label="Registrar serial"
-      icon="pi pi-plus"
-      class="btn-aura"
-      (click)="openCreate()"
-    ></button>
-  </div>
-
+<div class="page">
   <div class="card">
-    <div class="table-toolbar">
-      <div class="toolbar-left">
-        <span class="p-input-icon-left search-wrap">
-          <i class="pi pi-search"></i>
-          <input
-            type="text"
-            pInputText
-            class="search-input"
-            placeholder="Buscar por serial, producto o sucursal..."
-            [(ngModel)]="searchQuery"
-            (input)="onSearch()"
-            (keydown.escape)="clearSearch()"
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-barcode"></i></span>
+        <div>
+          <h1 class="title">Seriales</h1>
+          <p class="subtitle">
+            Control de productos por número de serie individual
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          label="Registrar serial"
+          icon="pi pi-plus"
+          class="btn-aura"
+          (click)="openCreate()"
+        ></button>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              class="search-input"
+              placeholder="Buscar por serial, producto o sucursal..."
+              [(ngModel)]="searchQuery"
+              (input)="onSearch()"
+              (keydown.escape)="clearSearch()"
+            />
+            <button
+              *ngIf="searchQuery"
+              class="clear-btn"
+              (click)="clearSearch()"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+
+          <p-dropdown
+            [options]="estadoOpts"
+            [(ngModel)]="estadoFiltro"
+            optionLabel="label"
+            optionValue="value"
+            (onChange)="onEstadoChange()"
+            styleClass="estado-filter"
           />
-          <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">
-            <i class="pi pi-times"></i>
-          </button>
-        </span>
-
-        <p-dropdown
-          [options]="estadoOpts"
-          [(ngModel)]="estadoFiltro"
-          optionLabel="label"
-          optionValue="value"
-          (onChange)="onEstadoChange()"
-          styleClass="estado-filter"
-        />
-
-        <span class="total-badge" *ngIf="!loadingTable">
-          {{ totalRecords }} {{ totalRecords === 1 ? "serial" : "seriales" }}
-        </span>
+        </div>
       </div>
     </div>
 
@@ -143,7 +142,7 @@
                 type="button"
                 label="Registrar primer serial"
                 icon="pi pi-plus"
-                class="btn-aura btn-teal p-button-sm"
+                class="btn-aura"
                 (click)="openCreate()"
               ></button>
             </div>

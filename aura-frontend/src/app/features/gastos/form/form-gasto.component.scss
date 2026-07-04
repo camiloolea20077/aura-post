@@ -12,25 +12,13 @@
   }
 }
 
-// ─── Página ───────────────────────────────────────────────────────
-.gasto-page {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  padding: 1.5rem 2rem 3rem;
-  max-width: 1400px;
+// ─── Form (con padding dentro de la card) ─────────────────────────
+.gasto-form {
+  display: block;
+  padding: 1.25rem 1.5rem;
 }
 
-// ─── Page header ──────────────────────────────────────────────────
-.page-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #e2e8f0;
-  margin-bottom: 0.5rem;
-}
-
+// ─── Botón volver (en el card-head) ───────────────────────────────
 .btn-back {
   width: 36px;
   height: 36px;
@@ -54,18 +42,6 @@
   }
 }
 
-.page-title {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #1e293b;
-  margin: 0;
-}
-
-.page-sub {
-  font-size: 0.8rem;
-  color: #94a3b8;
-  margin: 0;
-}
 .p-fieldset {
   margin-top: 10px !important;
   background: var(--p-fieldset-background);
@@ -129,6 +105,23 @@ label {
       box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
       outline: none;
     }
+  }
+}
+
+// ─── Autocomplete (proveedor / tercero) a 100% ────────────────────
+:host ::ng-deep p-autocomplete {
+  display: block;
+  width: 100%;
+
+  .p-autocomplete {
+    width: 100%;
+    display: flex;
+  }
+
+  .p-autocomplete-input,
+  input.p-inputtext {
+    width: 100%;
+    flex: 1 1 auto;
   }
 }
 

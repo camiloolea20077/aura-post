@@ -42,7 +42,11 @@ export class CierreContableComponent implements OnInit {
   data: CierreContableDto | null = null;
   loading = false;
 
-  fechaDesde: Date = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  fechaDesde: Date = new Date(
+    new Date().getFullYear(),
+    new Date().getMonth(),
+    1,
+  );
   fechaHasta: Date = new Date();
 
   constructor(
@@ -59,7 +63,10 @@ export class CierreContableComponent implements OnInit {
     this.cdr.markForCheck();
     try {
       const res = await lastValueFrom(
-        this.service.obtener(this.fmt(this.fechaDesde), this.fmt(this.fechaHasta)),
+        this.service.obtener(
+          this.fmt(this.fechaDesde),
+          this.fmt(this.fechaHasta),
+        ),
       );
       this.data = res?.data ?? null;
     } catch {
@@ -105,36 +112,50 @@ export class CierreContableComponent implements OnInit {
 
     // ── Paleta ────────────────────────────────────────────────
     const C = {
-      indigo:    '6366F1', indigoDark: '4F46E5',
-      green:     '10B981', greenDark:  '059669',
-      red:       'EF4444',
-      blue:      '3B82F6',
-      dark:      '1E293B',
-      muted:     '64748B',
-      border:    'E2E8F0',
-      bgLight:   'F8FAFC',
-      bgAlt:     'EEF2FF',
-      white:     'FFFFFF',
+      indigo: '6366F1',
+      indigoDark: '4F46E5',
+      green: '10B981',
+      greenDark: '059669',
+      red: 'EF4444',
+      blue: '3B82F6',
+      dark: '1E293B',
+      muted: '64748B',
+      border: 'E2E8F0',
+      bgLight: 'F8FAFC',
+      bgAlt: 'EEF2FF',
+      white: 'FFFFFF',
     };
 
     const copFmt = '#,##0';
 
-    const fill = (argb: string): any =>
-      ({ type: 'pattern', pattern: 'solid', fgColor: { argb } });
+    const fill = (argb: string): any => ({
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb },
+    });
 
-    const border = (argb: string = C.border): any =>
-      ({ style: 'thin', color: { argb } });
+    const border = (argb: string = C.border): any => ({
+      style: 'thin',
+      color: { argb },
+    });
 
     const allBorders = (argb: string = C.border) => ({
-      top: border(argb), left: border(argb),
-      bottom: border(argb), right: border(argb),
+      top: border(argb),
+      left: border(argb),
+      bottom: border(argb),
+      right: border(argb),
     });
 
     const styleTitle = (row: any) => {
       row.height = 28;
       row.eachCell((cell: any) => {
         cell.fill = fill(C.indigo);
-        cell.font = { bold: true, size: 16, color: { argb: C.white }, name: 'Calibri' };
+        cell.font = {
+          bold: true,
+          size: 16,
+          color: { argb: C.white },
+          name: 'Calibri',
+        };
         cell.alignment = { vertical: 'middle', horizontal: 'center' };
       });
     };
@@ -152,7 +173,12 @@ export class CierreContableComponent implements OnInit {
       row.height = 20;
       row.eachCell((cell: any) => {
         cell.fill = fill(color);
-        cell.font = { bold: true, size: 10, color: { argb: C.white }, name: 'Calibri' };
+        cell.font = {
+          bold: true,
+          size: 10,
+          color: { argb: C.white },
+          name: 'Calibri',
+        };
         cell.alignment = { vertical: 'middle', horizontal: 'left' };
         cell.border = allBorders(color);
       });
@@ -162,7 +188,12 @@ export class CierreContableComponent implements OnInit {
       row.height = 16;
       row.eachCell((cell: any) => {
         cell.fill = fill(C.dark);
-        cell.font = { bold: true, size: 9, color: { argb: C.white }, name: 'Calibri' };
+        cell.font = {
+          bold: true,
+          size: 9,
+          color: { argb: C.white },
+          name: 'Calibri',
+        };
         cell.alignment = { vertical: 'middle', horizontal: 'center' };
         cell.border = allBorders(C.dark);
       });
@@ -192,7 +223,12 @@ export class CierreContableComponent implements OnInit {
       row.height = 18;
       row.eachCell({ includeEmpty: true }, (cell: any) => {
         cell.fill = fill(bgColor);
-        cell.font = { bold: true, size: 10, color: { argb: C.white }, name: 'Calibri' };
+        cell.font = {
+          bold: true,
+          size: 10,
+          color: { argb: C.white },
+          name: 'Calibri',
+        };
         cell.border = allBorders(bgColor);
         cell.alignment = { vertical: 'middle' };
       });
@@ -205,11 +241,16 @@ export class CierreContableComponent implements OnInit {
 
     // ── Workbook ──────────────────────────────────────────────
     const wb = new Workbook();
-    wb.creator = 'Aura POS';
+    wb.creator = 'Aura Nube';
     wb.created = new Date();
 
     const ws = wb.addWorksheet('Cierre Contable', {
-      pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1 },
+      pageSetup: {
+        paperSize: 9,
+        orientation: 'portrait',
+        fitToPage: true,
+        fitToWidth: 1,
+      },
       properties: { tabColor: { argb: C.indigo } },
     });
 
@@ -228,8 +269,10 @@ export class CierreContableComponent implements OnInit {
 
     const rowSub = ws.addRow([
       `Período: ${d.fechaDesde}  →  ${d.fechaHasta}`,
-      '', '',
-      `Generado: ${new Date().toLocaleDateString('es-CO')}`, '',
+      '',
+      '',
+      `Generado: ${new Date().toLocaleDateString('es-CO')}`,
+      '',
     ]);
     ws.mergeCells(`A${rowSub.number}:C${rowSub.number}`);
     ws.mergeCells(`D${rowSub.number}:E${rowSub.number}`);
@@ -243,24 +286,41 @@ export class CierreContableComponent implements OnInit {
     ws.mergeCells(`A${rowKpiH.number}:E${rowKpiH.number}`);
     styleSectionHeader(rowKpiH, C.dark);
 
-    const rowKpiCols = ws.addRow(['Ventas sin IVA', 'COGS', 'Utilidad bruta', 'Utilidad operativa', 'Utilidad neta']);
+    const rowKpiCols = ws.addRow([
+      'Ventas sin IVA',
+      'COGS',
+      'Utilidad bruta',
+      'Utilidad operativa',
+      'Utilidad neta',
+    ]);
     styleColHeader(rowKpiCols);
 
     const rowKpiVals = ws.addRow([
-      n(d.totalVentasSinIva), n(d.costoVentas),
-      n(d.utilidadBruta),     n(d.utilidadOperativa),
+      n(d.totalVentasSinIva),
+      n(d.costoVentas),
+      n(d.utilidadBruta),
+      n(d.utilidadOperativa),
       n(d.utilidadNeta),
     ]);
     rowKpiVals.height = 18;
     rowKpiVals.eachCell({ includeEmpty: true }, (cell, col) => {
-      cell.fill   = fill(C.bgAlt);
-      cell.font   = { bold: true, size: 11, name: 'Calibri' };
+      cell.fill = fill(C.bgAlt);
+      cell.font = { bold: true, size: 11, name: 'Calibri' };
       cell.border = allBorders();
       cell.alignment = { vertical: 'middle', horizontal: 'center' };
       cell.numFmt = `"$"#,##0`;
-      if (col === 3) cell.font.color = { argb: n(d.utilidadBruta)     >= 0 ? C.greenDark : C.red };
-      if (col === 4) cell.font.color = { argb: n(d.utilidadOperativa) >= 0 ? C.greenDark : C.red };
-      if (col === 5) cell.font.color = { argb: n(d.utilidadNeta)      >= 0 ? C.greenDark : C.red };
+      if (col === 3)
+        cell.font.color = {
+          argb: n(d.utilidadBruta) >= 0 ? C.greenDark : C.red,
+        };
+      if (col === 4)
+        cell.font.color = {
+          argb: n(d.utilidadOperativa) >= 0 ? C.greenDark : C.red,
+        };
+      if (col === 5)
+        cell.font.color = {
+          argb: n(d.utilidadNeta) >= 0 ? C.greenDark : C.red,
+        };
     });
 
     addEmpty(ws);
@@ -274,55 +334,140 @@ export class CierreContableComponent implements OnInit {
     ws.mergeCells(`A${rowPlCols.number}:B${rowPlCols.number}`);
     styleColHeader(rowPlCols);
 
-    const addPlRow = (label: string, value: number, margen?: string, isSubtotal = false, isTotal = false, isDebit = false, alt = false) => {
+    const addPlRow = (
+      label: string,
+      value: number,
+      margen?: string,
+      isSubtotal = false,
+      isTotal = false,
+      isDebit = false,
+      alt = false,
+    ) => {
       const r = ws.addRow([label, '', value, margen ?? '', '']);
       ws.mergeCells(`A${r.number}:B${r.number}`);
       ws.mergeCells(`D${r.number}:E${r.number}`);
-      if (isTotal)    styleTotal(r, value >= 0 ? C.indigoDark : C.red);
+      if (isTotal) styleTotal(r, value >= 0 ? C.indigoDark : C.red);
       else if (isSubtotal) styleSubtotal(r, C.bgLight);
-      else            styleDataRow(r, alt);
+      else styleDataRow(r, alt);
 
       const cellA = r.getCell('A');
       const cellC = r.getCell('C');
       const cellD = r.getCell('D');
 
-      cellA.alignment = { horizontal: 'left',   vertical: 'middle' };
-      cellC.alignment = { horizontal: 'right',  vertical: 'middle' };
+      cellA.alignment = { horizontal: 'left', vertical: 'middle' };
+      cellC.alignment = { horizontal: 'right', vertical: 'middle' };
       cellD.alignment = { horizontal: 'center', vertical: 'middle' };
       cellC.numFmt = isDebit ? `"($"#,##0")"` : `"$"#,##0`;
       if (!isTotal) {
         if (isDebit) cellC.font = { ...cellC.font, color: { argb: C.red } };
-        else if (value > 0) cellC.font = { ...cellC.font, color: { argb: isSubtotal || isTotal ? C.dark : C.green } };
+        else if (value > 0)
+          cellC.font = {
+            ...cellC.font,
+            color: { argb: isSubtotal || isTotal ? C.dark : C.green },
+          };
       }
-      if (margen) cellD.font = { ...cellD.font, size: 9, color: { argb: C.muted } };
+      if (margen)
+        cellD.font = { ...cellD.font, size: 9, color: { argb: C.muted } };
     };
 
-    addPlRow('Ventas brutas (subtotal)',  n(d.totalVentasBruto));
+    addPlRow('Ventas brutas (subtotal)', n(d.totalVentasBruto));
     if (n(d.totalDescuentos) > 0)
-      addPlRow('(−) Descuentos',          n(d.totalDescuentos), '', false, false, true, true);
-    addPlRow('IVA cobrado (no utilidad)', n(d.totalImpuestos), '', false, false, false, false);
-    addPlRow('= Ventas netas sin IVA',    n(d.totalVentasSinIva), '', true);
+      addPlRow(
+        '(−) Descuentos',
+        n(d.totalDescuentos),
+        '',
+        false,
+        false,
+        true,
+        true,
+      );
+    addPlRow(
+      'IVA cobrado (no utilidad)',
+      n(d.totalImpuestos),
+      '',
+      false,
+      false,
+      false,
+      false,
+    );
+    addPlRow('= Ventas netas sin IVA', n(d.totalVentasSinIva), '', true);
 
     addEmpty(ws);
-    addPlRow('(−) Costo de lo vendido (COGS)', n(d.costoVentas), '', false, false, true, true);
+    addPlRow(
+      '(−) Costo de lo vendido (COGS)',
+      n(d.costoVentas),
+      '',
+      false,
+      false,
+      true,
+      true,
+    );
     if (n(d.totalMermas) > 0) {
-      addPlRow('(−) Mermas aprobadas',    n(d.totalMermas), '', false, false, true, false);
+      addPlRow(
+        '(−) Mermas aprobadas',
+        n(d.totalMermas),
+        '',
+        false,
+        false,
+        true,
+        false,
+      );
     }
-    addPlRow('= Utilidad bruta',          n(d.utilidadBruta),   `${this.pct(d.margenBruto)} sobre ventas`, true);
+    addPlRow(
+      '= Utilidad bruta',
+      n(d.utilidadBruta),
+      `${this.pct(d.margenBruto)} sobre ventas`,
+      true,
+    );
 
     if (n(d.totalComisionesTecnicos) > 0 || n(d.totalGastosDeducibles) > 0) {
       addEmpty(ws);
       if (n(d.totalComisionesTecnicos) > 0)
-        addPlRow('(−) Comisiones técnicos', n(d.totalComisionesTecnicos), '', false, false, true, false);
+        addPlRow(
+          '(−) Comisiones técnicos',
+          n(d.totalComisionesTecnicos),
+          '',
+          false,
+          false,
+          true,
+          false,
+        );
       if (n(d.totalGastosDeducibles) > 0)
-        addPlRow('(−) Gastos deducibles', n(d.totalGastosDeducibles), '', false, false, true, true);
-      addPlRow('= Utilidad operativa',    n(d.utilidadOperativa), `${this.pct(d.margenOperativo)} sobre ventas`, true);
+        addPlRow(
+          '(−) Gastos deducibles',
+          n(d.totalGastosDeducibles),
+          '',
+          false,
+          false,
+          true,
+          true,
+        );
+      addPlRow(
+        '= Utilidad operativa',
+        n(d.utilidadOperativa),
+        `${this.pct(d.margenOperativo)} sobre ventas`,
+        true,
+      );
     }
     if (n(d.totalGastosNoDeducibles) > 0) {
       addEmpty(ws);
-      addPlRow('(−) Gastos no deducibles', n(d.totalGastosNoDeducibles), '', false, false, true, false);
+      addPlRow(
+        '(−) Gastos no deducibles',
+        n(d.totalGastosNoDeducibles),
+        '',
+        false,
+        false,
+        true,
+        false,
+      );
     }
-    addPlRow('= Utilidad neta final',     n(d.utilidadNeta), `${this.pct(d.margenNeto)} sobre ventas`, false, true);
+    addPlRow(
+      '= Utilidad neta final',
+      n(d.utilidadNeta),
+      `${this.pct(d.margenNeto)} sobre ventas`,
+      false,
+      true,
+    );
 
     addEmpty(ws);
 
@@ -331,77 +476,150 @@ export class CierreContableComponent implements OnInit {
     ws.mergeCells(`A${rowOpH.number}:E${rowOpH.number}`);
     styleSectionHeader(rowOpH, C.blue);
 
-    const rowOpCols = ws.addRow(['Concepto', 'Cantidad', 'Total (COP)', 'Promedio', '']);
+    const rowOpCols = ws.addRow([
+      'Concepto',
+      'Cantidad',
+      'Total (COP)',
+      'Promedio',
+      '',
+    ]);
     styleColHeader(rowOpCols);
 
-    const addOpRow = (label: string, qty: number, total: number, alt = false) => {
+    const addOpRow = (
+      label: string,
+      qty: number,
+      total: number,
+      alt = false,
+    ) => {
       const avg = qty > 0 ? total / qty : 0;
       const r = ws.addRow([label, qty, total, avg, '']);
       styleDataRow(r, alt);
-      r.getCell('A').alignment = { horizontal: 'left',   vertical: 'middle' };
+      r.getCell('A').alignment = { horizontal: 'left', vertical: 'middle' };
       r.getCell('B').alignment = { horizontal: 'center', vertical: 'middle' };
       r.getCell('C').numFmt = `"$"#,##0`;
-      r.getCell('C').alignment = { horizontal: 'right',  vertical: 'middle' };
+      r.getCell('C').alignment = { horizontal: 'right', vertical: 'middle' };
       r.getCell('D').numFmt = `"$"#,##0`;
-      r.getCell('D').alignment = { horizontal: 'right',  vertical: 'middle' };
-      r.getCell('D').font = { size: 9, color: { argb: C.muted }, name: 'Calibri' };
+      r.getCell('D').alignment = { horizontal: 'right', vertical: 'middle' };
+      r.getCell('D').font = {
+        size: 9,
+        color: { argb: C.muted },
+        name: 'Calibri',
+      };
     };
 
-    addOpRow('Ventas',              n(d.cantidadVentas),     n(d.totalVentasNeto));
-    addOpRow('Compras',             n(d.cantidadCompras),    n(d.totalComprasNeto),          true);
-    addOpRow('Comisiones técnicos', n(d.cantidadComisiones), n(d.totalComisionesTecnicos));
-    addOpRow('Mermas aprobadas',    n(d.cantidadMermas),     n(d.totalMermas),               true);
-    addOpRow('Ingresos de caja',    n(d.cantidadIngresos),   n(d.totalIngresos));
-    addOpRow('Egresos de caja',     n(d.cantidadEgresos),    n(d.totalEgresos),              true);
+    addOpRow('Ventas', n(d.cantidadVentas), n(d.totalVentasNeto));
+    addOpRow('Compras', n(d.cantidadCompras), n(d.totalComprasNeto), true);
+    addOpRow(
+      'Comisiones técnicos',
+      n(d.cantidadComisiones),
+      n(d.totalComisionesTecnicos),
+    );
+    addOpRow('Mermas aprobadas', n(d.cantidadMermas), n(d.totalMermas), true);
+    addOpRow('Ingresos de caja', n(d.cantidadIngresos), n(d.totalIngresos));
+    addOpRow('Egresos de caja', n(d.cantidadEgresos), n(d.totalEgresos), true);
 
     addEmpty(ws);
 
     // ── Posición de cartera ────────────────────────────────────
     const rowCarH = ws.addRow(['POSICIÓN DE CARTERA', '', '', '', '']);
     ws.mergeCells(`A${rowCarH.number}:E${rowCarH.number}`);
-    styleSectionHeader(rowCarH, '7C3AED');   // purple
+    styleSectionHeader(rowCarH, '7C3AED'); // purple
 
-    const rowCarCols = ws.addRow(['Concepto', 'Total deuda', 'Saldo pendiente', 'Ctas. activas', 'Vencidas']);
+    const rowCarCols = ws.addRow([
+      'Concepto',
+      'Total deuda',
+      'Saldo pendiente',
+      'Ctas. activas',
+      'Vencidas',
+    ]);
     styleColHeader(rowCarCols);
 
-    const addCarRow = (label: string, deuda: number, saldo: number, activas: number, vencidas: number, alt = false) => {
+    const addCarRow = (
+      label: string,
+      deuda: number,
+      saldo: number,
+      activas: number,
+      vencidas: number,
+      alt = false,
+    ) => {
       const r = ws.addRow([label, deuda, saldo, activas, vencidas]);
       styleDataRow(r, alt);
-      r.getCell('A').alignment = { horizontal: 'left',   vertical: 'middle' };
-      r.getCell('B').numFmt = `"$"#,##0`;  r.getCell('B').alignment = { horizontal: 'right', vertical: 'middle' };
-      r.getCell('C').numFmt = `"$"#,##0`;  r.getCell('C').alignment = { horizontal: 'right', vertical: 'middle' };
+      r.getCell('A').alignment = { horizontal: 'left', vertical: 'middle' };
+      r.getCell('B').numFmt = `"$"#,##0`;
+      r.getCell('B').alignment = { horizontal: 'right', vertical: 'middle' };
+      r.getCell('C').numFmt = `"$"#,##0`;
+      r.getCell('C').alignment = { horizontal: 'right', vertical: 'middle' };
       r.getCell('D').alignment = { horizontal: 'center', vertical: 'middle' };
       r.getCell('E').alignment = { horizontal: 'center', vertical: 'middle' };
-      if (vencidas > 0) r.getCell('E').font = { bold: true, size: 9, color: { argb: C.red }, name: 'Calibri' };
+      if (vencidas > 0)
+        r.getCell('E').font = {
+          bold: true,
+          size: 9,
+          color: { argb: C.red },
+          name: 'Calibri',
+        };
     };
 
-    addCarRow('Cuentas por cobrar (CxC)',
-      n(d.cxcTotalDeuda), n(d.cxcSaldoPendiente), n(d.cxcCantidadActivas), n(d.cxcCantidadVencidas));
-    addCarRow('Cuentas por pagar (CxP)',
-      n(d.cxpTotalDeuda), n(d.cxpSaldoPendiente), n(d.cxpCantidadActivas), n(d.cxpCantidadVencidas), true);
+    addCarRow(
+      'Cuentas por cobrar (CxC)',
+      n(d.cxcTotalDeuda),
+      n(d.cxcSaldoPendiente),
+      n(d.cxcCantidadActivas),
+      n(d.cxcCantidadVencidas),
+    );
+    addCarRow(
+      'Cuentas por pagar (CxP)',
+      n(d.cxpTotalDeuda),
+      n(d.cxpSaldoPendiente),
+      n(d.cxpCantidadActivas),
+      n(d.cxpCantidadVencidas),
+      true,
+    );
 
     // Posición neta
     const posNeta = n(d.posicionNeta);
-    const rowPos = ws.addRow(['Posición neta (CxC − CxP)', '', posNeta, '', '']);
+    const rowPos = ws.addRow([
+      'Posición neta (CxC − CxP)',
+      '',
+      posNeta,
+      '',
+      '',
+    ]);
     ws.mergeCells(`A${rowPos.number}:B${rowPos.number}`);
     ws.mergeCells(`D${rowPos.number}:E${rowPos.number}`);
     styleTotal(rowPos, posNeta >= 0 ? C.greenDark : C.red);
-    rowPos.getCell('A').alignment = { horizontal: 'left',  vertical: 'middle' };
-    rowPos.getCell('C').numFmt   = `"$"#,##0`;
+    rowPos.getCell('A').alignment = { horizontal: 'left', vertical: 'middle' };
+    rowPos.getCell('C').numFmt = `"$"#,##0`;
     rowPos.getCell('C').alignment = { horizontal: 'right', vertical: 'middle' };
 
     addEmpty(ws);
 
     // ── Pie de página ─────────────────────────────────────────
-    const rowFoot = ws.addRow([`Generado por Aura POS · ${new Date().toLocaleString('es-CO')}`, '', '', '', '']);
+    const rowFoot = ws.addRow([
+      `Generado por Aura Nube · ${new Date().toLocaleString('es-CO')}`,
+      '',
+      '',
+      '',
+      '',
+    ]);
     ws.mergeCells(`A${rowFoot.number}:E${rowFoot.number}`);
     rowFoot.height = 14;
-    rowFoot.getCell('A').font      = { size: 8, italic: true, color: { argb: C.muted }, name: 'Calibri' };
-    rowFoot.getCell('A').alignment = { horizontal: 'center', vertical: 'middle' };
+    rowFoot.getCell('A').font = {
+      size: 8,
+      italic: true,
+      color: { argb: C.muted },
+      name: 'Calibri',
+    };
+    rowFoot.getCell('A').alignment = {
+      horizontal: 'center',
+      vertical: 'middle',
+    };
 
     // ── Descargar ─────────────────────────────────────────────
     const buffer = await wb.xlsx.writeBuffer();
-    const blob   = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const blob = new Blob([buffer], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
     saveAs(blob, `cierre-contable_${d.fechaDesde}_${d.fechaHasta}.xlsx`);
   }
 }

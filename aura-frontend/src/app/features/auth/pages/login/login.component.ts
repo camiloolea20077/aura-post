@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
   FormGroup,
+  FormsModule,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
@@ -32,6 +33,7 @@ const ROLES_REDIRECT: Record<string, string> = {
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     InputTextModule,
     ButtonModule,
     ToastModule,
@@ -43,6 +45,7 @@ const ROLES_REDIRECT: Record<string, string> = {
 export class LoginComponent implements OnInit {
   public frmLogin!: FormGroup;
   public isSubmitting = false;
+  public recordar = false;
   public currentYear = new Date().getFullYear();
 
   constructor(
@@ -70,6 +73,14 @@ export class LoginComponent implements OnInit {
   isInvalid(field: string): boolean {
     const ctrl = this.frmLogin.get(field);
     return !!(ctrl?.invalid && ctrl?.touched);
+  }
+
+  olvidePassword(): void {
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Recuperación de contraseña',
+      detail: 'Contacta al administrador de tu empresa para restablecerla.',
+    });
   }
 
   async login(): Promise<void> {

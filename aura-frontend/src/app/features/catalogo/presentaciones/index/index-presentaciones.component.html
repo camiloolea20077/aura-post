@@ -1,49 +1,48 @@
-<div class="page-container">
-  <div class="page-header">
-    <div class="page-title-area">
-      <div class="page-icon orange">
-        <i class="pi pi-box"></i>
-      </div>
-      <div>
-        <h3 class="page-title">Presentaciones</h3>
-        <p class="page-sub">
-          Empaques y formatos de venta de tus productos (Caja x12, SixPack,
-          Unidad...)
-        </p>
-      </div>
-    </div>
-    <button
-      pButton
-      type="button"
-      label="Nueva presentación"
-      icon="pi pi-plus"
-      class="btn-aura"
-      (click)="openCreate()"
-    ></button>
-  </div>
-
+<div class="page">
   <div class="card">
-    <div class="table-toolbar">
-      <div class="toolbar-left">
-        <span class="p-input-icon-left search-wrap">
-          <i class="pi pi-search"></i>
-          <input
-            type="text"
-            pInputText
-            class="search-input"
-            placeholder="Buscar por nombre, producto, código de barras..."
-            [(ngModel)]="searchQuery"
-            (input)="onSearch()"
-            (keydown.escape)="clearSearch()"
-          />
-          <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">
-            <i class="pi pi-times"></i>
-          </button>
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon">
+          <i class="pi pi-box"></i>
         </span>
-        <span class="total-badge" *ngIf="!loadingTable">
-          {{ totalRecords }}
-          {{ totalRecords === 1 ? "presentación" : "presentaciones" }}
-        </span>
+        <div>
+          <h1 class="title">Presentaciones</h1>
+          <p class="subtitle">
+            Empaques y formatos de venta de tus productos (Caja x12, SixPack,
+            Unidad...)
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          label="Nueva presentación"
+          icon="pi pi-plus"
+          class="btn-aura"
+          (click)="openCreate()"
+        ></button>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              class="search-input"
+              placeholder="Buscar por nombre, producto, código de barras..."
+              [(ngModel)]="searchQuery"
+              (input)="onSearch()"
+              (keydown.escape)="clearSearch()"
+            />
+            <button
+              *ngIf="searchQuery"
+              class="clear-btn"
+              (click)="clearSearch()"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+        </div>
       </div>
     </div>
 

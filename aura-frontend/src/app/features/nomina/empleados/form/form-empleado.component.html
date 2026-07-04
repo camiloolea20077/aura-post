@@ -100,6 +100,19 @@
           [style]="{ width: '100%' }"
         />
       </div>
+      <div class="field" *ngIf="form.tipoContrato === 'FIJO'">
+        <label>Fecha fin de contrato *</label>
+        <p-calendar
+          [(ngModel)]="fechaFinContrato"
+          dateFormat="dd/mm/yy"
+          placeholder="dd/mm/aaaa"
+          [showIcon]="true"
+          [style]="{ width: '100%' }"
+        />
+        <small class="field-hint">
+          Obligatoria en contratos a término fijo (define vencimiento y liquidación).
+        </small>
+      </div>
       <div class="field">
         <label>Nivel de riesgo ARL</label>
         <p-dropdown
@@ -110,6 +123,16 @@
           [style]="{ width: '100%' }"
         />
       </div>
+      <div class="field">
+        <label>Control de asistencia</label>
+        <label class="switch-inline">
+          <input
+            type="checkbox"
+            [(ngModel)]="form.requiereControlAsistencia"
+          />
+          <span>Requiere marcar asistencia para poder liquidar (modo mixto)</span>
+        </label>
+      </div>
     </div>
 
     <!-- Datos bancarios -->
@@ -119,11 +142,15 @@
     <div class="form-grid">
       <div class="field">
         <label>Banco</label>
-        <input
-          pInputText
-          [(ngModel)]="form.banco"
-          placeholder="Ej: Bancolombia"
+        <app-tercero-picker
+          filtro="BANCO"
+          placeholder="Buscar banco..."
+          [terceroNombre]="form.banco ?? null"
+          (seleccionado)="onBancoSeleccionado($event)"
         />
+        <small class="field-hint">
+          Se elige de los terceros marcados como banco.
+        </small>
       </div>
       <div class="field">
         <label>Tipo de cuenta</label>

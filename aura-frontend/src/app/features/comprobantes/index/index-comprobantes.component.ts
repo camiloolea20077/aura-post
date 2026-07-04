@@ -6,6 +6,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -78,10 +79,16 @@ export class IndexComprobantesComponent implements OnInit {
     private readonly cdr: ChangeDetectorRef,
     private readonly comprobanteService: ComprobanteCajaService,
     private readonly alertService: AlertService,
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
     this.cargar();
+  }
+
+  /** Abre el formulario plano para crear un comprobante contable. */
+  nuevo(): void {
+    this.router.navigate(['/comprobantes/contable/nuevo']);
   }
 
   async cargar(page = 0): Promise<void> {

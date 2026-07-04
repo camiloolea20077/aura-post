@@ -208,8 +208,28 @@
                 [options]="metodosPago"
                 optionLabel="label"
                 optionValue="value"
+                (onChange)="onMetodoChange()"
                 styleClass="w-full"
               ></p-dropdown>
+            </div>
+          </div>
+
+          <div class="form-row" *ngIf="!esEfectivo">
+            <div class="form-field">
+              <label>Cuenta de origen</label>
+              <p-dropdown
+                formControlName="cuentaBancariaId"
+                [options]="cuentasBancariasOpts"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Selecciona la cuenta..."
+                [filter]="true"
+                [showClear]="true"
+                styleClass="w-full"
+              ></p-dropdown>
+              <small class="max-hint"
+                >De qué cuenta sale el dinero (descuenta su saldo).</small
+              >
             </div>
           </div>
 

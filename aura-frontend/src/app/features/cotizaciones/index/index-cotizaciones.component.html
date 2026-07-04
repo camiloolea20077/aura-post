@@ -1,35 +1,35 @@
-<div class="page-container">
-  <div class="page-header">
-    <div class="page-title-area">
-      <div class="page-icon"><i class="pi pi-file-edit"></i></div>
-      <div>
-        <h3 class="page-title">Cotizaciones</h3>
-        <p class="page-sub">Propuestas de precios generadas desde el POS</p>
-      </div>
-    </div>
-  </div>
-
+<div class="page">
   <div class="card">
-    <div class="table-toolbar">
-      <div class="toolbar-left">
-        <span class="p-input-icon-left search-wrap">
-          <i class="pi pi-search"></i>
-          <input
-            type="text"
-            pInputText
-            class="search-input"
-            placeholder="Buscar por número, cliente o estado..."
-            [(ngModel)]="searchQuery"
-            (input)="onSearch()"
-            (keydown.escape)="clearSearch()"
-          />
-          <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">
-            <i class="pi pi-times"></i>
-          </button>
-        </span>
-        <span class="total-badge" *ngIf="!loadingTable">
-          {{ totalRecords }} cotizaciones
-        </span>
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-file-edit"></i></span>
+        <div>
+          <h1 class="title">Cotizaciones</h1>
+          <p class="subtitle">Propuestas de precios generadas desde el POS</p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              class="search-input"
+              placeholder="Buscar por número, cliente o estado..."
+              [(ngModel)]="searchQuery"
+              (input)="onSearch()"
+              (keydown.escape)="clearSearch()"
+            />
+            <button
+              *ngIf="searchQuery"
+              class="clear-btn"
+              (click)="clearSearch()"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+        </div>
       </div>
     </div>
 

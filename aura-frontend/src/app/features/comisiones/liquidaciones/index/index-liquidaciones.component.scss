@@ -1,4 +1,4 @@
-$indigo: #6366f1;
+$indigo: #2563eb;
 $border: #e2e8f0;
 $text: #1e293b;
 $muted: #94a3b8;
@@ -9,50 +9,9 @@ $bg: #f8fafc;
 $font: "Outfit", sans-serif;
 $mono: "JetBrains Mono", monospace;
 
-.module-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  padding: 1.5rem;
-}
-
-.module-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-  }
-  .header-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    background: rgba(99, 102, 241, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    i { font-size: 1.1rem; color: $indigo; }
-  }
-  .header-title { font-size: 1.15rem; font-weight: 800; color: $text; margin: 0; }
-  .header-sub { font-size: 0.78rem; color: $muted; margin: 0; }
-}
-
-.table-card {
-  background: #fff;
-  border: 1.5px solid $border;
-  border-radius: 16px;
+// Header + tabla en una sola .card global; aquí solo lo propio del módulo.
+.card {
   overflow: hidden;
-}
-
-.table-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.85rem 1rem;
-  border-bottom: 1px solid $border;
 }
 
 .filter-wrap {
@@ -76,18 +35,6 @@ $mono: "JetBrains Mono", monospace;
   }
 }
 
-.total-badge {
-  margin-left: auto;
-  white-space: nowrap;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: $muted;
-  background: $bg;
-  border: 1px solid $border;
-  padding: 0.2rem 0.65rem;
-  border-radius: 20px;
-}
-
 .clickable-row {
   cursor: pointer;
   &:hover { background: #fafbff !important; }
@@ -108,7 +55,7 @@ $mono: "JetBrains Mono", monospace;
   display: inline-block;
   font-size: 0.78rem;
   font-weight: 700;
-  background: rgba(99, 102, 241, 0.08);
+  background: rgba(37, 99, 235, 0.08);
   color: $indigo;
   padding: 0.1rem 0.55rem;
   border-radius: 20px;
@@ -125,12 +72,6 @@ $mono: "JetBrains Mono", monospace;
 .mono { font-family: $mono; }
 .text-muted { color: $muted; }
 
-::ng-deep .btn-primary.p-button {
-  background: linear-gradient(135deg, $indigo, #818cf8) !important;
-  border: none !important;
-  font-weight: 600 !important;
-}
-
 // ── Diálogo de pago ──────────────────────────────────────────
 .pago-dialog-body {
   display: flex;
@@ -143,8 +84,8 @@ $mono: "JetBrains Mono", monospace;
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: rgba(99, 102, 241, 0.06);
-  border: 1px solid rgba(99, 102, 241, 0.18);
+  background: rgba(37, 99, 235, 0.06);
+  border: 1px solid rgba(37, 99, 235, 0.18);
   border-radius: 10px;
   padding: 0.75rem 1rem;
 

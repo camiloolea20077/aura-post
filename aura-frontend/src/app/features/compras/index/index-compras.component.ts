@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -11,13 +12,11 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
-import { FormCompraComponent } from '../form/form-compra.component';
 import {
   CompraModel,
   CompraPageableDto,
   CompraTableModel,
   EstadoCompra,
-  PrefilledCompraOC,
 } from '../../../core/models/compra.model';
 import { CompraService } from '../../../core/services/compra.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
@@ -45,7 +44,6 @@ type TagSeverity =
     ToastModule,
     TooltipModule,
     SkeletonModule,
-    FormCompraComponent,
     DetalleCompraComponent,
     ComprobanteEgresoComponent,
   ],
@@ -54,11 +52,6 @@ type TagSeverity =
   styleUrls: ['./index-compras.component.scss'],
 })
 export class IndexComprasComponent implements OnInit {
-  // Modal nueva/editar compra
-  public showFormModal = false;
-  public compraEnEdicion: CompraModel | null = null;
-  public prefilledFromOC: PrefilledCompraOC | null = null;
-
   // Comprobante de egreso
   public showComprobante = false;
   public compraComprobante: CompraModel | null = null;
@@ -78,14 +71,18 @@ export class IndexComprasComponent implements OnInit {
   constructor(
     private readonly compraService: CompraService,
     private readonly alertService: AlertService,
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
+    // Tras guardar en el formulario plano, si fue de contado se abre el comprobante
     const state = history.state;
-    if (state?.['fromOC']) {
-      this.prefilledFromOC = state['fromOC'] as PrefilledCompraOC;
-      this.compraEnEdicion = null;
-      this.showFormModal = true;
+    if (state?.['savedCompra']) {
+      const compra = state['savedCompra'] as CompraModel;
+      if (compra?.formaPago === 'CONTADO') {
+        this.compraComprobante = compra;
+        this.showComprobante = true;
+      }
     }
   }
 
@@ -136,40 +133,13 @@ export class IndexComprasComponent implements OnInit {
     if (this.lastLazyEvent) this.loadTable(this.lastLazyEvent);
   }
 
-  // ─── Nueva compra ─────────────────────────────────────────
+  // ─── Nueva / editar compra (formulario plano ruteado) ─────
   openForm(): void {
-    this.compraEnEdicion = null;
-    this.prefilledFromOC = null;
-    this.showFormModal = true;
+    this.router.navigate(['/compras/nueva']);
   }
 
-  async editarCompra(item: CompraTableModel): Promise<void> {
-    try {
-      const res = await lastValueFrom(this.compraService.getById(item.id));
-      this.compraEnEdicion = res?.data ?? null;
-      this.showFormModal = true;
-    } catch {
-      this.alertService.showError(
-        'Error',
-        'No se pudo cargar la compra para editar.',
-      );
-    }
-  }
-
-  onFormClosed(): void {
-    this.showFormModal = false;
-    this.compraEnEdicion = null;
-    this.prefilledFromOC = null;
-  }
-  onCompraSaved(compra: CompraModel): void {
-    this.showFormModal = false;
-    this.compraEnEdicion = null;
-    this.reloadTable();
-    // Auto-abrir comprobante si fue CONTADO y es compra nueva (no edición)
-    if (compra.formaPago === 'CONTADO') {
-      this.compraComprobante = compra;
-      this.showComprobante = true;
-    }
+  editarCompra(item: CompraTableModel): void {
+    this.router.navigate(['/compras', item.id, 'editar']);
   }
 
   verComprobante(item: CompraTableModel): void {

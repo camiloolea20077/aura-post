@@ -136,7 +136,7 @@ export class ModalFacturaComponent implements OnChanges {
       footer: (currentPage: number, pageCount: number) => ({
         columns: [
           {
-            text: 'AURA POS — Software de gestión empresarial',
+            text: 'AURA NUBE — Software de gestión empresarial',
             fontSize: 8,
             color: '#7f8c8d',
             margin: [40, 0, 0, 0],
@@ -160,7 +160,7 @@ export class ModalFacturaComponent implements OnChanges {
             {
               stack: [
                 {
-                  text: 'AURA POS',
+                  text: 'AURA NUBE',
                   fontSize: 22,
                   bold: true,
                   color: '#3498db',

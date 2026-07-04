@@ -205,6 +205,30 @@ export const routes: Routes = [
             (m) => m.FormGastoComponent,
           ),
       },
+      {
+        path: 'obligaciones',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/obligaciones/index/index-obligaciones.component').then(
+            (m) => m.IndexObligacionesComponent,
+          ),
+      },
+      {
+        path: 'obligaciones/nuevo',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/obligaciones/form/form-obligacion.component').then(
+            (m) => m.FormObligacionComponent,
+          ),
+      },
+      {
+        path: 'obligaciones/:id',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/obligaciones/detalle/detalle-obligacion.component').then(
+            (m) => m.DetalleObligacionComponent,
+          ),
+      },
 
       // Inventario
       {
@@ -263,6 +287,22 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/compras/ordenes/index-ordenes.component').then(
             (m) => m.IndexOrdenesComponent,
+          ),
+      },
+      {
+        path: 'compras/nueva',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/compras/form/form-compra.component').then(
+            (m) => m.FormCompraComponent,
+          ),
+      },
+      {
+        path: 'compras/:id/editar',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/compras/form/form-compra.component').then(
+            (m) => m.FormCompraComponent,
           ),
       },
       {
@@ -331,6 +371,22 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/terceros/index/index-terceros.component').then(
             (m) => m.IndexTercerosComponent,
+          ),
+      },
+      {
+        path: 'terceros/nuevo',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/terceros/form-plano/form-tercero-plano.component').then(
+            (m) => m.FormTerceroPlanoComponent,
+          ),
+      },
+      {
+        path: 'terceros/editar/:id',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/terceros/form-plano/form-tercero-plano.component').then(
+            (m) => m.FormTerceroPlanoComponent,
           ),
       },
 
@@ -429,6 +485,64 @@ export const routes: Routes = [
           ),
       },
 
+      // Asistencia
+      {
+        path: 'asistencia/turnos',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/asistencia/turnos/turnos.component').then(
+            (m) => m.TurnosComponent,
+          ),
+      },
+      {
+        path: 'asistencia/marcaje',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/asistencia/marcaje/marcaje.component').then(
+            (m) => m.MarcajeComponent,
+          ),
+      },
+      {
+        path: 'asistencia/revision',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/asistencia/revision/revision.component').then(
+            (m) => m.RevisionAsistenciaComponent,
+          ),
+      },
+      {
+        path: 'asistencia/novedades',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/asistencia/novedades/novedades-asistencia.component').then(
+            (m) => m.NovedadesAsistenciaComponent,
+          ),
+      },
+      {
+        path: 'asistencia/autorizaciones',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/asistencia/autorizaciones/autorizaciones.component').then(
+            (m) => m.AutorizacionesComponent,
+          ),
+      },
+      {
+        path: 'nomina/preliquidacion',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/asistencia/cierre/preliquidacion.component').then(
+            (m) => m.PreliquidacionComponent,
+          ),
+      },
+      {
+        path: 'nomina/prestaciones',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/nomina/prestaciones/prestaciones.component').then(
+            (m) => m.PrestacionesComponent,
+          ),
+      },
+
       // Ventas de campo
       {
         path: 'ventas-campo',
@@ -501,6 +615,22 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'contabilidad/conceptos-caja',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/conceptos-caja/conceptos-caja.component').then(
+            (m) => m.ConceptosCajaComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/saldos-iniciales',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/saldos-iniciales/saldos-iniciales.component').then(
+            (m) => m.SaldosInicialesComponent,
+          ),
+      },
+      {
         path: 'contabilidad/centros-costo',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
@@ -540,6 +670,15 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/comprobantes/index/index-comprobantes.component').then(
             (m) => m.IndexComprobantesComponent,
+          ),
+      },
+      // Comprobante contable (formulario plano)
+      {
+        path: 'comprobantes/contable/nuevo',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/comprobantes/contable/form/form-comprobante-contable.component').then(
+            (m) => m.FormComprobanteContableComponent,
           ),
       },
 

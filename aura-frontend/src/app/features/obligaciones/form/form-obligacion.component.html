@@ -1,0 +1,116 @@
+<div class="page">
+  <form [formGroup]="frm" (ngSubmit)="guardar()">
+    <div class="card">
+      <!-- Encabezado dentro de la card -->
+      <div class="card-head">
+        <div class="card-head__title">
+          <p-button
+            icon="pi pi-arrow-left"
+            [rounded]="true"
+            [text]="true"
+            (onClick)="cancelar()"
+          />
+          <span class="header-icon">
+            <i class="pi pi-money-bill"></i>
+          </span>
+          <div>
+            <h1 class="title">Nuevo préstamo</h1>
+            <p class="subtitle">Crédito bancario con tabla de amortización</p>
+          </div>
+        </div>
+        <button
+          pButton
+          type="submit"
+          label="Crear préstamo"
+          icon="pi pi-check"
+          class="btn-aura"
+          [loading]="saving"
+        ></button>
+      </div>
+
+      <div class="form-body">
+      <h3 class="section">Datos del préstamo</h3>
+      <div class="grid">
+        <div class="field">
+          <label>Acreedor / Banco</label>
+          <app-tercero-picker
+            [terceroId]="terceroId"
+            [terceroNombre]="terceroNombre"
+            placeholder="Buscar el banco..."
+            filtro="BANCO"
+            (seleccionado)="onTerceroSel($event)"
+          />
+        </div>
+        <div class="field">
+          <label>Nombre de la entidad <span class="req">*</span></label>
+          <input pInputText formControlName="entidad" class="w-full" placeholder="Ej: Bancolombia" />
+        </div>
+
+        <div class="field">
+          <label>N° obligación / pagaré</label>
+          <input pInputText formControlName="numero" class="w-full" placeholder="Opcional" />
+        </div>
+        <div class="field">
+          <label>Cuenta donde entra el dinero <span class="req">*</span></label>
+          <p-dropdown
+            formControlName="cuentaBancariaId"
+            [options]="cuentasBancariasOpts"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Seleccionar cuenta bancaria..."
+            [filter]="true"
+            filterBy="label"
+            styleClass="w-full"
+          />
+        </div>
+      </div>
+
+      <h3 class="section">Condiciones</h3>
+      <div class="grid">
+        <div class="field">
+          <label>Monto del préstamo <span class="req">*</span></label>
+          <p-inputNumber
+            formControlName="montoPrincipal"
+            mode="currency"
+            currency="COP"
+            locale="es-CO"
+            [minFractionDigits]="0"
+            styleClass="w-full"
+          />
+        </div>
+        <div class="field">
+          <label>Tasa interés mensual (%) <span class="req">*</span></label>
+          <p-inputNumber
+            formControlName="tasaMensual"
+            [minFractionDigits]="2"
+            [maxFractionDigits]="4"
+            suffix=" %"
+            styleClass="w-full"
+          />
+        </div>
+
+        <div class="field">
+          <label>Plazo (meses) <span class="req">*</span></label>
+          <p-inputNumber formControlName="plazoMeses" [min]="1" styleClass="w-full" />
+        </div>
+        <div class="field">
+          <label>Fecha de desembolso <span class="req">*</span></label>
+          <p-calendar
+            formControlName="fechaDesembolso"
+            dateFormat="yy-mm-dd"
+            [showIcon]="true"
+            styleClass="w-full"
+          />
+        </div>
+      </div>
+
+      </div>
+
+      <!-- Botones dentro de la card -->
+      <div class="card-footer">
+        <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="cancelar()" />
+        <p-button label="Crear préstamo" icon="pi pi-check" type="submit" [loading]="saving" />
+      </div>
+    </div>
+  </form>
+</div>

@@ -1,7 +1,28 @@
-@use '../tesoreria-shared' as *;
+// ── Filtros (en la fila del buscador) ────────────────────────────────
+.card-head__search {
+  ::ng-deep .p-calendar,
+  ::ng-deep .p-dropdown {
+    min-width: 200px;
+  }
+}
 
-.conciliacion-icon {
-  background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
+// ── Tarjeta de tabla ─────────────────────────────────────────────────
+.table-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.empty-row {
+  text-align: center;
+  padding: 3rem !important;
+  color: #94a3b8;
+
+  p {
+    margin: 0.5rem 0 0;
+    font-size: 0.9rem;
+  }
 }
 
 // ── Layout principal ─────────────────────────────────────────────────
@@ -215,13 +236,6 @@
     color: #dc2626;
     .dif-valor { font-size: 0.9rem; }
   }
-}
-
-// ── Header actions ───────────────────────────────────────────────────
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 // ── Extracto CSV info ─────────────────────────────────────────────────

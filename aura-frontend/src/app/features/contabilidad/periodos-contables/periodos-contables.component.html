@@ -1,29 +1,32 @@
 <p-toast />
 
-<div class="module-wrapper">
+<div class="page">
   <!-- Header -->
-  <div class="module-header">
-    <div class="header-left">
-      <span class="header-icon"><i class="pi pi-lock"></i></span>
-      <div>
-        <h2>Períodos Contables</h2>
-        <p>
-          Control de apertura y cierre de períodos — bloquea asientos en
-          períodos cerrados
-        </p>
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-lock"></i></span>
+        <div>
+          <h1 class="title">Períodos Contables</h1>
+          <p class="subtitle">
+            Control de apertura y cierre de períodos — bloquea asientos en
+            períodos cerrados
+          </p>
+        </div>
       </div>
+      <button
+        pButton
+        type="button"
+        label="Abrir Período"
+        icon="pi pi-plus"
+        class="btn-aura"
+        [disabled]="!!periodoActivo"
+        [pTooltip]="
+          periodoActivo ? 'Cierre el período activo antes de abrir uno nuevo' : ''
+        "
+        (click)="abrirDialogNuevo()"
+      ></button>
     </div>
-    <button
-      pButton
-      label="Abrir Período"
-      icon="pi pi-plus"
-      class="btn-aura"
-      [disabled]="!!periodoActivo"
-      [pTooltip]="
-        periodoActivo ? 'Cierre el período activo antes de abrir uno nuevo' : ''
-      "
-      (click)="abrirDialogNuevo()"
-    ></button>
   </div>
 
   <!-- Banner período activo -->

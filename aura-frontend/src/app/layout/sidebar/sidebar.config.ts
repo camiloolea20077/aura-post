@@ -261,6 +261,11 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         icon: 'pi pi-check-square',
         route: '/tesoreria/conciliacion',
       },
+      {
+        label: 'Obligaciones',
+        icon: 'pi pi-money-bill',
+        route: '/obligaciones',
+      },
     ],
   },
 
@@ -309,6 +314,16 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         route: '/contabilidad/asientos',
       },
       {
+        label: 'Conceptos de Caja',
+        icon: 'pi pi-tags',
+        route: '/contabilidad/conceptos-caja',
+      },
+      {
+        label: 'Saldos Iniciales',
+        icon: 'pi pi-database',
+        route: '/contabilidad/saldos-iniciales',
+      },
+      {
         label: 'Centros de Costo',
         icon: 'pi pi-sitemap',
         route: '/contabilidad/centros-costo',
@@ -355,11 +370,46 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
     roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [
       { label: 'Empleados', icon: 'pi pi-users', route: '/nomina/empleados' },
+      {
+        label: 'Turnos Empleado',
+        icon: 'pi pi-clock',
+        route: '/asistencia/turnos',
+      },
+      {
+        label: 'Marcaje',
+        icon: 'pi pi-stopwatch',
+        route: '/asistencia/marcaje',
+      },
+      {
+        label: 'Revisión asistencia',
+        icon: 'pi pi-check-square',
+        route: '/asistencia/revision',
+      },
+      {
+        label: 'Novedades asistencia',
+        icon: 'pi pi-bolt',
+        route: '/asistencia/novedades',
+      },
+      {
+        label: 'Autorizaciones',
+        icon: 'pi pi-shield',
+        route: '/asistencia/autorizaciones',
+      },
       { label: 'Períodos', icon: 'pi pi-calendar', route: '/nomina/periodos' },
       {
         label: 'Liquidación Nómina',
         icon: 'pi pi-calculator',
         route: '/nomina/liquidacion',
+      },
+      {
+        label: 'Preliquidación / Auditoría',
+        icon: 'pi pi-verified',
+        route: '/nomina/preliquidacion',
+      },
+      {
+        label: 'Prestaciones',
+        icon: 'pi pi-gift',
+        route: '/nomina/prestaciones',
       },
       { label: 'Config. Nómina', icon: 'pi pi-cog', route: '/nomina/config' },
       {
@@ -403,7 +453,7 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
     icon: 'pi pi-sliders-h',
     items: [
       {
-        label: 'Clientes y Proveedores',
+        label: 'Terceros',
         icon: 'pi pi-users',
         route: '/terceros',
         roles: ['SUPER_ADMIN', 'ADMIN'],

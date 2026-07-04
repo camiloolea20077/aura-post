@@ -262,6 +262,7 @@ body {
   border: 1px solid var(--aura-border);
   box-shadow: var(--shadow-card);
   transition: box-shadow 0.2s;
+  overflow: visible;
 
   &:hover {
     box-shadow: var(--shadow-md);
@@ -378,7 +379,7 @@ body {
   border-radius: 16px;
   border: 1px solid var(--aura-border);
   box-shadow: var(--shadow-card);
-  overflow: hidden;
+  overflow: visible;
 
   .card-header {
     display: flex;
@@ -399,6 +400,169 @@ body {
   .card-content {
     padding: 1.25rem;
   }
+}
+
+// ─── Estándar de módulo (index + form plano) ───────────────────────────────
+// Contenedor de página
+.page {
+  padding: 1.5rem 2rem 3rem;
+  width: 100%;
+}
+
+// Encabezado dentro de la card: título a la izquierda, acciones a la derecha
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.5rem;
+  border-bottom: 1px solid var(--aura-border);
+  flex-wrap: wrap;
+
+  // Grupo izquierdo: ícono + título
+  .card-head__title {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .header-icon {
+    width: 44px;
+    height: 44px;
+    background: var(--aura-blue);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    i {
+      font-size: 1.1rem;
+      color: #fff;
+    }
+  }
+
+  .title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--aura-text);
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+
+  .subtitle {
+    font-size: 0.8rem;
+    color: var(--aura-text-muted);
+    margin: 0.1rem 0 0;
+  }
+
+  // Acciones a la derecha: botón arriba, buscador debajo
+  .card-head__actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.6rem;
+  }
+
+  // Fila de botones (cuando hay más de uno) arriba de las acciones
+  .card-head__btns {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  // Fila del buscador (+ total) debajo del botón
+  .card-head__search {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}
+
+// Pie de la card (formularios planos): botones a la derecha
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding: 1.1rem 1.5rem;
+  border-top: 1px solid var(--aura-border);
+}
+
+// Buscador estándar (va dentro de .card-head__actions)
+.search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  > i.pi {
+    position: absolute;
+    left: 0.75rem;
+    font-size: 0.82rem;
+    color: var(--aura-text-muted);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .search-input {
+    height: 38px;
+    width: 260px;
+    border-radius: 10px;
+    border: 1.5px solid var(--aura-border);
+    padding: 0 2rem 0 2.1rem;
+    font-size: 0.84rem;
+    font-family: "Outfit", sans-serif;
+    color: var(--aura-text);
+    transition: all 0.18s;
+
+    &::placeholder {
+      color: #9ca3af;
+    }
+    &:focus {
+      border-color: var(--aura-blue);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      outline: none;
+    }
+
+    @media (max-width: 600px) {
+      width: 100%;
+    }
+  }
+
+  .clear-btn {
+    position: absolute;
+    right: 0.55rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    padding: 0.2rem;
+    border-radius: 4px;
+
+    i {
+      font-size: 0.72rem;
+    }
+    &:hover {
+      color: var(--aura-danger);
+    }
+  }
+}
+
+// Badge de total de registros
+.total-badge {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--aura-text-muted);
+  background: #f1f5f9;
+  padding: 0.25rem 0.65rem;
+  border-radius: 20px;
+  white-space: nowrap;
 }
 
 // Toolbar de tabla
@@ -498,5 +662,25 @@ body {
   .aura-card {
     background: var(--aura-surface);
     border-color: var(--aura-border);
+  }
+}
+:host ::ng-deep .p-paginator-rpp-dropdown .p-select-overlay {
+  position: fixed !important;
+}
+.card {
+  overflow: visible;
+}
+
+// Panel de dropdown que envuelve etiquetas largas: crece hacia ABAJO, no a lo ancho.
+// Se usa vía panelStyleClass en selects con textos largos (cuenta, tercero, centro de costo).
+.cmp-dd-panel {
+  max-width: 360px;
+
+  .p-dropdown-items .p-dropdown-item,
+  .p-dropdown-item {
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.25;
+    height: auto;
   }
 }

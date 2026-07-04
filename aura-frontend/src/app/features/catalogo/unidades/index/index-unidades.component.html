@@ -1,47 +1,47 @@
-<div class="page-container">
-  <div class="page-header">
-    <div class="page-title-area">
-      <div class="page-icon green">
-        <i class="pi pi-chart-bar"></i>
-      </div>
-      <div>
-        <h3 class="page-title">Unidades de medida</h3>
-        <p class="page-sub">
-          Define las unidades con las que mides tus productos
-        </p>
-      </div>
-    </div>
-    <button
-      pButton
-      type="button"
-      label="Nueva unidad"
-      icon="pi pi-plus"
-      class="btn-aura"
-      (click)="openCreate()"
-    ></button>
-  </div>
-
+<div class="page">
   <div class="card">
-    <div class="table-toolbar">
-      <div class="toolbar-left">
-        <span class="p-input-icon-left search-wrap">
-          <i class="pi pi-search"></i>
-          <input
-            type="text"
-            pInputText
-            class="search-input"
-            placeholder="Buscar unidad..."
-            [(ngModel)]="searchQuery"
-            (input)="filterGlobal($event)"
-            (keydown.escape)="clearSearch()"
-          />
-          <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">
-            <i class="pi pi-times"></i>
-          </button>
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon">
+          <i class="pi pi-chart-bar"></i>
         </span>
-        <span class="total-badge" *ngIf="!loadingTable">
-          {{ totalRecords }} {{ totalRecords === 1 ? "unidad" : "unidades" }}
-        </span>
+        <div>
+          <h1 class="title">Unidades de medida</h1>
+          <p class="subtitle">
+            Define las unidades con las que mides tus productos
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          label="Nueva unidad"
+          icon="pi pi-plus"
+          class="btn-aura"
+          (click)="openCreate()"
+        ></button>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              class="search-input"
+              placeholder="Buscar unidad..."
+              [(ngModel)]="searchQuery"
+              (input)="filterGlobal($event)"
+              (keydown.escape)="clearSearch()"
+            />
+            <button
+              *ngIf="searchQuery"
+              class="clear-btn"
+              (click)="clearSearch()"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+        </div>
       </div>
     </div>
 

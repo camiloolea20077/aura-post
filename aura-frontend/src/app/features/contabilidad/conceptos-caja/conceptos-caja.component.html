@@ -1,0 +1,167 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-tags"></i></span>
+        <div>
+          <h1 class="title">Conceptos de caja</h1>
+          <p class="subtitle">
+            Conceptos amigables para ingresos y egresos del cajero, mapeados a
+            su cuenta contable
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          label="Nuevo concepto"
+          icon="pi pi-plus"
+          class="btn-aura"
+          (click)="abrirCrear()"
+        ></button>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              class="search-input"
+              placeholder="Buscar concepto o cuenta..."
+              [(ngModel)]="searchQuery"
+              (input)="onSearch()"
+              (keydown.escape)="clearSearch()"
+            />
+            <button
+              *ngIf="searchQuery"
+              class="clear-btn"
+              (click)="clearSearch()"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <p-table
+      [value]="filtrados"
+      styleClass="p-datatable-sm"
+      [loading]="loading"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords} registros"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Concepto</th>
+          <th class="text-center">Tipo</th>
+          <th>Cuenta contable</th>
+          <th class="text-center">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-c>
+        <tr>
+          <td>
+            <strong>{{ c.nombre }}</strong>
+          </td>
+          <td class="text-center">
+            <p-tag
+              [value]="tipoLabel(c.tipo)"
+              [severity]="tipoSeverity(c.tipo)"
+            />
+          </td>
+          <td>{{ c.cuentaCodigo }} - {{ c.cuentaNombre }}</td>
+          <td class="text-center">
+            <button
+              pButton
+              icon="pi pi-pencil"
+              class="p-button-text p-button-rounded p-button-sm"
+              pTooltip="Editar"
+              (click)="abrirEditar(c)"
+            ></button>
+            <button
+              pButton
+              icon="pi pi-trash"
+              class="p-button-text p-button-rounded p-button-sm p-button-danger"
+              pTooltip="Eliminar"
+              (click)="eliminar(c)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td
+            colspan="4"
+            class="text-center"
+            style="padding: 1.5rem; color: #94a3b8"
+          >
+            Aún no hay conceptos. Crea el primero para que el cajero pueda
+            registrar movimientos contabilizados.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- Diálogo crear/editar -->
+<p-dialog
+  [(visible)]="showForm"
+  [modal]="true"
+  [header]="editId ? 'Editar concepto' : 'Nuevo concepto'"
+  [style]="{ width: '440px' }"
+  [draggable]="false"
+>
+  <div class="cc-form">
+    <div class="field">
+      <label>Nombre <span class="req">*</span></label>
+      <input
+        pInputText
+        [(ngModel)]="form.nombre"
+        placeholder="Ej. Matada de cerdo, Compra de jugos"
+      />
+    </div>
+    <div class="field">
+      <label>Tipo <span class="req">*</span></label>
+      <p-dropdown
+        [(ngModel)]="form.tipo"
+        [options]="tipoOpts"
+        optionLabel="label"
+        optionValue="value"
+        appendTo="body"
+        styleClass="w-full"
+      ></p-dropdown>
+    </div>
+    <div class="field">
+      <label>Cuenta contable <span class="req">*</span></label>
+      <p-dropdown
+        [(ngModel)]="form.cuentaContableId"
+        [options]="cuentasOpts"
+        optionLabel="label"
+        optionValue="value"
+        appendTo="body"
+        placeholder="Selecciona la cuenta"
+        [filter]="true"
+        styleClass="w-full"
+      ></p-dropdown>
+      <small class="hint"
+        >A esta cuenta irá la contrapartida del asiento (la caja es la otra
+        línea).</small
+      >
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Cancelar" [text]="true" (onClick)="showForm = false" />
+    <p-button
+      label="Guardar"
+      icon="pi pi-check"
+      [loading]="saving"
+      (onClick)="guardar()"
+    />
+  </ng-template>
+</p-dialog>

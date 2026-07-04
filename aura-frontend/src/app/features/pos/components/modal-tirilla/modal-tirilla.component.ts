@@ -86,7 +86,8 @@ export class ModalTirillaComponent implements OnChanges {
   get cambioTotal(): number {
     if (!this.venta?.pagos?.length) return 0;
     const totalTendido = this.venta.pagos.reduce(
-      (s, p) => s + (p.montoRecibido ?? p.monto), 0
+      (s, p) => s + (p.montoRecibido ?? p.monto),
+      0,
     );
     return Math.max(0, totalTendido - this.venta.totalPagar);
   }
@@ -132,7 +133,10 @@ export class ModalTirillaComponent implements OnChanges {
       .join('');
 
     // ── Construir filas de pagos ──────────────────────────────────
-    const totalTendido = v.pagos.reduce((s, p) => s + (p.montoRecibido ?? p.monto), 0);
+    const totalTendido = v.pagos.reduce(
+      (s, p) => s + (p.montoRecibido ?? p.monto),
+      0,
+    );
     const cambioTotal = Math.max(0, totalTendido - v.totalPagar);
 
     const filasPagos = v.pagos
@@ -369,7 +373,7 @@ export class ModalTirillaComponent implements OnChanges {
   <div class="footer">
     <div class="thanks">*** GRACIAS POR SU COMPRA ***</div>
     <div style="font-size: 0.85em;">Conserve su comprobante para cualquier trámite.</div>
-    <div style="font-size: 0.75em; margin-top: 5px; color: #444;">Powered by Aura POS</div>
+    <div style="font-size: 0.75em; margin-top: 5px; color: #444;">Powered by Aura NUBE</div>
   </div>
 
 </body>

@@ -1,4 +1,4 @@
-$indigo: #6366f1;
+$indigo: #2563eb;
 $emerald: #10b981;
 $orange: #f97316;
 $red: #ef4444;
@@ -8,122 +8,8 @@ $border: #e2e8f0;
 $text: #1e293b;
 $muted: #94a3b8;
 
-.page-container {
-  padding: 24px;
-  min-height: 100%;
-  background: $bg;
-}
-
-.page-header {
-  margin-bottom: 24px;
-}
-
-.page-title-area {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.page-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, $indigo, #818cf8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 1.3rem;
-  box-shadow: 0 4px 12px rgba($indigo, 0.3);
-}
-
-.page-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: $text;
-  margin: 0;
-}
-
-.page-sub {
-  font-size: 0.85rem;
-  color: $muted;
-  margin: 2px 0 0;
-}
-
-.card {
-  background: $card;
-  border-radius: 16px;
-  border: 1px solid $border;
-  overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-}
-
-// ── Toolbar ──────────────────────────────────────────────────
-.table-toolbar {
-  padding: 16px 20px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border-bottom: 1px solid $border;
-}
-
-.toolbar-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-}
-
-.search-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-
-  i.pi-search {
-    position: absolute;
-    left: 12px;
-    color: $muted;
-    z-index: 1;
-  }
-}
-
-.search-input {
-  padding: 8px 36px 8px 36px;
-  border-radius: 10px;
-  border: 1.5px solid $border;
-  background: $bg;
-  font-size: 0.875rem;
-  min-width: 280px;
-  transition: border-color 0.15s;
-
-  &:focus {
-    border-color: $indigo;
-    outline: none;
-  }
-}
-
-.clear-btn {
-  position: absolute;
-  right: 8px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: $muted;
-  padding: 4px;
-  border-radius: 6px;
-
-  &:hover { color: $text; }
-}
-
-.total-badge {
-  font-size: 0.8rem;
-  color: $muted;
-  background: $bg;
-  padding: 4px 10px;
-  border-radius: 20px;
-  border: 1px solid $border;
-  white-space: nowrap;
-}
+// Header (.card-head), card (.card), buscador (.search-wrap) y total
+// (.total-badge) son estándar global en styles.scss.
 
 // ── Table ─────────────────────────────────────────────────────
 .id-badge {
@@ -181,14 +67,22 @@ $muted: #94a3b8;
   font-family: "JetBrains Mono", monospace;
 }
 
-.text-right { text-align: right; }
-.text-center { text-align: center; }
+.text-right {
+  text-align: right;
+}
+.text-center {
+  text-align: center;
+}
 
-.action-view { color: $indigo; }
+.action-view {
+  color: $indigo;
+}
 
 // ── Row states ─────────────────────────────────────────────────
 :host ::ng-deep .aura-table {
-  .row-vencida td { color: $muted; }
+  .row-vencida td {
+    color: $muted;
+  }
   .row-anulada td {
     text-decoration: line-through;
     color: $muted;
@@ -205,6 +99,11 @@ $muted: #94a3b8;
   gap: 8px;
   color: $muted;
 
-  i { font-size: 2.5rem; opacity: 0.4; }
-  p { font-size: 0.9rem; }
+  i {
+    font-size: 2.5rem;
+    opacity: 0.4;
+  }
+  p {
+    font-size: 0.9rem;
+  }
 }
