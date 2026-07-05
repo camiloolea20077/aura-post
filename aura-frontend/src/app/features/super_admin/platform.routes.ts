@@ -22,6 +22,13 @@ export const PLATFORM_ROUTES: Routes = [
           ),
       },
       {
+        path: 'clientes',
+        loadComponent: () =>
+          import('./clientes/index-clientes.component').then(
+            (m) => m.IndexClientesComponent,
+          ),
+      },
+      {
         path: 'errores',
         loadComponent: () =>
           import('./monitor-errores/monitor-errores.component').then(

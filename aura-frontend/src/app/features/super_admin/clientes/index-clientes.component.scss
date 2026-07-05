@@ -1,0 +1,288 @@
+.clientes-page {
+  padding: 1.5rem;
+  margin: 0 auto;
+}
+
+.page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+
+  .ph-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .ph-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: #fff;
+    i {
+      font-size: 1.25rem;
+    }
+  }
+  h1 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+  }
+  p {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #94a3b8;
+  }
+}
+
+/* KPIs */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+
+  @media (max-width: 1050px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media (max-width: 560px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.9rem 1rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  border-left: 4px solid #cbd5e1;
+
+  .k-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #94a3b8;
+  }
+  .k-val {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #1e293b;
+  }
+  .k-sub {
+    font-size: 0.72rem;
+    color: #94a3b8;
+  }
+
+  &.ok {
+    border-left-color: #22c55e;
+  }
+  &.danger {
+    border-left-color: #ef4444;
+  }
+  &.accent {
+    border-left-color: #6366f1;
+  }
+}
+
+/* Filtros */
+$flt-h: 42px;
+
+.filtros {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center; // que no se estiren en alto
+  margin-bottom: 1rem;
+
+  .search {
+    flex: 1;
+    min-width: 240px;
+  }
+
+  // Altura uniforme para buscador y dropdowns.
+  ::ng-deep .search .p-inputgroup,
+  ::ng-deep .search .p-inputgroup-addon,
+  ::ng-deep .search input,
+  ::ng-deep .flt.p-dropdown {
+    height: $flt-h;
+  }
+
+  ::ng-deep .search .p-inputgroup {
+    width: 100%;
+  }
+  ::ng-deep .search input {
+    width: 100%;
+  }
+
+  ::ng-deep .flt {
+    min-width: 190px;
+    flex: 0 0 auto;
+  }
+  // El dropdown se centra vertical y no crece.
+  ::ng-deep .flt.p-dropdown {
+    display: flex;
+    align-items: center;
+  }
+  ::ng-deep .flt.p-dropdown .p-dropdown-label {
+    display: flex;
+    align-items: center;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+
+/* Tabla */
+.tabla-wrap {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  overflow-x: auto;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead tr {
+    background: #f8fafc;
+  }
+  th {
+    padding: 0.65rem 0.9rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    text-align: left;
+    border-bottom: 2px solid #e2e8f0;
+    white-space: nowrap;
+  }
+  tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+  }
+  tbody tr:hover {
+    background: #fafbff;
+  }
+  td {
+    padding: 0.6rem 0.9rem;
+    font-size: 0.85rem;
+    color: #1e293b;
+  }
+
+  &.mini td,
+  &.mini th {
+    padding: 0.5rem 0.7rem;
+    font-size: 0.82rem;
+  }
+}
+
+.row-vencida {
+  background: #fff7f7;
+}
+
+.emp {
+  display: flex;
+  flex-direction: column;
+  .e-nom {
+    font-weight: 600;
+  }
+  .e-meta {
+    font-size: 0.74rem;
+    color: #94a3b8;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .acc-off {
+    color: #ef4444;
+    font-size: 0.75rem;
+  }
+}
+
+.money {
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 600;
+}
+.text-right {
+  text-align: right !important;
+}
+.muted {
+  color: #94a3b8;
+}
+
+.vencido-txt {
+  color: #dc2626;
+  font-weight: 600;
+}
+.dias {
+  display: block;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  &.neg {
+    color: #dc2626;
+  }
+}
+
+.acciones {
+  display: flex;
+  gap: 0.15rem;
+  justify-content: flex-end;
+}
+
+.empty {
+  text-align: center;
+  color: #94a3b8;
+  padding: 1.75rem;
+}
+
+/* Form dialogs */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+  padding: 0.25rem 0.1rem;
+
+  .fld {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+
+    label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #374151;
+    }
+    input {
+      width: 100%;
+    }
+  }
+  .fld-full {
+    grid-column: 1 / -1;
+  }
+  .check .chk {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 500;
+    color: #475569;
+    cursor: pointer;
+  }
+}
+
+.w-full {
+  width: 100%;
+}
+::ng-deep .w-full .p-dropdown,
+::ng-deep .w-full .p-inputnumber,
+::ng-deep .w-full .p-calendar {
+  width: 100%;
+}
