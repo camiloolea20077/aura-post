@@ -1,0 +1,174 @@
+<p-toast />
+
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-calculator"></i></span>
+        <div>
+          <h1 class="title">Preliquidación por proyecto / frente</h1>
+          <p class="subtitle">Novedades de asistencia listas para nómina</p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          label="Ir a liquidar nómina"
+          icon="pi pi-arrow-right"
+          iconPos="right"
+          class="p-button-outlined p-button-sm"
+          (click)="irALiquidar()"
+        ></button>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filtros">
+      <div class="fld">
+        <label>Período de nómina</label>
+        <p-dropdown
+          [options]="periodoOpts"
+          [(ngModel)]="periodoId"
+          optionLabel="label"
+          optionValue="value"
+          [filter]="true"
+          placeholder="Seleccionar período..."
+          styleClass="w-full"
+        />
+      </div>
+      <div class="fld">
+        <label>Proyecto</label>
+        <p-dropdown
+          [options]="proyectoOpts"
+          [(ngModel)]="proyectoId"
+          optionLabel="label"
+          optionValue="value"
+          [filter]="true"
+          styleClass="w-full"
+          (onChange)="onProyectoChange()"
+        />
+      </div>
+      <div class="fld">
+        <label>Frente</label>
+        <p-dropdown
+          [options]="frenteOpts"
+          [(ngModel)]="frenteId"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          [disabled]="!proyectoId"
+        />
+      </div>
+      <button
+        pButton
+        type="button"
+        label="Consultar"
+        icon="pi pi-search"
+        class="btn-aura"
+        [loading]="loading"
+        [disabled]="!periodoId"
+        (click)="cargar()"
+      ></button>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpis">
+      <div class="kpi">
+        <span class="kpi-ico blue"><i class="pi pi-list"></i></span>
+        <div>
+          <span class="kpi-val">{{ totalRegistros }}</span
+          ><span class="kpi-lbl">Novedades</span>
+        </div>
+      </div>
+      <div class="kpi">
+        <span class="kpi-ico slate"><i class="pi pi-users"></i></span>
+        <div>
+          <span class="kpi-val">{{ totalTrabajadores }}</span
+          ><span class="kpi-lbl">Trabajadores</span>
+        </div>
+      </div>
+      <div class="kpi">
+        <span class="kpi-ico red"><i class="pi pi-ban"></i></span>
+        <div>
+          <span class="kpi-val">{{ totalAusencias }}</span
+          ><span class="kpi-lbl">Ausencias</span>
+        </div>
+      </div>
+      <div class="kpi">
+        <span class="kpi-ico amber"><i class="pi pi-clock"></i></span>
+        <div>
+          <span class="kpi-val">{{ totalHorasExtra | number: "1.0-2" }}</span
+          ><span class="kpi-lbl">Horas extra / recargo</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla -->
+    <p-table
+      [value]="rows"
+      [loading]="loading"
+      [paginator]="rows.length > 15"
+      [rows]="15"
+      [rowsPerPageOptions]="[15, 30, 50]"
+      styleClass="p-datatable-sm"
+      showGridlines
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Trabajador</th>
+          <th style="width: 110px">Documento</th>
+          <th>Proyecto</th>
+          <th>Frente</th>
+          <th style="width: 105px">Fecha</th>
+          <th class="text-center" style="width: 120px">Asistencia</th>
+          <th class="text-right" style="width: 70px">Horas</th>
+          <th class="text-right" style="width: 70px">Extra</th>
+          <th>Novedad generada</th>
+          <th class="text-center" style="width: 130px">Estado nómina</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-r>
+        <tr>
+          <td class="nom">{{ r.empleadoNombre }}</td>
+          <td class="doc">{{ r.documento }}</td>
+          <td>{{ r.proyectoNombre ?? "—" }}</td>
+          <td>{{ r.frenteNombre ?? "—" }}</td>
+          <td>{{ r.fecha ?? "—" }}</td>
+          <td class="text-center">
+            <p-tag
+              [severity]="asistenciaSeverity(r.estadoAsistencia)"
+              [value]="r.estadoAsistencia"
+              [rounded]="true"
+            />
+          </td>
+          <td class="text-right horas">{{ r.horasTrabajadas }}</td>
+          <td class="text-right horas">{{ r.horasExtra || "—" }}</td>
+          <td>
+            <span *ngIf="r.novedadGenerada" class="nov">{{
+              r.novedadGenerada
+            }}</span>
+            <span *ngIf="!r.novedadGenerada" class="text-muted"
+              >— jornada normal —</span
+            >
+          </td>
+          <td class="text-center">
+            <p-tag
+              [severity]="frenteSeverity(r.estadoFrente)"
+              [value]="r.estadoFrente"
+              [rounded]="true"
+            />
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="10" class="empty-row">
+            Selecciona un período y consulta. No hay asistencia enviada a nómina
+            para el filtro.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

@@ -207,33 +207,89 @@ export class FormCompraComponent implements OnInit {
   // ── Catálogo fijo de retenciones (definido por nosotros) ──────────
   // Retefuente — tarifas nacionales aproximadas
   readonly retefuenteOpts: RetencionOpcion[] = [
-    { value: 'compras_generales', label: 'Compras generales (mercancías) — 2.5%', pct: 2.5 },
-    { value: 'compras_no_declarantes', label: 'Compras a no declarantes — 3.5%', pct: 3.5 },
+    {
+      value: 'compras_generales',
+      label: 'Compras generales (mercancías) — 2.5%',
+      pct: 2.5,
+    },
+    {
+      value: 'compras_no_declarantes',
+      label: 'Compras a no declarantes — 3.5%',
+      pct: 3.5,
+    },
     { value: 'servicios_general', label: 'Servicios en general — 4%', pct: 4 },
-    { value: 'servicios_declarantes', label: 'Servicios a declarantes — 4%', pct: 4 },
+    {
+      value: 'servicios_declarantes',
+      label: 'Servicios a declarantes — 4%',
+      pct: 4,
+    },
     { value: 'honorarios_11', label: 'Honorarios — 11%', pct: 11 },
-    { value: 'honorarios_10', label: 'Honorarios (no declarante) — 10%', pct: 10 },
+    {
+      value: 'honorarios_10',
+      label: 'Honorarios (no declarante) — 10%',
+      pct: 10,
+    },
     { value: 'comisiones_11', label: 'Comisiones — 11%', pct: 11 },
-    { value: 'comisiones_10', label: 'Comisiones (no declarante) — 10%', pct: 10 },
-    { value: 'arr_inmuebles', label: 'Arrendamiento bienes inmuebles — 3.5%', pct: 3.5 },
-    { value: 'arr_muebles', label: 'Arrendamiento bienes muebles — 4%', pct: 4 },
+    {
+      value: 'comisiones_10',
+      label: 'Comisiones (no declarante) — 10%',
+      pct: 10,
+    },
+    {
+      value: 'arr_inmuebles',
+      label: 'Arrendamiento bienes inmuebles — 3.5%',
+      pct: 3.5,
+    },
+    {
+      value: 'arr_muebles',
+      label: 'Arrendamiento bienes muebles — 4%',
+      pct: 4,
+    },
     { value: 'transporte_carga', label: 'Transporte de carga — 1%', pct: 1 },
-    { value: 'transporte_pasajeros', label: 'Transporte de pasajeros — 3.5%', pct: 3.5 },
-    { value: 'servicios_temporales', label: 'Servicios temporales — 2%', pct: 2 },
+    {
+      value: 'transporte_pasajeros',
+      label: 'Transporte de pasajeros — 3.5%',
+      pct: 3.5,
+    },
+    {
+      value: 'servicios_temporales',
+      label: 'Servicios temporales — 2%',
+      pct: 2,
+    },
     { value: 'hoteles', label: 'Hoteles / hospedaje — 3.5%', pct: 3.5 },
-    { value: 'construccion', label: 'Construcción / obra material — 2%', pct: 2 },
+    {
+      value: 'construccion',
+      label: 'Construcción / obra material — 2%',
+      pct: 2,
+    },
   ];
 
   // ReteIVA — 15% del IVA generado
   readonly reteivaOpts: RetencionOpcion[] = [
-    { value: 'reteiva_general', label: 'ReteIVA general — 15% del IVA', pct: 15 },
+    {
+      value: 'reteiva_general',
+      label: 'ReteIVA general — 15% del IVA',
+      pct: 15,
+    },
   ];
 
   // ReteICA — Montelíbano (Córdoba). ⚠ Verificar tarifas oficiales del municipio.
   readonly reteicaOpts: RetencionOpcion[] = [
-    { value: 'ica_comercial', label: 'Montelíbano · Comercial — 10‰ (1%)', pct: 1 },
-    { value: 'ica_servicios', label: 'Montelíbano · Servicios — 10‰ (1%)', pct: 1 },
-    { value: 'ica_industrial', label: 'Montelíbano · Industrial — 7‰ (0.7%)', pct: 0.7 },
+    {
+      value: 'ica_comercial',
+      label: 'Montelíbano · Comercial — 10‰ (1%)',
+      pct: 1,
+    },
+    {
+      value: 'ica_servicios',
+      label: 'Montelíbano · Servicios — 10‰ (1%)',
+      pct: 1,
+    },
+    {
+      value: 'ica_industrial',
+      label: 'Montelíbano · Industrial — 7‰ (0.7%)',
+      pct: 0.7,
+    },
   ];
 
   onTarifaRetencion(tipo: TipoRetencion, value: string | null): void {
@@ -268,11 +324,21 @@ export class FormCompraComponent implements OnInit {
     return this.lineas();
   }
 
-  get subtotalValue(): number { return this.subtotal(); }
-  get impuestosTotalValue(): number { return this.impuestosTotal(); }
-  get descuentoTotalValue(): number { return this.descuentoTotal(); }
-  get subtotalBrutoValue(): number { return this.subtotalBruto(); }
-  get totalUnidadesValue(): number { return this.totalUnidades(); }
+  get subtotalValue(): number {
+    return this.subtotal();
+  }
+  get impuestosTotalValue(): number {
+    return this.impuestosTotal();
+  }
+  get descuentoTotalValue(): number {
+    return this.descuentoTotal();
+  }
+  get subtotalBrutoValue(): number {
+    return this.subtotalBruto();
+  }
+  get totalUnidadesValue(): number {
+    return this.totalUnidades();
+  }
 
   // Valores que dependen de % retención y fletes (props normales) → getters
   // para que se recalculen en cada ciclo de detección (flete/% reactivos)
@@ -289,7 +355,9 @@ export class FormCompraComponent implements OnInit {
   }
   get totalRetencionesValue(): number {
     return (
-      this.retefuenteValorValue + this.reteivaValorValue + this.reteicaValorValue
+      this.retefuenteValorValue +
+      this.reteivaValorValue +
+      this.reteicaValorValue
     );
   }
   get totalValue(): number {
@@ -321,7 +389,7 @@ export class FormCompraComponent implements OnInit {
       if (!saved) return;
       const draft = JSON.parse(saved);
       if (!draft || !draft.lineas?.length) return;
-      
+
       // Restaurar datos
       if (draft.proveedorSeleccionado) {
         this.proveedorSeleccionado = draft.proveedorSeleccionado;
@@ -334,7 +402,7 @@ export class FormCompraComponent implements OnInit {
       if (draft.fechaCompra) this.fechaCompra = new Date(draft.fechaCompra);
       this.observaciones = draft.observaciones || '';
       this.lineas.set(draft.lineas || []);
-      
+
       this.formaPago = draft.formaPago || 'CONTADO';
       this.plazoDias = draft.plazoDias || 30;
       this.metodoPago = draft.metodoPago || 'EFECTIVO';
@@ -342,7 +410,7 @@ export class FormCompraComponent implements OnInit {
       this.cuentaBancariaId = draft.cuentaBancariaId || null;
       this.tipoDocumento = draft.tipoDocumento || 'FACTURA_COMPRA';
       this.fletes = draft.fletes || 0;
-      
+
       this.retefuentePct = draft.retefuentePct || 0;
       this.reteivaPct = draft.reteivaPct || 0;
       this.reteicaPct = draft.reteicaPct || 0;
@@ -350,7 +418,10 @@ export class FormCompraComponent implements OnInit {
       this.reteivaSel = draft.reteivaSel ?? null;
       this.reteicaSel = draft.reteicaSel ?? null;
 
-      this.alertService.showInfo('Borrador recuperado', 'Se restauraron los datos del formulario.');
+      this.alertService.showInfo(
+        'Borrador recuperado',
+        'Se restauraron los datos del formulario.',
+      );
     } catch {
       // Silencioso
     }
@@ -984,9 +1055,7 @@ export class FormCompraComponent implements OnInit {
 
       let res;
       if (this.modoEdicion && this.editId) {
-        res = await lastValueFrom(
-          this.compraService.update(this.editId, dto),
-        );
+        res = await lastValueFrom(this.compraService.update(this.editId, dto));
         if (res?.data) {
           this.limpiarDraft();
           this.alertService.showSuccess(

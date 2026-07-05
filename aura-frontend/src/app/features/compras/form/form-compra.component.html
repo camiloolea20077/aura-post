@@ -259,6 +259,8 @@
         [value]="lineasArray"
         styleClass="p-datatable-sm lineas-table"
         showGridlines
+        dataKey="_id"
+        [rowTrackBy]="trackByLinea"
         [scrollable]="true"
         scrollHeight="55vh"
       >

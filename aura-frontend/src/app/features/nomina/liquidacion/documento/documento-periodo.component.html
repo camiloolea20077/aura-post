@@ -11,6 +11,18 @@
       </div>
       <div class="card-head__actions">
         <button
+          *ngIf="puedeLiquidar"
+          pButton
+          type="button"
+          label="Liquidar todos"
+          icon="pi pi-bolt"
+          class="btn-aura"
+          [loading]="liquidando"
+          pTooltip="Liquida la nómina de todos los empleados activos de este período"
+          tooltipPosition="bottom"
+          (click)="liquidarTodos()"
+        ></button>
+        <button
           pButton
           type="button"
           label="Volver"
@@ -331,3 +343,6 @@
     ></button>
   </ng-template>
 </p-dialog>
+
+<p-confirmDialog />
+

@@ -21,7 +21,7 @@ import { SIDEBAR_MENU } from './sidebar.config';
 import { IndexDBService } from '../../core/services/index-db.service';
 import { environment } from '../../../environments/environment';
 import { normalize } from '../../shared/utils/commons';
-import { SidebarMenuGroup } from '../../shared/interfaces';
+import { SidebarMenuGroup, SidebarSubgroup } from '../../shared/interfaces';
 import { StateStore } from '../../core/store/state';
 
 @Component({
@@ -47,6 +47,8 @@ export class SidebarComponent implements OnInit {
 
   /** Grupos abiertos por label */
   public openGroups = new Set<string>();
+  /** Submódulos abiertos por "grupo::submódulo" */
+  public openSubgroups = new Set<string>();
 
   constructor(
     private readonly indexDBService: IndexDBService,
@@ -88,17 +90,41 @@ export class SidebarComponent implements OnInit {
     }
   }
 
-  /** Abre el grupo que contiene la ruta activa */
+  /** Abre el grupo (y submódulo) que contiene la ruta activa */
   private abrirGrupoActivo(): void {
     const url = this.router.url;
     for (const group of this.menuGroups) {
-      const tieneActivo = group.items.some(
+      const tieneActivo = (group.items ?? []).some(
         (item) => item.route && url.startsWith(item.route),
       );
       if (tieneActivo) {
         this.openGroups.add(group.label);
       }
+      for (const sg of group.subgroups ?? []) {
+        const subActivo = sg.items.some(
+          (item) => item.route && url.startsWith(item.route),
+        );
+        if (subActivo) {
+          this.openGroups.add(group.label);
+          this.openSubgroups.add(this.subKey(group, sg));
+        }
+      }
     }
+  }
+
+  private subKey(group: SidebarMenuGroup, sg: SidebarSubgroup): string {
+    return group.label + '::' + sg.label;
+  }
+
+  toggleSubgroup(group: SidebarMenuGroup, sg: SidebarSubgroup): void {
+    if (this.collapsed) return;
+    const key = this.subKey(group, sg);
+    if (this.openSubgroups.has(key)) this.openSubgroups.delete(key);
+    else this.openSubgroups.add(key);
+  }
+
+  isSubOpen(group: SidebarMenuGroup, sg: SidebarSubgroup): boolean {
+    return this.collapsed || this.openSubgroups.has(this.subKey(group, sg));
   }
 
   toggleGroup(group: SidebarMenuGroup): void {

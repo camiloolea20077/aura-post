@@ -229,7 +229,7 @@
   transition: max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
   &.open {
-    max-height: 600px; // suficiente para cualquier grupo
+    max-height: 1500px; // suficiente para grupos con submódulos expandidos
   }
 }
 
@@ -278,6 +278,56 @@
 
 // Cuando collapsed, quitar el indent
 .aura-sidebar.collapsed .nav-item {
+  padding-left: 0.65rem;
+}
+
+/* ── Submódulos (tercer nivel) ── */
+.nav-subgroup-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem 0.5rem 1.4rem;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  transition: all 0.15s;
+
+  &:hover { background: rgba(46, 108, 246, 0.06); color: #2e6cf6; }
+
+  .subgroup-icon { font-size: 0.85rem; }
+  .nav-subgroup-label { flex: 1; text-align: left; }
+  .subgroup-chevron {
+    font-size: 0.62rem;
+    transition: transform 0.2s;
+    &.rotated { transform: rotate(180deg); }
+  }
+}
+
+.nav-subgroup-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.open { max-height: 800px; }
+}
+
+.nav-item.nav-subitem { padding-left: 2.7rem; }
+
+.aura-sidebar.collapsed .nav-subgroup-header {
+  padding-left: 0.65rem;
+  justify-content: center;
+}
+.aura-sidebar.collapsed .nav-item.nav-subitem {
   padding-left: 0.65rem;
 }
 

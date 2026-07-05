@@ -125,6 +125,7 @@ export class DetalleNominaComponent implements OnChanges {
         'Aprobada',
         'Nómina aprobada correctamente',
       );
+      this.actualizada.emit();
     } catch {
       this.alertService.showError('Error', 'No se pudo aprobar la nómina');
     } finally {

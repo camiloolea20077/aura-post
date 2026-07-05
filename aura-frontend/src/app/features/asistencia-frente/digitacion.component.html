@@ -1,0 +1,281 @@
+<p-toast />
+
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-pencil"></i></span>
+        <div>
+          <h1 class="title">Digitación de asistencia</h1>
+          <p class="subtitle">Registro de horas por proyecto y frente</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filtros">
+      <div class="fld">
+        <label>Proyecto</label>
+        <p-dropdown
+          [options]="proyectoOpts"
+          [(ngModel)]="proyectoId"
+          optionLabel="label"
+          optionValue="value"
+          [filter]="true"
+          placeholder="Seleccionar proyecto..."
+          styleClass="w-full"
+          (onChange)="onProyectoChange()"
+        />
+      </div>
+      <div class="fld">
+        <label>Frente</label>
+        <p-dropdown
+          [options]="frenteOpts"
+          [(ngModel)]="frenteId"
+          optionLabel="label"
+          optionValue="value"
+          [filter]="true"
+          placeholder="Seleccionar frente..."
+          styleClass="w-full"
+          [disabled]="!proyectoId"
+        />
+      </div>
+      <div class="fld fld-fecha">
+        <label>Fecha</label>
+        <input type="date" pInputText [(ngModel)]="fecha" />
+      </div>
+      <button
+        pButton
+        type="button"
+        label="Cargar"
+        icon="pi pi-search"
+        class="btn-aura"
+        [loading]="loading"
+        [disabled]="!frenteId || !fecha"
+        (click)="cargar()"
+      ></button>
+    </div>
+
+    <ng-container *ngIf="data">
+      <!-- Estado + alertas -->
+      <div class="estado-bar">
+        <span class="lbl">Estado:</span>
+        <p-tag
+          [severity]="estadoFrenteSeverity(data.estado)"
+          [value]="data.estado"
+          [rounded]="true"
+        />
+        <span class="lbl ml">Frente:</span>
+        <span class="val">{{ data.frenteNombre }}</span>
+      </div>
+
+      <div class="alertas" *ngIf="data.alertas.length">
+        <div
+          class="alerta"
+          *ngFor="let a of data.alertas"
+          [class.critica]="a.nivel === 'CRITICA'"
+        >
+          <i class="pi pi-exclamation-triangle"></i>
+          <p-tag
+            [severity]="nivelSeverity(a.nivel)"
+            [value]="a.nivel"
+            [rounded]="true"
+          />
+          <span class="a-desc">
+            <strong *ngIf="a.empleadoNombre">{{ a.empleadoNombre }}: </strong
+            >{{ a.descripcion }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Layout de dos columnas: PDF (izq) + horas (der) -->
+      <div class="split">
+        <!-- Card izquierda: soporte PDF -->
+        <aside class="pdf-card">
+          <div class="pdf-card__head">
+            <span class="pdf-badge"><i class="pi pi-file-pdf"></i></span>
+            <div>
+              <h2 class="pdf-title">Soporte firmado</h2>
+              <p class="pdf-sub">Descarga, firma, escanea y sube</p>
+            </div>
+          </div>
+
+          <button
+            *ngIf="!tieneSoporte"
+            pButton
+            type="button"
+            label="Descargar planilla"
+            icon="pi pi-download"
+            class="p-button-outlined w-full"
+            [disabled]="!data.detalles.length"
+            (click)="descargarPlantilla()"
+          ></button>
+
+          <!-- Soporte ya cargado -->
+          <div class="soporte-ok" *ngIf="tieneSoporte && !uploading">
+            <i class="pi pi-check-circle"></i>
+            <div class="so-info">
+              <span class="so-label">Soporte cargado</span>
+              <a
+                [href]="data.soportePdfUrl"
+                target="_blank"
+                rel="noopener"
+                class="so-link"
+              >
+                {{ data.soportePdfNombre || "Ver PDF" }}
+              </a>
+            </div>
+          </div>
+
+          <!-- Zona de carga / drop -->
+          <label
+            class="dropzone"
+            *ngIf="editable"
+            [class.drag]="dragOver"
+            [class.busy]="uploading"
+            (dragover)="onDragOver($event)"
+            (dragleave)="onDragLeave($event)"
+            (drop)="onDrop($event)"
+          >
+            <input
+              type="file"
+              accept="application/pdf"
+              hidden
+              [disabled]="uploading"
+              (change)="onSoporteSelected($event)"
+            />
+
+            <ng-container *ngIf="!uploading">
+              <span class="dz-icon"><i class="pi pi-file-pdf"></i></span>
+              <span class="dz-title">
+                {{ tieneSoporte ? "Reemplazar PDF" : "Subir PDF escaneado" }}
+              </span>
+              <span class="dz-hint">Arrastra el archivo aquí o haz clic</span>
+            </ng-container>
+
+            <ng-container *ngIf="uploading">
+              <span class="dz-icon busy"
+                ><i class="pi pi-spin pi-spinner"></i
+              ></span>
+              <span class="dz-title">Subiendo soporte…</span>
+              <p-progressBar
+                mode="indeterminate"
+                [style]="{ height: '6px', width: '100%' }"
+                styleClass="dz-bar"
+              />
+            </ng-container>
+          </label>
+
+          <div class="soporte-sin" *ngIf="!tieneSoporte && !uploading">
+            <i class="pi pi-exclamation-circle"></i>
+            Aún no has cargado el soporte
+          </div>
+        </aside>
+
+        <!-- Card derecha: horas -->
+        <section class="horas-card">
+          <div class="detalles-table">
+            <table class="tabla">
+          <thead>
+            <tr>
+              <th>Trabajador</th>
+              <th style="width: 120px">Documento</th>
+              <th style="width: 150px">Estado</th>
+              <th style="width: 110px">Entrada</th>
+              <th style="width: 110px">Salida</th>
+              <th class="text-right" style="width: 80px">Horas</th>
+              <th style="min-width: 160px">Observación</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of data.detalles">
+              <td>
+                <div class="trab">
+                  <span class="t-nom">{{ row.empleadoNombre }}</span>
+                  <span class="t-cargo" *ngIf="row.cargo">{{ row.cargo }}</span>
+                </div>
+              </td>
+              <td class="doc">{{ row.documento }}</td>
+              <td>
+                <p-dropdown
+                  [options]="estadoAsistenciaOpts"
+                  [(ngModel)]="row.estadoAsistencia"
+                  optionLabel="label"
+                  appendTo="body"
+                  optionValue="value"
+                  styleClass="w-full sm"
+                  [disabled]="!editable"
+                />
+              </td>
+              <td>
+                <input
+                  type="time"
+                  [(ngModel)]="row.horaEntrada"
+                  [disabled]="!editable"
+                  class="time-inp"
+                />
+              </td>
+              <td>
+                <input
+                  type="time"
+                  [(ngModel)]="row.horaSalida"
+                  [disabled]="!editable"
+                  class="time-inp"
+                />
+              </td>
+              <td class="text-right horas">
+                {{ horas(row) | number: "1.0-2" }}
+              </td>
+              <td>
+                <input
+                  type="text"
+                  pInputText
+                  [(ngModel)]="row.observacionLider"
+                  [disabled]="!editable"
+                  class="obs-inp"
+                  placeholder="—"
+                />
+              </td>
+            </tr>
+            <tr *ngIf="data.detalles.length === 0">
+              <td colspan="7" class="empty-row">
+                No hay trabajadores asignados a este frente
+              </td>
+            </tr>
+          </tbody>
+        </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- Acciones -->
+      <div class="acciones" *ngIf="editable">
+        <button
+          pButton
+          type="button"
+          label="Guardar borrador"
+          icon="pi pi-save"
+          class="p-button-outlined"
+          [loading]="saving"
+          (click)="guardar()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          label="Enviar a revisión"
+          icon="pi pi-send"
+          class="btn-aura"
+          [loading]="sending"
+          [disabled]="!tieneSoporte"
+          pTooltip="Debes cargar el PDF soporte antes de enviar"
+          [tooltipDisabled]="tieneSoporte"
+          (click)="enviar()"
+        ></button>
+      </div>
+      <div class="acciones-lock" *ngIf="!editable">
+        <i class="pi pi-lock"></i>
+        Esta asistencia ya fue enviada/aprobada y no se puede editar.
+      </div>
+    </ng-container>
+  </div>
+</div>

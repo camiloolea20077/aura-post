@@ -1,0 +1,386 @@
+<p-toast />
+
+<!-- ═══ BANDEJA ═══ -->
+<div class="page" *ngIf="view === 'lista'">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-check-square"></i></span>
+        <div>
+          <h1 class="title">Revisión de asistencia</h1>
+          <p class="subtitle">Aprobación de asistencia por proyecto y frente</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="filtros">
+      <div class="fld">
+        <label>Estado</label>
+        <p-dropdown
+          [options]="estadoOpts"
+          [(ngModel)]="estado"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          (onChange)="onFiltro()"
+        />
+      </div>
+      <div class="fld">
+        <label>Proyecto</label>
+        <p-dropdown
+          [options]="proyectoOpts"
+          [(ngModel)]="proyectoId"
+          optionLabel="label"
+          optionValue="value"
+          [filter]="true"
+          styleClass="w-full"
+          (onChange)="onFiltro()"
+        />
+      </div>
+      <div class="fld fld-fecha">
+        <label>Fecha</label>
+        <input
+          type="date"
+          pInputText
+          [(ngModel)]="fecha"
+          (change)="onFiltro()"
+        />
+      </div>
+    </div>
+
+    <p-table
+      [value]="rows"
+      [loading]="loading"
+      [lazy]="true"
+      [paginator]="true"
+      [rows]="pageSize"
+      [totalRecords]="totalRecords"
+      [first]="page * pageSize"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords}"
+      (onPage)="onPage($event)"
+      styleClass="p-datatable-sm"
+      showGridlines
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Proyecto</th>
+          <th>Frente</th>
+          <th>Líder</th>
+          <th style="width: 110px">Fecha</th>
+          <th class="text-center" style="width: 90px">Trab.</th>
+          <th class="text-center" style="width: 90px">Alertas</th>
+          <th class="text-center" style="width: 130px">Estado</th>
+          <th class="text-center" style="width: 100px">Acción</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-r>
+        <tr>
+          <td>{{ r.proyectoNombre }}</td>
+          <td>
+            <span class="nom">{{ r.frenteNombre }}</span>
+          </td>
+          <td>{{ r.liderNombre ?? "—" }}</td>
+          <td>{{ r.fecha }}</td>
+          <td class="text-center">{{ r.trabajadoresCount }}</td>
+          <td class="text-center">
+            <p-tag
+              *ngIf="r.alertasCriticas > 0"
+              severity="danger"
+              [value]="r.alertasCriticas + ' críticas'"
+              [rounded]="true"
+            />
+            <span *ngIf="r.alertasCriticas === 0" class="ok-dash">—</span>
+          </td>
+          <td class="text-center">
+            <p-tag
+              [severity]="estadoSeverity(r.estado)"
+              [value]="r.estado"
+              [rounded]="true"
+            />
+          </td>
+          <td class="text-center">
+            <button
+              pButton
+              icon="pi pi-eye"
+              label="Revisar"
+              class="p-button-sm p-button-text"
+              (click)="abrir(r)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8" class="empty-row">
+            No hay asistencias para el filtro seleccionado
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- ═══ DETALLE / REVISIÓN ═══ -->
+<div class="page" *ngIf="view === 'detalle' && detalle">
+  <div class="card rev-card">
+    <!-- Título -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-arrow-left"
+          class="p-button-text p-button-plain"
+          (click)="volver()"
+        ></button>
+        <span class="header-icon"><i class="pi pi-check-square"></i></span>
+        <div>
+          <h1 class="title">{{ detalle.frenteNombre }}</h1>
+          <p class="subtitle">Revisión de asistencia — {{ detalle.fecha }}</p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <p-tag
+          [severity]="estadoSeverity(detalle.estado)"
+          [value]="detalle.estado"
+          [rounded]="true"
+        />
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpis">
+      <div class="kpi">
+        <span class="kpi-ico blue"><i class="pi pi-users"></i></span>
+        <div>
+          <span class="kpi-val">{{ totalTrabajadores }}</span>
+          <span class="kpi-lbl">Total trabajadores</span>
+        </div>
+      </div>
+      <div class="kpi">
+        <span class="kpi-ico amber"><i class="pi pi-clock"></i></span>
+        <div>
+          <span class="kpi-val">{{ registrosPendientes }}</span>
+          <span class="kpi-lbl">Registros pendientes</span>
+        </div>
+      </div>
+      <div class="kpi">
+        <span class="kpi-ico red"
+          ><i class="pi pi-exclamation-triangle"></i
+        ></span>
+        <div>
+          <span class="kpi-val">{{ alertasDetectadas }}</span>
+          <span class="kpi-lbl">Alertas detectadas</span>
+        </div>
+      </div>
+      <div class="kpi">
+        <span class="kpi-ico slate"><i class="pi pi-ban"></i></span>
+        <div>
+          <span class="kpi-val">{{ trabajadoresCeroHoras }}</span>
+          <span class="kpi-lbl">Trabajadores 0 horas</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dos columnas: PDF + detalle -->
+    <div class="rev-cols">
+      <!-- PDF -->
+      <div class="ci">
+        <div class="ci-head">
+          <i class="pi pi-file-pdf"></i> Documento soporte PDF
+        </div>
+        <div class="ci-body">
+          <iframe
+            *ngIf="safePdfUrl"
+            [src]="safePdfUrl"
+            class="pdf-frame"
+            title="Soporte PDF"
+          ></iframe>
+          <div class="pdf-empty" *ngIf="!safePdfUrl">
+            <i class="pi pi-file-excel"></i>
+            Sin PDF soporte cargado
+          </div>
+          <div class="pdf-meta" *ngIf="detalle.soportePdfId">
+            <span>
+              <i class="pi pi-user"></i>
+              Subido por
+              <strong>{{ detalle.soportePdfSubidoPor || "—" }}</strong>
+              <span *ngIf="detalle.soportePdfSubidoAt">
+                · {{ formatFecha(detalle.soportePdfSubidoAt) }}</span
+              >
+            </span>
+            <a [href]="detalle.soportePdfUrl" target="_blank" rel="noopener">
+              <i class="pi pi-external-link"></i> Abrir
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detalle -->
+      <div class="ci">
+        <div class="ci-head">
+          <i class="pi pi-list-check"></i> Resultado de la revisión
+        </div>
+        <div class="ci-body">
+          <div class="alertas" *ngIf="detalle.alertas.length">
+            <div
+              class="alerta"
+              *ngFor="let a of detalle.alertas"
+              [class.critica]="a.nivel === 'CRITICA'"
+            >
+              <p-tag
+                [severity]="nivelSeverity(a.nivel)"
+                [value]="a.nivel"
+                [rounded]="true"
+              />
+              <span
+                ><strong *ngIf="a.empleadoNombre"
+                  >{{ a.empleadoNombre }}: </strong
+                >{{ a.descripcion }}</span
+              >
+            </div>
+          </div>
+
+          <p-table
+            [value]="detalle.detalles"
+            [paginator]="detalle.detalles.length > 8"
+            [rows]="8"
+            [rowsPerPageOptions]="[8, 15, 30]"
+            styleClass="p-datatable-sm"
+            showGridlines
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Trabajador</th>
+                <th class="text-center" style="width: 60px">Ent.</th>
+                <th class="text-center" style="width: 60px">Sal.</th>
+                <th class="text-right" style="width: 55px">Hrs</th>
+                <th class="text-right" style="width: 55px" pTooltip="Extra diurna">Ext.D</th>
+                <th class="text-right" style="width: 55px" pTooltip="Extra nocturna">Ext.N</th>
+                <th class="text-right" style="width: 60px" pTooltip="Dominical/festivo">Dom/Fes</th>
+                <th style="width: 150px">Resultado</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-d>
+              <tr
+                [class.cero]="
+                  (d.horasTrabajadas ?? 0) <= 0 &&
+                  d.estadoAsistencia !== 'SIN_REGISTRO'
+                "
+              >
+                <td>
+                  <div class="trab">
+                    <span class="t-nom">{{ d.empleadoNombre }}</span>
+                    <span class="t-est">{{ d.estadoAsistencia }}</span>
+                  </div>
+                </td>
+                <td class="text-center">{{ d.horaEntrada ?? "—" }}</td>
+                <td class="text-center">{{ d.horaSalida ?? "—" }}</td>
+                <td class="text-right horas">{{ d.horasTrabajadas }}</td>
+                <td class="text-right horas">{{ d.horasExtraDiurnas || "—" }}</td>
+                <td class="text-right horas">{{ d.horasExtraNocturnas || "—" }}</td>
+                <td class="text-right horas">{{ d.horasDominicalesFestivas || "—" }}</td>
+                <td>
+                  <p-dropdown
+                    *ngIf="esRevisable && d.id"
+                    [options]="estadoRevisionOpts"
+                    [(ngModel)]="d.estadoRevision"
+                    optionLabel="label"
+                    optionValue="value"
+                    appendTo="body"
+                    styleClass="w-full sm"
+                  />
+                  <p-tag
+                    *ngIf="!esRevisable || !d.id"
+                    [severity]="revisionSeverity(d.estadoRevision)"
+                    [value]="d.estadoRevision"
+                    [rounded]="true"
+                  />
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="8" class="empty-row">Sin asistencia digitada</td>
+              </tr>
+            </ng-template>
+          </p-table>
+
+          <!-- Acciones -->
+          <ng-container *ngIf="esRevisable">
+            <div class="obs-fld">
+              <label>Observación</label>
+              <textarea
+                pTextarea
+                rows="2"
+                class="w-full"
+                [(ngModel)]="observacion"
+                placeholder="Observación para el líder (obligatoria al rechazar o solicitar corrección)"
+              ></textarea>
+            </div>
+            <div class="rev-acciones">
+              <button
+                pButton
+                type="button"
+                label="Solicitar corrección"
+                icon="pi pi-replay"
+                class="p-button-outlined p-button-warning p-button-sm"
+                [disabled]="processing"
+                (click)="solicitarCorreccion()"
+              ></button>
+              <button
+                pButton
+                type="button"
+                label="Rechazar"
+                icon="pi pi-times"
+                class="p-button-outlined p-button-danger p-button-sm"
+                [disabled]="processing"
+                (click)="rechazar()"
+              ></button>
+              <button
+                pButton
+                type="button"
+                label="Aprobar"
+                icon="pi pi-check"
+                class="btn-aura"
+                [loading]="processing"
+                [disabled]="tieneCriticas"
+                pTooltip="Hay alertas críticas abiertas; solicita corrección"
+                [tooltipDisabled]="!tieneCriticas"
+                (click)="aprobar()"
+              ></button>
+            </div>
+            <div class="criticas-warn" *ngIf="tieneCriticas">
+              <i class="pi pi-exclamation-triangle"></i>
+              No se puede aprobar con alertas críticas abiertas. Solicita
+              corrección al líder.
+            </div>
+          </ng-container>
+          <!-- Aprobada: enviar a nómina -->
+          <div class="rev-aprobada" *ngIf="esAprobada">
+            <div class="ra-info">
+              <i class="pi pi-check-circle"></i>
+              Asistencia aprobada. Genera las novedades para la nómina.
+            </div>
+            <button
+              pButton
+              type="button"
+              label="Enviar a nómina"
+              icon="pi pi-send"
+              class="btn-aura"
+              [loading]="processing"
+              (click)="enviarNomina()"
+            ></button>
+          </div>
+
+          <div class="rev-cerrada" *ngIf="!esRevisable && !esAprobada">
+            <i class="pi pi-info-circle"></i>
+            Esta asistencia ya fue procesada ({{ detalle.estado }}).
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,184 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-calendar"></i></span>
+        <div>
+          <h1 class="title">Calendario laboral</h1>
+          <p class="subtitle">
+            Festivos nacionales, regionales y descansos de empresa
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          [label]="'Cargar festivos ' + anio"
+          icon="pi pi-download"
+          class="p-button-outlined p-button-sm"
+          [loading]="cargandoFestivos"
+          pTooltip="Carga los festivos nacionales de Colombia del año"
+          (click)="cargarFestivos()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          label="Agregar día"
+          icon="pi pi-plus"
+          class="btn-aura"
+          (click)="abrirAgregar()"
+        ></button>
+      </div>
+    </div>
+
+    <div class="filtros">
+      <div class="fld">
+        <label>Año</label>
+        <input
+          type="number"
+          pInputText
+          [(ngModel)]="anio"
+          (change)="cargar()"
+        />
+      </div>
+      <div class="fld">
+        <label>Mes</label>
+        <p-dropdown
+          [options]="mesOpts"
+          [(ngModel)]="mes"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          (onChange)="cargar()"
+        />
+      </div>
+    </div>
+
+    <p-table
+      [value]="rows"
+      [loading]="loading"
+      styleClass="p-datatable-sm"
+      showGridlines
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 130px">Fecha</th>
+          <th>Nombre</th>
+          <th class="text-center" style="width: 170px">Tipo</th>
+          <th class="text-center" style="width: 110px">Recargo</th>
+          <th class="text-center" style="width: 100px">Origen</th>
+          <th class="text-center" style="width: 80px">Acción</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-d>
+        <tr>
+          <td class="nom">{{ d.fecha }}</td>
+          <td>{{ d.nombre ?? "—" }}</td>
+          <td class="text-center">
+            <p-tag
+              [severity]="tipoSeverity(d.tipoDia)"
+              [value]="d.tipoDia"
+              [rounded]="true"
+            />
+          </td>
+          <td class="text-center">
+            <i
+              class="pi"
+              [class.pi-check]="d.aplicaRecargo"
+              [class.pi-minus]="!d.aplicaRecargo"
+              [style.color]="d.aplicaRecargo ? '#16a34a' : '#cbd5e1'"
+            ></i>
+          </td>
+          <td class="text-center">
+            <span class="muted">{{ d.origen }}</span>
+          </td>
+          <td class="text-center">
+            <button
+              pButton
+              icon="pi pi-trash"
+              class="p-button-text p-button-danger p-button-sm p-button-rounded"
+              pTooltip="Anular"
+              (click)="anular(d)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="empty-row">
+            Sin días en el mes. Usa "Cargar festivos" o "Agregar día".
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- Dialog agregar día -->
+<p-dialog
+  [(visible)]="showAdd"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '440px' }"
+  header="Agregar día al calendario"
+>
+  <div class="add-form">
+    <div class="fld">
+      <label>Fecha <span class="req">*</span></label>
+      <p-calendar [(ngModel)]="diaFecha" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" />
+    </div>
+    <div class="fld">
+      <label>Tipo de día</label>
+      <p-dropdown
+        [options]="tipoOpts"
+        [(ngModel)]="form.tipoDia"
+        optionLabel="label"
+        optionValue="value"
+        appendTo="body"
+        styleClass="w-full"
+      />
+    </div>
+    <div class="fld">
+      <label>Nombre</label
+      ><input
+        type="text"
+        pInputText
+        [(ngModel)]="form.nombre"
+        placeholder="Ej: Independencia de Cartagena"
+      />
+    </div>
+    <div class="fld fld-check">
+      <p-checkbox
+        [(ngModel)]="form.aplicaRecargo"
+        [binary]="true"
+        inputId="rec"
+      />
+      <label for="rec" class="lbl-check"
+        >Aplica recargo dominical/festivo</label
+      >
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text p-button-plain"
+      (click)="showAdd = false"
+    ></button>
+    <button
+      pButton
+      type="button"
+      label="Guardar"
+      icon="pi pi-check"
+      class="btn-aura"
+      [loading]="saving"
+      (click)="guardarDia()"
+    ></button>
+  </ng-template>
+</p-dialog>

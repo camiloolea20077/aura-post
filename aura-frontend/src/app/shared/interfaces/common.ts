@@ -20,10 +20,18 @@ export interface SidebarMenuItem {
   roles?: string[];
 }
 
+export interface SidebarSubgroup {
+  label: string;
+  icon?: string;
+  items: SidebarMenuItem[];
+}
+
 export interface SidebarMenuGroup {
   label: string;
   icon: string;
   items: SidebarMenuItem[];
+  /** Submódulos colapsables dentro del grupo (tercer nivel). */
+  subgroups?: SidebarSubgroup[];
   roles?: string[];
   defaultOpen?: boolean;
   alwaysOpen?: boolean;
