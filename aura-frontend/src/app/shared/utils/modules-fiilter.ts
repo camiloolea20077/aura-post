@@ -40,6 +40,7 @@ export const filtrarMenuPorPermisos = (
 
     if (!grupoActivo) {
       group.items = [];
+      group.subgroups = [];
       return group;
     }
 
@@ -59,14 +60,29 @@ export const filtrarMenuPorPermisos = (
       return tieneAcceso(item.roles, userRole);
     });
 
+    // Submódulos (tercer nivel): se filtran por rol; el módulo padre ya validó acceso.
+    const subgroups = group.subgroups
+      ? group.subgroups
+          .map((sg) => ({
+            ...sg,
+            items: sg.items.filter((item) => tieneAcceso(item.roles, userRole)),
+          }))
+          .filter((sg) => sg.items.length > 0)
+      : undefined;
+
     return {
       ...group,
+      subgroups,
       defaultOpen:
         group.defaultOpen ||
         (userRole === 'CAJERO' &&
           gruposDefaultOpenCajero.includes(group.label)),
     };
   })
-    .filter((group) => group.items.length > 0)
+    .filter(
+      (group) =>
+        group.items.length > 0 ||
+        (group.subgroups !== undefined && group.subgroups.length > 0),
+    )
     .filter((group) => tieneAcceso(group.roles, userRole));
 };

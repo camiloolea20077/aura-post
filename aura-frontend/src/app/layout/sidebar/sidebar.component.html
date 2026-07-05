@@ -74,6 +74,39 @@
             }}</span>
             <span class="nav-badge-dot" *ngIf="item.badge && collapsed"></span>
           </a>
+
+          <!-- Submódulos colapsables (tercer nivel) -->
+          <ng-container *ngFor="let sg of group.subgroups">
+            <button
+              class="nav-subgroup-header"
+              [class.open]="isSubOpen(group, sg)"
+              (click)="toggleSubgroup(group, sg)"
+              [pTooltip]="collapsed ? sg.label : ''"
+              tooltipPosition="right"
+            >
+              <i [class]="(sg.icon || 'pi pi-folder') + ' subgroup-icon'"></i>
+              <span class="nav-subgroup-label" *ngIf="!collapsed">{{ sg.label }}</span>
+              <i
+                class="pi pi-chevron-down subgroup-chevron"
+                *ngIf="!collapsed"
+                [class.rotated]="isSubOpen(group, sg)"
+              ></i>
+            </button>
+            <div class="nav-subgroup-items" [class.open]="isSubOpen(group, sg)">
+              <a
+                *ngFor="let item of sg.items"
+                [routerLink]="item.route"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{ exact: true }"
+                class="nav-item nav-subitem"
+                [pTooltip]="collapsed ? item.label : ''"
+                tooltipPosition="right"
+              >
+                <i [class]="item.icon + ' nav-icon'"></i>
+                <span class="nav-label" *ngIf="!collapsed">{{ item.label }}</span>
+              </a>
+            </div>
+          </ng-container>
         </div>
       </div>
     </ng-container>

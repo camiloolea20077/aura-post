@@ -1,0 +1,364 @@
+<p-toast />
+
+<!-- ═══ LISTA DE FRENTES ═══ -->
+<div class="page" *ngIf="!showForm">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-arrow-left"
+          class="p-button-text p-button-plain"
+          pTooltip="Volver a proyectos"
+          (click)="volver()"
+        ></button>
+        <span class="header-icon"><i class="pi pi-sitemap"></i></span>
+        <div>
+          <h1 class="title">Frentes</h1>
+          <p class="subtitle">{{ proyectoNombre || "Frentes del proyecto" }}</p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          label="Nuevo frente"
+          icon="pi pi-plus"
+          class="btn-aura"
+          (click)="nuevo()"
+        ></button>
+      </div>
+    </div>
+
+    <p-table
+      [value]="frentes"
+      [loading]="loading"
+      styleClass="p-datatable-sm"
+      showGridlines
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 110px">Código</th>
+          <th>Frente</th>
+          <th>Líder</th>
+          <th>Ubicación</th>
+          <th class="text-center" style="width: 110px">Trabajadores</th>
+          <th class="text-center" style="width: 120px">Estado</th>
+          <th class="text-center" style="width: 120px">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-f>
+        <tr>
+          <td>
+            <code class="cod">{{ f.codigo }}</code>
+          </td>
+          <td>
+            <span class="nom">{{ f.nombre }}</span>
+          </td>
+          <td>{{ f.liderNombre ?? "— Sin líder —" }}</td>
+          <td>{{ f.ubicacion ?? "—" }}</td>
+          <td class="text-center">{{ f.trabajadoresCount }}</td>
+          <td class="text-center">
+            <p-tag
+              [severity]="estadoSeverity(f.estado)"
+              [value]="f.estado"
+              [rounded]="true"
+            />
+          </td>
+          <td class="text-center">
+            <button
+              pButton
+              icon="pi pi-pencil"
+              class="p-button-text p-button-sm p-button-rounded"
+              pTooltip="Editar / trabajadores"
+              (click)="editar(f)"
+            ></button>
+            <button
+              pButton
+              icon="pi pi-trash"
+              class="p-button-text p-button-danger p-button-sm p-button-rounded"
+              pTooltip="Eliminar"
+              (click)="eliminar(f)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="empty-row">
+            Este proyecto aún no tiene frentes
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- ═══ FORMULARIO PLANO ═══ -->
+<div class="page" *ngIf="showForm">
+  <div class="card form-card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-arrow-left"
+          class="p-button-text p-button-plain"
+          (click)="cancelar()"
+        ></button>
+        <span class="header-icon"><i class="pi pi-sitemap"></i></span>
+        <div>
+          <h1 class="title">{{ editId ? "Editar frente" : "Nuevo frente" }}</h1>
+          <p class="subtitle">{{ proyectoNombre }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="fld">
+        <label>Código <span class="req">*</span></label>
+        <input
+          type="text"
+          pInputText
+          [(ngModel)]="form.codigo"
+          placeholder="FRT-001"
+        />
+      </div>
+      <div class="fld fld-2">
+        <label>Nombre <span class="req">*</span></label>
+        <input
+          type="text"
+          pInputText
+          [(ngModel)]="form.nombre"
+          placeholder="Excavación, Acabados..."
+        />
+      </div>
+
+      <div class="fld fld-2">
+        <label>Líder del frente</label>
+        <p-dropdown
+          [options]="empleadoOpts"
+          [(ngModel)]="form.liderId"
+          optionLabel="label"
+          optionValue="value"
+          [filter]="true"
+          [showClear]="true"
+          styleClass="w-full"
+          placeholder="Seleccionar líder..."
+        />
+      </div>
+      <div class="fld">
+        <label>Estado</label>
+        <p-dropdown
+          [options]="estadoOpts"
+          [(ngModel)]="form.estado"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+        />
+      </div>
+
+      <div class="fld">
+        <label>Fecha inicio</label>
+        <input type="date" pInputText [(ngModel)]="form.fechaInicio" />
+      </div>
+      <div class="fld">
+        <label>Fecha fin</label>
+        <input type="date" pInputText [(ngModel)]="form.fechaFin" />
+      </div>
+      <div class="fld">
+        <label>Ubicación</label>
+        <input
+          type="text"
+          pInputText
+          [(ngModel)]="form.ubicacion"
+          placeholder="Zona / sector"
+        />
+      </div>
+
+      <!-- Trabajadores al crear -->
+      <div class="fld fld-3" *ngIf="!editId">
+        <label>Trabajadores asignados</label>
+        <p-multiSelect
+          [options]="empleadoOpts"
+          [(ngModel)]="form.trabajadorIds"
+          optionLabel="label"
+          optionValue="value"
+          [filter]="true"
+          display="chip"
+          styleClass="w-full"
+          placeholder="Selecciona trabajadores..."
+        />
+      </div>
+
+      <div class="fld fld-3">
+        <label>Descripción</label>
+        <textarea
+          pTextarea
+          rows="2"
+          class="w-full"
+          [(ngModel)]="form.descripcion"
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- Gestión de trabajadores en edición -->
+    <div class="trab-block" *ngIf="editId">
+      <p class="section-label">Trabajadores del frente</p>
+      <div class="trab-add">
+        <p-dropdown
+          [options]="empleadoOpts"
+          [(ngModel)]="nuevoTrabajadorId"
+          optionLabel="label"
+          optionValue="value"
+          [filter]="true"
+          styleClass="w-full"
+          placeholder="Selecciona un trabajador para agregar..."
+        />
+        <button
+          pButton
+          type="button"
+          icon="pi pi-plus"
+          label="Agregar"
+          class="p-button-outlined p-button-sm"
+          [disabled]="!nuevoTrabajadorId"
+          (click)="agregarTrabajador()"
+        ></button>
+      </div>
+
+      <div class="detalles-table">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Trabajador</th>
+              <th style="width: 130px">Documento</th>
+              <th style="width: 150px">Cargo</th>
+              <th class="text-center" style="width: 110px">Estado</th>
+              <th style="width: 60px"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let t of trabajadores">
+              <td>{{ t.empleadoNombre }}</td>
+              <td>{{ t.documento }}</td>
+              <td>{{ t.cargo ?? "—" }}</td>
+              <td class="text-center">
+                <p-tag
+                  [severity]="estadoSeverity(t.estado)"
+                  [value]="t.estado"
+                  [rounded]="true"
+                />
+              </td>
+              <td class="text-center">
+                <button
+                  pButton
+                  icon="pi pi-user-minus"
+                  class="p-button-text p-button-danger p-button-sm p-button-rounded"
+                  pTooltip="Retirar"
+                  (click)="retirar(t)"
+                ></button>
+              </td>
+            </tr>
+            <tr *ngIf="trabajadores.length === 0">
+              <td colspan="5" class="empty-row">Sin trabajadores asignados</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Turno vigente del frente en edición -->
+    <div class="trab-block" *ngIf="editId">
+      <p class="section-label">Turno del frente</p>
+      <p class="section-hint">
+        Define qué turno aplica al frente desde una fecha. El motor de nómina usa
+        el turno vigente según la fecha de la asistencia para clasificar las horas.
+      </p>
+      <div class="trab-add">
+        <p-dropdown
+          [options]="turnoOpts"
+          [(ngModel)]="nuevoTurnoId"
+          optionLabel="label"
+          optionValue="value"
+          [filter]="true"
+          styleClass="w-full"
+          placeholder="Selecciona un turno..."
+        />
+        <p-calendar
+          [(ngModel)]="nuevoTurnoFecha"
+          dateFormat="dd/mm/yy"
+          appendTo="body"
+          [showIcon]="true"
+          placeholder="Vigente desde"
+          styleClass="cal-turno"
+        />
+        <button
+          pButton
+          type="button"
+          icon="pi pi-plus"
+          label="Asignar"
+          class="p-button-outlined p-button-sm"
+          [disabled]="!nuevoTurnoId"
+          (click)="asignarTurno()"
+        ></button>
+      </div>
+
+      <div class="detalles-table">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Turno</th>
+              <th style="width: 140px">Desde</th>
+              <th style="width: 140px">Hasta</th>
+              <th style="width: 60px"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let ft of frenteTurnos">
+              <td>{{ ft.turnoNombre ?? "—" }}</td>
+              <td>{{ ft.fechaInicio ?? "—" }}</td>
+              <td>{{ ft.fechaFin ?? "Vigente" }}</td>
+              <td class="text-center">
+                <button
+                  pButton
+                  icon="pi pi-trash"
+                  class="p-button-text p-button-danger p-button-sm p-button-rounded"
+                  pTooltip="Eliminar"
+                  (click)="eliminarTurno(ft)"
+                ></button>
+              </td>
+            </tr>
+            <tr *ngIf="frenteTurnos.length === 0">
+              <td colspan="4" class="empty-row">
+                Sin turno asignado — el motor asumirá 8 horas por defecto
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="form-footer">
+      <button
+        pButton
+        type="button"
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-text p-button-plain"
+        [disabled]="saving"
+        (click)="cancelar()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        label="Guardar frente"
+        icon="pi pi-check"
+        class="btn-aura"
+        [loading]="saving"
+        [disabled]="!formValido()"
+        (click)="guardar()"
+      ></button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,118 @@
+<p-toast />
+<p-confirmDialog />
+
+<!-- LISTA -->
+<div class="page" *ngIf="!showForm">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-sliders-h"></i></span>
+        <div>
+          <h1 class="title">Configuración laboral y recargos</h1>
+          <p class="subtitle">Jornada y recargos por vigencia legal (Ley 2101 / 2466)</p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button pButton type="button" label="Nueva vigencia" icon="pi pi-plus" class="btn-aura" (click)="nuevo()"></button>
+      </div>
+    </div>
+
+    <p-table [value]="rows" [loading]="loading" styleClass="p-datatable-sm" showGridlines>
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Vigencia</th>
+          <th class="text-center">Jornada sem.</th>
+          <th class="text-center">Horas mes</th>
+          <th class="text-center">Rec. nocturno</th>
+          <th class="text-center">Extra diurna</th>
+          <th class="text-center">Extra noct.</th>
+          <th class="text-center">Dom/festivo</th>
+          <th class="text-center" style="width: 110px">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-c>
+        <tr>
+          <td>
+            <span class="nom">{{ c.fechaInicioVigencia }}</span>
+            <span class="muted"> → {{ c.fechaFinVigencia ?? "actual" }}</span>
+          </td>
+          <td class="text-center">{{ c.horasSemanalesLegales }} h</td>
+          <td class="text-center">{{ c.horasMensualesBase }}</td>
+          <td class="text-center">{{ c.recargoNocturno }}%</td>
+          <td class="text-center">{{ c.recargoExtraDiurna }}%</td>
+          <td class="text-center">{{ c.recargoExtraNocturna }}%</td>
+          <td class="text-center">{{ c.recargoDominicalFestivo }}%</td>
+          <td class="text-center">
+            <button pButton icon="pi pi-pencil" class="p-button-text p-button-sm p-button-rounded" pTooltip="Editar" (click)="editar(c)"></button>
+            <button pButton icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm p-button-rounded" pTooltip="Eliminar" (click)="eliminar(c)"></button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="8" class="empty-row">No hay configuraciones. Crea la vigencia actual.</td></tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- FORMULARIO -->
+<div class="page" *ngIf="showForm">
+  <div class="card form-card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <button pButton type="button" icon="pi pi-arrow-left" class="p-button-text p-button-plain" (click)="cancelar()"></button>
+        <span class="header-icon"><i class="pi pi-sliders-h"></i></span>
+        <div>
+          <h1 class="title">{{ form.id ? "Editar vigencia" : "Nueva vigencia" }}</h1>
+          <p class="subtitle">Parámetros legales aplicables por rango de fechas</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="grp">Vigencia</p>
+    <div class="grid">
+      <div class="fld">
+        <label>Fecha inicio <span class="req">*</span></label>
+        <p-calendar [(ngModel)]="vigInicio" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" />
+      </div>
+      <div class="fld">
+        <label>Fecha fin (opcional)</label>
+        <p-calendar [(ngModel)]="vigFin" dateFormat="dd/mm/yy" [showIcon]="true" [showClear]="true" appendTo="body" styleClass="w-full" />
+      </div>
+      <div class="fld"><label>Jornada semanal (horas)</label><p-inputNumber [(ngModel)]="form.horasSemanalesLegales" [minFractionDigits]="0" [maxFractionDigits]="2" styleClass="w-full" /></div>
+      <div class="fld"><label>Horas mensuales base</label><p-inputNumber [(ngModel)]="form.horasMensualesBase" [minFractionDigits]="0" [maxFractionDigits]="2" styleClass="w-full" /></div>
+    </div>
+
+    <p class="grp">Franjas horarias</p>
+    <div class="grid">
+      <div class="fld"><label>Diurna inicio</label><input type="time" pInputText [(ngModel)]="form.horaDiurnaInicio" /></div>
+      <div class="fld"><label>Diurna fin</label><input type="time" pInputText [(ngModel)]="form.horaDiurnaFin" /></div>
+      <div class="fld"><label>Nocturna inicio</label><input type="time" pInputText [(ngModel)]="form.horaNocturnaInicio" /></div>
+      <div class="fld"><label>Nocturna fin</label><input type="time" pInputText [(ngModel)]="form.horaNocturnaFin" /></div>
+    </div>
+
+    <p class="grp">Recargos (%)</p>
+    <div class="grid">
+      <div class="fld"><label>Recargo nocturno</label><p-inputNumber [(ngModel)]="form.recargoNocturno" suffix=" %" styleClass="w-full" /></div>
+      <div class="fld"><label>Extra diurna</label><p-inputNumber [(ngModel)]="form.recargoExtraDiurna" suffix=" %" styleClass="w-full" /></div>
+      <div class="fld"><label>Extra nocturna</label><p-inputNumber [(ngModel)]="form.recargoExtraNocturna" suffix=" %" styleClass="w-full" /></div>
+      <div class="fld"><label>Dominical / festivo</label><p-inputNumber [(ngModel)]="form.recargoDominicalFestivo" suffix=" %" styleClass="w-full" /></div>
+    </div>
+
+    <p class="grp">Límites de horas extra</p>
+    <div class="grid">
+      <div class="fld"><label>Máx. extra por día</label><p-inputNumber [(ngModel)]="form.maxHorasExtraDia" [maxFractionDigits]="2" styleClass="w-full" /></div>
+      <div class="fld"><label>Máx. extra por semana</label><p-inputNumber [(ngModel)]="form.maxHorasExtraSemana" [maxFractionDigits]="2" styleClass="w-full" /></div>
+      <div class="fld fld-check">
+        <p-checkbox [(ngModel)]="form.aplicaExcepcionSectorial" [binary]="true" inputId="exc" />
+        <label for="exc" class="lbl-check">Aplica excepción sectorial</label>
+      </div>
+      <div class="fld"><label>Sector excepción</label><input type="text" pInputText [(ngModel)]="form.sectorExcepcion" placeholder="Ej: vigilancia" /></div>
+    </div>
+
+    <div class="form-footer">
+      <button pButton type="button" label="Cancelar" icon="pi pi-times" class="p-button-text p-button-plain" [disabled]="saving" (click)="cancelar()"></button>
+      <button pButton type="button" label="Guardar" icon="pi pi-check" class="btn-aura" [loading]="saving" (click)="guardar()"></button>
+    </div>
+  </div>
+</div>
