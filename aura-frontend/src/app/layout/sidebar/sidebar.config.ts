@@ -362,65 +362,49 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
     ],
   },
 
-  // ── Recursos Humanos ────────────────────────────────────────────────────────
-  // Nómina de empleados + comisiones de técnicos/vendedores
+  // ── Recursos Humanos (con submódulos: Gestión / Asistencia / Parámetros) ─────
   {
     label: 'Recursos Humanos',
     icon: 'pi pi-id-card',
     roles: ['SUPER_ADMIN', 'ADMIN'],
-    items: [
-      { label: 'Empleados', icon: 'pi pi-users', route: '/nomina/empleados' },
+    items: [],
+    subgroups: [
       {
-        label: 'Turnos Empleado',
+        label: 'Gestión',
+        icon: 'pi pi-briefcase',
+        items: [
+          { label: 'Empleados', icon: 'pi pi-users', route: '/nomina/empleados' },
+          { label: 'Proyectos y Frentes', icon: 'pi pi-building', route: '/proyectos' },
+          { label: 'Períodos', icon: 'pi pi-calendar', route: '/nomina/periodos' },
+          { label: 'Liquidación Nómina', icon: 'pi pi-calculator', route: '/nomina/liquidacion' },
+          { label: 'Preliquidación / Auditoría', icon: 'pi pi-verified', route: '/nomina/preliquidacion' },
+          { label: 'Prestaciones', icon: 'pi pi-gift', route: '/nomina/prestaciones' },
+          { label: 'Comisiones', icon: 'pi pi-percentage', route: '/comisiones/configuracion' },
+          { label: 'Liquidar Comisiones', icon: 'pi pi-wallet', route: '/comisiones/liquidaciones' },
+        ],
+      },
+      {
+        label: 'Asistencia',
         icon: 'pi pi-clock',
-        route: '/asistencia/turnos',
+        items: [
+          { label: 'Digitación Asistencia', icon: 'pi pi-pencil', route: '/asistencia-frente/digitacion' },
+          { label: 'Revisión Asistencia (Frente)', icon: 'pi pi-check-square', route: '/asistencia-frente/revision' },
+          { label: 'Preliquidación (Frente)', icon: 'pi pi-calculator', route: '/asistencia-frente/preliquidacion' },
+          { label: 'Turnos Empleado', icon: 'pi pi-clock', route: '/asistencia/turnos' },
+          { label: 'Marcaje', icon: 'pi pi-stopwatch', route: '/asistencia/marcaje' },
+          { label: 'Revisión asistencia', icon: 'pi pi-check-square', route: '/asistencia/revision' },
+          { label: 'Novedades asistencia', icon: 'pi pi-bolt', route: '/asistencia/novedades' },
+          { label: 'Autorizaciones', icon: 'pi pi-shield', route: '/asistencia/autorizaciones' },
+        ],
       },
       {
-        label: 'Marcaje',
-        icon: 'pi pi-stopwatch',
-        route: '/asistencia/marcaje',
-      },
-      {
-        label: 'Revisión asistencia',
-        icon: 'pi pi-check-square',
-        route: '/asistencia/revision',
-      },
-      {
-        label: 'Novedades asistencia',
-        icon: 'pi pi-bolt',
-        route: '/asistencia/novedades',
-      },
-      {
-        label: 'Autorizaciones',
-        icon: 'pi pi-shield',
-        route: '/asistencia/autorizaciones',
-      },
-      { label: 'Períodos', icon: 'pi pi-calendar', route: '/nomina/periodos' },
-      {
-        label: 'Liquidación Nómina',
-        icon: 'pi pi-calculator',
-        route: '/nomina/liquidacion',
-      },
-      {
-        label: 'Preliquidación / Auditoría',
-        icon: 'pi pi-verified',
-        route: '/nomina/preliquidacion',
-      },
-      {
-        label: 'Prestaciones',
-        icon: 'pi pi-gift',
-        route: '/nomina/prestaciones',
-      },
-      { label: 'Config. Nómina', icon: 'pi pi-cog', route: '/nomina/config' },
-      {
-        label: 'Comisiones',
-        icon: 'pi pi-percentage',
-        route: '/comisiones/configuracion',
-      },
-      {
-        label: 'Liquidar Comisiones',
-        icon: 'pi pi-wallet',
-        route: '/comisiones/liquidaciones',
+        label: 'Parámetros',
+        icon: 'pi pi-sliders-h',
+        items: [
+          { label: 'Configuración laboral', icon: 'pi pi-sliders-h', route: '/laboral/configuracion' },
+          { label: 'Calendario laboral', icon: 'pi pi-calendar', route: '/laboral/calendario' },
+          { label: 'Config. Nómina', icon: 'pi pi-cog', route: '/nomina/config' },
+        ],
       },
     ],
   },

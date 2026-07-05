@@ -16,6 +16,8 @@ import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
 import { NominaService } from '../../../../core/services/nomina.service';
@@ -56,7 +58,9 @@ type TagSeverity =
     DropdownModule,
     SkeletonModule,
     TooltipModule,
+    ConfirmDialogModule,
   ],
+  providers: [ConfirmationService],
   templateUrl: './documento-periodo.component.html',
   styleUrls: ['./documento-periodo.component.scss'],
 })
@@ -72,6 +76,7 @@ export class DocumentoPeriodoComponent implements OnChanges {
   public data: PeriodoResumenModel | null = null;
   public activeTab = 0;
   public generandoPdf = false;
+  public liquidando = false;
   private empresa: EmpresaConfig | null = null;
 
   // Pago del período
@@ -91,6 +96,7 @@ export class DocumentoPeriodoComponent implements OnChanges {
     private readonly empresaService: EmpresaService,
     private readonly cuentaBancariaService: CuentaBancariaService,
     private readonly alertService: AlertService,
+    private readonly confirmationService: ConfirmationService,
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -122,6 +128,35 @@ export class DocumentoPeriodoComponent implements OnChanges {
   onHide(): void {
     this.data = null;
     this.closed.emit();
+  }
+
+  /** El período aún no ha sido liquidado. */
+  get puedeLiquidar(): boolean {
+    return this.data?.estado === 'ABIERTO';
+  }
+
+  liquidarTodos(): void {
+    if (this.periodoId == null) return;
+    this.confirmationService.confirm({
+      header: 'Liquidar nómina',
+      message: '¿Liquidar la nómina para todos los empleados activos de este período?',
+      icon: 'pi pi-bolt',
+      acceptLabel: 'Sí, liquidar',
+      rejectLabel: 'Cancelar',
+      accept: async () => {
+        this.liquidando = true;
+        try {
+          await lastValueFrom(this.nominaService.liquidarTodos(this.periodoId!));
+          this.alertService.showSuccess('Liquidado', 'Nómina liquidada para los empleados activos');
+          await this.cargar();
+          this.pagado.emit(); // refresca la lista de períodos por detrás
+        } catch (err: any) {
+          this.alertService.showError('Error', err?.error?.message ?? 'No se pudo liquidar la nómina');
+        } finally {
+          this.liquidando = false;
+        }
+      },
+    });
   }
 
   abrirEmpleado(nominaId: number): void {

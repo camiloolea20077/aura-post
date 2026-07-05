@@ -348,6 +348,62 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'proyectos',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/proyectos/proyectos.component').then(
+            (m) => m.ProyectosComponent,
+          ),
+      },
+      {
+        path: 'proyectos/:proyectoId/frentes',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/proyectos/frentes/frentes.component').then(
+            (m) => m.FrentesComponent,
+          ),
+      },
+      {
+        path: 'asistencia-frente/digitacion',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/asistencia-frente/digitacion.component').then(
+            (m) => m.DigitacionComponent,
+          ),
+      },
+      {
+        path: 'asistencia-frente/revision',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/asistencia-frente/revision.component').then(
+            (m) => m.RevisionFrenteComponent,
+          ),
+      },
+      {
+        path: 'asistencia-frente/preliquidacion',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/asistencia-frente/preliquidacion.component').then(
+            (m) => m.PreliquidacionFrenteComponent,
+          ),
+      },
+      {
+        path: 'laboral/configuracion',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/laboral/config-laboral.component').then(
+            (m) => m.ConfigLaboralComponent,
+          ),
+      },
+      {
+        path: 'laboral/calendario',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/laboral/calendario-laboral.component').then(
+            (m) => m.CalendarioLaboralComponent,
+          ),
+      },
+      {
         path: 'mermas',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>

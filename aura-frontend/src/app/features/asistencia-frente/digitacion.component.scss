@@ -1,0 +1,385 @@
+.header-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: #2563eb;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  i {
+    font-size: 1.05rem;
+  }
+}
+
+.filtros {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 1.25rem 1rem;
+
+  .fld {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 220px;
+    flex: 1;
+
+    label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #374151;
+    }
+    input {
+      width: 100%;
+    }
+
+    &.fld-fecha {
+      min-width: 160px;
+      flex: 0 0 170px;
+    }
+  }
+}
+
+.estado-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 1.25rem 0.5rem;
+  font-size: 0.86rem;
+
+  .lbl {
+    color: #64748b;
+    font-weight: 600;
+  }
+  .lbl.ml {
+    margin-left: 1rem;
+  }
+  .val {
+    color: #1e293b;
+    font-weight: 600;
+  }
+}
+
+.alertas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0 1.25rem 0.75rem;
+}
+
+.alerta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 9px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  font-size: 0.83rem;
+  color: #92400e;
+
+  > i {
+    color: #d97706;
+  }
+  .a-desc {
+    color: #334155;
+  }
+
+  &.critica {
+    background: #fef2f2;
+    border-color: #fecaca;
+    > i {
+      color: #dc2626;
+    }
+  }
+}
+
+/* ── Layout dos columnas: PDF (izq) + horas (der) ── */
+.split {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+  margin: 0 1.25rem 0.25rem;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Card izquierda: soporte PDF */
+.pdf-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1rem;
+  background: #fbfcfe;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  position: sticky;
+  top: 0.5rem;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+  }
+
+  .pdf-badge {
+    width: 42px;
+    height: 42px;
+    border-radius: 11px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(220, 38, 38, 0.25);
+    i {
+      font-size: 1.2rem;
+    }
+  }
+
+  .pdf-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1e293b;
+  }
+  .pdf-sub {
+    margin: 0;
+    font-size: 0.75rem;
+    color: #94a3b8;
+  }
+}
+
+/* Soporte ya cargado */
+.soporte-ok {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.6rem 0.7rem;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+
+  > i {
+    color: #16a34a;
+    font-size: 1.15rem;
+  }
+  .so-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .so-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #15803d;
+  }
+  .so-link {
+    font-size: 0.82rem;
+    color: #2563eb;
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+/* Zona de carga / drop */
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 1.4rem 1rem;
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #f8fafc;
+  cursor: pointer;
+  text-align: center;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    transform 0.15s;
+
+  &:hover {
+    border-color: #2563eb;
+    background: #eff6ff;
+  }
+  &.drag {
+    border-color: #2563eb;
+    background: #dbeafe;
+    transform: scale(1.01);
+  }
+  &.busy {
+    cursor: default;
+    border-style: solid;
+    border-color: #bfdbfe;
+    background: #eff6ff;
+  }
+
+  .dz-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    background: #fee2e2;
+    color: #dc2626;
+    i {
+      font-size: 1.4rem;
+    }
+    &.busy {
+      background: #dbeafe;
+      color: #2563eb;
+    }
+  }
+  .dz-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #334155;
+  }
+  .dz-hint {
+    font-size: 0.72rem;
+    color: #94a3b8;
+  }
+  ::ng-deep .dz-bar {
+    width: 100%;
+    margin-top: 0.4rem;
+  }
+}
+
+.soporte-sin {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: #d97706;
+  i {
+    font-size: 0.9rem;
+  }
+}
+
+/* Card derecha: horas */
+.horas-card {
+  min-width: 0;
+}
+
+.detalles-table {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow-x: auto;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead tr {
+    background: #fafbfe;
+  }
+  th {
+    padding: 0.55rem 0.75rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    text-align: left;
+    border-bottom: 2px solid #e2e8f0;
+    white-space: nowrap;
+  }
+  tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+  }
+  tbody tr:last-child {
+    border-bottom: none;
+  }
+  td {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.84rem;
+    color: #1e293b;
+  }
+}
+
+.trab {
+  display: flex;
+  flex-direction: column;
+  .t-nom {
+    font-weight: 600;
+  }
+  .t-cargo {
+    font-size: 0.72rem;
+    color: #94a3b8;
+  }
+}
+.doc {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+.horas {
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 600;
+}
+
+.time-inp,
+.obs-inp {
+  width: 100%;
+  height: 34px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0 0.5rem;
+  font-size: 0.82rem;
+  &:focus {
+    border-color: #2563eb;
+    outline: none;
+  }
+  &:disabled {
+    background: #f8fafc;
+    color: #94a3b8;
+  }
+}
+
+.empty-row {
+  text-align: center;
+  color: #94a3b8;
+  padding: 1.5rem;
+}
+.text-right {
+  text-align: right !important;
+}
+.w-full {
+  width: 100%;
+}
+
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin: 0 1.25rem;
+  padding: 1rem 0 0.5rem;
+}
+
+.acciones-lock {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 1.25rem;
+  padding: 0.9rem 0;
+  color: #94a3b8;
+  font-size: 0.84rem;
+}
+
+::ng-deep .sm .p-dropdown {
+  height: 34px;
+}
+::ng-deep .sm .p-dropdown .p-dropdown-label {
+  padding-top: 0.35rem;
+  font-size: 0.82rem;
+}
