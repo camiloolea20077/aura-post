@@ -1,0 +1,427 @@
+<p-toast position="top-right" />
+
+<div class="clientes-page">
+  <header class="page-head">
+    <div class="ph-title">
+      <span class="ph-icon"><i class="pi pi-users"></i></span>
+      <div>
+        <h1>Clientes y membresías</h1>
+        <p>Gestiona los planes de pago único y mensual de tus empresas</p>
+      </div>
+    </div>
+    <button
+      pButton
+      type="button"
+      icon="pi pi-refresh"
+      label="Actualizar"
+      class="p-button-outlined p-button-sm"
+      [loading]="loading"
+      (click)="cargar()"
+    ></button>
+  </header>
+
+  <!-- KPIs -->
+  <div class="kpis" *ngIf="resumen as r">
+    <div class="kpi">
+      <span class="k-label">Clientes</span>
+      <span class="k-val">{{ r.totalClientes }}</span>
+      <span class="k-sub">{{ r.sinMembresia }} sin membresía</span>
+    </div>
+    <div class="kpi ok">
+      <span class="k-label">Activos</span>
+      <span class="k-val">{{ r.activos }}</span>
+      <span class="k-sub">{{ r.enPrueba }} en prueba</span>
+    </div>
+    <div class="kpi danger">
+      <span class="k-label">Vencidos</span>
+      <span class="k-val">{{ r.vencidos }}</span>
+      <span class="k-sub">requieren cobro</span>
+    </div>
+    <div class="kpi accent">
+      <span class="k-label">Ingreso mensual (MRR)</span>
+      <span class="k-val">{{ formatMonto(r.mrr) }}</span>
+      <span class="k-sub">{{ r.mensuales }} mensuales · {{ r.unicos }} únicos</span>
+    </div>
+    <div class="kpi">
+      <span class="k-label">Recaudado este mes</span>
+      <span class="k-val">{{ formatMonto(r.recaudadoMesActual) }}</span>
+      <span class="k-sub">{{ r.suspendidos }} suspendidos</span>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filtros">
+    <p-inputGroup class="search">
+      <p-inputGroupAddon>
+        <i class="pi pi-search"></i>
+      </p-inputGroupAddon>
+      <input
+        pInputText
+        type="text"
+        [(ngModel)]="search"
+        placeholder="Buscar por razón social, nombre o NIT..."
+      />
+    </p-inputGroup>
+    <p-dropdown
+      [options]="planOpts"
+      [(ngModel)]="filtroPlan"
+      optionLabel="label"
+      optionValue="value"
+      styleClass="flt"
+    />
+    <p-dropdown
+      [options]="estadoFiltroOpts"
+      [(ngModel)]="filtroEstado"
+      optionLabel="label"
+      optionValue="value"
+      styleClass="flt"
+    />
+  </div>
+
+  <!-- Tabla -->
+  <div class="tabla-wrap">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Empresa</th>
+          <th style="width: 120px">Plan</th>
+          <th style="width: 120px">Estado</th>
+          <th class="text-right" style="width: 130px">Valor</th>
+          <th style="width: 140px">Próximo pago</th>
+          <th class="text-right" style="width: 130px">Total pagado</th>
+          <th style="width: 150px"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of filtrados" [class.row-vencida]="c.vencida">
+          <td>
+            <div class="emp">
+              <span class="e-nom">{{ c.razonSocial }}</span>
+              <span class="e-meta">
+                {{ c.nombreComercial || "—" }} · {{ c.nit }}
+                <i
+                  *ngIf="!c.activa"
+                  class="pi pi-ban acc-off"
+                  pTooltip="Acceso suspendido"
+                ></i>
+              </span>
+            </div>
+          </td>
+          <td>{{ planLabel(c.tipoPlan) }}</td>
+          <td>
+            <p-tag
+              [severity]="estadoSeverity(c.estadoEfectivo)"
+              [value]="c.estadoEfectivo"
+              [rounded]="true"
+            />
+          </td>
+          <td class="text-right money">
+            {{ c.tieneSuscripcion ? formatMonto(c.valor, c.moneda ?? "COP") : "—" }}
+          </td>
+          <td>
+            <ng-container *ngIf="c.tipoPlan === 'MENSUAL' && c.fechaProximoPago">
+              <span [class.vencido-txt]="c.vencida">
+                {{ c.fechaProximoPago | date: "dd MMM yy" : "" : "es-CO" }}
+              </span>
+              <span
+                class="dias"
+                *ngIf="c.diasParaVencer !== null"
+                [class.neg]="c.vencida"
+              >
+                {{ diasLabel(c.diasParaVencer) }}
+              </span>
+            </ng-container>
+            <span *ngIf="c.tipoPlan === 'UNICO'" class="muted">Sin vencimiento</span>
+            <span *ngIf="!c.tieneSuscripcion" class="muted">—</span>
+          </td>
+          <td class="text-right money">
+            {{ c.tieneSuscripcion ? formatMonto(c.totalPagado, c.moneda ?? "COP") : "—" }}
+          </td>
+          <td class="acciones">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-dollar"
+              class="p-button-text p-button-sm p-button-success"
+              pTooltip="Registrar pago"
+              tooltipPosition="top"
+              [disabled]="!c.tieneSuscripcion"
+              (click)="abrirPago(c)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-history"
+              class="p-button-text p-button-sm"
+              pTooltip="Historial de pagos"
+              tooltipPosition="top"
+              [disabled]="!c.tieneSuscripcion"
+              (click)="abrirHistorial(c)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-pencil"
+              class="p-button-text p-button-sm"
+              [pTooltip]="c.tieneSuscripcion ? 'Editar membresía' : 'Crear membresía'"
+              tooltipPosition="top"
+              (click)="abrirMembresia(c)"
+            ></button>
+          </td>
+        </tr>
+        <tr *ngIf="!loading && filtrados.length === 0">
+          <td colspan="7" class="empty">Sin clientes que coincidan</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ── Dialog membresía ── -->
+<p-dialog
+  [(visible)]="showMembresia"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  [style]="{ width: '560px', maxWidth: '95vw' }"
+  [header]="
+    (editCliente?.tieneSuscripcion ? 'Editar membresía' : 'Crear membresía') +
+    ' · ' + (editCliente?.razonSocial ?? '')
+  "
+>
+  <div class="form-grid" *ngIf="editCliente">
+    <div class="fld">
+      <label>Tipo de plan</label>
+      <p-dropdown
+        [options]="tipoPlanOpts"
+        [(ngModel)]="form.tipoPlan"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+      />
+    </div>
+    <div class="fld">
+      <label>Estado</label>
+      <p-dropdown
+        [options]="estadoOpts"
+        [(ngModel)]="form.estado"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+      />
+    </div>
+    <div class="fld">
+      <label>{{ form.tipoPlan === "UNICO" ? "Valor del plan" : "Valor mensual" }}</label>
+      <p-inputNumber
+        [(ngModel)]="form.valor"
+        mode="currency"
+        currency="COP"
+        locale="es-CO"
+        [minFractionDigits]="0"
+        styleClass="w-full"
+      />
+    </div>
+    <div class="fld">
+      <label>Fecha de inicio</label>
+      <p-calendar
+        [(ngModel)]="formFechaInicio"
+        dateFormat="dd/mm/yy"
+        appendTo="body"
+        [showIcon]="true"
+        styleClass="w-full"
+      />
+    </div>
+    <div class="fld" *ngIf="form.tipoPlan === 'MENSUAL'">
+      <label>Próximo pago</label>
+      <p-calendar
+        [(ngModel)]="formProximoPago"
+        dateFormat="dd/mm/yy"
+        appendTo="body"
+        [showIcon]="true"
+        styleClass="w-full"
+      />
+    </div>
+    <div class="fld">
+      <label>Contacto</label>
+      <input pInputText [(ngModel)]="form.contactoNombre" placeholder="Nombre" />
+    </div>
+    <div class="fld">
+      <label>Email</label>
+      <input pInputText [(ngModel)]="form.contactoEmail" placeholder="correo@..." />
+    </div>
+    <div class="fld">
+      <label>Teléfono</label>
+      <input pInputText [(ngModel)]="form.contactoTelefono" placeholder="300..." />
+    </div>
+    <div class="fld fld-full">
+      <label>Notas</label>
+      <input pInputText [(ngModel)]="form.notas" placeholder="Observaciones internas" />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cancelar"
+      class="p-button-text p-button-secondary"
+      (click)="showMembresia = false"
+    ></button>
+    <button
+      pButton
+      type="button"
+      label="Guardar"
+      icon="pi pi-check"
+      [loading]="savingMembresia"
+      (click)="guardarMembresia()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ── Dialog registrar pago ── -->
+<p-dialog
+  [(visible)]="showPago"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  [style]="{ width: '520px', maxWidth: '95vw' }"
+  [header]="'Registrar pago · ' + (pagoCliente?.razonSocial ?? '')"
+>
+  <div class="form-grid" *ngIf="pagoCliente">
+    <div class="fld">
+      <label>Fecha de pago</label>
+      <p-calendar
+        [(ngModel)]="pagoFecha"
+        dateFormat="dd/mm/yy"
+        appendTo="body"
+        [showIcon]="true"
+        styleClass="w-full"
+      />
+    </div>
+    <div class="fld">
+      <label>Monto</label>
+      <p-inputNumber
+        [(ngModel)]="pago.monto"
+        mode="currency"
+        currency="COP"
+        locale="es-CO"
+        [minFractionDigits]="0"
+        styleClass="w-full"
+      />
+    </div>
+    <div class="fld">
+      <label>Método</label>
+      <p-dropdown
+        [options]="metodoOpts"
+        [(ngModel)]="pago.metodo"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+      />
+    </div>
+    <div class="fld">
+      <label>Referencia</label>
+      <input pInputText [(ngModel)]="pago.referencia" placeholder="N° comprobante" />
+    </div>
+    <div class="fld" *ngIf="pagoCliente.tipoPlan === 'MENSUAL'">
+      <label>Período desde</label>
+      <p-calendar
+        [(ngModel)]="pagoDesde"
+        dateFormat="dd/mm/yy"
+        appendTo="body"
+        [showIcon]="true"
+        styleClass="w-full"
+      />
+    </div>
+    <div class="fld" *ngIf="pagoCliente.tipoPlan === 'MENSUAL'">
+      <label>Período hasta</label>
+      <p-calendar
+        [(ngModel)]="pagoHasta"
+        dateFormat="dd/mm/yy"
+        appendTo="body"
+        [showIcon]="true"
+        styleClass="w-full"
+      />
+    </div>
+    <div class="fld fld-full">
+      <label>Observación</label>
+      <input pInputText [(ngModel)]="pago.observacion" placeholder="Opcional" />
+    </div>
+    <div class="fld fld-full check" *ngIf="pagoCliente.tipoPlan === 'MENSUAL'">
+      <label class="chk">
+        <input type="checkbox" [(ngModel)]="pago.avanzarProximoPago" />
+        Avanzar la fecha de próximo pago automáticamente
+      </label>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cancelar"
+      class="p-button-text p-button-secondary"
+      (click)="showPago = false"
+    ></button>
+    <button
+      pButton
+      type="button"
+      label="Registrar pago"
+      icon="pi pi-check"
+      class="p-button-success"
+      [loading]="savingPago"
+      (click)="guardarPago()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ── Dialog historial ── -->
+<p-dialog
+  [(visible)]="showHistorial"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  [style]="{ width: '640px', maxWidth: '95vw' }"
+  [header]="'Historial de pagos · ' + (historialCliente?.razonSocial ?? '')"
+>
+  <table class="tabla mini">
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th class="text-right">Monto</th>
+        <th>Método</th>
+        <th>Período</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let p of historial">
+        <td>{{ p.fechaPago | date: "dd MMM yy" : "" : "es-CO" }}</td>
+        <td class="text-right money">{{ formatMonto(p.monto) }}</td>
+        <td>{{ p.metodo || "—" }}</td>
+        <td class="muted">
+          {{
+            p.periodoDesde
+              ? (p.periodoDesde | date: "dd/MM/yy") + " – " + (p.periodoHasta | date: "dd/MM/yy")
+              : "—"
+          }}
+        </td>
+        <td class="text-right">
+          <button
+            pButton
+            type="button"
+            icon="pi pi-trash"
+            class="p-button-text p-button-danger p-button-sm"
+            (click)="eliminarPago(p)"
+          ></button>
+        </td>
+      </tr>
+      <tr *ngIf="historial.length === 0">
+        <td colspan="5" class="empty">Sin pagos registrados</td>
+      </tr>
+    </tbody>
+  </table>
+</p-dialog>

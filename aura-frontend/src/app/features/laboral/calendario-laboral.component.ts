@@ -62,10 +62,18 @@ export class CalendarioLaboralComponent implements OnInit {
   diaFecha: Date | null = null;
 
   readonly mesOpts = [
-    { label: 'Enero', value: 1 }, { label: 'Febrero', value: 2 }, { label: 'Marzo', value: 3 },
-    { label: 'Abril', value: 4 }, { label: 'Mayo', value: 5 }, { label: 'Junio', value: 6 },
-    { label: 'Julio', value: 7 }, { label: 'Agosto', value: 8 }, { label: 'Septiembre', value: 9 },
-    { label: 'Octubre', value: 10 }, { label: 'Noviembre', value: 11 }, { label: 'Diciembre', value: 12 },
+    { label: 'Enero', value: 1 },
+    { label: 'Febrero', value: 2 },
+    { label: 'Marzo', value: 3 },
+    { label: 'Abril', value: 4 },
+    { label: 'Mayo', value: 5 },
+    { label: 'Junio', value: 6 },
+    { label: 'Julio', value: 7 },
+    { label: 'Agosto', value: 8 },
+    { label: 'Septiembre', value: 9 },
+    { label: 'Octubre', value: 10 },
+    { label: 'Noviembre', value: 11 },
+    { label: 'Diciembre', value: 12 },
   ];
 
   readonly tipoOpts = [
@@ -98,7 +106,9 @@ export class CalendarioLaboralComponent implements OnInit {
     this.loading = true;
     this.cdr.markForCheck();
     try {
-      const res = await lastValueFrom(this.service.calendarioList(desde, hasta));
+      const res = await lastValueFrom(
+        this.service.calendarioList(desde, hasta),
+      );
       this.rows = res?.data ?? [];
     } catch {
       this.alertService.showError('Error', 'No se pudo cargar el calendario');
@@ -114,10 +124,16 @@ export class CalendarioLaboralComponent implements OnInit {
     this.cdr.markForCheck();
     try {
       const res = await lastValueFrom(this.service.cargarFestivos(this.anio));
-      this.alertService.showSuccess('Festivos cargados', `Se agregaron ${res?.data ?? 0} festivos de ${this.anio}.`);
+      this.alertService.showSuccess(
+        'Festivos cargados',
+        `Se agregaron ${res?.data ?? 0} festivos de ${this.anio}.`,
+      );
       await this.cargar();
     } catch (e: any) {
-      this.alertService.showError('Error', e?.error?.message ?? 'No se pudieron cargar los festivos');
+      this.alertService.showError(
+        'Error',
+        e?.error?.message ?? 'No se pudieron cargar los festivos',
+      );
     } finally {
       this.cargandoFestivos = false;
       this.cdr.markForCheck();
@@ -152,7 +168,10 @@ export class CalendarioLaboralComponent implements OnInit {
       this.showAdd = false;
       await this.cargar();
     } catch (e: any) {
-      this.alertService.showError('Error', e?.error?.message ?? 'No se pudo guardar el día');
+      this.alertService.showError(
+        'Error',
+        e?.error?.message ?? 'No se pudo guardar el día',
+      );
     } finally {
       this.saving = false;
       this.cdr.markForCheck();
@@ -173,14 +192,22 @@ export class CalendarioLaboralComponent implements OnInit {
           this.alertService.showSuccess('Anulado', 'Día anulado');
           await this.cargar();
         } catch (e: any) {
-          this.alertService.showError('Error', e?.error?.message ?? 'No se pudo anular');
+          this.alertService.showError(
+            'Error',
+            e?.error?.message ?? 'No se pudo anular',
+          );
         }
       },
     });
   }
 
-  tipoSeverity(tipo: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
-    const m: Record<string, 'success' | 'info' | 'warn' | 'danger' | 'secondary'> = {
+  tipoSeverity(
+    tipo: string,
+  ): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+    const m: Record<
+      string,
+      'success' | 'info' | 'warn' | 'danger' | 'secondary'
+    > = {
       FESTIVO_NACIONAL: 'danger',
       FESTIVO_REGIONAL: 'warn',
       DESCANSO_EMPRESA: 'info',
