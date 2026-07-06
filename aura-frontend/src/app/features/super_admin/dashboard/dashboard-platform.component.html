@@ -63,6 +63,38 @@
     </ng-container>
   </div>
 
+  <!-- Membresías / clientes -->
+  <div class="pd-card membresias" *ngIf="clientes as c">
+    <div class="pd-card-header">
+      <span class="pd-card-title">
+        <i class="pi pi-users"></i> Clientes y membresías
+      </span>
+      <a routerLink="/platform/clientes" class="pd-ver-todas">Gestionar →</a>
+    </div>
+    <div class="memb-grid">
+      <div class="memb-kpi">
+        <span class="mk-val">{{ c.activos }}</span>
+        <span class="mk-label">Activos</span>
+      </div>
+      <div class="memb-kpi" [class.alert]="c.vencidos > 0">
+        <span class="mk-val red">{{ c.vencidos }}</span>
+        <span class="mk-label">Vencidos</span>
+      </div>
+      <div class="memb-kpi">
+        <span class="mk-val">{{ c.enPrueba }}</span>
+        <span class="mk-label">En prueba</span>
+      </div>
+      <div class="memb-kpi accent">
+        <span class="mk-val">{{ formatMonto(c.mrr) }}</span>
+        <span class="mk-label">Ingreso mensual (MRR)</span>
+      </div>
+      <div class="memb-kpi">
+        <span class="mk-val">{{ formatMonto(c.recaudadoMesActual) }}</span>
+        <span class="mk-label">Recaudado este mes</span>
+      </div>
+    </div>
+  </div>
+
   <!-- Últimas empresas -->
   <div class="pd-card">
     <div class="pd-card-header">
