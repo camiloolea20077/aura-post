@@ -15,12 +15,14 @@ import { TooltipModule } from 'primeng/tooltip';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SkeletonModule } from 'primeng/skeleton';
-import { MessageService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
 import { ContabilidadService } from '../../../core/services/contabilidad.service';
 import { TerceroService } from '../../../core/services/tercero.service';
 import { CentroCostoService } from '../../../core/services/centro-costo.service';
+import { ProyectoService } from '../../../core/services/proyecto.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
 import {
   AsientoContableModel, BalanceGeneralModel,
@@ -38,9 +40,9 @@ import { CentroCostoDto } from '../../../core/models/centro-costo.model';
     CommonModule, FormsModule,
     ButtonModule, TableModule, CalendarModule, DropdownModule,
     DialogModule, TabViewModule, TagModule, ToastModule, TooltipModule,
-    InputTextModule, InputNumberModule, SkeletonModule,
+    InputTextModule, InputNumberModule, SkeletonModule, ConfirmDialogModule,
   ],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './asientos.component.html',
   styleUrls: ['./asientos.component.scss'],
 })
@@ -66,6 +68,11 @@ export class AsientosComponent implements OnInit {
     new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     new Date(),
   ];
+  // E7: filtros de dimensión (rentabilidad por obra)
+  ccPyGId: number | null = null;
+  proyectoPyGId: number | null = null;
+  frentePyGId: number | null = null;
+  frentePyGOpts: { label: string; value: number }[] = [];
 
   // ── Libro Mayor ──────────────────────────────────────────────────
   libroMayorLineas: LibroMayorLineaModel[] = [];
@@ -75,6 +82,10 @@ export class AsientosComponent implements OnInit {
     new Date(new Date().getFullYear(), new Date().getMonth(), 1),
     new Date(),
   ];
+  ccMayorId: number | null = null;
+  proyectoMayorId: number | null = null;
+  frenteMayorId: number | null = null;
+  frenteMayorOpts: { label: string; value: number }[] = [];
 
   // ── Flujo de Caja ────────────────────────────────────────────────
   flujoCaja: FlujoCajaModel | null = null;
@@ -102,6 +113,7 @@ export class AsientosComponent implements OnInit {
   // Selectores para líneas de detalle
   terceroOpts: { label: string; value: number }[] = [];
   centroCostoOpts: { label: string; value: number }[] = [];
+  proyectoOpts: { label: string; value: number }[] = [];
 
   readonly tipoOrigenOpts = [
     { label: 'Todos', value: null },
@@ -149,7 +161,9 @@ export class AsientosComponent implements OnInit {
     private readonly service: ContabilidadService,
     private readonly terceroService: TerceroService,
     private readonly ccService: CentroCostoService,
+    private readonly proyectoService: ProyectoService,
     private readonly alertService: AlertService,
+    private readonly confirmationService: ConfirmationService,
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
@@ -188,9 +202,10 @@ export class AsientosComponent implements OnInit {
   }
 
   async cargarSelectores(): Promise<void> {
-    const [tercRes, ccRes] = await Promise.all([
+    const [tercRes, ccRes, proyRes] = await Promise.all([
       lastValueFrom(this.terceroService.terceros()).catch(() => null),
       lastValueFrom(this.ccService.list()).catch(() => null),
+      lastValueFrom(this.proyectoService.list()).catch(() => null),
     ]);
     this.terceroOpts = (tercRes?.data ?? []).map((t: TerceroTableModel) => ({
       label: `${t.numeroDocumento} — ${t.nombreCompleto}`,
@@ -200,7 +215,30 @@ export class AsientosComponent implements OnInit {
       label: `${cc.codigo} — ${cc.nombre}`,
       value: cc.id,
     }));
+    this.proyectoOpts = (proyRes?.data ?? []).map((p) => ({
+      label: `${p.codigo} — ${p.nombre}`,
+      value: p.id,
+    }));
     this.cdr.markForCheck();
+  }
+
+  // E7: al cambiar el proyecto se cargan sus frentes (y se limpia el frente).
+  async onProyectoPyGChange(): Promise<void> {
+    this.frentePyGId = null;
+    this.frentePyGOpts = await this.cargarFrentes(this.proyectoPyGId);
+    this.cdr.markForCheck();
+  }
+
+  async onProyectoMayorChange(): Promise<void> {
+    this.frenteMayorId = null;
+    this.frenteMayorOpts = await this.cargarFrentes(this.proyectoMayorId);
+    this.cdr.markForCheck();
+  }
+
+  private async cargarFrentes(proyectoId: number | null): Promise<{ label: string; value: number }[]> {
+    if (!proyectoId) return [];
+    const res = await lastValueFrom(this.proyectoService.frentes(proyectoId)).catch(() => null);
+    return (res?.data ?? []).map((f) => ({ label: `${f.codigo} — ${f.nombre}`, value: f.id }));
   }
 
   onPage(event: any): void {
@@ -220,16 +258,25 @@ export class AsientosComponent implements OnInit {
     }
   }
 
-  async anular(a: AsientoContableModel): Promise<void> {
-    if (!confirm('¿Anular este asiento manual?')) return;
-    try {
-      await lastValueFrom(this.service.anularAsiento(a.id));
-      a.estado = 'ANULADO';
-      this.alertService.showSuccess('Asiento anulado', '');
-      this.cdr.markForCheck();
-    } catch (e: any) {
-      this.alertService.showError('Error', e?.error?.message ?? 'No se pudo anular');
-    }
+  anular(a: AsientoContableModel): void {
+    this.confirmationService.confirm({
+      message: '¿Anular este asiento manual?',
+      header: 'Anular asiento',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, anular',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: async () => {
+        try {
+          await lastValueFrom(this.service.anularAsiento(a.id));
+          a.estado = 'ANULADO';
+          this.alertService.showSuccess('Asiento anulado', '');
+          this.cdr.markForCheck();
+        } catch (e: any) {
+          this.alertService.showError('Error', e?.error?.message ?? 'No se pudo anular');
+        }
+      },
+    });
   }
 
   // ── Estado de Resultados (P&G) ────────────────────────────────────
@@ -241,7 +288,8 @@ export class AsientosComponent implements OnInit {
     try {
       const desde = this.toISO(this.rangoFechasPyG[0]);
       const hasta = this.toISO(this.rangoFechasPyG[1]);
-      const res = await lastValueFrom(this.service.estadoResultados(desde, hasta));
+      const res = await lastValueFrom(this.service.estadoResultados(
+        desde, hasta, this.ccPyGId, this.proyectoPyGId, this.frentePyGId));
       this.estadoResultados = res?.data ?? null;
     } catch {
       this.alertService.showError('Error', 'No se pudo cargar el estado de resultados');
@@ -260,7 +308,8 @@ export class AsientosComponent implements OnInit {
     try {
       const desde = this.toISO(this.rangoFechasMayor[0]);
       const hasta = this.toISO(this.rangoFechasMayor[1]);
-      const res = await lastValueFrom(this.service.libroMayor(this.cuentaMayorId, desde, hasta));
+      const res = await lastValueFrom(this.service.libroMayor(this.cuentaMayorId, desde, hasta,
+        this.ccMayorId, this.proyectoMayorId, this.frenteMayorId));
       this.libroMayorLineas = res?.data ?? [];
     } catch {
       this.alertService.showError('Error', 'No se pudo cargar el libro mayor');

@@ -90,16 +90,25 @@ export class ContabilidadService {
   }
 
   // ── Estado de Resultados (P&G) ────────────────────────────────────
-  estadoResultados(desde?: string, hasta?: string): Observable<ResponseModel<EstadoResultadosModel>> {
+  // E7: filtros de dimensión opcionales (centro de costo / proyecto / frente)
+  estadoResultados(desde?: string, hasta?: string, centroCostoId?: number | null,
+      proyectoId?: number | null, frenteId?: number | null): Observable<ResponseModel<EstadoResultadosModel>> {
     let params = new HttpParams();
     if (desde) params = params.set('desde', desde);
     if (hasta) params = params.set('hasta', hasta);
+    if (centroCostoId) params = params.set('centroCostoId', centroCostoId);
+    if (proyectoId) params = params.set('proyectoId', proyectoId);
+    if (frenteId) params = params.set('frenteId', frenteId);
     return this.http.get<ResponseModel<EstadoResultadosModel>>(`${this.api}/estado-resultados`, { params });
   }
 
   // ── Libro Mayor ───────────────────────────────────────────────────
-  libroMayor(cuentaId: number, desde: string, hasta: string): Observable<ResponseModel<LibroMayorLineaModel[]>> {
-    const params = new HttpParams().set('cuentaId', cuentaId).set('desde', desde).set('hasta', hasta);
+  libroMayor(cuentaId: number, desde: string, hasta: string, centroCostoId?: number | null,
+      proyectoId?: number | null, frenteId?: number | null): Observable<ResponseModel<LibroMayorLineaModel[]>> {
+    let params = new HttpParams().set('cuentaId', cuentaId).set('desde', desde).set('hasta', hasta);
+    if (centroCostoId) params = params.set('centroCostoId', centroCostoId);
+    if (proyectoId) params = params.set('proyectoId', proyectoId);
+    if (frenteId) params = params.set('frenteId', frenteId);
     return this.http.get<ResponseModel<LibroMayorLineaModel[]>>(`${this.api}/libro-mayor`, { params });
   }
 

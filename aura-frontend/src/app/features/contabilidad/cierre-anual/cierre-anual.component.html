@@ -1,0 +1,464 @@
+<p-toast />
+
+<div class="page">
+  <!-- Header -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-calendar"></i></span>
+        <div>
+          <h1 class="title">Cierre de Ejercicio</h1>
+          <p class="subtitle">
+            Provisión de renta, traslado a resultados acumulados y distribución
+            de utilidades — el sistema sugiere, el contador decide
+          </p>
+        </div>
+      </div>
+      <div class="anio-selector">
+        <label>Año a cerrar</label>
+        <p-dropdown
+          [(ngModel)]="anio"
+          [options]="anioOpts"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+        />
+      </div>
+    </div>
+  </div>
+
+  <p-tabView>
+    <!-- ══ TAB 1: WIZARD DE CIERRE ══════════════════════════════════ -->
+    <p-tabPanel header="Cierre de ejercicio" leftIcon="pi pi-flag">
+      <!-- Paso 1: provisión -->
+      <div class="paso-card" [class.paso-hecho]="provisionRegistrada">
+        <div class="paso-head">
+          <span class="paso-num">1</span>
+          <div>
+            <h3>Provisión de impuesto de renta</h3>
+            <p>
+              Antes de cerrar diciembre. La renta fiscal difiere de la contable:
+              la sugerencia solo orienta, el valor lo digita usted.
+            </p>
+          </div>
+          <p-tag
+            *ngIf="provisionRegistrada"
+            severity="success"
+            value="REGISTRADA"
+          />
+        </div>
+
+        <div class="paso-body" *ngIf="!provisionRegistrada">
+          <div class="fila-sugerencia">
+            <div class="filtro-inline">
+              <label>Tarifa %</label>
+              <p-inputNumber
+                [(ngModel)]="tarifa"
+                [min]="0"
+                [max]="100"
+                [maxFractionDigits]="1"
+              />
+            </div>
+            <button
+              pButton
+              label="Calcular sugerencia"
+              icon="pi pi-calculator"
+              class="p-button-outlined"
+              [loading]="loadingSugerencia"
+              (click)="cargarSugerencia()"
+            ></button>
+            <div class="sugerencia-box" *ngIf="sugerencia">
+              <span>
+                Utilidad antes de impuesto:
+                <strong>{{
+                  formatCOP(sugerencia.utilidadAntesDeImpuesto)
+                }}</strong>
+              </span>
+              <span>
+                Provisión sugerida ({{ sugerencia.tarifa }}%):
+                <strong>{{ formatCOP(sugerencia.provisionSugerida) }}</strong>
+              </span>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Valor a provisionar <span class="req">*</span></label>
+              <p-inputNumber
+                [(ngModel)]="montoProvision"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [maxFractionDigits]="0"
+                styleClass="w-full"
+              />
+            </div>
+            <div class="form-group">
+              <label>Detalle</label>
+              <input
+                pInputText
+                [(ngModel)]="detalleProvision"
+                placeholder="Opcional"
+              />
+            </div>
+          </div>
+          <button
+            pButton
+            label="Contabilizar provisión"
+            icon="pi pi-check"
+            class="btn-aura"
+            [loading]="savingProvision"
+            [disabled]="!montoProvision || montoProvision <= 0"
+            (click)="provisionar()"
+          ></button>
+        </div>
+      </div>
+
+      <!-- Paso 2: cerrar diciembre (informativo, vive en Períodos) -->
+      <div class="paso-card paso-info">
+        <div class="paso-head">
+          <span class="paso-num">2</span>
+          <div>
+            <h3>Cierre del período de diciembre</h3>
+            <p>
+              Se hace desde <strong>Períodos Contables</strong>: el cierre
+              cancela ingresos, costos y gastos contra la utilidad del ejercicio
+              (3605). Requiere bancos conciliados y cero borradores.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paso 3: traslado -->
+      <div class="paso-card" [class.paso-hecho]="trasladoRegistrado">
+        <div class="paso-head">
+          <span class="paso-num">3</span>
+          <div>
+            <h3>Traslado a resultados acumulados (3605 → 3705)</h3>
+            <p>
+              Al abrir el año nuevo. Toma el saldo que dejó el cierre de
+              diciembre en 3605 y lo acumula en 3705.
+            </p>
+          </div>
+          <p-tag
+            *ngIf="trasladoRegistrado"
+            severity="success"
+            value="REGISTRADO"
+          />
+        </div>
+        <div class="paso-body" *ngIf="!trasladoRegistrado">
+          <button
+            pButton
+            label="Trasladar utilidad / pérdida"
+            icon="pi pi-arrow-right-arrow-left"
+            class="btn-aura"
+            [loading]="savingTraslado"
+            (click)="trasladar()"
+          ></button>
+        </div>
+      </div>
+
+      <!-- Historial -->
+      <div class="table-card">
+        <h3 class="tabla-titulo">Operaciones registradas</h3>
+        <p-table
+          [value]="operaciones"
+          [loading]="loadingOperaciones"
+          styleClass="p-datatable-sm"
+          responsiveLayout="scroll"
+          [rowHover]="true"
+          showGridlines
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 90px">Año</th>
+              <th style="width: 220px">Operación</th>
+              <th style="width: 160px; text-align: right">Monto</th>
+              <th style="width: 120px">Fecha</th>
+              <th>Detalle</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-o>
+            <tr>
+              <td>
+                <strong>{{ o.anio }}</strong>
+              </td>
+              <td>
+                <p-tag
+                  [severity]="tipoSeverity(o.tipo)"
+                  [value]="tipoOperacionLabel(o.tipo)"
+                />
+              </td>
+              <td class="num-cell" [class.text-danger]="o.monto < 0">
+                {{ formatCOP(o.monto) }}
+              </td>
+              <td>{{ o.fecha | date: "dd/MM/yyyy" }}</td>
+              <td>{{ o.detalle || "—" }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="5" class="empty-row">
+                <i class="pi pi-flag"></i> Sin operaciones de cierre anual
+                todavía.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </p-tabPanel>
+
+    <!-- ══ TAB 2: DISTRIBUCIÓN DE UTILIDADES ═══════════════════════ -->
+    <p-tabPanel header="Distribución de utilidades" leftIcon="pi pi-share-alt">
+      <div class="paso-card">
+        <div class="paso-head">
+          <div>
+            <h3>Distribución post-asamblea</h3>
+            <p>
+              Reserva legal (10% sugerido, tope 50% del capital) y dividendos
+              decretados. Genera DB 3705 · CR 330505 / 2360.
+            </p>
+          </div>
+          <button
+            pButton
+            label="Cargar saldos"
+            icon="pi pi-refresh"
+            class="p-button-outlined"
+            [loading]="loadingDist"
+            (click)="cargarSugerenciaDistribucion()"
+          ></button>
+        </div>
+
+        <div class="sugerencia-box distribucion" *ngIf="sugerenciaDist">
+          <span
+            >Utilidades acumuladas (3705):
+            <strong>{{
+              formatCOP(sugerenciaDist.utilidadesAcumuladas)
+            }}</strong></span
+          >
+          <span
+            >Reserva legal actual:
+            <strong>{{
+              formatCOP(sugerenciaDist.reservaLegalActual)
+            }}</strong></span
+          >
+          <span *ngIf="sugerenciaDist.topeReservaLegal != null"
+            >Tope reserva (50% capital):
+            <strong>{{
+              formatCOP(sugerenciaDist.topeReservaLegal)
+            }}</strong></span
+          >
+        </div>
+
+        <div class="paso-body" *ngIf="sugerenciaDist">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Reserva legal</label>
+              <p-inputNumber
+                [(ngModel)]="reservaLegal"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [maxFractionDigits]="0"
+                styleClass="w-full"
+              />
+            </div>
+            <div class="form-group">
+              <label>Dividendos a decretar</label>
+              <p-inputNumber
+                [(ngModel)]="dividendos"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [maxFractionDigits]="0"
+                styleClass="w-full"
+              />
+            </div>
+            <div class="form-group full-width">
+              <label>Observaciones (acta de asamblea)</label>
+              <input
+                pInputText
+                [(ngModel)]="observacionesDist"
+                placeholder="Ej: Acta asamblea #12"
+              />
+            </div>
+          </div>
+          <button
+            pButton
+            label="Contabilizar distribución"
+            icon="pi pi-check"
+            class="btn-aura"
+            [loading]="savingDist"
+            [disabled]="(reservaLegal ?? 0) + (dividendos ?? 0) <= 0"
+            (click)="distribuir()"
+          ></button>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <h3 class="tabla-titulo">Distribuciones registradas</h3>
+        <p-table
+          [value]="distribuciones"
+          styleClass="p-datatable-sm"
+          [rowHover]="true"
+          showGridlines
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 90px">Año</th>
+              <th style="text-align: right">Base (3705)</th>
+              <th style="text-align: right">Reserva legal</th>
+              <th style="text-align: right">Dividendos</th>
+              <th style="width: 120px">Fecha</th>
+              <th style="width: 110px"></th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-d>
+            <tr>
+              <td>
+                <strong>{{ d.anio }}</strong>
+              </td>
+              <td class="num-cell">{{ formatCOP(d.utilidadBase) }}</td>
+              <td class="num-cell">{{ formatCOP(d.reservaLegal) }}</td>
+              <td class="num-cell">{{ formatCOP(d.dividendos) }}</td>
+              <td>{{ d.fecha | date: "dd/MM/yyyy" }}</td>
+              <td>
+                <button
+                  pButton
+                  label="Pagos"
+                  icon="pi pi-money-bill"
+                  class="p-button-text p-button-sm"
+                  (click)="abrirPagos(d)"
+                ></button>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6" class="empty-row">
+                <i class="pi pi-share-alt"></i> Sin distribuciones registradas.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </p-tabPanel>
+  </p-tabView>
+</div>
+
+<!-- Dialog: pagos de dividendos -->
+<p-dialog
+  [(visible)]="showPagoDialog"
+  [modal]="true"
+  [header]="'Pagos de dividendos — ' + (distribucionPago?.anio ?? '')"
+  [style]="{ width: '640px' }"
+  [draggable]="false"
+>
+  <div class="pago-resumen" *ngIf="distribucionPago">
+    <span
+      >Decretados:
+      <strong>{{ formatCOP(distribucionPago.dividendos) }}</strong></span
+    >
+    <span
+      >Pagados: <strong>{{ formatCOP(totalPagado) }}</strong></span
+    >
+    <span
+      >Pendiente:
+      <strong [class.text-danger]="pendientePago > 0">{{
+        formatCOP(pendientePago)
+      }}</strong></span
+    >
+  </div>
+
+  <p-table
+    [value]="pagosDistribucion"
+    styleClass="p-datatable-sm"
+    showGridlines
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="text-align: right">Monto</th>
+        <th>Medio</th>
+        <th>Fecha</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-p>
+      <tr>
+        <td class="num-cell">{{ formatCOP(p.monto) }}</td>
+        <td>{{ p.metodoPago }}</td>
+        <td>{{ p.fecha | date: "dd/MM/yyyy" }}</td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="3" class="empty-row">Sin pagos registrados.</td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <div class="form-grid" style="margin-top: 1rem" *ngIf="pendientePago > 0">
+    <div class="form-group">
+      <label>Monto <span class="req">*</span></label>
+      <p-inputNumber
+        [(ngModel)]="montoPago"
+        mode="currency"
+        currency="COP"
+        locale="es-CO"
+        [maxFractionDigits]="0"
+        [max]="pendientePago"
+        styleClass="w-full"
+      />
+    </div>
+    <div class="form-group">
+      <label>Medio de pago</label>
+      <p-dropdown
+        [(ngModel)]="metodoPago"
+        [options]="metodoPagoOpts"
+        optionLabel="label"
+        optionValue="value"
+        appendTo="body"
+        styleClass="w-full"
+      />
+    </div>
+    <div class="form-group" *ngIf="metodoPago !== 'EFECTIVO'">
+      <label>Cuenta bancaria</label>
+      <p-dropdown
+        [(ngModel)]="cuentaBancariaPagoId"
+        [options]="cuentaBancariaOpts"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Seleccionar…"
+        appendTo="body"
+        styleClass="w-full"
+      />
+    </div>
+    <div class="form-group">
+      <label>Socio (tercero)</label>
+      <app-tercero-picker
+        [terceroId]="terceroPagoId"
+        placeholder="Buscar socio…"
+        (seleccionado)="onTerceroPago($event)"
+      />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cerrar"
+      icon="pi pi-times"
+      class="p-button-outlined p-button-secondary"
+      (click)="showPagoDialog = false"
+    ></button>
+    <button
+      *ngIf="pendientePago > 0"
+      pButton
+      label="Registrar pago"
+      icon="pi pi-check"
+      class="btn-aura"
+      [loading]="savingPago"
+      [disabled]="!montoPago || montoPago <= 0"
+      (click)="pagar()"
+    ></button>
+  </ng-template>
+</p-dialog>

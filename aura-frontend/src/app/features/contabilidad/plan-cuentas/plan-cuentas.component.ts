@@ -15,7 +15,8 @@ import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { CheckboxModule } from 'primeng/checkbox';
-import { MessageService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
 import { ContabilidadService } from '../../../core/services/contabilidad.service';
@@ -45,8 +46,9 @@ import { InputIconModule } from 'primeng/inputicon';
     IconFieldModule,
     InputIconModule,
     CheckboxModule,
+    ConfirmDialogModule,
   ],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './plan-cuentas.component.html',
   styleUrls: ['./plan-cuentas.component.scss'],
 })
@@ -103,6 +105,7 @@ export class PlanCuentasComponent implements OnInit {
   constructor(
     private readonly service: ContabilidadService,
     private readonly alertService: AlertService,
+    private readonly confirmationService: ConfirmationService,
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
@@ -127,23 +130,27 @@ export class PlanCuentasComponent implements OnInit {
     }
   }
 
-  async seedPUC(): Promise<void> {
-    if (
-      !confirm(
+  seedPUC(): void {
+    this.confirmationService.confirm({
+      message:
         '¿Cargar el PUC básico colombiano? Solo se agregará si el plan está vacío.',
-      )
-    )
-      return;
-    try {
-      await lastValueFrom(this.service.seedPUC());
-      await this.cargar();
-      this.alertService.showSuccess(
-        'PUC cargado',
-        'Plan de cuentas básico listo',
-      );
-    } catch {
-      this.alertService.showError('Error', 'No se pudo cargar el PUC');
-    }
+      header: 'Cargar PUC',
+      icon: 'pi pi-database',
+      acceptLabel: 'Sí, cargar',
+      rejectLabel: 'Cancelar',
+      accept: async () => {
+        try {
+          await lastValueFrom(this.service.seedPUC());
+          await this.cargar();
+          this.alertService.showSuccess(
+            'PUC cargado',
+            'Plan de cuentas básico listo',
+          );
+        } catch {
+          this.alertService.showError('Error', 'No se pudo cargar el PUC');
+        }
+      },
+    });
   }
 
   abrirNuevo(): void {
@@ -196,15 +203,24 @@ export class PlanCuentasComponent implements OnInit {
     }
   }
 
-  async eliminar(c: PlanCuentaModel): Promise<void> {
-    if (!confirm(`¿Desactivar la cuenta "${c.codigo} - ${c.nombre}"?`)) return;
-    try {
-      await lastValueFrom(this.service.eliminarCuenta(c.id));
-      await this.cargar();
-      this.alertService.showSuccess('Cuenta desactivada', '');
-    } catch {
-      this.alertService.showError('Error', 'No se pudo desactivar');
-    }
+  eliminar(c: PlanCuentaModel): void {
+    this.confirmationService.confirm({
+      message: `¿Desactivar la cuenta "${c.codigo} - ${c.nombre}"?`,
+      header: 'Desactivar cuenta',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, desactivar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: async () => {
+        try {
+          await lastValueFrom(this.service.eliminarCuenta(c.id));
+          await this.cargar();
+          this.alertService.showSuccess('Cuenta desactivada', '');
+        } catch {
+          this.alertService.showError('Error', 'No se pudo desactivar');
+        }
+      },
+    });
   }
 
   tipoSeverity(

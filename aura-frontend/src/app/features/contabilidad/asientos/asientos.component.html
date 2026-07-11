@@ -1,4 +1,5 @@
 <p-toast />
+<p-confirmDialog />
 
 <div class="page">
   <!-- Header -->
@@ -183,6 +184,47 @@
             styleClass="w-full"
           />
         </div>
+        <!-- E7: dimensiones — rentabilidad por centro de costo / obra / frente -->
+        <div class="filter-item">
+          <label>Centro de costo</label>
+          <p-dropdown
+            [(ngModel)]="ccPyGId"
+            [options]="centroCostoOpts"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todos"
+            [showClear]="true"
+            [filter]="true"
+            styleClass="w-full"
+          />
+        </div>
+        <div class="filter-item">
+          <label>Proyecto</label>
+          <p-dropdown
+            [(ngModel)]="proyectoPyGId"
+            [options]="proyectoOpts"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todos"
+            [showClear]="true"
+            [filter]="true"
+            styleClass="w-full"
+            (onChange)="onProyectoPyGChange()"
+          />
+        </div>
+        <div class="filter-item">
+          <label>Frente</label>
+          <p-dropdown
+            [(ngModel)]="frentePyGId"
+            [options]="frentePyGOpts"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todos"
+            [showClear]="true"
+            [disabled]="!proyectoPyGId"
+            styleClass="w-full"
+          />
+        </div>
         <button
           pButton
           icon="pi pi-search"
@@ -328,6 +370,47 @@
             [readonlyInput]="true"
             dateFormat="dd/mm/yy"
             placeholder="Desde — Hasta"
+            styleClass="w-full"
+          />
+        </div>
+        <!-- E7: dimensiones -->
+        <div class="filter-item">
+          <label>Centro de costo</label>
+          <p-dropdown
+            [(ngModel)]="ccMayorId"
+            [options]="centroCostoOpts"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todos"
+            [showClear]="true"
+            [filter]="true"
+            styleClass="w-full"
+          />
+        </div>
+        <div class="filter-item">
+          <label>Proyecto</label>
+          <p-dropdown
+            [(ngModel)]="proyectoMayorId"
+            [options]="proyectoOpts"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todos"
+            [showClear]="true"
+            [filter]="true"
+            styleClass="w-full"
+            (onChange)="onProyectoMayorChange()"
+          />
+        </div>
+        <div class="filter-item">
+          <label>Frente</label>
+          <p-dropdown
+            [(ngModel)]="frenteMayorId"
+            [options]="frenteMayorOpts"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todos"
+            [showClear]="true"
+            [disabled]="!proyectoMayorId"
             styleClass="w-full"
           />
         </div>

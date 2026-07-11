@@ -18,7 +18,8 @@ import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { CheckboxModule } from 'primeng/checkbox';
-import { MessageService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { TarifaRetencionService } from '../../../core/services/tarifa-retencion.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
@@ -49,8 +50,9 @@ import { InputIconModule } from 'primeng/inputicon';
     InputIconModule,
     TooltipModule,
     CheckboxModule,
+    ConfirmDialogModule,
   ],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './tarifas-retencion.component.html',
   styleUrls: ['./tarifas-retencion.component.scss'],
 })
@@ -73,6 +75,7 @@ export class TarifasRetencionComponent implements OnInit {
   constructor(
     private readonly service: TarifaRetencionService,
     private readonly alertService: AlertService,
+    private readonly confirmationService: ConfirmationService,
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
@@ -162,18 +165,27 @@ export class TarifasRetencionComponent implements OnInit {
     }
   }
 
-  async eliminar(t: TarifaRetencionModel): Promise<void> {
-    if (!confirm(`¿Desactivar la tarifa "${t.concepto}"?`)) return;
-    try {
-      await lastValueFrom(this.service.delete(t.id));
-      this.alertService.showSuccess('Eliminada', 'Tarifa desactivada');
-      await this.cargar();
-    } catch (e: any) {
-      this.alertService.showError(
-        'Error',
-        e?.error?.message ?? 'No se pudo eliminar',
-      );
-    }
+  eliminar(t: TarifaRetencionModel): void {
+    this.confirmationService.confirm({
+      message: `¿Desactivar la tarifa "${t.concepto}"?`,
+      header: 'Desactivar tarifa',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, desactivar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: async () => {
+        try {
+          await lastValueFrom(this.service.delete(t.id));
+          this.alertService.showSuccess('Eliminada', 'Tarifa desactivada');
+          await this.cargar();
+        } catch (e: any) {
+          this.alertService.showError(
+            'Error',
+            e?.error?.message ?? 'No se pudo eliminar',
+          );
+        }
+      },
+    });
   }
 
   tipoSeverity(tipo: TipoRetencion): 'info' | 'warn' | 'success' {
