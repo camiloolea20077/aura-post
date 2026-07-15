@@ -1,0 +1,571 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="page">
+  <!-- ══ VISTA 1: LISTADO DE EXTRACTOS ═══════════════════════════════ -->
+  @if (!extracto) {
+    <div class="card">
+      <div class="card-head">
+        <div class="card-head__title">
+          <span class="header-icon"><i class="pi pi-sync"></i></span>
+          <div>
+            <h1 class="title">Conciliación Bancaria</h1>
+            <p class="subtitle">
+              Extracto del banco contra el libro — comisiones, GMF e intereses
+              se contabilizan desde la misma pantalla
+            </p>
+          </div>
+        </div>
+        <button
+          pButton
+          label="Nuevo extracto"
+          icon="pi pi-plus"
+          class="btn-aura"
+          (click)="abrirCrear()"
+        ></button>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="filtro-cuenta">
+        <label>Cuenta bancaria</label>
+        <p-dropdown
+          [(ngModel)]="cuentaFiltroId"
+          [options]="cuentaBancariaOpts"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Todas"
+          [showClear]="true"
+          styleClass="w-full"
+          (onChange)="cargarExtractos()"
+        />
+      </div>
+
+      <p-table
+        [value]="extractos"
+        [loading]="loading"
+        styleClass="p-datatable-sm"
+        [rowHover]="true"
+        showGridlines
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 110px">Período</th>
+            <th>Cuenta</th>
+            <th style="text-align: right">Saldo inicial</th>
+            <th style="text-align: right">Saldo final</th>
+            <th style="width: 130px">Estado</th>
+            <th style="width: 130px"></th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-e>
+          <tr>
+            <td>
+              <strong>{{ e.periodo }}</strong>
+            </td>
+            <td>{{ cuentaNombre(e.cuentaBancariaId) }}</td>
+            <td class="num-cell">{{ formatCOP(e.saldoInicial) }}</td>
+            <td class="num-cell">{{ formatCOP(e.saldoFinal) }}</td>
+            <td>
+              <p-tag
+                [severity]="estadoExtractoSeverity(e.estado)"
+                [value]="e.estado"
+              />
+            </td>
+            <td>
+              <button
+                pButton
+                icon="pi pi-arrow-right"
+                label="Abrir"
+                class="p-button-text p-button-sm"
+                (click)="abrir(e)"
+              ></button>
+              <button
+                *ngIf="e.estado === 'ABIERTO'"
+                pButton
+                icon="pi pi-trash"
+                class="p-button-text p-button-sm p-button-danger"
+                pTooltip="Eliminar (solo sin ajustes)"
+                (click)="eliminarExtracto(e)"
+              ></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="empty-row">
+              <i class="pi pi-sync"></i> Sin extractos. Cree el del mes y pegue
+              el CSV del banco.
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+
+  <!-- ══ VISTA 2: PANTALLA DE TRABAJO (DOS COLUMNAS) ═════════════════ -->
+  @if (extracto) {
+    <div class="card">
+      <div class="card-head">
+        <div class="card-head__title">
+          <button
+            pButton
+            icon="pi pi-arrow-left"
+            class="p-button-text p-button-rounded"
+            pTooltip="Volver al listado"
+            (click)="volver()"
+          ></button>
+          <div>
+            <h1 class="title">
+              {{ cuentaNombre(extracto.cuentaBancariaId) }} —
+              {{ extracto.periodo }}
+              <p-tag
+                [severity]="estadoExtractoSeverity(extracto.estado)"
+                [value]="extracto.estado"
+                styleClass="ml-2"
+              />
+            </h1>
+            <p class="subtitle">
+              Saldo inicial {{ formatCOP(extracto.saldoInicial) }} · saldo final
+              {{ formatCOP(extracto.saldoFinal) }}
+            </p>
+          </div>
+        </div>
+        <div class="head-actions" *ngIf="extracto.estado === 'ABIERTO'">
+          <button
+            pButton
+            label="Importar CSV"
+            icon="pi pi-upload"
+            class="p-button-outlined"
+            (click)="abrirImportar()"
+          ></button>
+          <button
+            pButton
+            label="Cerrar extracto"
+            icon="pi pi-lock"
+            class="btn-aura"
+            [loading]="cerrando"
+            [disabled]="!resumen?.puedeCerrar"
+            [pTooltip]="
+              resumen?.puedeCerrar
+                ? ''
+                : 'Concilie todas las líneas y cuadre la diferencia'
+            "
+            (click)="cerrar()"
+          ></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resumen -->
+    <div class="resumen-bar" *ngIf="resumen">
+      <div class="resumen-item">
+        <span class="resumen-label">Pendientes</span>
+        <span
+          class="resumen-valor"
+          [class.text-warn]="resumen.pendientes > 0"
+          >{{ resumen.pendientes }}</span
+        >
+      </div>
+      <div class="resumen-item">
+        <span class="resumen-label">Conciliadas</span>
+        <span class="resumen-valor text-ok">{{ resumen.conciliadas }}</span>
+      </div>
+      <div class="resumen-item">
+        <span class="resumen-label">Ajustes</span>
+        <span class="resumen-valor">{{ resumen.ajustes }}</span>
+      </div>
+      <div class="resumen-item">
+        <span class="resumen-label">Saldo conciliado</span>
+        <span class="resumen-valor">{{
+          formatCOP(resumen.saldoConciliado)
+        }}</span>
+      </div>
+      <div class="resumen-item">
+        <span class="resumen-label">Diferencia</span>
+        <span
+          class="resumen-valor"
+          [class.text-ok]="resumen.diferencia === 0"
+          [class.text-danger]="resumen.diferencia !== 0"
+        >
+          {{ formatCOP(resumen.diferencia) }}
+        </span>
+      </div>
+      <div class="resumen-item" *ngIf="resumen.partidasEnTransito.length">
+        <span class="resumen-label">En tránsito (libro)</span>
+        <span class="resumen-valor"
+          >{{ resumen.partidasEnTransito.length }} mov ·
+          {{ formatCOP(resumen.netoPartidasEnTransito) }}</span
+        >
+      </div>
+    </div>
+
+    <!-- Dos columnas -->
+    <div class="columnas">
+      <!-- Columna extracto -->
+      <div class="col-card">
+        <h3><i class="pi pi-file"></i> Extracto del banco</h3>
+        <p-table
+          [value]="lineas"
+          [loading]="loadingDetalle"
+          styleClass="p-datatable-sm"
+          [rowHover]="true"
+          showGridlines
+          [scrollable]="true"
+          scrollHeight="480px"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 95px">Fecha</th>
+              <th>Descripción</th>
+              <th style="text-align: right; width: 130px">Valor</th>
+              <th style="width: 110px">Estado</th>
+              <th style="width: 130px"></th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-l>
+            <tr>
+              <td>{{ l.fecha | date: "dd/MM" }}</td>
+              <td class="desc-cell">{{ l.descripcion || "—" }}</td>
+              <td class="num-cell" [class.text-danger]="l.valor < 0">
+                {{ formatCOP(l.valor) }}
+              </td>
+              <td>
+                <p-tag
+                  [severity]="estadoLineaSeverity(l.estado)"
+                  [value]="l.estado"
+                />
+              </td>
+              <td class="acciones-cell">
+                @if (
+                  l.estado === "PENDIENTE" && extracto.estado === "ABIERTO"
+                ) {
+                  <button
+                    pButton
+                    icon="pi pi-link"
+                    class="p-button-text p-button-sm"
+                    [label]="
+                      candidatosDe(l).length ? '' + candidatosDe(l).length : ''
+                    "
+                    [pTooltip]="
+                      candidatosDe(l).length
+                        ? candidatosDe(l).length + ' candidatos del libro'
+                        : 'Buscar movimiento del libro'
+                    "
+                    (click)="abrirCandidatos(l)"
+                  ></button>
+                  <button
+                    pButton
+                    icon="pi pi-bolt"
+                    class="p-button-text p-button-sm p-button-warning"
+                    pTooltip="Contabilizar como ajuste (comisión/GMF/intereses)"
+                    (click)="abrirAjuste(l)"
+                  ></button>
+                }
+                @if (
+                  l.estado === "CONCILIADO" && extracto.estado === "ABIERTO"
+                ) {
+                  <button
+                    pButton
+                    icon="pi pi-undo"
+                    class="p-button-text p-button-sm p-button-secondary"
+                    pTooltip="Desconciliar"
+                    (click)="desconciliar(l)"
+                  ></button>
+                }
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="5" class="empty-row">
+                Sin líneas — importe el CSV del banco.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <!-- Columna libro -->
+      <div class="col-card">
+        <h3><i class="pi pi-book"></i> Libro (cuenta contable del banco)</h3>
+        <p-table
+          [value]="movimientos"
+          [loading]="loadingDetalle"
+          styleClass="p-datatable-sm"
+          [rowHover]="true"
+          showGridlines
+          [scrollable]="true"
+          scrollHeight="480px"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 95px">Fecha</th>
+              <th style="width: 110px">Comprobante</th>
+              <th>Descripción</th>
+              <th style="text-align: right; width: 120px">Débito</th>
+              <th style="text-align: right; width: 120px">Crédito</th>
+              <th style="width: 45px"></th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-m>
+            <tr [class.row-conciliado]="m.conciliado">
+              <td>{{ m.fecha | date: "dd/MM" }}</td>
+              <td>
+                <code>{{ m.numeroComprobante }}</code>
+              </td>
+              <td class="desc-cell">{{ m.descripcion }}</td>
+              <td class="num-cell">
+                {{ m.debito ? formatCOP(m.debito) : "—" }}
+              </td>
+              <td class="num-cell">
+                {{ m.credito ? formatCOP(m.credito) : "—" }}
+              </td>
+              <td>
+                <i
+                  *ngIf="m.conciliado"
+                  class="pi pi-check-circle text-ok"
+                  pTooltip="Conciliado"
+                ></i>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6" class="empty-row">
+                Sin movimientos del libro en el período.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Dialog: crear extracto -->
+<p-dialog
+  [(visible)]="showCrear"
+  [modal]="true"
+  header="Nuevo extracto bancario"
+  [style]="{ width: '460px' }"
+  [draggable]="false"
+>
+  <div class="form-grid">
+    <div class="form-group full-width">
+      <label>Cuenta bancaria <span class="req">*</span></label>
+      <p-dropdown
+        [(ngModel)]="nuevoCuentaId"
+        [options]="cuentaBancariaOpts"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Seleccionar…"
+        appendTo="body"
+        styleClass="w-full"
+      />
+    </div>
+    <div class="form-group full-width">
+      <label>Período <span class="req">*</span></label>
+      <p-calendar
+        [(ngModel)]="nuevoPeriodo"
+        view="month"
+        dateFormat="yy-mm"
+        [readonlyInput]="true"
+        appendTo="body"
+        styleClass="w-full"
+      />
+    </div>
+    <div class="form-group">
+      <label>Saldo inicial (extracto)</label>
+      <p-inputNumber
+        [(ngModel)]="nuevoSaldoInicial"
+        mode="currency"
+        currency="COP"
+        locale="es-CO"
+        [maxFractionDigits]="2"
+        styleClass="w-full"
+      />
+    </div>
+    <div class="form-group">
+      <label>Saldo final (extracto)</label>
+      <p-inputNumber
+        [(ngModel)]="nuevoSaldoFinal"
+        mode="currency"
+        currency="COP"
+        locale="es-CO"
+        [maxFractionDigits]="2"
+        styleClass="w-full"
+      />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-outlined p-button-secondary"
+      (click)="showCrear = false"
+    ></button>
+    <button
+      pButton
+      label="Crear"
+      icon="pi pi-check"
+      class="btn-aura"
+      [loading]="saving"
+      [disabled]="!nuevoCuentaId"
+      (click)="crear()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog: importar CSV -->
+<p-dialog
+  [(visible)]="showImportar"
+  [modal]="true"
+  header="Importar extracto (CSV)"
+  [style]="{ width: '620px' }"
+  [draggable]="false"
+>
+  <p class="ayuda-import">
+    Formato: <code>fecha;descripción;valor</code> — una línea por movimiento,
+    valor con el signo del banco (+ abono / − cargo). Acepta encabezado,
+    separadores <code>;</code> <code>,</code> o tabulación, fechas
+    <code>dd/MM/yyyy</code> y montos <code>$1.234.567,89</code>.
+  </p>
+  <input
+    type="file"
+    accept=".csv,.txt"
+    (change)="onArchivo($event)"
+    class="input-archivo"
+  />
+  <textarea
+    pTextarea
+    [(ngModel)]="csvContenido"
+    rows="10"
+    placeholder="2026-07-01;CONSIGNACION EFECTIVO;1500000&#10;2026-07-03;COMISION MANEJO;-25000"
+    style="width: 100%; font-family: monospace; font-size: 0.85rem"
+  ></textarea>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-outlined p-button-secondary"
+      (click)="showImportar = false"
+    ></button>
+    <button
+      pButton
+      label="Importar"
+      icon="pi pi-upload"
+      class="btn-aura"
+      [loading]="importando"
+      [disabled]="!csvContenido.trim()"
+      (click)="importar()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog: candidatos del libro -->
+<p-dialog
+  [(visible)]="showCandidatos"
+  [modal]="true"
+  header="Conciliar línea del extracto"
+  [style]="{ width: '720px' }"
+  [draggable]="false"
+>
+  <div class="linea-activa" *ngIf="lineaActiva">
+    <span>{{ lineaActiva.fecha | date: "dd/MM/yyyy" }}</span>
+    <span class="desc">{{ lineaActiva.descripcion }}</span>
+    <strong [class.text-danger]="lineaActiva.valor < 0">{{
+      formatCOP(lineaActiva.valor)
+    }}</strong>
+  </div>
+
+  <p-table [value]="candidatosLinea" styleClass="p-datatable-sm" showGridlines>
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 100px">Fecha</th>
+        <th style="width: 120px">Comprobante</th>
+        <th>Descripción</th>
+        <th style="text-align: right; width: 130px">Valor</th>
+        <th style="width: 110px"></th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-m>
+      <tr>
+        <td>{{ m.fecha | date: "dd/MM/yyyy" }}</td>
+        <td>
+          <code>{{ m.numeroComprobante }}</code>
+        </td>
+        <td>{{ m.descripcion }}</td>
+        <td class="num-cell">{{ formatCOP(m.debito || m.credito) }}</td>
+        <td>
+          <button
+            pButton
+            label="Conciliar"
+            icon="pi pi-check"
+            class="p-button-sm btn-aura"
+            (click)="conciliarCon(m)"
+          ></button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="5" class="empty-row">
+          Sin candidatos (valor exacto, fecha ±3 días). Si el banco cobró algo
+          que no está en el libro, regístrelo como <strong>ajuste</strong>.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-dialog>
+
+<!-- Dialog: ajuste -->
+<p-dialog
+  [(visible)]="showAjuste"
+  [modal]="true"
+  header="Contabilizar ajuste bancario"
+  [style]="{ width: '520px' }"
+  [draggable]="false"
+>
+  <div class="linea-activa" *ngIf="lineaActiva">
+    <span>{{ lineaActiva.fecha | date: "dd/MM/yyyy" }}</span>
+    <span class="desc">{{ lineaActiva.descripcion }}</span>
+    <strong [class.text-danger]="lineaActiva.valor < 0">{{
+      formatCOP(lineaActiva.valor)
+    }}</strong>
+  </div>
+  <p class="ayuda-import">
+    La línea no existe en el libro: se genera el asiento automáticamente (cargo
+    → débito al gasto · crédito al banco; abono → débito al banco · crédito a
+    ingresos financieros).
+  </p>
+  <div class="form-group">
+    <label>Tipo de ajuste <span class="req">*</span></label>
+    <p-dropdown
+      [(ngModel)]="tipoAjuste"
+      [options]="tipoAjusteOpts"
+      optionLabel="label"
+      optionValue="value"
+      appendTo="body"
+      styleClass="w-full"
+    />
+  </div>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-outlined p-button-secondary"
+      (click)="showAjuste = false"
+    ></button>
+    <button
+      pButton
+      label="Contabilizar"
+      icon="pi pi-check"
+      class="btn-aura"
+      (click)="registrarAjuste()"
+    ></button>
+  </ng-template>
+</p-dialog>

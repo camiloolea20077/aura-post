@@ -34,7 +34,8 @@
       "Bash(npx ng *)",
       "Bash(./mvnw compile *)",
       "Bash(npx tsc *)",
-      "Bash(echo \"exit=$?\")"
+      "Bash(echo \"exit=$?\")",
+      "PowerShell(npx ng build --configuration development 2>&1 | Select-Object -Last 40)"
     ]
   }
 }
