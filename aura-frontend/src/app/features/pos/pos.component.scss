@@ -1882,3 +1882,363 @@ $mono: "JetBrains Mono", monospace;
     background: rgba(99, 102, 241, 0.05);
   }
 }
+
+// ═══════════════════════════════════════════════════════════════
+//  MÓVIL — Experiencia POS de una sola columna (≤768px)
+//  Diseño distinto al escritorio, optimizado para venta rápida.
+// ═══════════════════════════════════════════════════════════════
+
+// Elementos exclusivos de móvil: ocultos en escritorio
+.mobile-cart-btn,
+.mobile-summary,
+.mobile-cobrar-bar,
+.mobile-sheet-backdrop,
+.sheet-handle {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  // ── Layout: una sola columna ─────────────────────────────
+  .pos-layout {
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: none;
+    height: 100%;
+    min-height: 0;
+  }
+
+  // Catálogo ocupa todo el alto disponible
+  .catalog-panel {
+    flex: 1;
+    min-height: 0;
+    border-right: none;
+  }
+
+  // ── Barra superior: solo búsqueda + carrito ──────────────
+  .catalog-header {
+    gap: 0.5rem;
+    padding: 0.6rem 0.75rem;
+  }
+
+  // Turno / ingreso-egreso pasan a segundo plano
+  .catalog-turno-row {
+    display: none;
+  }
+
+  .search-wrap .product-search {
+    height: 48px;
+    font-size: 1rem;
+  }
+
+  .mobile-cart-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    border: 1.5px solid $border;
+    background: $card;
+    color: $indigo;
+    cursor: pointer;
+
+    i {
+      font-size: 1.2rem;
+    }
+  }
+
+  .mobile-cart-count {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 10px;
+    background: $indigo;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  // ── Categorías: scroll horizontal, siempre una fila ──────
+  .cat-bar {
+    padding: 0.5rem 0.75rem;
+    gap: 0.45rem;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .cat-chip {
+    padding: 0.5rem 0.95rem;
+    font-size: 0.85rem;
+  }
+
+  // ── Tarjeta resumen de la venta ──────────────────────────
+  .mobile-summary {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0.6rem 0.75rem 0.2rem;
+    padding: 0.75rem 0.9rem;
+    border-radius: 14px;
+    border: 1.5px solid $border;
+    background: $card;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+    cursor: pointer;
+    text-align: left;
+    flex-shrink: 0;
+
+    .ms-left {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ms-orden {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: $text;
+
+      b {
+        color: $indigo;
+      }
+    }
+
+    .ms-cliente {
+      font-size: 0.78rem;
+      color: $muted;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ms-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      flex-shrink: 0;
+    }
+
+    .ms-total-label {
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: $muted;
+    }
+
+    .ms-total {
+      font-family: $mono;
+      font-size: 1.15rem;
+      font-weight: 900;
+      color: $text;
+      line-height: 1;
+    }
+
+    .ms-chevron {
+      color: $indigo;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+    }
+  }
+
+  // ── Grid productos: 2 columnas grandes ───────────────────
+  .product-grid,
+  .product-grid.list-mode {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+    padding: 0.6rem 0.75rem;
+    padding-bottom: 96px; // deja ver el contenido tras la barra fija
+  }
+
+  .product-card {
+    min-height: 200px;
+    padding: 0.5rem;
+    gap: 0.4rem;
+  }
+
+  // Imagen más protagonista (un poco más de alto que ancho)
+  .prod-avatar {
+    aspect-ratio: 1 / 1.15;
+  }
+
+  // Botón "+" siempre visible en la esquina de la imagen
+  .prod-avatar .prod-overlay {
+    opacity: 1;
+    inset: auto 0.35rem 0.35rem auto;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: $indigo;
+    backdrop-filter: none;
+    box-shadow: 0 3px 8px rgba(37, 99, 235, 0.4);
+
+    i {
+      font-size: 0.85rem;
+    }
+  }
+
+  // Badge "¡Últimas!" a la izquierda para no tapar el botón +
+  .stock-badge {
+    left: 0.5rem;
+    right: auto;
+  }
+
+  .prod-nombre {
+    font-size: 0.9rem;
+  }
+
+  .prod-precio {
+    font-size: 1.1rem;
+  }
+
+  // ── Barra Cobrar fija — siempre visible ──────────────────
+  .mobile-cobrar-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    padding: 0.6rem 0.9rem calc(0.6rem + env(safe-area-inset-bottom));
+    background: $card;
+    border-top: 1px solid $border;
+    box-shadow: 0 -6px 20px rgba(15, 23, 42, 0.08);
+
+    .mcb-total {
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .mcb-label {
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: $muted;
+    }
+
+    .mcb-val {
+      font-family: $mono;
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: $text;
+      line-height: 1;
+    }
+
+    .mcb-btn {
+      flex: 1;
+      height: 56px;
+      border-radius: 14px;
+      border: none;
+      background: $indigo;
+      color: #fff;
+      font-family: $font;
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35);
+      transition: transform 0.12s;
+
+      &:active:not(:disabled) {
+        transform: scale(0.98);
+      }
+
+      &:disabled {
+        opacity: 0.45;
+        box-shadow: none;
+      }
+    }
+  }
+
+  // ── Carrito como Bottom Sheet ────────────────────────────
+  .mobile-sheet-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    z-index: 70;
+    animation: sheet-fade 0.2s ease;
+  }
+
+  .cart-panel {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 80;
+    height: 88dvh;
+    max-height: 88dvh;
+    min-width: 0;
+    border-left: none;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -10px 40px rgba(15, 23, 42, 0.25);
+    transform: translateY(100%);
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &.mobile-open {
+      transform: translateY(0);
+    }
+  }
+
+  // Handle del sheet
+  .sheet-handle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.55rem 0 0.35rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    touch-action: none;
+
+    .handle-bar {
+      width: 44px;
+      height: 5px;
+      border-radius: 3px;
+      background: #cbd5e1;
+    }
+
+    .handle-close {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: $muted;
+
+      i {
+        font-size: 0.7rem;
+      }
+    }
+  }
+
+  // Espacio seguro para el botón cobrar dentro del sheet
+  .cart-footer {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+}
+
+@keyframes sheet-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

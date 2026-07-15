@@ -626,3 +626,67 @@
   overflow: hidden !important;
   border-radius: 0 0 14px 14px;
 }
+
+// ═══════════════════════════════════════════════════════════════════════════════
+//  MÓVIL — Pantalla Cobrar a pantalla completa (≤768px)
+// ═══════════════════════════════════════════════════════════════════════════════
+@media (max-width: 768px) {
+  ::ng-deep .cobro-dialog.p-dialog {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  ::ng-deep .cobro-dialog .p-dialog-content {
+    border-radius: 0 !important;
+    height: calc(100dvh - 56px);
+    overflow-y: auto !important;
+  }
+
+  // Una sola columna, scroll vertical
+  .cobro-layout {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: 100%;
+    overflow: visible;
+  }
+
+  .cobro-izq {
+    overflow: visible;
+  }
+
+  .cobro-der {
+    border-left: none;
+    border-top: 1px solid #e2e8f0;
+    overflow: visible;
+  }
+
+  // Métodos: 2 columnas grandes y táctiles
+  .metodo-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+  }
+
+  .metodo-btn {
+    min-height: 68px;
+    font-size: 0.82rem;
+    border-radius: 12px;
+
+    i {
+      font-size: 1.25rem;
+    }
+  }
+
+  // Confirmar siempre accesible al final
+  .btn-confirmar {
+    height: 56px;
+    font-size: 1.05rem;
+  }
+
+  .acciones {
+    padding-bottom: calc(0.3rem + env(safe-area-inset-bottom));
+  }
+}

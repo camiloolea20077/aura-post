@@ -1,0 +1,289 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-file-excel"></i></span>
+        <div>
+          <h1 class="title">Información Exógena DIAN</h1>
+          <p class="subtitle">
+            Validar → generar → revisar → aprobar → exportar el Excel del
+            prevalidador — sin ediciones manuales
+          </p>
+        </div>
+      </div>
+      <div class="filtros-head">
+        <div class="filtro-inline">
+          <label>Año gravable</label>
+          <p-dropdown
+            [(ngModel)]="anio" [options]="anioOpts"
+            optionLabel="label" optionValue="value" styleClass="w-full"
+            (onChange)="onFormatoChange()"
+          />
+        </div>
+        <div class="filtro-inline formato">
+          <label>Formato</label>
+          <p-dropdown
+            [(ngModel)]="formatoId" [options]="formatos"
+            optionValue="id" styleClass="w-full"
+            (onChange)="onFormatoChange()"
+          >
+            <ng-template let-f pTemplate="item">{{ f.codigo }} — {{ f.nombre }}</ng-template>
+            <ng-template let-f pTemplate="selectedItem">
+              <span *ngIf="f">{{ f.codigo }} — {{ f.nombre }}</span>
+            </ng-template>
+          </p-dropdown>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p-tabView>
+    <!-- ══ TAB 1: WIZARD ═══════════════════════════════════════════ -->
+    <p-tabPanel header="Generación" leftIcon="pi pi-play">
+      <!-- Paso 1: validar -->
+      <div class="paso-card">
+        <div class="paso-head">
+          <span class="paso-num">1</span>
+          <div>
+            <h3>Validador previo</h3>
+            <p>
+              Períodos abiertos, comprobantes en borrador, cuentas sin mapeo y
+              terceros incompletos (documento, DV, dirección, municipio).
+            </p>
+          </div>
+          <button
+            pButton label="Validar" icon="pi pi-shield"
+            class="p-button-outlined" [loading]="loadingValidar"
+            [disabled]="!formatoId" (click)="validar()"
+          ></button>
+        </div>
+
+        @if (validado) {
+          <div class="validacion-resultado" [class.ok]="!errores.length" [class.err]="errores.length">
+            <i [class]="errores.length ? 'pi pi-exclamation-triangle' : 'pi pi-check-circle'"></i>
+            <span *ngIf="!errores.length">Sin hallazgos — listo para generar y aprobar.</span>
+            <span *ngIf="errores.length">{{ errores.length }} hallazgos: la aprobación exigirá corregirlos y regenerar.</span>
+          </div>
+          <p-table *ngIf="errores.length" [value]="errores" styleClass="p-datatable-sm" showGridlines [paginator]="errores.length > 10" [rows]="10">
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="width: 200px">Tipo</th>
+                <th>Detalle</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-e>
+              <tr>
+                <td><p-tag [severity]="tipoErrorSeverity(e.tipo)" [value]="e.tipo" /></td>
+                <td>{{ e.detalle }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        }
+      </div>
+
+      <!-- Paso 2: generar -->
+      <div class="paso-card">
+        <div class="paso-head">
+          <span class="paso-num">2</span>
+          <div>
+            <h3>Generar lote</h3>
+            <p>
+              Agrupa los movimientos del año por tercero × concepto. Terceros
+              bajo el umbral van como cuantías menores (NIT 222222222). Un
+              borrador se regenera; sobre un aprobado se crea otra versión.
+            </p>
+          </div>
+          <div class="generar-controles">
+            <div class="filtro-inline">
+              <label>Umbral cuantías menores</label>
+              <p-inputNumber
+                [(ngModel)]="cuantiaMenorUmbral"
+                mode="currency" currency="COP" locale="es-CO" [maxFractionDigits]="0"
+              />
+            </div>
+            <button
+              pButton label="Generar" icon="pi pi-cog" class="btn-aura"
+              [loading]="generando" [disabled]="!formatoId" (click)="generar()"
+            ></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lotes -->
+      <div class="table-card">
+        <h3 class="tabla-titulo">Lotes del formato {{ formatoActivo?.codigo }} — {{ anio }}</h3>
+        <p-table [value]="lotes" styleClass="p-datatable-sm" [rowHover]="true" showGridlines>
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 90px">Versión</th>
+              <th style="width: 120px">Estado</th>
+              <th>Generado</th>
+              <th style="text-align: right">Umbral</th>
+              <th style="width: 240px"></th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-l>
+            <tr>
+              <td><strong>v{{ l.version }}</strong></td>
+              <td><p-tag [severity]="estadoLoteSeverity(l.estado)" [value]="l.estado" /></td>
+              <td>{{ l.generadoEn | date: "dd/MM/yyyy HH:mm" }}</td>
+              <td class="num-cell">{{ formatCOP(l.cuantiaMenorUmbral) }}</td>
+              <td>
+                <button pButton label="Revisar" icon="pi pi-eye" class="p-button-text p-button-sm" (click)="abrirLote(l)"></button>
+                <button pButton label="Excel" icon="pi pi-download" class="p-button-text p-button-sm" (click)="exportar(l)"></button>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr><td colspan="5" class="empty-row">Sin lotes generados para este formato y año.</td></tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <!-- Paso 3/4: revisar y aprobar -->
+      @if (loteActivo) {
+        <div class="paso-card">
+          <div class="paso-head">
+            <span class="paso-num">3</span>
+            <div>
+              <h3>
+                Revisión — lote v{{ loteActivo.version }}
+                <p-tag [severity]="estadoLoteSeverity(loteActivo.estado)" [value]="loteActivo.estado" styleClass="ml-2" />
+              </h3>
+              <p>{{ lineas.length }} líneas · total {{ formatCOP(totalLote) }} · {{ erroresLote.length }} hallazgos</p>
+            </div>
+            <div class="generar-controles">
+              <button
+                *ngIf="loteActivo.estado === 'BORRADOR'"
+                pButton label="Aprobar y bloquear" icon="pi pi-lock" class="btn-aura"
+                [loading]="aprobando"
+                [disabled]="erroresLote.length > 0"
+                [pTooltip]="erroresLote.length ? 'Corrija los hallazgos y regenere' : ''"
+                (click)="aprobar()"
+              ></button>
+              <button pButton label="Excel prevalidador" icon="pi pi-download" class="p-button-outlined" (click)="exportar(loteActivo)"></button>
+            </div>
+          </div>
+
+          <div *ngIf="erroresLote.length" class="validacion-resultado err">
+            <i class="pi pi-exclamation-triangle"></i>
+            <span>{{ erroresLote.length }} hallazgos persistidos con el lote — no se puede aprobar hasta regenerar sin errores.</span>
+          </div>
+
+          <p-table
+            [value]="lineas" [loading]="loadingLote"
+            styleClass="p-datatable-sm" [rowHover]="true" showGridlines
+            [paginator]="lineas.length > 15" [rows]="15"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="width: 100px">Concepto</th>
+                <th style="width: 130px">Documento</th>
+                <th>Tercero</th>
+                <th style="text-align: right; width: 150px">Valor</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-l>
+              <tr [class.row-cuantia]="l.cuantiaMenor">
+                <td><code>{{ l.concepto }}</code></td>
+                <td>{{ l.documento }}</td>
+                <td>
+                  {{ l.tercero }}
+                  <p-tag *ngIf="l.cuantiaMenor" severity="info" value="CUANTÍAS MENORES" styleClass="ml-2" />
+                </td>
+                <td class="num-cell">{{ formatCOP(l.valor) }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr><td colspan="4" class="empty-row">El lote no tiene líneas (¿hay movimientos del año en las cuentas mapeadas?).</td></tr>
+            </ng-template>
+          </p-table>
+        </div>
+      }
+    </p-tabPanel>
+
+    <!-- ══ TAB 2: MAPEOS ═══════════════════════════════════════════ -->
+    <p-tabPanel header="Mapeos de cuentas" leftIcon="pi pi-sitemap">
+      <div class="table-card">
+        <div class="mapeos-head">
+          <p class="ayuda">
+            Cuenta o prefijo PUC → concepto DIAN. Sin “hasta” el mapeo cubre el
+            prefijo completo; el prefijo más específico gana (5105 le gana a 51).
+          </p>
+          <div>
+            <button pButton label="Restaurar defaults" icon="pi pi-refresh" class="p-button-outlined p-button-sm" (click)="restaurarDefaults()"></button>
+            <button pButton label="Nuevo mapeo" icon="pi pi-plus" class="btn-aura p-button-sm ml-2" [disabled]="!formatoId" (click)="abrirNuevoMapeo()"></button>
+          </div>
+        </div>
+
+        <p-table [value]="mapeos" [loading]="loadingMapeos" styleClass="p-datatable-sm" [rowHover]="true" showGridlines>
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Concepto</th>
+              <th style="width: 130px">Desde (prefijo)</th>
+              <th style="width: 130px">Hasta</th>
+              <th style="width: 220px">Tipo de valor</th>
+              <th style="width: 70px"></th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-m>
+            <tr>
+              <td>{{ conceptoLabel(m.conceptoId) }}</td>
+              <td><code>{{ m.cuentaDesde }}</code></td>
+              <td><code>{{ m.cuentaHasta || "—" }}</code></td>
+              <td>{{ m.tipoValor }}</td>
+              <td>
+                <button pButton icon="pi pi-trash" class="p-button-text p-button-sm p-button-danger" (click)="eliminarMapeo(m)"></button>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="5" class="empty-row">
+                Sin mapeos para este formato — use <strong>Restaurar defaults</strong>.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </p-tabPanel>
+  </p-tabView>
+</div>
+
+<!-- Dialog: nuevo mapeo -->
+<p-dialog [(visible)]="showMapeoDialog" [modal]="true" header="Nuevo mapeo cuenta → concepto" [style]="{ width: '480px' }" [draggable]="false">
+  <div class="form-grid">
+    <div class="form-group full-width">
+      <label>Concepto DIAN <span class="req">*</span></label>
+      <p-dropdown
+        [(ngModel)]="nuevoConceptoId" [options]="conceptos"
+        optionValue="id" appendTo="body" styleClass="w-full"
+      >
+        <ng-template let-c pTemplate="item">{{ c.codigo }} — {{ c.nombre }}</ng-template>
+        <ng-template let-c pTemplate="selectedItem"><span *ngIf="c">{{ c.codigo }} — {{ c.nombre }}</span></ng-template>
+      </p-dropdown>
+    </div>
+    <div class="form-group">
+      <label>Cuenta / prefijo desde <span class="req">*</span></label>
+      <input pInputText [(ngModel)]="nuevoCuentaDesde" placeholder="Ej: 5105" />
+    </div>
+    <div class="form-group">
+      <label>Hasta (opcional)</label>
+      <input pInputText [(ngModel)]="nuevoCuentaHasta" placeholder="Vacío = prefijo" />
+    </div>
+    <div class="form-group full-width">
+      <label>Tipo de valor <span class="req">*</span></label>
+      <p-dropdown
+        [(ngModel)]="nuevoTipoValor" [options]="tipoValorOpts"
+        optionLabel="label" optionValue="value" appendTo="body" styleClass="w-full"
+      />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancelar" icon="pi pi-times" class="p-button-outlined p-button-secondary" (click)="showMapeoDialog = false"></button>
+    <button pButton label="Guardar" icon="pi pi-check" class="btn-aura" [loading]="savingMapeo" [disabled]="!nuevoConceptoId || !nuevoCuentaDesde.trim()" (click)="crearMapeo()"></button>
+  </ng-template>
+</p-dialog>

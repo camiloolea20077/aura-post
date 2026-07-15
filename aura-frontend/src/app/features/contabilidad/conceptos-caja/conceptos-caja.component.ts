@@ -13,6 +13,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
 import { ConceptoCajaService } from '../../../core/services/concepto-caja.service';
@@ -39,7 +41,9 @@ import { PlanCuentaModel } from '../../../core/models/contabilidad.model';
     DialogModule,
     DropdownModule,
     InputTextModule,
+    ConfirmDialogModule,
   ],
+  providers: [ConfirmationService],
   templateUrl: './conceptos-caja.component.html',
   styleUrls: ['./conceptos-caja.component.scss'],
 })
@@ -65,6 +69,7 @@ export class ConceptosCajaComponent implements OnInit {
     private readonly service: ConceptoCajaService,
     private readonly contaService: ContabilidadService,
     private readonly alert: AlertService,
+    private readonly confirmationService: ConfirmationService,
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
@@ -172,15 +177,24 @@ export class ConceptosCajaComponent implements OnInit {
     }
   }
 
-  async eliminar(c: ConceptoCajaModel): Promise<void> {
-    if (!confirm(`¿Eliminar el concepto "${c.nombre}"?`)) return;
-    try {
-      await lastValueFrom(this.service.eliminar(c.id));
-      this.alert.showSuccess('Concepto eliminado', '');
-      await this.cargar();
-    } catch (e: any) {
-      this.alert.showError('Error', e?.error?.message ?? 'No se pudo eliminar');
-    }
+  eliminar(c: ConceptoCajaModel): void {
+    this.confirmationService.confirm({
+      message: `¿Eliminar el concepto "${c.nombre}"?`,
+      header: 'Eliminar concepto',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: async () => {
+        try {
+          await lastValueFrom(this.service.eliminar(c.id));
+          this.alert.showSuccess('Concepto eliminado', '');
+          await this.cargar();
+        } catch (e: any) {
+          this.alert.showError('Error', e?.error?.message ?? 'No se pudo eliminar');
+        }
+      },
+    });
   }
 
   tipoSeverity(tipo: string): 'success' | 'danger' {

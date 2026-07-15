@@ -718,6 +718,42 @@ export const routes: Routes = [
             (m) => m.TarifasRetencionComponent,
           ),
       },
+      // E8: wizard de cierre de ejercicio + distribución de utilidades
+      {
+        path: 'contabilidad/cierre-anual',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/cierre-anual/cierre-anual.component').then(
+            (m) => m.CierreAnualComponent,
+          ),
+      },
+      // E9: conciliación bancaria (extracto vs libro)
+      {
+        path: 'contabilidad/conciliacion',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/conciliacion/conciliacion-bancaria.component').then(
+            (m) => m.ConciliacionBancariaComponent,
+          ),
+      },
+      // E10: estados financieros NIIF (patrimonio + flujo de efectivo)
+      {
+        path: 'contabilidad/eeff',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/eeff/eeff.component').then(
+            (m) => m.EeffComponent,
+          ),
+      },
+      // E11: información exógena DIAN
+      {
+        path: 'contabilidad/exogena',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/exogena/exogena.component').then(
+            (m) => m.ExogenaComponent,
+          ),
+      },
 
       // Comprobantes de caja
       {

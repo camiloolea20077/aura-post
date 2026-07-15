@@ -1,0 +1,257 @@
+<p-toast />
+
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-chart-pie"></i></span>
+        <div>
+          <h1 class="title">Estados Financieros NIIF</h1>
+          <p class="subtitle">
+            Cambios en el patrimonio y flujo de efectivo (método indirecto) —
+            completan los 5 componentes de NIIF pymes Sección 3
+          </p>
+        </div>
+      </div>
+      <div class="filtros-head">
+        <p-calendar
+          [(ngModel)]="rangoFechas"
+          selectionMode="range"
+          [readonlyInput]="true"
+          dateFormat="dd/mm/yy"
+          placeholder="Desde — Hasta"
+        />
+        <button
+          pButton
+          label="Generar"
+          icon="pi pi-refresh"
+          class="btn-aura"
+          [loading]="loadingPatrimonio || loadingFlujo"
+          (click)="generarAmbos()"
+        ></button>
+      </div>
+    </div>
+  </div>
+
+  <p-tabView>
+    <!-- ══ TAB 1: CAMBIOS EN EL PATRIMONIO ═════════════════════════ -->
+    <p-tabPanel
+      header="Cambios en el Patrimonio"
+      leftIcon="pi pi-building-columns"
+    >
+      <div class="table-card" *ngIf="!loadingPatrimonio && patrimonioCargado">
+        <p-table
+          [value]="patrimonio"
+          styleClass="p-datatable-sm"
+          [rowHover]="true"
+          showGridlines
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 110px">Código</th>
+              <th>Cuenta</th>
+              <th style="text-align: right">Saldo inicial</th>
+              <th style="text-align: right">Aumentos</th>
+              <th style="text-align: right">Disminuciones</th>
+              <th style="text-align: right">Saldo final</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-l>
+            <tr>
+              <td>
+                <code>{{ l.codigo }}</code>
+              </td>
+              <td>{{ l.nombre }}</td>
+              <td class="num-cell">{{ formatCOP(l.saldoInicial) }}</td>
+              <td class="num-cell text-ok">
+                {{ l.aumentos ? formatCOP(l.aumentos) : "—" }}
+              </td>
+              <td class="num-cell text-danger">
+                {{ l.disminuciones ? formatCOP(l.disminuciones) : "—" }}
+              </td>
+              <td class="num-cell">
+                <strong>{{ formatCOP(l.saldoFinal) }}</strong>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="footer">
+            <tr class="totals-row" *ngIf="patrimonio.length">
+              <td colspan="2"><strong>TOTAL PATRIMONIO</strong></td>
+              <td class="num-cell">
+                <strong>{{ formatCOP(totales.inicial) }}</strong>
+              </td>
+              <td class="num-cell">
+                <strong>{{ formatCOP(totales.aumentos) }}</strong>
+              </td>
+              <td class="num-cell">
+                <strong>{{ formatCOP(totales.disminuciones) }}</strong>
+              </td>
+              <td class="num-cell">
+                <strong>{{ formatCOP(totales.final) }}</strong>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6" class="empty-row">
+                Sin movimientos de patrimonio en el período.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <div class="placeholder" *ngIf="!patrimonioCargado && !loadingPatrimonio">
+        <i class="pi pi-building-columns"></i>
+        <p>Seleccione el período y presione <strong>Generar</strong>.</p>
+      </div>
+      <div class="table-card" *ngIf="loadingPatrimonio">
+        <p-skeleton
+          height="2rem"
+          styleClass="mb-2"
+          *ngFor="let i of [1, 2, 3, 4]"
+        />
+      </div>
+    </p-tabPanel>
+
+    <!-- ══ TAB 2: FLUJO DE EFECTIVO (INDIRECTO) ════════════════════ -->
+    <p-tabPanel
+      header="Flujo de Efectivo"
+      leftIcon="pi pi-arrow-right-arrow-left"
+    >
+      @if (flujo && !loadingFlujo) {
+        <!-- Cuadre -->
+        <div
+          class="cuadre-banner"
+          [class.cuadre-ok]="flujo.cuadra"
+          [class.cuadre-err]="!flujo.cuadra"
+        >
+          <i
+            [class]="
+              flujo.cuadra ? 'pi pi-check-circle' : 'pi pi-exclamation-triangle'
+            "
+          ></i>
+          <span *ngIf="flujo.cuadra">
+            El flujo neto cuadra con la variación del disponible del balance.
+          </span>
+          <span *ngIf="!flujo.cuadra">
+            El flujo neto ({{ formatCOP(flujo.flujoNeto) }}) difiere del Δ
+            disponible en libros ({{ formatCOP(flujo.deltaEfectivoLibros) }}) —
+            revise clasificaciones o asientos manuales sobre bancos.
+          </span>
+        </div>
+
+        <div class="efe-wrapper">
+          <!-- Operación -->
+          <div class="efe-seccion">
+            <div class="efe-titulo">ACTIVIDADES DE OPERACIÓN</div>
+            <div class="efe-row">
+              <span>Utilidad del período</span>
+              <span class="num">{{ formatCOP(flujo.utilidadPeriodo) }}</span>
+            </div>
+            <div class="efe-row" *ngIf="flujo.depreciacion">
+              <span>(+) Depreciación (no monetaria)</span>
+              <span class="num">{{ formatCOP(flujo.depreciacion) }}</span>
+            </div>
+            <div class="efe-row" *ngIf="flujo.deterioroYProvisiones">
+              <span>(+) Deterioros y provisiones</span>
+              <span class="num">{{
+                formatCOP(flujo.deterioroYProvisiones)
+              }}</span>
+            </div>
+            <div
+              class="efe-row sub"
+              *ngFor="let v of flujo.variacionesCapitalTrabajo"
+            >
+              <span>Δ {{ nombreGrupo(v.grupo) }} ({{ v.grupo }})</span>
+              <span class="num" [class.text-danger]="v.flujo < 0">{{
+                formatCOP(v.flujo)
+              }}</span>
+            </div>
+            <div class="efe-subtotal">
+              <span>Efectivo neto de operación</span>
+              <strong [class.text-danger]="flujo.flujoOperacion < 0">{{
+                formatCOP(flujo.flujoOperacion)
+              }}</strong>
+            </div>
+          </div>
+
+          <!-- Inversión -->
+          <div class="efe-seccion">
+            <div class="efe-titulo">ACTIVIDADES DE INVERSIÓN</div>
+            <div class="efe-row sub" *ngFor="let v of flujo.detalleInversion">
+              <span>{{ nombreGrupo(v.grupo) }} ({{ v.grupo }})</span>
+              <span class="num" [class.text-danger]="v.flujo < 0">{{
+                formatCOP(v.flujo)
+              }}</span>
+            </div>
+            <div class="efe-row sub" *ngIf="!flujo.detalleInversion.length">
+              <span class="text-muted">Sin movimientos de inversión</span
+              ><span></span>
+            </div>
+            <div class="efe-subtotal">
+              <span>Efectivo neto de inversión</span>
+              <strong [class.text-danger]="flujo.flujoInversion < 0">{{
+                formatCOP(flujo.flujoInversion)
+              }}</strong>
+            </div>
+          </div>
+
+          <!-- Financiación -->
+          <div class="efe-seccion">
+            <div class="efe-titulo">ACTIVIDADES DE FINANCIACIÓN</div>
+            <div
+              class="efe-row sub"
+              *ngFor="let v of flujo.detalleFinanciacion"
+            >
+              <span>{{ nombreGrupo(v.grupo) }} ({{ v.grupo }})</span>
+              <span class="num" [class.text-danger]="v.flujo < 0">{{
+                formatCOP(v.flujo)
+              }}</span>
+            </div>
+            <div class="efe-row sub" *ngIf="!flujo.detalleFinanciacion.length">
+              <span class="text-muted">Sin movimientos de financiación</span
+              ><span></span>
+            </div>
+            <div class="efe-subtotal">
+              <span>Efectivo neto de financiación</span>
+              <strong [class.text-danger]="flujo.flujoFinanciacion < 0">{{
+                formatCOP(flujo.flujoFinanciacion)
+              }}</strong>
+            </div>
+          </div>
+
+          <!-- Resumen -->
+          <div class="efe-resultado">
+            <div class="efe-row">
+              <span>Flujo neto del período</span>
+              <strong [class.text-danger]="flujo.flujoNeto < 0">{{
+                formatCOP(flujo.flujoNeto)
+              }}</strong>
+            </div>
+            <div class="efe-row">
+              <span>Efectivo al inicio</span>
+              <span class="num">{{ formatCOP(flujo.efectivoInicial) }}</span>
+            </div>
+            <div class="efe-row final">
+              <span>EFECTIVO AL FINAL DEL PERÍODO</span>
+              <strong>{{ formatCOP(flujo.efectivoFinal) }}</strong>
+            </div>
+          </div>
+        </div>
+      }
+
+      <div class="placeholder" *ngIf="!flujo && !loadingFlujo">
+        <i class="pi pi-arrow-right-arrow-left"></i>
+        <p>Seleccione el período y presione <strong>Generar</strong>.</p>
+      </div>
+      <div class="table-card" *ngIf="loadingFlujo">
+        <p-skeleton
+          height="2rem"
+          styleClass="mb-2"
+          *ngFor="let i of [1, 2, 3, 4]"
+        />
+      </div>
+    </p-tabPanel>
+  </p-tabView>
+</div>

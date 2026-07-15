@@ -7,6 +7,7 @@ import {
   ElementRef,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
+  inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -74,6 +75,7 @@ import { ValidacionCreditoModel } from '../../core/models/cartera.model';
 import { TicketComprobanteCajaComponent } from '../comprobantes/ticket/ticket-comprobante-caja.component';
 import { ComprobanteCajaModel } from '../../core/models/comprobante-caja.model';
 import { MovimientoCajaDto } from '../../core/models/caja.model';
+import { StateStore } from '../../core/store/state';
 
 interface CartTab {
   id: string;
@@ -119,6 +121,14 @@ interface CartTab {
   styleUrls: ['./pos.component.scss'],
 })
 export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
+  // ── Responsive: store para saber si estamos en móvil (<768px) ──
+  public readonly state = inject(StateStore);
+
+  // ── Móvil: carrito como bottom sheet ──────────────────────
+  public mobileCartOpen = false;
+  private _sheetStartY = 0;
+  private _sheetDeltaY = 0;
+
   searchProduct = '';
   page = 1;
   length = 12;
@@ -948,6 +958,32 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
+  // ── Móvil: bottom sheet del carrito ───────────────────────
+  openMobileCart(): void {
+    this.mobileCartOpen = true;
+    this.cdr.markForCheck();
+  }
+
+  closeMobileCart(): void {
+    this.mobileCartOpen = false;
+    this.cdr.markForCheck();
+  }
+
+  onSheetTouchStart(e: TouchEvent): void {
+    this._sheetStartY = e.touches[0]?.clientY ?? 0;
+    this._sheetDeltaY = 0;
+  }
+
+  onSheetTouchMove(e: TouchEvent): void {
+    this._sheetDeltaY = (e.touches[0]?.clientY ?? 0) - this._sheetStartY;
+  }
+
+  onSheetTouchEnd(): void {
+    // Deslizar hacia abajo más de 70px cierra el sheet
+    if (this._sheetDeltaY > 70) this.closeMobileCart();
+    this._sheetDeltaY = 0;
+  }
+
   // ── Pestañas ───────────────────────────────────────────────
   private storageKey(): string {
     return `pos_tabs_${this.turnoActivo?.id ?? 'default'}`;
@@ -1160,6 +1196,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   // ── Pago ──────────────────────────────────────────────────
   async irAlPago(): Promise<void> {
     if (!this.cart.length) return;
+    this.mobileCartOpen = false;
     this.pagosPrev = [
       {
         metodoPago: 'EFECTIVO',

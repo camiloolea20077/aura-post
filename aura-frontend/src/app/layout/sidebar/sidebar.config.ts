@@ -359,6 +359,26 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         icon: 'pi pi-percentage',
         route: '/contabilidad/tarifas-retencion',
       },
+      {
+        label: 'Conciliación Bancaria',
+        icon: 'pi pi-sync',
+        route: '/contabilidad/conciliacion',
+      },
+      {
+        label: 'Cierre Anual',
+        icon: 'pi pi-calendar',
+        route: '/contabilidad/cierre-anual',
+      },
+      {
+        label: 'Estados Financieros',
+        icon: 'pi pi-chart-pie',
+        route: '/contabilidad/eeff',
+      },
+      {
+        label: 'Exógena DIAN',
+        icon: 'pi pi-file-excel',
+        route: '/contabilidad/exogena',
+      },
     ],
   },
 

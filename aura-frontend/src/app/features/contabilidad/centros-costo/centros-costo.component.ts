@@ -18,7 +18,8 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { CheckboxModule } from 'primeng/checkbox';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { MessageService } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { CentroCostoService } from '../../../core/services/centro-costo.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
@@ -50,8 +51,9 @@ import { InputIconModule } from 'primeng/inputicon';
     InputNumberModule,
     IconFieldModule,
     InputIconModule,
+    ConfirmDialogModule,
   ],
-  providers: [MessageService],
+  providers: [MessageService, ConfirmationService],
   templateUrl: './centros-costo.component.html',
   styleUrls: ['./centros-costo.component.scss'],
 })
@@ -83,6 +85,7 @@ export class CentrosCostoComponent implements OnInit {
   constructor(
     private readonly service: CentroCostoService,
     private readonly alertService: AlertService,
+    private readonly confirmationService: ConfirmationService,
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
@@ -200,20 +203,28 @@ export class CentrosCostoComponent implements OnInit {
     }
   }
 
-  async eliminar(cc: CentroCostoTableModel): Promise<void> {
-    if (!confirm(`¿Eliminar el centro de costo "${cc.codigo} — ${cc.nombre}"?`))
-      return;
-    try {
-      await lastValueFrom(this.service.delete(cc.id));
-      this.alertService.showSuccess('Eliminado', 'Centro de costo eliminado');
-      await this.cargar();
-      await this.cargarLista();
-    } catch (e: any) {
-      this.alertService.showError(
-        'Error',
-        e?.error?.message ?? 'No se pudo eliminar',
-      );
-    }
+  eliminar(cc: CentroCostoTableModel): void {
+    this.confirmationService.confirm({
+      message: `¿Eliminar el centro de costo "${cc.codigo} — ${cc.nombre}"?`,
+      header: 'Eliminar centro de costo',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: async () => {
+        try {
+          await lastValueFrom(this.service.delete(cc.id));
+          this.alertService.showSuccess('Eliminado', 'Centro de costo eliminado');
+          await this.cargar();
+          await this.cargarLista();
+        } catch (e: any) {
+          this.alertService.showError(
+            'Error',
+            e?.error?.message ?? 'No se pudo eliminar',
+          );
+        }
+      },
+    });
   }
 
   tipoSeverity(

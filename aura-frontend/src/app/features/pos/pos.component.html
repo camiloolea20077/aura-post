@@ -65,6 +65,19 @@
           <i class="pi pi-times"></i>
         </button>
       </span>
+
+      <!-- Botón carrito (solo móvil) -->
+      <button
+        class="mobile-cart-btn"
+        type="button"
+        (click)="openMobileCart()"
+        aria-label="Ver carrito"
+      >
+        <i class="pi pi-shopping-cart"></i>
+        <span class="mobile-cart-count" *ngIf="cart.length">{{
+          cart.length
+        }}</span>
+      </button>
     </div>
 
     <!-- Filtro categorías -->
@@ -85,6 +98,26 @@
         {{ c.nombre }}
       </button>
     </div>
+
+    <!-- Resumen de venta (solo móvil) — toca para abrir el carrito -->
+    <button
+      class="mobile-summary"
+      type="button"
+      (click)="openMobileCart()"
+    >
+      <div class="ms-left">
+        <span class="ms-orden">
+          Orden
+          <b>({{ cart.length }} {{ cart.length === 1 ? "producto" : "productos" }})</b>
+        </span>
+        <span class="ms-cliente">{{ clienteNombre || "Consumidor final" }}</span>
+      </div>
+      <div class="ms-right">
+        <span class="ms-total-label">Total</span>
+        <span class="ms-total">{{ formatCOP(total) }}</span>
+      </div>
+      <i class="pi pi-chevron-up ms-chevron"></i>
+    </button>
 
     <!-- Skeletons mientras carga -->
     <div class="product-grid" *ngIf="loadingProductos">
@@ -113,7 +146,7 @@
     <div
       class="product-grid"
       *ngIf="!loadingProductos"
-      [class.list-mode]="searchProduct.trim()"
+      [class.list-mode]="searchProduct.trim() && !state.isMobile()"
     >
       <div
         class="product-card"
@@ -261,8 +294,27 @@
   </div>
   <!-- /catalog-panel -->
 
+  <!-- Backdrop del bottom sheet (solo móvil) -->
+  <div
+    class="mobile-sheet-backdrop"
+    *ngIf="mobileCartOpen"
+    (click)="closeMobileCart()"
+  ></div>
+
   <!-- ══ PANEL DERECHO — Carrito ═══════════════════════════════ -->
-  <div class="cart-panel">
+  <div class="cart-panel" [class.mobile-open]="mobileCartOpen">
+    <!-- Handle del bottom sheet (solo móvil) — desliza hacia abajo para cerrar -->
+    <div
+      class="sheet-handle"
+      (click)="closeMobileCart()"
+      (touchstart)="onSheetTouchStart($event)"
+      (touchmove)="onSheetTouchMove($event)"
+      (touchend)="onSheetTouchEnd()"
+    >
+      <span class="handle-bar"></span>
+      <span class="handle-close"><i class="pi pi-chevron-down"></i> Cerrar</span>
+    </div>
+
     <!-- Pestañas de órdenes -->
     <div class="cart-tabs">
       <button
@@ -764,6 +816,22 @@
     </div>
   </div>
   <!-- /cart-panel -->
+
+  <!-- Barra Cobrar fija (solo móvil) — siempre visible -->
+  <div class="mobile-cobrar-bar">
+    <div class="mcb-total">
+      <span class="mcb-label">Total</span>
+      <span class="mcb-val">{{ formatCOP(total) }}</span>
+    </div>
+    <button
+      class="mcb-btn"
+      type="button"
+      [disabled]="cart.length === 0"
+      (click)="irAlPago()"
+    >
+      COBRAR
+    </button>
+  </div>
 </div>
 <!-- /pos-layout -->
 
