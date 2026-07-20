@@ -1,0 +1,158 @@
+<div class="page">
+  <div class="card">
+    <!-- Header -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <p-button
+          icon="pi pi-arrow-left"
+          [rounded]="true"
+          [text]="true"
+          (onClick)="volver()"
+        />
+        <span class="header-icon"><i class="pi pi-user"></i></span>
+        <div>
+          <h1 class="title">{{ nombre }}</h1>
+          <p class="subtitle">Ficha del empleado</p>
+        </div>
+      </div>
+    </div>
+
+    @if (loading) {
+      <div class="contenido"><p-skeleton height="18rem" /></div>
+    } @else {
+      <div class="contenido">
+        <!-- ── Identidad (recortada; se expande con el botón) ────── -->
+        <section class="bloque">
+          <div class="bloque__head">
+            <div>
+              <h3 class="bloque__titulo">Identidad y datos bancarios</h3>
+              @if (!mostrarIdentidad) {
+                <p class="resumen">
+                  {{ empleado?.tipoDocumento }}
+                  {{ empleado?.numeroDocumento }} ·
+                  {{ empleado?.cargo || "Sin cargo" }}
+                  @if (empleado?.banco) {
+                    · {{ empleado?.banco }}
+                  }
+                </p>
+              }
+            </div>
+            <button
+              pButton
+              type="button"
+              [label]="mostrarIdentidad ? 'Ocultar' : 'Editar identidad'"
+              [icon]="mostrarIdentidad ? 'pi pi-chevron-up' : 'pi pi-pencil'"
+              class="p-button-sm p-button-outlined"
+              (click)="mostrarIdentidad = !mostrarIdentidad"
+            ></button>
+          </div>
+
+          <!-- Requiere asistencia: empleado-nivel, clave con config MIXTA. -->
+          <div class="asistencia-row">
+            <p-toggleswitch
+              [ngModel]="empleado?.requiereControlAsistencia"
+              (ngModelChange)="cambiarAsistencia($event)"
+            />
+            <div>
+              <span class="asistencia-row__label"
+                >Requiere control de asistencia</span
+              >
+              <small class="muted">
+                Define si su liquidación exige la asistencia aprobada del
+                período.
+              </small>
+            </div>
+          </div>
+
+          @if (mostrarIdentidad) {
+            @if (terceroId) {
+              <app-form-tercero-plano
+                [embedded]="true"
+                [terceroIdInput]="terceroId"
+                [rolesFijos]="['EMPLEADO']"
+                (guardado)="onIdentidadGuardada()"
+              />
+            } @else {
+              <p class="muted">
+                Este empleado no tiene identidad (tercero) enlazada.
+              </p>
+            }
+          }
+        </section>
+
+        <!-- ── Tabs ──────────────────────────────────────────────── -->
+        <p-tabView styleClass="detalle-tabs">
+          <p-tabPanel header="Contratos">
+            <app-index-contratos
+              [embedded]="true"
+              [empleadoIdInput]="empleadoId"
+            />
+          </p-tabPanel>
+
+          <p-tabPanel header="Afiliaciones">
+            <ng-container
+              [ngTemplateOutlet]="tabPorContrato"
+              [ngTemplateOutletContext]="{ tab: 'afil' }"
+            ></ng-container>
+          </p-tabPanel>
+
+          <p-tabPanel header="Retenciones">
+            <ng-container
+              [ngTemplateOutlet]="tabPorContrato"
+              [ngTemplateOutletContext]="{ tab: 'rete' }"
+            ></ng-container>
+          </p-tabPanel>
+
+          <p-tabPanel header="Embargos">
+            <ng-container
+              [ngTemplateOutlet]="tabPorContrato"
+              [ngTemplateOutletContext]="{ tab: 'emb' }"
+            ></ng-container>
+          </p-tabPanel>
+        </p-tabView>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Contenido de los tabs que operan por contrato. -->
+<ng-template #tabPorContrato let-tab="tab">
+  @if (!contratoSelId) {
+    <p class="muted p-3">
+      Este empleado no tiene contratos. Crea uno en el tab "Contratos".
+    </p>
+  } @else {
+    <!-- Selector de contrato solo si hay más de uno. -->
+    @if (contratos.length > 1) {
+      <div class="sel-contrato">
+        <label>Contrato</label>
+        <p-dropdown
+          [(ngModel)]="contratoSelId"
+          [options]="contratos"
+          optionLabel="tipoContrato"
+          optionValue="id"
+          styleClass="w-full"
+        >
+          <ng-template pTemplate="selectedItem" let-c>
+            <span *ngIf="c">{{ contratoLabel(c) }}</span>
+          </ng-template>
+          <ng-template pTemplate="item" let-c>{{
+            contratoLabel(c)
+          }}</ng-template>
+        </p-dropdown>
+      </div>
+    }
+
+    @switch (tab) {
+      @case ("afil") {
+        <app-afiliaciones [inline]="true" [contratoId]="contratoSelId" />
+      }
+      @case ("rete") {
+        <app-retefuente [inline]="true" [contratoId]="contratoSelId" />
+      }
+      @case ("emb") {
+        <app-embargos [inline]="true" [contratoId]="contratoSelId" />
+      }
+    }
+  }
+</ng-template>

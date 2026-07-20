@@ -314,6 +314,11 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         route: '/contabilidad/asientos',
       },
       {
+        label: 'Revisión de Comprobantes',
+        icon: 'pi pi-check-square',
+        route: '/contabilidad/revision',
+      },
+      {
         label: 'Conceptos de Caja',
         icon: 'pi pi-tags',
         route: '/contabilidad/conceptos-caja',
@@ -337,6 +342,11 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         label: 'Cierre Contable',
         icon: 'pi pi-calendar-times',
         route: '/contabilidad/cierre',
+      },
+      {
+        label: 'Balance General',
+        icon: 'pi pi-chart-bar',
+        route: '/contabilidad/balance-general',
       },
       {
         label: 'Estado de Cuenta',
@@ -395,9 +405,11 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         items: [
           { label: 'Empleados', icon: 'pi pi-users', route: '/nomina/empleados' },
           { label: 'Proyectos y Frentes', icon: 'pi pi-building', route: '/proyectos' },
+          { label: 'Conceptos', icon: 'pi pi-sliders-h', route: '/nomina/conceptos' },
           { label: 'Períodos', icon: 'pi pi-calendar', route: '/nomina/periodos' },
           { label: 'Liquidación Nómina', icon: 'pi pi-calculator', route: '/nomina/liquidacion' },
           { label: 'Preliquidación / Auditoría', icon: 'pi pi-verified', route: '/nomina/preliquidacion' },
+          { label: 'PILA', icon: 'pi pi-shield', route: '/nomina/pila' },
           { label: 'Prestaciones', icon: 'pi pi-gift', route: '/nomina/prestaciones' },
           { label: 'Comisiones', icon: 'pi pi-percentage', route: '/comisiones/configuracion' },
           { label: 'Liquidar Comisiones', icon: 'pi pi-wallet', route: '/comisiones/liquidaciones' },

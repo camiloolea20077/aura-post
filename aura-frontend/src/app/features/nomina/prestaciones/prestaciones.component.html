@@ -14,103 +14,102 @@
         <button
           pButton
           type="button"
-          label="Liquidación definitiva"
-          icon="pi pi-sign-out"
-          class="p-button-outlined"
-          (click)="abrirDefinitiva()"
-        ></button>
-        <button
-          pButton
-          type="button"
           label="Nueva liquidación"
           icon="pi pi-plus"
           class="btn-aura"
           (click)="abrirForm()"
         ></button>
+        <button
+          pButton
+          type="button"
+          label="Liquidación definitiva"
+          icon="pi pi-sign-out"
+          class="p-button-outlined"
+          (click)="abrirDefinitiva()"
+        ></button>
       </div>
     </div>
 
     <p-table
-      [value]="items"
+      [value]="lotes"
       [loading]="loading"
       showGridlines
-      [tableStyle]="{ 'min-width': '860px' }"
-      [paginator]="items.length > 12"
+      [tableStyle]="{ 'min-width': '820px' }"
+      [paginator]="lotes.length > 12"
       [rows]="12"
     >
       <ng-template pTemplate="header">
         <tr>
           <th>Empleado</th>
           <th class="text-center">Tipo</th>
-          <th class="text-center">Período</th>
-          <th class="text-center">Días</th>
-          <th class="text-right">Valor</th>
+          <th class="text-center">Fecha</th>
+          <th class="text-right">Total</th>
           <th class="text-center">Estado</th>
-          <th class="text-center" style="width: 200px">Acciones</th>
+          <th class="text-center" style="width: 220px">Acciones</th>
         </tr>
       </ng-template>
-      <ng-template pTemplate="body" let-p>
-        <tr [class.row-off]="p.estado === 'ANULADA'">
+      <ng-template pTemplate="body" let-l>
+        <tr [class.row-off]="l.estado === 'ANULADA'">
           <td>
             <div class="emp">
-              <div class="emp-nombre">{{ p.empleadoNombre }}</div>
-              <div class="emp-doc">{{ p.empleadoDocumento }}</div>
+              <div class="emp-nombre">{{ l.empleadoNombre }}</div>
+              <div class="emp-doc">{{ l.empleadoDocumento }}</div>
             </div>
           </td>
           <td class="text-center">
-            <span class="tipo-chip">{{ tipoLabel(p.tipo) }}</span>
+            <span class="tipo-chip" [class.def]="l.definitiva">
+              {{ l.definitiva ? "Definitiva" : tipoLabel(l.tipoResumen) }}
+            </span>
+            @if (l.cantidad > 1) {
+              <span class="conteo">{{ l.cantidad }} conceptos</span>
+            }
           </td>
-          <td class="text-center">{{ p.fechaDesde }} → {{ p.fechaHasta }}</td>
-          <td class="text-center">{{ p.dias }}</td>
-          <td class="text-right monto">{{ formatMonto(p.valor) }}</td>
+          <td class="text-center">{{ l.fecha }}</td>
+          <td class="text-right monto">{{ formatMonto(l.total) }}</td>
           <td class="text-center">
-            <p-tag
-              [value]="p.estado"
-              [severity]="estadoSeverity(p.estado)"
-              [rounded]="true"
-            />
+            <p-tag [value]="l.estado" [severity]="estadoSeverity(l.estado)" [rounded]="true" />
           </td>
           <td class="text-center acc">
+            <button
+              pButton
+              icon="pi pi-eye"
+              class="p-button-sm p-button-text"
+              pTooltip="Ver detalle"
+              (click)="verDetalle(l)"
+            ></button>
             <button
               pButton
               icon="pi pi-check"
               class="p-button-sm btn-aura"
               pTooltip="Aprobar"
-              *ngIf="p.estado === 'BORRADOR'"
-              (click)="aprobar(p)"
+              *ngIf="l.estado === 'BORRADOR'"
+              (click)="aprobar(l)"
             ></button>
             <button
               pButton
               icon="pi pi-money-bill"
               class="p-button-sm p-button-success"
               pTooltip="Pagar"
-              *ngIf="p.estado === 'APROBADA'"
-              (click)="abrirPago(p)"
+              *ngIf="l.estado === 'APROBADA'"
+              (click)="abrirPago(l)"
             ></button>
             <button
               pButton
               icon="pi pi-times"
               class="p-button-sm p-button-danger p-button-outlined"
               pTooltip="Anular"
-              *ngIf="p.estado !== 'PAGADA' && p.estado !== 'ANULADA'"
-              (click)="anular(p)"
-            ></button>
-            <button
-              pButton
-              icon="pi pi-file-pdf"
-              class="p-button-sm p-button-text"
-              pTooltip="Descargar comprobante"
-              (click)="descargarPdf(p)"
+              *ngIf="l.estado !== 'PAGADA' && l.estado !== 'ANULADA'"
+              (click)="anular(l)"
             ></button>
           </td>
         </tr>
       </ng-template>
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="7">
+          <td colspan="6">
             <div class="empty-state">
               <i class="pi pi-gift"></i>
-              <p>Sin prestaciones. Crea la primera.</p>
+              <p>Sin liquidaciones. Crea la primera.</p>
             </div>
           </td>
         </tr>
@@ -118,6 +117,57 @@
     </p-table>
   </div>
 </div>
+
+<!-- Detalle del lote: desglose por concepto -->
+<p-dialog
+  [(visible)]="showDetalle"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '54rem' }"
+  [header]="detalleLoteSel ? 'Liquidación de ' + detalleLoteSel.empleadoNombre : 'Detalle'"
+>
+  @if (loadingDetalle) {
+    <p-skeleton height="10rem" />
+  } @else {
+    <p-table [value]="detalleFilas" styleClass="p-datatable-sm">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Concepto</th>
+          <th class="text-center">Período</th>
+          <th class="text-center">Días</th>
+          <th class="text-right">Base</th>
+          <th class="text-right">Valor</th>
+          <th class="text-center">Estado</th>
+          <th></th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-p>
+        <tr [class.row-off]="p.estado === 'ANULADA'">
+          <td><strong>{{ tipoLabel(p.tipo) }}</strong></td>
+          <td class="text-center muted">{{ p.fechaDesde }} → {{ p.fechaHasta }}</td>
+          <td class="text-center">{{ p.dias }}</td>
+          <td class="text-right">{{ formatMonto(p.baseSalarial) }}</td>
+          <td class="text-right monto">{{ formatMonto(p.valor) }}</td>
+          <td class="text-center"><p-tag [value]="p.estado" [severity]="estadoSeverity(p.estado)" [rounded]="true" /></td>
+          <td class="text-right">
+            <button pButton icon="pi pi-file-pdf" class="p-button-sm p-button-text" pTooltip="Comprobante" (click)="descargarPdf(p)"></button>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    @if (detalleLoteSel) {
+      <div class="detalle-total">
+        <span>Total de la liquidación</span>
+        <strong>{{ formatMonto(detalleLoteSel.total) }}</strong>
+      </div>
+    }
+  }
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Cerrar" class="p-button-text" (click)="showDetalle = false"></button>
+  </ng-template>
+</p-dialog>
 
 <!-- Nueva liquidación -->
 <p-dialog

@@ -246,8 +246,30 @@ export class IndexVentasComponent implements OnInit {
   async abrirFactura(item: VentaTableModel, event: Event): Promise<void> {
     event.stopPropagation();
     try {
-      const res = await lastValueFrom(this.ventaService.getById(item.id));
-      this.ventaFactura = res?.data ?? null;
+      const [ventaRes, empresaRes] = await Promise.all([
+        lastValueFrom(this.ventaService.getById(item.id)),
+        lastValueFrom(this.empresaService.getConfig()),
+      ]);
+      const ventaFull = ventaRes?.data;
+      const empresa = empresaRes?.data;
+      this.ventaFactura = ventaFull
+        ? ({
+            ...ventaFull,
+            logoUrl: empresa?.logoUrl ?? '',
+            razonSocial: empresa?.razonSocial ?? '',
+            empresaNit: empresa?.nit ?? '',
+            empresaDireccion: empresa?.direccion ?? '',
+            empresaEmail: empresa?.correo ?? '',
+            empresaTelefono: empresa?.telefono ?? '',
+            municipio: empresa?.municipio ?? '',
+            resolucionNumero: empresa?.resolucionNumero ?? undefined,
+            resolucionPrefijo: empresa?.resolucionPrefijo ?? undefined,
+            resolucionDesde: empresa?.resolucionDesde ?? undefined,
+            resolucionHasta: empresa?.resolucionHasta ?? undefined,
+            resolucionFechaDesde: empresa?.resolucionFechaDesde ?? undefined,
+            resolucionFechaHasta: empresa?.resolucionFechaHasta ?? undefined,
+          } as unknown as VentaModel)
+        : null;
       this.showFactura = true;
       this.cdr.markForCheck();
     } catch {

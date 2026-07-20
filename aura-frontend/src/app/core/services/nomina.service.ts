@@ -18,6 +18,7 @@ import {
   PeriodoResumenModel,
   UpdateNominaConfigDto,
 } from '../models/nomina.model';
+import { ProcesoModel } from '../models/proceso.model';
 import { environment } from '../../../environments/environment';
 import { ResponseTableModel } from '../../shared/utils/response-table.model';
 import { ResponseModel } from '../../shared/utils/responde.models';
@@ -66,6 +67,28 @@ export class NominaService {
     return this.http.post<ResponseModel<EmpleadoModel>>(
       `${this.base}empleados/create`,
       dto,
+    );
+  }
+
+  /** Alta de empleado desde un tercero ya creado (identidad+banco en tercero). */
+  crearEmpleadoDesdeTercero(
+    terceroId: number,
+    cargo?: string | null,
+  ): Observable<ResponseModel<EmpleadoModel>> {
+    return this.http.post<ResponseModel<EmpleadoModel>>(
+      `${this.base}empleados/desde-tercero`,
+      { terceroId, cargo: cargo ?? null },
+    );
+  }
+
+  /** Marca si el empleado requiere control de asistencia (config MIXTA). */
+  cambiarControlAsistencia(
+    id: number,
+    requiere: boolean,
+  ): Observable<ResponseModel<EmpleadoModel>> {
+    return this.http.put<ResponseModel<EmpleadoModel>>(
+      `${this.base}empleados/${id}/control-asistencia?requiere=${requiere}`,
+      {},
     );
   }
 
@@ -172,10 +195,24 @@ export class NominaService {
     );
   }
 
-  liquidarTodos(periodoId: number): Observable<ResponseModel<void>> {
-    return this.http.post<ResponseModel<void>>(
+  /**
+   * Lanza la liquidación de todo el período en segundo plano.
+   *
+   * Responde 202 con el proceso en PENDIENTE; hay que hacer polling con
+   * {@link consultarProceso}. Un 409 significa que ya hay una liquidación
+   * corriendo para ese período.
+   */
+  liquidarTodos(periodoId: number): Observable<ResponseModel<ProcesoModel>> {
+    return this.http.post<ResponseModel<ProcesoModel>>(
       `${this.base}nomina/liquidar/${periodoId}/todos`,
       {},
+    );
+  }
+
+  /** Estado de un proceso asíncrono, para el polling. */
+  consultarProceso(procesoId: number): Observable<ResponseModel<ProcesoModel>> {
+    return this.http.get<ResponseModel<ProcesoModel>>(
+      `${this.base}proceso/${procesoId}`,
     );
   }
 

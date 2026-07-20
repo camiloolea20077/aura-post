@@ -1,0 +1,100 @@
+.sub {
+  margin: 0 0 1rem;
+  color: var(--text-color-secondary);
+}
+.muted {
+  color: var(--text-color-secondary);
+  font-size: 0.85rem;
+}
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+.mt-2 {
+  margin-top: 0.5rem;
+}
+.req {
+  color: var(--red-500, #ef4444);
+}
+
+.afil-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.afil {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.25rem;
+  border-bottom: 1px solid var(--surface-border);
+}
+.afil__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.afil__tipo {
+  font-weight: 600;
+}
+.afil__entidad {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+.afil__form {
+  grid-column: 1 / -1;
+  padding: 0.75rem;
+  background: var(--surface-ground);
+  border-radius: 0.5rem;
+}
+.afil__form-row {
+  display: grid;
+  grid-template-columns: 1fr 12rem;
+  gap: 0.75rem;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.field label {
+  font-size: 0.8rem;
+  color: var(--text-color-secondary);
+}
+.afil__form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.pila-problemas {
+  margin-top: 1rem;
+}
+.pila-problemas ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.2rem;
+}
+.pila-problemas li {
+  font-size: 0.85rem;
+  color: var(--text-color-secondary);
+  margin-bottom: 0.2rem;
+}
+
+/* Tipo de cotizante */
+.tipo-cot {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  padding-bottom: 1rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--surface-border);
+}
+.tipo-cot .field {
+  flex: 1;
+  margin: 0;
+}
+.tipo-cot__btn {
+  white-space: nowrap;
+}

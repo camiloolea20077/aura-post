@@ -1,6 +1,6 @@
 // Header + tabla en una sola .card global; aquí solo lo propio del módulo.
 .card {
-  overflow: hidden;
+  overflow: visible;
 }
 
 // Fila de tercero inactivo
@@ -154,6 +154,12 @@
     color: #d97706;
     background: rgba(217, 119, 6, 0.1);
     border: 1px solid rgba(217, 119, 6, 0.2);
+  }
+  // Banco, EPS, AFP, CCF, ARL, Cesantías…
+  &.rol-otro {
+    color: #7c3aed;
+    background: rgba(124, 58, 237, 0.1);
+    border: 1px solid rgba(124, 58, 237, 0.2);
   }
 }
 

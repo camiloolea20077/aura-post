@@ -7,6 +7,7 @@ import { ResponseModel } from '../../shared/utils/responde.models';
 import {
   CrearPrestacionDto,
   LiquidacionDefinitivaDto,
+  LotePrestacionModel,
   PrestacionModel,
 } from '../models/prestacion.model';
 import { PagoNominaDto } from '../models/nomina.model';
@@ -44,5 +45,27 @@ export class PrestacionService {
 
   anular(id: number): Observable<ResponseModel<PrestacionModel>> {
     return this.http.put<ResponseModel<PrestacionModel>>(`${this.base}/${id}/anular`, {});
+  }
+
+  // ── Lotes (V122): el listado agrupa; el detalle abre el desglose ──
+
+  listarLotes(): Observable<ResponseModel<LotePrestacionModel[]>> {
+    return this.http.get<ResponseModel<LotePrestacionModel[]>>(`${this.base}/lotes`);
+  }
+
+  detalleLote(lote: string): Observable<ResponseModel<PrestacionModel[]>> {
+    return this.http.get<ResponseModel<PrestacionModel[]>>(`${this.base}/lote/${lote}`);
+  }
+
+  aprobarLote(lote: string): Observable<ResponseModel<PrestacionModel[]>> {
+    return this.http.put<ResponseModel<PrestacionModel[]>>(`${this.base}/lote/${lote}/aprobar`, {});
+  }
+
+  pagarLote(lote: string, dto: PagoNominaDto): Observable<ResponseModel<PrestacionModel[]>> {
+    return this.http.put<ResponseModel<PrestacionModel[]>>(`${this.base}/lote/${lote}/pagar`, dto);
+  }
+
+  anularLote(lote: string): Observable<ResponseModel<PrestacionModel[]>> {
+    return this.http.put<ResponseModel<PrestacionModel[]>>(`${this.base}/lote/${lote}/anular`, {});
   }
 }

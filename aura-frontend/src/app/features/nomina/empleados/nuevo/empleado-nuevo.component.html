@@ -1,0 +1,24 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" (onClick)="volver()" />
+        <span class="header-icon"><i class="pi pi-user-plus"></i></span>
+        <div>
+          <h1 class="title">Nuevo empleado</h1>
+          <p class="subtitle">
+            Primero su identidad y banco. El contrato (salario, ARL) se agrega en la ficha.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding: 1rem 1.25rem">
+      <app-form-tercero-plano
+        [embedded]="true"
+        [rolesFijos]="['EMPLEADO']"
+        (guardado)="onTerceroGuardado($event)"
+      />
+    </div>
+  </div>
+</div>

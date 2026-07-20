@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import {
-  AsientoContableModel, BalanceGeneralModel,
+  AsientoContableModel, BalanceGeneralModel, BalanceGeneralDetalladoModel,
   CreateAsientoDto, CreateComprobanteDto, CreatePlanCuentaDto, PlanCuentaModel,
   CreateSaldosInicialesDto,
   EstadoResultadosModel, FlujoCajaModel, LibroMayorLineaModel,
@@ -59,6 +59,25 @@ export class ContabilidadService {
     return this.http.patch<ResponseModel<void>>(`${this.api}/asientos/${id}/anular`, {});
   }
 
+  // ── Bandeja de revisión (E3): aprobar borradores ─────────────────
+  asientosPendientes(): Observable<ResponseModel<AsientoContableModel[]>> {
+    return this.http.get<ResponseModel<AsientoContableModel[]>>(`${this.api}/asientos/pendientes`);
+  }
+
+  asientosDescuadrados(): Observable<ResponseModel<AsientoContableModel[]>> {
+    return this.http.get<ResponseModel<AsientoContableModel[]>>(`${this.api}/asientos/descuadrados`);
+  }
+
+  contabilizarBorrador(id: number): Observable<ResponseModel<AsientoContableModel>> {
+    return this.http.post<ResponseModel<AsientoContableModel>>(`${this.api}/asientos/${id}/contabilizar`, {});
+  }
+
+  contabilizarMasivo(desde: string, hasta: string, tipoOrigen?: string | null): Observable<ResponseModel<number>> {
+    const body: Record<string, string> = { desde, hasta };
+    if (tipoOrigen) body['tipoOrigen'] = tipoOrigen;
+    return this.http.post<ResponseModel<number>>(`${this.api}/asientos/contabilizar-masivo`, body);
+  }
+
   // ── Comprobantes manuales (CD/CE/RC) ──────────────────────────────
   crearComprobante(dto: CreateComprobanteDto): Observable<ResponseModel<AsientoContableModel>> {
     return this.http.post<ResponseModel<AsientoContableModel>>(`${this.api}/comprobantes`, dto);
@@ -87,6 +106,13 @@ export class ContabilidadService {
     let params = new HttpParams();
     if (hasta) params = params.set('hasta', hasta);
     return this.http.get<ResponseModel<BalanceGeneralModel>>(`${this.api}/balance`, { params });
+  }
+
+  // Balance General profesional (detalle por cuenta, corriente/no corriente)
+  balanceGeneralDetallado(hasta?: string): Observable<ResponseModel<BalanceGeneralDetalladoModel>> {
+    let params = new HttpParams();
+    if (hasta) params = params.set('hasta', hasta);
+    return this.http.get<ResponseModel<BalanceGeneralDetalladoModel>>(`${this.api}/balance-detallado`, { params });
   }
 
   // ── Estado de Resultados (P&G) ────────────────────────────────────

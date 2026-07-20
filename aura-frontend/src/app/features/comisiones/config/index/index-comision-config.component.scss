@@ -10,12 +10,14 @@ $mono: "JetBrains Mono", monospace;
 
 // Header + tabla en una sola .card global; aquí solo lo propio del módulo.
 .card {
-  overflow: hidden;
+  overflow: visible;
 }
 
 .clickable-row {
   cursor: pointer;
-  &:hover { background: #fafbff !important; }
+  &:hover {
+    background: #fafbff !important;
+  }
 }
 
 .empty-row {
@@ -26,7 +28,10 @@ $mono: "JetBrains Mono", monospace;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
-  p { margin: 0; font-size: 0.85rem; }
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+  }
 }
 
 .tecnico-tag {
@@ -39,7 +44,9 @@ $mono: "JetBrains Mono", monospace;
   background: rgba(37, 99, 235, 0.08);
   padding: 0.15rem 0.55rem;
   border-radius: 6px;
-  i { font-size: 0.72rem; }
+  i {
+    font-size: 0.72rem;
+  }
 }
 
 .pct-badge {
@@ -60,5 +67,9 @@ $mono: "JetBrains Mono", monospace;
   }
 }
 
-.fw-600 { font-weight: 600; }
-.text-muted { color: $muted; }
+.fw-600 {
+  font-weight: 600;
+}
+.text-muted {
+  color: $muted;
+}

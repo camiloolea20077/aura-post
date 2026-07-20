@@ -25,6 +25,7 @@ import {
   TipoNovedad,
 } from '../../../../core/models/nomina.model';
 import { AlertService } from '../../../../shared/pipes/alert.service';
+import { DesprendibleComponent } from '../desprendible/desprendible.component';
 
 type TagSeverity =
   | 'success'
@@ -48,6 +49,7 @@ type TagSeverity =
     DropdownModule,
     InputTextModule,
     TooltipModule,
+    DesprendibleComponent,
   ],
   templateUrl: './detalle-nomina.component.html',
   styleUrls: ['./detalle-nomina.component.scss'],
@@ -68,6 +70,9 @@ export class DetalleNominaComponent implements OnChanges {
   // Form novedad
   public showFormNovedad = false;
   public novedad: AddNovedadDto = this.emptyNovedad();
+
+  // Desprendible con traza
+  public showDesprendible = false;
 
   public tipoNovedadOpts = [
     { label: 'Hora extra diurna', value: 'HORA_EXTRA_DIURNA' },
@@ -205,6 +210,11 @@ export class DetalleNominaComponent implements OnChanges {
     } catch {
       this.alertService.showError('Error', 'No se pudo eliminar la novedad');
     }
+  }
+
+  verDesprendible(): void {
+    if (!this.nomina) return;
+    this.showDesprendible = true;
   }
 
   close(): void {

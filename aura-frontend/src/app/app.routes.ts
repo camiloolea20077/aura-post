@@ -525,11 +525,62 @@ export const routes: Routes = [
           ),
       },
       {
+        // Alta de empleado (flujo nuevo): crea la identidad como tercero y de
+        // ahí cae en la ficha para agregar el contrato.
+        path: 'nomina/empleados/nuevo',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/nomina/empleados/nuevo/empleado-nuevo.component').then(
+            (m) => m.EmpleadoNuevoComponent,
+          ),
+      },
+      {
+        // Ficha del empleado (maestro-detalle): identidad + tabs de contratos,
+        // afiliaciones, retenciones y embargos.
+        path: 'nomina/empleados/:id/ficha',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/nomina/empleados/detalle/empleado-detalle.component').then(
+            (m) => m.EmpleadoDetalleComponent,
+          ),
+      },
+      {
+        // Contratos de un empleado (Fase 2). Se entra desde el listado de
+        // empleados: un empleado puede tener varios contratos, por eso la
+        // ruta cuelga de él.
+        path: 'nomina/empleados/:empleadoId/contratos',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/nomina/contratos/index/index-contratos.component').then(
+            (m) => m.IndexContratosComponent,
+          ),
+      },
+      {
+        // Catálogo de conceptos de nómina (Fase 3). Tarifas parametrizables
+        // por vigencia, sin recompilar el motor.
+        path: 'nomina/conceptos',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/nomina/conceptos/index/index-conceptos.component').then(
+            (m) => m.IndexConceptosComponent,
+          ),
+      },
+      {
         path: 'nomina/periodos',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/nomina/periodos/index/index-periodos.component').then(
             (m) => m.IndexPeriodosComponent,
+          ),
+      },
+      {
+        // PILA (Fase 6). Genera la planilla estructurada; el archivo plano por
+        // operador es un export aparte.
+        path: 'nomina/pila',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/nomina/pila/pila.component').then(
+            (m) => m.PilaComponent,
           ),
       },
       {
@@ -668,6 +719,22 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/contabilidad/asientos/asientos.component').then(
             (m) => m.AsientosComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/revision',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/revision-asientos/revision-asientos.component').then(
+            (m) => m.RevisionAsientosComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/balance-general',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/balance-general/balance-general.component').then(
+            (m) => m.BalanceGeneralComponent,
           ),
       },
       {

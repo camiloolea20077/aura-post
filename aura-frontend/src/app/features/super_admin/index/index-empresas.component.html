@@ -99,7 +99,7 @@
               [severity]="e.activa ? 'success' : 'danger'"
             />
           </td>
-          <td class="text-center" (click)="$event.stopPropagation()">
+          <td class="text-center flex" (click)="$event.stopPropagation()">
             <button
               pButton
               icon="pi pi-pencil"
@@ -153,73 +153,3 @@
     </p-table>
   </div>
 </div>
-
-<!-- Dialog crear/editar — inline lazy para no crear otro archivo -->
-<p-dialog
-  [header]="editTarget ? 'Editar empresa' : 'Nueva empresa'"
-  [(visible)]="showForm"
-  [modal]="true"
-  [style]="{ width: '660px' }"
-  [draggable]="false"
-  [resizable]="false"
-  (onHide)="showForm = false"
->
-  <app-form-empresa
-    *ngIf="showForm"
-    [empresa]="editTarget"
-    (saved)="onSaved()"
-    (credencialesCreadas)="onCredencialesCreadas($event)"
-    (cancelled)="showForm = false"
-  />
-</p-dialog>
-
-<!-- Dialog credenciales -->
-<p-dialog
-  header="Empresa creada — Credenciales de acceso"
-  [(visible)]="showCredenciales"
-  [modal]="true"
-  [style]="{ width: '520px' }"
-  [draggable]="false"
-  [resizable]="false"
-  (onHide)="showCredenciales = false"
->
-  <div *ngIf="credenciales" class="cred-dialog">
-    <div class="cred-alert">
-      <i class="pi pi-info-circle"></i>
-      Guarda estas credenciales y compártelas con el administrador de la empresa.
-    </div>
-
-    <div class="cred-row">
-      <span class="cred-label">Empresa</span>
-      <span class="cred-value">{{ credenciales.empresa.razonSocial }}</span>
-    </div>
-
-    <div class="cred-row">
-      <span class="cred-label">Usuario</span>
-      <code class="cred-code">{{ credenciales.emailAdmin }}</code>
-      <button pButton icon="pi pi-copy" class="p-button-text p-button-sm" pTooltip="Copiar" (click)="copiar(credenciales.emailAdmin)"></button>
-    </div>
-
-    <div class="cred-row">
-      <span class="cred-label">Contraseña temporal</span>
-      <code class="cred-code">{{ credenciales.passwordTemporal }}</code>
-      <button pButton icon="pi pi-copy" class="p-button-text p-button-sm" pTooltip="Copiar" (click)="copiar(credenciales.passwordTemporal)"></button>
-    </div>
-
-    <div class="cred-row cred-link-row">
-      <span class="cred-label">Link cambio de contraseña</span>
-      <div class="cred-link-wrap">
-        <code class="cred-code cred-link">{{ credenciales.resetLink }}</code>
-        <button pButton icon="pi pi-copy" class="p-button-text p-button-sm" pTooltip="Copiar link" (click)="copiar(credenciales.resetLink)"></button>
-      </div>
-    </div>
-
-    <div class="cred-footer">
-      <small><i class="pi pi-clock"></i> El link de cambio de contraseña expira en 72 horas.</small>
-    </div>
-  </div>
-
-  <ng-template pTemplate="footer">
-    <button pButton label="Cerrar" icon="pi pi-check" class="p-button-outlined" (click)="showCredenciales = false"></button>
-  </ng-template>
-</p-dialog>

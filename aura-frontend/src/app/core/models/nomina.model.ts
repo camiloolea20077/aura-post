@@ -61,6 +61,8 @@ export interface UpdateNominaConfigDto {
 // ─── Empleados ────────────────────────────────────────────────
 export interface EmpleadoModel {
   id: number;
+  /** Identidad del empleado (para editar vía el form de tercero). */
+  terceroId?: number | null;
   nombres: string;
   apellidos: string;
   tipoDocumento: string;
@@ -98,6 +100,8 @@ export interface EmpleadoTableModel {
   salarioBase: number;
   tipoContrato: TipoContrato;
   activo: boolean;
+  /** Si requiere control de asistencia (para filtrar el marcaje). */
+  requiereControlAsistencia?: boolean;
   usuarioId: number | null;
   totalRows: number;
 }

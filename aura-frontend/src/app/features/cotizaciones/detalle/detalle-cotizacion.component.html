@@ -97,14 +97,22 @@
       </div>
     </div>
 
-    <!-- Imprimir -->
+    <!-- Imprimir / PDF -->
     <div class="print-zone">
       <button
         pButton
         label="Imprimir tirilla"
         icon="pi pi-print"
-        class="p-button-outlined p-button-secondary p-button-sm w-full"
+        class="p-button-outlined p-button-secondary p-button-sm"
         (click)="imprimir()"
+      ></button>
+      <button
+        pButton
+        label="Descargar PDF"
+        icon="pi pi-file-pdf"
+        class="p-button-outlined p-button-sm"
+        [loading]="isDescargandoPdf"
+        (click)="descargarPdf()"
       ></button>
     </div>
 

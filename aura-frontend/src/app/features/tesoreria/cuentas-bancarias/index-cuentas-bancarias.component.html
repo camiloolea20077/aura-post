@@ -255,6 +255,34 @@
         styleClass="w-full"
       />
     </div>
+
+    <!-- Sobregiro -->
+    <div class="field sobregiro-field">
+      <p-toggleswitch
+        [(ngModel)]="form.permiteSobregiro"
+        (ngModelChange)="onPermiteSobregiroChange()"
+        inputId="sw-sobregiro"
+      />
+      <label for="sw-sobregiro" class="sobregiro-label">
+        Permite sobregiro
+        <span>El saldo puede quedar negativo hasta el cupo definido.</span>
+      </label>
+    </div>
+
+    <div class="field" *ngIf="form.permiteSobregiro">
+      <label>Cupo de sobregiro <span style="color: #94a3b8">(vacío = sin límite)</span></label>
+      <p-inputNumber
+        [(ngModel)]="form.cupoSobregiro"
+        mode="currency"
+        currency="COP"
+        locale="es-CO"
+        [minFractionDigits]="0"
+        [maxFractionDigits]="0"
+        [min]="0"
+        placeholder="Sin límite"
+        styleClass="w-full"
+      />
+    </div>
   </div>
 
   <ng-template pTemplate="footer">

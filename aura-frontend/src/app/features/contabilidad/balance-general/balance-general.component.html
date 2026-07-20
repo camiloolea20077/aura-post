@@ -1,0 +1,214 @@
+<p-toast />
+
+<!-- Barra de herramientas (no se imprime) -->
+<div class="toolbar no-print">
+  <div class="toolbar-left">
+    <span class="header-icon"><i class="pi pi-chart-bar"></i></span>
+    <div>
+      <h1 class="title">Balance General</h1>
+      <p class="subtitle">Estado de Situación Financiera — detalle por cuenta</p>
+    </div>
+  </div>
+  <div class="toolbar-right">
+    <div class="field">
+      <label>Fecha de corte</label>
+      <p-calendar
+        [(ngModel)]="fechaCorte"
+        dateFormat="dd/mm/yy"
+        [readonlyInput]="true"
+        appendTo="body"
+        [showIcon]="true"
+        styleClass="cal-corte"
+      />
+    </div>
+    <button
+      pButton
+      label="Generar"
+      icon="pi pi-refresh"
+      class="btn-aura"
+      [loading]="loading"
+      (click)="generar()"
+    ></button>
+    <button
+      pButton
+      label="Descargar PDF"
+      icon="pi pi-file-pdf"
+      class="p-button-outlined p-button-secondary"
+      [disabled]="!balance || loading || sinDatos"
+      (click)="descargarPdf()"
+    ></button>
+  </div>
+</div>
+
+<!-- Skeleton -->
+@if (loading) {
+  <div class="hoja">
+    <p-skeleton height="2rem" styleClass="mb-3" width="60%" />
+    <p-skeleton height="1.5rem" styleClass="mb-2" />
+    <p-skeleton height="1.5rem" styleClass="mb-2" />
+    <p-skeleton height="1.5rem" styleClass="mb-2" />
+    <p-skeleton height="1.5rem" />
+  </div>
+}
+
+<!-- Reporte -->
+@if (!loading && balance) {
+  <div class="hoja">
+    <!-- Encabezado -->
+    <header class="reporte-head">
+      <h2 class="empresa">{{ balance.empresaNombre || "—" }}</h2>
+      <p class="nit" *ngIf="balance.nit">NIT: {{ balance.nit }}</p>
+      <h3 class="reporte-titulo">Estado de Situación Financiera</h3>
+      <p class="reporte-fecha">
+        A la fecha de corte {{ balance.fechaCorte | date: "d 'de' MMMM 'de' y" }}
+      </p>
+      <p class="reporte-moneda">(Cifras expresadas en pesos colombianos)</p>
+    </header>
+
+    @if (sinDatos) {
+      <div class="empty-report">
+        <i class="pi pi-inbox"></i>
+        <p>No hay movimientos contabilizados hasta esta fecha.</p>
+      </div>
+    } @else {
+      <div class="balance-cols">
+        <!-- ── Columna ACTIVO ─────────────────────────────────── -->
+        <section class="col">
+          <div class="col-title activo">ACTIVO</div>
+
+          <ng-container
+            *ngTemplateOutlet="
+              seccion;
+              context: {
+                titulo: 'Activo Corriente',
+                grupos: balance.activoCorriente,
+                total: balance.totalActivoCorriente
+              }
+            "
+          ></ng-container>
+
+          <ng-container
+            *ngTemplateOutlet="
+              seccion;
+              context: {
+                titulo: 'Activo No Corriente',
+                grupos: balance.activoNoCorriente,
+                total: balance.totalActivoNoCorriente
+              }
+            "
+          ></ng-container>
+
+          <div class="total-mayor activo">
+            <span>TOTAL ACTIVO</span>
+            <span>{{ formatCOP(balance.totalActivo) }}</span>
+          </div>
+        </section>
+
+        <!-- ── Columna PASIVO + PATRIMONIO ───────────────────── -->
+        <section class="col">
+          <div class="col-title pasivo">PASIVO</div>
+
+          <ng-container
+            *ngTemplateOutlet="
+              seccion;
+              context: {
+                titulo: 'Pasivo Corriente',
+                grupos: balance.pasivoCorriente,
+                total: balance.totalPasivoCorriente
+              }
+            "
+          ></ng-container>
+
+          <ng-container
+            *ngTemplateOutlet="
+              seccion;
+              context: {
+                titulo: 'Pasivo No Corriente',
+                grupos: balance.pasivoNoCorriente,
+                total: balance.totalPasivoNoCorriente
+              }
+            "
+          ></ng-container>
+
+          <div class="total-mayor pasivo">
+            <span>TOTAL PASIVO</span>
+            <span>{{ formatCOP(balance.totalPasivo) }}</span>
+          </div>
+
+          <div class="col-title patrimonio">PATRIMONIO</div>
+
+          <ng-container
+            *ngTemplateOutlet="
+              seccion;
+              context: {
+                titulo: '',
+                grupos: balance.patrimonio,
+                total: balance.totalPatrimonio
+              }
+            "
+          ></ng-container>
+
+          <div class="total-mayor patrimonio">
+            <span>TOTAL PATRIMONIO</span>
+            <span>{{ formatCOP(balance.totalPatrimonio) }}</span>
+          </div>
+
+          <div class="total-mayor suma">
+            <span>TOTAL PASIVO + PATRIMONIO</span>
+            <span>{{ formatCOP(balance.totalPasivoPatrimonio) }}</span>
+          </div>
+        </section>
+      </div>
+
+      <!-- Verificación de la ecuación contable -->
+      <div
+        class="cuadre"
+        [class.ok]="balance.cuadra"
+        [class.err]="!balance.cuadra"
+      >
+        <i class="pi" [class]="balance.cuadra ? 'pi-check-circle' : 'pi-exclamation-triangle'"></i>
+        <span *ngIf="balance.cuadra">
+          Balance cuadrado — el Activo es igual al Pasivo más el Patrimonio.
+        </span>
+        <span *ngIf="!balance.cuadra">
+          Descuadre de {{ formatCOP(balance.diferencia) }} entre Activo y Pasivo + Patrimonio.
+          Revise comprobantes en borrador o asientos descuadrados.
+        </span>
+      </div>
+    }
+  </div>
+}
+
+<!-- ── Plantilla reutilizable de una sección (título + grupos + subtotal) ── -->
+<ng-template #seccion let-titulo="titulo" let-grupos="grupos" let-total="total">
+  @if (grupos && grupos.length) {
+    <div class="seccion">
+      <div class="seccion-title" *ngIf="titulo">{{ titulo }}</div>
+
+      @for (g of grupos; track g.codigo) {
+        <div class="grupo">
+          <div class="grupo-row">
+            <span class="grupo-nombre">
+              <span class="cod">{{ g.codigo }}</span> {{ g.nombre }}
+            </span>
+            <span class="grupo-saldo">{{ formatCOP(g.saldo) }}</span>
+          </div>
+
+          @for (c of g.cuentas; track c.codigo) {
+            <div class="cuenta-row">
+              <span class="cuenta-nombre">
+                <span class="cod">{{ c.codigo }}</span> {{ c.nombre }}
+              </span>
+              <span class="cuenta-saldo">{{ formatCOP(c.saldo) }}</span>
+            </div>
+          }
+        </div>
+      }
+
+      <div class="seccion-total" *ngIf="titulo">
+        <span>Total {{ titulo }}</span>
+        <span>{{ formatCOP(total) }}</span>
+      </div>
+    </div>
+  }
+</ng-template>

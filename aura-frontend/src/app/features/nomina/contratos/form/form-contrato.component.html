@@ -1,0 +1,145 @@
+<p-dialog
+  [(visible)]="visible"
+  [header]="esEdicion ? 'Editar contrato' : 'Nuevo contrato'"
+  [modal]="true"
+  [style]="{ width: '46rem' }"
+  [draggable]="false"
+  (onShow)="onShow()"
+  (onHide)="onHide()"
+>
+  <div class="grid-2">
+    <div class="field">
+      <label>Tipo de contrato <span class="req">*</span></label>
+      <p-dropdown
+        [(ngModel)]="form.tipoContrato"
+        [options]="tipoContratoOpts"
+        optionLabel="label"
+        optionValue="value"
+        (onChange)="onTipoContratoChange()"
+        styleClass="w-full"
+      />
+    </div>
+
+    <div class="field">
+      <label>Cargo</label>
+      <input
+        pInputText
+        [(ngModel)]="form.cargo"
+        class="w-full"
+        placeholder="Cargo"
+      />
+    </div>
+
+    <div class="field">
+      <label>Fecha de inicio <span class="req">*</span></label>
+      <p-calendar
+        [(ngModel)]="form.fechaInicio"
+        dateFormat="yy-mm-dd"
+        [showIcon]="true"
+        styleClass="w-full"
+        placeholder="AAAA-MM-DD"
+      />
+    </div>
+
+    <!-- Solo el término fijo vence. El backend rechaza un INDEFINIDO con
+         fecha fin, así que se oculta en vez de dejar que falle. -->
+    @if (esFijo) {
+      <div class="field">
+        <label>Fecha de vencimiento <span class="req">*</span></label>
+        <p-calendar
+          [(ngModel)]="form.fechaFin"
+          dateFormat="yy-mm-dd"
+          [showIcon]="true"
+          styleClass="w-full"
+          placeholder="AAAA-MM-DD"
+        />
+      </div>
+    }
+
+    <div class="field">
+      <label>
+        Salario base <span class="req">*</span>
+        @if (esEdicion) {
+          <small class="hint">Para cambiarlo usa "Salario e historial"</small>
+        }
+      </label>
+      <p-inputNumber
+        [(ngModel)]="form.salarioBase"
+        mode="currency"
+        currency="COP"
+        locale="es-CO"
+        [maxFractionDigits]="0"
+        [disabled]="esEdicion"
+        styleClass="w-full"
+        placeholder="0"
+      />
+    </div>
+
+    <div class="field">
+      <label>Procedimiento de retefuente</label>
+      <p-dropdown
+        [(ngModel)]="form.procedimientoRetefuente"
+        [options]="procedimientoOpts"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+      />
+    </div>
+
+    <div class="field">
+      <label>Nivel de riesgo ARL <span class="req">*</span></label>
+      <p-dropdown
+        [(ngModel)]="form.nivelRiesgoArl"
+        [options]="nivelArlOpts"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+        placeholder="Nivel de riesgo"
+      />
+    </div>
+  </div>
+
+  <div class="grid-2 mt-3">
+    <div class="field switch">
+      <label>
+        Salario integral
+        <small class="hint"
+          >El IBC es el 70% y no se provisionan prestaciones</small
+        >
+      </label>
+      <p-toggleswitch [(ngModel)]="form.esSalarioIntegral" />
+    </div>
+
+    <div class="field switch">
+      <label>
+        Contrato principal
+        <small class="hint">Cuál manda si el empleado tiene varios</small>
+      </label>
+      <p-toggleswitch [(ngModel)]="form.esPrincipal" />
+    </div>
+  </div>
+
+  <div class="field mt-3">
+    <label>Observación</label>
+    <input pInputText [(ngModel)]="form.observacion" class="w-full" />
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cancelar"
+      class="p-button-text"
+      (click)="onHide()"
+    ></button>
+    <button
+      pButton
+      type="button"
+      label="Guardar"
+      icon="pi pi-check"
+      class="btn-aura"
+      [loading]="saving"
+      (click)="guardar()"
+    ></button>
+  </ng-template>
+</p-dialog>

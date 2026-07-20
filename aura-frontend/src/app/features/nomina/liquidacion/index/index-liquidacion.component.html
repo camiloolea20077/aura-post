@@ -152,5 +152,69 @@
   (actualizada)="onNominaActualizada()"
 />
 
+<!-- Progreso de la liquidación asíncrona -->
+<p-dialog
+  [(visible)]="showProgreso"
+  header="Liquidando período"
+  [modal]="true"
+  [style]="{ width: '40rem' }"
+  [draggable]="false"
+  (onHide)="cerrarProgreso()"
+>
+  @if (proceso) {
+    <div class="progreso">
+      <div class="progreso__head">
+        <p-tag [value]="proceso.estado" [severity]="severidadProceso(proceso.estado)" />
+        <span class="progreso__conteo">
+          {{ proceso.itemsOk }} ok · {{ proceso.itemsError }} con error · de {{ proceso.totalItems }}
+        </span>
+      </div>
+
+      <p-progressBar [value]="proceso.progreso" />
+
+      @if (proceso.mensaje) {
+        <p class="progreso__mensaje">{{ proceso.mensaje }}</p>
+      }
+
+      <!-- COMPLETADO_CON_ERRORES no es un fallo: los buenos quedaron liquidados.
+           Aquí se listan solo los que hay que resolver. -->
+      @if (proceso.errores.length) {
+        <div class="progreso__errores">
+          <h4>Contratos que no se liquidaron</h4>
+          <p-table [value]="proceso.errores" styleClass="p-datatable-sm" [scrollable]="true" scrollHeight="14rem">
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="width: 12rem">Referencia</th>
+                <th>Motivo</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-e>
+              <tr>
+                <td>{{ e.referencia }}</td>
+                <td>{{ e.error }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      }
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    @if (procesoEnCurso) {
+      <span class="progreso__espera">
+        <i class="pi pi-spin pi-spinner"></i> Puedes cerrar esta ventana; el proceso sigue en segundo plano.
+      </span>
+    }
+    <button
+      pButton
+      type="button"
+      [label]="procesoEnCurso ? 'Cerrar' : 'Aceptar'"
+      class="p-button-text"
+      (click)="cerrarProgreso()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
 <p-toast />
 <p-confirmDialog />

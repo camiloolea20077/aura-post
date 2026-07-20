@@ -309,6 +309,16 @@
       ></button>
       <div class="footer-actions">
         <button
+          pButton
+          type="button"
+          label="Desprendible"
+          icon="pi pi-file"
+          class="p-button-outlined"
+          pTooltip="Desglose por concepto con la traza del cálculo"
+          tooltipPosition="top"
+          (click)="verDesprendible()"
+        ></button>
+        <button
           *ngIf="nomina.estado !== 'ANULADO' && nomina.estado !== 'PAGADO'"
           pButton
           type="button"
@@ -342,3 +352,9 @@
     </div>
   </ng-template>
 </p-dialog>
+
+<app-desprendible
+  [visible]="showDesprendible"
+  [nominaId]="nomina?.id ?? null"
+  (closed)="showDesprendible = false"
+/>

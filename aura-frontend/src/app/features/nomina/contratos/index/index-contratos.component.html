@@ -1,0 +1,212 @@
+<div class="page" [class.embedded]="embedded">
+  <div class="card">
+    <!-- ── Header dentro de la card ─────────────────────────── -->
+    <div class="card-head">
+      @if (!embedded) {
+        <div class="card-head__title">
+          <p-button
+            icon="pi pi-arrow-left"
+            [rounded]="true"
+            [text]="true"
+            (onClick)="volver()"
+          />
+          <span class="header-icon"><i class="pi pi-file-edit"></i></span>
+          <div>
+            <h1 class="title">Contratos</h1>
+            <p class="subtitle">
+              {{ empleadoNombre || "Contratos del empleado" }}
+            </p>
+          </div>
+        </div>
+      } @else {
+        <span></span>
+      }
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          label="Nuevo contrato"
+          icon="pi pi-plus"
+          class="btn-aura"
+          (click)="nuevo()"
+        ></button>
+      </div>
+    </div>
+
+    <p-table
+      [value]="items"
+      [loading]="loading"
+      dataKey="id"
+      styleClass="p-datatable-sm"
+      [tableStyle]="{ 'min-width': '60rem' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Tipo</th>
+          <th>Cargo</th>
+          <th>Inicio</th>
+          <th>Vencimiento</th>
+          <th class="text-right">Salario</th>
+          <th>Estado</th>
+          <th style="width: 10rem"></th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-c>
+        <tr>
+          <td>
+            {{ c.tipoContrato }}
+            <!-- Con multi-vínculo hay que saber cuál manda para los reportes
+                 que asumen un solo contrato. -->
+            @if (c.esPrincipal) {
+              <p-tag value="Principal" severity="info" styleClass="ml-2" />
+            }
+          </td>
+          <td>{{ c.cargo || "—" }}</td>
+          <td>{{ c.fechaInicio }}</td>
+          <td>
+            @if (severidadVencimiento(c.diasParaVencer); as sev) {
+              <p-tag
+                [value]="textoVencimiento(c.diasParaVencer)"
+                [severity]="sev"
+              />
+            } @else {
+              <span class="text-muted">Indefinido</span>
+            }
+          </td>
+          <td class="text-right">
+            {{ c.salarioBase | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+          </td>
+          <td>
+            <p-tag [value]="c.estado" [severity]="severidadEstado(c.estado)" />
+          </td>
+          <td class="text-right flex">
+            <!-- El salario no se edita en línea: cambiarlo preserva el
+                 histórico y pasa por su propia pantalla. -->
+            <button
+              pButton
+              type="button"
+              icon="pi pi-pencil"
+              class="p-button-text p-button-sm"
+              pTooltip="Editar contrato"
+              (click)="editar(c)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-chart-line"
+              class="p-button-text p-button-sm"
+              pTooltip="Salario e historial"
+              (click)="verHistorial(c)"
+            ></button>
+            <!-- <button
+              pButton
+              type="button"
+              icon="pi pi-id-card"
+              class="p-button-text p-button-sm"
+              pTooltip="Afiliaciones (EPS/AFP/CCF/ARL)"
+              (click)="afiliaciones(c)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-percentage"
+              class="p-button-text p-button-sm"
+              pTooltip="Retención en la fuente"
+              (click)="retefuente(c)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-lock"
+              class="p-button-text p-button-sm"
+              pTooltip="Embargos"
+              (click)="embargos(c)"
+            ></button> -->
+            <button
+              pButton
+              type="button"
+              icon="pi pi-ban"
+              class="p-button-text p-button-sm p-button-danger"
+              pTooltip="Terminar contrato"
+              [disabled]="c.estado !== 'ACTIVO'"
+              (click)="terminar(c)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center p-4">
+            <span class="text-muted">
+              Este empleado no tiene contratos. Sin contrato no se puede
+              liquidar.
+            </span>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr>
+          <td colspan="7"><p-skeleton height="2rem" /></td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<app-form-contrato
+  [(visible)]="showForm"
+  [empleadoId]="empleadoId"
+  [contratoId]="contratoEditId"
+  (guardado)="onGuardado()"
+/>
+
+<app-historial-salario
+  [(visible)]="showHistorial"
+  [contrato]="contratoSeleccionado"
+  (guardado)="onGuardado()"
+/>
+
+<app-terminar-contrato
+  [(visible)]="showTerminar"
+  [contrato]="contratoSeleccionado"
+  (guardado)="onGuardado()"
+/>
+
+<app-afiliaciones
+  [(visible)]="showAfiliaciones"
+  [contratoId]="contratoSeleccionado?.id ?? null"
+  [contratoLabel]="
+    contratoSeleccionado
+      ? contratoSeleccionado.tipoContrato +
+        ' · ' +
+        (contratoSeleccionado.cargo || 'Sin cargo')
+      : ''
+  "
+/>
+
+<app-retefuente
+  [(visible)]="showRetefuente"
+  [contratoId]="contratoSeleccionado?.id ?? null"
+  [contratoLabel]="
+    contratoSeleccionado
+      ? contratoSeleccionado.tipoContrato +
+        ' · ' +
+        (contratoSeleccionado.cargo || 'Sin cargo')
+      : ''
+  "
+/>
+
+<app-embargos
+  [(visible)]="showEmbargos"
+  [contratoId]="contratoSeleccionado?.id ?? null"
+  [contratoLabel]="
+    contratoSeleccionado
+      ? contratoSeleccionado.tipoContrato +
+        ' · ' +
+        (contratoSeleccionado.cargo || 'Sin cargo')
+      : ''
+  "
+/>

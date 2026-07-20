@@ -14,6 +14,8 @@ export interface CuentaBancariaModel {
   saldoInicial: number;
   saldoActual: number;
   activa: boolean;
+  permiteSobregiro: boolean;
+  cupoSobregiro: number | null;
 }
 
 export interface CreateCuentaBancariaDto {
@@ -25,6 +27,9 @@ export interface CreateCuentaBancariaDto {
   terceroId?: number | null;
   cuentaContableId?: number | null;
   saldoInicial: number;
+  // Sobregiro: permite saldo negativo hasta el cupo.
+  permiteSobregiro?: boolean;
+  cupoSobregiro?: number | null;
 }
 
 export const TIPOS_CUENTA: { label: string; value: TipoCuenta; icon: string; color: string }[] = [

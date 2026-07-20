@@ -6,8 +6,23 @@ export type TipoPrestacion =
   | 'INDEMNIZACION';
 export type EstadoPrestacion = 'BORRADOR' | 'APROBADA' | 'PAGADA' | 'ANULADA';
 
+/** Resumen de un lote: una fila del listado que agrupa una liquidación. */
+export interface LotePrestacionModel {
+  lote: string;
+  empleadoId: number;
+  empleadoNombre: string;
+  empleadoDocumento: string;
+  definitiva: boolean;
+  tipoResumen: string;
+  fecha: string;
+  total: number;
+  estado: EstadoPrestacion;
+  cantidad: number;
+}
+
 export interface PrestacionModel {
   id: number;
+  lote: string;
   empleadoId: number;
   empleadoNombre: string;
   empleadoDocumento: string;

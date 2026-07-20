@@ -14,15 +14,40 @@
       <!-- Header empresa -->
       <div class="fp-header">
         <div class="fp-logo-area">
-          <div class="fp-logo-text">AURA <span>POS</span></div>
-          <div class="fp-logo-sub">Software de gestión empresarial</div>
+          <img
+            *ngIf="venta.logoUrl"
+            [src]="venta.logoUrl"
+            alt="Logo"
+            class="fp-logo-img"
+          />
+          <div class="fp-logo-text" *ngIf="!venta.logoUrl">
+            {{ venta.razonSocial || venta.sucursalNombre }}
+          </div>
         </div>
         <div class="fp-empresa-area">
-          <div class="fp-empresa-nombre">{{ venta.sucursalNombre }}</div>
+          <div class="fp-empresa-nombre">
+            {{ venta.razonSocial || venta.sucursalNombre }}
+          </div>
+          <div class="fp-empresa-dato" *ngIf="venta.empresaNit">
+            NIT {{ venta.empresaNit }}
+          </div>
+          <div class="fp-empresa-dato" *ngIf="venta.empresaDireccion">
+            {{ venta.empresaDireccion }}
+          </div>
+          <div class="fp-empresa-dato" *ngIf="venta.municipio">
+            {{ venta.municipio }}
+          </div>
         </div>
       </div>
 
       <div class="fp-accent-bar"></div>
+
+      <!-- Badge factura electrónica -->
+      <div class="fp-fe-badge" *ngIf="esElectronica">
+        <i class="pi pi-verified"></i>
+        <span>Factura Electrónica de Venta validada por la DIAN</span>
+        <span class="fp-fe-estado" *ngIf="venta.estadoDian">{{ venta.estadoDian }}</span>
+      </div>
 
       <!-- Datos cliente + factura -->
       <div class="fp-details-box">
@@ -87,18 +112,12 @@
               </td>
               <td class="text-right">
                 <span class="fp-iva-pill" *ngIf="d.impuestoValor > 0">
-                  {{
-                    (d.impuestoValor / d.subtotalLinea) * 100 | number: "1.0-0"
-                  }}%
+                  {{ ivaPorcentaje(d) | number: "1.0-0" }}%
                 </span>
                 <span class="text-muted" *ngIf="!d.impuestoValor">—</span>
               </td>
               <td class="text-right mono fw-700">
-                {{
-                  formatCOPPublic(
-                    d.subtotalLinea + d.impuestoValor - (d.montoDescuento || 0)
-                  )
-                }}
+                {{ formatCOPPublic(d.subtotalLinea) }}
               </td>
             </tr>
           </tbody>
@@ -137,6 +156,15 @@
             <span>TOTAL</span>
             <span class="mono">{{ formatCOPPublic(venta.totalPagar) }}</span>
           </div>
+        </div>
+      </div>
+
+      <!-- Facturación electrónica: CUFE -->
+      <div class="fp-fe-box" *ngIf="esElectronica && venta.cufe">
+        <div class="fp-section-label">Facturación electrónica — CUFE</div>
+        <div class="fp-cufe mono">{{ venta.cufe }}</div>
+        <div class="fp-fe-hint">
+          El código QR y la resolución DIAN se incluyen en el PDF descargable.
         </div>
       </div>
 

@@ -1,0 +1,105 @@
+.muted {
+  color: var(--text-color-secondary);
+  font-size: 0.85rem;
+}
+.text-right {
+  text-align: right;
+}
+.text-center {
+  text-align: center;
+}
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.desp-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--surface-border);
+}
+
+.desp-sec {
+  margin: 1rem 0 0.4rem;
+  font-size: 0.95rem;
+}
+
+.desp-lineas {
+  display: flex;
+  flex-direction: column;
+}
+
+.linea {
+  border-bottom: 1px solid var(--surface-border);
+}
+.linea__row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0.25rem;
+  background: none;
+  border: none;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: default;
+}
+.linea__row.clickable {
+  cursor: pointer;
+}
+.linea__row.clickable:hover {
+  background: var(--surface-hover);
+}
+.linea__nombre {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.linea__nombre i {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+}
+.linea__valor {
+  font-variant-numeric: tabular-nums;
+}
+.linea__valor.deduccion {
+  color: var(--red-500, #ef4444);
+}
+
+.traza {
+  padding: 0.25rem 0.75rem 0.6rem 1.6rem;
+  background: var(--surface-ground);
+}
+.traza__paso {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-color-secondary);
+  padding: 0.1rem 0;
+}
+
+.desp-totales {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 2px solid var(--surface-border);
+}
+.tot {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.2rem 0.25rem;
+  font-variant-numeric: tabular-nums;
+}
+.tot.neto {
+  font-weight: 700;
+  font-size: 1.05rem;
+  border-top: 1px solid var(--surface-border);
+  margin-top: 0.3rem;
+  padding-top: 0.5rem;
+}
+.pago {
+  margin-top: 0.5rem;
+  text-align: right;
+}

@@ -1,0 +1,75 @@
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.sub {
+  margin: 0;
+  color: var(--text-color-secondary);
+}
+.muted {
+  color: var(--text-color-secondary);
+  font-size: 0.85rem;
+}
+.text-right {
+  text-align: right;
+}
+.text-center {
+  text-align: center;
+}
+.req {
+  color: var(--red-500, #ef4444);
+}
+.cupo {
+  color: var(--orange-500, #f97316);
+  font-size: 0.75rem;
+  margin-left: 0.25rem;
+}
+
+.tbl {
+  width: 100%;
+  border-collapse: collapse;
+}
+.tbl th,
+.tbl td {
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px solid var(--surface-border);
+  font-size: 0.86rem;
+}
+.tbl th {
+  text-align: left;
+  color: var(--text-color-secondary);
+  font-weight: 600;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.field label {
+  font-size: 0.8rem;
+  color: var(--text-color-secondary);
+}
+
+.form {
+  margin-top: 1rem;
+  padding: 0.9rem;
+  background: var(--surface-ground);
+  border-radius: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.3rem;
+}

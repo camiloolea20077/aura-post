@@ -1,0 +1,222 @@
+<ng-template #cuerpo>
+  <div class="head">
+    @if (!inline) {
+      <p class="sub">{{ contratoLabel || "Contrato" }}</p>
+    } @else {
+      <span></span>
+    }
+    <button
+      pButton
+      type="button"
+      label="Nuevo embargo"
+      icon="pi pi-plus"
+      class="p-button-sm p-button-outlined"
+      (click)="abrirForm()"
+    ></button>
+  </div>
+
+  @if (loading) {
+    <p-skeleton height="6rem" />
+  } @else {
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Expediente</th>
+          <th>Tipo</th>
+          <th class="text-center">Prioridad</th>
+          <th class="text-right">Monto</th>
+          <th class="text-right">Saldo</th>
+          <th class="text-center">Estado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (e of embargos; track e.id) {
+          <tr>
+            <td>{{ e.expediente }}</td>
+            <td>
+              {{ labelDe(e.tipo) }}
+              @if (e.cupoAmpliado) {
+                <i
+                  class="pi pi-arrow-up cupo"
+                  pTooltip="Hasta el 50% del salario"
+                ></i>
+              }
+            </td>
+            <td class="text-center">{{ e.prioridad }}</td>
+            <td class="text-right">
+              @if (e.valorTotal != null) {
+                {{ e.valorTotal | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+              } @else {
+                {{ e.porcentaje }}%
+              }
+            </td>
+            <td class="text-right">
+              @if (e.valorTotal != null) {
+                {{ e.saldo | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+              } @else {
+                <span class="muted">—</span>
+              }
+            </td>
+            <td class="text-center">
+              <p-tag
+                [value]="e.estado"
+                [severity]="severidadEstado(e.estado)"
+              />
+            </td>
+            <td class="text-right">
+              <button
+                pButton
+                type="button"
+                icon="pi pi-ban"
+                class="p-button-text p-button-sm p-button-danger"
+                pTooltip="Terminar"
+                [disabled]="e.estado !== 'ACTIVO'"
+                (click)="terminar(e)"
+              ></button>
+            </td>
+          </tr>
+        }
+        @if (!embargos.length) {
+          <tr>
+            <td colspan="7" class="muted text-center p-2">
+              Sin embargos registrados.
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  @if (mostrarForm) {
+    <div class="form">
+      <div class="form-row">
+        <div class="field">
+          <label>Expediente <span class="req">*</span></label>
+          <input
+            pInputText
+            [(ngModel)]="expediente"
+            class="w-full"
+            placeholder="N° de expediente"
+          />
+        </div>
+        <div class="field">
+          <label>Tipo <span class="req">*</span></label>
+          <p-dropdown
+            [(ngModel)]="tipo"
+            [options]="tiposEmbargo"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+          />
+          @if (hintDe(tipo)) {
+            <small class="muted">{{ hintDe(tipo) }}</small>
+          }
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Cómo se descuenta <span class="req">*</span></label>
+        <p-selectButton
+          [(ngModel)]="modo"
+          [options]="modoOpts"
+          optionLabel="label"
+          optionValue="value"
+        />
+        <small class="muted"
+          >O un valor total (se consume mes a mes) o un porcentaje (indefinido),
+          nunca ambos.</small
+        >
+      </div>
+
+      <div class="form-row">
+        @if (modo === "TOTAL") {
+          <div class="field">
+            <label>Valor total <span class="req">*</span></label>
+            <p-inputNumber
+              [(ngModel)]="valorTotal"
+              mode="currency"
+              currency="COP"
+              locale="es-CO"
+              [maxFractionDigits]="0"
+              styleClass="w-full"
+              placeholder="0"
+            />
+          </div>
+        } @else {
+          <div class="field">
+            <label>Porcentaje <span class="req">*</span></label>
+            <p-inputNumber
+              [(ngModel)]="porcentaje"
+              suffix=" %"
+              [maxFractionDigits]="2"
+              styleClass="w-full"
+              placeholder="0"
+            />
+          </div>
+        }
+        <div class="field">
+          <label>Fecha de inicio <span class="req">*</span></label>
+          <p-calendar
+            [(ngModel)]="fechaInicio"
+            dateFormat="yy-mm-dd"
+            [showIcon]="true"
+            styleClass="w-full"
+            placeholder="AAAA-MM-DD"
+          />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Observación</label>
+        <input pInputText [(ngModel)]="observacion" class="w-full" />
+      </div>
+
+      <div class="form-actions">
+        <button
+          pButton
+          type="button"
+          label="Cancelar"
+          class="p-button-text p-button-sm"
+          (click)="cancelarForm()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          label="Guardar"
+          icon="pi pi-check"
+          class="btn-aura p-button-sm"
+          [loading]="guardando"
+          (click)="guardar()"
+        ></button>
+      </div>
+    </div>
+  }
+</ng-template>
+
+@if (inline) {
+  <div class="tab-body">
+    <ng-container [ngTemplateOutlet]="cuerpo"></ng-container>
+  </div>
+} @else {
+  <p-dialog
+    [visible]="visible"
+    (visibleChange)="!$event && onHide()"
+    header="Embargos"
+    [modal]="true"
+    [style]="{ width: '50rem' }"
+    [draggable]="false"
+    (onHide)="onHide()"
+  >
+    <ng-container [ngTemplateOutlet]="cuerpo"></ng-container>
+    <ng-template pTemplate="footer">
+      <button
+        pButton
+        type="button"
+        label="Cerrar"
+        class="p-button-text"
+        (click)="onHide()"
+      ></button>
+    </ng-template>
+  </p-dialog>
+}
