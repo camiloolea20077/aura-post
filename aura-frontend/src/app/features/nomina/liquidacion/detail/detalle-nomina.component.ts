@@ -14,6 +14,7 @@ import { TagModule } from 'primeng/tag';
 import { SkeletonModule } from 'primeng/skeleton';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
+import { CalendarModule } from 'primeng/calendar';
 import { TooltipModule } from 'primeng/tooltip';
 import { lastValueFrom } from 'rxjs';
 
@@ -23,8 +24,10 @@ import {
   EstadoNomina,
   NominaModel,
   TipoNovedad,
+  VacacionesSaldoModel,
 } from '../../../../core/models/nomina.model';
 import { AlertService } from '../../../../shared/pipes/alert.service';
+import { DesprendibleComponent } from '../desprendible/desprendible.component';
 
 type TagSeverity =
   | 'success'
@@ -47,7 +50,9 @@ type TagSeverity =
     SkeletonModule,
     DropdownModule,
     InputTextModule,
+    CalendarModule,
     TooltipModule,
+    DesprendibleComponent,
   ],
   templateUrl: './detalle-nomina.component.html',
   styleUrls: ['./detalle-nomina.component.scss'],
@@ -69,6 +74,13 @@ export class DetalleNominaComponent implements OnChanges {
   public showFormNovedad = false;
   public novedad: AddNovedadDto = this.emptyNovedad();
 
+  // F3 — saldo de vacaciones del empleado en curso
+  public vacacionesSaldo: VacacionesSaldoModel | null = null;
+  public cargandoSaldo = false;
+
+  // Desprendible con traza
+  public showDesprendible = false;
+
   public tipoNovedadOpts = [
     { label: 'Hora extra diurna', value: 'HORA_EXTRA_DIURNA' },
     { label: 'Hora extra nocturna', value: 'HORA_EXTRA_NOCTURNA' },
@@ -76,6 +88,9 @@ export class DetalleNominaComponent implements OnChanges {
     { label: 'Hora extra festivo', value: 'HORA_EXTRA_FESTIVO' },
     { label: 'Incapacidad', value: 'INCAPACIDAD' },
     { label: 'Licencia remunerada', value: 'LICENCIA_REMUNERADA' },
+    { label: 'Licencia NO remunerada', value: 'LICENCIA_NO_REMUNERADA' },
+    { label: 'Licencia de maternidad', value: 'LICENCIA_MATERNIDAD' },
+    { label: 'Vacaciones', value: 'VACACIONES' },
     { label: 'Bono', value: 'BONO' },
     { label: 'Comisión', value: 'COMISION' },
     { label: 'Préstamo (descuento)', value: 'PRESTAMO' },
@@ -83,6 +98,79 @@ export class DetalleNominaComponent implements OnChanges {
     { label: 'Otro devengo', value: 'OTRO_DEVENGO' },
     { label: 'Otro descuento', value: 'OTRO_DESCUENTO' },
   ];
+
+  /** Subtipos de incapacidad (quién la paga). */
+  public subtipoIncapacidadOpts = [
+    { label: 'Enfermedad general (EPS)', value: 'GENERAL' },
+    { label: 'Riesgo laboral (ARL)', value: 'RIESGO_LABORAL' },
+  ];
+
+  /** Tipos que son ausencia: descuentan días de salario. */
+  private readonly tiposAusencia = new Set<TipoNovedad>([
+    'INCAPACIDAD',
+    'LICENCIA_NO_REMUNERADA',
+    'LICENCIA_MATERNIDAD',
+    'VACACIONES',
+  ]);
+
+  /** Tipos que piden fechas (para descuento y/o reporte a PILA). */
+  private readonly tiposConFechas = new Set<TipoNovedad>([
+    ...this.tiposAusencia,
+    'LICENCIA_REMUNERADA', // no descuenta salario, pero PILA la reporta (VAC/LR)
+  ]);
+
+  esAusencia(tipo: TipoNovedad | '' | null): boolean {
+    return !!tipo && this.tiposAusencia.has(tipo as TipoNovedad);
+  }
+
+  requiereFechas(tipo: TipoNovedad | '' | null): boolean {
+    return !!tipo && this.tiposConFechas.has(tipo as TipoNovedad);
+  }
+
+  /** Incapacidad y maternidad: el backend calcula el valor solo. */
+  get esAutoCalculada(): boolean {
+    return (
+      this.novedad.tipo === 'INCAPACIDAD' ||
+      this.novedad.tipo === 'LICENCIA_MATERNIDAD'
+    );
+  }
+
+  /** Al elegir el tipo, si es vacaciones carga el saldo del empleado. */
+  async onTipoNovedadChange(): Promise<void> {
+    this.vacacionesSaldo = null;
+    if (this.novedad.tipo === 'VACACIONES' && this.nomina) {
+      this.cargandoSaldo = true;
+      try {
+        const res = await lastValueFrom(
+          this.nominaService.vacacionesSaldo(this.nomina.empleadoId),
+        );
+        this.vacacionesSaldo = res?.data ?? null;
+      } catch {
+        this.vacacionesSaldo = null;
+      } finally {
+        this.cargandoSaldo = false;
+      }
+    }
+  }
+
+  /** Días solicitados en la novedad de ausencia (según las fechas). */
+  get diasSolicitados(): number {
+    const i = this.novedad.fechaInicio;
+    const f = this.novedad.fechaFin;
+    if (!i || !f) return 0;
+    const di = i instanceof Date ? i : new Date(i);
+    const df = f instanceof Date ? f : new Date(f);
+    if (isNaN(di.getTime()) || isNaN(df.getTime()) || df < di) return 0;
+    return Math.round((df.getTime() - di.getTime()) / 86400000) + 1;
+  }
+
+  /** Vacaciones que exceden el saldo y la empresa no permite anticipadas. */
+  get vacacionesExcedidas(): boolean {
+    if (this.novedad.tipo !== 'VACACIONES' || !this.vacacionesSaldo)
+      return false;
+    if (this.vacacionesSaldo.permiteAnticipadas) return false;
+    return this.diasSolicitados > this.vacacionesSaldo.diasDisponibles;
+  }
 
   constructor(
     private readonly nominaService: NominaService,
@@ -165,7 +253,31 @@ export class DetalleNominaComponent implements OnChanges {
   }
 
   async agregarNovedad(): Promise<void> {
-    if (!this.nomina || !this.novedad.tipo || !this.novedad.valorUnitario) {
+    if (!this.nomina || !this.novedad.tipo) {
+      this.alertService.showWarn('Requerido', 'Selecciona el tipo de novedad');
+      return;
+    }
+    if (
+      this.requiereFechas(this.novedad.tipo) &&
+      (!this.novedad.fechaInicio || !this.novedad.fechaFin)
+    ) {
+      this.alertService.showWarn(
+        'Requerido',
+        'Indica la fecha de inicio y fin',
+      );
+      return;
+    }
+    if (this.vacacionesExcedidas) {
+      this.alertService.showWarn(
+        'Sin saldo',
+        `El empleado solo tiene ${this.vacacionesSaldo?.diasDisponibles} días de vacaciones disponibles.`,
+      );
+      return;
+    }
+    if (
+      !this.requiereFechas(this.novedad.tipo) &&
+      !this.novedad.valorUnitario
+    ) {
       this.alertService.showWarn(
         'Requerido',
         'Completa el tipo y valor de la novedad',
@@ -174,8 +286,13 @@ export class DetalleNominaComponent implements OnChanges {
     }
     this.agregando = true;
     try {
+      const payload: AddNovedadDto = {
+        ...this.novedad,
+        fechaInicio: this.toISO(this.novedad.fechaInicio),
+        fechaFin: this.toISO(this.novedad.fechaFin),
+      };
       const res = await lastValueFrom(
-        this.nominaService.agregarNovedad(this.nomina.id, this.novedad),
+        this.nominaService.agregarNovedad(this.nomina.id, payload),
       );
       this.nomina = res?.data ?? this.nomina;
       this.novedad = this.emptyNovedad();
@@ -205,6 +322,11 @@ export class DetalleNominaComponent implements OnChanges {
     } catch {
       this.alertService.showError('Error', 'No se pudo eliminar la novedad');
     }
+  }
+
+  verDesprendible(): void {
+    if (!this.nomina) return;
+    this.showDesprendible = true;
   }
 
   close(): void {
@@ -245,12 +367,26 @@ export class DetalleNominaComponent implements OnChanges {
     return this.tipoNovedadOpts.find((o) => o.value === tipo)?.label ?? tipo;
   }
 
+  /** p-calendar entrega Date; el backend espera 'yyyy-MM-dd'. */
+  private toISO(v: string | Date | null | undefined): string | null {
+    if (!v) return null;
+    const d = v instanceof Date ? v : new Date(v);
+    if (isNaN(d.getTime())) return null;
+    const mes = String(d.getMonth() + 1).padStart(2, '0');
+    const dia = String(d.getDate()).padStart(2, '0');
+    return `${d.getFullYear()}-${mes}-${dia}`;
+  }
+
   private emptyNovedad(): AddNovedadDto {
     return {
       tipo: '' as TipoNovedad,
       descripcion: null,
       cantidad: 1,
       valorUnitario: 0,
+      fechaInicio: null,
+      fechaFin: null,
+      subtipo: null,
+      numeroAutorizacion: null,
     };
   }
 }

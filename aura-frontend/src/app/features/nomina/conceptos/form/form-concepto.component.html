@@ -1,0 +1,171 @@
+<p-dialog
+  [(visible)]="visible"
+  [header]="titulo"
+  [modal]="true"
+  [style]="{ width: '48rem' }"
+  [draggable]="false"
+  (onShow)="onShow()"
+  (onHide)="onHide()"
+>
+  <!-- En modo "nueva vigencia" se recuerda que esto NO edita el concepto. -->
+  @if (esNuevaVersion) {
+    <p class="aviso">
+      <i class="pi pi-info-circle"></i>
+      Esto crea una versión nueva del concepto; la anterior queda archivada para
+      poder reliquidar períodos viejos con su tarifa de entonces.
+    </p>
+  }
+
+  <div class="grid-2">
+    <div class="field">
+      <label>Código <span class="req">*</span></label>
+      <input
+        pInputText
+        [(ngModel)]="form.codigo"
+        [disabled]="esNuevaVersion"
+        class="w-full"
+        placeholder="DED_SALUD"
+      />
+    </div>
+
+    <div class="field">
+      <label>Nombre <span class="req">*</span></label>
+      <input
+        pInputText
+        [(ngModel)]="form.nombre"
+        [disabled]="esNuevaVersion"
+        class="w-full"
+        placeholder="Deducción de salud"
+      />
+    </div>
+
+    <div class="field">
+      <label>Clase <span class="req">*</span></label>
+      <p-dropdown
+        [(ngModel)]="form.clase"
+        [options]="claseOpts"
+        [disabled]="esNuevaVersion"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+      />
+    </div>
+
+    <div class="field">
+      <label>Base de cálculo <span class="req">*</span></label>
+      <p-dropdown
+        [(ngModel)]="form.base"
+        [options]="baseOpts"
+        optionLabel="label"
+        optionValue="value"
+        (onChange)="onBaseChange()"
+        styleClass="w-full"
+      />
+    </div>
+
+    <!-- El porcentaje aplica a todas las bases salvo FIJO y MANUAL. -->
+    @if (esPorcentual) {
+      <div class="field">
+        <label>Porcentaje <span class="req">*</span></label>
+        <p-inputNumber
+          [(ngModel)]="form.porcentaje"
+          suffix=" %"
+          [minFractionDigits]="0"
+          [maxFractionDigits]="4"
+          styleClass="w-full"
+          placeholder="0"
+        />
+      </div>
+    }
+
+    <!-- Solo la base FIJO lleva valor. -->
+    @if (esFijo) {
+      <div class="field">
+        <label>Valor fijo <span class="req">*</span></label>
+        <p-inputNumber
+          [(ngModel)]="form.valorFijo"
+          mode="currency"
+          currency="COP"
+          locale="es-CO"
+          [maxFractionDigits]="0"
+          styleClass="w-full"
+          placeholder="0"
+        />
+      </div>
+    }
+
+    <div class="field">
+      <label>Vigente desde <span class="req">*</span></label>
+      <p-calendar
+        [(ngModel)]="form.vigenteDesde"
+        dateFormat="yy-mm-dd"
+        [showIcon]="true"
+        styleClass="w-full"
+        placeholder="AAAA-MM-DD"
+      />
+    </div>
+
+    <div class="field">
+      <label>Vigente hasta</label>
+      <p-calendar
+        [(ngModel)]="form.vigenteHasta"
+        dateFormat="yy-mm-dd"
+        [showIcon]="true"
+        styleClass="w-full"
+        placeholder="Indefinido"
+      />
+    </div>
+
+    <div class="field">
+      <label>
+        Código DIAN
+        <small class="hint">Etiqueta para la nómina electrónica</small>
+      </label>
+      <input pInputText [(ngModel)]="form.codigoDian" class="w-full" placeholder="Opcional" />
+    </div>
+
+    <div class="field">
+      <label>
+        Orden de cálculo
+        <small class="hint">Los que dependen de otros van después</small>
+      </label>
+      <p-inputNumber [(ngModel)]="form.orden" [maxFractionDigits]="0" styleClass="w-full" />
+    </div>
+  </div>
+
+  <!-- MANUAL no lleva tarifa: lo resuelve el motor o una novedad. -->
+  @if (esManual) {
+    <p class="aviso muted">
+      <i class="pi pi-info-circle"></i>
+      Base "Manual": el valor no se parametriza aquí; lo resuelve el motor (ARL,
+      retefuente) o viene de una novedad.
+    </p>
+  }
+
+  <div class="field switch mt-3">
+    <label>
+      Constituye IBC
+      <small class="hint">¿Entra en la base de seguridad social? El auxilio de transporte no.</small>
+    </label>
+    <p-toggleswitch [(ngModel)]="form.constituyeIbc" />
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cancelar"
+      class="p-button-text"
+      (click)="onHide()"
+    ></button>
+    <button
+      pButton
+      type="button"
+      label="Guardar"
+      icon="pi pi-check"
+      class="btn-aura"
+      [loading]="saving"
+      (click)="guardar()"
+    ></button>
+  </ng-template>
+</p-dialog>

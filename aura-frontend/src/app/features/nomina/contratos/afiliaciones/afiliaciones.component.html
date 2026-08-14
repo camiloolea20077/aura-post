@@ -1,0 +1,182 @@
+<!-- Cuerpo reutilizable: se pinta inline (en un tab) o dentro de un diálogo. -->
+<ng-template #cuerpo>
+  @if (!inline) {
+    <p class="sub">{{ contratoLabel || "Contrato" }}</p>
+  }
+
+  <!-- Tipo de cotizante (código UGPP) — también lo exige PILA -->
+  <div class="tipo-cot">
+    <div class="field">
+      <label>Tipo de cotizante <span class="req">*</span></label>
+      <p-dropdown
+        [(ngModel)]="tipoCotizante"
+        [options]="tiposCotizante"
+        optionLabel="label"
+        optionValue="value"
+        [filter]="true"
+        placeholder="Elige el tipo (código UGPP)"
+        styleClass="w-full"
+      />
+    </div>
+    <button
+      pButton
+      type="button"
+      label="Guardar"
+      icon="pi pi-check"
+      class="p-button-sm btn-aura tipo-cot__btn"
+      [loading]="guardandoTipoCot"
+      (click)="guardarTipoCotizante()"
+    ></button>
+  </div>
+
+  @if (loading) {
+    <p-skeleton height="3rem" styleClass="mb-2" />
+    <p-skeleton height="3rem" styleClass="mb-2" />
+    <p-skeleton height="3rem" />
+  } @else {
+    <div class="afil-list">
+      @for (t of tipos; track t.tipo) {
+        @let vig = vigenteDe(t.tipo);
+        <div class="afil">
+          <div class="afil__info">
+            <span class="afil__tipo">{{ t.label }}</span>
+            @if (vig) {
+              <span class="afil__entidad">
+                {{ vig.entidadNombre }}
+                <small class="muted">desde {{ vig.fechaDesde }}</small>
+              </span>
+              @if (!vig.codigoOficial) {
+                <p-tag value="Sin código PILA" severity="danger" />
+              }
+            } @else {
+              <span class="afil__vacio muted">Sin afiliación vigente</span>
+            }
+          </div>
+          <div class="afil__accion">
+            <button
+              pButton
+              type="button"
+              [label]="vig ? 'Trasladar' : 'Afiliar'"
+              [icon]="vig ? 'pi pi-sync' : 'pi pi-plus'"
+              class="p-button-sm p-button-outlined"
+              (click)="abrirForm(t.tipo)"
+            ></button>
+          </div>
+
+          @if (tipoEnEdicion === t.tipo) {
+            <div class="afil__form">
+              @if (cargandoCatalogo) {
+                <p-skeleton height="2.5rem" />
+              } @else {
+                <div class="afil__form-row">
+                  <div class="field">
+                    <label>Entidad <span class="req">*</span></label>
+                    <p-dropdown
+                      [(ngModel)]="entidadId"
+                      [options]="catalogo"
+                      optionLabel="nombre"
+                      optionValue="id"
+                      [filter]="true"
+                      filterBy="nombre,nit"
+                      placeholder="Elige del catálogo"
+                      styleClass="w-full"
+                    />
+                  </div>
+                  <div class="field">
+                    <label
+                      >{{ vig ? "Traslado desde" : "Afiliado desde" }}
+                      <span class="req">*</span></label
+                    >
+                    <p-calendar
+                      [(ngModel)]="desde"
+                      dateFormat="yy-mm-dd"
+                      [showIcon]="true"
+                      styleClass="w-full"
+                      placeholder="AAAA-MM-DD"
+                    />
+                  </div>
+                </div>
+                <div class="afil__form-actions">
+                  <button
+                    pButton
+                    type="button"
+                    label="Cancelar"
+                    class="p-button-text p-button-sm"
+                    (click)="cancelarForm()"
+                  ></button>
+                  <button
+                    pButton
+                    type="button"
+                    label="Guardar"
+                    icon="pi pi-check"
+                    class="btn-aura p-button-sm"
+                    [loading]="guardando"
+                    (click)="guardar()"
+                  ></button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    @if (problemas !== null) {
+      @if (problemas.length) {
+        <div class="pila-problemas">
+          <p-message severity="warn" text="Faltan datos para PILA:" />
+          <ul>
+            @for (p of problemas; track $index) {
+              <li>{{ p }}</li>
+            }
+          </ul>
+        </div>
+      } @else {
+        <p-message
+          severity="success"
+          text="Listo para PILA: no faltan datos."
+          styleClass="mt-2"
+        />
+      }
+    }
+
+    <div class="inline-actions">
+      <button
+        pButton
+        type="button"
+        label="Validar para PILA"
+        icon="pi pi-verified"
+        class="p-button-text"
+        [loading]="validando"
+        (click)="validar()"
+      ></button>
+    </div>
+  }
+</ng-template>
+
+@if (inline) {
+  <div class="tab-body">
+    <ng-container [ngTemplateOutlet]="cuerpo"></ng-container>
+  </div>
+} @else {
+  <p-dialog
+    [visible]="visible"
+    (visibleChange)="!$event && onHide()"
+    header="Afiliaciones a seguridad social"
+    [modal]="true"
+    [style]="{ width: '44rem' }"
+    [draggable]="false"
+    (onHide)="onHide()"
+  >
+    <ng-container [ngTemplateOutlet]="cuerpo"></ng-container>
+    <ng-template pTemplate="footer">
+      <button
+        pButton
+        type="button"
+        label="Cerrar"
+        class="p-button-text"
+        (click)="onHide()"
+      ></button>
+    </ng-template>
+  </p-dialog>
+}

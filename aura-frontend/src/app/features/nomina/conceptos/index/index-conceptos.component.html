@@ -1,0 +1,119 @@
+<div class="page">
+  <div class="card">
+    <!-- ── Header dentro de la card ─────────────────────────── -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-percentage"></i></span>
+        <div>
+          <h1 class="title">Conceptos de nómina</h1>
+          <p class="subtitle">Tarifas y conceptos vigentes, sin recompilar</p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="field-inline">
+          <label>Vigentes al</label>
+          <p-calendar
+            [(ngModel)]="fecha"
+            dateFormat="yy-mm-dd"
+            [showIcon]="true"
+            (onSelect)="cargar()"
+            styleClass="cal-inline"
+            placeholder="AAAA-MM-DD"
+          />
+        </div>
+        <button
+          pButton
+          type="button"
+          label="Nuevo concepto"
+          icon="pi pi-plus"
+          class="btn-aura"
+          (click)="nuevo()"
+        ></button>
+      </div>
+    </div>
+
+    <p-table
+      [value]="items"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [loading]="loading"
+      dataKey="id"
+      styleClass="p-datatable-sm"
+      [tableStyle]="{ 'min-width': '64rem' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Código</th>
+          <th>Nombre</th>
+          <th>Clase</th>
+          <th>Base</th>
+          <th class="text-right">Tarifa</th>
+          <th class="text-center">IBC</th>
+          <th>Vigencia</th>
+          <th>Origen</th>
+          <th style="width: 8rem"></th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-c>
+        <tr>
+          <td><code>{{ c.codigo }}</code></td>
+          <td>{{ c.nombre }}</td>
+          <td><p-tag [value]="c.clase" [severity]="severidadClase(c.clase)" /></td>
+          <td class="text-muted">{{ c.base }}</td>
+          <td class="text-right">{{ textoTarifa(c) }}</td>
+          <td class="text-center">
+            @if (c.constituyeIbc) {
+              <i class="pi pi-check text-ok" pTooltip="Constituye IBC"></i>
+            } @else {
+              <span class="text-muted">—</span>
+            }
+          </td>
+          <td class="text-muted">{{ textoVigencia(c) }}</td>
+          <td>
+            <!-- De ley (global) vs. propio de la empresa. Un global que la
+                 empresa personalizó llega marcado como propio por el backend. -->
+            @if (c.esGlobal) {
+              <p-tag value="De ley" severity="info" />
+            } @else {
+              <p-tag value="Empresa" severity="success" />
+            }
+          </td>
+          <td class="text-right">
+            <!-- Tanto un concepto de ley como uno propio se "cambian" creando
+                 una versión nueva: el botón abre el form precargado. -->
+            <button
+              pButton
+              type="button"
+              icon="pi pi-clone"
+              class="p-button-text p-button-sm"
+              pTooltip="Nueva vigencia (cambiar tarifa)"
+              (click)="nuevaVersion(c)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9" class="text-center p-4">
+            <span class="text-muted">No hay conceptos vigentes en esta fecha.</span>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr>
+          <td colspan="9"><p-skeleton height="2rem" /></td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<app-form-concepto
+  [(visible)]="showForm"
+  [base]="baseSeleccionada"
+  (guardado)="onGuardado()"
+/>

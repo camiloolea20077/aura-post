@@ -8,11 +8,13 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { DialogModule } from 'primeng/dialog';
+import { MessageModule } from 'primeng/message';
 import { DropdownModule } from 'primeng/dropdown';
 import { CalendarModule } from 'primeng/calendar';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -35,6 +37,7 @@ import { AlertService } from '../../../../shared/pipes/alert.service';
     CommonModule,
     FormsModule,
     DialogModule,
+    MessageModule,
     ButtonModule,
     InputTextModule,
     TextareaModule,
@@ -49,6 +52,22 @@ import { AlertService } from '../../../../shared/pipes/alert.service';
 export class FormEmpleadoComponent implements OnChanges, OnInit {
   @Input() displayModal = false;
   @Input() empleadoEdit: EmpleadoModel | null = null;
+
+  /**
+   * En edición, los datos del contrato se bloquean.
+   *
+   * Cambiar el salario aquí perdería el histórico: el contrato es su propia
+   * entidad (Fase 2) y el cambio pasa por `/contrato/{id}/salario`, que cierra
+   * la vigencia anterior y abre otra. Sin eso no hay retroactivos ni `vsp`.
+   */
+  get esEdicion(): boolean {
+    return !!this.empleadoEdit?.id;
+  }
+
+  irAContratos(): void {
+    if (!this.empleadoEdit?.id) return;
+    this.router.navigate(['/nomina/empleados', this.empleadoEdit.id, 'contratos']);
+  }
   @Output() modalClosed = new EventEmitter<void>();
   @Output() empleadoSaved = new EventEmitter<void>();
 
@@ -96,6 +115,7 @@ export class FormEmpleadoComponent implements OnChanges, OnInit {
     private readonly nominaService: NominaService,
     private readonly tipoEmpleadoService: TipoEmpleadoService,
     private readonly alertService: AlertService,
+    private readonly router: Router,
   ) {}
 
   async ngOnInit(): Promise<void> {

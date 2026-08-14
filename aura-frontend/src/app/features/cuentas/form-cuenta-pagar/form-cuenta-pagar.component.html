@@ -66,6 +66,7 @@
           id="fechaEmision"
           formControlName="fechaEmision"
           [showIcon]="true"
+          appendTo="body"
           dateFormat="dd/mm/yy"
           [class.ng-invalid]="isInvalid('fechaEmision')"
           styleClass="w-full"
@@ -79,6 +80,7 @@
           formControlName="fechaVencimiento"
           [showIcon]="true"
           dateFormat="dd/mm/yy"
+          appendTo="body"
           [minDate]="form.get('fechaEmision')?.value"
           styleClass="w-full"
         ></p-calendar>

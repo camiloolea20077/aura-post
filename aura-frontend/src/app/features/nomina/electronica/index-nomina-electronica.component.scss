@@ -1,0 +1,13 @@
+// Solo estilos propios de la tabla de este módulo. El patrón (card, header,
+// buscador, botón de marca) es global en src/styles.scss.
+
+.cune {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  color: #64748b;
+  cursor: default;
+}
+
+tr.row-off td {
+  opacity: 0.55;
+}

@@ -37,6 +37,25 @@
   gap: 0.5rem 1.75rem;
 }
 
+// 2 campos por fila (igual que .grid, para secciones que lo usan)
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1.75rem;
+}
+
+// 3 campos por fila. Los labels van al lado (como el resto del form), con la
+// columna de label un poco más angosta para que quepan en un tercio de ancho.
+.grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.5rem 1.5rem;
+
+  .field {
+    grid-template-columns: 92px 1fr;
+  }
+}
+
 // Cada campo: label a la izquierda, control a la derecha
 .field {
   display: grid;
@@ -81,7 +100,38 @@
 }
 
 @media (max-width: 720px) {
-  .grid {
+  .grid,
+  .grid-2,
+  .grid-3 {
     grid-template-columns: 1fr;
   }
+}
+
+/* Modo embebido (dentro del detalle de empleado): sin padding de página, pero
+   la card conserva su borde para que el footer (botón Actualizar) quede
+   contenido y no parezca suelto por fuera. */
+.page.embedded {
+  padding: 0;
+}
+.page.embedded .card {
+  box-shadow: none;
+}
+
+/* Chips del "Tipo de tercero": fondo azul, texto y X en blanco. */
+:host ::ng-deep .p-multiselect .p-multiselect-token,
+:host ::ng-deep .p-multiselect .p-multiselect-chip,
+:host ::ng-deep .p-multiselect .p-chip {
+  background: #2563eb;
+  color: #ffffff;
+  border-radius: 6px;
+}
+:host ::ng-deep .p-multiselect .p-multiselect-token .p-multiselect-token-label,
+:host ::ng-deep .p-multiselect .p-chip .p-chip-text {
+  color: #ffffff;
+}
+:host ::ng-deep .p-multiselect .p-multiselect-token-icon,
+:host ::ng-deep .p-multiselect .p-chip-remove-icon,
+:host ::ng-deep .p-multiselect .p-multiselect-token .p-icon {
+  color: #ffffff;
+  fill: #ffffff;
 }

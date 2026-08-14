@@ -313,6 +313,33 @@ export const routes: Routes = [
             (m) => m.IndexVentasComponent,
           ),
       },
+      {
+        // Notas crédito/débito electrónicas (Factus v1).
+        path: 'ventas/notas',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/ventas/nota-electronica/index-notas.component').then(
+            (m) => m.IndexNotasComponent,
+          ),
+      },
+      {
+        path: 'ventas/notas/credito',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        data: { tipo: 'CREDITO' },
+        loadComponent: () =>
+          import('./features/ventas/nota-electronica/form-nota-credito.component').then(
+            (m) => m.FormNotaCreditoComponent,
+          ),
+      },
+      {
+        path: 'ventas/notas/debito',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        data: { tipo: 'DEBITO' },
+        loadComponent: () =>
+          import('./features/ventas/nota-electronica/form-nota-credito.component').then(
+            (m) => m.FormNotaCreditoComponent,
+          ),
+      },
 
       // Vendedores
       {
@@ -525,6 +552,56 @@ export const routes: Routes = [
           ),
       },
       {
+        // F7 — carga de saldos iniciales (migración desde otro sistema).
+        path: 'nomina/saldos-iniciales',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/nomina/saldos-iniciales/saldos-iniciales.component').then(
+            (m) => m.SaldosInicialesComponent,
+          ),
+      },
+      {
+        // Alta de empleado (flujo nuevo): crea la identidad como tercero y de
+        // ahí cae en la ficha para agregar el contrato.
+        path: 'nomina/empleados/nuevo',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/nomina/empleados/nuevo/empleado-nuevo.component').then(
+            (m) => m.EmpleadoNuevoComponent,
+          ),
+      },
+      {
+        // Ficha del empleado (maestro-detalle): identidad + tabs de contratos,
+        // afiliaciones, retenciones y embargos.
+        path: 'nomina/empleados/:id/ficha',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/nomina/empleados/detalle/empleado-detalle.component').then(
+            (m) => m.EmpleadoDetalleComponent,
+          ),
+      },
+      {
+        // Contratos de un empleado (Fase 2). Se entra desde el listado de
+        // empleados: un empleado puede tener varios contratos, por eso la
+        // ruta cuelga de él.
+        path: 'nomina/empleados/:empleadoId/contratos',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/nomina/contratos/index/index-contratos.component').then(
+            (m) => m.IndexContratosComponent,
+          ),
+      },
+      {
+        // Catálogo de conceptos de nómina (Fase 3). Tarifas parametrizables
+        // por vigencia, sin recompilar el motor.
+        path: 'nomina/conceptos',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/nomina/conceptos/index/index-conceptos.component').then(
+            (m) => m.IndexConceptosComponent,
+          ),
+      },
+      {
         path: 'nomina/periodos',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
@@ -533,11 +610,30 @@ export const routes: Routes = [
           ),
       },
       {
+        // PILA (Fase 6). Genera la planilla estructurada; el archivo plano por
+        // operador es un export aparte.
+        path: 'nomina/pila',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/nomina/pila/pila.component').then(
+            (m) => m.PilaComponent,
+          ),
+      },
+      {
         path: 'nomina/liquidacion',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/nomina/liquidacion/index/index-liquidacion.component').then(
             (m) => m.IndexLiquidacionComponent,
+          ),
+      },
+      {
+        // Listado de nóminas electrónicas emitidas (XML, anular, eliminar pruebas).
+        path: 'nomina/electronica',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/nomina/electronica/index-nomina-electronica.component').then(
+            (m) => m.IndexNominaElectronicaComponent,
           ),
       },
 
@@ -671,6 +767,22 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'contabilidad/revision',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/revision-asientos/revision-asientos.component').then(
+            (m) => m.RevisionAsientosComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/balance-general',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/balance-general/balance-general.component').then(
+            (m) => m.BalanceGeneralComponent,
+          ),
+      },
+      {
         path: 'contabilidad/conceptos-caja',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
@@ -788,6 +900,13 @@ export const routes: Routes = [
           import('./features/reporte-inventario/reporte-inventario.component').then(
             (m) => m.ReporteInventarioComponent,
           ),
+      },
+      {
+        path: 'reportes/facturacion-electronica',
+        loadComponent: () =>
+          import(
+            './features/reportes/facturacion-electronica/reporte-facturacion-electronica.component'
+          ).then((m) => m.ReporteFacturacionElectronicaComponent),
       },
       {
         path: 'reportes/avanzados',

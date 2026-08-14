@@ -1,0 +1,114 @@
+<div class="page">
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <div class="page-icon"><i class="pi pi-file-export"></i></div>
+      <div>
+        <h2 class="page-title">Facturación Electrónica</h2>
+        <p class="page-sub">Exporta a Excel las facturas y notas emitidas</p>
+      </div>
+    </div>
+
+    <div class="filtros">
+      <p-calendar
+        [(ngModel)]="desde"
+        dateFormat="dd/mm/yy"
+        placeholder="Desde"
+        [showIcon]="true"
+        [maxDate]="hasta ?? undefined"
+        styleClass="cal-sm"
+      />
+      <span class="sep-cal">→</span>
+      <p-calendar
+        [(ngModel)]="hasta"
+        dateFormat="dd/mm/yy"
+        placeholder="Hasta"
+        [showIcon]="true"
+        [minDate]="desde ?? undefined"
+        styleClass="cal-sm"
+      />
+    </div>
+  </div>
+
+  <!-- Tarjetas de exportación -->
+  <div class="export-grid">
+    <!-- Facturas -->
+    <div class="export-card">
+      <div class="card-top">
+        <div class="card-icon facturas"><i class="pi pi-receipt"></i></div>
+        <div>
+          <h3 class="card-title">Facturas de venta</h3>
+          <p class="card-sub">
+            Documentos electrónicos emitidos en el rango, con el desglose de IVA
+            por tarifa, CUFE y estado DIAN.
+          </p>
+        </div>
+      </div>
+
+      <ul class="card-cols">
+        <li>N° de factura y fecha</li>
+        <li>Cliente e identificación</li>
+        <li>Bases, IVA, descuento y total</li>
+        <li>CUFE, estado DIAN y ambiente</li>
+      </ul>
+
+      <p-button
+        icon="pi pi-file-excel"
+        label="Exportar a Excel"
+        severity="success"
+        [loading]="loadingFacturas"
+        (onClick)="exportarFacturas()"
+        styleClass="w-full"
+      />
+    </div>
+
+    <!-- Notas -->
+    <div class="export-card">
+      <div class="card-top">
+        <div class="card-icon notas"><i class="pi pi-file-edit"></i></div>
+        <div>
+          <h3 class="card-title">Notas crédito y débito</h3>
+          <p class="card-sub">
+            Notas emitidas contra facturas electrónicas, con su CUDE y la
+            factura que referencian.
+          </p>
+        </div>
+      </div>
+
+      <ul class="card-cols">
+        <li>Tipo, número y fecha</li>
+        <li>Factura referenciada y reference code</li>
+        <li>Base gravable, IVA y total</li>
+        <li>CUDE y estado</li>
+      </ul>
+
+      <div class="notas-actions">
+        <p-selectButton
+          [(ngModel)]="tipoNota"
+          [options]="tipoNotaOptions"
+          optionLabel="label"
+          optionValue="value"
+          [allowEmpty]="false"
+          styleClass="tipo-nota-btn"
+          pTooltip="Filtra el reporte por tipo de nota"
+          tooltipPosition="top"
+        />
+        <p-button
+          icon="pi pi-file-excel"
+          label="Exportar a Excel"
+          severity="success"
+          [loading]="loadingNotas"
+          (onClick)="exportarNotas()"
+          styleClass="w-full"
+        />
+      </div>
+    </div>
+  </div>
+
+  <p class="page-note">
+    <i class="pi pi-info-circle"></i>
+    El reporte se genera con los documentos registrados en Aura. Si una factura
+    fue rechazada por la DIAN, aparece con su estado real en la columna
+    <strong>Estado DIAN</strong>.
+  </p>
+</div>

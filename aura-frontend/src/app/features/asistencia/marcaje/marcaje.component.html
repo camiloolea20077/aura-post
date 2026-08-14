@@ -4,182 +4,115 @@
       <div class="card-head__title">
         <span class="header-icon"><i class="pi pi-stopwatch"></i></span>
         <div>
-          <h1 class="title">Marcaje de asistencia</h1>
+          <h1 class="title">Digitación de asistencia</h1>
           <p class="subtitle">
-            Registro de entrada/salida y consolidación diaria
+            Captura la entrada y salida del día por empleado
           </p>
         </div>
       </div>
-    </div>
-
-    <!-- Selección -->
-    <div class="sel-bar">
-      <div class="field">
-        <label>Empleado</label>
-        <p-dropdown
-          [options]="empleadosOpts"
-          [(ngModel)]="empleadoSel"
-          optionLabel="label"
-          optionValue="value"
-          placeholder="Seleccionar empleado"
-          [filter]="true"
-          [style]="{ minWidth: '240px' }"
-          (onChange)="cargar()"
-        />
-      </div>
-      <div class="field">
-        <label>Fecha</label>
-        <p-calendar
-          [(ngModel)]="fecha"
-          dateFormat="yy-mm-dd"
-          [showIcon]="true"
-          (onSelect)="cargar()"
-        />
-      </div>
-      <div class="marcar-btns" *ngIf="empleadoSel != null">
+      <div class="card-head__actions">
+        <div class="field-inline">
+          <label>Día</label>
+          <p-calendar
+            [(ngModel)]="fecha"
+            dateFormat="yy-mm-dd"
+            [showIcon]="true"
+            (onSelect)="cargarDia()"
+            placeholder="AAAA-MM-DD"
+          />
+        </div>
         <button
           pButton
-          label="Entrada"
-          icon="pi pi-sign-in"
+          type="button"
+          label="Guardar asistencia"
+          icon="pi pi-check"
           class="btn-aura"
-          [loading]="marcando"
-          (click)="marcar('ENTRADA')"
-        ></button>
-        <button
-          pButton
-          label="Salida"
-          icon="pi pi-sign-out"
-          class="p-button-outlined"
-          [loading]="marcando"
-          (click)="marcar('SALIDA')"
-        ></button>
-        <button
-          pButton
-          label="Consolidar día"
-          icon="pi pi-sync"
-          class="p-button-secondary"
-          [loading]="consolidando"
-          (click)="consolidar()"
+          [loading]="guardando"
+          [disabled]="!filas.length"
+          (click)="guardarTodos()"
         ></button>
       </div>
     </div>
-  </div>
 
-  <div class="grid2" *ngIf="empleadoSel != null">
-    <!-- Marcajes -->
-    <div class="card">
-      <div class="section-title">
-        <i class="pi pi-list"></i> Marcajes del día
-      </div>
-      <p-table [value]="marcajes" [loading]="loading" showGridlines>
-        <ng-template pTemplate="header">
-          <tr>
-            <th>Hora</th>
-            <th>Tipo</th>
-            <th>Origen</th>
-            <th>Estado</th>
-            <th></th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-m>
-          <tr [class.row-off]="m.estado === 'ANULADO'">
-            <td>{{ horaSolo(m.fechaHoraMarcaje) }}</td>
-            <td>{{ m.tipoMarcaje }}</td>
-            <td>{{ m.origenMarcaje }}</td>
-            <td>
+    <p-table
+      [value]="filas"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [loading]="loading"
+      styleClass="p-datatable-sm"
+      [tableStyle]="{ 'min-width': '48rem' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Empleado</th>
+          <th style="width: 12rem">Hora de entrada</th>
+          <th style="width: 12rem">Hora de salida</th>
+          <th style="width: 10rem">Estado</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-f>
+        <tr>
+          <td>{{ f.nombre }}</td>
+          <td>
+            <p-calendar
+              [(ngModel)]="f.entrada"
+              [timeOnly]="true"
+              hourFormat="24"
+              [showIcon]="true"
+              icon="pi pi-clock"
+              appendTo="body"
+              placeholder="--:--"
+              styleClass="hora-input"
+            />
+          </td>
+          <td>
+            <p-calendar
+              [(ngModel)]="f.salida"
+              [timeOnly]="true"
+              hourFormat="24"
+              [showIcon]="true"
+              appendTo="body"
+              icon="pi pi-clock"
+              placeholder="--:--"
+              styleClass="hora-input"
+            />
+          </td>
+          <td>
+            @if (f.estado) {
               <p-tag
-                [value]="m.estado"
-                [severity]="m.estado === 'VALIDO' ? 'success' : 'secondary'"
+                [value]="f.estado"
+                [severity]="estadoSeverity(f.estado)"
                 [rounded]="true"
               />
-            </td>
-            <td class="text-center">
-              <button
-                *ngIf="m.estado === 'VALIDO'"
-                pButton
-                type="button"
-                icon="pi pi-times"
-                class="p-button-text p-button-sm p-button-danger"
-                pTooltip="Anular"
-                (click)="anular(m)"
-              ></button>
-            </td>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="emptymessage">
-          <tr>
-            <td colspan="5">
-              <div class="empty-state">
-                <i class="pi pi-stopwatch"></i>
-                <p>Sin marcajes en esta fecha.</p>
-              </div>
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </div>
+            } @else {
+              <span class="pend">Sin capturar</span>
+            }
+          </td>
+        </tr>
+      </ng-template>
 
-    <!-- Día consolidado -->
-    <div class="card">
-      <div class="section-title">
-        <i class="pi pi-calendar-clock"></i> Día consolidado
-      </div>
-      <div *ngIf="!dia" class="empty-state">
-        <i class="pi pi-info-circle"></i>
-        <p>Aún no consolidado. Pulsa "Consolidar día".</p>
-      </div>
-      <div *ngIf="dia" class="dia-box">
-        <div class="dia-head">
-          <p-tag
-            [value]="dia.estadoAsistencia"
-            [severity]="estadoAsistSeverity(dia.estadoAsistencia)"
-            [rounded]="true"
-          />
-          <span class="dia-turno">{{ dia.turnoNombre || "Sin turno" }}</span>
-          <p-tag
-            [value]="dia.estadoAprobacion"
-            severity="secondary"
-            [rounded]="true"
-          />
-        </div>
-        <div class="dia-grid">
-          <div>
-            <label>Entrada real</label><b>{{ hhmm(dia.horaEntradaReal) }}</b>
-          </div>
-          <div>
-            <label>Salida real</label><b>{{ hhmm(dia.horaSalidaReal) }}</b>
-          </div>
-          <div>
-            <label>Programado</label><b>{{ min(dia.minutosProgramados) }}</b>
-          </div>
-          <div>
-            <label>Trabajado</label><b>{{ min(dia.minutosTrabajados) }}</b>
-          </div>
-          <div>
-            <label>Tarde</label><b>{{ min(dia.minutosTarde) }}</b>
-          </div>
-          <div>
-            <label>Salida temp.</label
-            ><b>{{ min(dia.minutosSalidaTemprana) }}</b>
-          </div>
-          <div>
-            <label>Extra diurna</label><b>{{ min(dia.minutosExtraDiurna) }}</b>
-          </div>
-          <div>
-            <label>Extra nocturna</label
-            ><b>{{ min(dia.minutosExtraNocturna) }}</b>
-          </div>
-          <div>
-            <label>Recargo nocturno</label
-            ><b>{{ min(dia.minutosNocturnos) }}</b>
-          </div>
-          <div>
-            <label>Dominical/festivo</label
-            ><b>{{ min(dia.minutosDominicalFestiva) }}</b>
-          </div>
-        </div>
-      </div>
-    </div>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="4">
+            <div class="empty-state">
+              <i class="pi pi-users"></i>
+              <p>
+                No hay empleados que requieran control de asistencia. Actívalo
+                en la ficha de cada empleado.
+              </p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr>
+          <td colspan="4"><p-skeleton height="2rem" /></td>
+        </tr>
+      </ng-template>
+    </p-table>
   </div>
 </div>
 

@@ -31,15 +31,67 @@ export const RESPONSABILIDAD_FISCAL_OPTIONS = [
   { label: 'Autorretenedor', value: 'Autorretenedor' },
 ];
 
+export const SEXO_OPTS = [
+  { label: 'Masculino', value: 'M' },
+  { label: 'Femenino', value: 'F' },
+  { label: 'Otro', value: 'OTRO' },
+];
+
+export type Sexo = 'M' | 'F' | 'OTRO';
+
+/**
+ * Campos de identificación y fiscales de la Fase 1 (backend V97).
+ *
+ * Se comparten entre TerceroModel y los DTOs: son los mismos campos de ida y
+ * de vuelta.
+ */
+export interface TerceroCamposFase1 {
+  // ── Identificación desagregada ─────────────────────────────
+  // La DIAN (nómina electrónica) y la UGPP (PILA) exigen los CUATRO
+  // componentes por separado. No partir `nombres`/`apellidos` con split(' '):
+  // falla con "DE LA ROSA", "VAN DER BERG" o nombres de una sola palabra.
+  // El backend tampoco lo hace, a propósito.
+  nombre1: string | null;
+  nombre2: string | null;
+  apellido1: string | null;
+  apellido2: string | null;
+
+  // ── Persona natural — requeridos por PILA ──────────────────
+  fechaNacimiento: string | null;
+  sexo: Sexo | null;
+  fechaExpedicionDocumento: string | null;
+  municipioExpedicionId: number | null;
+
+  // ── Persona jurídica ───────────────────────────────────────
+  // El representante legal es obligatorio en el encabezado de PILA.
+  nombreComercial: string | null;
+  representanteLegalNombre: string | null;
+  representanteLegalDocumento: string | null;
+
+  // ── Fiscal ─────────────────────────────────────────────────
+  // `autoRetenedor` era uno solo, pero son autorretenciones DISTINTAS:
+  // se puede ser de renta y no de ICA.
+  esAutoretenedorIca: boolean;
+  esAutoretenedorFuente: boolean;
+  declarante: boolean;
+
+  // ── Bancario ───────────────────────────────────────────────
+  bancoTerceroId: number | null;
+  tipoCuenta: string | null;
+  numeroCuenta: string | null;
+}
+
 // ─── Detalle ─────────────────────────────────────────────────
-export interface TerceroModel {
+export interface TerceroModel extends TerceroCamposFase1 {
   id: number;
   empresaId: number;
   tipoDocumento: TipoDocumento;
   numeroDocumento: string;
   dv: string | null;
   razonSocial: string | null;
+  /** @deprecated Usar nombre1/nombre2. Se conserva para compatibilidad. */
   nombres: string | null;
+  /** @deprecated Usar apellido1/apellido2. */
   apellidos: string | null;
   direccion: string | null;
   municipioId: number | null;
@@ -57,11 +109,18 @@ export interface TerceroModel {
   tipoPersona: 'NATURAL' | 'JURIDICA';
   regimen: string;
   granContribuyente: boolean;
+  /** @deprecated Usar esAutoretenedorIca / esAutoretenedorFuente. */
   autoRetenedor: boolean;
   codigoCIIU: string | null;
   actividadEconomica: string | null;
   pais: string;
   codigoPais: string;
+  /** Roles del tercero (backend V98). Solo lectura. */
+  roles?: string[];
+  /** Nombre del banco (resuelto) para mostrar en el selector. Solo lectura. */
+  bancoTerceroNombre?: string | null;
+  /** Código oficial UGPP si es EPS/AFP/CCF/ARL (V120). */
+  codigoSeguridadSocial?: string | null;
 }
 
 // ─── Tabla ───────────────────────────────────────────────────
@@ -77,15 +136,27 @@ export interface TerceroTableModel {
   esEmpleado: boolean;
   esBanco?: boolean;
   activo: boolean;
+  /** Todos los roles reales (tercero_rol), separados por coma. */
+  roles?: string | null;
 }
 
 // ─── DTOs ────────────────────────────────────────────────────
-export interface CreateTerceroDto {
+/**
+ * Los campos de la Fase 1 son OPCIONALES al crear/editar.
+ *
+ * El backend los tiene nullable, y no todos los flujos los necesitan: el modal
+ * de creación rápida (un cliente durante una venta) no debe pedir fecha de
+ * nacimiento ni representante legal. Los exige quien los necesita —el formulario
+ * completo— y PILA valida su presencia al liquidar, no al crear el tercero.
+ */
+export interface CreateTerceroDto extends Partial<TerceroCamposFase1> {
   tipoDocumento: TipoDocumento;
   numeroDocumento: string;
   dv: string | null;
   razonSocial: string | null;
+  /** @deprecated Usar nombre1/nombre2. */
   nombres: string | null;
+  /** @deprecated Usar apellido1/apellido2. */
   apellidos: string | null;
   direccion: string | null;
   municipioId: number;
@@ -103,11 +174,16 @@ export interface CreateTerceroDto {
   tipoPersona: 'NATURAL' | 'JURIDICA';
   regimen: string;
   granContribuyente: boolean;
+  /** @deprecated Usar esAutoretenedorIca / esAutoretenedorFuente. */
   autoRetenedor: boolean;
   codigoCIIU: string | null;
   actividadEconomica: string | null;
   pais: string;
   codigoPais: string;
+  /** Roles de seguridad social a asignar: EPS | AFP | CCF | ARL (V120). */
+  roles?: string[];
+  /** Código oficial UGPP si es EPS/AFP/CCF/ARL (V120). */
+  codigoSeguridadSocial?: string | null;
 }
 
 export interface UpdateTerceroDto extends CreateTerceroDto {

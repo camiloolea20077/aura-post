@@ -1,0 +1,148 @@
+<ng-template #cuerpo>
+  @if (!inline) {
+    <p class="sub">{{ contratoLabel || "Contrato" }}</p>
+  }
+
+  <!-- Procedimiento -->
+  <div class="proc">
+    <div class="field">
+      <label>Procedimiento de retención</label>
+      <p-dropdown
+        [(ngModel)]="procedimiento"
+        [options]="procedimientoOpts"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+      />
+    </div>
+    <button
+      pButton
+      type="button"
+      label="Guardar"
+      icon="pi pi-check"
+      class="p-button-sm btn-aura proc__btn"
+      [loading]="guardandoProc"
+      (click)="guardarProcedimiento()"
+    ></button>
+  </div>
+
+  <!-- Deducciones -->
+  <div class="ded-head">
+    <h4>Deducciones y rentas exentas</h4>
+    <button
+      pButton
+      type="button"
+      label="Agregar"
+      icon="pi pi-plus"
+      class="p-button-sm p-button-outlined"
+      (click)="abrirForm()"
+    ></button>
+  </div>
+
+  @if (loading) {
+    <p-skeleton height="6rem" />
+  } @else {
+    <table class="tbl">
+      <thead>
+        <tr>
+          <th>Tipo</th>
+          <th class="text-right">Valor</th>
+          <th>Vigencia</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (d of deducciones; track d.id) {
+          <tr>
+            <td>{{ labelDe(d.tipo) }}</td>
+            <td class="text-right">
+              @if (d.valorLoCalculaElMotor) {
+                <span class="muted">Lo calcula el motor</span>
+              } @else {
+                {{ d.valor | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+              }
+            </td>
+            <td class="muted">
+              {{ d.vigenteDesde }}@if (d.vigenteHasta) { → {{ d.vigenteHasta }} }
+            </td>
+            <td class="text-right">
+              <button
+                pButton
+                type="button"
+                icon="pi pi-trash"
+                class="p-button-text p-button-sm p-button-danger"
+                (click)="eliminar(d)"
+              ></button>
+            </td>
+          </tr>
+        }
+        @if (!deducciones.length) {
+          <tr><td colspan="4" class="muted text-center p-2">Sin deducciones registradas.</td></tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  @if (mostrarForm) {
+    <div class="form">
+      <div class="form-row">
+        <div class="field">
+          <label>Tipo <span class="req">*</span></label>
+          <p-dropdown
+            [(ngModel)]="tipo"
+            [options]="tiposDeduccion"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+          />
+          @if (hintDe(tipo)) { <small class="muted">{{ hintDe(tipo) }}</small> }
+        </div>
+        @if (!esDependientes) {
+          <div class="field">
+            <label>Valor mensual <span class="req">*</span></label>
+            <p-inputNumber [(ngModel)]="valor" mode="currency" currency="COP" locale="es-CO" [maxFractionDigits]="0" styleClass="w-full" placeholder="0" />
+          </div>
+        }
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>Vigente desde <span class="req">*</span></label>
+          <p-calendar [(ngModel)]="vigenteDesde" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full" placeholder="AAAA-MM-DD" />
+        </div>
+        <div class="field">
+          <label>Vigente hasta</label>
+          <p-calendar [(ngModel)]="vigenteHasta" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full" placeholder="Indefinido" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Soporte</label>
+        <input pInputText [(ngModel)]="soporte" class="w-full" placeholder="Referencia del documento (opcional)" />
+      </div>
+      <div class="form-actions">
+        <button pButton type="button" label="Cancelar" class="p-button-text p-button-sm" (click)="cancelarForm()"></button>
+        <button pButton type="button" label="Guardar" icon="pi pi-check" class="btn-aura p-button-sm" [loading]="guardando" (click)="guardar()"></button>
+      </div>
+    </div>
+  }
+</ng-template>
+
+@if (inline) {
+  <div class="tab-body">
+    <ng-container [ngTemplateOutlet]="cuerpo"></ng-container>
+  </div>
+} @else {
+  <p-dialog
+    [visible]="visible"
+    (visibleChange)="!$event && onHide()"
+    header="Retención en la fuente"
+    [modal]="true"
+    [style]="{ width: '46rem' }"
+    [draggable]="false"
+    (onHide)="onHide()"
+  >
+    <ng-container [ngTemplateOutlet]="cuerpo"></ng-container>
+    <ng-template pTemplate="footer">
+      <button pButton type="button" label="Cerrar" class="p-button-text" (click)="onHide()"></button>
+    </ng-template>
+  </p-dialog>
+}

@@ -139,3 +139,35 @@
     margin: 0;
   }
 }
+
+/* Lote: chip de definitiva y conteo de conceptos */
+.tipo-chip.def {
+  background: rgba(124, 58, 237, 0.12);
+  color: #7c3aed;
+}
+.conteo {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--text-color-secondary, #94a3b8);
+  margin-top: 0.15rem;
+}
+.muted { color: var(--text-color-secondary, #94a3b8); }
+
+.detalle-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 2px solid var(--surface-border, #e2e8f0);
+  font-size: 1.05rem;
+
+  strong { font-variant-numeric: tabular-nums; }
+}
+
+.lote-hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+  line-height: 1.4;
+}

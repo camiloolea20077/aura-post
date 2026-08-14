@@ -8,18 +8,27 @@ import {
   ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import {
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+} from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
-import { InputTextarea } from 'primeng/inputtextarea';
+import { TextareaModule } from 'primeng/textarea';
 import { CalendarModule } from 'primeng/calendar';
 import { DropdownModule } from 'primeng/dropdown';
 import { lastValueFrom } from 'rxjs';
 
 import { AlertService } from '../../../shared/pipes/alert.service';
-import { CreateCuentaCobrarDto, UpdateCuentaCobrarDto, MetodoPago } from '../models/cuenta-cobrar.model';
+import {
+  CreateCuentaCobrarDto,
+  UpdateCuentaCobrarDto,
+  MetodoPago,
+} from '../models/cuenta-cobrar.model';
 import { CuentaCobrarService } from '../services/cuenta-cobrar.service';
 import { TerceroService } from '../../../core/services/tercero.service';
 
@@ -34,7 +43,7 @@ import { TerceroService } from '../../../core/services/tercero.service';
     ButtonModule,
     InputNumberModule,
     InputTextModule,
-    InputTextarea,
+    TextareaModule,
     CalendarModule,
     DropdownModule,
   ],
@@ -85,7 +94,9 @@ export class FormCuentaCobrarComponent implements OnChanges {
           clienteId: this.cuenta.terceroId,
           totalDeuda: this.cuenta.totalDeuda,
           fechaEmision: new Date(this.cuenta.fechaEmision),
-          fechaVencimiento: this.cuenta.fechaVencimiento ? new Date(this.cuenta.fechaVencimiento) : null,
+          fechaVencimiento: this.cuenta.fechaVencimiento
+            ? new Date(this.cuenta.fechaVencimiento)
+            : null,
           observaciones: this.cuenta.observaciones,
         });
       } else {
@@ -126,7 +137,10 @@ export class FormCuentaCobrarComponent implements OnChanges {
           observaciones: dto.observaciones,
         };
         await lastValueFrom(this.service.update(this.cuenta.id, updateDto));
-        this.alert.showSuccess('Actualizado', 'La cuenta por cobrar ha sido actualizada');
+        this.alert.showSuccess(
+          'Actualizado',
+          'La cuenta por cobrar ha sido actualizada',
+        );
       } else {
         await lastValueFrom(this.service.create(dto));
         this.alert.showSuccess('Creado', 'La cuenta por cobrar ha sido creada');
@@ -134,7 +148,10 @@ export class FormCuentaCobrarComponent implements OnChanges {
       this.saved.emit();
       this.close();
     } catch (err: any) {
-      this.alert.showError('Error', err?.error?.message || 'No se pudo guardar');
+      this.alert.showError(
+        'Error',
+        err?.error?.message || 'No se pudo guardar',
+      );
     } finally {
       this.loading = false;
       this.cdr.markForCheck();

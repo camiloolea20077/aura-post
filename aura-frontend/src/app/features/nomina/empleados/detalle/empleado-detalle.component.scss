@@ -1,0 +1,81 @@
+.muted {
+  color: var(--text-color-secondary);
+  font-size: 0.9rem;
+}
+
+/* Contenido con aire respecto a los bordes de la card. */
+.contenido {
+  padding: 1.25rem 1.5rem 1.75rem;
+}
+
+.bloque {
+  margin-bottom: 1.5rem;
+}
+
+/* Encabezado de identidad: barra contenida, con padding, no pegada al borde. */
+.bloque__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1.15rem;
+  background: var(--surface-50, #f8fafc);
+  border: 1px solid var(--surface-border, #e2e8f0);
+  border-radius: 10px;
+}
+.bloque__titulo {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+.resumen {
+  margin: 0.3rem 0 0;
+  color: var(--text-color-secondary);
+  font-size: 0.85rem;
+}
+
+.asistencia-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--surface-50, #f8fafc);
+  border: 1px solid var(--surface-border, #e2e8f0);
+  border-radius: 8px;
+
+  &__label {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  .muted {
+    display: block;
+    color: var(--text-color-secondary);
+    font-size: 0.8rem;
+  }
+}
+
+/* El formulario embebido, separado del encabezado. */
+.bloque > app-form-tercero-plano {
+  display: block;
+  margin-top: 0.85rem;
+}
+
+.sel-contrato {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+
+  label {
+    color: var(--text-color-secondary);
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+  :host ::ng-deep .p-dropdown { min-width: 22rem; }
+}
+
+:host ::ng-deep .detalle-tabs .p-tabview-panels {
+  padding: 1rem 0.25rem;
+}

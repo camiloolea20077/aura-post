@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
@@ -60,7 +61,17 @@ export class IndexEmpleadosComponent implements OnInit {
   constructor(
     private readonly nominaService: NominaService,
     private readonly alertService: AlertService,
+    private readonly router: Router,
   ) {}
+
+  /**
+   * Ficha del empleado: identidad (form de tercero) + tabs de contratos,
+   * afiliaciones, retenciones y embargos. El salario, las fechas y la
+   * terminación viven en el tab de contratos (preservan histórico).
+   */
+  verContratos(item: EmpleadoTableModel): void {
+    this.router.navigate(['/nomina/empleados', item.id, 'ficha']);
+  }
 
   ngOnInit(): void {}
 
@@ -108,20 +119,14 @@ export class IndexEmpleadosComponent implements OnInit {
     if (this.lastLazyEvent) this.loadTable(this.lastLazyEvent);
   }
 
+  /** Alta nueva: crea la identidad (tercero) y cae en la ficha. */
   openForm(): void {
-    this.selectedEmpleado = null;
-    this.showFormModal = true;
+    this.router.navigate(['/nomina/empleados/nuevo']);
   }
 
+  /** Editar = abrir la ficha (identidad + contratos/afiliaciones/etc.). */
   editEmpleado(item: EmpleadoTableModel): void {
-    this.nominaService.getEmpleadoById(item.id).subscribe({
-      next: (res) => {
-        this.selectedEmpleado = res?.data ?? null;
-        this.showFormModal = true;
-      },
-      error: () =>
-        this.alertService.showError('Error', 'No se pudo cargar el empleado'),
-    });
+    this.router.navigate(['/nomina/empleados', item.id, 'ficha']);
   }
 
   async retirarEmpleado(item: EmpleadoTableModel): Promise<void> {

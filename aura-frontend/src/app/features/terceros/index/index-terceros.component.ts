@@ -153,11 +153,31 @@ export class IndexTercerosComponent implements OnInit {
     return nombre.charAt(0).toUpperCase();
   }
 
+  private readonly rolLabels: Record<string, string> = {
+    CLIENTE: 'Cliente',
+    PROVEEDOR: 'Proveedor',
+    EMPLEADO: 'Empleado',
+    BANCO: 'Banco',
+    EPS: 'EPS',
+    AFP: 'AFP',
+    CCF: 'CCF',
+    ARL: 'ARL',
+    CESANTIAS: 'Cesantías',
+  };
+
   getRoles(item: TerceroTableModel): string[] {
+    // Preferir los roles reales (tercero_rol); si no vienen, caer a los booleanos.
+    if (item.roles) {
+      return item.roles
+        .split(',')
+        .map((r) => this.rolLabels[r.trim()] ?? r.trim())
+        .filter((r) => !!r);
+    }
     const roles: string[] = [];
     if (item.esCliente) roles.push('Cliente');
     if (item.esProveedor) roles.push('Proveedor');
     if (item.esEmpleado) roles.push('Empleado');
+    if (item.esBanco) roles.push('Banco');
     return roles;
   }
 
@@ -167,7 +187,7 @@ export class IndexTercerosComponent implements OnInit {
         Cliente: 'rol-cliente',
         Proveedor: 'rol-proveedor',
         Empleado: 'rol-empleado',
-      }[rol] ?? ''
+      }[rol] ?? 'rol-otro'
     );
   }
 

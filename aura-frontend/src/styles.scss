@@ -291,6 +291,45 @@ body {
   }
 }
 
+// ── Botones de acción por color (estándar del sistema) ─────────────────────
+// Verde = Agregar/Actualizar/Guardar · Rojo = Regresar/Salir · Amarillo = Cancelar
+.btn-verde,
+.btn-rojo,
+.btn-amarillo {
+  border: none !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  font-family: "Outfit", sans-serif !important;
+  color: #fff !important;
+  transition: all 0.2s !important;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px) !important;
+    filter: brightness(0.95);
+  }
+  &:disabled {
+    opacity: 0.55 !important;
+    box-shadow: none !important;
+  }
+  .p-button-label,
+  .p-button-icon {
+    color: #fff !important;
+  }
+}
+
+.btn-verde {
+  background: var(--aura-success) !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.28) !important;
+}
+.btn-rojo {
+  background: var(--aura-danger) !important;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.28) !important;
+}
+.btn-amarillo {
+  background: var(--aura-warning) !important;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.28) !important;
+}
+
 // Números y precios
 .numeric,
 .price,

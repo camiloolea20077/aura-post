@@ -30,6 +30,9 @@
 
     <p-table
       [value]="turnos"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
       [loading]="loading"
       showGridlines
       [tableStyle]="{ 'min-width': '700px' }"
@@ -243,6 +246,9 @@
 
     <p-table
       [value]="asignaciones"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
       [loading]="loadingAsign"
       showGridlines
       [tableStyle]="{ 'min-width': '500px' }"

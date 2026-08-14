@@ -12,6 +12,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { DropdownModule } from 'primeng/dropdown';
 import { DialogModule } from 'primeng/dialog';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -43,6 +44,7 @@ import {
     InputNumberModule,
     DropdownModule,
     DialogModule,
+    ToggleSwitchModule,
     TableModule,
     ToastModule,
     TooltipModule,
@@ -151,6 +153,8 @@ export class IndexCuentasBancariasComponent implements OnInit {
       terceroId: c.terceroId,
       cuentaContableId: c.cuentaContableId,
       saldoInicial: c.saldoInicial,
+      permiteSobregiro: c.permiteSobregiro ?? false,
+      cupoSobregiro: c.cupoSobregiro ?? null,
     };
     this.terceroNombreSel = c.terceroNombre ?? null;
     this.showModal = true;
@@ -220,6 +224,11 @@ export class IndexCuentasBancariasComponent implements OnInit {
     return this.form.tipo === 'BANCO';
   }
 
+  onPermiteSobregiroChange(): void {
+    // Si se desactiva el sobregiro, se limpia el cupo.
+    if (!this.form.permiteSobregiro) this.form.cupoSobregiro = null;
+  }
+
   private emptyForm(): CreateCuentaBancariaDto {
     return {
       nombre: '',
@@ -230,6 +239,8 @@ export class IndexCuentasBancariasComponent implements OnInit {
       terceroId: null,
       cuentaContableId: null,
       saldoInicial: 0,
+      permiteSobregiro: false,
+      cupoSobregiro: null,
     };
   }
 }

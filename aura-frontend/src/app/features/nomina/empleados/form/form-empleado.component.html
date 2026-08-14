@@ -65,6 +65,14 @@
           [style]="{ width: '100%' }"
         />
       </div>
+      <!--
+        Datos del contrato inicial (Fase 2).
+
+        Solo se piden al CREAR: el backend arma el contrato con ellos. Al editar
+        se bloquean, porque cambiar el salario acá perdería el histórico —
+        y sin histórico no hay retroactivos ni bandera `vsp` en PILA.
+        El cambio va por la pantalla de contratos.
+      -->
       <div class="field">
         <label>Fecha de ingreso *</label>
         <p-calendar
@@ -72,6 +80,7 @@
           dateFormat="dd/mm/yy"
           placeholder="dd/mm/aaaa"
           [showIcon]="true"
+          [disabled]="esEdicion"
           [style]="{ width: '100%' }"
         />
       </div>
@@ -87,6 +96,7 @@
           [showButtons]="false"
           [min]="0"
           placeholder="0"
+          [disabled]="esEdicion"
           [style]="{ width: '100%' }"
         />
       </div>
@@ -97,6 +107,7 @@
           [(ngModel)]="form.tipoContrato"
           optionLabel="label"
           optionValue="value"
+          [disabled]="esEdicion"
           [style]="{ width: '100%' }"
         />
       </div>
@@ -107,11 +118,21 @@
           dateFormat="dd/mm/yy"
           placeholder="dd/mm/aaaa"
           [showIcon]="true"
+          [disabled]="esEdicion"
           [style]="{ width: '100%' }"
         />
         <small class="field-hint">
           Obligatoria en contratos a término fijo (define vencimiento y liquidación).
         </small>
+      </div>
+
+      <div class="field field--full" *ngIf="esEdicion">
+        <p-message severity="info" styleClass="w-full">
+          Los datos del contrato se administran desde
+          <b>Contratos</b>: cambiar el salario ahí conserva el histórico, que es
+          lo que permite liquidar retroactivos y reportar a PILA.
+          <a class="link-contratos" (click)="irAContratos()">Ir a contratos</a>
+        </p-message>
       </div>
       <div class="field">
         <label>Nivel de riesgo ARL</label>

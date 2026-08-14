@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
@@ -13,16 +13,22 @@ import { DropdownModule } from 'primeng/dropdown';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
-import { FormComposicionComponent } from '../form/form-composicion.component';
+import { FormRecetaComponent } from '../receta/form-receta.component';
 import {
-  ComposicionPageableDto,
-  ProductoComposicionTableModel,
+  RecetaResumenTableModel,
   TipoComposicion,
 } from '../../../../core/models/producto-composicion.model';
 import { ProductoComposicionService } from '../../../../core/services/producto-composicion.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 import { IFilterTable } from '../../../../shared/utils/filter-table';
 
+/**
+ * Listado de composiciones agrupado por producto.
+ *
+ * Antes mostraba una fila por ingrediente: un negocio con 60 productos
+ * compuestos veía cientos de filas sueltas y tenía que editarlas de a una.
+ * Ahora cada fila es una receta completa y se edita entera en un solo guardado.
+ */
 @Component({
   selector: 'app-index-composicion',
   standalone: true,
@@ -38,31 +44,23 @@ import { IFilterTable } from '../../../../shared/utils/filter-table';
     TooltipModule,
     SkeletonModule,
     DropdownModule,
-    FormComposicionComponent,
+    FormRecetaComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './index-composicion.component.html',
   styleUrls: ['./index-composicion.component.scss'],
 })
-export class IndexComposicionComponent implements OnInit {
+export class IndexComposicionComponent {
   public showModal = false;
-  public selectedId: number | null = null;
-  public modalSlug = 'create';
+  public selectedPadreId: number | null = null;
 
-  public items: ProductoComposicionTableModel[] = [];
+  public items: RecetaResumenTableModel[] = [];
   public loadingTable = true;
   public totalRecords = 0;
   public rowSize = 10;
   public searchQuery = '';
   public lastLazyEvent!: TableLazyLoadEvent;
   filtersTable!: IFilterTable<any>;
-  // Filtro por tipo
-  public tipoFiltro: TipoComposicion | null = null;
-  public tipoOpts = [
-    { label: 'Todos los tipos', value: null },
-    { label: 'Kit', value: 'KIT' },
-    { label: 'Receta', value: 'RECETA' },
-  ];
 
   constructor(
     private readonly composicionService: ProductoComposicionService,
@@ -70,25 +68,25 @@ export class IndexComposicionComponent implements OnInit {
     private readonly confirmationService: ConfirmationService,
   ) {}
 
-  ngOnInit(): void {}
-
   async loadTable(lazyTable: TableLazyLoadEvent): Promise<void> {
     this.loadingTable = true;
+    this.lastLazyEvent = lazyTable;
     this.filtersTable = this.prepareTableParams(lazyTable);
 
     try {
       const response = await lastValueFrom(
-        this.composicionService.page(this.filtersTable),
+        this.composicionService.pageRecetas(this.filtersTable),
       );
       this.items = response.data?.content ?? [];
       this.totalRecords = response.data?.totalElements ?? 0;
-      this.loadingTable = false;
-    } catch (error) {
+    } catch {
       this.items = [];
       this.totalRecords = 0;
+    } finally {
       this.loadingTable = false;
     }
   }
+
   private prepareTableParams(lazyTable: TableLazyLoadEvent): IFilterTable<any> {
     this.rowSize = lazyTable.rows ?? this.rowSize;
     const currentPage = lazyTable.first
@@ -102,51 +100,57 @@ export class IndexComposicionComponent implements OnInit {
       order_by: lazyTable.sortField ?? 'id',
     };
   }
-  filterGlobal(event: Event) {
+
+  filterGlobal(event: Event): void {
     this.loadTable({
       first: 0,
       rows: this.rowSize,
       globalFilter: (event.target as HTMLInputElement)?.value ?? '',
     });
   }
+
   onSearch(): void {
     if (this.lastLazyEvent) this.loadTable({ ...this.lastLazyEvent, first: 0 });
   }
+
   clearSearch(): void {
     this.searchQuery = '';
     this.onSearch();
   }
-  onTipoChange(): void {
-    this.onSearch();
-  }
 
   openCreate(): void {
-    this.selectedId = null;
-    this.modalSlug = 'create';
+    this.selectedPadreId = null;
     this.showModal = true;
   }
-  openEdit(item: ProductoComposicionTableModel): void {
-    this.selectedId = item.id;
-    this.modalSlug = 'edit';
+
+  openEdit(item: RecetaResumenTableModel): void {
+    this.selectedPadreId = item.productoPadreId;
     this.showModal = true;
   }
 
   onModalClosed(): void {
     this.showModal = false;
-    this.selectedId = null;
+    this.selectedPadreId = null;
   }
-  onItemSaved(): void {
+
+  onRecetaSaved(): void {
     this.showModal = false;
+    this.selectedPadreId = null;
     this.reloadTable();
   }
+
   private reloadTable(): void {
     if (this.lastLazyEvent) this.loadTable(this.lastLazyEvent);
   }
 
-  confirmDelete(item: ProductoComposicionTableModel): void {
+  /**
+   * Borrar la receta = guardarla sin componentes. No hay endpoint de borrado
+   * masivo porque el guardado por lote ya es un reemplazo total.
+   */
+  confirmDelete(item: RecetaResumenTableModel): void {
     this.confirmationService.confirm({
-      message: `¿Eliminar la composición de <strong>${item.productoHijoNombre}</strong>
-                en <strong>${item.productoPadreNombre}</strong>?`,
+      message: `¿Eliminar la receta de <strong>${item.productoPadreNombre}</strong>?
+                Se quitarán sus ${item.totalComponentes} ingredientes.`,
       header: 'Confirmar eliminación',
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Sí, eliminar',
@@ -155,13 +159,14 @@ export class IndexComposicionComponent implements OnInit {
       accept: async () => {
         try {
           const response = await lastValueFrom(
-            this.composicionService.delete(item.id),
+            this.composicionService.guardarReceta(item.productoPadreId, {
+              tipo: item.tipo,
+              rendimiento: item.rendimiento,
+              componentes: [],
+            }),
           );
           if (response?.status === 200) {
-            this.alertService.showSuccess(
-              'Composición eliminada',
-              response.message,
-            );
+            this.alertService.showSuccess('Receta eliminada', response.message);
             this.reloadTable();
           }
         } catch (error: any) {
@@ -176,5 +181,13 @@ export class IndexComposicionComponent implements OnInit {
 
   getTipoSeverity(tipo: TipoComposicion): 'info' | 'success' {
     return tipo === 'KIT' ? 'info' : 'success';
+  }
+
+  /** Margen contra el costo estimado de la receta, para pintar la columna. */
+  margen(item: RecetaResumenTableModel): number | null {
+    if (!item.precio || item.precio <= 0 || item.costoEstimado === null) {
+      return null;
+    }
+    return ((item.precio - item.costoEstimado) / item.precio) * 100;
   }
 }

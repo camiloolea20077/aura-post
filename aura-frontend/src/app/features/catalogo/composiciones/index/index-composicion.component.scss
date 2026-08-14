@@ -117,6 +117,51 @@
   max-width: 170px;
 }
 
+// ─── Columnas del listado por receta ───────────────────────────
+.fila-receta {
+  cursor: pointer;
+}
+
+.prod-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.prod-sku {
+  font-size: 0.68rem;
+  color: #94a3b8;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.rend-valor,
+.costo-valor {
+  display: block;
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 700;
+  font-size: 0.86rem;
+  color: #1e293b;
+}
+
+.rend-label,
+.costo-nota {
+  display: block;
+  font-size: 0.65rem;
+  color: #94a3b8;
+}
+
+// El costo guardado en el producto quedó desfasado del de la receta: se avisa
+// sin bloquear, porque re-costear es una decisión del usuario.
+.costo-nota {
+  color: #d97706;
+  cursor: help;
+}
+
+.sin-dato {
+  color: #cbd5e1;
+}
+
 // ─── Flecha ────────────────────────────────────────────────────
 .arrow-cell {
   display: flex;

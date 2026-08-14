@@ -1,0 +1,29 @@
+/* Estilos propios de la tabla de contratos.
+   El patrón (.page, .card, .card-head, .title, .btn-aura) es global y vive en
+   styles.scss — no se redefine aquí. */
+
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-muted {
+  color: var(--text-color-secondary);
+}
+
+.ml-2 {
+  margin-left: 0.5rem;
+}
+
+.page.embedded {
+  padding: 0;
+}
+.page.embedded .card {
+  box-shadow: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}

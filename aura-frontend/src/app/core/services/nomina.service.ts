@@ -9,15 +9,19 @@ import {
   CreateUsuarioFromEmpleadoDto,
   EmpleadoModel,
   EmpleadoTableModel,
+  HistorialPagoModel,
   NominaConfigModel,
   NominaModel,
   NominaPageableDto,
   NominaTableModel,
   PagoNominaDto,
   PeriodoNominaModel,
+  SaldosInicialesModel,
+  VacacionesSaldoModel,
   PeriodoResumenModel,
   UpdateNominaConfigDto,
 } from '../models/nomina.model';
+import { ProcesoModel } from '../models/proceso.model';
 import { environment } from '../../../environments/environment';
 import { ResponseTableModel } from '../../shared/utils/response-table.model';
 import { ResponseModel } from '../../shared/utils/responde.models';
@@ -60,12 +64,41 @@ export class NominaService {
     );
   }
 
+  /** Empleados con contrato activo (para prestaciones/nómina). */
+  empleadosConContratoActivo(): Observable<ResponseModel<EmpleadoModel[]>> {
+    return this.http.get<ResponseModel<EmpleadoModel[]>>(
+      `${this.base}empleados/con-contrato-activo`,
+    );
+  }
+
   createEmpleado(
     dto: CreateEmpleadoDto,
   ): Observable<ResponseModel<EmpleadoModel>> {
     return this.http.post<ResponseModel<EmpleadoModel>>(
       `${this.base}empleados/create`,
       dto,
+    );
+  }
+
+  /** Alta de empleado desde un tercero ya creado (identidad+banco en tercero). */
+  crearEmpleadoDesdeTercero(
+    terceroId: number,
+    cargo?: string | null,
+  ): Observable<ResponseModel<EmpleadoModel>> {
+    return this.http.post<ResponseModel<EmpleadoModel>>(
+      `${this.base}empleados/desde-tercero`,
+      { terceroId, cargo: cargo ?? null },
+    );
+  }
+
+  /** Marca si el empleado requiere control de asistencia (config MIXTA). */
+  cambiarControlAsistencia(
+    id: number,
+    requiere: boolean,
+  ): Observable<ResponseModel<EmpleadoModel>> {
+    return this.http.put<ResponseModel<EmpleadoModel>>(
+      `${this.base}empleados/${id}/control-asistencia?requiere=${requiere}`,
+      {},
     );
   }
 
@@ -134,6 +167,41 @@ export class NominaService {
     );
   }
 
+  /** Trazabilidad de pagos de un empleado (nóminas no anuladas, recientes primero). */
+  historialPagos(
+    empleadoId: number,
+  ): Observable<ResponseModel<HistorialPagoModel[]>> {
+    return this.http.get<ResponseModel<HistorialPagoModel[]>>(
+      `${this.base}nomina/empleado/${empleadoId}/historial`,
+    );
+  }
+
+  /** F3 — saldo de vacaciones de un empleado. */
+  vacacionesSaldo(
+    empleadoId: number,
+  ): Observable<ResponseModel<VacacionesSaldoModel>> {
+    return this.http.get<ResponseModel<VacacionesSaldoModel>>(
+      `${this.base}nomina/empleado/${empleadoId}/vacaciones-saldo`,
+    );
+  }
+
+  // ─── F7: saldos iniciales (migración) ───────────────────────
+  listarSaldosIniciales(): Observable<ResponseModel<SaldosInicialesModel[]>> {
+    return this.http.get<ResponseModel<SaldosInicialesModel[]>>(
+      `${this.base}empleados/saldos-iniciales`,
+    );
+  }
+
+  guardarSaldosIniciales(
+    empleadoId: number,
+    dto: SaldosInicialesModel,
+  ): Observable<ResponseModel<SaldosInicialesModel>> {
+    return this.http.put<ResponseModel<SaldosInicialesModel>>(
+      `${this.base}empleados/${empleadoId}/saldos-iniciales`,
+      dto,
+    );
+  }
+
   getResumenPeriodo(
     periodoId: number,
   ): Observable<ResponseModel<PeriodoResumenModel>> {
@@ -172,10 +240,24 @@ export class NominaService {
     );
   }
 
-  liquidarTodos(periodoId: number): Observable<ResponseModel<void>> {
-    return this.http.post<ResponseModel<void>>(
+  /**
+   * Lanza la liquidación de todo el período en segundo plano.
+   *
+   * Responde 202 con el proceso en PENDIENTE; hay que hacer polling con
+   * {@link consultarProceso}. Un 409 significa que ya hay una liquidación
+   * corriendo para ese período.
+   */
+  liquidarTodos(periodoId: number): Observable<ResponseModel<ProcesoModel>> {
+    return this.http.post<ResponseModel<ProcesoModel>>(
       `${this.base}nomina/liquidar/${periodoId}/todos`,
       {},
+    );
+  }
+
+  /** Estado de un proceso asíncrono, para el polling. */
+  consultarProceso(procesoId: number): Observable<ResponseModel<ProcesoModel>> {
+    return this.http.get<ResponseModel<ProcesoModel>>(
+      `${this.base}proceso/${procesoId}`,
     );
   }
 

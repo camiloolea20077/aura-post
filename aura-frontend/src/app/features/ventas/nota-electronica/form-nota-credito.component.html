@@ -1,0 +1,417 @@
+<div class="page">
+  <div class="card">
+    <!-- Header -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-file-edit"></i></span>
+        <div>
+          <h1 class="title">{{ tituloDoc }}</h1>
+          <p class="subtitle">
+            {{
+              esDebito
+                ? "Cobra un valor adicional sobre una factura electrónica"
+                : "Corrige o anula una factura electrónica ante la DIAN"
+            }}
+          </p>
+        </div>
+      </div>
+      <button
+        pButton
+        type="button"
+        label="Registrar"
+        icon="pi pi-check"
+        class="btn-verde"
+        [loading]="saving"
+        (click)="registrar()"
+      ></button>
+    </div>
+
+    <!-- ── Información general ── -->
+    <section class="nc-section">
+      <h3>Información general</h3>
+      <div class="grid formgrid">
+        <div class="field col-12 md:col-6">
+          <label>Tipo de operación</label>
+          <p-dropdown
+            [(ngModel)]="form.customizationId"
+            [options]="tipoOperacionOpts"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+          />
+        </div>
+        <div class="field col-12 md:col-6">
+          <label>Concepto de corrección</label>
+          <p-dropdown
+            [(ngModel)]="form.correctionConceptCode"
+            [options]="conceptoOpts"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+          />
+        </div>
+        <div class="field col-12 md:col-6">
+          <label>Rango de numeración (opcional)</label>
+          <p-inputNumber
+            [(ngModel)]="form.numberingRangeId"
+            [useGrouping]="false"
+            placeholder="ID del rango"
+            styleClass="w-full"
+          />
+        </div>
+        <div class="field col-12 md:col-6">
+          <label>Referencia <span class="req">*</span></label>
+          <input
+            pInputText
+            [(ngModel)]="form.referenceCode"
+            class="w-full"
+            placeholder="Código único"
+          />
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Factura referenciada ── -->
+    <section class="nc-section" *ngIf="requiereFactura">
+      <h3>Factura</h3>
+
+      <div *ngIf="!facturaSel" class="nc-buscar">
+        <span class="search-wrap">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            pInputText
+            class="search-input"
+            placeholder="N° de factura, documento o nombre del cliente"
+            [(ngModel)]="facturaSearch"
+            (keydown.enter)="buscarFactura()"
+          />
+        </span>
+        <button
+          pButton
+          type="button"
+          label="Buscar"
+          icon="pi pi-search"
+          class="btn-aura"
+          [loading]="buscando"
+          (click)="buscarFactura()"
+        ></button>
+      </div>
+
+      <p-table
+        *ngIf="resultados.length && !facturaSel"
+        [value]="resultados"
+        styleClass="p-datatable-sm"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>N° Factura</th>
+            <th>Cliente</th>
+            <th>Documento</th>
+            <th></th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-f>
+          <tr>
+            <td>{{ f.numero }}</td>
+            <td>{{ f.cliente || "—" }}</td>
+            <td>{{ f.identificacion || "—" }}</td>
+            <td class="text-right">
+              <button
+                pButton
+                label="Seleccionar"
+                class="p-button-sm p-button-text"
+                (click)="seleccionarFactura(f)"
+              ></button>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+
+      <div *ngIf="facturaSel" class="nc-factura-sel">
+        <div>
+          <div>
+            <span class="lbl">N° factura</span> <b>{{ facturaSel.numero }}</b>
+          </div>
+          <div>
+            <span class="lbl">CUFE</span>
+            <code class="cufe">{{ facturaSel.cufe || "—" }}</code>
+          </div>
+          <div>
+            <span class="lbl">Cliente</span> {{ facturaSel.cliente }} ·
+            {{ facturaSel.identificacion }}
+          </div>
+        </div>
+        <button
+          pButton
+          type="button"
+          label="Cambiar"
+          icon="pi pi-sync"
+          class="p-button-text"
+          (click)="limpiarFactura()"
+        ></button>
+      </div>
+    </section>
+
+    <!-- ── Productos ── -->
+    <section class="nc-section">
+      <h3>Producto o servicio</h3>
+
+      <!-- Card editor del producto -->
+      <div class="p-3 border-1 surface-border border-round mb-3">
+        <div class="flex align-items-center gap-2 mb-2">
+          <button
+            pButton
+            type="button"
+            label="Buscar producto"
+            icon="pi pi-search"
+            class="p-button-outlined"
+            (click)="abrirBuscador()"
+          ></button>
+          <span class="text-sm text-primary" *ngIf="editIndex !== null"
+            ><i class="pi pi-pencil"></i> Editando</span
+          >
+        </div>
+
+        <!-- Fila 1: referencia, nombre, impuesto -->
+        <div class="grid formgrid">
+          <div class="field col-12 md:col-3">
+            <label>Referencia</label
+            ><input
+              pInputText
+              [(ngModel)]="itemForm.codeReference"
+              class="w-full"
+            />
+          </div>
+          <div class="field col-12 md:col-6">
+            <label>Nombre <span class="req">*</span></label
+            ><input pInputText [(ngModel)]="itemForm.name" class="w-full" />
+          </div>
+          <div class="field col-12 md:col-3">
+            <label>Impuesto</label>
+            <p-dropdown
+              [(ngModel)]="itemForm.taxRate"
+              [options]="taxRateOpts"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-full"
+            />
+          </div>
+        </div>
+
+        <!-- Fila 2: precio, unidad, cantidad, descuento -->
+        <div class="grid formgrid">
+          <div class="field col-6 md:col-3">
+            <label>Precio <span class="req">*</span></label>
+            <p-inputNumber
+              [(ngModel)]="itemForm.price"
+              mode="currency"
+              currency="COP"
+              locale="es-CO"
+              [maxFractionDigits]="0"
+              styleClass="w-full"
+            />
+          </div>
+          <div class="field col-6 md:col-3">
+            <label>Unidad</label>
+            <p-dropdown
+              [(ngModel)]="itemForm.unitMeasureId"
+              [options]="unidadOpts"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-full"
+            />
+          </div>
+          <div class="field col-6 md:col-3">
+            <label>Cantidad</label
+            ><p-inputNumber
+              [(ngModel)]="itemForm.quantity"
+              [min]="1"
+              styleClass="w-full"
+            />
+          </div>
+          <div class="field col-6 md:col-3">
+            <label>Descuento %</label
+            ><p-inputNumber
+              [(ngModel)]="itemForm.discountRate"
+              [min]="0"
+              [max]="100"
+              styleClass="w-full"
+            />
+          </div>
+        </div>
+
+        <!-- Fila 3: total (completa) -->
+        <div class="grid formgrid">
+          <div class="field col-12">
+            <label>Total</label>
+            <div class="nc-total-box">
+              {{ totalItemForm | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones a la derecha -->
+        <div class="flex justify-content-end gap-2">
+          <button
+            *ngIf="editIndex !== null"
+            pButton
+            type="button"
+            label="Eliminar"
+            icon="pi pi-trash"
+            class="btn-rojo"
+            (click)="eliminarItem()"
+          ></button>
+          <button
+            pButton
+            type="button"
+            label="Cancelar"
+            icon="pi pi-times"
+            class="btn-amarillo"
+            (click)="cancelarItem()"
+          ></button>
+          <button
+            pButton
+            type="button"
+            [label]="editIndex !== null ? 'Actualizar' : 'Agregar'"
+            [icon]="editIndex !== null ? 'pi pi-check' : 'pi pi-plus'"
+            class="btn-verde"
+            (click)="guardarItem()"
+          ></button>
+        </div>
+      </div>
+
+      <!-- Productos agregados: click en la fila → editar arriba -->
+      <p-table [value]="items" styleClass="p-datatable-sm nc-items-tbl">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>#</th>
+            <th>Referencia</th>
+            <th>Nombre</th>
+            <th class="text-right">Cant.</th>
+            <th class="text-right">Valor U.</th>
+            <th class="text-right">Desc.</th>
+            <th class="text-right">Impuesto</th>
+            <th class="text-right">IVA</th>
+            <th class="text-right">Total</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-it let-i="rowIndex">
+          <tr
+            class="nc-item-row"
+            [class.sel]="editIndex === i"
+            (click)="editarItem(it, i)"
+          >
+            <td>{{ i + 1 }}</td>
+            <td>{{ it.code_reference }}</td>
+            <td>{{ it.name }}</td>
+            <td class="text-right">{{ it.quantity }}</td>
+            <td class="text-right">
+              {{ it.price | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+            </td>
+            <td class="text-right">{{ it.discount_rate }}%</td>
+            <td class="text-right">{{ it.tax_rate }}%</td>
+            <td class="text-right">
+              {{ ivaLinea(it) | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+            </td>
+            <td class="text-right">
+              {{ lineaTotal(it) | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="9" class="text-center p-3">
+              No hay productos agregados
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+
+      <div class="nc-totales mt-5">
+        <div>
+          <span>Total Bruto</span
+          ><b>{{ totalBruto | currency: "COP" : "symbol-narrow" : "1.0-0" }}</b>
+        </div>
+        <div>
+          <span>Descuentos</span
+          ><b>{{
+            totalDescuentos | currency: "COP" : "symbol-narrow" : "1.0-0"
+          }}</b>
+        </div>
+        <div>
+          <span>Subtotal</span
+          ><b>{{ subtotal | currency: "COP" : "symbol-narrow" : "1.0-0" }}</b>
+        </div>
+        <div>
+          <span>IVA</span
+          ><b>{{ totalIva | currency: "COP" : "symbol-narrow" : "1.0-0" }}</b>
+        </div>
+        <div class="grand">
+          <span>Total</span
+          ><b>{{ total | currency: "COP" : "symbol-narrow" : "1.0-0" }}</b>
+        </div>
+      </div>
+      <small class="hint"
+        >Los totales son una estimación; Factus calcula los definitivos al
+        validar.</small
+      >
+    </section>
+
+    <!-- ── Pago y observación ── -->
+    <section class="nc-section">
+      <div class="grid formgrid">
+        <div class="field col-12 md:col-4">
+          <label>Método de pago</label>
+          <p-dropdown
+            [(ngModel)]="form.paymentMethodCode"
+            [options]="metodoPagoOpts"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full"
+          />
+        </div>
+        <div class="field col-12">
+          <label>Observación</label>
+          <textarea
+            pTextarea
+            [(ngModel)]="form.observation"
+            rows="2"
+            maxlength="250"
+            class="w-full"
+          ></textarea>
+          <small class="hint"
+            >({{ (form.observation || "").length }}/250)</small
+          >
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <div class="card-footer">
+      <button
+        pButton
+        type="button"
+        label="Regresar"
+        icon="pi pi-arrow-left"
+        class="btn-rojo"
+        (click)="cancelar()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        label="Registrar"
+        icon="pi pi-check"
+        class="btn-verde"
+        [loading]="saving"
+        (click)="registrar()"
+      ></button>
+    </div>
+  </div>
+</div>
+
+<!-- Buscador avanzado de productos -->
+<app-buscador-producto-dialog
+  [(visible)]="showBuscador"
+  (productoSelected)="onProductoSel($event)"
+/>

@@ -1,0 +1,40 @@
+/* El patrón (.page, .card, .card-head, .title, .btn-aura) es global y vive en
+   styles.scss — no se redefine aquí. */
+
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-muted {
+  color: var(--text-color-secondary);
+}
+
+.text-ok {
+  color: var(--green-500, #22c55e);
+}
+
+/* Filtro de fecha embebido en el header de la card. */
+.field-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  label {
+    color: var(--text-color-secondary);
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+}
+
+:host ::ng-deep .cal-inline .p-inputtext {
+  width: 9rem;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85rem;
+}

@@ -9,7 +9,7 @@ $mono: "JetBrains Mono", monospace;
 
 // Header + tabla en una sola .card global; aquí solo lo propio del módulo.
 .card {
-  overflow: hidden;
+  overflow: visible;
 }
 
 .clickable-row {

@@ -1,0 +1,330 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="page">
+  <!-- Header -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-check-square"></i></span>
+        <div>
+          <h1 class="title">Revisión de Comprobantes</h1>
+          <p class="subtitle">
+            Bandeja del contador — aprueba los asientos automáticos en borrador
+            para que impacten los reportes oficiales
+          </p>
+        </div>
+      </div>
+      <button
+        pButton
+        type="button"
+        label="Refrescar"
+        icon="pi pi-refresh"
+        class="p-button-outlined p-button-secondary"
+        [loading]="loading"
+        (click)="cargar()"
+      ></button>
+    </div>
+  </div>
+
+  <p-tabView>
+    <!-- Tab 1: Pendientes -->
+    <p-tabPanel header="Pendientes de aprobar" leftIcon="pi pi-clock">
+      <!-- Barra de aprobación masiva -->
+      <div class="masivo-bar">
+        <div class="masivo-field">
+          <label>Rango de fechas</label>
+          <p-calendar
+            [(ngModel)]="rangoFechas"
+            selectionMode="range"
+            dateFormat="dd/mm/yy"
+            [readonlyInput]="true"
+            appendTo="body"
+            styleClass="w-full"
+            placeholder="Desde — Hasta"
+          />
+        </div>
+        <div class="masivo-field">
+          <label>Tipo de origen</label>
+          <p-dropdown
+            [(ngModel)]="tipoOrigenMasivo"
+            [options]="tipoOrigenOpts"
+            optionLabel="label"
+            optionValue="value"
+            appendTo="body"
+            styleClass="w-full"
+            placeholder="Todos los tipos"
+          />
+        </div>
+        <button
+          pButton
+          label="Aprobar en bloque"
+          icon="pi pi-check-circle"
+          class="btn-aura"
+          [loading]="aprobandoMasivo"
+          (click)="aprobarMasivo()"
+        ></button>
+      </div>
+
+      <!-- Resumen -->
+      <div class="resumen-pendientes" *ngIf="!loading && pendientes.length">
+        <span>
+          <strong>{{ pendientes.length }}</strong> comprobante(s) en borrador
+        </span>
+        <span class="resumen-monto">
+          Total débito: <strong>{{ formatCOP(totalPendiente) }}</strong>
+        </span>
+      </div>
+
+      <div class="table-card">
+        <p-table
+          [value]="pendientes"
+          [loading]="loading"
+          styleClass="p-datatable-sm"
+          responsiveLayout="scroll"
+          [rowHover]="true"
+          [paginator]="pendientes.length > 20"
+          [rows]="20"
+          showGridlines
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 130px">Comprobante</th>
+              <th style="width: 110px">Fecha</th>
+              <th>Descripción</th>
+              <th style="width: 110px">Origen</th>
+              <th style="width: 140px; text-align: right">Valor</th>
+              <th style="width: 150px; text-align: center">Acciones</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-a>
+            <tr>
+              <td>
+                <strong>{{ a.numeroComprobante || "—" }}</strong>
+              </td>
+              <td>{{ a.fecha | date: "dd/MM/yyyy" }}</td>
+              <td class="desc-cell">{{ a.descripcion }}</td>
+              <td>
+                <p-tag
+                  [severity]="tipoOrigenBadge(a.tipoOrigen)"
+                  [value]="a.tipoOrigen"
+                />
+              </td>
+              <td class="num-cell">{{ formatCOP(a.totalDebito) }}</td>
+              <td style="text-align: center">
+                <button
+                  pButton
+                  icon="pi pi-eye"
+                  class="p-button-text p-button-sm p-button-rounded"
+                  pTooltip="Ver detalle"
+                  (click)="verDetalle(a)"
+                ></button>
+                <button
+                  pButton
+                  icon="pi pi-check"
+                  class="p-button-text p-button-sm p-button-rounded p-button-success"
+                  pTooltip="Contabilizar"
+                  [loading]="aprobandoId === a.id"
+                  (click)="aprobar(a)"
+                ></button>
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6" class="empty-row">
+                <i class="pi pi-check-circle"></i> No hay comprobantes pendientes
+                de aprobar. Todo está contabilizado.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </p-tabPanel>
+
+    <!-- Tab 2: Descuadrados (red de seguridad) -->
+    <p-tabPanel
+      header="Descuadrados"
+      leftIcon="pi pi-exclamation-triangle"
+      (click)="cargarDescuadrados()"
+    >
+      <div class="masivo-bar masivo-bar--simple">
+        <span class="descuadrados-hint">
+          <i class="pi pi-info-circle"></i>
+          Red de seguridad: comprobantes con débito ≠ crédito. Debería estar
+          vacío; si aparece alguno, revísalo antes de contabilizar.
+        </span>
+        <button
+          pButton
+          label="Buscar descuadrados"
+          icon="pi pi-search"
+          class="p-button-outlined"
+          [loading]="loadingDescuadrados"
+          (click)="cargarDescuadrados()"
+        ></button>
+      </div>
+
+      <div class="table-card">
+        <p-table
+          [value]="descuadrados"
+          [loading]="loadingDescuadrados"
+          styleClass="p-datatable-sm"
+          responsiveLayout="scroll"
+          [rowHover]="true"
+          showGridlines
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 130px">Comprobante</th>
+              <th style="width: 110px">Fecha</th>
+              <th>Descripción</th>
+              <th style="width: 110px">Origen</th>
+              <th style="width: 130px; text-align: right">Débito</th>
+              <th style="width: 130px; text-align: right">Crédito</th>
+              <th style="width: 130px; text-align: right">Diferencia</th>
+              <th style="width: 70px"></th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-a>
+            <tr>
+              <td>
+                <strong>{{ a.numeroComprobante || "—" }}</strong>
+              </td>
+              <td>{{ a.fecha | date: "dd/MM/yyyy" }}</td>
+              <td class="desc-cell">{{ a.descripcion }}</td>
+              <td>
+                <p-tag
+                  [severity]="tipoOrigenBadge(a.tipoOrigen)"
+                  [value]="a.tipoOrigen"
+                />
+              </td>
+              <td class="num-cell">{{ formatCOP(a.totalDebito) }}</td>
+              <td class="num-cell">{{ formatCOP(a.totalCredito) }}</td>
+              <td class="num-cell diff-cell">
+                {{ formatCOP(a.totalDebito - a.totalCredito) }}
+              </td>
+              <td style="text-align: center">
+                <button
+                  pButton
+                  icon="pi pi-eye"
+                  class="p-button-text p-button-sm p-button-rounded"
+                  pTooltip="Ver detalle"
+                  (click)="verDetalle(a)"
+                ></button>
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="8" class="empty-row">
+                <i class="pi pi-check-circle"></i> No hay comprobantes
+                descuadrados. Todo cuadra.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </p-tabPanel>
+  </p-tabView>
+</div>
+
+<!-- Dialog: Detalle del comprobante -->
+<p-dialog
+  [(visible)]="showDetalle"
+  [modal]="true"
+  [header]="
+    'Comprobante ' + (asientoDetalle?.numeroComprobante || '')
+  "
+  [style]="{ width: '720px' }"
+  [draggable]="false"
+>
+  <div *ngIf="asientoDetalle" class="detalle">
+    <div class="detalle-head">
+      <div>
+        <span class="detalle-label">Fecha</span>
+        <span>{{ asientoDetalle.fecha | date: "dd/MM/yyyy" }}</span>
+      </div>
+      <div>
+        <span class="detalle-label">Origen</span>
+        <p-tag
+          [severity]="tipoOrigenBadge(asientoDetalle.tipoOrigen)"
+          [value]="asientoDetalle.tipoOrigen"
+        />
+      </div>
+      <div>
+        <span class="detalle-label">Estado</span>
+        <p-tag severity="warn" [value]="asientoDetalle.estado" />
+      </div>
+    </div>
+    <p class="detalle-desc">{{ asientoDetalle.descripcion }}</p>
+
+    <p-table
+      [value]="asientoDetalle.detalles || []"
+      styleClass="p-datatable-sm"
+      responsiveLayout="scroll"
+      showGridlines
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 110px">Cuenta</th>
+          <th>Nombre</th>
+          <th>Tercero</th>
+          <th style="width: 120px; text-align: right">Débito</th>
+          <th style="width: 120px; text-align: right">Crédito</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-d>
+        <tr>
+          <td>
+            <code class="cuenta-code">{{ d.cuentaCodigo }}</code>
+          </td>
+          <td>{{ d.cuentaNombre }}</td>
+          <td>
+            <span *ngIf="d.terceroNombre">{{ d.terceroNombre }}</span>
+            <span *ngIf="!d.terceroNombre" class="text-muted">—</span>
+          </td>
+          <td class="num-cell">
+            {{ d.debito ? formatCOP(d.debito) : "" }}
+          </td>
+          <td class="num-cell">
+            {{ d.credito ? formatCOP(d.credito) : "" }}
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="footer">
+        <tr class="totals-row">
+          <td colspan="3"><strong>TOTALES</strong></td>
+          <td class="num-cell">
+            <strong>{{ formatCOP(asientoDetalle.totalDebito) }}</strong>
+          </td>
+          <td class="num-cell">
+            <strong>{{ formatCOP(asientoDetalle.totalCredito) }}</strong>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cerrar"
+      icon="pi pi-times"
+      class="p-button-outlined p-button-secondary"
+      (click)="showDetalle = false"
+    ></button>
+    <button
+      *ngIf="asientoDetalle && asientoDetalle.estado === 'BORRADOR'"
+      pButton
+      label="Contabilizar"
+      icon="pi pi-check"
+      class="btn-aura"
+      [loading]="aprobandoId === asientoDetalle.id"
+      (click)="showDetalle = false; aprobar(asientoDetalle)"
+    ></button>
+  </ng-template>
+</p-dialog>

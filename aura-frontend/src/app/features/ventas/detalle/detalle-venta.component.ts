@@ -161,7 +161,7 @@ export class DetalleVentaComponent implements OnChanges {
     return e === 'COMPLETADA'
       ? 'Completada'
       : e === 'PAGO_PARCIAL'
-        ? 'Pago Parcial'
+        ? 'Crédito'
         : 'Anulada';
   }
 }
