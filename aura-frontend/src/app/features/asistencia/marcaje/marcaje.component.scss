@@ -1,138 +1,32 @@
-.page {
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-}
-.card {
-  background: #fff;
-  border: 1px solid #eef2f7;
-  border-radius: 16px;
-  padding: 1.1rem 1.25rem;
-}
-.card-head__title {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-.header-icon {
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: #2563eb;
-  color: #fff;
-  font-size: 1.15rem;
-}
-.title {
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 800;
-  color: #1e293b;
-}
-.subtitle {
-  margin: 0;
-  font-size: 0.82rem;
-  color: #64748b;
-}
-
-.sel-bar {
-  display: flex;
-  gap: 1rem;
-  align-items: end;
-  flex-wrap: wrap;
-  margin-top: 1rem;
-}
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-
-  label {
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: #475569;
-  }
-}
-.marcar-btns {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.grid2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1.25rem;
-
-  @media (max-width: 900px) {
-    grid-template-columns: 1fr;
-  }
-}
-.section-title {
+.field-inline {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-weight: 700;
-  color: #334155;
-  margin-bottom: 0.85rem;
-}
 
-.dia-box {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-.dia-head {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-}
-.dia-turno {
-  font-weight: 600;
-  color: #475569;
-}
-.dia-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.6rem 1rem;
-
-  div {
-    display: flex;
-    justify-content: space-between;
-    border-bottom: 1px dashed #eef2f7;
-    padding-bottom: 0.3rem;
-  }
   label {
-    color: #64748b;
+    color: var(--text-color-secondary);
     font-size: 0.85rem;
-  }
-  b {
-    color: #1e293b;
+    white-space: nowrap;
   }
 }
 
-.text-center {
-  text-align: center;
+:host ::ng-deep .hora-input .p-inputtext {
+  width: 7.5rem;
 }
-.row-off {
-  opacity: 0.5;
-  text-decoration: line-through;
+
+.pend {
+  color: var(--text-color-secondary, #94a3b8);
+  font-size: 0.82rem;
 }
+
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  padding: 1.5rem;
-  color: #94a3b8;
+  gap: 0.6rem;
+  padding: 3rem 1rem;
+  text-align: center;
 
-  i {
-    font-size: 1.6rem;
-  }
-  p {
-    margin: 0;
-  }
+  i { font-size: 2.2rem; color: #cbd5e1; }
+  p { margin: 0; color: var(--text-color-secondary); font-size: 0.9rem; max-width: 34rem; }
 }

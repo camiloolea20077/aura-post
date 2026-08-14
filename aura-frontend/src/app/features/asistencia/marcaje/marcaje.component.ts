@@ -3,154 +3,188 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
-import { DropdownModule } from 'primeng/dropdown';
 import { CalendarModule } from 'primeng/calendar';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
-import { TooltipModule } from 'primeng/tooltip';
+import { SkeletonModule } from 'primeng/skeleton';
 import { lastValueFrom } from 'rxjs';
 
 import { AsistenciaService } from '../../../core/services/asistencia.service';
 import { NominaService } from '../../../core/services/nomina.service';
-import {
-  AsistenciaDiaModel,
-  MarcajeModel,
-  TipoMarcaje,
-} from '../../../core/models/asistencia.model';
 import { EmpleadoTableModel } from '../../../core/models/nomina.model';
 import { AlertService } from '../../../shared/pipes/alert.service';
 
+/** Una fila de digitación: un empleado, su entrada y su salida del día. */
+interface FilaCaptura {
+  empleadoId: number;
+  nombre: string;
+  entrada: Date | null;
+  salida: Date | null;
+  estado: string | null;
+  guardado: boolean;
+}
+
+/**
+ * Digitación de asistencia (la captura el administrador, no el trabajador).
+ *
+ * <p>Se elige el día y se escribe la hora de entrada y salida de cada empleado
+ * que requiere control de asistencia. Al guardar, se registran los marcajes con
+ * esas horas y se consolida el día. No es un reloj en vivo.
+ */
 @Component({
   selector: 'app-marcaje',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, TableModule, ButtonModule, DropdownModule,
-    CalendarModule, TagModule, ToastModule, TooltipModule,
+    CommonModule, FormsModule, TableModule, ButtonModule, CalendarModule,
+    TagModule, ToastModule, SkeletonModule,
   ],
   templateUrl: './marcaje.component.html',
   styleUrls: ['./marcaje.component.scss'],
 })
 export class MarcajeComponent implements OnInit {
-  public empleados: EmpleadoTableModel[] = [];
-  public empleadoSel: number | null = null;
-  public fecha: Date = new Date();
+  fecha: Date = new Date();
+  filas: FilaCaptura[] = [];
+  loading = false;
+  guardando = false;
 
-  public marcajes: MarcajeModel[] = [];
-  public dia: AsistenciaDiaModel | null = null;
-  public loading = false;
-  public marcando = false;
-  public consolidando = false;
+  private empleados: EmpleadoTableModel[] = [];
 
   constructor(
     private readonly asistenciaService: AsistenciaService,
     private readonly nominaService: NominaService,
-    private readonly alertService: AlertService,
+    private readonly alert: AlertService,
   ) {}
 
   async ngOnInit(): Promise<void> {
+    await this.cargarEmpleados();
+    await this.cargarDia();
+  }
+
+  get fechaStr(): string {
+    const p = (n: number) => String(n).padStart(2, '0');
+    return `${this.fecha.getFullYear()}-${p(this.fecha.getMonth() + 1)}-${p(this.fecha.getDate())}`;
+  }
+
+  private async cargarEmpleados(): Promise<void> {
     try {
       const res = await lastValueFrom(
         this.nominaService.pageEmpleados({ page: 0, rows: 500, search: null }),
       );
-      this.empleados = res?.data?.content ?? [];
+      // Solo los que requieren control de asistencia y están activos.
+      this.empleados = (res?.data?.content ?? []).filter(
+        (e) => e.requiereControlAsistencia && e.activo,
+      );
     } catch {
       this.empleados = [];
     }
   }
 
-  get empleadosOpts() {
-    return this.empleados.map(e => ({ label: e.nombreCompleto, value: e.id }));
-  }
-
-  get fechaStr(): string {
-    return this.fecha.toISOString().split('T')[0];
-  }
-
-  async cargar(): Promise<void> {
-    if (this.empleadoSel == null) return;
+  /** Arma las filas del día y precarga lo ya capturado. */
+  async cargarDia(): Promise<void> {
+    if (!this.empleados.length) {
+      this.filas = [];
+      return;
+    }
     this.loading = true;
     try {
-      const [mRes, dRes] = await Promise.all([
-        lastValueFrom(this.asistenciaService.listMarcajes(this.empleadoSel, this.fechaStr)),
-        lastValueFrom(this.asistenciaService.listDias(this.empleadoSel, this.fechaStr, this.fechaStr)),
-      ]);
-      this.marcajes = mRes?.data ?? [];
-      this.dia = (dRes?.data ?? [])[0] ?? null;
-    } catch {
-      this.marcajes = [];
-      this.dia = null;
+      const dias = await Promise.all(
+        this.empleados.map((e) =>
+          lastValueFrom(this.asistenciaService.listDias(e.id, this.fechaStr, this.fechaStr))
+            .then((r) => (r?.data ?? [])[0] ?? null)
+            .catch(() => null),
+        ),
+      );
+      this.filas = this.empleados.map((e, i) => {
+        const d = dias[i];
+        return {
+          empleadoId: e.id,
+          nombre: e.nombreCompleto,
+          entrada: this.aHora(d?.horaEntradaReal),
+          salida: this.aHora(d?.horaSalidaReal),
+          estado: d?.estadoAsistencia ?? null,
+          guardado: !!d,
+        };
+      });
     } finally {
       this.loading = false;
     }
   }
 
-  async marcar(tipo: TipoMarcaje): Promise<void> {
-    if (this.empleadoSel == null) {
-      this.alertService.showWarn('Requerido', 'Selecciona un empleado');
+  /** Guarda la asistencia de todas las filas con horas capturadas. */
+  async guardarTodos(): Promise<void> {
+    const conDatos = this.filas.filter((f) => f.entrada || f.salida);
+    if (!conDatos.length) {
+      this.alert.showWarn('Sin datos', 'Escribe al menos la entrada de un empleado.');
       return;
     }
-    this.marcando = true;
-    try {
-      // Marca en la fecha seleccionada, con la hora actual
-      const ahora = new Date();
-      const fh = new Date(this.fecha);
-      fh.setHours(ahora.getHours(), ahora.getMinutes(), 0, 0);
+    this.guardando = true;
+    let ok = 0;
+    let error = 0;
+    for (const f of conDatos) {
+      try {
+        await this.guardarFila(f);
+        f.guardado = true;
+        ok++;
+      } catch {
+        error++;
+      }
+    }
+    this.guardando = false;
+    if (error === 0) this.alert.showSuccess('Guardado', `Asistencia registrada para ${ok} empleado(s).`);
+    else this.alert.showWarn('Parcial', `${ok} guardados, ${error} con error.`);
+    await this.cargarDia();
+  }
+
+  private async guardarFila(f: FilaCaptura): Promise<void> {
+    // Limpiar lo previo del día para no duplicar marcajes al re-guardar.
+    const previos = await lastValueFrom(
+      this.asistenciaService.listMarcajes(f.empleadoId, this.fechaStr),
+    );
+    for (const m of previos?.data ?? []) {
+      if (m.estado === 'VALIDO') {
+        await lastValueFrom(this.asistenciaService.anularMarcaje(m.id));
+      }
+    }
+    if (f.entrada) {
       await lastValueFrom(this.asistenciaService.registrarMarcaje({
-        empleadoId: this.empleadoSel,
-        tipoMarcaje: tipo,
-        fechaHoraMarcaje: this.toLocalIso(fh),
+        empleadoId: f.empleadoId,
+        tipoMarcaje: 'ENTRADA',
+        fechaHoraMarcaje: this.fechaHora(f.entrada),
         origenMarcaje: 'ASISTENTE',
       }));
-      this.alertService.showSuccess('Marcado', `Marcaje ${tipo} registrado`);
-      await this.cargar();
-    } catch {
-      this.alertService.showError('Error', 'No se pudo registrar el marcaje');
-    } finally {
-      this.marcando = false;
     }
+    if (f.salida) {
+      await lastValueFrom(this.asistenciaService.registrarMarcaje({
+        empleadoId: f.empleadoId,
+        tipoMarcaje: 'SALIDA',
+        fechaHoraMarcaje: this.fechaHora(f.salida),
+        origenMarcaje: 'ASISTENTE',
+      }));
+    }
+    // Consolidar el día para que cuente para la nómina.
+    const cons = await lastValueFrom(this.asistenciaService.consolidarDia(f.empleadoId, this.fechaStr));
+    f.estado = cons?.data?.estadoAsistencia ?? f.estado;
   }
 
-  async anular(m: MarcajeModel): Promise<void> {
-    try {
-      await lastValueFrom(this.asistenciaService.anularMarcaje(m.id));
-      this.alertService.showSuccess('Anulado', 'Marcaje anulado');
-      await this.cargar();
-    } catch {
-      this.alertService.showError('Error', 'No se pudo anular');
-    }
+  // ── Helpers ─────────────────────────────────────────────────
+
+  /** 'HH:mm:ss' → Date (en el día seleccionado). */
+  private aHora(hhmmss: string | null | undefined): Date | null {
+    if (!hhmmss) return null;
+    const [h, m] = hhmmss.split(':').map(Number);
+    const d = new Date(this.fecha);
+    d.setHours(h ?? 0, m ?? 0, 0, 0);
+    return d;
   }
 
-  async consolidar(): Promise<void> {
-    if (this.empleadoSel == null) return;
-    this.consolidando = true;
-    try {
-      const res = await lastValueFrom(
-        this.asistenciaService.consolidarDia(this.empleadoSel, this.fechaStr),
-      );
-      this.dia = res?.data ?? null;
-      this.alertService.showSuccess('Consolidado', 'Día consolidado');
-    } catch {
-      this.alertService.showError('Error', 'No se pudo consolidar el día');
-    } finally {
-      this.consolidando = false;
-    }
-  }
-
-  horaSolo(dt: string): string {
-    return new Date(dt).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
-  }
-  hhmm(h: string | null): string {
-    return h ? h.substring(0, 5) : '—';
-  }
-  min(v: number): string {
-    return `${v} min`;
-  }
-  private toLocalIso(d: Date): string {
+  /** Combina el día seleccionado con la hora del input → ISO local. */
+  private fechaHora(hora: Date): string {
     const p = (n: number) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:00`;
+    return `${this.fecha.getFullYear()}-${p(this.fecha.getMonth() + 1)}-${p(this.fecha.getDate())}`
+      + `T${p(hora.getHours())}:${p(hora.getMinutes())}:00`;
   }
 
-  estadoAsistSeverity(e: string): 'success' | 'warn' | 'danger' | 'secondary' | 'info' {
+  estadoSeverity(e: string | null): 'success' | 'warn' | 'danger' | 'secondary' | 'info' {
     if (e === 'ASISTIO') return 'success';
     if (e === 'TARDE' || e === 'SALIDA_TEMPRANA') return 'warn';
     if (e === 'AUSENTE') return 'danger';

@@ -10,6 +10,7 @@ export interface EmpresaPlataformaModel {
   municipio: string | null;
   municipioId: number | null;
   activa: boolean;
+  modoContabilizacion?: string | null;
   createdAt: string;
   totalSucursales: number;
   totalUsuarios: number;
@@ -65,6 +66,7 @@ export interface CreateEmpresaDto {
   paisAdmin: string;
   codigoPaisAdmin: string;
   nombreSucursal: string;
+  modoContabilizacion?: string;
   // Facturación electrónica (Factus)
   facturaElectronica?: boolean;
   factusClientId?: string;
@@ -84,6 +86,7 @@ export interface UpdateEmpresaDto {
   municipio?: string | null;
   municipioId?: number | null;
   activa?: boolean;
+  modoContabilizacion?: string;
   // Facturación electrónica (Factus)
   facturaElectronica?: boolean;
   factusClientId?: string;

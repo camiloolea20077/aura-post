@@ -1,7 +1,8 @@
-<div class="page">
+<div class="page" [class.embedded]="embedded">
   <form [formGroup]="frm" (ngSubmit)="guardar()">
     <div class="card">
-      <!-- ── Header dentro de la card ─────────────────────────── -->
+      <!-- ── Header dentro de la card (oculto en modo embebido) ── -->
+      @if (!embedded) {
       <div class="card-head">
         <div class="card-head__title">
           <p-button
@@ -19,6 +20,7 @@
           </div>
         </div>
       </div>
+      }
 
       <div class="form-body">
         <!-- ── Clasificación ──────────────────────────────────── -->
@@ -33,11 +35,24 @@
               (onChange)="onRolesChange()"
               optionLabel="label"
               optionValue="value"
-              placeholder="Cliente, Proveedor, Empleado o Banco"
+              placeholder="Cliente, Proveedor, Empleado, Banco, EPS…"
               display="chip"
               styleClass="w-full"
             />
           </div>
+
+          <!-- Código UGPP: solo si el tercero es EPS/AFP/CCF/ARL. Lo exige PILA. -->
+          @if (esEntidadSeguridadSocial) {
+            <div class="field">
+              <label>Código UGPP <span class="req">*</span></label>
+              <input
+                pInputText
+                formControlName="codigoSeguridadSocial"
+                class="w-full"
+                placeholder="Código oficial (p. ej. EPS037)"
+              />
+            </div>
+          }
 
           <div class="field">
             <label>Tipo de persona</label>
@@ -47,7 +62,7 @@
               optionLabel="label"
               optionValue="value"
               (onChange)="onTipoPersonaChange()"
-              [disabled]="esBanco"
+              [disabled]="esBanco || esEntidadSeguridadSocial"
               styleClass="w-full"
             />
           </div>
@@ -63,6 +78,7 @@
               [options]="tipoDocOpts"
               optionLabel="label"
               optionValue="value"
+              [disabled]="esEntidadSeguridadSocial"
               styleClass="w-full"
             />
           </div>
@@ -95,27 +111,126 @@
                 placeholder="Nombre de la empresa"
               />
             </div>
-          } @else {
             <div class="field">
-              <label>Nombres <span class="req">*</span></label>
+              <label>Nombre comercial</label>
               <input
                 pInputText
-                formControlName="nombres"
+                formControlName="nombreComercial"
                 class="w-full"
-                placeholder="Nombres"
+                placeholder="Marca con la que opera"
+              />
+            </div>
+          } @else {
+            <!--
+              Los CUATRO componentes por separado: la DIAN (nómina electrónica)
+              y la UGPP (PILA) los exigen así. No se parten de un campo único:
+              "DE LA ROSA" o los nombres de una sola palabra rompen cualquier
+              heurística.
+            -->
+            <div class="field">
+              <label>Primer nombre <span class="req">*</span></label>
+              <input
+                pInputText
+                formControlName="nombre1"
+                class="w-full"
+                placeholder="Primer nombre"
               />
             </div>
             <div class="field">
-              <label>Apellidos</label>
+              <label>Segundo nombre</label>
               <input
                 pInputText
-                formControlName="apellidos"
+                formControlName="nombre2"
                 class="w-full"
-                placeholder="Apellidos"
+                placeholder="Segundo nombre"
+              />
+            </div>
+            <div class="field">
+              <label>Primer apellido</label>
+              <input
+                pInputText
+                formControlName="apellido1"
+                class="w-full"
+                placeholder="Primer apellido"
+              />
+            </div>
+            <div class="field">
+              <label>Segundo apellido</label>
+              <input
+                pInputText
+                formControlName="apellido2"
+                class="w-full"
+                placeholder="Segundo apellido"
               />
             </div>
           }
         </div>
+
+        <!-- ── Datos personales (solo natural) ─────────────────── -->
+        @if (!esJuridica && !esBanco) {
+          <h3 class="section">Datos personales</h3>
+          <div class="grid-3">
+            <div class="field">
+              <label>Fecha de nacimiento</label>
+              <p-calendar
+                formControlName="fechaNacimiento"
+                dateFormat="yy-mm-dd"
+                [showIcon]="true"
+                [maxDate]="hoy"
+                styleClass="w-full"
+                placeholder="AAAA-MM-DD"
+              ></p-calendar>
+            </div>
+            <div class="field">
+              <label>Sexo</label>
+              <p-dropdown
+                formControlName="sexo"
+                [options]="sexoOpts"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccionar"
+                styleClass="w-full"
+                [showClear]="true"
+              ></p-dropdown>
+            </div>
+            <div class="field">
+              <label>Fecha expedición</label>
+              <p-calendar
+                formControlName="fechaExpedicionDocumento"
+                dateFormat="yy-mm-dd"
+                [showIcon]="true"
+                [maxDate]="hoy"
+                styleClass="w-full"
+                placeholder="AAAA-MM-DD"
+              ></p-calendar>
+            </div>
+          </div>
+        }
+
+        <!-- ── Representante legal (jurídica, no entidad simple) ── -->
+        @if (esJuridica && !esEntidadSimple) {
+          <h3 class="section">Representante legal</h3>
+          <div class="grid-2">
+            <div class="field">
+              <label>Nombre completo</label>
+              <input
+                pInputText
+                formControlName="representanteLegalNombre"
+                class="w-full"
+                placeholder="Nombre del representante legal"
+              />
+            </div>
+            <div class="field">
+              <label>Documento</label>
+              <input
+                pInputText
+                formControlName="representanteLegalDocumento"
+                class="w-full"
+                placeholder="Número de documento"
+              />
+            </div>
+          </div>
+        }
 
         <!-- ── Contacto ───────────────────────────────────────── -->
         @if (!esBanco) {
@@ -159,7 +274,41 @@
           </div>
         }
 
-        <!-- ── Información fiscal ──────────────────────────────── -->
+        <!-- ── Datos bancarios (empleado: ahí se le paga la nómina) ── -->
+        @if (esEmpleado) {
+          <h3 class="section">Datos bancarios</h3>
+          <div class="grid">
+            <div class="field">
+              <label>Banco</label>
+              <app-tercero-picker
+                [filtro]="'BANCO'"
+                [terceroId]="frm.get('bancoTerceroId')?.value"
+                [terceroNombre]="bancoNombre"
+                placeholder="Buscar banco..."
+                (seleccionado)="onBancoSeleccionado($event)"
+              />
+            </div>
+            <div class="field">
+              <label>Tipo de cuenta</label>
+              <p-dropdown
+                formControlName="tipoCuenta"
+                [options]="tipoCuentaOpts"
+                optionLabel="label"
+                optionValue="value"
+                [showClear]="true"
+                placeholder="Ahorros / Corriente"
+                styleClass="w-full"
+              />
+            </div>
+            <div class="field">
+              <label>Número de cuenta</label>
+              <input pInputText formControlName="numeroCuenta" class="w-full" placeholder="N° de cuenta" />
+            </div>
+          </div>
+        }
+
+        <!-- ── Información fiscal (no aplica a banco/entidad SS) ── -->
+        @if (!esEntidadSimple) {
         <h3 class="section">Información fiscal</h3>
         <div class="grid">
           <div class="field">
@@ -215,10 +364,28 @@
             <label>Gran contribuyente</label>
             <p-toggleswitch formControlName="granContribuyente" />
           </div>
+          <!--
+            `autoRetenedor` era uno solo, pero son autorretenciones DISTINTAS:
+            se puede ser autorretenedor de renta y no de ICA. Alimentan el
+            cálculo de retenciones sugeridas.
+          -->
           <div class="field switch">
-            <label>Autorretenedor</label>
-            <p-toggleswitch formControlName="autoRetenedor" />
+            <label>Autorretenedor de renta</label>
+            <p-toggleswitch formControlName="esAutoretenedorFuente" />
           </div>
+          <div class="field switch">
+            <label>Autorretenedor de ICA</label>
+            <p-toggleswitch formControlName="esAutoretenedorIca" />
+          </div>
+          <div class="field switch">
+            <label>Declarante de renta</label>
+            <p-toggleswitch formControlName="declarante" />
+          </div>
+        </div>
+        }
+
+        <!-- Activo: siempre visible, también para banco/entidad SS. -->
+        <div class="grid">
           <div class="field switch">
             <label>Activo</label>
             <p-toggleswitch formControlName="activo" />

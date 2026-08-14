@@ -19,7 +19,7 @@ import {
   UpdateFrenteDto,
   UpdateProyectoDto,
 } from '../models/proyecto.model';
-import { EmpleadoTableModel, NominaPageableDto } from '../models/nomina.model';
+import { EmpleadoModel } from '../models/nomina.model';
 import {
   AsistenciaFrenteModel,
   GuardarBorradorDto,
@@ -163,17 +163,11 @@ export class ProyectoService {
   }
 
   // ── Empleados (para pickers de líder y trabajadores) ───────
-  empleados(
-    search?: string,
-  ): Observable<ResponseTableModel<EmpleadoTableModel>> {
-    const dto: NominaPageableDto = {
-      page: 0,
-      rows: 100,
-      search: search ?? null,
-    };
-    return this.http.post<ResponseTableModel<EmpleadoTableModel>>(
-      `${this.api}empleados/page`,
-      dto,
+  // Solo empleados con contrato ACTIVO: no se asigna a un frente a quien ya no
+  // tiene contrato.
+  empleados(): Observable<ResponseModel<EmpleadoModel[]>> {
+    return this.http.get<ResponseModel<EmpleadoModel[]>>(
+      `${this.api}empleados/con-contrato-activo`,
     );
   }
 

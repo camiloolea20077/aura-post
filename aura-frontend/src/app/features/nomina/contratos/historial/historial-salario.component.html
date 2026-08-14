@@ -1,0 +1,128 @@
+<p-dialog
+  [(visible)]="visible"
+  header="Salario e historial"
+  [modal]="true"
+  [style]="{ width: '52rem' }"
+  [draggable]="false"
+  (onHide)="onHide()"
+>
+  <!-- ── Cambio de salario ──────────────────────────────────── -->
+  <h3 class="section">Registrar cambio de salario</h3>
+
+  <p-message severity="info" styleClass="w-full mb-3">
+    El cambio no reemplaza el salario anterior: cierra su vigencia y abre una
+    nueva. Por eso hace falta saber desde cuándo rige — de esa fecha dependen los
+    retroactivos y el reporte a PILA.
+  </p-message>
+
+  <div class="grid-3">
+    <div class="field">
+      <label>Nuevo salario <span class="req">*</span></label>
+      <p-inputNumber
+        [(ngModel)]="nuevoSalario"
+        mode="currency"
+        currency="COP"
+        locale="es-CO"
+        [maxFractionDigits]="0"
+        styleClass="w-full"
+        placeholder="0"
+      />
+    </div>
+    <div class="field">
+      <label>Rige desde <span class="req">*</span></label>
+      <p-calendar
+        [(ngModel)]="fechaDesde"
+        dateFormat="yy-mm-dd"
+        [showIcon]="true"
+        styleClass="w-full"
+        placeholder="AAAA-MM-DD"
+      />
+    </div>
+    <div class="field">
+      <label>Motivo</label>
+      <input
+        pInputText
+        [(ngModel)]="motivo"
+        class="w-full"
+        placeholder="Aumento anual, ascenso…"
+      />
+    </div>
+  </div>
+
+  <div class="flex justify-end mt-2">
+    <button
+      pButton
+      type="button"
+      label="Registrar cambio"
+      icon="pi pi-check"
+      class="btn-aura"
+      [loading]="saving"
+      (click)="cambiar()"
+    ></button>
+  </div>
+
+  <!-- ── Historial ──────────────────────────────────────────── -->
+  <h3 class="section mt-4">Historial</h3>
+
+  <p-table
+    [value]="historial"
+    [loading]="loading"
+    [paginator]="true"
+    [rows]="10"
+    [rowsPerPageOptions]="[10, 25, 50]"
+    dataKey="id"
+    styleClass="p-datatable-sm"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th class="text-right">Salario</th>
+        <th>Variación</th>
+        <th>Desde</th>
+        <th>Hasta</th>
+        <th>Motivo</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-h>
+      <tr>
+        <td class="text-right">
+          {{ h.salario | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+        </td>
+        <td>
+          @if (severidadVariacion(h.variacionPorcentaje); as sev) {
+            <p-tag [value]="textoVariacion(h.variacionPorcentaje)" [severity]="sev" />
+          } @else {
+            <span class="text-muted">—</span>
+          }
+        </td>
+        <td>{{ h.fechaDesde }}</td>
+        <td>
+          @if (h.fechaHasta) {
+            {{ h.fechaHasta }}
+          } @else {
+            <p-tag value="Vigente" severity="success" />
+          }
+        </td>
+        <td>{{ h.motivo || "—" }}</td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="5" class="text-center p-3">
+          <span class="text-muted">Sin historial.</span>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cerrar"
+      class="p-button-text"
+      (click)="onHide()"
+    ></button>
+  </ng-template>
+</p-dialog>

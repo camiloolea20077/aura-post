@@ -73,6 +73,9 @@
 
       <p-table
         [value]="autorizaciones"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[10, 25, 50]"
         [loading]="loading"
         showGridlines
         [tableStyle]="{ 'min-width': '720px' }"

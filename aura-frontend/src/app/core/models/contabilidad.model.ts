@@ -187,3 +187,39 @@ export interface BalanceGeneralModel {
   utilidadNeta: number;
   ecuacionContable: number;
 }
+
+// ── Balance General profesional (Estado de Situación Financiera) ──────────
+export interface LineaBalanceModel {
+  codigo: string;
+  nombre: string;
+  saldo: number;
+}
+
+export interface GrupoBalanceModel {
+  codigo: string;
+  nombre: string;
+  saldo: number;
+  cuentas: LineaBalanceModel[];
+}
+
+export interface BalanceGeneralDetalladoModel {
+  empresaNombre: string;
+  nit: string;
+  fechaCorte: string;
+  activoCorriente: GrupoBalanceModel[];
+  activoNoCorriente: GrupoBalanceModel[];
+  pasivoCorriente: GrupoBalanceModel[];
+  pasivoNoCorriente: GrupoBalanceModel[];
+  patrimonio: GrupoBalanceModel[];
+  totalActivoCorriente: number;
+  totalActivoNoCorriente: number;
+  totalActivo: number;
+  totalPasivoCorriente: number;
+  totalPasivoNoCorriente: number;
+  totalPasivo: number;
+  totalPatrimonio: number;
+  totalPasivoPatrimonio: number;
+  resultadoEjercicio: number;
+  cuadra: boolean;
+  diferencia: number;
+}

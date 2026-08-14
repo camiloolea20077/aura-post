@@ -1,0 +1,83 @@
+<div class="hp">
+  <!-- Skeleton -->
+  <div *ngIf="loading" class="hp-skeleton">
+    <p-skeleton height="48px" styleClass="mb-2" />
+    <p-skeleton height="48px" styleClass="mb-2" />
+    <p-skeleton height="48px" />
+  </div>
+
+  <ng-container *ngIf="!loading">
+    <!-- Resumen -->
+    <div class="hp-summary" *ngIf="pagos.length > 0">
+      <div class="hp-chip">
+        <span class="hp-chip-label">Nóminas</span>
+        <span class="hp-chip-val">{{ pagos.length }}</span>
+      </div>
+      <div class="hp-chip">
+        <span class="hp-chip-label">Pagadas</span>
+        <span class="hp-chip-val">{{ cantidadPagadas }}</span>
+      </div>
+      <div class="hp-chip hp-chip--total">
+        <span class="hp-chip-label">Total pagado (neto)</span>
+        <span class="hp-chip-val">{{ money(totalPagado) }}</span>
+      </div>
+    </div>
+
+    <!-- Tabla -->
+    <p-table
+      [value]="pagos"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [scrollable]="true"
+      scrollHeight="420px"
+      styleClass="p-datatable-sm"
+      *ngIf="pagos.length > 0"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="min-width: 170px">Período</th>
+          <th style="width: 70px" class="text-center">Días</th>
+          <th style="min-width: 110px" class="text-right">Devengado</th>
+          <th style="min-width: 110px" class="text-right">Deducciones</th>
+          <th style="min-width: 110px" class="text-right">Neto</th>
+          <th style="width: 100px" class="text-center">Estado</th>
+          <th style="min-width: 130px">Pago</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-p>
+        <tr>
+          <td>
+            <div class="hp-periodo">
+              {{ fecha(p.periodoFechaInicio) }} → {{ fecha(p.periodoFechaFin) }}
+            </div>
+          </td>
+          <td class="text-center">{{ p.diasTrabajados }}d</td>
+          <td class="text-right hp-dev">{{ money(p.totalDevengado) }}</td>
+          <td class="text-right hp-ded">{{ money(p.totalDeducciones) }}</td>
+          <td class="text-right hp-neto">{{ money(p.netoPagar) }}</td>
+          <td class="text-center">
+            <p-tag
+              [value]="estadoLabel(p.estado)"
+              [severity]="estadoSeverity(p.estado)"
+              [rounded]="true"
+            />
+          </td>
+          <td>
+            <div class="hp-pago" *ngIf="p.estado === 'PAGADO'; else sinPago">
+              <span class="hp-medio">{{ medioLabel(p.medioPago) }}</span>
+              <span class="hp-fecha">{{ fecha(p.fechaPago) }}</span>
+            </div>
+            <ng-template #sinPago><span class="hp-nopago">Sin pagar</span></ng-template>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <!-- Vacío -->
+    <div class="hp-empty" *ngIf="pagos.length === 0">
+      <i class="pi pi-wallet"></i>
+      <p>Este empleado aún no tiene nóminas liquidadas.</p>
+    </div>
+  </ng-container>
+</div>

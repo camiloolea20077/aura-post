@@ -14,10 +14,13 @@ import { DialogModule } from 'primeng/dialog';
 import { DividerModule } from 'primeng/divider';
 import { VentaModel } from '../../../../core/models/venta.model';
 
-// pdfmake — instalar con: npm install pdfmake @types/pdfmake
 import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
 (pdfMake as any).vfs = (pdfFonts as any).pdfMake?.vfs || pdfFonts;
+
+const AZUL = '#2563eb';
+const GRIS = '#64748b';
+const OSCURO = '#1e293b';
 
 @Component({
   selector: 'app-modal-factura',
@@ -36,11 +39,7 @@ export class ModalFacturaComponent implements OnChanges {
 
   constructor(private readonly cdr: ChangeDetectorRef) {}
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['venta'] && this.venta) {
-      // reset al abrir
-    }
-  }
+  ngOnChanges(_changes: SimpleChanges): void {}
 
   // ── Helpers ───────────────────────────────────────────────
 
@@ -48,6 +47,10 @@ export class ModalFacturaComponent implements OnChanges {
     if (!this.venta) return '';
     const num = String(this.venta.consecutivo ?? 0).padStart(6, '0');
     return this.venta.prefijo ? `${this.venta.prefijo}-${num}` : num;
+  }
+
+  get esElectronica(): boolean {
+    return !!this.venta?.cufe;
   }
 
   private formatCOP(v: number | null | undefined): string {
@@ -58,8 +61,23 @@ export class ModalFacturaComponent implements OnChanges {
     }).format(v ?? 0);
   }
 
-  private formatFecha(iso: string): string {
-    return new Date(iso).toLocaleDateString('es-CO', {
+  /** Parsea ISO (yyyy-MM-dd / timestamp) o dd/MM/yyyy. Null si no es válida. */
+  private parseFecha(s?: string | null): Date | null {
+    if (!s) return null;
+    let d = new Date(/^\d{4}-\d{2}-\d{2}$/.test(s) ? s + 'T00:00:00' : s);
+    if (!isNaN(d.getTime())) return d;
+    const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (m) {
+      d = new Date(+m[3], +m[2] - 1, +m[1]);
+      if (!isNaN(d.getTime())) return d;
+    }
+    return null;
+  }
+
+  private formatFecha(iso?: string | null): string {
+    const d = this.parseFecha(iso);
+    if (!d) return '—';
+    return d.toLocaleDateString('es-CO', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -70,502 +88,279 @@ export class ModalFacturaComponent implements OnChanges {
     const map: Record<string, string> = {
       EFECTIVO: 'Efectivo',
       NEQUI: 'Nequi',
+      DAVIPLATA: 'Daviplata',
       TARJETA: 'Tarjeta',
       TRANSFERENCIA: 'Transferencia',
+      CREDITO: 'Crédito',
     };
     return map[m] ?? m;
   }
 
+  /** Descarga un recurso (logo) como dataURL. Null si falla (CORS / vacío). */
+  private async toDataUrl(url?: string | null): Promise<string | null> {
+    if (!url) return null;
+    try {
+      const res = await fetch(url, { mode: 'cors' });
+      const blob = await res.blob();
+      return await new Promise<string>((resolve, reject) => {
+        const r = new FileReader();
+        r.onloadend = () => resolve(r.result as string);
+        r.onerror = reject;
+        r.readAsDataURL(blob);
+      });
+    } catch {
+      return null;
+    }
+  }
+
+  /** Genera el QR de la factura electrónica como imagen dataURL. */
+  private async qrDataUrl(data?: string | null): Promise<string | null> {
+    if (!data) return null;
+    try {
+      // qrcode no trae tipos propios; se usa en runtime.
+      // @ts-ignore
+      const mod: any = await import('qrcode');
+      const toDataURL = mod.toDataURL || mod.default?.toDataURL;
+      return await toDataURL(data, { margin: 1, width: 150 });
+    } catch {
+      return null;
+    }
+  }
+
   // ── Construir documento pdfmake ───────────────────────────
 
-  private buildDocDefinition(): any {
+  private async buildDocDefinition(): Promise<any> {
     const v = this.venta!;
+    const [logo, qr] = await Promise.all([
+      this.toDataUrl(v.logoUrl),
+      this.qrDataUrl(v.qrData),
+    ]);
 
-    // Filas de productos
+    const nombreEmpresa = v.razonSocial || v.sucursalNombre || 'Empresa';
+    const nit = v.empresaNit ? `NIT ${v.empresaNit}` : '';
+
+    // Izquierda: logo arriba y TODOS los datos de la empresa debajo del logo.
+    const empresaStack: any[] = [];
+    if (logo) empresaStack.push({ image: logo, fit: [150, 60], margin: [0, 0, 0, 6] });
+    empresaStack.push({ text: nombreEmpresa, fontSize: 13, bold: true, color: OSCURO });
+    if (nit) empresaStack.push({ text: nit, fontSize: 8, color: GRIS, margin: [0, 1, 0, 0] });
+    if (v.empresaDireccion) empresaStack.push({ text: v.empresaDireccion, fontSize: 8, color: GRIS });
+    if (v.municipio) empresaStack.push({ text: v.municipio, fontSize: 8, color: GRIS });
+    const contacto = [v.empresaTelefono, v.empresaEmail].filter(Boolean).join(' · ');
+    if (contacto) empresaStack.push({ text: contacto, fontSize: 8, color: GRIS });
+
+    // Derecha: QR de la factura electrónica en la misma línea del encabezado.
+    const columnaDerecha = qr
+      ? {
+          width: 'auto',
+          stack: [
+            { image: qr, fit: [95, 95], alignment: 'right' },
+            { text: 'Factura Electrónica', fontSize: 7, color: GRIS, alignment: 'center', margin: [0, 2, 0, 0] },
+          ],
+        }
+      : { width: 'auto', text: '' };
+
+    // Encabezado: empresa (izq) + QR (der)
+    const encabezado = {
+      columns: [{ width: '*', stack: empresaStack }, columnaDerecha],
+      columnGap: 12,
+      margin: [0, 0, 0, 12],
+    };
+
+    // Filas de productos.
+    // subtotalLinea YA incluye el IVA y tiene el descuento restado:
+    //   subtotalLinea = (precio·cant − descuento) + IVA
+    // → base gravable (neta) = subtotalLinea − IVA ; total de línea = subtotalLinea
     const bodyRows = v.detalles.map((d) => {
-      const base = d.subtotalLinea ?? 0;
-      const desc = (d as any).montoDescuento ?? 0;
+      const totalLinea = d.subtotalLinea ?? 0;
       const imp = d.impuestoValor ?? 0;
-      const total = base - desc + imp;
-
+      const neta = totalLinea - imp;
+      const desc = (d as any).montoDescuento ?? 0;
+      const ivaPct = neta > 0 ? Math.round((imp / neta) * 100) : 0;
       return [
-        { text: d.productoNombre, style: 'tableBody' },
-        {
-          text: String(
-            d.cantidad % 1 === 0
-              ? d.cantidad.toFixed(0)
-              : d.cantidad.toFixed(3),
-          ),
-          style: 'tableBodyRight',
-          alignment: 'right',
-        },
-        {
-          text: this.formatCOP(d.precioUnitario ?? base / d.cantidad),
-          style: 'tableBodyRight',
-          alignment: 'right',
-        },
-        {
-          text: imp > 0 ? `${Math.round((imp / base) * 100)}%` : '—',
-          style: 'tableBodyRight',
-          alignment: 'right',
-        },
-        {
-          text: desc > 0 ? `-${this.formatCOP(desc)}` : '—',
-          style: 'tableBodyRight',
-          alignment: 'right',
-        },
-        {
-          text: this.formatCOP(total),
-          style: 'tableBodyRight',
-          alignment: 'right',
-          bold: true,
-        },
+        { text: d.productoNombre, fontSize: 8, color: OSCURO, margin: [0, 2, 0, 2] },
+        { text: d.cantidad % 1 === 0 ? d.cantidad.toFixed(0) : d.cantidad.toFixed(3), fontSize: 8, alignment: 'right' },
+        { text: this.formatCOP(d.precioUnitario ?? (d.cantidad ? neta / d.cantidad : 0)), fontSize: 8, alignment: 'right' },
+        { text: imp > 0 ? `${ivaPct}%` : '—', fontSize: 8, alignment: 'right' },
+        { text: desc > 0 ? `-${this.formatCOP(desc)}` : '—', fontSize: 8, alignment: 'right' },
+        { text: this.formatCOP(totalLinea), fontSize: 8, alignment: 'right', bold: true },
       ];
     });
 
-    // Filas de pagos
-    const pagoRows = v.pagos.map((p) => [
+    // Métodos de pago
+    const pagoRows = (v.pagos ?? []).map((p) => [
       { text: this.metodoPagoLabel(p.metodoPago), fontSize: 9 },
       { text: this.formatCOP(p.monto), fontSize: 9, alignment: 'right' },
     ]);
 
-    return {
-      pageSize: 'A4',
-      pageMargins: [40, 40, 40, 60],
+    // Subtotales
+    const totalesBody: any[] = [
+      [{ text: 'Subtotal', fontSize: 9, color: GRIS }, { text: this.formatCOP(v.subtotal), fontSize: 9, alignment: 'right' }],
+    ];
+    if (v.descuentoTotal > 0) {
+      totalesBody.push([
+        { text: 'Descuento', fontSize: 9, color: '#dc2626' },
+        { text: `- ${this.formatCOP(v.descuentoTotal)}`, fontSize: 9, alignment: 'right', color: '#dc2626' },
+      ]);
+    }
+    if (v.impuestosTotal > 0) {
+      totalesBody.push([
+        { text: 'IVA', fontSize: 9, color: GRIS },
+        { text: this.formatCOP(v.impuestosTotal), fontSize: 9, alignment: 'right' },
+      ]);
+    }
+    totalesBody.push([
+      { text: 'TOTAL', bold: true, fontSize: 12, color: '#fff', fillColor: AZUL, margin: [6, 5, 6, 5] },
+      { text: this.formatCOP(v.totalPagar), bold: true, fontSize: 12, color: '#fff', fillColor: AZUL, alignment: 'right', margin: [6, 5, 6, 5] },
+    ]);
 
-      footer: (currentPage: number, pageCount: number) => ({
+    // Bloque de facturación electrónica (CUFE + estado + resolución), va ABAJO.
+    const bloqueFE = this.esElectronica ? this.bloqueElectronico(v) : null;
+
+    const content: any[] = [
+      encabezado,
+      { canvas: [{ type: 'line', x1: 0, y1: 0, x2: 515, y2: 0, lineWidth: 2.5, lineColor: AZUL }], margin: [0, 0, 0, 12] },
+      {
         columns: [
-          {
-            text: 'AURA NUBE — Software de gestión empresarial',
-            fontSize: 8,
-            color: '#7f8c8d',
-            margin: [40, 0, 0, 0],
-          },
-          {
-            text: `Página ${currentPage} de ${pageCount}`,
-            fontSize: 8,
-            color: '#7f8c8d',
-            alignment: 'right',
-            margin: [0, 0, 40, 0],
-          },
+          { text: this.esElectronica ? 'FACTURA ELECTRÓNICA DE VENTA' : 'FACTURA DE VENTA', fontSize: 15, bold: true, color: OSCURO },
+          { text: `N.° ${this.numeroFactura}`, fontSize: 13, bold: true, color: AZUL, alignment: 'right' },
         ],
-        margin: [0, 10, 0, 0],
-      }),
+        margin: [0, 0, 0, 14],
+      },
+    ];
 
-      content: [
-        // ── Encabezado: logo + datos empresa ─────────────
-        {
-          columns: [
-            // Logo (texto como placeholder — reemplazar por imagen si hay)
-            {
-              stack: [
-                {
-                  text: 'AURA NUBE',
-                  fontSize: 22,
-                  bold: true,
-                  color: '#3498db',
-                  characterSpacing: 2,
-                },
-                {
-                  text: 'Software de gestión empresarial',
-                  fontSize: 9,
-                  color: '#9b59b6',
-                  margin: [0, 2, 0, 0],
-                },
-              ],
-              width: '*',
-            },
-            // Datos empresa (derecha)
-            {
-              stack: [
-                {
-                  text: v.sucursalNombre,
-                  fontSize: 13,
-                  bold: true,
-                  color: '#2c3e50',
-                  alignment: 'right',
-                },
-                {
-                  text: `Sucursal: ${v.sucursalNombre}`,
-                  fontSize: 8,
-                  color: '#7f8c8d',
-                  alignment: 'right',
-                  margin: [0, 2, 0, 0],
-                },
-              ],
-              width: 'auto',
-            },
-          ],
-          margin: [0, 0, 0, 16],
-        },
-
-        // Línea divisora degradado simulado
-        {
-          canvas: [
-            {
-              type: 'line',
-              x1: 0,
-              y1: 0,
-              x2: 515,
-              y2: 0,
-              lineWidth: 3,
-              lineColor: '#3498db',
-            },
-          ],
-          margin: [0, 0, 0, 20],
-        },
-
-        // ── Datos cliente + factura ───────────────────────
-        {
-          columns: [
-            // Cliente
-            {
-              stack: [
-                {
-                  text: 'FACTURAR A',
-                  fontSize: 8,
-                  bold: true,
-                  color: '#9b59b6',
-                  margin: [0, 0, 0, 6],
-                },
-                {
-                  text: v.clienteNombre ?? 'Consumidor Final',
-                  fontSize: 11,
-                  bold: true,
-                  color: '#2c3e50',
-                },
-              ],
-              width: '*',
-            },
-            // Número y fecha
-            {
-              stack: [
-                {
-                  text: 'FACTURA DE VENTA',
-                  fontSize: 8,
-                  bold: true,
-                  color: '#9b59b6',
-                  alignment: 'right',
-                  margin: [0, 0, 0, 6],
-                },
-                {
-                  columns: [
-                    { text: 'N°:', bold: true, fontSize: 9, width: 'auto' },
-                    {
-                      text: this.numeroFactura,
-                      fontSize: 9,
-                      alignment: 'right',
-                    },
-                  ],
-                  columnGap: 8,
-                },
-                {
-                  columns: [
-                    { text: 'Fecha:', bold: true, fontSize: 9, width: 'auto' },
-                    {
-                      text: this.formatFecha(v.fechaEmision),
-                      fontSize: 9,
-                      alignment: 'right',
-                    },
-                  ],
-                  columnGap: 8,
-                },
-                {
-                  columns: [
-                    { text: 'Estado:', bold: true, fontSize: 9, width: 'auto' },
-                    {
-                      text:
-                        v.estadoVenta === 'COMPLETADA' ? 'Pagada' : 'Anulada',
-                      fontSize: 9,
-                      color:
-                        v.estadoVenta === 'COMPLETADA' ? '#27ae60' : '#e74c3c',
-                      bold: true,
-                      alignment: 'right',
-                    },
-                  ],
-                  columnGap: 8,
-                },
-              ],
-              width: 'auto',
-            },
-          ],
-          fillColor: '#f8f9fa',
-          margin: [-8, 0, -8, 0],
-          // Caja gris de fondo via table
-        },
-
-        // Caja datos con fondo gris
-        {
-          table: {
-            widths: ['*', 'auto'],
-            body: [
-              [
-                {
-                  stack: [
-                    {
-                      text: 'FACTURAR A',
-                      fontSize: 8,
-                      bold: true,
-                      color: '#9b59b6',
-                      margin: [0, 0, 0, 4],
-                    },
-                    {
-                      text: v.clienteNombre ?? 'Consumidor Final',
-                      fontSize: 11,
-                      bold: true,
-                      color: '#2c3e50',
-                    },
-                    {
-                      text: v.tipoDocumento ?? 'Consumidor Final',
-                      fontSize: 9,
-                      color: '#7f8c8d',
-                      margin: [0, 2, 0, 0],
-                    },
-                  ],
-                  border: [false, false, false, false],
-                },
-                {
-                  stack: [
-                    {
-                      text: 'DETALLE',
-                      fontSize: 8,
-                      bold: true,
-                      color: '#9b59b6',
-                      alignment: 'right',
-                      margin: [0, 0, 0, 4],
-                    },
-                    {
-                      text: `N° ${this.numeroFactura}`,
-                      fontSize: 10,
-                      bold: true,
-                      alignment: 'right',
-                      color: '#2c3e50',
-                    },
-                    {
-                      text: `Fecha: ${this.formatFecha(v.fechaEmision)}`,
-                      fontSize: 9,
-                      alignment: 'right',
-                      color: '#7f8c8d',
-                    },
-                    {
-                      text:
-                        v.estadoVenta === 'COMPLETADA'
-                          ? '● Pagada'
-                          : '● Anulada',
-                      fontSize: 9,
-                      bold: true,
-                      alignment: 'right',
-                      color:
-                        v.estadoVenta === 'COMPLETADA' ? '#27ae60' : '#e74c3c',
-                    },
-                  ],
-                  border: [false, false, false, false],
-                },
-              ],
+    // Cliente + fechas
+    content.push({
+      table: {
+        widths: ['*', 'auto'],
+        body: [[
+          {
+            border: [false, false, false, false],
+            stack: [
+              { text: 'FACTURAR A', fontSize: 8, bold: true, color: AZUL, margin: [0, 0, 0, 3] },
+              { text: v.clienteNombre ?? 'Consumidor Final', fontSize: 11, bold: true, color: OSCURO },
+              v.clienteDocumento ? { text: `Documento: ${v.clienteDocumento}`, fontSize: 8, color: GRIS, margin: [0, 1, 0, 0] } : {},
             ],
           },
-          fillColor: '#f8f9fa',
-          margin: [0, 0, 0, 24],
-        },
-
-        // ── Tabla productos ───────────────────────────────
-        {
-          table: {
-            headerRows: 1,
-            widths: ['*', 45, 70, 35, 60, 70],
-            body: [
-              // Header
-              [
-                { text: 'DESCRIPCIÓN', style: 'tableHeader' },
-                { text: 'CANT.', style: 'tableHeader', alignment: 'right' },
-                {
-                  text: 'PRECIO UNIT.',
-                  style: 'tableHeader',
-                  alignment: 'right',
-                },
-                { text: 'IVA', style: 'tableHeader', alignment: 'right' },
-                { text: 'DESCUENTO', style: 'tableHeader', alignment: 'right' },
-                { text: 'TOTAL', style: 'tableHeader', alignment: 'right' },
-              ],
-              // Filas productos
-              ...bodyRows,
+          {
+            border: [false, false, false, false],
+            stack: [
+              { text: [{ text: 'Fecha: ', bold: true }, this.formatFecha(v.fechaEmision)], fontSize: 9, alignment: 'right' },
+              { text: [{ text: 'Estado: ', bold: true }, v.estadoVenta === 'COMPLETADA' ? 'Pagada' : 'Anulada'], fontSize: 9, alignment: 'right', color: v.estadoVenta === 'COMPLETADA' ? '#16a34a' : '#dc2626' },
+              v.estadoDian ? { text: [{ text: 'DIAN: ', bold: true }, v.estadoDian], fontSize: 9, alignment: 'right', color: GRIS } : {},
             ],
           },
-          layout: {
-            hLineWidth: (i: number, node: any) =>
-              i === 0 || i === 1 || i === node.table.body.length ? 0 : 0.5,
-            vLineWidth: () => 0,
-            hLineColor: () => '#e0e0e0',
-            fillColor: (rowIndex: number) => {
-              if (rowIndex === 0) return null; // header tiene su propio estilo
-              return rowIndex % 2 === 0 ? '#f8f9fa' : null;
-            },
-          },
-          margin: [0, 0, 0, 24],
-        },
+        ]],
+      },
+      layout: { fillColor: () => '#f8fafc', paddingLeft: () => 8, paddingRight: () => 8, paddingTop: () => 6, paddingBottom: () => 6, hLineWidth: () => 0, vLineWidth: () => 0 },
+      margin: [0, 0, 0, 16],
+    });
 
-        // ── Totales ───────────────────────────────────────
+    // Tabla de productos
+    content.push({
+      table: {
+        headerRows: 1,
+        widths: ['*', 40, 65, 32, 60, 68],
+        body: [
+          [
+            { text: 'DESCRIPCIÓN', style: 'th' },
+            { text: 'CANT.', style: 'th', alignment: 'right' },
+            { text: 'PRECIO', style: 'th', alignment: 'right' },
+            { text: 'IVA', style: 'th', alignment: 'right' },
+            { text: 'DESC.', style: 'th', alignment: 'right' },
+            { text: 'TOTAL', style: 'th', alignment: 'right' },
+          ],
+          ...bodyRows,
+        ],
+      },
+      layout: {
+        fillColor: (row: number) => (row === 0 ? AZUL : row % 2 === 0 ? '#f8fafc' : null),
+        hLineColor: () => '#e2e8f0',
+        hLineWidth: () => 0.5,
+        vLineWidth: () => 0,
+      },
+      margin: [0, 0, 0, 16],
+    });
+
+    // Totales + pagos
+    content.push({
+      columns: [
         {
-          columns: [
-            // Pagos (izquierda)
+          width: '*',
+          stack: [
+            { text: 'MÉTODOS DE PAGO', fontSize: 8, bold: true, color: AZUL, margin: [0, 4, 0, 4] },
             {
-              stack: [
-                {
-                  text: 'MÉTODOS DE PAGO',
-                  fontSize: 8,
-                  bold: true,
-                  color: '#9b59b6',
-                  margin: [0, 0, 0, 6],
-                },
-                {
-                  table: {
-                    widths: [80, 70],
-                    body:
-                      pagoRows.length > 0
-                        ? pagoRows
-                        : [
-                            [
-                              { text: '—', fontSize: 9 },
-                              { text: '', fontSize: 9 },
-                            ],
-                          ],
-                  },
-                  layout: 'noBorders',
-                },
-              ],
-              width: '*',
-            },
-            // Subtotales (derecha)
-            {
-              table: {
-                widths: [100, 80],
-                body: [
-                  [
-                    { text: 'Subtotal:', fontSize: 9, color: '#555' },
-                    {
-                      text: this.formatCOP(v.subtotal),
-                      fontSize: 9,
-                      alignment: 'right',
-                    },
-                  ],
-                  ...(v.descuentoTotal > 0
-                    ? [
-                        [
-                          { text: 'Descuento:', fontSize: 9, color: '#e74c3c' },
-                          {
-                            text: `-${this.formatCOP(v.descuentoTotal)}`,
-                            fontSize: 9,
-                            alignment: 'right',
-                            color: '#e74c3c',
-                          },
-                        ],
-                      ]
-                    : []),
-                  ...(v.impuestosTotal > 0
-                    ? [
-                        [
-                          { text: 'Impuestos:', fontSize: 9, color: '#555' },
-                          {
-                            text: this.formatCOP(v.impuestosTotal),
-                            fontSize: 9,
-                            alignment: 'right',
-                          },
-                        ],
-                      ]
-                    : []),
-                  [
-                    {
-                      text: 'TOTAL:',
-                      fontSize: 12,
-                      bold: true,
-                      color: '#3498db',
-                      margin: [0, 4, 0, 0],
-                    },
-                    {
-                      text: this.formatCOP(v.totalPagar),
-                      fontSize: 12,
-                      bold: true,
-                      alignment: 'right',
-                      color: '#3498db',
-                      margin: [0, 4, 0, 0],
-                    },
-                  ],
-                ],
-              },
-              layout: {
-                hLineWidth: (i: number, node: any) =>
-                  i === node.table.body.length - 1 ? 2 : 0,
-                vLineWidth: () => 0,
-                hLineColor: () => '#3498db',
-              },
-              width: 'auto',
+              table: { widths: [90, 70], body: pagoRows.length ? pagoRows : [[{ text: '—', fontSize: 9 }, { text: '', fontSize: 9 }]] },
+              layout: 'noBorders',
             },
           ],
         },
-
-        // ── Observaciones ─────────────────────────────────
-        ...(v.observaciones
-          ? [
-              {
-                stack: [
-                  {
-                    canvas: [
-                      {
-                        type: 'line',
-                        x1: 0,
-                        y1: 0,
-                        x2: 515,
-                        y2: 0,
-                        lineWidth: 0.5,
-                        lineColor: '#e0e0e0',
-                      },
-                    ],
-                    margin: [0, 20, 0, 8],
-                  },
-                  {
-                    text: 'OBSERVACIONES',
-                    fontSize: 8,
-                    bold: true,
-                    color: '#9b59b6',
-                    margin: [0, 0, 0, 4],
-                  },
-                  {
-                    text: v.observaciones,
-                    fontSize: 9,
-                    color: '#555',
-                    italics: true,
-                  },
-                ],
-              },
-            ]
-          : []),
+        {
+          width: 240,
+          table: { widths: ['*', 'auto'], body: totalesBody },
+          layout: 'noBorders',
+        },
       ],
+    });
 
-      styles: {
-        tableHeader: {
-          fontSize: 8,
-          bold: true,
-          color: 'white',
-          fillColor: '#3498db',
-          margin: [0, 4, 0, 4],
-        },
-        tableBody: {
-          fontSize: 9,
-          color: '#2c3e50',
-          margin: [0, 3, 0, 3],
-        },
-        tableBodyRight: {
-          fontSize: 9,
-          color: '#2c3e50',
-          margin: [0, 3, 0, 3],
-        },
-      },
+    if (bloqueFE) content.push(bloqueFE);
 
-      defaultStyle: {
-        font: 'Roboto',
-        fontSize: 10,
-        color: '#2c3e50',
-      },
+    if (v.observaciones) {
+      content.push({
+        stack: [
+          { text: 'OBSERVACIONES', fontSize: 8, bold: true, color: AZUL, margin: [0, 18, 0, 3] },
+          { text: v.observaciones, fontSize: 9, color: OSCURO, italics: true },
+        ],
+      });
+    }
+
+    return {
+      pageSize: 'LETTER',
+      pageMargins: [40, 40, 40, 55],
+      content,
+      styles: { th: { fontSize: 8, bold: true, color: '#fff', margin: [0, 4, 0, 4] } },
+      defaultStyle: { fontSize: 9, color: OSCURO },
+      footer: (page: number, count: number) => ({
+        columns: [
+          { text: `Factura ${this.numeroFactura}`, fontSize: 7, color: GRIS, margin: [40, 0, 0, 0] },
+          { text: `Página ${page} de ${count}`, alignment: 'right', fontSize: 7, color: GRIS, margin: [0, 0, 40, 0] },
+        ],
+        margin: [0, 12, 0, 0],
+      }),
+    };
+  }
+
+  /** Texto de la resolución DIAN (o null). Solo incluye vigencia si la fecha es válida. */
+  private resolucionTexto(v: VentaModel): string | null {
+    if (!v.resolucionNumero) return null;
+    const rango = v.resolucionDesde && v.resolucionHasta
+      ? ` del ${v.resolucionDesde} al ${v.resolucionHasta}` : '';
+    const vig = this.parseFecha(v.resolucionFechaHasta)
+      ? `, vigente hasta ${this.formatFecha(v.resolucionFechaHasta)}` : '';
+    return `Resolución DIAN N.° ${v.resolucionNumero}`
+      + `${v.resolucionPrefijo ? ' · Prefijo ' + v.resolucionPrefijo : ''}${rango}${vig}`;
+  }
+
+  /** Bloque inferior de facturación electrónica: CUFE + estado + resolución. */
+  private bloqueElectronico(v: VentaModel): any {
+    const stack: any[] = [
+      { text: 'FACTURACIÓN ELECTRÓNICA', fontSize: 8, bold: true, color: AZUL, margin: [0, 0, 0, 4] },
+      { text: [{ text: 'CUFE: ', bold: true }, v.cufe ?? ''], fontSize: 7.5, color: OSCURO },
+    ];
+    if (v.estadoDian) {
+      stack.push({ text: [{ text: 'Estado DIAN: ', bold: true }, v.estadoDian], fontSize: 8, color: GRIS, margin: [0, 2, 0, 0] });
+    }
+    const reso = this.resolucionTexto(v);
+    if (reso) stack.push({ text: reso, fontSize: 7.5, color: GRIS, margin: [0, 2, 0, 0] });
+    stack.push({
+      text: 'Documento validado por la DIAN. Verifíquelo escaneando el código QR del encabezado.',
+      fontSize: 7, italics: true, color: GRIS, margin: [0, 3, 0, 0],
+    });
+
+    return {
+      table: { widths: ['*'], body: [[{ stack, margin: [8, 6, 8, 6], border: [false, false, false, false] }]] },
+      layout: { fillColor: () => '#f8fafc' },
+      margin: [0, 20, 0, 0],
     };
   }
 
@@ -576,7 +371,7 @@ export class ModalFacturaComponent implements OnChanges {
     this.generando = true;
     this.cdr.markForCheck();
     try {
-      const doc = this.buildDocDefinition();
+      const doc = await this.buildDocDefinition();
       pdfMake.createPdf(doc).download(`Factura-${this.numeroFactura}.pdf`);
     } finally {
       this.generando = false;
@@ -589,7 +384,7 @@ export class ModalFacturaComponent implements OnChanges {
     this.generando = true;
     this.cdr.markForCheck();
     try {
-      const doc = this.buildDocDefinition();
+      const doc = await this.buildDocDefinition();
       pdfMake.createPdf(doc).print();
     } finally {
       this.generando = false;
@@ -602,4 +397,10 @@ export class ModalFacturaComponent implements OnChanges {
   }
 
   formatCOPPublic = (v: number) => this.formatCOP(v);
+
+  /** IVA % real de una línea (subtotalLinea incluye IVA; el descuento ya está restado). */
+  ivaPorcentaje(d: { subtotalLinea: number; impuestoValor: number }): number {
+    const neta = (d.subtotalLinea ?? 0) - (d.impuestoValor ?? 0);
+    return neta > 0 ? (d.impuestoValor / neta) * 100 : 0;
+  }
 }

@@ -32,6 +32,29 @@ export class ReporteService {
     });
   }
 
+  // ── Facturación electrónica ───────────────────────────────
+  /** Facturas electrónicas emitidas en el rango. */
+  facturasElectronicasExcel(desde: string, hasta: string): Observable<Blob> {
+    return this.http.get(`${this.api}/facturas-electronicas/excel`, {
+      responseType: 'blob',
+      params: { desde, hasta },
+    });
+  }
+
+  /** Notas crédito/débito del rango. Sin `tipo` trae ambas. */
+  notasElectronicasExcel(
+    desde: string,
+    hasta: string,
+    tipo?: 'CREDITO' | 'DEBITO',
+  ): Observable<Blob> {
+    const params: Record<string, string> = { desde, hasta };
+    if (tipo) params['tipo'] = tipo;
+    return this.http.get(`${this.api}/notas-electronicas/excel`, {
+      responseType: 'blob',
+      params,
+    });
+  }
+
   // ── Inventario ────────────────────────────────────────────
   inventarioExcel(): Observable<Blob> {
     return this.http.get(`${this.api}/inventario/excel`, {

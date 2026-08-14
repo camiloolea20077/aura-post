@@ -133,6 +133,17 @@
               *ngIf="!item.usuarioId && item.activo"
               (click)="openCrearUsuario(item)"
             ></button>
+            <!-- Ficha: identidad + contratos, afiliaciones, retenciones y
+                 embargos en tabs (reemplaza los botones sueltos por fila). -->
+            <button
+              pButton
+              type="button"
+              icon="pi pi-id-card"
+              class="p-button-text p-button-sm action-edit"
+              pTooltip="Abrir ficha"
+              tooltipPosition="top"
+              (click)="verContratos(item)"
+            ></button>
             <button
               pButton
               type="button"

@@ -24,6 +24,7 @@ import {
 import { CotizacionService } from '../../../core/services/cotizacion.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
 import { EmpresaService } from '../../../core/services/empresa.service';
+import { CotizacionPdfService } from '../../../core/services/cotizacion-pdf.service';
 import { ModalTirillaCotizacionComponent } from '../../pos/components/modal-tirilla-cotizacion/modal-tirilla-cotizacion.component';
 
 @Component({
@@ -64,6 +65,7 @@ export class DetalleCotizacionComponent implements OnChanges {
   public empresaEmail = '';
   public municipio = '';
   public logoUrl = '';
+  public isDescargandoPdf = false;
 
   constructor(
     private readonly cotizacionService: CotizacionService,
@@ -71,6 +73,7 @@ export class DetalleCotizacionComponent implements OnChanges {
     private readonly confirmationService: ConfirmationService,
     private readonly router: Router,
     private readonly empresaService: EmpresaService,
+    private readonly cotizacionPdf: CotizacionPdfService,
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -160,6 +163,19 @@ export class DetalleCotizacionComponent implements OnChanges {
       this.showTirilla = true;
     } catch {
       this.alertService.showError('Error', 'No se pudo cargar los datos de la empresa.');
+    }
+  }
+
+  async descargarPdf(): Promise<void> {
+    if (!this.cotizacion) return;
+    this.isDescargandoPdf = true;
+    try {
+      const res = await lastValueFrom(this.empresaService.getConfig());
+      await this.cotizacionPdf.cotizacion(this.cotizacion, res?.data ?? {});
+    } catch {
+      this.alertService.showError('Error', 'No se pudo generar el PDF.');
+    } finally {
+      this.isDescargandoPdf = false;
     }
   }
 

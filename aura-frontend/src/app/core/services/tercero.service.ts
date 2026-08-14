@@ -110,6 +110,13 @@ export class TerceroService {
     );
   }
 
+  /** Resuelve un municipio por su código DANE (para mostrar el nombre). */
+  getMunicipioByCodigo(codigo: string): Observable<ResponseModel<MunicipioDto>> {
+    return this.http.get<ResponseModel<MunicipioDto>>(
+      `${environment.apiUrl}municipios/codigo/${codigo}`,
+    );
+  }
+
   getEstadoCuenta(
     clienteId: number,
     fechaDesde?: string,

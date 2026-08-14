@@ -22,6 +22,20 @@ export const PLATFORM_ROUTES: Routes = [
           ),
       },
       {
+        path: 'empresas/nueva',
+        loadComponent: () =>
+          import('./form/form-empresa.component').then(
+            (m) => m.FormEmpresaComponent,
+          ),
+      },
+      {
+        path: 'empresas/:id/editar',
+        loadComponent: () =>
+          import('./form/form-empresa.component').then(
+            (m) => m.FormEmpresaComponent,
+          ),
+      },
+      {
         path: 'clientes',
         loadComponent: () =>
           import('./clientes/index-clientes.component').then(

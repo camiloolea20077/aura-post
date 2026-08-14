@@ -6,8 +6,8 @@ $text: #1e293b;
 $muted: #94a3b8;
 $bg: #f8fafc;
 $card: #ffffff;
-$font: 'Outfit', sans-serif;
-$mono: 'JetBrains Mono', monospace;
+$font: "Outfit", sans-serif;
+$mono: "JetBrains Mono", monospace;
 
 .fw-600 {
   font-weight: 600;
@@ -39,7 +39,7 @@ $mono: 'JetBrains Mono', monospace;
 
 // Header + tabla en una sola .card global. Anchos mínimos de filtros.
 .card {
-  overflow: hidden;
+  overflow: visible;
 }
 
 .card-head__search.filtros {

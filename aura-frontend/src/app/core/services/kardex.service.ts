@@ -20,7 +20,8 @@ export class KardexService {
 
   // Selectores auxiliares
   getSucursales(): Observable<any> {
-    return this.http.get<any>(`${this.base}sucursales/list`);
+    // El endpoint de sucursales es /activas (no /list, que caía en /{id}).
+    return this.http.get<any>(`${this.base}sucursales/activas`);
   }
 
   buscarProductos(search: string): Observable<any> {

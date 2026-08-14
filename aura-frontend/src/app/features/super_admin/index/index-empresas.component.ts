@@ -19,14 +19,10 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { RouterModule } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 import {
-  CreateEmpresaResponseDto,
-  EmpresaPlataformaModel,
   EmpresaTableModel,
 } from '../../../core/models/platform.model';
 import { PlatformService } from '../../../core/services/platform.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
-import { FormEmpresaComponent } from '../form/form-empresa.component';
-import { DialogModule } from 'primeng/dialog';
 import { Router } from '@angular/router';
 
 @Component({
@@ -44,8 +40,6 @@ import { Router } from '@angular/router';
     TooltipModule,
     SkeletonModule,
     ConfirmDialogModule,
-    FormEmpresaComponent,
-    DialogModule,
     RouterModule,
   ],
   providers: [MessageService, ConfirmationService],
@@ -59,11 +53,6 @@ export class IndexEmpresasComponent implements OnInit {
   search = '';
   rowSize = 15;
   lastEvent!: TableLazyLoadEvent;
-
-  showForm = false;
-  editTarget: EmpresaPlataformaModel | null = null;
-  credenciales: CreateEmpresaResponseDto | null = null;
-  showCredenciales = false;
 
   constructor(
     private readonly platformService: PlatformService,
@@ -114,19 +103,11 @@ export class IndexEmpresasComponent implements OnInit {
   }
 
   nueva(): void {
-    this.editTarget = null;
-    this.showForm = true;
+    this.router.navigate(['/platform/empresas/nueva']);
   }
 
-  async editar(id: number): Promise<void> {
-    try {
-      const res = await lastValueFrom(this.platformService.getById(id));
-      this.editTarget = res?.data ?? null;
-      this.showForm = true;
-      this.cdr.markForCheck();
-    } catch {
-      this.alertService.showError('Error', 'No se pudo cargar la empresa');
-    }
+  editar(id: number): void {
+    this.router.navigate(['/platform/empresas', id, 'editar']);
   }
 
   confirmarSuspender(item: EmpresaTableModel, event: Event): void {
@@ -162,24 +143,6 @@ export class IndexEmpresasComponent implements OnInit {
     } catch {
       this.alertService.showError('Error', 'No se pudo activar');
     }
-  }
-
-  onSaved(): void {
-    this.showForm = false;
-    this.reload();
-  }
-
-  onCredencialesCreadas(data: CreateEmpresaResponseDto): void {
-    this.credenciales = data;
-    this.showForm = false;
-    this.showCredenciales = true;
-    this.reload();
-    this.cdr.markForCheck();
-  }
-
-  copiar(texto: string): void {
-    navigator.clipboard.writeText(texto);
-    this.alertService.showSuccess('Copiado', 'Texto copiado al portapapeles');
   }
 
   gestionarPermisos(item: EmpresaTableModel, event: Event): void {

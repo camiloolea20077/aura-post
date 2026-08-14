@@ -1,0 +1,472 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-shield"></i></span>
+        <div>
+          <h1 class="title">PILA</h1>
+          <p class="subtitle">Planilla integrada de liquidación de aportes</p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="field-inline">
+          <label>Período</label>
+          <p-calendar
+            [(ngModel)]="mes"
+            view="month"
+            dateFormat="yy-mm"
+            [showIcon]="true"
+            styleClass="cal-mes"
+            placeholder="AAAA-MM"
+          />
+        </div>
+        <button
+          pButton
+          type="button"
+          label="Configurar aportante"
+          icon="pi pi-id-card"
+          class="p-button-outlined p-button-secondary"
+          pTooltip="Datos del aportante para el encabezado PILA"
+          (click)="abrirConfig()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          label="Generar planilla"
+          icon="pi pi-cog"
+          class="btn-aura"
+          [loading]="generando"
+          (click)="generar()"
+        ></button>
+      </div>
+    </div>
+
+    <p-table
+      [value]="planillas"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [loading]="loading"
+      dataKey="id"
+      styleClass="p-datatable-sm"
+      [tableStyle]="{ 'min-width': '48rem' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Período</th>
+          <th>Aportante</th>
+          <th class="text-center">Estado</th>
+          <th class="text-right">Empleados</th>
+          <th class="text-right">Total nómina (IBC pensión)</th>
+          <th style="width: 8rem"></th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-p>
+        <tr>
+          <td>
+            <strong>{{ p.periodo }}</strong>
+          </td>
+          <td>
+            {{ p.razonSocial }}
+            <span class="muted">{{ p.numeroDocumento }}</span>
+          </td>
+          <td class="text-center">
+            <p-tag [value]="p.estado" [severity]="severidadEstado(p.estado)" />
+          </td>
+          <td class="text-right">{{ p.totalEmpleados ?? "—" }}</td>
+          <td class="text-right">{{ formatMonto(p.totalNomina) }}</td>
+          <td class="text-right flex">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-verified"
+              class="p-button-text p-button-sm"
+              pTooltip="Validar (tipo UGPP)"
+              (click)="validar(p)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-users"
+              class="p-button-text p-button-sm"
+              pTooltip="Ver cotizantes"
+              (click)="verCotizantes(p)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-download"
+              class="p-button-text p-button-sm"
+              pTooltip="Descargar archivo PILA"
+              (click)="descargarArchivo(p)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="text-center p-4">
+            <span class="muted"
+              >Aún no hay planillas. Elige un período y genera la primera.</span
+            >
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr>
+          <td colspan="6"><p-skeleton height="2rem" /></td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- Problemas de validación (409): lista accionable por empleado -->
+<p-dialog
+  [(visible)]="showProblemas"
+  header="No se puede generar la planilla"
+  [modal]="true"
+  [style]="{ width: '40rem' }"
+  [draggable]="false"
+>
+  <p class="muted">
+    Resuelve estos puntos y vuelve a generar. Cada uno bloquea el archivo:
+  </p>
+  <pre class="problemas">{{ problemas }}</pre>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Entendido"
+      class="p-button-text"
+      (click)="showProblemas = false"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Cotizantes de la planilla -->
+<p-dialog
+  [(visible)]="showCotizantes"
+  [header]="
+    planillaAbierta
+      ? 'Cotizantes · PILA ' + planillaAbierta.periodo
+      : 'Cotizantes'
+  "
+  [modal]="true"
+  [style]="{ width: '72rem' }"
+  [draggable]="false"
+>
+  @if (cargandoCotizantes) {
+    <p-skeleton height="14rem" />
+  } @else {
+    <p-table
+      [value]="cotizantes"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      styleClass="p-datatable-sm"
+      [scrollable]="true"
+      scrollHeight="26rem"
+      [tableStyle]="{ 'min-width': '68rem' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>#</th>
+          <th>Cotizante</th>
+          <th>Documento</th>
+          <th class="text-center">Días S/P</th>
+          <th class="text-right">IBC salud</th>
+          <th class="text-right">IBC pensión</th>
+          <th class="text-right">Ap. salud</th>
+          <th class="text-right">Ap. pensión</th>
+          <th class="text-right">Ap. ARL</th>
+          <th class="text-center">Nov.</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-c>
+        <tr>
+          <td>{{ c.secuencia }}</td>
+          <td>{{ c.nombreCompleto }}</td>
+          <td>{{ c.tipoDocumento }} {{ c.numeroIdentificacion }}</td>
+          <td class="text-center">
+            {{ c.diasCotizadosSalud }}/{{ c.diasCotizadosPension }}
+          </td>
+          <td class="text-right">{{ formatMonto(c.ibcSalud) }}</td>
+          <td class="text-right">{{ formatMonto(c.ibcPension) }}</td>
+          <td class="text-right">{{ formatMonto(c.aporteSalud) }}</td>
+          <td class="text-right">{{ formatMonto(c.aportePension) }}</td>
+          <td class="text-right">{{ formatMonto(c.aporteRiesgos) }}</td>
+          <td class="text-center">
+            @if (c.ingreso) {
+              <p-tag value="ING" severity="success" />
+            }
+            @if (c.retiro) {
+              <p-tag value="RET" severity="danger" />
+            }
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="10" class="text-center p-3 muted">
+            Esta planilla no tiene cotizantes.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  }
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cerrar"
+      class="p-button-text"
+      (click)="showCotizantes = false"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Configuración del aportante (P4b) -->
+<p-dialog
+  [(visible)]="showConfig"
+  header="Configuración del aportante · PILA"
+  [modal]="true"
+  [style]="{ width: '44rem' }"
+  [draggable]="false"
+>
+  <p class="muted cfg-hint">
+    Datos que el operador exige en el encabezado de la PILA. Se aplican al
+    generar la planilla.
+  </p>
+
+  <div class="cfg-seccion">Clasificación del aportante</div>
+  <div class="cfg-grid">
+    <div class="cfg-field">
+      <label>Tipo de aportante</label>
+      <input
+        pInputText
+        [(ngModel)]="config.tipoAportante"
+        placeholder="1"
+        maxlength="5"
+      />
+    </div>
+    <div class="cfg-field">
+      <label>Clase de aportante</label>
+      <input pInputText [(ngModel)]="config.claseAportante" maxlength="5" />
+    </div>
+    <div class="cfg-field">
+      <label>Naturaleza</label>
+      <input
+        pInputText
+        [(ngModel)]="config.naturalezaAportante"
+        maxlength="5"
+      />
+    </div>
+    <div class="cfg-field">
+      <label>Actividad económica (CIIU)</label>
+      <input
+        pInputText
+        [(ngModel)]="config.codActividadEconomica"
+        maxlength="10"
+      />
+    </div>
+    <div class="cfg-field">
+      <label>Código de operador</label>
+      <input pInputText [(ngModel)]="config.codOperador" maxlength="10" />
+    </div>
+    <div class="cfg-field">
+      <label>Forma de presentación</label>
+      <input pInputText [(ngModel)]="config.formaPresentacion" maxlength="5" />
+    </div>
+  </div>
+
+  <div class="cfg-seccion">Representante legal</div>
+  <div class="cfg-grid">
+    <div class="cfg-field">
+      <label>Tipo de documento</label>
+      <input
+        pInputText
+        [(ngModel)]="config.repLegalTipoDocumento"
+        placeholder="CC"
+        maxlength="5"
+      />
+    </div>
+    <div class="cfg-field">
+      <label>Documento</label>
+      <input pInputText [(ngModel)]="config.repLegalDocumento" maxlength="30" />
+    </div>
+    <div class="cfg-field">
+      <label>Primer apellido</label>
+      <input pInputText [(ngModel)]="config.repLegalApellido1" maxlength="40" />
+    </div>
+    <div class="cfg-field">
+      <label>Segundo apellido</label>
+      <input pInputText [(ngModel)]="config.repLegalApellido2" maxlength="40" />
+    </div>
+    <div class="cfg-field">
+      <label>Primer nombre</label>
+      <input pInputText [(ngModel)]="config.repLegalNombre1" maxlength="40" />
+    </div>
+    <div class="cfg-field">
+      <label>Segundo nombre</label>
+      <input pInputText [(ngModel)]="config.repLegalNombre2" maxlength="40" />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cancelar"
+      class="p-button-text"
+      (click)="showConfig = false"
+    ></button>
+    <button
+      pButton
+      type="button"
+      label="Guardar"
+      icon="pi pi-check"
+      class="btn-aura"
+      [loading]="savingConfig"
+      (click)="guardarConfig()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Reporte de validación tipo UGPP (P1) -->
+<p-dialog
+  [(visible)]="showValidacion"
+  [header]="
+    planillaAbierta
+      ? 'Validación PILA · ' + planillaAbierta.periodo
+      : 'Validación PILA'
+  "
+  [modal]="true"
+  [style]="{ width: '68rem' }"
+  [draggable]="false"
+>
+  @if (validando) {
+    <p-skeleton height="16rem" />
+  } @else if (reporte) {
+    <!-- Estado global + resumen -->
+    <div class="val-resumen">
+      <div class="val-estado">
+        <span class="val-estado-label">Estado de la planilla</span>
+        <p-tag
+          [value]="reporte.estadoPlanilla"
+          [severity]="estadoPlanillaColor(reporte.estadoPlanilla)"
+          styleClass="val-estado-tag"
+        />
+      </div>
+      <div class="val-contadores">
+        <div class="val-chip ok">
+          <strong>{{ reporte.cotizantesAptos }}</strong> aptos
+        </div>
+        <div class="val-chip warn">
+          <strong>{{ reporte.cotizantesAptosConAdvertencias }}</strong> con
+          advertencias
+        </div>
+        <div class="val-chip danger">
+          <strong>{{ reporte.cotizantesBloqueados }}</strong> bloqueados
+        </div>
+        <div class="val-chip sec">
+          <strong>{{ reporte.cotizantesNoEvaluables }}</strong> no evaluables
+        </div>
+      </div>
+      <div class="val-contadores">
+        <div class="val-chip danger-soft">
+          {{ reporte.totalErrores }} errores
+        </div>
+        <div class="val-chip warn-soft">
+          {{ reporte.totalAdvertencias }} advertencias
+        </div>
+        <div class="val-chip sec-soft">
+          {{ reporte.totalNoEvaluable }} no evaluable
+        </div>
+        <div class="val-chip info-soft">
+          {{ reporte.totalInformacion }} info
+        </div>
+      </div>
+    </div>
+
+    <!-- Hallazgos de contexto/encabezado -->
+    @if (reporte.hallazgosPlanilla?.length) {
+      <div class="val-seccion">
+        <div class="val-seccion-titulo">Contexto de la planilla</div>
+        <div class="val-hallazgo" *ngFor="let h of reporte.hallazgosPlanilla">
+          <p-tag
+            [value]="h.severidad"
+            [severity]="severidadColor(h.severidad)"
+          />
+          <div class="val-hallazgo-body">
+            <div class="val-hallazgo-top">
+              <code>{{ h.codigo }}</code>
+              <span class="val-campo">{{ h.campo }}</span>
+            </div>
+            <div class="val-desc">{{ h.descripcion }}</div>
+            <div class="val-accion" *ngIf="h.accionSugerida">
+              <i class="pi pi-arrow-right"></i> {{ h.accionSugerida }}
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Cotizantes -->
+    <div class="val-seccion">
+      <div class="val-seccion-titulo">
+        Cotizantes ({{ reporte.totalCotizantes }})
+      </div>
+      <div class="val-cot-list">
+        <div class="val-cot" *ngFor="let c of reporte.cotizantes">
+          <div class="val-cot-head">
+            <p-tag
+              [value]="c.estado"
+              [severity]="estadoCotizanteColor(c.estado)"
+            />
+            <span class="val-cot-nombre">{{ c.nombreCompleto }}</span>
+            <span class="val-cot-doc"
+              >{{ c.tipoDocumento }} {{ c.numeroIdentificacion }}</span
+            >
+          </div>
+          <div class="val-cot-hallazgos">
+            <div class="val-hallazgo" *ngFor="let h of c.hallazgos">
+              <p-tag
+                [value]="h.severidad"
+                [severity]="severidadColor(h.severidad)"
+              />
+              <div class="val-hallazgo-body">
+                <div class="val-hallazgo-top">
+                  <code>{{ h.codigo }}</code>
+                  <span class="val-campo">{{ h.campo }}</span>
+                  <span class="val-valor" *ngIf="h.valorRecibido"
+                    >= {{ h.valorRecibido }}</span
+                  >
+                </div>
+                <div class="val-desc">{{ h.descripcion }}</div>
+                <div class="val-accion" *ngIf="h.accionSugerida">
+                  <i class="pi pi-arrow-right"></i> {{ h.accionSugerida }}
+                </div>
+                <div class="val-riesgo" *ngIf="h.riesgo">
+                  <i class="pi pi-exclamation-triangle"></i> {{ h.riesgo }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cerrar"
+      class="p-button-text"
+      (click)="showValidacion = false"
+    ></button>
+  </ng-template>
+</p-dialog>

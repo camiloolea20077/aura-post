@@ -28,7 +28,14 @@
           ></button>
         </div>
 
-        <p-table [value]="periodos" [loading]="loadingPeriodos" showGridlines>
+        <p-table
+          [value]="periodos"
+          [loading]="loadingPeriodos"
+          showGridlines
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[10, 25, 50]"
+        >
           <ng-template pTemplate="header">
             <tr>
               <th>Período</th>
@@ -138,6 +145,9 @@
         </div>
         <p-table
           [value]="dias"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[10, 25, 50]"
           showGridlines
           [tableStyle]="{ 'min-width': '760px' }"
         >
@@ -209,6 +219,9 @@
         </div>
         <p-table
           [value]="incidencias"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[10, 25, 50]"
           showGridlines
           [tableStyle]="{ 'min-width': '760px' }"
         >

@@ -55,9 +55,7 @@
       <ng-template pTemplate="header">
         <tr>
           <th style="width: 50px">#</th>
-          <th pSortableColumn="nombre">
-            Nombre <p-sortIcon field="nombre" />
-          </th>
+          <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre" /></th>
           <th pSortableColumn="codigo" style="width: 160px">
             Código <p-sortIcon field="codigo" />
           </th>
@@ -87,7 +85,7 @@
               [severity]="s.activo ? 'success' : 'danger'"
             />
           </td>
-          <td class="text-center" (click)="$event.stopPropagation()">
+          <td class="text-center flex" (click)="$event.stopPropagation()">
             <button
               pButton
               icon="pi pi-pencil"

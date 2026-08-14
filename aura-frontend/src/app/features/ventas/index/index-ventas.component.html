@@ -16,7 +16,7 @@
               type="text"
               pInputText
               class="search-input"
-              placeholder="Buscar por N° venta, cliente o caja..."
+              placeholder="Buscar por N° venta, N° factura, cliente o caja..."
               [(ngModel)]="searchQuery"
               (input)="onSearch()"
               (keydown.escape)="clearSearch()"
@@ -53,6 +53,7 @@
           <th pSortableColumn="v.numero_venta" style="min-width: 120px">
             N° Venta <p-sortIcon field="v.numero_venta" />
           </th>
+          <th style="min-width: 150px">N° Factura Electrónica</th>
           <th style="min-width: 160px">Cliente</th>
           <th style="min-width: 120px">Caja</th>
           <th pSortableColumn="v.fecha" style="min-width: 130px">
@@ -73,12 +74,15 @@
             <span class="numero-venta">{{ item.numeroVenta ?? "—" }}</span>
           </td>
           <td>
+            <span class="factus-num">{{ item.factusNumero ?? "—" }}</span>
+          </td>
+          <td>
             <div class="cell-cliente">
               <div class="cliente-av">
-                {{ (item.clienteNombre ?? "CF").charAt(0).toUpperCase() }}
+                {{ ((item.clienteNombre || "").trim() || "CF").charAt(0).toUpperCase() }}
               </div>
               <span class="cliente-n">{{
-                item.clienteNombre ?? "Consumidor final"
+                ((item.clienteNombre || "").trim() || "Consumidor Final") | uppercase
               }}</span>
             </div>
           </td>
@@ -147,13 +151,18 @@
             <button
               pButton
               *ngIf="
-                item.estadoVenta === 'COMPLETADA' ||
-                (item.estadoVenta === 'PAGO_PARCIAL' && !item.estadoDian)
+                (item.estadoVenta === 'COMPLETADA' ||
+                  item.estadoVenta === 'PAGO_PARCIAL') &&
+                (!item.estadoDian || item.estadoDian === 'RECHAZADA')
               "
               icon="pi pi-bolt"
               class="p-button-text p-button-sm"
               style="color: #f59e0b"
-              pTooltip="Generar factura electrónica"
+              [pTooltip]="
+                item.estadoDian === 'RECHAZADA'
+                  ? 'Reintentar factura electrónica'
+                  : 'Generar factura electrónica'
+              "
               tooltipPosition="left"
               (click)="generarFE(item, $event)"
             ></button>

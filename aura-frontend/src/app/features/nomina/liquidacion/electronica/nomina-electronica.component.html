@@ -1,0 +1,313 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="!enviando"
+  [closable]="!enviando"
+  [style]="{ width: '680px', maxWidth: '95vw' }"
+  (onHide)="close()"
+  styleClass="ne-dialog"
+>
+  <ng-template pTemplate="header">
+    <div class="ne-header">
+      <div class="ne-title">
+        <i class="pi pi-send"></i>
+        <span>Nómina electrónica</span>
+      </div>
+      <p-tag value="DIAN · Factus" severity="info" [rounded]="true" />
+    </div>
+  </ng-template>
+
+  <!-- Skeleton -->
+  <div *ngIf="loading" class="ne-skeleton">
+    <p-skeleton height="90px" styleClass="mb-3" />
+    <p-skeleton height="140px" styleClass="mb-3" />
+    <p-skeleton height="120px" />
+  </div>
+
+  <!-- Overlay de carga durante el envío -->
+  <div *ngIf="enviando" class="ne-sending">
+    <p-progressSpinner strokeWidth="4" [style]="{ width: '52px', height: '52px' }" />
+    <div class="ne-sending-txt">Enviando a la DIAN…</div>
+    <div class="ne-sending-sub">Validando y generando el CUNE, no cierres esta ventana.</div>
+  </div>
+
+  <!-- Overlay de carga durante la anulación -->
+  <div *ngIf="anulando" class="ne-sending">
+    <p-progressSpinner strokeWidth="4" [style]="{ width: '52px', height: '52px' }" />
+    <div class="ne-sending-txt">Anulando…</div>
+    <div class="ne-sending-sub">Procesando la anulación, no cierres esta ventana.</div>
+  </div>
+
+  <!-- Resultado del envío -->
+  <div *ngIf="respuesta && !enviando && !anulando" class="ne-result" [class.ok]="respuesta.exitoso && !anulada" [class.err]="!respuesta.exitoso || anulada">
+    <i class="pi" [ngClass]="anulada ? 'pi-ban' : (respuesta.exitoso ? 'pi-check-circle' : 'pi-times-circle')"></i>
+    <div class="ne-result-body">
+      <div class="ne-result-title">
+        {{ anulada ? "Anulada" : (respuesta.exitoso ? "Aceptada por la DIAN" : "Rechazada") }}
+      </div>
+      <div class="ne-result-cune" *ngIf="respuesta.exitoso && respuesta.cune">
+        <span class="lbl">CUNE</span>
+        <code>{{ respuesta.cune }}</code>
+      </div>
+      <div class="ne-result-msg" *ngIf="!respuesta.exitoso">
+        {{ errorFactus }}
+      </div>
+      <div class="ne-result-http">HTTP {{ respuesta.codigoHttp }} · {{ respuesta.duracionMs }} ms</div>
+    </div>
+  </div>
+
+  <!-- Estado ya persistido (enviada/anulada en una sesión previa) -->
+  <div
+    *ngIf="!respuesta && !enviando && !anulando && estadoLocal && (yaEnviada || estadoLocal.estado === 'ANULADO')"
+    class="ne-result"
+    [class.ok]="yaEnviada"
+    [class.err]="estadoLocal.estado === 'ANULADO'"
+  >
+    <i class="pi" [ngClass]="estadoLocal.estado === 'ANULADO' ? 'pi-ban' : 'pi-check-circle'"></i>
+    <div class="ne-result-body">
+      <div class="ne-result-title">
+        {{ estadoLocal.estado === 'ANULADO' ? "Anulada" : "Aceptada por la DIAN" }}
+      </div>
+      <div class="ne-result-cune" *ngIf="estadoLocal.cune">
+        <span class="lbl">CUNE</span>
+        <code>{{ estadoLocal.cune }}</code>
+      </div>
+      <div class="ne-result-http" *ngIf="estadoLocal.prefijo">
+        Documento {{ estadoLocal.prefijo }}{{ estadoLocal.consecutivo }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Datos de la nómina electrónica (formulario plano) -->
+  <ng-container *ngIf="!loading && !enviando && !respuesta && payload">
+    <p-tag
+      *ngIf="hayAdvertencias"
+      styleClass="ne-warn"
+      severity="warn"
+      [rounded]="true"
+      [value]="
+        (faltaMunicipio ? 'Falta municipio del empleado. ' : '') +
+        (faltaDireccion ? 'Falta dirección del empleado.' : '')
+      "
+    />
+
+    <!-- Trabajador -->
+    <section class="ne-sec">
+      <div class="ne-sec-title">Trabajador</div>
+      <div class="ne-grid">
+        <div class="ne-item"><span>Nombre</span><b>{{ nombreCompleto }}</b></div>
+        <div class="ne-item">
+          <span>Documento</span>
+          <b>{{ documentoLabel(w?.identification_document_code) }} {{ w?.identification_number }}</b>
+        </div>
+        <div class="ne-item"><span>Tipo cotizante</span><b>{{ trabajadorLabel(w?.worker_type_code) }}</b></div>
+        <div class="ne-item"><span>Tipo contrato</span><b>{{ contratoLabel(w?.contract_type) }}</b></div>
+        <div class="ne-item"><span>Salario</span><b>{{ money(w?.salary) }}</b></div>
+        <div class="ne-item"><span>Días trabajados</span><b>{{ w?.days_worked }}</b></div>
+        <div class="ne-item"><span>Ingreso</span><b>{{ w?.entry_date ?? "—" }}</b></div>
+        <div class="ne-item" *ngIf="w?.retirement_date"><span>Retiro</span><b>{{ w?.retirement_date }}</b></div>
+        <div class="ne-item"><span>Dirección</span><b [class.ne-missing]="faltaDireccion">{{ w?.address ?? "Sin dirección" }}</b></div>
+        <div class="ne-item"><span>Municipio</span><b [class.ne-missing]="faltaMunicipio">{{ municipioNombre ?? w?.municipality_code ?? "Sin municipio" }}</b></div>
+        <div class="ne-item" *ngIf="w?.has_integral_salary"><span>Salario integral</span><b>Sí</b></div>
+        <div class="ne-item" *ngIf="w?.has_high_risk"><span>Alto riesgo</span><b>Sí</b></div>
+      </div>
+    </section>
+
+    <!-- Período y pago -->
+    <section class="ne-sec">
+      <div class="ne-sec-title">Período y pago</div>
+      <div class="ne-grid">
+        <div class="ne-item">
+          <span>Período</span>
+          <b>{{ periodoLabel(p?.payroll_period_code) }}<ng-container *ngIf="p?.pay_period_half"> · {{ p?.pay_period_half }}ª quincena</ng-container></b>
+        </div>
+        <div class="ne-item"><span>Mes / año</span><b>{{ p?.month }}/{{ p?.year }}</b></div>
+        <div class="ne-item"><span>Medio de pago</span><b>{{ medioPagoLabel(pay?.payment_method_code) }}</b></div>
+        <div class="ne-item" *ngIf="pay?.bank_name"><span>Banco</span><b>{{ pay?.bank_name }}</b></div>
+        <div class="ne-item" *ngIf="pay?.account_number">
+          <span>Cuenta</span><b>{{ cuentaLabel(pay?.account_type) }} · {{ pay?.account_number }}</b>
+        </div>
+        <div class="ne-item"><span>Fecha de pago</span><b>{{ pay?.payment_date }}</b></div>
+      </div>
+    </section>
+
+    <!-- Devengados -->
+    <section class="ne-sec">
+      <div class="ne-sec-title devengado">Devengados</div>
+      <div class="ne-line" *ngIf="acc?.suel">
+        <span>Sueldo</span><span class="mny">{{ money(acc?.suel?.amount) }}</span>
+      </div>
+      <div class="ne-line" *ngFor="let t of acc?.tra">
+        <span>Auxilio de transporte</span><span class="mny">{{ money(t.amount) }}</span>
+      </div>
+      <div class="ne-line" *ngFor="let h of acc?.hora">
+        <span>{{ horaLabel(h.accrual_type_code) }} ({{ h.quantity }} h · {{ h.percentage }}%)</span>
+        <span class="mny">{{ money(h.amount) }}</span>
+      </div>
+      <div class="ne-line" *ngFor="let c of acc?.comi">
+        <span>Comisión</span><span class="mny">{{ money(c.amount) }}</span>
+      </div>
+    </section>
+
+    <!-- Deducciones -->
+    <section class="ne-sec">
+      <div class="ne-sec-title deduccion">Deducciones</div>
+      <div class="ne-line" *ngIf="ded?.salu">
+        <span>Salud ({{ ded?.salu?.percentage }}%)</span>
+        <span class="mny red">{{ money(ded?.salu?.amount) }}</span>
+      </div>
+      <div class="ne-line" *ngIf="ded?.pens">
+        <span>Pensión ({{ ded?.pens?.percentage }}%)</span>
+        <span class="mny red">{{ money(ded?.pens?.amount) }}</span>
+      </div>
+      <div class="ne-line" *ngIf="ded?.dedu">
+        <span>Fondo solidaridad pensional</span>
+        <span class="mny red">{{ money(ded?.dedu?.amount) }}</span>
+      </div>
+      <div class="ne-line" *ngIf="ded?.rete">
+        <span>Retención en la fuente</span>
+        <span class="mny red">{{ money(ded?.rete?.amount) }}</span>
+      </div>
+      <div class="ne-line" *ngFor="let o of ded?.otra">
+        <span>Otra deducción</span><span class="mny red">{{ money(o.amount) }}</span>
+      </div>
+    </section>
+  </ng-container>
+
+  <ng-template pTemplate="footer">
+    <div class="ne-footer" *ngIf="!enviando && !anulando">
+      <button
+        pButton
+        type="button"
+        label="Cerrar"
+        icon="pi pi-times"
+        class="p-button-text p-button-secondary"
+        (click)="close()"
+      ></button>
+      <button
+        *ngIf="payload && !respuesta && !yaEnviada && estadoLocal?.estado !== 'ANULADO'"
+        pButton
+        type="button"
+        label="Enviar a la DIAN"
+        icon="pi pi-send"
+        class="btn-nomina"
+        (click)="pedirConfirmacion()"
+      ></button>
+      <button
+        *ngIf="respuesta && !respuesta.exitoso"
+        pButton
+        type="button"
+        label="Reintentar"
+        icon="pi pi-refresh"
+        class="p-button-outlined"
+        (click)="respuesta = null; errorFactus = null"
+      ></button>
+      <!-- XML: disponible cuando ya fue aceptada (en esta sesión o en una previa). -->
+      <button
+        *ngIf="(respuesta?.exitoso || yaEnviada)"
+        pButton
+        type="button"
+        label="Descargar XML"
+        icon="pi pi-download"
+        class="p-button-outlined"
+        [loading]="descargando"
+        (click)="descargarXml()"
+      ></button>
+      <button
+        *ngIf="(respuesta?.exitoso || yaEnviada) && !anulada"
+        pButton
+        type="button"
+        label="Nota de ajuste"
+        icon="pi pi-ban"
+        class="p-button-outlined p-button-danger"
+        pTooltip="Nota de ajuste (anula la nómina ante la DIAN)"
+        (click)="pedirAnular()"
+      ></button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Modal de confirmación -->
+<p-dialog
+  [(visible)]="showConfirm"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '420px', maxWidth: '92vw' }"
+  styleClass="ne-confirm"
+>
+  <ng-template pTemplate="header">
+    <div class="ne-title"><i class="pi pi-exclamation-triangle"></i><span>Confirmar envío</span></div>
+  </ng-template>
+  <div class="ne-confirm-body">
+    <p>
+      Vas a enviar la nómina de <b>{{ nombreCompleto }}</b> a la DIAN a través de
+      Factus. Este es un documento fiscal con consecutivo.
+    </p>
+    <p class="ne-confirm-warn" *ngIf="hayAdvertencias">
+      <i class="pi pi-info-circle"></i>
+      Faltan datos del empleado ({{ faltaMunicipio ? "municipio" : "" }}{{ faltaMunicipio && faltaDireccion ? " y " : "" }}{{ faltaDireccion ? "dirección" : "" }}). La DIAN podría rechazarla.
+    </p>
+    <p>¿Continuar?</p>
+  </div>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text p-button-secondary"
+      (click)="showConfirm = false"
+    ></button>
+    <button
+      pButton
+      type="button"
+      label="Sí, enviar"
+      icon="pi pi-check"
+      class="btn-nomina"
+      (click)="enviar()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Modal de confirmación de anulación -->
+<p-dialog
+  [(visible)]="showAnular"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '420px', maxWidth: '92vw' }"
+  styleClass="ne-confirm"
+>
+  <ng-template pTemplate="header">
+    <div class="ne-title"><i class="pi pi-exclamation-triangle"></i><span>Nota de ajuste</span></div>
+  </ng-template>
+  <div class="ne-confirm-body">
+    <p>
+      Se generará la <b>nota de ajuste (eliminación DIAN)</b> de la nómina
+      electrónica de <b>{{ nombreCompleto }}</b>, que la deja anulada. Para
+      corregir valores, luego re-liquida y vuelve a enviar.
+    </p>
+    <p>¿Continuar?</p>
+  </div>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text p-button-secondary"
+      (click)="showAnular = false"
+    ></button>
+    <button
+      pButton
+      type="button"
+      label="Sí, generar nota"
+      icon="pi pi-ban"
+      class="p-button-danger"
+      (click)="anular()"
+    ></button>
+  </ng-template>
+</p-dialog>

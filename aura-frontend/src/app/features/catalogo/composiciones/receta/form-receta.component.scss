@@ -1,0 +1,308 @@
+// Editor de receta completa. La grilla es el centro de la pantalla: todo lo
+// demás (cabecera, costeo) se subordina a que quepan las filas.
+
+$azul: #2563eb;
+$borde: #e2e8f0;
+$texto-suave: #64748b;
+
+:host ::ng-deep .receta-dialog {
+  .p-dialog-content {
+    padding: 1.1rem 1.4rem;
+    background: #fbfcfe;
+  }
+  .p-dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+  }
+}
+
+// ─── Encabezado del diálogo ───────────────────────────────────
+.dlg-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dlg-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: rgba(37, 99, 235, 0.1);
+  color: $azul;
+  font-size: 1.1rem;
+}
+
+.dlg-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.dlg-sub {
+  margin: 0.1rem 0 0;
+  font-size: 0.78rem;
+  color: white;
+}
+
+// ─── Cabecera: producto, tipo, rendimiento ────────────────────
+.cabecera {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.9rem;
+  padding: 1rem 1.1rem;
+  margin-bottom: 1rem;
+  background: #fff;
+  border: 1px solid $borde;
+  border-radius: 14px;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  label {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #334155;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+}
+
+.campo--acciones {
+  justify-content: flex-end;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.hint {
+  font-size: 0.73rem;
+  color: $texto-suave;
+  line-height: 1.35;
+
+  strong {
+    color: #0f172a;
+  }
+}
+
+.hint-icon {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  margin-left: 0.2rem;
+  cursor: help;
+}
+
+// ─── Grilla ───────────────────────────────────────────────────
+.grilla-wrap {
+  background: #fff;
+  border: 1px solid $borde;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+:host ::ng-deep .receta-tabla {
+  .p-datatable-thead > tr > th {
+    background: #f8fafc;
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: #475569;
+  }
+
+  .p-datatable-tbody > tr > td {
+    vertical-align: top;
+    padding: 0.55rem 0.6rem;
+  }
+
+  // Los inputs de la grilla deben ocupar la celda completa: si respiran de más
+  // la tabla no cabe en un portátil.
+  .p-inputnumber,
+  .p-dropdown {
+    width: 100%;
+  }
+
+  .p-inputnumber-input {
+    text-align: right;
+  }
+}
+
+.fila-alerta {
+  background: rgba(239, 68, 68, 0.04);
+}
+
+.nota-input {
+  width: 100%;
+  margin-top: 0.35rem;
+  font-size: 0.76rem;
+  padding: 0.3rem 0.5rem;
+}
+
+.cargando {
+  font-size: 0.76rem;
+  color: $texto-suave;
+}
+
+.consumo {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.25rem;
+
+  strong {
+    font-size: 0.92rem;
+    color: #0f172a;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.consumo-um {
+  font-size: 0.72rem;
+  color: $texto-suave;
+}
+
+.consumo-lote {
+  display: block;
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+.alerta-msg {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.7rem;
+  color: #dc2626;
+  line-height: 1.25;
+}
+
+.sin-inv {
+  font-size: 0.73rem;
+  color: #94a3b8;
+}
+
+.add-fila {
+  margin: 0.5rem;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 2rem 1rem;
+  color: $texto-suave;
+
+  i {
+    font-size: 1.8rem;
+    color: #cbd5e1;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+  }
+}
+
+// ─── Costeo ───────────────────────────────────────────────────
+.costeo-panel {
+  margin-top: 1rem;
+  padding: 1rem 1.1rem;
+  background: #fff;
+  border: 1px solid $borde;
+  border-radius: 14px;
+}
+
+.costeo-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  h3 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #0f172a;
+  }
+}
+
+.costeo-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.7rem;
+  margin: 0.8rem 0;
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.7rem 0.85rem;
+  background: #f8fafc;
+  border: 1px solid $borde;
+  border-radius: 11px;
+
+  &.kpi--malo {
+    background: rgba(239, 68, 68, 0.06);
+    border-color: rgba(239, 68, 68, 0.25);
+
+    .kpi-valor {
+      color: #dc2626;
+    }
+  }
+}
+
+.kpi-label {
+  font-size: 0.72rem;
+  color: $texto-suave;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.kpi-valor {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  font-variant-numeric: tabular-nums;
+}
+
+.costeo-aviso {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.8rem;
+  background: rgba(245, 158, 11, 0.09);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 10px;
+  font-size: 0.79rem;
+  color: #92400e;
+}
+
+.costeo-acciones {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.dup-aviso {
+  margin: 0 0 0.9rem;
+  font-size: 0.82rem;
+  color: #475569;
+  line-height: 1.45;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.text-center {
+  text-align: center;
+}

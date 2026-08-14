@@ -1,0 +1,146 @@
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="!$event && close()"
+  header="Desprendible de pago"
+  [modal]="true"
+  [style]="{ width: '46rem' }"
+  [draggable]="false"
+  (onHide)="close()"
+>
+  @if (loading) {
+    <p-skeleton height="3rem" styleClass="mb-2" />
+    <p-skeleton height="12rem" />
+  } @else if (desprendible) {
+    @let d = desprendible;
+    <!-- Encabezado -->
+    <div class="desp-head">
+      <div>
+        <strong>{{ d.empleadoNombre || "—" }}</strong>
+        <div class="muted">
+          {{ d.empleadoDocumento }} · {{ d.cargo || "Sin cargo" }}
+        </div>
+      </div>
+      <div class="text-right">
+        <div class="muted">{{ d.empresaRazonSocial }}</div>
+        <div class="muted">
+          {{ d.periodoInicio }} → {{ d.periodoFin }} ·
+          {{ d.diasTrabajados }} días
+        </div>
+      </div>
+    </div>
+
+    <!-- Devengados -->
+    <h4 class="desp-sec">Devengados</h4>
+    <div class="desp-lineas">
+      @for (l of d.devengados; track $index) {
+        <div class="linea">
+          <button
+            class="linea__row"
+            type="button"
+            [class.clickable]="tieneTraza(l)"
+            (click)="tieneTraza(l) && toggle('dev', $index)"
+          >
+            <span class="linea__nombre">
+              @if (tieneTraza(l)) {
+                <i
+                  class="pi"
+                  [class.pi-chevron-right]="!estaExpandido('dev', $index)"
+                  [class.pi-chevron-down]="estaExpandido('dev', $index)"
+                ></i>
+              }
+              {{ l.concepto }}
+            </span>
+            <span class="linea__valor">{{ formatMonto(l.valor) }}</span>
+          </button>
+          @if (estaExpandido("dev", $index)) {
+            <div class="traza">
+              @for (p of pasos(l); track $index) {
+                <div class="traza__paso">
+                  <span>{{ p.paso }}</span
+                  ><span>{{ p.valor }}</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+      @if (!d.devengados.length) {
+        <div class="muted p-2">Sin devengados.</div>
+      }
+    </div>
+
+    <!-- Deducciones -->
+    <h4 class="desp-sec">Deducciones</h4>
+    <div class="desp-lineas">
+      @for (l of d.deducciones; track $index) {
+        <div class="linea">
+          <button
+            class="linea__row"
+            type="button"
+            [class.clickable]="tieneTraza(l)"
+            (click)="tieneTraza(l) && toggle('ded', $index)"
+          >
+            <span class="linea__nombre">
+              @if (tieneTraza(l)) {
+                <i
+                  class="pi"
+                  [class.pi-chevron-right]="!estaExpandido('ded', $index)"
+                  [class.pi-chevron-down]="estaExpandido('ded', $index)"
+                ></i>
+              }
+              {{ l.concepto }}
+            </span>
+            <span class="linea__valor deduccion"
+              >- {{ formatMonto(l.valor) }}</span
+            >
+          </button>
+          @if (estaExpandido("ded", $index)) {
+            <div class="traza">
+              @for (p of pasos(l); track $index) {
+                <div class="traza__paso">
+                  <span>{{ p.paso }}</span
+                  ><span>{{ p.valor }}</span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+      @if (!d.deducciones.length) {
+        <div class="muted p-2">Sin deducciones.</div>
+      }
+    </div>
+
+    <!-- Totales -->
+    <div class="desp-totales">
+      <div class="tot">
+        <span>Total devengado</span
+        ><span>{{ formatMonto(d.totalDevengado) }}</span>
+      </div>
+      <div class="tot">
+        <span>Total deducciones</span
+        ><span>- {{ formatMonto(d.totalDeducciones) }}</span>
+      </div>
+      <div class="tot neto">
+        <span>Neto a pagar</span><span>{{ formatMonto(d.netoPagar) }}</span>
+      </div>
+      @if (d.banco) {
+        <div class="muted pago">
+          Pago a {{ d.banco }} · {{ d.tipoCuenta }} {{ d.numeroCuenta }}
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="muted p-3 text-center">No hay datos para mostrar.</div>
+  }
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cerrar"
+      class="p-button-text"
+      (click)="close()"
+    ></button>
+  </ng-template>
+</p-dialog>

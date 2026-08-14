@@ -1,438 +1,302 @@
-<!-- ─── form-empresa.component.html ─────────────────────────── -->
-<form [formGroup]="frmEmpresa" class="fe-form">
-  <!-- ── Datos empresa ──────────────────────────────────────── -->
-  <div class="section-title">
-    <i class="pi pi-building"></i> Datos de la empresa
+<!-- ─── form-empresa (página plana, una sola card) ──────────── -->
+<div class="fe-page">
+  <!-- Skeleton al cargar en edición -->
+  <div class="fe-card" *ngIf="loadingEmpresa">
+    <p-skeleton height="2rem" width="40%" styleClass="mb-3" />
+    <p-skeleton height="2.5rem" styleClass="mb-2" />
+    <p-skeleton height="2.5rem" styleClass="mb-2" />
+    <p-skeleton height="2.5rem" />
   </div>
 
-  <div class="form-row two-col">
-    <div class="field">
-      <label class="field-label required">Razón social</label>
-      <input
-        pInputText
-        formControlName="razonSocial"
-        placeholder="Mi Empresa S.A.S"
-        class="w-full"
-        [class.ng-invalid]="isInvalid('razonSocial')"
-      />
-      <small class="field-error" *ngIf="isInvalid('razonSocial')"
-        >Requerido</small
-      >
+  <!-- Pantalla de éxito con credenciales (tras crear) -->
+  <div class="fe-card cred-card" *ngIf="credenciales">
+    <div class="cred-head">
+      <i class="pi pi-check-circle"></i>
+      <div>
+        <h2>Empresa creada</h2>
+        <p>Comparte estas credenciales con el administrador. La contraseña no se volverá a mostrar.</p>
+      </div>
     </div>
-    <div class="field">
-      <label class="field-label">Nombre comercial</label>
-      <input
-        pInputText
-        formControlName="nombreComercial"
-        placeholder="Mi Empresa"
-        class="w-full"
-      />
+    <div class="cred-row">
+      <span class="cred-label">Email</span>
+      <span class="cred-val">{{ credenciales.emailAdmin }}</span>
+      <button pButton icon="pi pi-copy" class="p-button-text p-button-sm" (click)="copiar(credenciales.emailAdmin)"></button>
     </div>
-  </div>
-
-  <div class="form-row two-col">
-    <div class="field">
-      <label class="field-label required">NIT</label>
-      <input
-        pInputText
-        formControlName="nit"
-        placeholder="900555222"
-        class="w-full"
-        [readOnly]="isEdit"
-        [class.ng-invalid]="isInvalid('nit')"
-      />
-      <small class="field-error" *ngIf="isInvalid('nit')">Requerido</small>
+    <div class="cred-row">
+      <span class="cred-label">Contraseña temporal</span>
+      <span class="cred-val mono">{{ credenciales.passwordTemporal }}</span>
+      <button pButton icon="pi pi-copy" class="p-button-text p-button-sm" (click)="copiar(credenciales.passwordTemporal)"></button>
     </div>
-    <div class="field">
-      <label class="field-label">DV</label>
-      <input
-        pInputText
-        formControlName="dv"
-        placeholder="1"
-        maxlength="2"
-        class="w-full"
-      />
+    <div class="cred-row" *ngIf="credenciales.resetLink">
+      <span class="cred-label">Enlace de activación</span>
+      <span class="cred-val link">{{ credenciales.resetLink }}</span>
+      <button pButton icon="pi pi-copy" class="p-button-text p-button-sm" (click)="copiar(credenciales.resetLink)"></button>
+    </div>
+    <div class="cred-footer">
+      <button pButton label="Ir al listado de empresas" icon="pi pi-arrow-right" class="btn-platform btn-primary" (click)="volver()"></button>
     </div>
   </div>
 
-  <div class="form-row two-col">
-    <div class="field">
-      <label class="field-label">Teléfono</label>
-      <input
-        pInputText
-        formControlName="telefono"
-        placeholder="3001234567"
-        class="w-full"
-      />
-    </div>
-    <div class="field">
-      <label class="field-label">Municipio</label>
-      <p-autoComplete
-        formControlName="municipioObj"
-        [suggestions]="municipioSugerencias"
-        (completeMethod)="buscarMunicipios($event)"
-        (onSelect)="onMunicipioSelect($event)"
-        (onClear)="onMunicipioClear()"
-        field="label"
-        [dropdown]="false"
-        placeholder="Buscar municipio..."
-        [showClear]="true"
-        styleClass="w-full"
-      />
-    </div>
-  </div>
+  <!-- Formulario en una sola card -->
+  <form [formGroup]="frmEmpresa" *ngIf="!loadingEmpresa && !credenciales">
+    <div class="fe-card">
+      <!-- Encabezado dentro de la card -->
+      <div class="fe-head">
+        <button pButton type="button" icon="pi pi-arrow-left" class="p-button-text p-button-secondary" pTooltip="Volver" (click)="volver()"></button>
+        <div class="fe-head-titles">
+          <h1 class="fe-title">{{ isEdit ? "Editar empresa" : "Nueva empresa" }}</h1>
+          <p class="fe-subtitle">
+            {{ isEdit ? "Actualiza los datos y la configuración contable de la empresa" : "Crea la empresa, su administrador y define cómo se contabiliza" }}
+          </p>
+        </div>
+      </div>
 
-  <!-- Logo -->
-  <div class="field">
-    <label class="field-label">Logo de la empresa</label>
-    <div class="logo-upload-area">
-      <img
-        *ngIf="logoPreview"
-        [src]="logoPreview"
-        alt="Logo"
-        class="logo-preview"
-      />
-      <div class="logo-actions">
-        <label
-          class="p-button p-button-outlined p-button-sm logo-btn"
-          [class.p-disabled]="uploadingLogo"
-        >
-          <i
-            class="pi"
-            [class.pi-upload]="!uploadingLogo"
-            [class.pi-spin]="uploadingLogo"
-            [class.pi-spinner]="uploadingLogo"
-          ></i>
-          {{
-            uploadingLogo
-              ? "Subiendo..."
-              : logoPreview
-                ? "Cambiar logo"
-                : "Subir logo"
-          }}
-          <input
-            type="file"
-            accept="image/*"
-            (change)="onLogoSelect($event)"
-            [disabled]="uploadingLogo"
-            hidden
-          />
-        </label>
-        <button
-          *ngIf="logoPreview"
-          pButton
-          type="button"
-          icon="pi pi-trash"
-          class="p-button-text p-button-danger p-button-sm"
-          (click)="removeLogo()"
-        ></button>
-      </div>
-    </div>
-  </div>
+      <!-- ── Datos de la empresa ─────────────────────────────── -->
+      <div class="fe-section">
+        <div class="section-title"><i class="pi pi-building"></i> Datos de la empresa</div>
 
-  <!-- Estado solo en edición -->
-  <div class="field" *ngIf="isEdit">
-    <label class="field-label">Estado</label>
-    <p-toggleButton
-      formControlName="activa"
-      onLabel="Activa"
-      offLabel="Suspendida"
-      offIcon="pi pi-ban"
-      styleClass="toggle-estado"
-    />
-  </div>
+        <div class="empresa-grid">
+          <div class="empresa-fields">
+            <div class="form-row two-col">
+              <div class="field">
+                <label class="field-label required">Razón social</label>
+                <input pInputText formControlName="razonSocial" placeholder="Mi Empresa S.A.S" class="w-full" [class.ng-invalid]="isInvalid('razonSocial')" />
+                <small class="field-error" *ngIf="isInvalid('razonSocial')">Requerido</small>
+              </div>
+              <div class="field">
+                <label class="field-label">Nombre comercial</label>
+                <input pInputText formControlName="nombreComercial" placeholder="Mi Empresa" class="w-full" />
+              </div>
+            </div>
 
-  <!-- ── Datos admin — solo en creación ──────────────────────── -->
-  <ng-container *ngIf="!isEdit">
-    <p-divider />
-    <div class="section-title">
-      <i class="pi pi-user"></i> Administrador de la empresa
-    </div>
+            <div class="form-row two-col">
+              <div class="field">
+                <label class="field-label required">NIT</label>
+                <input pInputText formControlName="nit" placeholder="900555222" class="w-full" [readOnly]="isEdit" [class.ng-invalid]="isInvalid('nit')" />
+                <small class="field-error" *ngIf="isInvalid('nit')">Requerido</small>
+              </div>
+              <div class="field">
+                <label class="field-label">DV</label>
+                <input pInputText formControlName="dv" placeholder="1" maxlength="2" class="w-full" />
+              </div>
+            </div>
 
-    <div class="form-row two-col">
-      <div class="field">
-        <label class="field-label required">Email</label>
-        <input
-          pInputText
-          formControlName="emailAdmin"
-          placeholder="admin@empresa.com"
-          class="w-full"
-          [class.ng-invalid]="isInvalid('emailAdmin')"
-        />
-        <small class="field-error" *ngIf="isInvalid('emailAdmin')"
-          >Email válido requerido</small
-        >
-      </div>
-      <div class="field">
-        <label class="field-label required">Contraseña</label>
-        <p-password
-          formControlName="passwordAdmin"
-          placeholder="••••••••"
-          [feedback]="false"
-          [toggleMask]="true"
-          styleClass="w-full"
-          inputStyleClass="w-full"
-          [class.ng-invalid]="isInvalid('passwordAdmin')"
-        />
-        <small class="field-error" *ngIf="isInvalid('passwordAdmin')"
-          >Mínimo 6 caracteres</small
-        >
-      </div>
-    </div>
+            <div class="form-row two-col">
+              <div class="field">
+                <label class="field-label">Teléfono</label>
+                <input pInputText formControlName="telefono" placeholder="3001234567" class="w-full" />
+              </div>
+              <div class="field">
+                <label class="field-label">Municipio</label>
+                <p-dropdown
+                  formControlName="municipioId"
+                  [options]="municipioOpts"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Buscar municipio..."
+                  [filter]="true"
+                  (onFilter)="onMunicipioFilter($event)"
+                  [virtualScroll]="true"
+                  [virtualScrollItemSize]="38"
+                  [showClear]="true"
+                  [loading]="municipioLoading"
+                  filterPlaceholder="Escribe para buscar..."
+                  emptyFilterMessage="Escribe para buscar municipios"
+                  styleClass="w-full"
+                />
+              </div>
+            </div>
+          </div>
 
-    <div class="form-row two-col">
-      <div class="field">
-        <label class="field-label required">Nombres</label>
-        <input
-          pInputText
-          formControlName="nombresAdmin"
-          placeholder="Juan"
-          class="w-full"
-          [class.ng-invalid]="isInvalid('nombresAdmin')"
-        />
-      </div>
-      <div class="field">
-        <label class="field-label required">Apellidos</label>
-        <input
-          pInputText
-          formControlName="apellidosAdmin"
-          placeholder="Pérez"
-          class="w-full"
-          [class.ng-invalid]="isInvalid('apellidosAdmin')"
-        />
-      </div>
-    </div>
+          <!-- Logo como imagen (derecha) -->
+          <div class="empresa-logo">
+            <label class="field-label">Logo</label>
+            <div class="logo-box">
+              <img *ngIf="logoPreview" [src]="logoPreview" alt="Logo" class="logo-img" />
+              <div class="logo-empty" *ngIf="!logoPreview">
+                <i class="pi pi-image"></i>
+                <span>Sin logo</span>
+              </div>
+            </div>
+            <input #logoInput type="file" accept="image/*" style="display: none" (change)="onLogoSelect($event)" />
+            <div class="logo-btns">
+              <button
+                pButton
+                type="button"
+                [label]="uploadingLogo ? 'Subiendo...' : logoPreview ? 'Cambiar' : 'Subir logo'"
+                [icon]="uploadingLogo ? 'pi pi-spin pi-spinner' : 'pi pi-upload'"
+                class="p-button-outlined p-button-sm"
+                [disabled]="uploadingLogo"
+                (click)="logoInput.click()"
+              ></button>
+              <button *ngIf="logoPreview && !uploadingLogo" pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm" pTooltip="Quitar logo" (click)="removeLogo()"></button>
+            </div>
+            <small class="field-hint"><i class="pi pi-info-circle"></i> JPG, PNG o WebP</small>
+          </div>
+        </div>
 
-    <div class="form-row two-col">
-      <div class="field">
-        <label class="field-label required">Tipo de documento</label>
-        <p-dropdown
-          formControlName="tipoDocumentoAdmin"
-          [options]="tipoDocOpts"
-          optionLabel="label"
-          optionValue="value"
-          styleClass="w-full"
-        />
+        <!-- Estado (solo edición) -->
+        <div class="field toggle-field" *ngIf="isEdit">
+          <p-toggleswitch formControlName="activa" inputId="sw-activa" />
+          <label for="sw-activa" class="toggle-label">
+            Empresa activa
+            <span>Si la suspendes, sus usuarios no podrán acceder.</span>
+          </label>
+        </div>
       </div>
-      <div class="field">
-        <label class="field-label required">Documento</label>
-        <input
-          pInputText
-          formControlName="documentoAdmin"
-          placeholder="1045678901"
-          class="w-full"
-          [class.ng-invalid]="isInvalid('documentoAdmin')"
-        />
-      </div>
-    </div>
 
-    <div class="form-row two-col">
-      <div class="field">
-        <label class="field-label">Tipo de persona</label>
-        <p-dropdown
-          formControlName="tipoPersonaAdmin"
-          [options]="tipoPersonaOpts"
-          optionLabel="label"
-          optionValue="value"
-          styleClass="w-full"
-        />
+      <!-- ── Contabilidad: modo de contabilización ───────────── -->
+      <div class="fe-section">
+        <div class="section-title"><i class="pi pi-calculator"></i> Contabilidad</div>
+        <p class="section-hint">¿Cómo quieres que se generen los asientos contables de esta empresa?</p>
+        <div class="modo-grid">
+          <button
+            type="button"
+            class="modo-card"
+            *ngFor="let m of modoOpts"
+            [class.active]="frmEmpresa.get('modoContabilizacion')?.value === m.value"
+            (click)="seleccionarModo(m.value)"
+          >
+            <div class="modo-top">
+              <i [class]="'pi ' + m.icon"></i>
+              <span class="modo-check" *ngIf="frmEmpresa.get('modoContabilizacion')?.value === m.value">
+                <i class="pi pi-check-circle"></i>
+              </span>
+            </div>
+            <div class="modo-titulo">{{ m.titulo }}</div>
+            <div class="modo-desc">{{ m.desc }}</div>
+          </button>
+        </div>
       </div>
-      <div class="field">
-        <label class="field-label">Régimen tributario</label>
-        <p-dropdown
-          formControlName="regimenAdmin"
-          [options]="regimenOpts"
-          optionLabel="label"
-          optionValue="value"
-          styleClass="w-full"
-        />
-      </div>
-    </div>
 
-    <div class="form-row two-col">
-      <div class="field">
-        <label class="field-label">País</label>
-        <input
-          pInputText
-          formControlName="paisAdmin"
-          placeholder="Colombia"
-          class="w-full"
-        />
-      </div>
-      <div class="field">
-        <label class="field-label">Código país</label>
-        <input
-          pInputText
-          formControlName="codigoPaisAdmin"
-          placeholder="CO"
-          maxlength="5"
-          class="w-full"
-          style="text-transform: uppercase"
-        />
-      </div>
-    </div>
+      <!-- ── Administrador + sucursal (solo creación) ────────── -->
+      <div class="fe-section" *ngIf="!isEdit">
+        <div class="section-title"><i class="pi pi-user"></i> Administrador de la empresa</div>
 
-    <div class="form-row two-col" style="align-items: center">
-      <div class="field">
-        <label class="field-label">Gran Contribuyente</label>
-        <p-toggleswitch formControlName="granContribuyenteAdmin" />
-      </div>
-      <div class="field">
-        <label class="field-label">Autorretenedor</label>
-        <p-toggleswitch formControlName="autoRetenedorAdmin" />
-      </div>
-    </div>
+        <div class="form-row two-col">
+          <div class="field">
+            <label class="field-label required">Email</label>
+            <input pInputText formControlName="emailAdmin" placeholder="admin@empresa.com" class="w-full" [class.ng-invalid]="isInvalid('emailAdmin')" />
+            <small class="field-error" *ngIf="isInvalid('emailAdmin')">Email válido requerido</small>
+          </div>
+          <div class="field">
+            <label class="field-label required">Contraseña</label>
+            <p-password formControlName="passwordAdmin" placeholder="••••••••" [feedback]="false" [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full" />
+            <small class="field-error" *ngIf="isInvalid('passwordAdmin')">Mínimo 6 caracteres</small>
+          </div>
+        </div>
 
-    <div class="form-row two-col">
-      <div class="field">
-        <label class="field-label required">Sucursal principal</label>
-        <input
-          pInputText
-          formControlName="nombreSucursal"
-          placeholder="Sede Principal"
-          class="w-full"
-          [class.ng-invalid]="isInvalid('nombreSucursal')"
-        />
+        <div class="form-row two-col">
+          <div class="field">
+            <label class="field-label required">Nombres</label>
+            <input pInputText formControlName="nombresAdmin" placeholder="Juan" class="w-full" [class.ng-invalid]="isInvalid('nombresAdmin')" />
+          </div>
+          <div class="field">
+            <label class="field-label required">Apellidos</label>
+            <input pInputText formControlName="apellidosAdmin" placeholder="Pérez" class="w-full" [class.ng-invalid]="isInvalid('apellidosAdmin')" />
+          </div>
+        </div>
+
+        <div class="form-row two-col">
+          <div class="field">
+            <label class="field-label required">Tipo de documento</label>
+            <p-dropdown formControlName="tipoDocumentoAdmin" [options]="tipoDocOpts" optionLabel="label" optionValue="value" styleClass="w-full" />
+          </div>
+          <div class="field">
+            <label class="field-label required">Documento</label>
+            <input pInputText formControlName="documentoAdmin" placeholder="1045678901" class="w-full" [class.ng-invalid]="isInvalid('documentoAdmin')" />
+          </div>
+        </div>
+
+        <div class="form-row two-col">
+          <div class="field">
+            <label class="field-label">Tipo de persona</label>
+            <p-dropdown formControlName="tipoPersonaAdmin" [options]="tipoPersonaOpts" optionLabel="label" optionValue="value" styleClass="w-full" />
+          </div>
+          <div class="field">
+            <label class="field-label">Régimen tributario</label>
+            <p-dropdown formControlName="regimenAdmin" [options]="regimenOpts" optionLabel="label" optionValue="value" styleClass="w-full" />
+          </div>
+        </div>
+
+        <div class="form-row two-col">
+          <div class="field toggle-field">
+            <p-toggleswitch formControlName="granContribuyenteAdmin" inputId="sw-gc" />
+            <label for="sw-gc" class="toggle-label">Gran Contribuyente</label>
+          </div>
+          <div class="field toggle-field">
+            <p-toggleswitch formControlName="autoRetenedorAdmin" inputId="sw-ar" />
+            <label for="sw-ar" class="toggle-label">Autorretenedor</label>
+          </div>
+        </div>
+
+        <div class="form-row two-col">
+          <div class="field">
+            <label class="field-label required">Sucursal principal</label>
+            <input pInputText formControlName="nombreSucursal" placeholder="Sede Principal" class="w-full" [class.ng-invalid]="isInvalid('nombreSucursal')" />
+          </div>
+        </div>
       </div>
-    </div>
-  </ng-container>
 
-  <!-- ── Facturación electrónica ────────────────────────────────── -->
-  <p-divider />
-  <div class="section-title">
-    <i class="pi pi-file-pdf"></i> Facturación electrónica (Factus)
-  </div>
+      <!-- ── Facturación electrónica ─────────────────────────── -->
+      <div class="fe-section">
+        <div class="section-title"><i class="pi pi-file-pdf"></i> Facturación electrónica (Factus)</div>
 
-  <div class="field">
-    <label class="field-label">Habilitar facturación electrónica</label>
-    <p-toggleButton
-      formControlName="facturaElectronica"
-      onLabel="Habilitada"
-      offLabel="Deshabilitada"
-      offIcon="pi pi-times"
-      styleClass="toggle-estado"
-    />
-  </div>
+        <div class="field toggle-field">
+          <p-toggleswitch formControlName="facturaElectronica" inputId="sw-fe" />
+          <label for="sw-fe" class="toggle-label">
+            Habilitar facturación electrónica
+            <span>Conecta la empresa con Factus para emitir facturas ante la DIAN.</span>
+          </label>
+        </div>
 
-  <!-- Campos Factus — solo si está habilitada -->
-  <ng-container *ngIf="frmEmpresa.get('facturaElectronica')?.value">
-    <div class="form-row two-col">
-      <div class="field">
-        <label class="field-label required">Client ID</label>
-        <input
-          pInputText
-          formControlName="factusClientId"
-          placeholder="xxxxx"
-          class="w-full"
-          [class.ng-invalid]="isInvalid('factusClientId')"
-        />
-        <small class="field-error" *ngIf="isInvalid('factusClientId')"
-          >Requerido para facturación electrónica</small
-        >
+        <ng-container *ngIf="frmEmpresa.get('facturaElectronica')?.value">
+          <div class="form-row two-col">
+            <div class="field">
+              <label class="field-label required">Client ID</label>
+              <input pInputText formControlName="factusClientId" placeholder="xxxxx" class="w-full" [class.ng-invalid]="isInvalid('factusClientId')" />
+              <small class="field-error" *ngIf="isInvalid('factusClientId')">Requerido</small>
+            </div>
+            <div class="field">
+              <label class="field-label required">Client Secret</label>
+              <p-password formControlName="factusClientSecret" placeholder="••••••••" [feedback]="false" [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full" />
+              <small class="field-error" *ngIf="isInvalid('factusClientSecret')">Requerido</small>
+            </div>
+          </div>
+
+          <div class="form-row two-col">
+            <div class="field">
+              <label class="field-label required">Usuario Factus</label>
+              <input pInputText formControlName="factusUsername" placeholder="usuario@factus.com" class="w-full" [class.ng-invalid]="isInvalid('factusUsername')" />
+              <small class="field-error" *ngIf="isInvalid('factusUsername')">Requerido</small>
+            </div>
+            <div class="field">
+              <label class="field-label required">Contraseña Factus</label>
+              <p-password formControlName="factusPassword" placeholder="••••••••" [feedback]="false" [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full" />
+              <small class="field-error" *ngIf="isInvalid('factusPassword')">Requerido</small>
+            </div>
+          </div>
+
+          <div class="form-row two-col">
+            <div class="field">
+              <label class="field-label required">ID Rango Numeración</label>
+              <input pInputText formControlName="factusNumberingRangeId" type="number" placeholder="12345" class="w-full" [class.ng-invalid]="isInvalid('factusNumberingRangeId')" />
+              <small class="field-hint"><i class="pi pi-info-circle"></i> Obtenido del panel de Factus</small>
+            </div>
+            <div class="field">
+              <label class="field-label required">Prefijo de factura</label>
+              <input pInputText formControlName="factusPrefijo" placeholder="SETP" maxlength="10" class="w-full" style="text-transform: uppercase" [class.ng-invalid]="isInvalid('factusPrefijo')" />
+              <small class="field-hint"><i class="pi pi-info-circle"></i> Ej: SETP, FAC, etc.</small>
+            </div>
+          </div>
+        </ng-container>
       </div>
-      <div class="field">
-        <label class="field-label required">Client Secret</label>
-        <p-password
-          formControlName="factusClientSecret"
-          placeholder="••••••••"
-          [feedback]="false"
-          [toggleMask]="true"
-          styleClass="w-full"
-          inputStyleClass="w-full"
-          [class.ng-invalid]="isInvalid('factusClientSecret')"
-        />
-        <small class="field-error" *ngIf="isInvalid('factusClientSecret')"
-          >Requerido para facturación electrónica</small
-        >
+
+      <!-- Footer -->
+      <div class="fe-footer">
+        <button pButton type="button" label="Cancelar" icon="pi pi-times" class="p-button-text p-button-secondary" (click)="volver()"></button>
+        <button pButton type="button" [label]="isEdit ? 'Actualizar' : 'Crear empresa'" icon="pi pi-check" class="btn-platform btn-primary" [loading]="loading" (click)="save()"></button>
       </div>
     </div>
-
-    <div class="form-row two-col">
-      <div class="field">
-        <label class="field-label required">Usuario Factus</label>
-        <input
-          pInputText
-          formControlName="factusUsername"
-          placeholder="usuario@factus.com"
-          class="w-full"
-          [class.ng-invalid]="isInvalid('factusUsername')"
-        />
-        <small class="field-error" *ngIf="isInvalid('factusUsername')"
-          >Requerido para facturación electrónica</small
-        >
-      </div>
-      <div class="field">
-        <label class="field-label required">Contraseña Factus</label>
-        <p-password
-          formControlName="factusPassword"
-          placeholder="••••••••"
-          [feedback]="false"
-          [toggleMask]="true"
-          styleClass="w-full"
-          inputStyleClass="w-full"
-          [class.ng-invalid]="isInvalid('factusPassword')"
-        />
-        <small class="field-error" *ngIf="isInvalid('factusPassword')"
-          >Requerido para facturación electrónica</small
-        >
-      </div>
-    </div>
-
-    <div class="form-row two-col">
-      <div class="field">
-        <label class="field-label required">ID Rango Numeración</label>
-        <input
-          pInputText
-          formControlName="factusNumberingRangeId"
-          type="number"
-          placeholder="12345"
-          class="w-full"
-          [class.ng-invalid]="isInvalid('factusNumberingRangeId')"
-        />
-        <small class="field-hint"
-          ><i class="pi pi-info-circle"></i> Obtenido del panel de Factus</small
-        >
-        <small class="field-error" *ngIf="isInvalid('factusNumberingRangeId')"
-          >Requerido para facturación electrónica</small
-        >
-      </div>
-      <div class="field">
-        <label class="field-label required">Prefijo de factura</label>
-        <input
-          pInputText
-          formControlName="factusPrefijo"
-          placeholder="SETP"
-          maxlength="10"
-          class="w-full"
-          style="text-transform: uppercase"
-          [class.ng-invalid]="isInvalid('factusPrefijo')"
-        />
-        <small class="field-hint"
-          ><i class="pi pi-info-circle"></i> Ej: SETP, FAC, etc.</small
-        >
-        <small class="field-error" *ngIf="isInvalid('factusPrefijo')"
-          >Requerido para facturación electrónica</small
-        >
-      </div>
-    </div>
-  </ng-container>
-
-  <!-- Footer -->
-  <div class="fe-footer">
-    <button
-      pButton
-      label="Cancelar"
-      icon="pi pi-times"
-      class="p-button-text p-button-secondary"
-      (click)="cancelled.emit()"
-    ></button>
-    <button
-      pButton
-      [label]="isEdit ? 'Actualizar' : 'Crear empresa'"
-      icon="pi pi-check"
-      class="btn-platform btn-primary"
-      [loading]="loading"
-      (click)="save()"
-    ></button>
-  </div>
-</form>
+  </form>
+</div>

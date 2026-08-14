@@ -10,6 +10,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
+import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
@@ -25,11 +26,11 @@ import {
 import {
   CrearPrestacionDto,
   EstadoPrestacion,
+  LotePrestacionModel,
   PrestacionModel,
   TipoPrestacion,
 } from '../../../core/models/prestacion.model';
 import { MedioPagoNomina } from '../../../core/models/nomina.model';
-import { EmpleadoTableModel } from '../../../core/models/nomina.model';
 import { CuentaBancariaModel } from '../../../core/models/cuenta-bancaria.model';
 import { AlertService } from '../../../shared/pipes/alert.service';
 
@@ -57,6 +58,7 @@ type TagSeverity =
     TagModule,
     ToastModule,
     TooltipModule,
+    SkeletonModule,
     ConfirmDialogModule,
   ],
   providers: [MessageService, ConfirmationService],
@@ -64,13 +66,19 @@ type TagSeverity =
   styleUrls: ['./prestaciones.component.scss'],
 })
 export class PrestacionesComponent implements OnInit {
-  public items: PrestacionModel[] = [];
+  public lotes: LotePrestacionModel[] = [];
   public loading = true;
+
+  // Detalle de un lote (desglose por concepto)
+  public showDetalle = false;
+  public loadingDetalle = false;
+  public detalleLoteSel: LotePrestacionModel | null = null;
+  public detalleFilas: PrestacionModel[] = [];
 
   // Nueva
   public showForm = false;
   public saving = false;
-  public empleados: EmpleadoTableModel[] = [];
+  public empleados: { id: number; nombreCompleto: string }[] = [];
   public form = {
     empleadoId: null as number | null,
     tipo: 'PRIMA' as TipoPrestacion,
@@ -85,12 +93,23 @@ export class PrestacionesComponent implements OnInit {
     { label: 'Intereses de cesantías', value: 'INTERESES_CESANTIAS' },
   ];
 
+  // Generar en lote (F4): prima/cesantías para todos los activos
+  public showLote = false;
+  public savingLote = false;
+  public formLote = {
+    tipo: 'PRIMA' as TipoPrestacion,
+    fechaDesde: null as Date | null,
+    fechaHasta: null as Date | null,
+    observacion: '',
+  };
+
   // Liquidación definitiva
   public showDefinitiva = false;
   public savingDef = false;
   public defEmpleadoId: number | null = null;
   public defFechaRetiro: Date | null = null;
   public defMotivo: string | null = null;
+  public defCesantiasCorte: Date | null = null;
   public motivos = [
     { label: 'Renuncia', value: 'RENUNCIA' },
     {
@@ -105,7 +124,7 @@ export class PrestacionesComponent implements OnInit {
   // Pago
   public showPago = false;
   public pagando = false;
-  public pagoId: number | null = null;
+  public pagoLote: string | null = null;
   public medioPago: MedioPagoNomina = 'TRANSFERENCIA';
   public cuentaBancariaId: number | null = null;
   public cuentas: CuentaBancariaModel[] = [];
@@ -145,12 +164,28 @@ export class PrestacionesComponent implements OnInit {
   async load(): Promise<void> {
     this.loading = true;
     try {
-      const res = await lastValueFrom(this.prestacionService.listar());
-      this.items = res?.data ?? [];
+      const res = await lastValueFrom(this.prestacionService.listarLotes());
+      this.lotes = res?.data ?? [];
     } catch {
-      this.items = [];
+      this.lotes = [];
     } finally {
       this.loading = false;
+    }
+  }
+
+  /** Abre el desglose por concepto de un lote. */
+  async verDetalle(l: LotePrestacionModel): Promise<void> {
+    this.detalleLoteSel = l;
+    this.showDetalle = true;
+    this.loadingDetalle = true;
+    this.detalleFilas = [];
+    try {
+      const res = await lastValueFrom(this.prestacionService.detalleLote(l.lote));
+      this.detalleFilas = res?.data ?? [];
+    } catch {
+      this.detalleFilas = [];
+    } finally {
+      this.loadingDetalle = false;
     }
   }
 
@@ -177,19 +212,65 @@ export class PrestacionesComponent implements OnInit {
       observacion: '',
     };
     this.showForm = true;
-    if (this.empleados.length === 0) {
-      try {
-        const res = await lastValueFrom(
-          this.nominaService.pageEmpleados({
-            page: 0,
-            rows: 500,
-            search: null,
-          }),
-        );
-        this.empleados = res?.data?.content ?? [];
-      } catch {
-        this.empleados = [];
-      }
+    await this.cargarEmpleados();
+  }
+
+  /** Solo empleados con contrato activo: los retirados no deben liquidarse. */
+  private async cargarEmpleados(): Promise<void> {
+    if (this.empleados.length > 0) return;
+    try {
+      const res = await lastValueFrom(
+        this.nominaService.empleadosConContratoActivo(),
+      );
+      this.empleados = (res?.data ?? []).map((e) => ({
+        id: e.id,
+        nombreCompleto: `${e.nombres} ${e.apellidos}`,
+      }));
+    } catch {
+      this.empleados = [];
+    }
+  }
+
+  // ── Generar en lote (F4) ──
+  abrirLote(): void {
+    this.formLote = {
+      tipo: 'PRIMA',
+      fechaDesde: null,
+      fechaHasta: null,
+      observacion: '',
+    };
+    this.showLote = true;
+  }
+
+  async generarLote(): Promise<void> {
+    if (!this.formLote.fechaDesde || !this.formLote.fechaHasta) {
+      this.alertService.showWarn('Requerido', 'Indica el período (desde y hasta)');
+      return;
+    }
+    this.savingLote = true;
+    try {
+      const res = await lastValueFrom(
+        this.prestacionService.generarLote({
+          tipo: this.formLote.tipo,
+          fechaDesde: this.fmt(this.formLote.fechaDesde),
+          fechaHasta: this.fmt(this.formLote.fechaHasta),
+          observacion: this.formLote.observacion || null,
+        }),
+      );
+      const n = res?.data?.length ?? 0;
+      this.alertService.showSuccess(
+        'Generado',
+        `Lote generado para ${n} empleado(s)`,
+      );
+      this.showLote = false;
+      await this.load();
+    } catch (err: any) {
+      this.alertService.showError(
+        'Error',
+        err?.error?.message ?? 'No se pudo generar el lote',
+      );
+    } finally {
+      this.savingLote = false;
     }
   }
 
@@ -233,21 +314,9 @@ export class PrestacionesComponent implements OnInit {
     this.defEmpleadoId = null;
     this.defFechaRetiro = null;
     this.defMotivo = null;
+    this.defCesantiasCorte = null;
     this.showDefinitiva = true;
-    if (this.empleados.length === 0) {
-      try {
-        const res = await lastValueFrom(
-          this.nominaService.pageEmpleados({
-            page: 0,
-            rows: 500,
-            search: null,
-          }),
-        );
-        this.empleados = res?.data?.content ?? [];
-      } catch {
-        this.empleados = [];
-      }
-    }
+    await this.cargarEmpleados();
   }
 
   async liquidarDefinitiva(): Promise<void> {
@@ -264,6 +333,9 @@ export class PrestacionesComponent implements OnInit {
             ? this.fmt(this.defFechaRetiro)
             : null,
           motivo: (this.defMotivo as any) ?? null,
+          cesantiasCorteHasta: this.defCesantiasCorte
+            ? this.fmt(this.defCesantiasCorte)
+            : null,
         }),
       );
       const n = res?.data?.length ?? 0;
@@ -283,22 +355,22 @@ export class PrestacionesComponent implements OnInit {
     }
   }
 
-  async aprobar(p: PrestacionModel): Promise<void> {
+  async aprobar(l: LotePrestacionModel): Promise<void> {
     try {
-      await lastValueFrom(this.prestacionService.aprobar(p.id));
-      this.alertService.showSuccess('Aprobada', 'Prestación aprobada');
-      await this.load();
+      await lastValueFrom(this.prestacionService.aprobarLote(l.lote));
+      this.alertService.showSuccess('Aprobada', 'Liquidación aprobada');
+      await this.refrescar();
     } catch (err: any) {
-      this.alertService.showError(
-        'Error',
-        err?.error?.message ?? 'No se pudo aprobar',
-      );
+      this.alertService.showError('Error', err?.error?.message ?? 'No se pudo aprobar');
     }
   }
 
-  anular(p: PrestacionModel): void {
+  anular(l: LotePrestacionModel): void {
+    const msg = l.definitiva
+      ? `¿Anular la liquidación definitiva de ${l.empleadoNombre}? Se reactivará el empleado y su contrato.`
+      : `¿Anular la ${l.tipoResumen.toLowerCase()} de ${l.empleadoNombre}?`;
     this.confirm.confirm({
-      message: `¿Anular la ${p.tipo.toLowerCase()} de ${p.empleadoNombre}?`,
+      message: msg,
       header: 'Confirmar',
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Sí, anular',
@@ -306,22 +378,19 @@ export class PrestacionesComponent implements OnInit {
       acceptButtonStyleClass: 'p-button-danger',
       accept: async () => {
         try {
-          await lastValueFrom(this.prestacionService.anular(p.id));
-          this.alertService.showSuccess('Anulada', 'Prestación anulada');
-          await this.load();
+          await lastValueFrom(this.prestacionService.anularLote(l.lote));
+          this.alertService.showSuccess('Anulada', 'Liquidación anulada');
+          await this.refrescar();
         } catch (err: any) {
-          this.alertService.showError(
-            'Error',
-            err?.error?.message ?? 'No se pudo anular',
-          );
+          this.alertService.showError('Error', err?.error?.message ?? 'No se pudo anular');
         }
       },
     });
   }
 
   // ── Pago ──
-  async abrirPago(p: PrestacionModel): Promise<void> {
-    this.pagoId = p.id;
+  async abrirPago(l: LotePrestacionModel): Promise<void> {
+    this.pagoLote = l.lote;
     this.medioPago = 'TRANSFERENCIA';
     this.cuentaBancariaId = null;
     this.showPago = true;
@@ -336,33 +405,65 @@ export class PrestacionesComponent implements OnInit {
   }
 
   async confirmarPago(): Promise<void> {
-    if (this.pagoId == null) return;
+    if (this.pagoLote == null) return;
     if (this.medioPago === 'TRANSFERENCIA' && this.cuentaBancariaId == null) {
-      this.alertService.showWarn(
-        'Requerido',
-        'Selecciona la cuenta bancaria de origen',
-      );
+      this.alertService.showWarn('Requerido', 'Selecciona la cuenta bancaria de origen');
       return;
     }
     this.pagando = true;
     try {
       await lastValueFrom(
-        this.prestacionService.pagar(this.pagoId, {
+        this.prestacionService.pagarLote(this.pagoLote, {
           medioPago: this.medioPago,
           cuentaBancariaId:
             this.medioPago === 'TRANSFERENCIA' ? this.cuentaBancariaId : null,
         }),
       );
-      this.alertService.showSuccess('Pagada', 'Prestación pagada');
+      // B-07 — una transferencia queda PROGRAMADA hasta confirmar que el banco
+      // pagó; el efectivo/cheque sí queda pagado de una.
+      if (this.medioPago === 'TRANSFERENCIA') {
+        this.alertService.showSuccess(
+          'Programada',
+          'Pago programado. Confírmalo cuando el banco haya hecho la transferencia.',
+        );
+      } else {
+        this.alertService.showSuccess('Pagada', 'Liquidación pagada');
+      }
       this.showPago = false;
-      await this.load();
+      await this.refrescar();
     } catch (err: any) {
-      this.alertService.showError(
-        'Error',
-        err?.error?.message ?? 'No se pudo pagar',
-      );
+      this.alertService.showError('Error', err?.error?.message ?? 'No se pudo pagar');
     } finally {
       this.pagando = false;
+    }
+  }
+
+  /** B-07 — confirma una transferencia ya PROGRAMADA (el banco confirmó el pago). */
+  async confirmarProgramado(l: LotePrestacionModel): Promise<void> {
+    this.confirm.confirm({
+      message: `¿Confirmar que el banco ya pagó la ${l.tipoResumen.toLowerCase()} de ${l.empleadoNombre}? Se descontará del banco y se contabilizará.`,
+      header: 'Confirmar pago',
+      icon: 'pi pi-check-circle',
+      acceptLabel: 'Sí, el banco pagó',
+      rejectLabel: 'Cancelar',
+      accept: async () => {
+        try {
+          await lastValueFrom(this.prestacionService.confirmarPagoLote(l.lote));
+          this.alertService.showSuccess('Pagada', 'Pago confirmado');
+          await this.refrescar();
+        } catch (err: any) {
+          this.alertService.showError('Error', err?.error?.message ?? 'No se pudo confirmar');
+        }
+      },
+    });
+  }
+
+  /** Recarga el listado y, si está abierto, el detalle. */
+  private async refrescar(): Promise<void> {
+    await this.load();
+    if (this.showDetalle && this.detalleLoteSel) {
+      const actual = this.lotes.find((x) => x.lote === this.detalleLoteSel!.lote);
+      if (actual) await this.verDetalle(actual);
     }
   }
 
@@ -377,8 +478,8 @@ export class PrestacionesComponent implements OnInit {
       maximumFractionDigits: 0,
     }).format(v ?? 0);
   }
-  tipoLabel(t: TipoPrestacion): string {
-    const m: Record<TipoPrestacion, string> = {
+  tipoLabel(t: string): string {
+    const m: Record<string, string> = {
       PRIMA: 'Prima',
       VACACIONES: 'Vacaciones',
       CESANTIAS: 'Cesantías',
@@ -391,6 +492,7 @@ export class PrestacionesComponent implements OnInit {
     const m: Record<EstadoPrestacion, TagSeverity> = {
       BORRADOR: 'warn',
       APROBADA: 'success',
+      PROGRAMADA: 'warn',
       PAGADA: 'info',
       ANULADA: 'danger',
     };

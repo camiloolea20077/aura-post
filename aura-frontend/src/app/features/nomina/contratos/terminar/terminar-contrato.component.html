@@ -1,0 +1,59 @@
+<p-dialog
+  [(visible)]="visible"
+  header="Terminar contrato"
+  [modal]="true"
+  [style]="{ width: '34rem' }"
+  [draggable]="false"
+  (onHide)="onHide()"
+>
+  <div class="field">
+    <label>Fecha de terminación <span class="req">*</span></label>
+    <p-calendar
+      [(ngModel)]="fechaFin"
+      dateFormat="yy-mm-dd"
+      [showIcon]="true"
+      styleClass="w-full"
+      placeholder="AAAA-MM-DD"
+    />
+  </div>
+
+  <div class="field mt-3">
+    <label>Causa del retiro <span class="req">*</span></label>
+    <p-dropdown
+      [(ngModel)]="causaRetiro"
+      [options]="causaOpts"
+      optionLabel="label"
+      optionValue="value"
+      placeholder="Seleccionar"
+      styleClass="w-full"
+    />
+    <small class="hint">Define si hay indemnización y cómo se calcula.</small>
+  </div>
+
+  <!-- Avisar antes de guardar: es plata que la empresa va a deber. -->
+  @if (generaIndemnizacion) {
+    <p-message severity="warn" styleClass="w-full mt-3">
+      El despido sin justa causa genera indemnización. Se calculará al liquidar,
+      según el tipo de contrato y el tiempo servido.
+    </p-message>
+  }
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cancelar"
+      class="p-button-text"
+      (click)="onHide()"
+    ></button>
+    <button
+      pButton
+      type="button"
+      label="Terminar contrato"
+      icon="pi pi-ban"
+      class="p-button-danger"
+      [loading]="saving"
+      (click)="terminar()"
+    ></button>
+  </ng-template>
+</p-dialog>

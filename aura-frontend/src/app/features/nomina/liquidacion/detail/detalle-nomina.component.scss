@@ -200,6 +200,55 @@
   grid-template-columns: 2fr 1fr 1.5fr;
   gap: 0.5rem;
 }
+.nf-row.nf-row--dos {
+  grid-template-columns: 1fr 1fr;
+  margin-top: 0.5rem;
+}
+.nf-hint {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.5rem 0 0;
+  font-size: 0.78rem;
+  color: #2563eb;
+  i {
+    font-size: 0.85rem;
+  }
+}
+.nf-saldo {
+  margin-top: 0.5rem;
+}
+.nf-saldo-load {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+.nf-saldo-chips {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.nf-saldo-chip {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.78rem;
+  color: #1e40af;
+  b {
+    color: #2563eb;
+  }
+}
+.nf-saldo-warn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.4rem 0 0;
+  font-size: 0.78rem;
+  color: #b45309;
+  i {
+    font-size: 0.85rem;
+  }
+}
 .field {
   display: flex;
   flex-direction: column;

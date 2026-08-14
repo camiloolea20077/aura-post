@@ -1,0 +1,346 @@
+:host {
+  display: block;
+}
+
+// ── Barra de herramientas ────────────────────────────────────────────────────
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+
+  .header-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: #eef2ff;
+    color: #4338ca;
+    font-size: 1.25rem;
+  }
+  .title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin: 0;
+    color: #1e293b;
+  }
+  .subtitle {
+    font-size: 0.82rem;
+    color: #64748b;
+    margin: 0.1rem 0 0;
+  }
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+
+  // Etiqueta EN LÍNEA a la izquierda del calendario (no apilada encima).
+  .field {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #374151;
+      white-space: nowrap;
+      margin: 0;
+    }
+  }
+
+  button {
+    height: 40px;
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+}
+
+// El calendario: ancho fijo y misma altura que los botones, para que
+// nunca se estire y empuje los botones a otra línea.
+::ng-deep .cal-corte {
+  width: 170px;
+  flex: 0 0 auto;
+  .p-inputtext {
+    height: 40px;
+    width: 100%;
+  }
+}
+
+// ── Hoja del reporte ─────────────────────────────────────────────────────────
+.hoja {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+  padding: 2.5rem 3rem;
+  margin: 0 auto;
+}
+
+.reporte-head {
+  text-align: center;
+  border-bottom: 2px solid #1e293b;
+  padding-bottom: 1rem;
+  margin-bottom: 1.75rem;
+
+  .empresa {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+  .nit {
+    font-size: 0.85rem;
+    color: #475569;
+    margin: 0.15rem 0 0.75rem;
+  }
+  .reporte-titulo {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    text-transform: uppercase;
+  }
+  .reporte-fecha {
+    font-size: 0.9rem;
+    color: #334155;
+    margin: 0.35rem 0 0;
+  }
+  .reporte-moneda {
+    font-size: 0.78rem;
+    color: #94a3b8;
+    font-style: italic;
+    margin: 0.2rem 0 0;
+  }
+}
+
+// ── Dos columnas Activo | Pasivo+Patrimonio ─────────────────────────────────
+.balance-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2.5rem;
+}
+
+@media (max-width: 820px) {
+  .balance-cols {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .hoja {
+    padding: 1.5rem 1.25rem;
+  }
+}
+
+.col-title {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #fff;
+  padding: 0.5rem 0.85rem;
+  border-radius: 6px;
+  margin-bottom: 0.85rem;
+
+  &.activo {
+    background: #1d4ed8;
+  }
+  &.pasivo {
+    background: #b91c1c;
+  }
+  &.patrimonio {
+    background: #7e22ce;
+    margin-top: 1.5rem;
+  }
+}
+
+.seccion {
+  margin-bottom: 1.1rem;
+}
+
+.seccion-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.3rem;
+  margin-bottom: 0.5rem;
+}
+
+.grupo {
+  margin-bottom: 0.55rem;
+}
+
+.grupo-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 0.88rem;
+  padding: 0.15rem 0;
+}
+
+.cuenta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.82rem;
+  color: #475569;
+  padding: 0.12rem 0 0.12rem 1.1rem;
+}
+
+.cod {
+  font-family: "Courier New", monospace;
+  font-size: 0.76rem;
+  color: #94a3b8;
+  margin-right: 0.4rem;
+}
+
+.grupo-saldo,
+.cuenta-saldo {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  padding-left: 1rem;
+}
+
+.seccion-total {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #0f172a;
+  border-top: 1px solid #cbd5e1;
+  margin-top: 0.4rem;
+  padding-top: 0.35rem;
+
+  span:last-child {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.total-mayor {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+  font-weight: 800;
+  padding: 0.6rem 0.85rem;
+  border-radius: 6px;
+  margin-top: 0.85rem;
+  color: #0f172a;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+
+  span:last-child {
+    font-variant-numeric: tabular-nums;
+  }
+
+  &.activo {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1e40af;
+  }
+  &.pasivo {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #991b1b;
+  }
+  &.patrimonio {
+    background: #faf5ff;
+    border-color: #e9d5ff;
+    color: #6b21a8;
+  }
+  &.suma {
+    background: #0f172a;
+    border-color: #0f172a;
+    color: #fff;
+    margin-top: 1.25rem;
+  }
+}
+
+// ── Cuadre ───────────────────────────────────────────────────────────────────
+.cuadre {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 2rem;
+  padding: 0.85rem 1.15rem;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+
+  i {
+    font-size: 1.2rem;
+  }
+
+  &.ok {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #15803d;
+  }
+  &.err {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+  }
+}
+
+.empty-report {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 3.5rem 1rem;
+  color: #94a3b8;
+  text-align: center;
+  i {
+    font-size: 2.5rem;
+  }
+  p {
+    margin: 0;
+  }
+}
+
+// ── Impresión ────────────────────────────────────────────────────────────────
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  :host {
+    background: #fff;
+  }
+  .hoja {
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0;
+    max-width: 100%;
+    margin: 0;
+  }
+  .balance-cols {
+    gap: 1.5rem;
+  }
+  .col-title,
+  .total-mayor.suma {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
