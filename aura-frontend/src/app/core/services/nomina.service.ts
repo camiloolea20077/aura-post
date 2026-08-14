@@ -9,12 +9,15 @@ import {
   CreateUsuarioFromEmpleadoDto,
   EmpleadoModel,
   EmpleadoTableModel,
+  HistorialPagoModel,
   NominaConfigModel,
   NominaModel,
   NominaPageableDto,
   NominaTableModel,
   PagoNominaDto,
   PeriodoNominaModel,
+  SaldosInicialesModel,
+  VacacionesSaldoModel,
   PeriodoResumenModel,
   UpdateNominaConfigDto,
 } from '../models/nomina.model';
@@ -58,6 +61,13 @@ export class NominaService {
   getEmpleadoById(id: number): Observable<ResponseModel<EmpleadoModel>> {
     return this.http.get<ResponseModel<EmpleadoModel>>(
       `${this.base}empleados/${id}`,
+    );
+  }
+
+  /** Empleados con contrato activo (para prestaciones/nómina). */
+  empleadosConContratoActivo(): Observable<ResponseModel<EmpleadoModel[]>> {
+    return this.http.get<ResponseModel<EmpleadoModel[]>>(
+      `${this.base}empleados/con-contrato-activo`,
     );
   }
 
@@ -154,6 +164,41 @@ export class NominaService {
   getNominaById(id: number): Observable<ResponseModel<NominaModel>> {
     return this.http.get<ResponseModel<NominaModel>>(
       `${this.base}nomina/${id}`,
+    );
+  }
+
+  /** Trazabilidad de pagos de un empleado (nóminas no anuladas, recientes primero). */
+  historialPagos(
+    empleadoId: number,
+  ): Observable<ResponseModel<HistorialPagoModel[]>> {
+    return this.http.get<ResponseModel<HistorialPagoModel[]>>(
+      `${this.base}nomina/empleado/${empleadoId}/historial`,
+    );
+  }
+
+  /** F3 — saldo de vacaciones de un empleado. */
+  vacacionesSaldo(
+    empleadoId: number,
+  ): Observable<ResponseModel<VacacionesSaldoModel>> {
+    return this.http.get<ResponseModel<VacacionesSaldoModel>>(
+      `${this.base}nomina/empleado/${empleadoId}/vacaciones-saldo`,
+    );
+  }
+
+  // ─── F7: saldos iniciales (migración) ───────────────────────
+  listarSaldosIniciales(): Observable<ResponseModel<SaldosInicialesModel[]>> {
+    return this.http.get<ResponseModel<SaldosInicialesModel[]>>(
+      `${this.base}empleados/saldos-iniciales`,
+    );
+  }
+
+  guardarSaldosIniciales(
+    empleadoId: number,
+    dto: SaldosInicialesModel,
+  ): Observable<ResponseModel<SaldosInicialesModel>> {
+    return this.http.put<ResponseModel<SaldosInicialesModel>>(
+      `${this.base}empleados/${empleadoId}/saldos-iniciales`,
+      dto,
     );
   }
 

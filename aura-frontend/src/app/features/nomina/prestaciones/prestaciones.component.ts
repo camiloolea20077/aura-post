@@ -31,7 +31,6 @@ import {
   TipoPrestacion,
 } from '../../../core/models/prestacion.model';
 import { MedioPagoNomina } from '../../../core/models/nomina.model';
-import { EmpleadoTableModel } from '../../../core/models/nomina.model';
 import { CuentaBancariaModel } from '../../../core/models/cuenta-bancaria.model';
 import { AlertService } from '../../../shared/pipes/alert.service';
 
@@ -79,7 +78,7 @@ export class PrestacionesComponent implements OnInit {
   // Nueva
   public showForm = false;
   public saving = false;
-  public empleados: EmpleadoTableModel[] = [];
+  public empleados: { id: number; nombreCompleto: string }[] = [];
   public form = {
     empleadoId: null as number | null,
     tipo: 'PRIMA' as TipoPrestacion,
@@ -94,12 +93,23 @@ export class PrestacionesComponent implements OnInit {
     { label: 'Intereses de cesantías', value: 'INTERESES_CESANTIAS' },
   ];
 
+  // Generar en lote (F4): prima/cesantías para todos los activos
+  public showLote = false;
+  public savingLote = false;
+  public formLote = {
+    tipo: 'PRIMA' as TipoPrestacion,
+    fechaDesde: null as Date | null,
+    fechaHasta: null as Date | null,
+    observacion: '',
+  };
+
   // Liquidación definitiva
   public showDefinitiva = false;
   public savingDef = false;
   public defEmpleadoId: number | null = null;
   public defFechaRetiro: Date | null = null;
   public defMotivo: string | null = null;
+  public defCesantiasCorte: Date | null = null;
   public motivos = [
     { label: 'Renuncia', value: 'RENUNCIA' },
     {
@@ -202,19 +212,65 @@ export class PrestacionesComponent implements OnInit {
       observacion: '',
     };
     this.showForm = true;
-    if (this.empleados.length === 0) {
-      try {
-        const res = await lastValueFrom(
-          this.nominaService.pageEmpleados({
-            page: 0,
-            rows: 500,
-            search: null,
-          }),
-        );
-        this.empleados = res?.data?.content ?? [];
-      } catch {
-        this.empleados = [];
-      }
+    await this.cargarEmpleados();
+  }
+
+  /** Solo empleados con contrato activo: los retirados no deben liquidarse. */
+  private async cargarEmpleados(): Promise<void> {
+    if (this.empleados.length > 0) return;
+    try {
+      const res = await lastValueFrom(
+        this.nominaService.empleadosConContratoActivo(),
+      );
+      this.empleados = (res?.data ?? []).map((e) => ({
+        id: e.id,
+        nombreCompleto: `${e.nombres} ${e.apellidos}`,
+      }));
+    } catch {
+      this.empleados = [];
+    }
+  }
+
+  // ── Generar en lote (F4) ──
+  abrirLote(): void {
+    this.formLote = {
+      tipo: 'PRIMA',
+      fechaDesde: null,
+      fechaHasta: null,
+      observacion: '',
+    };
+    this.showLote = true;
+  }
+
+  async generarLote(): Promise<void> {
+    if (!this.formLote.fechaDesde || !this.formLote.fechaHasta) {
+      this.alertService.showWarn('Requerido', 'Indica el período (desde y hasta)');
+      return;
+    }
+    this.savingLote = true;
+    try {
+      const res = await lastValueFrom(
+        this.prestacionService.generarLote({
+          tipo: this.formLote.tipo,
+          fechaDesde: this.fmt(this.formLote.fechaDesde),
+          fechaHasta: this.fmt(this.formLote.fechaHasta),
+          observacion: this.formLote.observacion || null,
+        }),
+      );
+      const n = res?.data?.length ?? 0;
+      this.alertService.showSuccess(
+        'Generado',
+        `Lote generado para ${n} empleado(s)`,
+      );
+      this.showLote = false;
+      await this.load();
+    } catch (err: any) {
+      this.alertService.showError(
+        'Error',
+        err?.error?.message ?? 'No se pudo generar el lote',
+      );
+    } finally {
+      this.savingLote = false;
     }
   }
 
@@ -258,21 +314,9 @@ export class PrestacionesComponent implements OnInit {
     this.defEmpleadoId = null;
     this.defFechaRetiro = null;
     this.defMotivo = null;
+    this.defCesantiasCorte = null;
     this.showDefinitiva = true;
-    if (this.empleados.length === 0) {
-      try {
-        const res = await lastValueFrom(
-          this.nominaService.pageEmpleados({
-            page: 0,
-            rows: 500,
-            search: null,
-          }),
-        );
-        this.empleados = res?.data?.content ?? [];
-      } catch {
-        this.empleados = [];
-      }
-    }
+    await this.cargarEmpleados();
   }
 
   async liquidarDefinitiva(): Promise<void> {
@@ -289,6 +333,9 @@ export class PrestacionesComponent implements OnInit {
             ? this.fmt(this.defFechaRetiro)
             : null,
           motivo: (this.defMotivo as any) ?? null,
+          cesantiasCorteHasta: this.defCesantiasCorte
+            ? this.fmt(this.defCesantiasCorte)
+            : null,
         }),
       );
       const n = res?.data?.length ?? 0;
@@ -372,7 +419,16 @@ export class PrestacionesComponent implements OnInit {
             this.medioPago === 'TRANSFERENCIA' ? this.cuentaBancariaId : null,
         }),
       );
-      this.alertService.showSuccess('Pagada', 'Liquidación pagada');
+      // B-07 — una transferencia queda PROGRAMADA hasta confirmar que el banco
+      // pagó; el efectivo/cheque sí queda pagado de una.
+      if (this.medioPago === 'TRANSFERENCIA') {
+        this.alertService.showSuccess(
+          'Programada',
+          'Pago programado. Confírmalo cuando el banco haya hecho la transferencia.',
+        );
+      } else {
+        this.alertService.showSuccess('Pagada', 'Liquidación pagada');
+      }
       this.showPago = false;
       await this.refrescar();
     } catch (err: any) {
@@ -380,6 +436,26 @@ export class PrestacionesComponent implements OnInit {
     } finally {
       this.pagando = false;
     }
+  }
+
+  /** B-07 — confirma una transferencia ya PROGRAMADA (el banco confirmó el pago). */
+  async confirmarProgramado(l: LotePrestacionModel): Promise<void> {
+    this.confirm.confirm({
+      message: `¿Confirmar que el banco ya pagó la ${l.tipoResumen.toLowerCase()} de ${l.empleadoNombre}? Se descontará del banco y se contabilizará.`,
+      header: 'Confirmar pago',
+      icon: 'pi pi-check-circle',
+      acceptLabel: 'Sí, el banco pagó',
+      rejectLabel: 'Cancelar',
+      accept: async () => {
+        try {
+          await lastValueFrom(this.prestacionService.confirmarPagoLote(l.lote));
+          this.alertService.showSuccess('Pagada', 'Pago confirmado');
+          await this.refrescar();
+        } catch (err: any) {
+          this.alertService.showError('Error', err?.error?.message ?? 'No se pudo confirmar');
+        }
+      },
+    });
   }
 
   /** Recarga el listado y, si está abierto, el detalle. */
@@ -416,6 +492,7 @@ export class PrestacionesComponent implements OnInit {
     const m: Record<EstadoPrestacion, TagSeverity> = {
       BORRADOR: 'warn',
       APROBADA: 'success',
+      PROGRAMADA: 'warn',
       PAGADA: 'info',
       ANULADA: 'danger',
     };

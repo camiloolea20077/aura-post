@@ -10,7 +10,7 @@
           </p>
         </div>
       </div>
-      <div class="card-head__actions">
+      <div class="card-head__btns">
         <button
           pButton
           type="button"
@@ -18,6 +18,16 @@
           icon="pi pi-plus"
           class="btn-aura"
           (click)="abrirForm()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          label="Generar en lote"
+          icon="pi pi-users"
+          class="p-button-outlined"
+          pTooltip="Prima o cesantías para todos los empleados activos"
+          tooltipPosition="bottom"
+          (click)="abrirLote()"
         ></button>
         <button
           pButton
@@ -95,6 +105,14 @@
             ></button>
             <button
               pButton
+              icon="pi pi-check-circle"
+              class="p-button-sm p-button-success"
+              pTooltip="Confirmar pago (el banco confirmó la transferencia)"
+              *ngIf="l.estado === 'PROGRAMADA'"
+              (click)="confirmarProgramado(l)"
+            ></button>
+            <button
+              pButton
               icon="pi pi-times"
               class="p-button-sm p-button-danger p-button-outlined"
               pTooltip="Anular"
@@ -132,6 +150,7 @@
     <p-table [value]="detalleFilas" styleClass="p-datatable-sm">
       <ng-template pTemplate="header">
         <tr>
+          <th>Empleado</th>
           <th>Concepto</th>
           <th class="text-center">Período</th>
           <th class="text-center">Días</th>
@@ -143,6 +162,7 @@
       </ng-template>
       <ng-template pTemplate="body" let-p>
         <tr [class.row-off]="p.estado === 'ANULADA'">
+          <td>{{ p.empleadoNombre }}</td>
           <td><strong>{{ tipoLabel(p.tipo) }}</strong></td>
           <td class="text-center muted">{{ p.fechaDesde }} → {{ p.fechaHasta }}</td>
           <td class="text-center">{{ p.dias }}</td>
@@ -241,6 +261,70 @@
   </ng-template>
 </p-dialog>
 
+<!-- Generar en lote (F4) -->
+<p-dialog
+  [(visible)]="showLote"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '520px' }"
+  header="Generar prestación en lote"
+>
+  <p class="lote-hint">
+    Genera la prestación para <b>todos los empleados activos</b> en un solo lote.
+    A cada uno se le recorta el período a su fecha de ingreso.
+  </p>
+  <div class="form-grid">
+    <div class="field span2">
+      <label>Tipo</label>
+      <p-dropdown
+        [options]="tipos"
+        [(ngModel)]="formLote.tipo"
+        optionLabel="label"
+        optionValue="value"
+        [style]="{ width: '100%' }"
+      />
+    </div>
+    <div class="field">
+      <label>Desde</label
+      ><p-calendar
+        [(ngModel)]="formLote.fechaDesde"
+        appendTo="body"
+        dateFormat="yy-mm-dd"
+        [showIcon]="true"
+      />
+    </div>
+    <div class="field">
+      <label>Hasta</label
+      ><p-calendar
+        [(ngModel)]="formLote.fechaHasta"
+        appendTo="body"
+        dateFormat="yy-mm-dd"
+        [showIcon]="true"
+      />
+    </div>
+    <div class="field span2">
+      <label>Observación</label>
+      <input pInputText [(ngModel)]="formLote.observacion" placeholder="Opcional (ej: Prima 1er semestre 2026)" />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      class="p-button-text"
+      (click)="showLote = false"
+    ></button>
+    <button
+      pButton
+      label="Generar para todos"
+      icon="pi pi-users"
+      class="btn-aura"
+      [loading]="savingLote"
+      (click)="generarLote()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
 <!-- Liquidación definitiva -->
 <p-dialog
   [(visible)]="showDefinitiva"
@@ -289,6 +373,20 @@
       <small class="hint"
         >La indemnización solo se calcula si es
         <b>despido sin justa causa</b>.</small
+      >
+    </div>
+    <div class="field span2">
+      <label>Cesantías ya consignadas hasta (opcional)</label>
+      <p-calendar
+        [(ngModel)]="defCesantiasCorte"
+        dateFormat="yy-mm-dd"
+        [showIcon]="true"
+        appendTo="body"
+        [style]="{ width: '100%' }"
+      />
+      <small class="hint"
+        >Si consignaste cesantías al fondo por fuera del sistema, indica hasta qué
+        fecha: no se volverán a liquidar.</small
       >
     </div>
   </div>

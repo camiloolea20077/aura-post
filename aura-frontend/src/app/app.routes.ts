@@ -313,6 +313,33 @@ export const routes: Routes = [
             (m) => m.IndexVentasComponent,
           ),
       },
+      {
+        // Notas crédito/débito electrónicas (Factus v1).
+        path: 'ventas/notas',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/ventas/nota-electronica/index-notas.component').then(
+            (m) => m.IndexNotasComponent,
+          ),
+      },
+      {
+        path: 'ventas/notas/credito',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        data: { tipo: 'CREDITO' },
+        loadComponent: () =>
+          import('./features/ventas/nota-electronica/form-nota-credito.component').then(
+            (m) => m.FormNotaCreditoComponent,
+          ),
+      },
+      {
+        path: 'ventas/notas/debito',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        data: { tipo: 'DEBITO' },
+        loadComponent: () =>
+          import('./features/ventas/nota-electronica/form-nota-credito.component').then(
+            (m) => m.FormNotaCreditoComponent,
+          ),
+      },
 
       // Vendedores
       {
@@ -525,6 +552,15 @@ export const routes: Routes = [
           ),
       },
       {
+        // F7 — carga de saldos iniciales (migración desde otro sistema).
+        path: 'nomina/saldos-iniciales',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/nomina/saldos-iniciales/saldos-iniciales.component').then(
+            (m) => m.SaldosInicialesComponent,
+          ),
+      },
+      {
         // Alta de empleado (flujo nuevo): crea la identidad como tercero y de
         // ahí cae en la ficha para agregar el contrato.
         path: 'nomina/empleados/nuevo',
@@ -589,6 +625,15 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/nomina/liquidacion/index/index-liquidacion.component').then(
             (m) => m.IndexLiquidacionComponent,
+          ),
+      },
+      {
+        // Listado de nóminas electrónicas emitidas (XML, anular, eliminar pruebas).
+        path: 'nomina/electronica',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/nomina/electronica/index-nomina-electronica.component').then(
+            (m) => m.IndexNominaElectronicaComponent,
           ),
       },
 
@@ -855,6 +900,13 @@ export const routes: Routes = [
           import('./features/reporte-inventario/reporte-inventario.component').then(
             (m) => m.ReporteInventarioComponent,
           ),
+      },
+      {
+        path: 'reportes/facturacion-electronica',
+        loadComponent: () =>
+          import(
+            './features/reportes/facturacion-electronica/reporte-facturacion-electronica.component'
+          ).then((m) => m.ReporteFacturacionElectronicaComponent),
       },
       {
         path: 'reportes/avanzados',

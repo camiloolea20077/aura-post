@@ -34,6 +34,9 @@
 
     <p-table
       [value]="items"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
       [loading]="loading"
       dataKey="id"
       styleClass="p-datatable-sm"

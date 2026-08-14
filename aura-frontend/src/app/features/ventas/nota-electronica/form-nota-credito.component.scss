@@ -1,0 +1,102 @@
+// Solo lo propio de este form. El grid usa PrimeFlex (grid/col-*/flex).
+
+.nc-section {
+  padding: 1.25rem 1.5rem;
+  border-top: 1px solid var(--aura-border);
+
+  h3 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--aura-text);
+    margin: 0 0 0.9rem;
+  }
+}
+
+.nc-buscar {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+
+  .search-wrap {
+    flex: 1;
+  }
+}
+
+.nc-factura-sel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  background: var(--aura-bg);
+  border: 1px solid var(--aura-border);
+  border-radius: 12px;
+  padding: 0.9rem 1.1rem;
+  font-size: 0.86rem;
+
+  .lbl {
+    color: var(--aura-text-muted);
+    margin-right: 0.4rem;
+    font-size: 0.78rem;
+  }
+  .cufe {
+    font-family: 'Courier New', monospace;
+    font-size: 0.72rem;
+    color: #64748b;
+    word-break: break-all;
+  }
+  > div > div {
+    margin-bottom: 0.25rem;
+  }
+}
+
+// Caja de "Total" (solo lectura) en el editor de producto
+.nc-total-box {
+  height: 2.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 0.75rem;
+  border: 1px solid var(--aura-border);
+  border-radius: 8px;
+  background: var(--aura-bg);
+  font-weight: 700;
+}
+
+// Filas de la tabla clicables para editar
+.nc-item-row {
+  cursor: pointer;
+
+  &.sel > td {
+    background: rgba(37, 99, 235, 0.08) !important;
+  }
+}
+
+// Resumen de totales
+.nc-totales {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-end;
+  max-width: 320px;
+  margin-left: auto;
+
+  > div {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 0.86rem;
+
+    span {
+      color: var(--aura-text-muted);
+    }
+  }
+  .grand {
+    border-top: 1px solid var(--aura-border);
+    padding-top: 0.4rem;
+    font-size: 1rem;
+
+    b {
+      color: var(--aura-blue);
+    }
+  }
+}

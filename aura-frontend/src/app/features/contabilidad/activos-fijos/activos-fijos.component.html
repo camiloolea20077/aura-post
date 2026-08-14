@@ -108,7 +108,7 @@
               [severity]="estadoBadgeSeverity(row.estado)"
             />
           </td>
-          <td>
+          <td class="text-center flex" (click)="$event.stopPropagation()">
             <button
               pButton
               icon="pi pi-pencil"

@@ -1,0 +1,452 @@
+<p-dialog
+  [visible]="displayModal"
+  (visibleChange)="!$event && close()"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [maximizable]="true"
+  [style]="{ width: '96vw', maxWidth: '1240px' }"
+  styleClass="receta-dialog"
+  [contentStyle]="{ overflow: 'visible' }"
+>
+  <ng-template pTemplate="header">
+    <div class="dlg-head">
+      <span class="dlg-icon"><i class="pi pi-sitemap"></i></span>
+      <div>
+        <h2 class="dlg-title">
+          {{ padreNombre ? "Receta de " + padreNombre : "Definir receta" }}
+        </h2>
+        <p class="dlg-sub">
+          Escribe las cantidades del lote completo. El sistema calcula cuánto
+          consume cada unidad.
+        </p>
+      </div>
+    </div>
+  </ng-template>
+
+  <!-- ── Cabecera ─────────────────────────────────────────── -->
+  <div class="cabecera">
+    <div class="campo" *ngIf="!productoPadreId">
+      <label>Producto a elaborar</label>
+      <p-dropdown
+        [options]="padreOpts"
+        [(ngModel)]="padreId"
+        optionLabel="label"
+        optionValue="value"
+        [filter]="true"
+        filterBy="label"
+        [showClear]="true"
+        placeholder="Busca el producto (mín. 2 letras)"
+        emptyFilterMessage="Sin resultados"
+        (onFilter)="onFiltroPadre($event)"
+        (onChange)="onPadreSeleccionado()"
+        styleClass="w-full"
+      />
+    </div>
+
+    <div class="campo campo--tipo">
+      <label>Tipo</label>
+      <p-dropdown
+        [options]="tipoOptions"
+        [(ngModel)]="tipo"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="w-full"
+      />
+      <small class="hint">
+        {{
+          tipo === "KIT"
+            ? "Agrupa productos para vender juntos."
+            : "Producto elaborado: los insumos se consumen al producir."
+        }}
+      </small>
+    </div>
+
+    <div class="campo campo--rend">
+      <label>Rendimiento del lote</label>
+      <p-inputNumber
+        [(ngModel)]="rendimiento"
+        [min]="0.000001"
+        [minFractionDigits]="0"
+        [maxFractionDigits]="6"
+        [showButtons]="false"
+        styleClass="w-full"
+      />
+      <small class="hint">
+        Con una tanda de esta receta salen
+        <strong>{{ rendimiento | number: "1.0-4" }}</strong>
+        {{ padreUnidadAbrev || "unidades" }}.
+      </small>
+    </div>
+
+    <div class="campo campo--acciones">
+      <button
+        pButton
+        type="button"
+        label="Copiar de otra receta"
+        icon="pi pi-copy"
+        class="p-button-outlined p-button-sm"
+        [disabled]="!padreId || isSubmitting"
+        (click)="abrirDuplicar()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        label="Ver costeo"
+        icon="pi pi-dollar"
+        class="p-button-outlined p-button-sm"
+        [disabled]="!padreId || isCosteando"
+        [loading]="isCosteando"
+        (click)="verCosteo()"
+      ></button>
+    </div>
+  </div>
+
+  <!-- ── Grilla de ingredientes ───────────────────────────── -->
+  <div class="grilla-wrap">
+    <p-table
+      [value]="filas"
+      [loading]="isLoading"
+      showGridlines
+      styleClass="p-datatable-sm receta-tabla"
+      [tableStyle]="{ 'min-width': '980px' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="min-width: 240px">Ingrediente</th>
+          <th style="width: 130px" class="text-center">Cant. por lote</th>
+          <th style="min-width: 200px">Medida</th>
+          <th style="width: 100px" class="text-center">
+            Merma %
+            <i
+              class="pi pi-info-circle hint-icon"
+              pTooltip="Parte que se pierde en el proceso (evaporación, recorte). Se consume de más."
+              tooltipPosition="top"
+            ></i>
+          </th>
+          <th style="width: 165px" class="text-center">Consumo por unidad</th>
+          <th style="width: 150px" class="text-center">Stock</th>
+          <th style="width: 56px"></th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-fila let-i="rowIndex">
+        <tr [class.fila-alerta]="cantidadDemasiadoPequena(fila)">
+          <!-- Ingrediente -->
+          <td>
+            <p-dropdown
+              [options]="fila._hijoOpts"
+              [(ngModel)]="fila.productoHijoId"
+              optionLabel="label"
+              appendTo="body"
+              optionValue="value"
+              [filter]="true"
+              filterBy="label"
+              [editable]="false"
+              [placeholder]="fila.productoHijoNombre || 'Buscar ingrediente'"
+              emptyFilterMessage="Escribe al menos 2 letras"
+              (onFilter)="onFiltroHijo(fila, $event)"
+              (onChange)="onComponenteSeleccionado(fila)"
+              styleClass="w-full"
+            />
+            <input
+              *ngIf="fila.productoHijoId"
+              type="text"
+              pInputText
+              class="nota-input"
+              placeholder="Nota (opcional)"
+              [(ngModel)]="fila.nota"
+            />
+          </td>
+
+          <!-- Cantidad por lote -->
+          <td class="text-center">
+            <p-inputNumber
+              [(ngModel)]="fila.cantidadReceta"
+              [min]="0"
+              [minFractionDigits]="0"
+              [maxFractionDigits]="6"
+              styleClass="w-full cant-input"
+            />
+          </td>
+
+          <!-- Medida -->
+          <td>
+            <p-dropdown
+              *ngIf="!fila._cargando"
+              [options]="fila._medidaOpts"
+              [(ngModel)]="fila.medida"
+              optionLabel="label"
+              optionValue="value"
+              [disabled]="!fila.productoHijoId"
+              styleClass="w-full"
+            />
+            <span *ngIf="fila._cargando" class="cargando">
+              <i class="pi pi-spin pi-spinner"></i> cargando medidas…
+            </span>
+          </td>
+
+          <!-- Merma -->
+          <td class="text-center">
+            <p-inputNumber
+              [(ngModel)]="fila.mermaPorcentaje"
+              [min]="0"
+              [max]="99.99"
+              [minFractionDigits]="0"
+              [maxFractionDigits]="2"
+              suffix="%"
+              styleClass="w-full cant-input"
+            />
+          </td>
+
+          <!-- Consumo derivado -->
+          <td class="text-center">
+            <div class="consumo">
+              <strong>{{ consumoPorUnidad(fila) | number: "1.0-6" }}</strong>
+              <span class="consumo-um">{{ fila._unidadBaseAbrev }}</span>
+            </div>
+            <small class="consumo-lote">
+              lote: {{ consumoLote(fila) | number: "1.0-4" }}
+            </small>
+            <small *ngIf="cantidadDemasiadoPequena(fila)" class="alerta-msg">
+              Se redondea a cero: usa una medida más pequeña
+            </small>
+          </td>
+
+          <!-- Stock -->
+          <td class="text-center">
+            <span *ngIf="fila._manejaInventario">
+              <p-tag
+                [value]="
+                  (fila._stock | number: '1.0-2') + ' ' + fila._unidadBaseAbrev
+                "
+                [severity]="stockInsuficiente(fila) ? 'danger' : 'success'"
+                [rounded]="true"
+              />
+              <small *ngIf="stockInsuficiente(fila)" class="alerta-msg">
+                No alcanza para un lote
+              </small>
+            </span>
+            <span *ngIf="!fila._manejaInventario" class="sin-inv">
+              No maneja inventario
+            </span>
+          </td>
+
+          <!-- Quitar -->
+          <td class="text-center">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-trash"
+              class="p-button-text p-button-danger p-button-sm"
+              pTooltip="Quitar ingrediente"
+              tooltipPosition="left"
+              (click)="quitarFila(fila)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              <i class="pi pi-list"></i>
+              <p>Esta receta todavía no tiene ingredientes.</p>
+              <button
+                pButton
+                type="button"
+                label="Agregar el primero"
+                icon="pi pi-plus"
+                class="btn-aura p-button-sm"
+                [disabled]="!padreId"
+                (click)="agregarFila()"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <button
+      pButton
+      type="button"
+      label="Agregar ingrediente"
+      icon="pi pi-plus"
+      class="p-button-text add-fila"
+      [disabled]="!padreId"
+      (click)="agregarFila()"
+    ></button>
+  </div>
+
+  <!-- ── Panel de costeo ──────────────────────────────────── -->
+  <div class="costeo-panel" *ngIf="costeoVisible && costeo">
+    <div class="costeo-head">
+      <h3>Costeo</h3>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-times"
+        class="p-button-text p-button-sm"
+        (click)="costeoVisible = false"
+      ></button>
+    </div>
+
+    <div class="costeo-kpis">
+      <div class="kpi">
+        <span class="kpi-label">Costo por unidad</span>
+        <span class="kpi-valor">{{
+          costeo.costoUnitario | currency: "COP" : "symbol-narrow" : "1.0-2"
+        }}</span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-label">Costo del lote</span>
+        <span class="kpi-valor">{{
+          costeo.costoLote | currency: "COP" : "symbol-narrow" : "1.0-2"
+        }}</span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-label">Precio de venta</span>
+        <span class="kpi-valor">{{
+          costeo.precioVenta
+            ? (costeo.precioVenta | currency: "COP" : "symbol-narrow" : "1.0-2")
+            : "—"
+        }}</span>
+      </div>
+      <div class="kpi" [class.kpi--malo]="(costeo.margenPorcentaje ?? 0) <= 0">
+        <span class="kpi-label">Margen</span>
+        <span class="kpi-valor">{{
+          costeo.margenPorcentaje !== null
+            ? (costeo.margenPorcentaje | number: "1.0-2") + "%"
+            : "—"
+        }}</span>
+      </div>
+    </div>
+
+    <div class="costeo-aviso" *ngIf="costeo.costoIncompleto">
+      <i class="pi pi-exclamation-triangle"></i>
+      Hay ingredientes sin costo cargado: el total está subestimado.
+    </div>
+
+    <p-table [value]="costeo.lineas" styleClass="p-datatable-sm">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Ingrediente</th>
+          <th class="text-center" style="width: 130px">Consumo/unidad</th>
+          <th class="text-center" style="width: 130px">Costo unitario</th>
+          <th class="text-center" style="width: 130px">Aporte al costo</th>
+          <th class="text-center" style="width: 110px">Peso</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-l>
+        <tr>
+          <td>
+            {{ l.productoHijoNombre }}
+            <p-tag
+              *ngIf="l.costoDerivadoDeReceta"
+              value="subreceta"
+              severity="info"
+              [rounded]="true"
+              styleClass="ml-2"
+            />
+            <small *ngIf="l.advertencia" class="alerta-msg">{{
+              l.advertencia
+            }}</small>
+          </td>
+          <td class="text-center">{{ l.cantidad | number: "1.0-6" }}</td>
+          <td class="text-center">
+            {{ l.costoUnitario | currency: "COP" : "symbol-narrow" : "1.0-2" }}
+          </td>
+          <td class="text-center">
+            {{ l.costoTotal | currency: "COP" : "symbol-narrow" : "1.0-2" }}
+          </td>
+          <td class="text-center">{{ l.participacion | number: "1.0-2" }}%</td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <div class="costeo-acciones">
+      <button
+        pButton
+        type="button"
+        label="Usar como costo del producto"
+        icon="pi pi-check"
+        class="btn-aura p-button-sm"
+        [disabled]="costeo.costoIncompleto || isCosteando"
+        [loading]="isCosteando"
+        (click)="aplicarCosto()"
+      ></button>
+      <small *ngIf="costeo.costoIncompleto" class="hint">
+        Carga el costo de los ingredientes faltantes para poder aplicarlo.
+      </small>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cancelar"
+      class="p-button-text"
+      [disabled]="isSubmitting"
+      (click)="close()"
+    ></button>
+    <button
+      pButton
+      type="button"
+      label="Guardar receta"
+      icon="pi pi-save"
+      class="btn-aura"
+      [disabled]="!puedeGuardar"
+      [loading]="isSubmitting"
+      (click)="guardar()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ── Copiar de otra receta ──────────────────────────────── -->
+<p-dialog
+  [(visible)]="duplicarVisible"
+  [modal]="true"
+  [draggable]="false"
+  header="Copiar de otra receta"
+  [style]="{ width: '480px' }"
+>
+  <p class="dup-aviso">
+    Se reemplazarán todos los ingredientes actuales de
+    <strong>{{ padreNombre }}</strong> por los del producto que elijas.
+  </p>
+  <p-dropdown
+    [options]="duplicarOpts"
+    [(ngModel)]="duplicarOrigenId"
+    optionLabel="label"
+    optionValue="value"
+    [filter]="true"
+    filterBy="label"
+    placeholder="Producto de origen (mín. 2 letras)"
+    emptyFilterMessage="Sin resultados"
+    (onFilter)="onFiltroDuplicar($event)"
+    styleClass="w-full"
+  />
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cancelar"
+      class="p-button-text"
+      (click)="duplicarVisible = false"
+    ></button>
+    <button
+      pButton
+      type="button"
+      label="Copiar"
+      icon="pi pi-copy"
+      class="btn-aura"
+      [disabled]="!duplicarOrigenId || isSubmitting"
+      [loading]="isSubmitting"
+      (click)="confirmarDuplicar()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<p-toast />

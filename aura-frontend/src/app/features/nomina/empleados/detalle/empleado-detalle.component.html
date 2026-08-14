@@ -109,6 +109,10 @@
               [ngTemplateOutletContext]="{ tab: 'emb' }"
             ></ng-container>
           </p-tabPanel>
+
+          <p-tabPanel header="Pagos">
+            <app-historial-pagos [empleadoId]="empleadoId" />
+          </p-tabPanel>
         </p-tabView>
       </div>
     }

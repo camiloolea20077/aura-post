@@ -1,0 +1,89 @@
+:host {
+  --si-primary: #2563eb;
+  --si-border: #e5e7eb;
+  --si-muted: #6b7280;
+}
+
+.page {
+  padding: 1rem;
+}
+.card {
+  background: #fff;
+  border: 1px solid var(--si-border);
+  border-radius: 14px;
+  padding: 1.25rem;
+}
+
+.card-head__title {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+.header-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #2563eb;
+  color: var(--si-primary);
+  font-size: 1.1rem;
+}
+.title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+}
+.subtitle {
+  margin: 0.15rem 0 0;
+  color: var(--si-muted);
+  font-size: 0.85rem;
+  max-width: 720px;
+}
+
+.si-body {
+  margin-top: 1rem;
+}
+.si-loading {
+  padding: 0.5rem 0;
+}
+
+.si-emp {
+  display: flex;
+  flex-direction: column;
+}
+.si-nombre {
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+.si-doc {
+  font-size: 0.75rem;
+  color: var(--si-muted);
+}
+
+.text-center {
+  text-align: center;
+}
+.text-right {
+  text-align: right;
+}
+
+.si-empty {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--si-muted);
+}
+.si-empty i {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 0.5rem;
+  opacity: 0.6;
+}
+.si-empty p {
+  margin: 0;
+}
+
+:host ::ng-deep .si-input {
+  width: 100%;
+}

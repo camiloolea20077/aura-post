@@ -144,8 +144,8 @@ export class FrentesComponent implements OnInit {
   async cargarEmpleados(): Promise<void> {
     try {
       const res = await lastValueFrom(this.service.empleados());
-      this.empleadoOpts = (res?.data?.content ?? []).map((e) => ({
-        label: `${e.nombreCompleto ?? e.nombres + ' ' + e.apellidos} — ${e.numeroDocumento}`,
+      this.empleadoOpts = (res?.data ?? []).map((e) => ({
+        label: `${e.nombres} ${e.apellidos} — ${e.numeroDocumento}`,
         value: e.id,
       }));
       this.cdr.markForCheck();

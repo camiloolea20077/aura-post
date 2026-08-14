@@ -259,6 +259,24 @@
         </div>
       </div>
     </div>
+
+    <!-- Vacaciones (F3) -->
+    <div class="card sec">
+      <div class="section-title">
+        <i class="pi pi-sun"></i> Vacaciones
+      </div>
+      <div class="toggle-row">
+        <p-toggleswitch [(ngModel)]="config.permiteVacacionesAnticipadas" />
+        <div class="toggle-text">
+          <span class="toggle-label">Permitir vacaciones anticipadas</span>
+          <span class="toggle-hint">
+            Si está activo, se pueden registrar vacaciones aunque el empleado no
+            tenga días causados suficientes. Si está inactivo, el sistema bloquea
+            tomar más días de los disponibles.
+          </span>
+        </div>
+      </div>
+    </div>
   </ng-container>
 </div>
 

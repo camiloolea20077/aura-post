@@ -8,6 +8,10 @@ import {
   CreateProductoComposicionDto,
   UpdateProductoComposicionDto,
   ComposicionPageableDto,
+  RecetaModel,
+  RecetaResumenTableModel,
+  RecetaCosteoModel,
+  GuardarRecetaDto,
 } from '../models/producto-composicion.model';
 import { environment } from '../../../environments/environment';
 import { ResponseTableModel } from '../../shared/utils/response-table.model';
@@ -65,5 +69,61 @@ export class ProductoComposicionService {
 
   delete(id: number): Observable<ResponseModel<void>> {
     return this.http.delete<ResponseModel<void>>(`${this.apiUrl}/${id}`);
+  }
+
+  // ─── Receta completa ───────────────────────────────────────
+  /** Una fila por producto con receta, en vez de una por ingrediente. */
+  pageRecetas(
+    filter: IFilterTable<any>,
+  ): Observable<ResponseTableModel<RecetaResumenTableModel>> {
+    return this.http.post<ResponseTableModel<RecetaResumenTableModel>>(
+      `${this.apiUrl}/recetas/page`,
+      filter,
+    );
+  }
+
+  getReceta(productoPadreId: number): Observable<ResponseModel<RecetaModel>> {
+    return this.http.get<ResponseModel<RecetaModel>>(
+      `${this.apiUrl}/receta/${productoPadreId}`,
+    );
+  }
+
+  /** Guarda la receta entera en un solo request. Reemplaza todas las líneas. */
+  guardarReceta(
+    productoPadreId: number,
+    dto: GuardarRecetaDto,
+  ): Observable<ResponseModel<RecetaModel>> {
+    return this.http.put<ResponseModel<RecetaModel>>(
+      `${this.apiUrl}/receta/${productoPadreId}`,
+      dto,
+    );
+  }
+
+  duplicarReceta(
+    productoDestinoId: number,
+    productoOrigenId: number,
+  ): Observable<ResponseModel<RecetaModel>> {
+    return this.http.post<ResponseModel<RecetaModel>>(
+      `${this.apiUrl}/receta/${productoDestinoId}/duplicar-de/${productoOrigenId}`,
+      {},
+    );
+  }
+
+  // ─── Costeo ────────────────────────────────────────────────
+  costear(
+    productoPadreId: number,
+  ): Observable<ResponseModel<RecetaCosteoModel>> {
+    return this.http.get<ResponseModel<RecetaCosteoModel>>(
+      `${this.apiUrl}/receta/${productoPadreId}/costeo`,
+    );
+  }
+
+  aplicarCosto(
+    productoPadreId: number,
+  ): Observable<ResponseModel<RecetaCosteoModel>> {
+    return this.http.post<ResponseModel<RecetaCosteoModel>>(
+      `${this.apiUrl}/receta/${productoPadreId}/aplicar-costo`,
+      {},
+    );
   }
 }

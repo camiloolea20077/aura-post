@@ -26,6 +26,19 @@ export class PrestacionService {
     return this.http.post<ResponseModel<PrestacionModel>>(this.base, dto);
   }
 
+  /** F4 — genera una prestación para todos los empleados activos, en un lote. */
+  generarLote(dto: {
+    tipo: string;
+    fechaDesde: string;
+    fechaHasta: string;
+    observacion?: string | null;
+  }): Observable<ResponseModel<PrestacionModel[]>> {
+    return this.http.post<ResponseModel<PrestacionModel[]>>(
+      `${this.base}/generar-lote`,
+      dto,
+    );
+  }
+
   liquidacionDefinitiva(
     dto: LiquidacionDefinitivaDto,
   ): Observable<ResponseModel<PrestacionModel[]>> {
@@ -41,6 +54,11 @@ export class PrestacionService {
 
   pagar(id: number, dto: PagoNominaDto): Observable<ResponseModel<PrestacionModel>> {
     return this.http.put<ResponseModel<PrestacionModel>>(`${this.base}/${id}/pagar`, dto);
+  }
+
+  /** B-07 — confirma el pago de una transferencia PROGRAMADA (banco confirmó). */
+  confirmarPago(id: number): Observable<ResponseModel<PrestacionModel>> {
+    return this.http.put<ResponseModel<PrestacionModel>>(`${this.base}/${id}/confirmar-pago`, {});
   }
 
   anular(id: number): Observable<ResponseModel<PrestacionModel>> {
@@ -63,6 +81,14 @@ export class PrestacionService {
 
   pagarLote(lote: string, dto: PagoNominaDto): Observable<ResponseModel<PrestacionModel[]>> {
     return this.http.put<ResponseModel<PrestacionModel[]>>(`${this.base}/lote/${lote}/pagar`, dto);
+  }
+
+  /** B-07 — confirma el pago de todas las transferencias PROGRAMADA del lote. */
+  confirmarPagoLote(lote: string): Observable<ResponseModel<PrestacionModel[]>> {
+    return this.http.put<ResponseModel<PrestacionModel[]>>(
+      `${this.base}/lote/${lote}/confirmar-pago`,
+      {},
+    );
   }
 
   anularLote(lote: string): Observable<ResponseModel<PrestacionModel[]>> {

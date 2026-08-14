@@ -11,8 +11,12 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { lastValueFrom } from 'rxjs';
 
 import { ContratoService } from '../../../../core/services/contrato.service';
+import { NominaService } from '../../../../core/services/nomina.service';
+import { NominaConfigModel } from '../../../../core/models/nomina.model';
 import {
   CreateContratoDto,
+  FASE_APRENDIZ_OPTS,
+  FaseAprendiz,
   TIPO_CONTRATO_OPTS,
   TipoContratoLaboral,
 } from '../../../../core/models/contrato.model';
@@ -48,6 +52,11 @@ export class FormContratoComponent {
   }
 
   readonly tipoContratoOpts = TIPO_CONTRATO_OPTS;
+  readonly faseAprendizOpts = FASE_APRENDIZ_OPTS;
+  /** Cargos ya usados en la empresa: el dropdown es editable, se puede agregar nuevos. */
+  cargoOpts: string[] = [];
+  /** Config de nómina (SMMLV y % del aprendiz) para auto-calcular el apoyo. */
+  private config: NominaConfigModel | null = null;
   readonly procedimientoOpts = [
     { label: 'Procedimiento 1 (mensual)', value: '1' },
     { label: 'Procedimiento 2 (% fijo semestral)', value: '2' },
@@ -69,6 +78,7 @@ export class FormContratoComponent {
     fechaFin: Date | null;
     salarioBase: number | null;
     esSalarioIntegral: boolean;
+    fase: FaseAprendiz | null;
     esPrincipal: boolean;
     procedimientoRetefuente: '1' | '2';
     nivelRiesgoArl: number | null;
@@ -83,6 +93,7 @@ export class FormContratoComponent {
       fechaFin: null,
       salarioBase: null,
       esSalarioIntegral: false,
+      fase: null as FaseAprendiz | null,
       esPrincipal: true,
       procedimientoRetefuente: '1' as '1' | '2',
       nivelRiesgoArl: 1 as number | null,
@@ -100,12 +111,25 @@ export class FormContratoComponent {
     return this.form.tipoContrato === 'FIJO';
   }
 
-  onTipoContratoChange(): void {
-    if (!this.esFijo) this.form.fechaFin = null;
+  /** El aprendiz SENA lleva fase (lectiva/práctica), que define apoyo y ARL. */
+  get esAprendiz(): boolean {
+    return this.form.tipoContrato === 'APRENDIZAJE';
   }
 
-  /** Al abrirse: en modo edición carga los datos del contrato. */
+  onTipoContratoChange(): void {
+    if (!this.esFijo) this.form.fechaFin = null;
+    if (!this.esAprendiz) {
+      this.form.fase = null;
+    } else {
+      if (!this.form.fase) this.form.fase = 'LECTIVA';
+      this.aplicarApoyoAprendiz();
+    }
+  }
+
+  /** Al abrirse: carga el catálogo de cargos y, en edición, los datos del contrato. */
   async onShow(): Promise<void> {
+    this.cargarCargos();
+    this.cargarConfig();
     if (!this.esEdicion || !this.contratoId) {
       this.form = this.vacio();
       return;
@@ -121,6 +145,7 @@ export class FormContratoComponent {
           fechaFin: aDate(c.fechaFin),
           salarioBase: c.salarioBase,
           esSalarioIntegral: !!c.esSalarioIntegral,
+          fase: c.fase ?? null,
           esPrincipal: !!c.esPrincipal,
           procedimientoRetefuente: (c.procedimientoRetefuente ?? '1') as
             | '1'
@@ -132,6 +157,45 @@ export class FormContratoComponent {
     } catch {
       this.alert.showError('Error', 'No se pudo cargar el contrato.');
     }
+  }
+
+  private async cargarCargos(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.service.cargos());
+      this.cargoOpts = res?.data ?? [];
+    } catch {
+      this.cargoOpts = [];
+    }
+  }
+
+  private async cargarConfig(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.nominaService.getConfig());
+      this.config = res?.data ?? null;
+    } catch {
+      this.config = null;
+    }
+  }
+
+  /** Al cambiar la fase del aprendiz, recalcula el apoyo sugerido. */
+  onFaseChange(): void {
+    this.aplicarApoyoAprendiz();
+  }
+
+  /**
+   * Sugiere el salario del aprendiz según la fase: SMMLV × % (lectiva 50 / práctica
+   * 75, parametrizable en config). Así nadie tiene que sacar la cuenta. Solo en alta
+   * (en edición el salario se cambia por "Salario e historial") y el usuario puede
+   * ajustarlo manualmente después.
+   */
+  private aplicarApoyoAprendiz(): void {
+    if (this.esEdicion || !this.esAprendiz || !this.config || !this.form.fase) return;
+    const pct =
+      this.form.fase === 'PRACTICA'
+        ? this.config.aprendizPctPractica
+        : this.config.aprendizPctLectiva;
+    if (pct == null || !this.config.smmlv) return;
+    this.form.salarioBase = Math.round((this.config.smmlv * pct) / 100);
   }
 
   onHide(): void {
@@ -158,6 +222,13 @@ export class FormContratoComponent {
       );
       return;
     }
+    if (this.esAprendiz && !this.form.fase) {
+      this.alert.showWarn(
+        'Datos incompletos',
+        'Indica la fase del aprendiz (lectiva o práctica).',
+      );
+      return;
+    }
 
     const dto: CreateContratoDto = {
       empleadoId: this.empleadoId,
@@ -167,6 +238,7 @@ export class FormContratoComponent {
       fechaFin: this.esFijo ? aFechaLocal(this.form.fechaFin) : null,
       salarioBase: this.form.salarioBase,
       esSalarioIntegral: this.form.esSalarioIntegral,
+      fase: this.esAprendiz ? this.form.fase : null,
       esPrincipal: this.form.esPrincipal,
       procedimientoRetefuente: this.form.procedimientoRetefuente,
       nivelRiesgoArl: this.form.nivelRiesgoArl,
@@ -199,6 +271,7 @@ export class FormContratoComponent {
 
   constructor(
     private readonly service: ContratoService,
+    private readonly nominaService: NominaService,
     private readonly alert: AlertService,
   ) {}
 }

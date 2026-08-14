@@ -142,6 +142,12 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         roles: ['SUPER_ADMIN', 'ADMIN'],
       },
       {
+        label: 'Notas Crédito/Débito',
+        icon: 'pi pi-file-edit',
+        route: '/ventas/notas',
+        roles: ['SUPER_ADMIN', 'ADMIN'],
+      },
+      {
         label: 'Cotizaciones',
         icon: 'pi pi-file',
         route: '/cotizaciones',
@@ -404,11 +410,13 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         icon: 'pi pi-briefcase',
         items: [
           { label: 'Empleados', icon: 'pi pi-users', route: '/nomina/empleados' },
+          { label: 'Saldos iniciales', icon: 'pi pi-database', route: '/nomina/saldos-iniciales' },
           { label: 'Proyectos y Frentes', icon: 'pi pi-building', route: '/proyectos' },
           { label: 'Conceptos', icon: 'pi pi-sliders-h', route: '/nomina/conceptos' },
           { label: 'Períodos', icon: 'pi pi-calendar', route: '/nomina/periodos' },
           { label: 'Liquidación Nómina', icon: 'pi pi-calculator', route: '/nomina/liquidacion' },
           { label: 'Preliquidación / Auditoría', icon: 'pi pi-verified', route: '/nomina/preliquidacion' },
+          { label: 'Nómina Electrónica', icon: 'pi pi-file-o', route: '/nomina/electronica' },
           { label: 'PILA', icon: 'pi pi-shield', route: '/nomina/pila' },
           { label: 'Prestaciones', icon: 'pi pi-gift', route: '/nomina/prestaciones' },
           { label: 'Comisiones', icon: 'pi pi-percentage', route: '/comisiones/configuracion' },
@@ -452,6 +460,11 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         label: 'Inventario',
         icon: 'pi pi-chart-pie',
         route: '/reportes/inventario',
+      },
+      {
+        label: 'Facturación Electrónica',
+        icon: 'pi pi-file-export',
+        route: '/reportes/facturacion-electronica',
       },
       {
         label: 'Reportes Avanzados',

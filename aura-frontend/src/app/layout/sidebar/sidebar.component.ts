@@ -90,9 +90,31 @@ export class SidebarComponent implements OnInit {
     }
   }
 
+  /**
+   * Ruta del ítem que debe verse "activo". Es la coincidencia de prefijo MÁS
+   * LARGA con la URL actual: así una ruta hija (form plano `/ventas/notas/credito`)
+   * mantiene marcado su ítem de listado (`/ventas/notas`) sin encender también al
+   * padre más corto (`/ventas`).
+   */
+  public activeRoute = '';
+
+  private computarRutaActiva(url: string): void {
+    const limpia = url.split('?')[0].split('#')[0];
+    let mejor = '';
+    const considerar = (route?: string) => {
+      if (route && limpia.startsWith(route) && route.length > mejor.length) mejor = route;
+    };
+    for (const group of this.menuGroups) {
+      (group.items ?? []).forEach((i) => considerar(i.route));
+      for (const sg of group.subgroups ?? []) sg.items.forEach((i) => considerar(i.route));
+    }
+    this.activeRoute = mejor;
+  }
+
   /** Abre el grupo (y submódulo) que contiene la ruta activa */
   private abrirGrupoActivo(): void {
     const url = this.router.url;
+    this.computarRutaActiva(url);
     for (const group of this.menuGroups) {
       const tieneActivo = (group.items ?? []).some(
         (item) => item.route && url.startsWith(item.route),

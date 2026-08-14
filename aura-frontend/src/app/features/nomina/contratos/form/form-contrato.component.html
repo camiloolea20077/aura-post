@@ -22,12 +22,19 @@
 
     <div class="field">
       <label>Cargo</label>
-      <input
-        pInputText
+      <p-dropdown
         [(ngModel)]="form.cargo"
-        class="w-full"
-        placeholder="Cargo"
+        [options]="cargoOpts"
+        [editable]="true"
+        [filter]="true"
+        [showClear]="true"
+        styleClass="w-full"
+        placeholder="Selecciona o escribe un cargo"
       />
+      <small class="hint"
+        >Elige uno de la lista o escribe uno nuevo; quedará disponible la próxima
+        vez.</small
+      >
     </div>
 
     <div class="field">
@@ -53,6 +60,25 @@
           styleClass="w-full"
           placeholder="AAAA-MM-DD"
         />
+      </div>
+    }
+
+    @if (esAprendiz) {
+      <div class="field">
+        <label>Fase del aprendiz <span class="req">*</span></label>
+        <p-dropdown
+          [(ngModel)]="form.fase"
+          [options]="faseAprendizOpts"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Selecciona la fase"
+          styleClass="w-full"
+          (onChange)="onFaseChange()"
+        />
+        <small class="hint"
+          >Lectiva: apoyo 50% SMMLV, solo salud. Práctica: 75% SMMLV, salud +
+          ARL. El salario se calcula solo según la fase.</small
+        >
       </div>
     }
 

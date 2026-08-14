@@ -19,6 +19,9 @@ export type TipoNovedad =
   | 'HORA_EXTRA_FESTIVO'
   | 'INCAPACIDAD'
   | 'LICENCIA_REMUNERADA'
+  | 'LICENCIA_NO_REMUNERADA'
+  | 'LICENCIA_MATERNIDAD'
+  | 'VACACIONES'
   | 'BONO'
   | 'COMISION'
   | 'PRESTAMO'
@@ -41,6 +44,10 @@ export interface NominaConfigModel {
   pctCajaCompensacion: number;
   pctIcbf: number;
   pctSena: number;
+  /** Apoyo de sostenimiento del aprendiz SENA como % del SMMLV, por fase. */
+  aprendizPctLectiva: number;
+  aprendizPctPractica: number;
+  permiteVacacionesAnticipadas?: boolean;
 }
 
 export interface UpdateNominaConfigDto {
@@ -56,6 +63,9 @@ export interface UpdateNominaConfigDto {
   pctCajaCompensacion?: number;
   pctIcbf?: number;
   pctSena?: number;
+  aprendizPctLectiva?: number;
+  aprendizPctPractica?: number;
+  permiteVacacionesAnticipadas?: boolean;
 }
 
 // ─── Empleados ────────────────────────────────────────────────
@@ -160,6 +170,12 @@ export interface NominaNovedadModel {
   valorUnitario: number;
   valorTotal: number;
   esDeduccion: boolean;
+  // F0: ausencias con días
+  dias?: number | null;
+  afectaDiasSalario?: boolean;
+  subtipo?: string | null;
+  fechaInicio?: string | null;
+  fechaFin?: string | null;
 }
 
 export interface AddNovedadDto {
@@ -167,6 +183,11 @@ export interface AddNovedadDto {
   descripcion?: string | null;
   cantidad?: number;
   valorUnitario: number;
+  // F0: novedades de ausencia con fechas (p-calendar entrega Date; se envía ISO)
+  fechaInicio?: string | Date | null;
+  fechaFin?: string | Date | null;
+  subtipo?: string | null;
+  numeroAutorizacion?: string | null;
 }
 
 // ─── Nómina ───────────────────────────────────────────────────
@@ -227,6 +248,45 @@ export interface NominaTableModel {
   netoPagar: number;
   estado: EstadoNomina;
   totalRows: number;
+}
+
+// ─── Saldos iniciales (F7 — migración) ───────────────────────
+export interface SaldosInicialesModel {
+  empleadoId: number;
+  empleadoNombre: string;
+  documento: string;
+  fechaIngreso: string | Date | null;
+  vacacionesSaldoInicial: number;
+  cesantiasSaldoInicial: number;
+  ingresosYtd: number;
+  retencionesYtd: number;
+}
+
+// ─── Saldo de vacaciones (F3) ────────────────────────────────
+export interface VacacionesSaldoModel {
+  empleadoId: number;
+  fechaIngreso: string | null;
+  antiguedadDias: number;
+  diasCausados: number;
+  saldoInicial: number;
+  diasTomados: number;
+  diasDisponibles: number;
+  permiteAnticipadas: boolean;
+}
+
+// ─── Trazabilidad de pagos por empleado ──────────────────────
+export interface HistorialPagoModel {
+  id: number;
+  periodoId: number;
+  periodoFechaInicio: string;
+  periodoFechaFin: string;
+  diasTrabajados: number;
+  totalDevengado: number;
+  totalDeducciones: number;
+  netoPagar: number;
+  estado: EstadoNomina;
+  medioPago: MedioPagoNomina | null;
+  fechaPago: string | null;
 }
 
 // ─── Documento de período (maestro-detalle) ──────────────────

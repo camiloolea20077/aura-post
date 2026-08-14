@@ -19,6 +19,7 @@ import { IndexContratosComponent } from '../../contratos/index/index-contratos.c
 import { AfiliacionesComponent } from '../../contratos/afiliaciones/afiliaciones.component';
 import { RetefuenteComponent } from '../../contratos/retefuente/retefuente.component';
 import { EmbargosComponent } from '../../contratos/embargos/embargos.component';
+import { HistorialPagosComponent } from '../historial-pagos/historial-pagos.component';
 
 /**
  * Detalle de un empleado (maestro-detalle).
@@ -46,6 +47,7 @@ import { EmbargosComponent } from '../../contratos/embargos/embargos.component';
     AfiliacionesComponent,
     RetefuenteComponent,
     EmbargosComponent,
+    HistorialPagosComponent,
   ],
   templateUrl: './empleado-detalle.component.html',
   styleUrls: ['./empleado-detalle.component.scss'],

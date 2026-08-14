@@ -80,6 +80,7 @@
           formControlName="fechaVencimiento"
           [showIcon]="true"
           dateFormat="dd/mm/yy"
+          appendTo="body"
           [minDate]="form.get('fechaEmision')?.value"
           styleClass="w-full"
         ></p-calendar>

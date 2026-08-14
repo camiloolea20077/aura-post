@@ -7,6 +7,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { DropdownModule } from 'primeng/dropdown';
 import { ToastModule } from 'primeng/toast';
 import { SkeletonModule } from 'primeng/skeleton';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
@@ -30,6 +31,7 @@ import { AlertService } from '../../../shared/pipes/alert.service';
     DropdownModule,
     ToastModule,
     SkeletonModule,
+    ToggleSwitchModule,
   ],
   providers: [MessageService],
   templateUrl: './nomina-config.component.html',

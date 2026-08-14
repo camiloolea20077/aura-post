@@ -27,6 +27,11 @@ export class ContratoService {
 
   constructor(private readonly http: HttpClient) {}
 
+  /** Cargos ya usados en la empresa, para el autocompletar del form. */
+  cargos(): Observable<ResponseModel<string[]>> {
+    return this.http.get<ResponseModel<string[]>>(`${this.base}contrato/cargos`);
+  }
+
   /** Contratos activos de un empleado. Puede haber varios (multi-vínculo). */
   porEmpleado(empleadoId: number): Observable<ResponseModel<ContratoTableModel[]>> {
     return this.http.get<ResponseModel<ContratoTableModel[]>>(

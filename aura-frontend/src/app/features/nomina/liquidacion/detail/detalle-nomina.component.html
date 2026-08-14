@@ -212,6 +212,7 @@
               optionValue="value"
               placeholder="Tipo"
               [style]="{ width: '100%' }"
+              (onChange)="onTipoNovedadChange()"
             />
           </div>
           <div class="field">
@@ -224,7 +225,13 @@
             />
           </div>
           <div class="field">
-            <label>Valor unitario</label>
+            <label>{{
+              esAutoCalculada
+                ? "Valor (automático)"
+                : requiereFechas(novedad.tipo)
+                  ? "Valor (opcional)"
+                  : "Valor unitario"
+            }}</label>
             <input
               type="number"
               pInputText
@@ -233,6 +240,93 @@
             />
           </div>
         </div>
+
+        <!-- F0/F2: ausencias y licencias piden fechas (descuento y/o PILA) -->
+        <div class="nf-row nf-row--dos" *ngIf="requiereFechas(novedad.tipo)">
+          <div class="field">
+            <label>Desde</label>
+            <p-calendar
+              [(ngModel)]="novedad.fechaInicio"
+              dateFormat="dd/mm/yy"
+              [showIcon]="true"
+              [style]="{ width: '100%' }"
+              appendTo="body"
+            />
+          </div>
+          <div class="field">
+            <label>Hasta</label>
+            <p-calendar
+              [(ngModel)]="novedad.fechaFin"
+              dateFormat="dd/mm/yy"
+              [showIcon]="true"
+              [style]="{ width: '100%' }"
+              appendTo="body"
+            />
+          </div>
+        </div>
+
+        <!-- Incapacidad: quién la paga + autorización -->
+        <div class="nf-row nf-row--dos" *ngIf="novedad.tipo === 'INCAPACIDAD'">
+          <div class="field">
+            <label>Tipo de incapacidad</label>
+            <p-dropdown
+              [options]="subtipoIncapacidadOpts"
+              [(ngModel)]="novedad.subtipo"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Enfermedad o riesgo laboral"
+              [style]="{ width: '100%' }"
+            />
+          </div>
+          <div class="field">
+            <label>N° autorización</label>
+            <input
+              pInputText
+              [(ngModel)]="novedad.numeroAutorizacion"
+              placeholder="Opcional"
+            />
+          </div>
+        </div>
+
+        <!-- F3: saldo de vacaciones -->
+        <div class="nf-saldo" *ngIf="novedad.tipo === 'VACACIONES'">
+          <span *ngIf="cargandoSaldo" class="nf-saldo-load"
+            >Cargando saldo…</span
+          >
+          <ng-container *ngIf="!cargandoSaldo && vacacionesSaldo">
+            <div class="nf-saldo-chips">
+              <span class="nf-saldo-chip">
+                Disponibles <b>{{ vacacionesSaldo.diasDisponibles }}</b> días
+              </span>
+              <span class="nf-saldo-chip" *ngIf="diasSolicitados > 0">
+                Solicitados <b>{{ diasSolicitados }}</b>
+              </span>
+            </div>
+            <p class="nf-saldo-warn" *ngIf="vacacionesExcedidas">
+              <i class="pi pi-exclamation-triangle"></i>
+              No alcanza el saldo. Habilita vacaciones anticipadas en la
+              configuración si lo permites.
+            </p>
+          </ng-container>
+        </div>
+
+        <p class="nf-hint" *ngIf="requiereFechas(novedad.tipo)">
+          <i class="pi pi-info-circle"></i>
+          <ng-container *ngIf="esAutoCalculada">
+            El sistema descuenta los días y calcula el valor de la incapacidad
+            automáticamente (déjalo en 0). Escribe un valor solo si quieres
+            forzarlo.
+          </ng-container>
+          <ng-container *ngIf="!esAutoCalculada && esAusencia(novedad.tipo)">
+            El sistema descuenta los días de ausencia del salario
+            automáticamente.
+          </ng-container>
+          <ng-container *ngIf="!esAusencia(novedad.tipo)">
+            Se paga como salario normal (no descuenta días) y se reporta a la
+            seguridad social (PILA).
+          </ng-container>
+        </p>
+
         <div class="field" style="margin-top: 0.5rem">
           <label>Descripción (opcional)</label>
           <input
@@ -257,6 +351,7 @@
             icon="pi pi-check"
             class="btn-nomina p-button-sm"
             [loading]="agregando"
+            [disabled]="vacacionesExcedidas"
             (click)="agregarNovedad()"
           ></button>
         </div>
@@ -276,7 +371,12 @@
           <span class="nov-desc" *ngIf="nov.descripcion">{{
             nov.descripcion
           }}</span>
-          <span class="nov-cant">× {{ nov.cantidad }}</span>
+          <span class="nov-cant" *ngIf="nov.afectaDiasSalario && nov.dias">
+            {{ nov.dias }} {{ nov.dias === 1 ? "día" : "días" }}
+          </span>
+          <span class="nov-cant" *ngIf="!nov.afectaDiasSalario"
+            >× {{ nov.cantidad }}</span
+          >
         </div>
         <div class="nov-right">
           <span class="nov-valor" [class.red]="nov.esDeduccion">

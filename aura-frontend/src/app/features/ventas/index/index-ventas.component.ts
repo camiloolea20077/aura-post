@@ -164,7 +164,7 @@ export class IndexVentasComponent implements OnInit {
     return e === 'COMPLETADA'
       ? 'Completada'
       : e === 'PAGO_PARCIAL'
-        ? 'Pago Parcial'
+        ? 'Crédito'
         : 'Anulada';
   }
 

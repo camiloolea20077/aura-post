@@ -14,6 +14,14 @@ export type TipoContratoLaboral =
 
 export type EstadoContrato = 'ACTIVO' | 'SUSPENDIDO' | 'TERMINADO';
 
+/** Fase del aprendiz SENA (solo para tipoContrato = APRENDIZAJE). */
+export type FaseAprendiz = 'LECTIVA' | 'PRACTICA';
+
+export const FASE_APRENDIZ_OPTS = [
+  { label: 'Lectiva (50% SMMLV, solo salud)', value: 'LECTIVA' },
+  { label: 'Práctica (75% SMMLV, salud + ARL)', value: 'PRACTICA' },
+];
+
 /**
  * Causa del retiro.
  *
@@ -69,6 +77,8 @@ export interface ContratoModel {
   salarioBase: number;
   /** El IBC es el 70% y no se provisionan prestaciones. */
   esSalarioIntegral: boolean;
+  /** Fase del aprendiz SENA: LECTIVA | PRACTICA. Null si no es aprendiz. */
+  fase: FaseAprendiz | null;
   periodicidad: string | null;
   /** Con multi-vínculo, cuál manda para reportes de un solo contrato. */
   esPrincipal: boolean;
@@ -150,6 +160,8 @@ export interface CreateContratoDto {
   fechaFin?: string | null;
   salarioBase: number;
   esSalarioIntegral?: boolean;
+  /** Fase del aprendiz SENA: LECTIVA | PRACTICA. Solo para APRENDIZAJE. */
+  fase?: FaseAprendiz | null;
   periodicidad?: string | null;
   esPrincipal?: boolean;
   procedimientoRetefuente?: '1' | '2';

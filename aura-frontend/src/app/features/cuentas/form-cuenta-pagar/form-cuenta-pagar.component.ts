@@ -18,7 +18,7 @@ import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
-import { InputTextarea } from 'primeng/inputtextarea';
+import { TextareaModule } from 'primeng/textarea';
 import { CalendarModule } from 'primeng/calendar';
 import { DropdownModule } from 'primeng/dropdown';
 import { lastValueFrom } from 'rxjs';
@@ -43,7 +43,7 @@ import { OnInit } from '@angular/core';
     ButtonModule,
     InputNumberModule,
     InputTextModule,
-    InputTextarea,
+    TextareaModule,
     CalendarModule,
     DropdownModule,
   ],

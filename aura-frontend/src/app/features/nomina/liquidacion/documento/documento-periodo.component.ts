@@ -34,6 +34,7 @@ import {
   PeriodoResumenModel,
 } from '../../../../core/models/nomina.model';
 import { AlertService } from '../../../../shared/pipes/alert.service';
+import { NominaElectronicaComponent } from '../electronica/nomina-electronica.component';
 
 type TagSeverity =
   | 'success'
@@ -59,6 +60,7 @@ type TagSeverity =
     SkeletonModule,
     TooltipModule,
     ConfirmDialogModule,
+    NominaElectronicaComponent,
   ],
   providers: [ConfirmationService],
   templateUrl: './documento-periodo.component.html',
@@ -78,6 +80,10 @@ export class DocumentoPeriodoComponent implements OnChanges {
   public generandoPdf = false;
   public liquidando = false;
   private empresa: EmpresaConfig | null = null;
+
+  // Nómina electrónica (DIAN / Factus)
+  public showElectronica = false;
+  public electronicaNominaId: number | null = null;
 
   // Pago del período
   public showPago = false;
@@ -139,19 +145,28 @@ export class DocumentoPeriodoComponent implements OnChanges {
     if (this.periodoId == null) return;
     this.confirmationService.confirm({
       header: 'Liquidar nómina',
-      message: '¿Liquidar la nómina para todos los empleados activos de este período?',
+      message:
+        '¿Liquidar la nómina para todos los empleados activos de este período?',
       icon: 'pi pi-bolt',
       acceptLabel: 'Sí, liquidar',
       rejectLabel: 'Cancelar',
       accept: async () => {
         this.liquidando = true;
         try {
-          await lastValueFrom(this.nominaService.liquidarTodos(this.periodoId!));
-          this.alertService.showSuccess('Liquidado', 'Nómina liquidada para los empleados activos');
+          await lastValueFrom(
+            this.nominaService.liquidarTodos(this.periodoId!),
+          );
+          this.alertService.showSuccess(
+            'Liquidado',
+            'Nómina liquidada para los empleados activos',
+          );
           await this.cargar();
           this.pagado.emit(); // refresca la lista de períodos por detrás
         } catch (err: any) {
-          this.alertService.showError('Error', err?.error?.message ?? 'No se pudo liquidar la nómina');
+          this.alertService.showError(
+            'Error',
+            err?.error?.message ?? 'No se pudo liquidar la nómina',
+          );
         } finally {
           this.liquidando = false;
         }
@@ -161,6 +176,11 @@ export class DocumentoPeriodoComponent implements OnChanges {
 
   abrirEmpleado(nominaId: number): void {
     this.verNomina.emit(nominaId);
+  }
+
+  enviarElectronica(nominaId: number): void {
+    this.electronicaNominaId = nominaId;
+    this.showElectronica = true;
   }
 
   private async getEmpresa(): Promise<EmpresaConfig> {

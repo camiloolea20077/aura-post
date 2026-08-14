@@ -4,7 +4,12 @@ export type TipoPrestacion =
   | 'CESANTIAS'
   | 'INTERESES_CESANTIAS'
   | 'INDEMNIZACION';
-export type EstadoPrestacion = 'BORRADOR' | 'APROBADA' | 'PAGADA' | 'ANULADA';
+export type EstadoPrestacion =
+  | 'BORRADOR'
+  | 'APROBADA'
+  | 'PROGRAMADA'
+  | 'PAGADA'
+  | 'ANULADA';
 
 /** Resumen de un lote: una fila del listado que agrupa una liquidación. */
 export interface LotePrestacionModel {
@@ -59,4 +64,6 @@ export interface LiquidacionDefinitivaDto {
   empleadoId: number;
   fechaRetiro?: string | null;
   motivo?: MotivoRetiro | null;
+  /** B-04 — cesantías ya consignadas al fondo hasta esta fecha (fuera del sistema). */
+  cesantiasCorteHasta?: string | null;
 }

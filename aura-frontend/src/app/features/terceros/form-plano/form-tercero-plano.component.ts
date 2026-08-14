@@ -435,13 +435,27 @@ export class FormTerceroPlanoComponent implements OnInit {
 
     const v = this.frm.value;
     const juridica = this.esJuridica;
+
+    // El backend exige `nombres` (campo legacy, usado para mostrar el nombre).
+    // Si el usuario solo llenó los campos desagregados de PILA (nombre1/apellido1),
+    // se componen desde ahí para no mandar `nombres` en null y que no falle con
+    // "Debe ingresar razón social o nombres".
+    const unir = (...partes: (string | null | undefined)[]) =>
+      partes.map((p) => p?.trim()).filter(Boolean).join(' ') || null;
+    const nombresFinal = juridica
+      ? null
+      : v.nombres?.trim() || unir(v.nombre1, v.nombre2);
+    const apellidosFinal = juridica
+      ? null
+      : v.apellidos?.trim() || unir(v.apellido1, v.apellido2);
+
     const dto: CreateTerceroDto & { esBanco: boolean } = {
       tipoDocumento: v.tipoDocumento,
       numeroDocumento: v.numeroDocumento.trim(),
       dv: juridica ? v.dv?.trim() || null : null,
       razonSocial: juridica ? v.razonSocial?.trim() || null : null,
-      nombres: !juridica ? v.nombres?.trim() || null : null,
-      apellidos: !juridica ? v.apellidos?.trim() || null : null,
+      nombres: nombresFinal,
+      apellidos: apellidosFinal,
       telefono: v.telefono?.trim() || null,
       email: v.email?.trim() || null,
       emailFe: v.emailFe?.trim() || null,
