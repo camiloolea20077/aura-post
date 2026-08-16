@@ -264,11 +264,11 @@
   <ng-template pTemplate="footer">
     <div class="dialog-footer">
       <button pButton type="button" label="Cancelar" icon="pi pi-times"
-        class="p-button-outlined p-button-secondary"
+        class="btn-amarillo"
         [disabled]="isSubmitting" (click)="closeModal()"></button>
       <button pButton type="button" label="Cerrar turno"
         [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-lock'"
-        class="btn-aura btn-cierre"
+        class="btn-verde"
         [disabled]="isSubmitting || frmCerrar.invalid"
         (click)="cerrarTurno()"></button>
     </div>

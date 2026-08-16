@@ -27,7 +27,7 @@
           type="button"
           label="Volver"
           icon="pi pi-arrow-left"
-          class="p-button-text"
+          class="btn-rojo"
           (click)="onHide()"
         ></button>
       </div>
@@ -346,14 +346,14 @@
     <button
       pButton
       label="Cancelar"
-      class="p-button-text"
+      class="btn-amarillo"
       (click)="showPago = false"
     ></button>
     <button
       pButton
       label="Confirmar pago"
       icon="pi pi-check"
-      class="btn-aura"
+      class="btn-verde"
       [loading]="pagando"
       (click)="confirmarPago()"
     ></button>

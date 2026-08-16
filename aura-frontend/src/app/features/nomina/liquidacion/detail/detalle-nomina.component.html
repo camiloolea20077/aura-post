@@ -195,7 +195,7 @@
           type="button"
           icon="pi pi-plus"
           label="Agregar"
-          class="p-button-text p-button-sm btn-add-nov"
+          class="btn-verde p-button-sm"
           (click)="showFormNovedad = !showFormNovedad"
         ></button>
       </div>
@@ -341,7 +341,7 @@
             type="button"
             label="Cancelar"
             icon="pi pi-times"
-            class="p-button-text p-button-secondary p-button-sm"
+            class="btn-amarillo p-button-sm"
             (click)="showFormNovedad = false"
           ></button>
           <button
@@ -349,7 +349,7 @@
             type="button"
             label="Agregar"
             icon="pi pi-check"
-            class="btn-nomina p-button-sm"
+            class="btn-verde p-button-sm"
             [loading]="agregando"
             [disabled]="vacacionesExcedidas"
             (click)="agregarNovedad()"
@@ -404,7 +404,7 @@
         type="button"
         label="Cerrar"
         icon="pi pi-times"
-        class="p-button-text p-button-secondary"
+        class="btn-amarillo"
         (click)="close()"
       ></button>
       <div class="footer-actions">

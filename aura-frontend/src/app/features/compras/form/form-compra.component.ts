@@ -51,6 +51,8 @@ import { AlertService } from '../../../shared/pipes/alert.service';
 import { IndexDBService } from '../../../core/services/index-db.service';
 import { CuentaBancariaService } from '../../../core/services/cuenta-bancaria.service';
 import { CuentaBancariaModel } from '../../../core/models/cuenta-bancaria.model';
+import { ContabilidadService } from '../../../core/services/contabilidad.service';
+import { PlanCuentaModel } from '../../../core/models/contabilidad.model';
 import { TarifaRetencionService } from '../../../core/services/tarifa-retencion.service';
 import { TipoRetencion } from '../../../core/models/tarifa-retencion.model';
 
@@ -159,6 +161,15 @@ export class FormCompraComponent implements OnInit {
   public banco: string = '';
   public cuentaBancariaId: number | null = null;
   public cuentasBancarias: CuentaBancariaModel[] = [];
+
+  /**
+   * Cuenta contable de la que sale el pago. Opcional a propósito: el flujo
+   * normal es efectivo desde la caja del punto, y ahí no se toca. Solo hace
+   * falta cuando no hay caja abierta y la plata sale de otro lado — el caso del
+   * administrador comprando fuera del horario del punto de venta.
+   */
+  public cuentaContableId: number | null = null;
+  public cuentasContables: PlanCuentaModel[] = [];
 
   readonly formaPagoOpts: { label: string; value: FormaPago }[] = [
     { label: 'Contado', value: 'CONTADO' },
@@ -315,7 +326,13 @@ export class FormCompraComponent implements OnInit {
   }
 
   // ─── Estado ───────────────────────────────────────────────────────
-  public isSubmitting = false;
+  /**
+   * Signal, no propiedad plana: con OnPush, apagarla dentro del `finally`
+   * después del `await` no marcaba el componente para revisión y el botón se
+   * quedaba girando para siempre cuando el backend respondía un error. En el
+   * camino feliz no se notaba porque se navega y el componente se destruye.
+   */
+  public isSubmitting = signal(false);
 
   private readonly DRAFT_KEY = 'compra_draft';
 
@@ -408,6 +425,7 @@ export class FormCompraComponent implements OnInit {
       this.metodoPago = draft.metodoPago || 'EFECTIVO';
       this.banco = draft.banco || '';
       this.cuentaBancariaId = draft.cuentaBancariaId || null;
+      this.cuentaContableId = draft.cuentaContableId || null;
       this.tipoDocumento = draft.tipoDocumento || 'FACTURA_COMPRA';
       this.fletes = draft.fletes || 0;
 
@@ -442,6 +460,7 @@ export class FormCompraComponent implements OnInit {
         metodoPago: this.metodoPago,
         banco: this.banco,
         cuentaBancariaId: this.cuentaBancariaId,
+        cuentaContableId: this.cuentaContableId,
         tipoDocumento: this.tipoDocumento,
         fletes: this.fletes,
         retefuentePct: this.retefuentePct,
@@ -466,6 +485,7 @@ export class FormCompraComponent implements OnInit {
     private readonly terceroService: TerceroService,
     private readonly productoService: ProductoService,
     private readonly cuentaBancariaService: CuentaBancariaService,
+    private readonly contabilidadService: ContabilidadService,
     private readonly tarifaRetencionService: TarifaRetencionService,
     private readonly alertService: AlertService,
     private readonly indexDBService: IndexDBService,
@@ -565,12 +585,19 @@ export class FormCompraComponent implements OnInit {
   // ─── Carga datos ──────────────────────────────────────────────────
   private async loadDropdowns(): Promise<void> {
     try {
-      const [sucursales, defaultId, cuentasRes] = await Promise.all([
+      const [sucursales, defaultId, cuentasRes, planRes] = await Promise.all([
         this.indexDBService.getSucursales(),
         this.indexDBService.getSucursalDefault(),
         lastValueFrom(this.cuentaBancariaService.list()).catch(() => null),
+        lastValueFrom(this.contabilidadService.listarPlan()).catch(() => null),
       ]);
       this.cuentasBancarias = (cuentasRes?.data ?? []).filter((c) => c.activa);
+      // Solo cuentas auxiliares de activo o pasivo: el pago sale de un fondo
+      // (caja, banco, anticipo) o queda como obligación. Ofrecer cuentas de
+      // gasto aquí llevaría a asientos invertidos.
+      this.cuentasContables = (planRes?.data ?? []).filter(
+        (c) => c.activa && c.auxiliar && (c.tipo === 'ACTIVO' || c.tipo === 'PASIVO'),
+      );
       this.sucursalesOpts = sucursales.map((s) => ({
         label: s.nombre,
         value: s.id,
@@ -1001,7 +1028,7 @@ export class FormCompraComponent implements OnInit {
     if (err) return void this.alertService.showWarn('Compra incompleta', err);
 
     this.guardarDraft();
-    this.isSubmitting = true;
+    this.isSubmitting.set(true);
     try {
       const detalles: CreateCompraDetalleDto[] = this.lineas().map((l) => ({
         productoId: l.productoId!,
@@ -1048,6 +1075,7 @@ export class FormCompraComponent implements OnInit {
                       : this.totalValue,
                   banco: this.banco.trim() || null,
                   cuentaBancariaId: this.cuentaBancariaId,
+                  cuentaContableId: this.cuentaContableId,
                 },
               ]
             : null,
@@ -1085,7 +1113,7 @@ export class FormCompraComponent implements OnInit {
         err?.message ?? 'No se pudo registrar la compra.',
       );
     } finally {
-      this.isSubmitting = false;
+      this.isSubmitting.set(false);
     }
   }
 
@@ -1113,6 +1141,7 @@ export class FormCompraComponent implements OnInit {
     this.metodoPago = 'EFECTIVO';
     this.banco = '';
     this.cuentaBancariaId = null;
+    this.cuentaContableId = null;
     this.tipoDocumento = 'FACTURA_COMPRA';
     this.fletes = 0;
   }

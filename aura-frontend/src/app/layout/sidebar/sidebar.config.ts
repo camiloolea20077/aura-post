@@ -105,6 +105,7 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         route: '/inventario/reconteos',
       },
       { label: 'Mermas', icon: 'pi pi-trash', route: '/mermas' },
+      { label: 'Obsequios', icon: 'pi pi-gift', route: '/obsequios' },
       { label: 'Traslados', icon: 'pi pi-arrows-h', route: '/traslados' },
     ],
   },

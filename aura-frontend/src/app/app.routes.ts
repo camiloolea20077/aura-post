@@ -439,6 +439,14 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'obsequios',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/obsequios/index/index-obsequios.component').then(
+            (m) => m.IndexObsequiosComponent,
+          ),
+      },
+      {
         path: 'traslados',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>

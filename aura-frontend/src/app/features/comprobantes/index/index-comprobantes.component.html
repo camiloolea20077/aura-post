@@ -17,7 +17,7 @@
           type="button"
           label="Nuevo comprobante"
           icon="pi pi-plus"
-          class="btn-aura"
+          class="btn-verde"
           (click)="nuevo()"
         ></button>
         <!-- ── Filtros ───────────────────────────────────────────── -->
@@ -90,12 +90,26 @@
       </ng-template>
 
       <ng-template pTemplate="body" let-item>
-        <tr class="clickable-row" (click)="verComprobante(item)">
+        <tr
+          class="clickable-row"
+          [class.fila-anulada]="item.anulado"
+          (click)="verComprobante(item)"
+        >
           <td>
             <span class="id-badge">{{ item.numeroComprobante }}</span>
           </td>
           <td class="text-center">
+            <!-- Un comprobante anulado conserva su número pero ya no soporta
+                 ningún pago: si no se distingue, se lee como un egreso real. -->
             <p-tag
+              *ngIf="item.anulado"
+              value="Anulado"
+              severity="danger"
+              [rounded]="true"
+              [pTooltip]="item.motivoAnulacion || 'Comprobante anulado'"
+            />
+            <p-tag
+              *ngIf="!item.anulado"
               [value]="getTipoLabel(item.tipo)"
               [severity]="getTipoSeverity(item.tipo)"
               [rounded]="true"
@@ -107,8 +121,8 @@
           <td class="text-right">
             <span
               class="monto-val"
-              [class.monto-ingreso]="item.tipo === 'INGRESO'"
-              [class.monto-egreso]="item.tipo === 'EGRESO'"
+              [class.monto-ingreso]="!item.anulado && item.tipo === 'INGRESO'"
+              [class.monto-egreso]="!item.anulado && item.tipo === 'EGRESO'"
             >
               {{ formatCOP(item.monto) }}
             </span>

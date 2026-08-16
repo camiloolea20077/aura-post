@@ -1213,6 +1213,17 @@ $mono: "JetBrains Mono", monospace;
     flex-wrap: wrap;
     align-items: center;
     gap: 0.4rem;
+
+    // Un flex item arranca en min-width:auto, o sea que se niega a encogerse
+    // por debajo de su contenido. Sin esto un nombre largo empuja al subtotal
+    // fuera de la línea y el precio deja de verse. Con min-width:0 el nombre
+    // cede y se reparte en varias líneas, que es lo que queremos: nombre
+    // completo Y precio visible.
+    flex: 1 1 auto;
+    min-width: 0;
+    // Nombres que vienen como una sola palabra larguísima (SKU pegado, códigos)
+    // no tienen dónde partirse: se parten donde toque antes que desbordar.
+    overflow-wrap: anywhere;
   }
 
   .badge-desc {
@@ -1229,6 +1240,12 @@ $mono: "JetBrains Mono", monospace;
     font-size: 1rem;
     font-weight: 800;
     color: $text;
+
+    // El precio es el dato que no puede faltar: no se encoge ni se parte en
+    // dos líneas por más largo que sea el nombre de al lado.
+    flex: 0 0 auto;
+    white-space: nowrap;
+    text-align: right;
   }
 }
 
@@ -1236,6 +1253,10 @@ $mono: "JetBrains Mono", monospace;
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  // En pantallas estrechas los controles bajan de línea en vez de comprimirse
+  // unos a otros (el control de cantidad mide 44px fijos y no cede).
+  flex-wrap: wrap;
+  row-gap: 0.5rem;
 }
 
 .spacer {
@@ -1247,6 +1268,8 @@ $mono: "JetBrains Mono", monospace;
   font-size: 0.75rem;
   color: $muted;
   font-weight: 500;
+  // "x $12.500" partido en dos líneas se lee fatal.
+  white-space: nowrap;
 }
 
 // ── Controles de Cantidad (Touch Friendly 44px) ───────────────

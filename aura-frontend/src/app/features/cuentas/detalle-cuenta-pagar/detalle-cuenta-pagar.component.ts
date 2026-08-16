@@ -43,6 +43,7 @@ import {
   TurnoCajaService,
 } from '../../../core/services/caja.service';
 import { CuentaBancariaService } from '../../../core/services/cuenta-bancaria.service';
+import { ContabilidadService } from '../../../core/services/contabilidad.service';
 
 type TagSeverity =
   | 'success'
@@ -97,12 +98,15 @@ export class DetalleCuentaPagarComponent implements OnInit {
   ];
 
   cuentasBancariasOpts: { label: string; value: number }[] = [];
+  /** Cuentas de fondo para pagar cuando no hay caja abierta. */
+  cuentasPagoOpts: { label: string; value: number }[] = [];
 
   constructor(
     private readonly fb: FormBuilder,
     private readonly service: CuentaPagarService,
     private readonly cajaService: TurnoCajaService,
     private readonly cuentaBancariaService: CuentaBancariaService,
+    private readonly contabilidadService: ContabilidadService,
     private readonly alert: AlertService,
     private readonly confirm: ConfirmationService,
     private readonly cdr: ChangeDetectorRef,
@@ -113,8 +117,18 @@ export class DetalleCuentaPagarComponent implements OnInit {
       referencia: [null],
       banco: [null],
       cuentaBancariaId: [null as number | null],
+      cuentaContableId: [null as number | null],
       fechaPago: [new Date(), Validators.required],
     });
+  }
+
+  /**
+   * El pago en efectivo necesita una caja abierta. Si el usuario no tiene turno
+   * (el caso del administrador), el backend busca el de la sucursal y, si no
+   * hay ninguno, rechaza el abono. Ahí es donde entra la cuenta contable.
+   */
+  get sinCajaAbierta(): boolean {
+    return this.esEfectivo && !this.turnoActivo;
   }
 
   /** Sin cuenta bancaria cuando el abono es en efectivo. */
@@ -125,6 +139,22 @@ export class DetalleCuentaPagarComponent implements OnInit {
   onMetodoChange(): void {
     if (this.esEfectivo) {
       this.abonoForm.patchValue({ cuentaBancariaId: null });
+    }
+  }
+
+  /**
+   * Solo cuentas auxiliares de activo o pasivo: de ahí sale la plata. Ofrecer
+   * cuentas de gasto produciría un asiento invertido.
+   */
+  private async loadCuentasPago(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.contabilidadService.listarPlan());
+      this.cuentasPagoOpts = (res?.data ?? [])
+        .filter((c) => c.activa && c.auxiliar && (c.tipo === 'ACTIVO' || c.tipo === 'PASIVO'))
+        .map((c) => ({ label: `${c.codigo} - ${c.nombre}`, value: c.id }));
+      this.cdr.markForCheck();
+    } catch {
+      this.cuentasPagoOpts = [];
     }
   }
 
@@ -170,6 +200,7 @@ export class DetalleCuentaPagarComponent implements OnInit {
   ngOnInit(): void {
     this.loadTurnoActivo();
     this.loadCuentasBancarias();
+    this.loadCuentasPago();
   }
 
   get progressPercent(): number {
@@ -222,6 +253,7 @@ export class DetalleCuentaPagarComponent implements OnInit {
     this.abonoForm.reset({
       monto: null,
       metodoPago: 'efectivo',
+      cuentaContableId: null,
       referencia: null,
       banco: null,
       cuentaBancariaId: null,
@@ -267,6 +299,7 @@ export class DetalleCuentaPagarComponent implements OnInit {
       referencia: formValue.referencia || null,
       banco: formValue.banco || null,
       cuentaBancariaId: this.esEfectivo ? null : formValue.cuentaBancariaId || null,
+      cuentaContableId: this.esEfectivo ? formValue.cuentaContableId || null : null,
       fechaPago: formValue.fechaPago.toISOString(),
       turnoCajaId: this.turnoActivo?.id ?? null,
     };

@@ -240,6 +240,90 @@
       </div>
     </p-fieldset>
 
+    <!-- ── Sección 3b: Forma de pago ─────────────────────────────────
+         De dónde sale la plata. Antes no se preguntaba y el asiento
+         acreditaba Caja siempre, aunque el gasto se hubiera pagado por
+         banco. Si es en efectivo el backend exige una caja abierta. -->
+    <p-fieldset legend="Forma de pago" styleClass="fs-section">
+      <div class="p-grid p-fluid">
+        <div class="col-12 sm:col-12 md:col-6 lg:col-3 py-0 px-1">
+          <label>Forma de pago</label>
+          <div class="field mt-1">
+            <p-dropdown
+              formControlName="formaPago"
+              [options]="formaPagoOpts"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-full"
+            />
+          </div>
+        </div>
+
+        <div class="col-12 sm:col-12 md:col-6 lg:col-3 py-0 px-1" *ngIf="!esCredito">
+          <label>Método de pago</label>
+          <div class="field mt-1">
+            <p-dropdown
+              formControlName="metodoPago"
+              [options]="metodosPagoOpts"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-full"
+            />
+          </div>
+        </div>
+
+        <div
+          class="col-12 sm:col-12 md:col-6 lg:col-3 py-0 px-1"
+          *ngIf="!esCredito && requiereBanco"
+        >
+          <label>Cuenta bancaria <span class="req">*</span></label>
+          <div class="field mt-1">
+            <p-dropdown
+              formControlName="cuentaBancariaId"
+              [options]="cuentasBancariasOpts"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Seleccionar cuenta..."
+              [showClear]="true"
+              styleClass="w-full"
+            />
+          </div>
+        </div>
+
+        <!-- Salida para cuando no hay caja abierta. Opcional: si se deja
+             vacío, el efectivo sale de la caja del punto de venta. -->
+        <div
+          class="col-12 sm:col-12 md:col-6 lg:col-3 py-0 px-1"
+          *ngIf="!esCredito && !requiereBanco"
+        >
+          <label>Cuenta contable <span class="optional">(opcional)</span></label>
+          <div class="field mt-1">
+            <p-dropdown
+              formControlName="cuentaPagoId"
+              [options]="cuentasPagoOpts"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sale de la caja abierta"
+              [showClear]="true"
+              [filter]="true"
+              filterBy="label"
+              styleClass="w-full"
+            />
+            <small class="hint">
+              Elíjala solo si no hay caja abierta.
+            </small>
+          </div>
+        </div>
+
+        <div class="col-12 py-0 px-1" *ngIf="esCredito">
+          <small class="hint">
+            El gasto a crédito no saca plata hoy: genera una cuenta por pagar al
+            tercero, así que el tercero es obligatorio.
+          </small>
+        </div>
+      </div>
+    </p-fieldset>
+
     <!-- ── Sección 4: Información tributaria ─────────────────────── -->
     <p-fieldset legend="Información tributaria" styleClass="fs-section">
       <div class="p-grid p-fluid">
@@ -385,7 +469,7 @@
         type="button"
         label="Cancelar"
         icon="pi pi-times"
-        class="p-button-outlined p-button-secondary"
+        class="btn-amarillo"
         [disabled]="isSubmitting"
         (click)="cancelar()"
       ></button>
@@ -394,7 +478,7 @@
         type="button"
         [label]="modoEdicion ? 'Actualizar gasto' : 'Registrar gasto'"
         [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
-        class="btn-aura"
+        class="btn-verde"
         [disabled]="isSubmitting || frm.invalid"
         (click)="save()"
       ></button>

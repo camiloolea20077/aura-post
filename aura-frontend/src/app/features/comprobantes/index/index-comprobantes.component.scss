@@ -51,6 +51,17 @@
   &.monto-egreso  { color: #dc2626; }
 }
 
+/* El comprobante anulado conserva su número pero ya no soporta ningún pago:
+   se atenúa y se tacha el monto para que no se lea como un egreso real. */
+.fila-anulada {
+  opacity: 0.6;
+
+  .monto-val,
+  .concepto-text {
+    text-decoration: line-through;
+  }
+}
+
 .metodo-badge {
   font-size: 0.76rem;
   font-weight: 600;

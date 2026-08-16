@@ -23,7 +23,7 @@
             pButton
             label="Nuevo período"
             icon="pi pi-plus"
-            class="btn-aura"
+            class="btn-verde"
             (click)="showFormPeriodo = true"
           ></button>
         </div>
@@ -311,14 +311,14 @@
     <button
       pButton
       label="Cancelar"
-      class="p-button-text"
+      class="btn-amarillo"
       (click)="showFormPeriodo = false"
     ></button>
     <button
       pButton
       label="Crear"
       icon="pi pi-check"
-      class="btn-aura"
+      class="btn-verde"
       [loading]="savingPeriodo"
       (click)="crearPeriodo()"
     ></button>
@@ -370,14 +370,14 @@
     <button
       pButton
       label="Cancelar"
-      class="p-button-text"
+      class="btn-amarillo"
       (click)="showRevisar = false"
     ></button>
     <button
       pButton
       label="Guardar"
       icon="pi pi-check"
-      class="btn-aura"
+      class="btn-verde"
       [loading]="revisando"
       (click)="guardarRevision()"
     ></button>

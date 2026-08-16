@@ -23,7 +23,7 @@
       type="button"
       label="Guardar"
       icon="pi pi-check"
-      class="p-button-sm btn-aura tipo-cot__btn"
+      class="btn-verde p-button-sm tipo-cot__btn"
       [loading]="guardandoTipoCot"
       (click)="guardarTipoCotizante()"
     ></button>
@@ -58,7 +58,7 @@
               type="button"
               [label]="vig ? 'Trasladar' : 'Afiliar'"
               [icon]="vig ? 'pi pi-sync' : 'pi pi-plus'"
-              class="p-button-sm p-button-outlined"
+              class="btn-verde p-button-sm"
               (click)="abrirForm(t.tipo)"
             ></button>
           </div>
@@ -101,7 +101,7 @@
                     pButton
                     type="button"
                     label="Cancelar"
-                    class="p-button-text p-button-sm"
+                    class="btn-amarillo p-button-sm"
                     (click)="cancelarForm()"
                   ></button>
                   <button
@@ -109,7 +109,7 @@
                     type="button"
                     label="Guardar"
                     icon="pi pi-check"
-                    class="btn-aura p-button-sm"
+                    class="btn-verde p-button-sm"
                     [loading]="guardando"
                     (click)="guardar()"
                   ></button>
@@ -174,7 +174,7 @@
         pButton
         type="button"
         label="Cerrar"
-        class="p-button-text"
+        class="btn-amarillo"
         (click)="onHide()"
       ></button>
     </ng-template>

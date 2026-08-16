@@ -20,7 +20,7 @@
       type="button"
       label="Guardar"
       icon="pi pi-check"
-      class="p-button-sm btn-aura proc__btn"
+      class="btn-verde p-button-sm proc__btn"
       [loading]="guardandoProc"
       (click)="guardarProcedimiento()"
     ></button>
@@ -34,7 +34,7 @@
       type="button"
       label="Agregar"
       icon="pi pi-plus"
-      class="p-button-sm p-button-outlined"
+      class="btn-verde p-button-sm"
       (click)="abrirForm()"
     ></button>
   </div>
@@ -119,8 +119,8 @@
         <input pInputText [(ngModel)]="soporte" class="w-full" placeholder="Referencia del documento (opcional)" />
       </div>
       <div class="form-actions">
-        <button pButton type="button" label="Cancelar" class="p-button-text p-button-sm" (click)="cancelarForm()"></button>
-        <button pButton type="button" label="Guardar" icon="pi pi-check" class="btn-aura p-button-sm" [loading]="guardando" (click)="guardar()"></button>
+        <button pButton type="button" label="Cancelar" class="btn-amarillo p-button-sm" (click)="cancelarForm()"></button>
+        <button pButton type="button" label="Guardar" icon="pi pi-check" class="btn-verde p-button-sm" [loading]="guardando" (click)="guardar()"></button>
       </div>
     </div>
   }
@@ -142,7 +142,7 @@
   >
     <ng-container [ngTemplateOutlet]="cuerpo"></ng-container>
     <ng-template pTemplate="footer">
-      <button pButton type="button" label="Cerrar" class="p-button-text" (click)="onHide()"></button>
+      <button pButton type="button" label="Cerrar" class="btn-amarillo" (click)="onHide()"></button>
     </ng-template>
   </p-dialog>
 }

@@ -12,6 +12,12 @@ export interface GastoModel {
   deducible: boolean;
   estado: string;
   createdAt: string;
+  // Origen de fondos (V142)
+  formaPago: 'CONTADO' | 'CREDITO' | null;
+  metodoPago: string | null;
+  cuentaBancariaId: number | null;
+  /** Cuenta acreditada (crédito); distinta de cuentaContableId. */
+  cuentaPagoId: number | null;
   // Campos tributarios (V54)
   terceroId: number | null;
   terceroNombre: string | null;
@@ -51,8 +57,17 @@ export interface CreateGastoDto {
   monto: number;
   fecha: string | null;
   deducible: boolean;
+  // Origen de fondos (V142): de dónde sale la plata.
+  formaPago: 'CONTADO' | 'CREDITO';
+  metodoPago: string;
+  /** Cuenta bancaria de la que sale el pago. */
+  cuentaBancariaId: number | null;
+  /** Cuenta contable de la que sale el pago — el CRÉDITO del asiento. */
+  cuentaPagoId: number | null;
+  fechaVencimiento?: string | null;
   // Campos tributarios (V54)
   terceroId: number | null;
+  /** Cuenta de gasto a la que se imputa — el DÉBITO. No confundir con cuentaPagoId. */
   cuentaContableId: number | null;
   centroCostoId: number | null;
   periodoContableId: number | null;

@@ -258,7 +258,7 @@
                 type="button"
                 label="Agregar el primero"
                 icon="pi pi-plus"
-                class="btn-aura p-button-sm"
+                class="btn-verde p-button-sm"
                 [disabled]="!padreId"
                 (click)="agregarFila()"
               ></button>
@@ -273,7 +273,7 @@
       type="button"
       label="Agregar ingrediente"
       icon="pi pi-plus"
-      class="p-button-text add-fila"
+      class="btn-verde add-fila"
       [disabled]="!padreId"
       (click)="agregarFila()"
     ></button>
@@ -387,7 +387,7 @@
       pButton
       type="button"
       label="Cancelar"
-      class="p-button-text"
+      class="btn-amarillo"
       [disabled]="isSubmitting"
       (click)="close()"
     ></button>
@@ -396,7 +396,7 @@
       type="button"
       label="Guardar receta"
       icon="pi pi-save"
-      class="btn-aura"
+      class="btn-verde"
       [disabled]="!puedeGuardar"
       [loading]="isSubmitting"
       (click)="guardar()"
@@ -433,7 +433,7 @@
       pButton
       type="button"
       label="Cancelar"
-      class="p-button-text"
+      class="btn-amarillo"
       (click)="duplicarVisible = false"
     ></button>
     <button

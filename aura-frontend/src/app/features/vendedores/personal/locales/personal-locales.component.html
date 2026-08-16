@@ -4,7 +4,7 @@
       pButton
       label="Nuevo Local"
       icon="pi pi-plus"
-      class="btn-aura ml-auto"
+      class="btn-verde ml-auto"
       (click)="nuevo()"
     ></button>
     <span class="search-wrap">
@@ -137,14 +137,14 @@
       pButton
       label="Cancelar"
       icon="pi pi-times"
-      class="p-button-text"
+      class="btn-amarillo"
       (click)="closeForm()"
     ></button>
     <button
       pButton
       [label]="editingLocal ? 'Actualizar' : 'Guardar'"
       icon="pi pi-check"
-      class="btn-aura"
+      class="btn-verde"
       [loading]="saving"
       (click)="save()"
     ></button>

@@ -14,7 +14,7 @@
         type="button"
         label="Guardar apertura"
         icon="pi pi-check"
-        class="btn-aura"
+        class="btn-verde"
         [loading]="saving"
         (click)="guardar()"
       ></button>
@@ -82,7 +82,7 @@
       <div class="si-lineas-head">
         <span>Saldos por cuenta</span>
         <button pButton type="button" label="Agregar cuenta" icon="pi pi-plus"
-          class="p-button-text" (click)="agregarLinea()"></button>
+          class="btn-verde" (click)="agregarLinea()"></button>
       </div>
 
       <p-table [value]="lineas" styleClass="p-datatable-sm" showGridlines>
@@ -133,7 +133,7 @@
 
       <div class="card-footer">
         <button pButton type="button" label="Guardar apertura" icon="pi pi-check"
-          class="btn-aura" [loading]="saving" (click)="guardar()"></button>
+          class="btn-verde" [loading]="saving" (click)="guardar()"></button>
       </div>
     </div>
   </div>

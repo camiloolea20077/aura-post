@@ -215,7 +215,7 @@
           </p>
           <div>
             <button pButton label="Restaurar defaults" icon="pi pi-refresh" class="p-button-outlined p-button-sm" (click)="restaurarDefaults()"></button>
-            <button pButton label="Nuevo mapeo" icon="pi pi-plus" class="btn-aura p-button-sm ml-2" [disabled]="!formatoId" (click)="abrirNuevoMapeo()"></button>
+            <button pButton label="Nuevo mapeo" icon="pi pi-plus" class="btn-verde p-button-sm ml-2" [disabled]="!formatoId" (click)="abrirNuevoMapeo()"></button>
           </div>
         </div>
 
@@ -283,7 +283,7 @@
     </div>
   </div>
   <ng-template pTemplate="footer">
-    <button pButton label="Cancelar" icon="pi pi-times" class="p-button-outlined p-button-secondary" (click)="showMapeoDialog = false"></button>
-    <button pButton label="Guardar" icon="pi pi-check" class="btn-aura" [loading]="savingMapeo" [disabled]="!nuevoConceptoId || !nuevoCuentaDesde.trim()" (click)="crearMapeo()"></button>
+    <button pButton label="Cancelar" icon="pi pi-times" class="btn-amarillo" (click)="showMapeoDialog = false"></button>
+    <button pButton label="Guardar" icon="pi pi-check" class="btn-verde" [loading]="savingMapeo" [disabled]="!nuevoConceptoId || !nuevoCuentaDesde.trim()" (click)="crearMapeo()"></button>
   </ng-template>
 </p-dialog>

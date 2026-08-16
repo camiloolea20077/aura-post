@@ -18,7 +18,7 @@
           type="button"
           label="Nueva Cuenta"
           icon="pi pi-plus"
-          class="btn-aura"
+          class="btn-verde"
           (click)="abrirNueva()"
         ></button>
         <div class="card-head__search">
@@ -289,7 +289,7 @@
     <button
       pButton
       label="Cancelar"
-      class="p-button-text"
+      class="btn-amarillo"
       (click)="showModal = false"
       [disabled]="saving"
     ></button>
@@ -297,7 +297,7 @@
       pButton
       [label]="editId ? 'Actualizar' : 'Crear Cuenta'"
       icon="pi pi-check"
-      class="btn-aura"
+      class="btn-verde"
       (click)="guardar()"
       [loading]="saving"
       [disabled]="!form.nombre.trim() || !form.tipo"

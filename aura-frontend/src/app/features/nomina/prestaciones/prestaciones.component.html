@@ -16,7 +16,7 @@
           type="button"
           label="Nueva liquidación"
           icon="pi pi-plus"
-          class="btn-aura"
+          class="btn-verde"
           (click)="abrirForm()"
         ></button>
         <button
@@ -185,7 +185,7 @@
   }
 
   <ng-template pTemplate="footer">
-    <button pButton label="Cerrar" class="p-button-text" (click)="showDetalle = false"></button>
+    <button pButton label="Cerrar" class="btn-amarillo" (click)="showDetalle = false"></button>
   </ng-template>
 </p-dialog>
 
@@ -247,14 +247,14 @@
     <button
       pButton
       label="Cancelar"
-      class="p-button-text"
+      class="btn-amarillo"
       (click)="showForm = false"
     ></button>
     <button
       pButton
       label="Calcular y guardar"
       icon="pi pi-check"
-      class="btn-aura"
+      class="btn-verde"
       [loading]="saving"
       (click)="guardar()"
     ></button>
@@ -311,7 +311,7 @@
     <button
       pButton
       label="Cancelar"
-      class="p-button-text"
+      class="btn-amarillo"
       (click)="showLote = false"
     ></button>
     <button
@@ -400,7 +400,7 @@
     <button
       pButton
       label="Cancelar"
-      class="p-button-text"
+      class="btn-amarillo"
       (click)="showDefinitiva = false"
     ></button>
     <button
@@ -451,14 +451,14 @@
     <button
       pButton
       label="Cancelar"
-      class="p-button-text"
+      class="btn-amarillo"
       (click)="showPago = false"
     ></button>
     <button
       pButton
       label="Confirmar pago"
       icon="pi pi-check"
-      class="btn-aura"
+      class="btn-verde"
       [loading]="pagando"
       (click)="confirmarPago()"
     ></button>
