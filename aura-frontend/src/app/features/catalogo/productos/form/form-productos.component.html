@@ -915,7 +915,7 @@
                       type="button"
                       label="Cancelar"
                       icon="pi pi-times"
-                      class="p-button-outlined p-button-secondary p-button-sm"
+                      class="btn-amarillo p-button-sm"
                       (click)="cancelarEdicion(item)"
                     ></button>
                     <button
@@ -927,7 +927,7 @@
                           ? 'pi pi-spin pi-spinner'
                           : 'pi pi-check'
                       "
-                      class="btn-aura p-button-sm"
+                      class="btn-verde p-button-sm"
                       [disabled]="savingPresentacion"
                       (click)="guardarPresentacion(item)"
                     ></button>
@@ -955,7 +955,7 @@
               type="button"
               label="Agregar presentación"
               icon="pi pi-plus"
-              class="p-button-outlined btn-aura-outline"
+              class="btn-verde"
               [disabled]="presentacionEnEdicion !== null"
               (click)="agregarPresentacion()"
             ></button>
@@ -973,7 +973,7 @@
         type="button"
         label="Cancelar"
         icon="pi pi-times"
-        class="p-button-outlined p-button-secondary"
+        class="btn-amarillo"
         [disabled]="isSubmitting"
         (click)="closeModal()"
       ></button>
@@ -982,7 +982,7 @@
         type="button"
         [label]="isEditMode ? 'Actualizar producto' : 'Guardar producto'"
         [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
-        class="btn-aura"
+        class="btn-verde"
         [disabled]="isSubmitting || isLoading"
         (click)="saveProducto()"
       ></button>

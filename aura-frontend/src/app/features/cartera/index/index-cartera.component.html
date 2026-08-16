@@ -625,14 +625,14 @@
       pButton
       label="Cancelar"
       icon="pi pi-times"
-      class="p-button-text p-button-secondary"
+      class="btn-amarillo"
       (click)="showCreditoModal = false"
     ></button>
     <button
       pButton
       [label]="creditoEditId ? 'Actualizar' : 'Configurar'"
       icon="pi pi-check"
-      class="btn-aura"
+      class="btn-verde"
       [loading]="savingCredito"
       (click)="guardarCredito()"
     ></button>
@@ -704,14 +704,14 @@
       pButton
       label="Cancelar"
       icon="pi pi-times"
-      class="p-button-text p-button-secondary"
+      class="btn-amarillo"
       (click)="showGestionModal = false"
     ></button>
     <button
       pButton
       label="Registrar"
       icon="pi pi-check"
-      class="btn-aura"
+      class="btn-verde"
       [loading]="savingGestion"
       [disabled]="!gestionForm.tipoGestion"
       (click)="guardarGestion()"

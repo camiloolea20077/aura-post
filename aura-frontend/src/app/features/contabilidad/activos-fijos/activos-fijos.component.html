@@ -25,7 +25,7 @@
             type="button"
             icon="pi pi-plus"
             label="Nuevo Activo"
-            class="btn-aura"
+            class="btn-verde"
             (click)="openCreate()"
           ></button>
         </div>
@@ -353,14 +353,14 @@
       pButton
       label="Cancelar"
       icon="pi pi-times"
-      class="p-button-outlined p-button-secondary"
+      class="btn-amarillo"
       (click)="showModal = false"
     ></button>
     <button
       pButton
       [label]="isEdit ? 'Actualizar' : 'Guardar'"
       [icon]="saving ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
-      class="btn-aura"
+      class="btn-verde"
       [disabled]="saving"
       (click)="save()"
     ></button>
@@ -407,7 +407,7 @@
       pButton
       label="Cerrar"
       icon="pi pi-times"
-      class="p-button-text"
+      class="btn-amarillo"
       (click)="showHistorial = false"
     ></button>
   </ng-template>
@@ -443,14 +443,14 @@
       pButton
       label="Cancelar"
       icon="pi pi-times"
-      class="p-button-text"
+      class="btn-amarillo"
       (click)="showBajaModal = false"
     ></button>
     <button
       pButton
       label="Confirmar Baja"
       icon="pi pi-ban"
-      class="p-button-danger"
+      class="btn-rojo"
       (click)="confirmarBaja()"
     ></button>
   </ng-template>
@@ -488,7 +488,7 @@
       pButton
       label="Cancelar"
       icon="pi pi-times"
-      class="p-button-text"
+      class="btn-amarillo"
       (click)="showDepreciarModal = false"
     ></button>
     <button

@@ -5,7 +5,7 @@
       <button
         pButton
         icon="pi pi-arrow-left"
-        class="p-button-text p-button-sm"
+        class="btn-rojo p-button-sm"
         label="Volver"
         (click)="router.navigate(['/cotizaciones'])"
       ></button>
@@ -34,7 +34,7 @@
         pButton
         icon="pi pi-check"
         label="Guardar cambios"
-        class="btn-aura"
+        class="btn-verde"
         [loading]="isSaving"
         [disabled]="!puedeEditar"
         (click)="guardar()"
@@ -131,7 +131,7 @@
           pButton
           icon="pi pi-plus"
           label="Agregar producto"
-          class="p-button-outlined"
+          class="btn-verde"
           [disabled]="!puedeEditar"
           (click)="agregarLinea()"
         ></button>
@@ -239,7 +239,7 @@
       <button
         pButton
         label="Agregar primer producto"
-        class="p-button-outlined"
+        class="btn-verde"
         [disabled]="!puedeEditar"
         (click)="agregarLinea()"
       ></button>

@@ -31,6 +31,7 @@ import { AlertService } from '../../../shared/pipes/alert.service';
 import { IndexDBService } from '../../../core/services/index-db.service';
 import { TerceroService } from '../../../core/services/tercero.service';
 import { ContabilidadService } from '../../../core/services/contabilidad.service';
+import { CuentaBancariaService } from '../../../core/services/cuenta-bancaria.service';
 import {
   CATEGORIAS_GASTO,
   CreateGastoDto,
@@ -73,7 +74,24 @@ export class FormGastoComponent implements OnInit {
 
   // Opciones de dropdowns
   sucursalesOpts: { label: string; value: number }[] = [];
+  /** Todas las cuentas: el DÉBITO, a qué se imputa el gasto. */
   cuentasOpts: { label: string; value: number }[] = [];
+  /** Solo cuentas de fondo: el CRÉDITO, de dónde sale la plata. */
+  cuentasPagoOpts: { label: string; value: number }[] = [];
+  cuentasBancariasOpts: { label: string; value: number }[] = [];
+
+  readonly formaPagoOpts = [
+    { label: 'Contado', value: 'CONTADO' },
+    { label: 'Crédito', value: 'CREDITO' },
+  ];
+
+  readonly metodosPagoOpts = [
+    { label: 'Efectivo', value: 'EFECTIVO' },
+    { label: 'Transferencia', value: 'TRANSFERENCIA' },
+    { label: 'Nequi', value: 'NEQUI' },
+    { label: 'Tarjeta', value: 'TARJETA' },
+    { label: 'Cheque', value: 'CHEQUE' },
+  ];
 
   // Autocomplete tercero (objeto completo, fuera del form)
   terceroSugerencias: TerceroTableModel[] = [];
@@ -94,6 +112,7 @@ export class FormGastoComponent implements OnInit {
     private readonly indexDB: IndexDBService,
     private readonly terceroService: TerceroService,
     private readonly contabilidadService: ContabilidadService,
+    private readonly cuentaBancariaService: CuentaBancariaService,
     private readonly router: Router,
     private readonly route: ActivatedRoute,
     public readonly cdr: ChangeDetectorRef,
@@ -103,7 +122,11 @@ export class FormGastoComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     this.initForm();
     const id = this.route.snapshot.params['id'];
-    await Promise.all([this.loadSucursales(), this.loadCuentas()]);
+    await Promise.all([
+      this.loadSucursales(),
+      this.loadCuentas(),
+      this.loadCuentasBancarias(),
+    ]);
     if (id) {
       await this.cargarParaEditar(+id);
     }
@@ -117,6 +140,12 @@ export class FormGastoComponent implements OnInit {
       monto:             [null, Validators.required],
       fecha:             [new Date()],
       deducible:         [false],
+      // Origen de fondos (V142). El backend exige caja abierta cuando el gasto
+      // es en efectivo, así que aquí se declara de dónde sale la plata.
+      formaPago:         ['CONTADO'],
+      metodoPago:        ['EFECTIVO'],
+      cuentaBancariaId:  [null],
+      cuentaPagoId:      [null],
       tipoDocSoporte:    [null],
       numeroDocSoporte:  [''],
       descripcion:       [''],
@@ -142,11 +171,39 @@ export class FormGastoComponent implements OnInit {
   private async loadCuentas(): Promise<void> {
     try {
       const res = await lastValueFrom(this.contabilidadService.listarPlan());
-      this.cuentasOpts = (res?.data ?? []).map((c: PlanCuentaModel) => ({
+      const plan = res?.data ?? [];
+      this.cuentasOpts = plan.map((c: PlanCuentaModel) => ({
         label: `${c.codigo} - ${c.nombre}`,
         value: c.id,
       }));
-    } catch { this.cuentasOpts = []; }
+      // Para el CRÉDITO solo sirven cuentas de fondo (activo) u obligación
+      // (pasivo): de ahí sale la plata. Ofrecer cuentas de gasto aquí
+      // produciría un asiento con gasto contra gasto.
+      this.cuentasPagoOpts = plan
+        .filter((c) => c.activa && c.auxiliar && (c.tipo === 'ACTIVO' || c.tipo === 'PASIVO'))
+        .map((c) => ({ label: `${c.codigo} - ${c.nombre}`, value: c.id }));
+    } catch {
+      this.cuentasOpts = [];
+      this.cuentasPagoOpts = [];
+    }
+  }
+
+  private async loadCuentasBancarias(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.cuentaBancariaService.list());
+      this.cuentasBancariasOpts = (res?.data ?? [])
+        .filter((c) => c.activa)
+        .map((c) => ({ label: c.nombre, value: c.id }));
+    } catch { this.cuentasBancariasOpts = []; }
+  }
+
+  /** El efectivo sale de la caja; el resto de medios necesitan cuenta bancaria. */
+  get requiereBanco(): boolean {
+    return this.frm.get('metodoPago')?.value !== 'EFECTIVO';
+  }
+
+  get esCredito(): boolean {
+    return this.frm.get('formaPago')?.value === 'CREDITO';
   }
 
   private async cargarParaEditar(id: number): Promise<void> {
@@ -167,6 +224,10 @@ export class FormGastoComponent implements OnInit {
           tipoDocSoporte:    g.tipoDocSoporte ?? null,
           numeroDocSoporte:  g.numeroDocSoporte ?? '',
           cuentaContableId:  g.cuentaContableId ?? null,
+          formaPago:         g.formaPago ?? 'CONTADO',
+          metodoPago:        g.metodoPago ?? 'EFECTIVO',
+          cuentaBancariaId:  g.cuentaBancariaId ?? null,
+          cuentaPagoId:      g.cuentaPagoId ?? null,
           baseIva:           g.baseIva ?? 0,
           tarifaIva:         g.tarifaIva ?? 0,
           valorIva:          g.valorIva ?? 0,
@@ -241,6 +302,10 @@ export class FormGastoComponent implements OnInit {
       deducible:         v.deducible,
       terceroId:         this.terceroSeleccionado?.id ?? null,
       cuentaContableId:  v.cuentaContableId,
+      formaPago:         v.formaPago,
+      metodoPago:        v.metodoPago,
+      cuentaBancariaId:  v.metodoPago === 'EFECTIVO' ? null : v.cuentaBancariaId,
+      cuentaPagoId:      v.cuentaPagoId,
       centroCostoId:     null,
       periodoContableId: null,
       tipoDocSoporte:    v.tipoDocSoporte,

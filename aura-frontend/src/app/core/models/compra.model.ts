@@ -89,6 +89,12 @@ export interface CreateCompraPagoDto {
   monto: number;
   banco?: string | null;
   cuentaBancariaId?: number | null;
+  /**
+   * Cuenta contable de la que sale el pago. Opcional: solo hace falta cuando la
+   * plata no sale de la caja del punto ni de un banco — el caso del
+   * administrador que compra sin turno abierto. Si viene, manda sobre el resto.
+   */
+  cuentaContableId?: number | null;
 }
 
 export interface CreateCompraDto {

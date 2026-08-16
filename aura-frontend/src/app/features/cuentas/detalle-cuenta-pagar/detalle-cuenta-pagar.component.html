@@ -122,7 +122,7 @@
           pButton
           label="Registrar Pago"
           icon="pi pi-plus"
-          class="p-button-sm btn-aura btn-primary"
+          class="btn-verde p-button-sm"
           (click)="openAbonoForm()"
         ></button>
       </div>
@@ -233,6 +233,39 @@
             </div>
           </div>
 
+          <!-- Salida cuando el pago es en efectivo pero no hay caja abierta:
+               sin esto el backend rechaza el abono porque no tiene dónde
+               registrar la salida del dinero. Opcional a propósito. -->
+          <div class="form-row" *ngIf="esEfectivo">
+            <div class="form-field">
+              <label>
+                Cuenta contable
+                <span class="opcional" *ngIf="!sinCajaAbierta">(opcional)</span>
+              </label>
+              <p-dropdown
+                formControlName="cuentaContableId"
+                [options]="cuentasPagoOpts"
+                optionLabel="label"
+                optionValue="value"
+                [placeholder]="
+                  sinCajaAbierta
+                    ? 'Elija de dónde sale el dinero...'
+                    : 'Sale de la caja abierta'
+                "
+                [filter]="true"
+                [showClear]="true"
+                styleClass="w-full"
+              ></p-dropdown>
+              <small class="max-hint" *ngIf="sinCajaAbierta">
+                No tiene una caja abierta: elija la cuenta de la que sale el
+                dinero, o abra caja para pagar desde ella.
+              </small>
+              <small class="max-hint" *ngIf="!sinCajaAbierta">
+                Déjela vacía para que el pago salga de la caja abierta.
+              </small>
+            </div>
+          </div>
+
           <div class="form-row">
             <div class="form-field">
               <label>Banco</label>
@@ -272,14 +305,14 @@
               pButton
               label="Cancelar"
               icon="pi pi-times"
-              class="p-button-text"
+              class="btn-amarillo"
               (click)="showAbonoForm = false"
             ></button>
             <button
               pButton
               label="Registrar Pago"
               icon="pi pi-check"
-              class="btn-aura"
+              class="btn-verde"
               [loading]="loadingAbono"
               (click)="saveAbono()"
             ></button>

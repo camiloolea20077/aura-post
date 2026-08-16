@@ -66,6 +66,11 @@ export interface CreateAbonoCobrarDto {
   monto: number;
   metodoPago: MetodoPago;
   referencia?: string | null;
+  /**
+   * Cuenta contable donde entra el recaudo. Opcional: solo hace falta cuando no
+   * hay caja abierta — el administrador cobrando fuera del horario del punto.
+   */
+  cuentaContableId?: number | null;
   fechaPago: string;
   turnoCajaId?: number | null;
 }

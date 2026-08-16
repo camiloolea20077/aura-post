@@ -17,7 +17,7 @@
           type="button"
           label="Nuevo proyecto"
           icon="pi pi-plus"
-          class="btn-aura"
+          class="btn-verde"
           (click)="nuevo()"
         ></button>
         <span class="search-wrap">
@@ -252,7 +252,7 @@
         type="button"
         label="Cancelar"
         icon="pi pi-times"
-        class="p-button-text p-button-plain"
+        class="btn-amarillo"
         [disabled]="saving"
         (click)="cancelar()"
       ></button>
@@ -261,7 +261,7 @@
         type="button"
         label="Guardar proyecto"
         icon="pi pi-check"
-        class="btn-aura"
+        class="btn-verde"
         [loading]="saving"
         [disabled]="!formValido()"
         (click)="guardar()"

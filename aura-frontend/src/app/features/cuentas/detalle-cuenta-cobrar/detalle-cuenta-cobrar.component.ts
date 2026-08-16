@@ -46,6 +46,7 @@ import { ModalTirillaComponent } from '../../pos/components/modal-tirilla/modal-
 import { VentaService } from '../../../core/services/venta.service';
 import { EmpresaService } from '../../../core/services/empresa.service';
 import { IndexDBService } from '../../../core/services/index-db.service';
+import { ContabilidadService } from '../../../core/services/contabilidad.service';
 import { VentaModel } from '../../../core/models/venta.model';
 
 type TagSeverity =
@@ -119,13 +120,43 @@ export class DetalleCuentaCobrarComponent implements OnInit {
     private readonly ventaService: VentaService,
     private readonly empresaService: EmpresaService,
     private readonly indexDBService: IndexDBService,
+    private readonly contabilidadService: ContabilidadService,
   ) {
     this.abonoForm = this.fb.group({
       monto: [null, [Validators.required, Validators.min(1)]],
       metodoPago: ['efectivo', Validators.required],
       referencia: [null],
+      cuentaContableId: [null as number | null],
       fechaPago: [new Date(), Validators.required],
     });
+  }
+
+  get esEfectivo(): boolean {
+    return this.abonoForm.get('metodoPago')?.value === 'efectivo';
+  }
+
+  /**
+   * El recaudo en efectivo tiene que entrar a una caja abierta. Si quien cobra
+   * no tiene turno (el administrador), el backend busca el de la sucursal y, si
+   * no hay ninguno, rechaza el abono: ahí hace falta la cuenta contable.
+   */
+  get sinCajaAbierta(): boolean {
+    return this.esEfectivo && !this.turnoActivo;
+  }
+
+  /** Cuentas de fondo donde puede entrar el recaudo si no hay caja. */
+  cuentasPagoOpts: { label: string; value: number }[] = [];
+
+  private async loadCuentasPago(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.contabilidadService.listarPlan());
+      this.cuentasPagoOpts = (res?.data ?? [])
+        .filter((c) => c.activa && c.auxiliar && (c.tipo === 'ACTIVO' || c.tipo === 'PASIVO'))
+        .map((c) => ({ label: `${c.codigo} - ${c.nombre}`, value: c.id }));
+      this.cdr.markForCheck();
+    } catch {
+      this.cuentasPagoOpts = [];
+    }
   }
 
   async imprimirFactura(): Promise<void> {
@@ -221,6 +252,7 @@ export class DetalleCuentaCobrarComponent implements OnInit {
   }
   ngOnInit(): void {
     this.loadTurnoActivo();
+    this.loadCuentasPago();
   }
 
   get progressPercent(): number {
@@ -314,6 +346,7 @@ export class DetalleCuentaCobrarComponent implements OnInit {
       monto: formValue.monto,
       metodoPago: formValue.metodoPago as MetodoPago,
       referencia: formValue.referencia || null,
+      cuentaContableId: this.esEfectivo ? formValue.cuentaContableId || null : null,
       fechaPago: formValue.fechaPago.toISOString(),
       turnoCajaId: this.turnoActivo?.id ?? null,
     };

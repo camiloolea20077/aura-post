@@ -20,7 +20,7 @@
           type="button"
           label="Nuevo Recaudo"
           icon="pi pi-plus"
-          class="btn-aura"
+          class="btn-verde"
           (click)="abrirNuevo()"
         ></button>
         <!-- ── Filtros ───────────────────────────────────────────── -->
@@ -233,7 +233,7 @@
     <button
       pButton
       label="Cancelar"
-      class="p-button-text"
+      class="btn-amarillo"
       (click)="showModal = false"
       [disabled]="saving"
     ></button>
@@ -241,7 +241,7 @@
       pButton
       label="Registrar Recaudo"
       icon="pi pi-check"
-      class="btn-aura"
+      class="btn-verde"
       (click)="guardar()"
       [loading]="saving"
       [disabled]="

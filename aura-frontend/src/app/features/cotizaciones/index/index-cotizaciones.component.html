@@ -139,6 +139,18 @@
               *ngIf="item.estado === 'PENDIENTE'"
               (click)="convertirAVenta(item, $event)"
             ></button>
+            <!-- Solo en vencidas: revive la cotización con sus mismos precios
+                 para poder convertirla, sin tener que pedírselo a nadie. -->
+            <button
+              pButton
+              icon="pi pi-replay"
+              class="p-button-text p-button-sm"
+              style="color: #2563eb"
+              pTooltip="Reactivar (mantiene los precios)"
+              tooltipPosition="left"
+              *ngIf="item.estado === 'VENCIDA'"
+              (click)="reactivar(item, $event)"
+            ></button>
           </td>
         </tr>
       </ng-template>

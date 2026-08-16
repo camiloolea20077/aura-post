@@ -1,0 +1,117 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-gift"></i></span>
+        <div>
+          <h1 class="title">Obsequios</h1>
+          <p class="subtitle">
+            Producto entregado sin cobro: muestras, promociones y cortesías
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          label="Registrar obsequio"
+          icon="pi pi-plus"
+          class="btn-verde"
+          (click)="nuevo()"
+        ></button>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              placeholder="Buscar por motivo o beneficiario..."
+              [(ngModel)]="search"
+              (input)="onSearch()"
+              class="search-input"
+            />
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <p-table
+      [value]="rows"
+      [lazy]="true"
+      [loading]="loading"
+      [totalRecords]="totalRows"
+      [rows]="pageSize"
+      [paginator]="true"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      (onPage)="onPage($event)"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords}"
+      styleClass="p-datatable-sm p-datatable-gridlines"
+      showGridlines
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 80px">#</th>
+          <th>Motivo</th>
+          <th>Beneficiario</th>
+          <th>Sucursal</th>
+          <th style="width: 160px">Fecha</th>
+          <th style="width: 140px">Costo</th>
+          <th style="width: 130px">IVA asumido</th>
+          <th style="width: 110px">Estado</th>
+          <th style="width: 110px">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-o>
+        <tr class="clickable-row" (click)="verDetalle(o)">
+          <td class="mono text-muted">{{ o.id }}</td>
+          <td class="fw-600">{{ motivoLabel(o.motivo) }}</td>
+          <td>{{ o.terceroNombre || "—" }}</td>
+          <td>{{ o.sucursalNombre }}</td>
+          <td class="mono text-muted">
+            {{ o.fecha | date: "dd/MM/yyyy HH:mm" }}
+          </td>
+          <td class="mono fw-600 text-danger">{{ formatCOP(o.costoTotal) }}</td>
+          <td class="mono text-muted">{{ formatCOP(o.ivaTotal) }}</td>
+          <td>
+            <p-tag [value]="o.estado" [severity]="getSeverity(o.estado)" />
+          </td>
+          <td (click)="$event.stopPropagation()">
+            <div class="actions">
+              <button
+                pButton
+                icon="pi pi-eye"
+                class="p-button-text p-button-sm"
+                pTooltip="Ver detalle"
+                (click)="verDetalle(o)"
+              ></button>
+              <button
+                pButton
+                icon="pi pi-ban"
+                class="p-button-text p-button-danger p-button-sm"
+                pTooltip="Anular"
+                [disabled]="o.estado === 'ANULADO'"
+                (click)="confirmAnular(o)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9" class="empty-row">No hay obsequios registrados</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- Modal detalle -->
+<app-detalle-obsequio
+  [(visible)]="showDetalle"
+  [obsequio]="obsequioDetalle"
+  [loading]="loadingDetalle"
+  (anular)="confirmAnular($event)"
+/>
+<app-form-obsequio [(visible)]="showForm" (saved)="onSaved()" />
+<p-confirmDialog />
+<p-toast />

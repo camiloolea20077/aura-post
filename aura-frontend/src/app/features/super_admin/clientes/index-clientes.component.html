@@ -265,10 +265,11 @@
       pButton
       type="button"
       label="Cancelar"
-      class="p-button-text p-button-secondary"
+      class="btn-amarillo"
       (click)="showMembresia = false"
     ></button>
     <button
+      class="btn-verde"
       pButton
       type="button"
       label="Guardar"
@@ -362,7 +363,7 @@
       pButton
       type="button"
       label="Cancelar"
-      class="p-button-text p-button-secondary"
+      class="btn-amarillo"
       (click)="showPago = false"
     ></button>
     <button
@@ -370,7 +371,7 @@
       type="button"
       label="Registrar pago"
       icon="pi pi-check"
-      class="p-button-success"
+      class="btn-verde"
       [loading]="savingPago"
       (click)="guardarPago()"
     ></button>

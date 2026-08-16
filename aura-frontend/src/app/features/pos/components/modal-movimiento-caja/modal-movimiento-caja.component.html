@@ -191,11 +191,12 @@
         type="button"
         label="Cancelar"
         icon="pi pi-times"
-        class="p-button-outlined p-button-secondary"
+        class="btn-amarillo"
         [disabled]="isSubmitting"
         (click)="closeModal()"
       ></button>
       <button
+        class="btn-verde"
         pButton
         type="button"
         [label]="tipo === 'INGRESO' ? 'Registrar ingreso' : 'Registrar egreso'"
@@ -205,9 +206,6 @@
             : tipo === 'INGRESO'
               ? 'pi pi-arrow-circle-down'
               : 'pi pi-arrow-circle-up'
-        "
-        [class]="
-          tipo === 'INGRESO' ? 'btn-aura btn-ingreso' : 'btn-aura btn-egreso'
         "
         [disabled]="isSubmitting || formInvalid"
         (click)="confirmar()"
