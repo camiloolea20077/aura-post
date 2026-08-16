@@ -78,6 +78,12 @@ export interface CreateAbonoPagarDto {
   banco?: string | null;
   /** Cuenta bancaria de origen del abono (null si es efectivo). */
   cuentaBancariaId?: number | null;
+  /**
+   * Cuenta contable de la que sale el pago. Opcional: solo hace falta cuando no
+   * hay caja abierta y el pago no sale de un banco — el administrador pagando
+   * fuera del horario del punto de venta.
+   */
+  cuentaContableId?: number | null;
   fechaPago: string;
   turnoCajaId?: number | null;
 }

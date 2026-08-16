@@ -35,7 +35,9 @@
       "Bash(./mvnw compile *)",
       "Bash(npx tsc *)",
       "Bash(echo \"exit=$?\")",
-      "PowerShell(npx ng build --configuration development 2>&1 | Select-Object -Last 40)"
+      "PowerShell(npx ng build --configuration development 2>&1 | Select-Object -Last 40)",
+      "Bash(node *)",
+      "Read(//c/Users/camil/AppData/Local/Temp/claude/D--Proyectos-Camilo-aura-post-aura-frontend/128694cd-90c4-4fd5-b675-40ecb4c61cbf/scratchpad/**)"
     ]
   }
 }

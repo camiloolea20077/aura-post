@@ -23,7 +23,7 @@
           type="submit"
           label="Crear préstamo"
           icon="pi pi-check"
-          class="btn-aura"
+          class="btn-verde"
           [loading]="saving"
         ></button>
       </div>
@@ -108,8 +108,10 @@
 
       <!-- Botones dentro de la card -->
       <div class="card-footer">
-        <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="cancelar()" />
-        <p-button label="Crear préstamo" icon="pi pi-check" type="submit" [loading]="saving" />
+        <p-button
+          styleClass="btn-amarillo" label="Cancelar" (onClick)="cancelar()" />
+        <p-button
+          styleClass="btn-verde" label="Crear préstamo" icon="pi pi-check" type="submit" [loading]="saving" />
       </div>
     </div>
   </form>

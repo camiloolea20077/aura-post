@@ -43,6 +43,17 @@ export class CotizacionService {
     );
   }
 
+  /**
+   * Revive una cotización vencida conservando sus precios. Solo se permite una
+   * vez: a la segunda hay que cotizar de nuevo.
+   */
+  reactivar(id: number): Observable<ResponseModel<CotizacionModel>> {
+    return this.http.patch<ResponseModel<CotizacionModel>>(
+      `${this.apiUrl}/${id}/reactivar`,
+      {},
+    );
+  }
+
   convertirAVenta(id: number): Observable<ResponseModel<CotizacionModel>> {
     return this.http.get<ResponseModel<CotizacionModel>>(
       `${this.apiUrl}/${id}/convertir`,

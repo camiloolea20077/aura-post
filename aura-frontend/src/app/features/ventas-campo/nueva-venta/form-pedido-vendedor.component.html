@@ -207,7 +207,7 @@
     <button
       pButton
       label="Cancelar"
-      class="p-button-text"
+      class="btn-amarillo"
       (click)="cerrar()"
       [disabled]="isSubmitting"
     ></button>
@@ -215,7 +215,7 @@
       pButton
       label="Crear pedido"
       icon="pi pi-check"
-      class="p-button-primary"
+      class="btn-verde"
       [loading]="isSubmitting"
       [disabled]="carrito.length === 0"
       (click)="crearPedido()"

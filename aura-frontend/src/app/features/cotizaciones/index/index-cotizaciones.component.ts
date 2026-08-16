@@ -140,6 +140,27 @@ export class IndexCotizacionesComponent implements OnInit {
     }
   }
 
+  /**
+   * Revive una cotización vencida para poder convertirla. Los precios quedan
+   * como estaban: el cliente vuelve por lo que se le cotizó.
+   */
+  async reactivar(item: CotizacionTableModel, event: Event): Promise<void> {
+    event.stopPropagation();
+    try {
+      await lastValueFrom(this.cotizacionService.reactivar(item.id));
+      this.alertService.showSuccess(
+        'Cotización reactivada',
+        'Vuelve a estar vigente con los mismos precios.',
+      );
+      if (this.lastLazyEvent) this.loadTable(this.lastLazyEvent);
+    } catch (err: any) {
+      this.alertService.showError(
+        'No se pudo reactivar',
+        err?.error?.message ?? err?.message ?? 'Intente de nuevo.',
+      );
+    }
+  }
+
   getEstadoSeverity(e: EstadoCotizacion): TagSeverity {
     const map: Record<EstadoCotizacion, TagSeverity> = {
       PENDIENTE: 'info',

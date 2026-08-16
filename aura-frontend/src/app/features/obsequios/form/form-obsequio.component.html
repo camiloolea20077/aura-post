@@ -1,0 +1,251 @@
+<p-dialog
+  header="Registrar Obsequio"
+  [(visible)]="visible"
+  (onHide)="close()"
+  [modal]="true"
+  [style]="{ width: '960px', maxHeight: '90vh' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <div class="dialog-body" [formGroup]="form">
+    <!-- Cabecera: motivo + beneficiario + observación -->
+    <div class="dialog-section">
+      <div class="form-grid-2">
+        <div class="field">
+          <label class="field-label"
+            >Motivo <span class="required">*</span></label
+          >
+          <p-dropdown
+            formControlName="motivo"
+            [options]="motivos"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="¿Por qué se regala?"
+            styleClass="w-full"
+            [class.ng-invalid]="isInvalid('motivo')"
+          />
+          <small class="field-error" *ngIf="isInvalid('motivo')"
+            >El motivo es obligatorio</small
+          >
+        </div>
+
+        <div class="field">
+          <label class="field-label">Beneficiario</label>
+          <app-tercero-picker
+            [terceroId]="terceroId"
+            [terceroNombre]="terceroNombre"
+            placeholder="¿Quién lo recibe? (opcional)"
+            filtro="CLIENTE"
+            (seleccionado)="onTerceroSel($event)"
+          />
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="field">
+          <label class="field-label">Observación</label>
+          <textarea
+            pTextarea
+            formControlName="observacion"
+            placeholder="Detalle adicional (opcional)..."
+            rows="2"
+            class="w-full"
+          ></textarea>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Impuesto</label>
+          <div class="iva-check">
+            <p-checkbox
+              formControlName="generaIva"
+              [binary]="true"
+              inputId="generaIva"
+              (onChange)="onGeneraIvaChange()"
+            />
+            <label for="generaIva" class="iva-check__label">
+              Causar IVA por retiro de inventario
+            </label>
+          </div>
+          <small class="field-hint">
+            El retiro de inventario se considera venta para efectos de IVA: el
+            impuesto se causa sobre el valor comercial y lo asume la empresa.
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Líneas de productos -->
+    <div class="dialog-section">
+      <div class="section-header">
+        <span class="section-title"
+          ><i class="pi pi-gift"></i> Productos entregados</span
+        >
+        <button
+          pButton
+          label="Agregar producto"
+          icon="pi pi-plus"
+          class="btn-verde p-button-sm"
+          (click)="addLinea()"
+        ></button>
+      </div>
+
+      <!-- Empty -->
+      <div class="lines-empty" *ngIf="lineas.length === 0">
+        <i class="pi pi-inbox"></i>
+        <p>Agrega los productos que vas a regalar</p>
+      </div>
+
+      <!-- Tabla -->
+      <div class="lines-wrap" *ngIf="lineas.length > 0">
+        <div class="lines-header">
+          <span class="col-producto">Producto</span>
+          <span class="col-lote">Lote</span>
+          <span class="col-stock">Stock</span>
+          <span class="col-cantidad">Cantidad</span>
+          <span class="col-costo">Valor comercial</span>
+          <span class="col-subtotal">Costo</span>
+          <span class="col-subtotal">IVA</span>
+          <span class="col-accion"></span>
+        </div>
+
+        <div class="line-row" *ngFor="let l of lineas; trackBy: trackById">
+          <!-- Producto -->
+          <div class="col-producto">
+            <p-dropdown
+              appendTo="body"
+              [ngModel]="l.productoId"
+              [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="onProductoChange(l, $event)"
+              [options]="productosOpts"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Escribe para buscar..."
+              [filter]="true"
+              filterPlaceholder="Nombre o SKU (2+ letras)..."
+              (onFilter)="onFiltroProducto($event)"
+              styleClass="w-full"
+              [class.sin-seleccion]="!l.productoId"
+            />
+          </div>
+
+          <!-- Lote -->
+          <div class="col-lote">
+            <p-dropdown
+              appendTo="body"
+              *ngIf="l.manejaLotes"
+              [(ngModel)]="l.loteId"
+              [ngModelOptions]="{ standalone: true }"
+              [options]="l.lotesDisponibles"
+              optionLabel="codigoLote"
+              optionValue="id"
+              placeholder="Lote..."
+              styleClass="w-full"
+              (onChange)="onLoteChange(l, $event.value)"
+            />
+            <span class="no-aplica" *ngIf="!l.manejaLotes">—</span>
+          </div>
+
+          <!-- Stock -->
+          <div class="col-stock">
+            <span
+              class="stock-pill"
+              [class.danger]="l.productoId && l.cantidad > l.stockActual"
+            >
+              {{ l.stockActual }}
+            </span>
+          </div>
+
+          <!-- Cantidad -->
+          <div class="col-cantidad">
+            <p-inputNumber
+              [ngModel]="l.cantidad"
+              [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="updateCantidad(l, $event)"
+              [min]="0.001"
+              [maxFractionDigits]="4"
+              inputStyleClass="line-input text-center"
+              styleClass="w-full"
+            />
+          </div>
+
+          <!-- Valor comercial (base sin IVA) -->
+          <div class="col-costo">
+            <p-inputNumber
+              [ngModel]="l.baseComercialUnitaria"
+              [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="updateBase(l, $event)"
+              [min]="0"
+              mode="currency"
+              currency="COP"
+              locale="es-CO"
+              [minFractionDigits]="0"
+              inputStyleClass="line-input text-right"
+              styleClass="w-full"
+              pTooltip="Base sin IVA sobre la que se causa el impuesto"
+              tooltipPosition="top"
+            />
+          </div>
+
+          <!-- Costo de la línea -->
+          <div class="col-subtotal">
+            <span class="subtotal-val">{{ formatCOP(l.subtotalCosto) }}</span>
+          </div>
+
+          <!-- IVA de la línea -->
+          <div class="col-subtotal">
+            <span class="subtotal-val text-muted">{{
+              formatCOP(l.subtotalIva)
+            }}</span>
+          </div>
+
+          <!-- Eliminar -->
+          <div class="col-accion">
+            <button
+              pButton
+              icon="pi pi-trash"
+              class="p-button-text p-button-danger p-button-sm"
+              (click)="removeLinea(l._id)"
+            ></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alerta stock inválido -->
+    <div class="stock-alert" *ngIf="hayStockInvalido">
+      <i class="pi pi-exclamation-triangle"></i>
+      Hay productos con cantidad mayor al stock disponible
+    </div>
+  </div>
+
+  <!-- Footer del dialog -->
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <div class="total-wrap">
+        <span class="total-label">Costo del obsequio</span>
+        <span class="total-val">{{ formatCOP(costoTotal) }}</span>
+        <span class="total-label" *ngIf="ivaTotal > 0">+ IVA asumido</span>
+        <span class="total-val" *ngIf="ivaTotal > 0">{{
+          formatCOP(ivaTotal)
+        }}</span>
+      </div>
+      <div class="footer-actions">
+        <button
+          pButton
+          label="Cancelar"
+          icon="pi pi-times"
+          class="btn-amarillo"
+          (click)="close()"
+        ></button>
+        <button
+          pButton
+          label="Registrar obsequio"
+          icon="pi pi-check"
+          class="btn-verde"
+          [loading]="loading"
+          (click)="guardar()"
+        ></button>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>

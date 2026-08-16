@@ -320,7 +320,7 @@
     <button
       pButton
       label="Cancelar"
-      class="p-button-text"
+      class="btn-amarillo"
       (click)="cerrarDespachar()"
       [disabled]="loadingDespachar"
     ></button>
@@ -328,7 +328,7 @@
       pButton
       label="Confirmar despacho"
       icon="pi pi-truck"
-      class="p-button-primary"
+      class="btn-verde"
       [loading]="loadingDespachar"
       (click)="confirmarDespachar()"
     ></button>
@@ -378,7 +378,7 @@
     <button
       pButton
       label="Cancelar"
-      class="p-button-text"
+      class="btn-amarillo"
       (click)="cerrarCobro()"
       [disabled]="loadingCobro"
     ></button>
@@ -386,7 +386,7 @@
       pButton
       label="Confirmar cobro"
       icon="pi pi-check"
-      class="p-button-success"
+      class="btn-verde"
       [loading]="loadingCobro"
       (click)="confirmarCobro()"
     ></button>
@@ -494,7 +494,7 @@
   </div>
 
   <ng-template pTemplate="footer">
-    <button pButton label="Cerrar" class="p-button-text" (click)="cerrarDetalle()"></button>
+    <button pButton label="Cerrar" class="btn-amarillo" (click)="cerrarDetalle()"></button>
   </ng-template>
 </p-dialog>
 

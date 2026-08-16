@@ -19,7 +19,7 @@
         type="button"
         label="Abrir Período"
         icon="pi pi-plus"
-        class="btn-aura"
+        class="btn-verde"
         [disabled]="!!periodoActivo"
         [pTooltip]="
           periodoActivo ? 'Cierre el período activo antes de abrir uno nuevo' : ''
@@ -43,7 +43,7 @@
       pButton
       label="Cerrar período"
       icon="pi pi-lock"
-      class="p-button-sm p-button-danger"
+      class="btn-rojo p-button-sm"
       (click)="abrirDialogCerrar(periodoActivo)"
     ></button>
   </div>
@@ -337,7 +337,7 @@
       pButton
       label="Cancelar"
       icon="pi pi-times"
-      class="p-button-outlined p-button-secondary"
+      class="btn-amarillo"
       (click)="showAbrirDialog = false"
     ></button>
     <button
@@ -388,14 +388,14 @@
       pButton
       label="Cancelar"
       icon="pi pi-times"
-      class="p-button-outlined p-button-secondary"
+      class="btn-amarillo"
       (click)="showCerrarDialog = false"
     ></button>
     <button
       pButton
       label="Confirmar cierre"
       icon="pi pi-lock"
-      class="p-button-danger"
+      class="btn-rojo"
       [loading]="saving"
       (click)="confirmarCerrar()"
     ></button>

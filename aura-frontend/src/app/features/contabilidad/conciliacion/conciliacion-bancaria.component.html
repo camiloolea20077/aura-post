@@ -20,7 +20,7 @@
           pButton
           label="Nuevo extracto"
           icon="pi pi-plus"
-          class="btn-aura"
+          class="btn-verde"
           (click)="abrirCrear()"
         ></button>
       </div>
@@ -143,7 +143,7 @@
             pButton
             label="Cerrar extracto"
             icon="pi pi-lock"
-            class="btn-aura"
+            class="btn-verde"
             [loading]="cerrando"
             [disabled]="!resumen?.puedeCerrar"
             [pTooltip]="
@@ -403,14 +403,14 @@
       pButton
       label="Cancelar"
       icon="pi pi-times"
-      class="p-button-outlined p-button-secondary"
+      class="btn-amarillo"
       (click)="showCrear = false"
     ></button>
     <button
       pButton
       label="Crear"
       icon="pi pi-check"
-      class="btn-aura"
+      class="btn-verde"
       [loading]="saving"
       [disabled]="!nuevoCuentaId"
       (click)="crear()"
@@ -450,7 +450,7 @@
       pButton
       label="Cancelar"
       icon="pi pi-times"
-      class="p-button-outlined p-button-secondary"
+      class="btn-amarillo"
       (click)="showImportar = false"
     ></button>
     <button
@@ -557,7 +557,7 @@
       pButton
       label="Cancelar"
       icon="pi pi-times"
-      class="p-button-outlined p-button-secondary"
+      class="btn-amarillo"
       (click)="showAjuste = false"
     ></button>
     <button

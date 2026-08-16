@@ -15,7 +15,7 @@
       pButton
       label="Nueva Ruta"
       icon="pi pi-plus"
-      class="btn-aura"
+      class="btn-verde"
       (click)="nuevo()"
     ></button>
   </div>
@@ -142,14 +142,14 @@
       pButton
       label="Cancelar"
       icon="pi pi-times"
-      class="p-button-text"
+      class="btn-amarillo"
       (click)="closeForm()"
     ></button>
     <button
       pButton
       [label]="editingRuta ? 'Actualizar' : 'Guardar'"
       icon="pi pi-check"
-      class="btn-aura"
+      class="btn-verde"
       [loading]="saving"
       (click)="save()"
     ></button>

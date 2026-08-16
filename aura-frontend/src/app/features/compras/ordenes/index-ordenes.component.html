@@ -17,7 +17,7 @@
           pButton
           label="Nueva Orden"
           icon="pi pi-plus"
-          class="btn-aura"
+          class="btn-verde"
           (click)="abrirNueva()"
         ></button>
         <div class="card-head__search">
@@ -282,7 +282,7 @@
           pButton
           label="Agregar línea"
           icon="pi pi-plus"
-          class="p-button-text p-button-sm"
+          class="btn-verde p-button-sm"
           (click)="agregarLinea()"
         ></button>
         <span class="footer-total">
@@ -298,7 +298,7 @@
       pButton
       label="Cancelar"
       icon="pi pi-times"
-      class="p-button-text p-button-secondary"
+      class="btn-amarillo"
       (click)="showFormModal = false"
       [disabled]="saving"
     ></button>
@@ -306,7 +306,7 @@
       pButton
       label="Guardar"
       icon="pi pi-save"
-      class="btn-aura"
+      class="btn-verde"
       (click)="guardar()"
       [loading]="saving"
     ></button>
@@ -432,7 +432,7 @@
         pButton
         label="Confirmar"
         icon="pi pi-check"
-        class="p-button-success p-button-sm"
+        class="btn-verde p-button-sm"
         *ngIf="puedeConfirmar(ordenDetalle.estado)"
         (click)="confirmar(ordenDetalle.id)"
       ></button>
@@ -534,7 +534,7 @@
       pButton
       label="Cancelar"
       icon="pi pi-times"
-      class="p-button-text p-button-secondary"
+      class="btn-amarillo"
       (click)="showRecepcionModal = false"
       [disabled]="savingRecepcion"
     ></button>
@@ -542,7 +542,7 @@
       pButton
       label="Confirmar recepción"
       icon="pi pi-check"
-      class="btn-aura"
+      class="btn-verde"
       (click)="guardarRecepcion()"
       [loading]="savingRecepcion"
     ></button>

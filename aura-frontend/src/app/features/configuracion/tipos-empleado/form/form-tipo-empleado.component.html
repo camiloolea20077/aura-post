@@ -38,14 +38,14 @@
       pButton
       label="Cancelar"
       icon="pi pi-times"
-      class="p-button-text"
+      class="btn-amarillo"
       (click)="close()"
     ></button>
     <button
       pButton
       [label]="isEdit ? 'Actualizar' : 'Guardar'"
       icon="pi pi-check"
-      class="btn-primary"
+      class="btn-verde"
       [loading]="saving"
       (click)="save()"
     ></button>

@@ -10,7 +10,7 @@
       type="button"
       label="Nuevo embargo"
       icon="pi pi-plus"
-      class="p-button-sm p-button-outlined"
+      class="btn-verde p-button-sm"
       (click)="abrirForm()"
     ></button>
   </div>
@@ -177,7 +177,7 @@
           pButton
           type="button"
           label="Cancelar"
-          class="p-button-text p-button-sm"
+          class="btn-amarillo p-button-sm"
           (click)="cancelarForm()"
         ></button>
         <button
@@ -185,7 +185,7 @@
           type="button"
           label="Guardar"
           icon="pi pi-check"
-          class="btn-aura p-button-sm"
+          class="btn-verde p-button-sm"
           [loading]="guardando"
           (click)="guardar()"
         ></button>
@@ -214,7 +214,7 @@
         pButton
         type="button"
         label="Cerrar"
-        class="p-button-text"
+        class="btn-amarillo"
         (click)="onHide()"
       ></button>
     </ng-template>

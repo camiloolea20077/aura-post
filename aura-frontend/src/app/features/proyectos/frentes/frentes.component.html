@@ -25,7 +25,7 @@
           type="button"
           label="Nuevo frente"
           icon="pi pi-plus"
-          class="btn-aura"
+          class="btn-verde"
           (click)="nuevo()"
         ></button>
       </div>
@@ -224,7 +224,7 @@
           type="button"
           icon="pi pi-plus"
           label="Agregar"
-          class="p-button-outlined p-button-sm"
+          class="btn-verde p-button-sm"
           [disabled]="!nuevoTrabajadorId"
           (click)="agregarTrabajador()"
         ></button>
@@ -301,7 +301,7 @@
           type="button"
           icon="pi pi-plus"
           label="Asignar"
-          class="p-button-outlined p-button-sm"
+          class="btn-verde p-button-sm"
           [disabled]="!nuevoTurnoId"
           (click)="asignarTurno()"
         ></button>
@@ -348,7 +348,7 @@
         type="button"
         label="Cancelar"
         icon="pi pi-times"
-        class="p-button-text p-button-plain"
+        class="btn-amarillo"
         [disabled]="saving"
         (click)="cancelar()"
       ></button>
@@ -357,7 +357,7 @@
         type="button"
         label="Guardar frente"
         icon="pi pi-check"
-        class="btn-aura"
+        class="btn-verde"
         [loading]="saving"
         [disabled]="!formValido()"
         (click)="guardar()"

@@ -23,9 +23,9 @@
         pButton
         type="button"
         [label]="modoEdicion ? 'Actualizar compra' : 'Registrar compra'"
-        [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
-        class="btn-aura"
-        [disabled]="isSubmitting || lineasArray.length === 0"
+        [icon]="isSubmitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+        class="btn-verde"
+        [disabled]="isSubmitting() || lineasArray.length === 0"
         (click)="saveCompra()"
       ></button>
     </div>
@@ -211,6 +211,44 @@
           </div>
         </div>
 
+        <!--
+          Origen alterno del pago. Solo se ofrece cuando el pago es en efectivo:
+          si va por banco ya se eligió la cuenta bancaria arriba, y si hay caja
+          abierta el backend la resuelve solo. Queda opcional a propósito — el
+          cajero no debería tener que tocarlo nunca.
+        -->
+        <div
+          class="campo-row"
+          *ngIf="formaPago === 'CONTADO' && !requiereBanco"
+        >
+          <label>
+            Cuenta contable <span class="optional">(opc.)</span>
+          </label>
+          <div class="campo-control">
+            <p-dropdown
+              [(ngModel)]="cuentaContableId"
+              [options]="cuentasContables"
+              optionValue="id"
+              [filter]="true"
+              filterBy="codigo,nombre"
+              [showClear]="true"
+              placeholder="Sale de la caja abierta"
+              styleClass="w-full"
+            >
+              <ng-template pTemplate="selectedItem" let-cuenta>
+                <span *ngIf="cuenta">{{ cuenta.codigo }} — {{ cuenta.nombre }}</span>
+              </ng-template>
+              <ng-template pTemplate="item" let-cuenta>
+                <span>{{ cuenta.codigo }} — {{ cuenta.nombre }}</span>
+              </ng-template>
+            </p-dropdown>
+            <small class="campo-hint">
+              Elíjala solo si no hay caja abierta: de lo contrario el pago sale
+              de la caja del punto de venta.
+            </small>
+          </div>
+        </div>
+
         <div class="campo-row" *ngIf="formaPago === 'CREDITO'">
           <label>Plazo <span class="optional">(días)</span></label>
           <div class="campo-control">
@@ -249,7 +287,7 @@
           type="button"
           label="Agregar producto"
           icon="pi pi-plus"
-          class="p-button-outlined p-button-sm btn-add-linea"
+          class="btn-verde p-button-sm"
           (click)="agregarLinea()"
         ></button>
       </div>
@@ -424,7 +462,7 @@
           type="button"
           label="Agregar primer producto"
           icon="pi pi-plus"
-          class="p-button-outlined p-button-sm btn-add-linea"
+          class="btn-verde p-button-sm"
           (click)="agregarLinea()"
         ></button>
       </div>
@@ -595,17 +633,17 @@
         type="button"
         label="Cancelar"
         icon="pi pi-times"
-        class="p-button-outlined p-button-secondary"
-        [disabled]="isSubmitting"
+        class="btn-amarillo"
+        [disabled]="isSubmitting()"
         (click)="cancelar()"
       ></button>
       <button
         pButton
         type="button"
         [label]="modoEdicion ? 'Actualizar compra' : 'Registrar compra'"
-        [icon]="isSubmitting ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
-        class="btn-aura"
-        [disabled]="isSubmitting || lineasArray.length === 0"
+        [icon]="isSubmitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+        class="btn-verde"
+        [disabled]="isSubmitting() || lineasArray.length === 0"
         (click)="saveCompra()"
       ></button>
     </div>

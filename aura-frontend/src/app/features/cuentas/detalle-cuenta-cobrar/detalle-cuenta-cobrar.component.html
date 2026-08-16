@@ -132,7 +132,7 @@
           pButton
           label="Registrar Abono"
           icon="pi pi-plus"
-          class="p-button-sm btn-aura btn-primary"
+          class="btn-verde p-button-sm"
           (click)="openAbonoForm()"
         ></button>
       </div>
@@ -232,6 +232,33 @@
               />
             </div>
 
+            <!-- Dónde entra el efectivo si no hay caja abierta. Sin esto el
+                 backend rechaza el recaudo por no tener dónde registrarlo. -->
+            <div class="form-field" *ngIf="esEfectivo">
+              <label>
+                Cuenta contable
+                <span class="opcional" *ngIf="!sinCajaAbierta">(opcional)</span>
+              </label>
+              <p-dropdown
+                formControlName="cuentaContableId"
+                [options]="cuentasPagoOpts"
+                optionLabel="label"
+                optionValue="value"
+                [placeholder]="
+                  sinCajaAbierta
+                    ? 'Elija dónde entra el dinero...'
+                    : 'Entra a la caja abierta'
+                "
+                [filter]="true"
+                [showClear]="true"
+                styleClass="w-full"
+              ></p-dropdown>
+              <small class="max-hint" *ngIf="sinCajaAbierta">
+                No tiene una caja abierta: elija la cuenta donde entra el
+                dinero, o abra caja para recibirlo allí.
+              </small>
+            </div>
+
             <div class="form-field">
               <label>Fecha de Pago <span class="required">*</span></label>
               <p-calendar
@@ -248,14 +275,14 @@
               pButton
               label="Cancelar"
               icon="pi pi-times"
-              class="p-button-text"
+              class="btn-amarillo"
               (click)="showAbonoForm = false"
             ></button>
             <button
               pButton
               label="Registrar Abono"
               icon="pi pi-check"
-              class="btn-aura"
+              class="btn-verde"
               [loading]="loadingAbono"
               (click)="saveAbono()"
             ></button>

@@ -19,7 +19,7 @@
           type="button"
           label="Nuevo concepto"
           icon="pi pi-plus"
-          class="btn-aura"
+          class="btn-verde"
           (click)="abrirCrear()"
         ></button>
         <div class="card-head__search">
@@ -158,8 +158,10 @@
   </div>
 
   <ng-template pTemplate="footer">
-    <p-button label="Cancelar" [text]="true" (onClick)="showForm = false" />
     <p-button
+      styleClass="btn-amarillo" label="Cancelar" (onClick)="showForm = false" />
+    <p-button
+      styleClass="btn-verde"
       label="Guardar"
       icon="pi pi-check"
       [loading]="saving"
