@@ -1,0 +1,100 @@
+.card {
+  background: var(--surface-card, #fff);
+  border-radius: 10px;
+  padding: 1.25rem;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+
+  h2 {
+    margin: 0;
+    font-size: 1.35rem;
+  }
+}
+
+.subtitulo {
+  margin: 0.25rem 0 0;
+  color: var(--text-color-secondary, #6b7280);
+  font-size: 0.85rem;
+  max-width: 46rem;
+}
+
+.filtros {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+
+  .filtro {
+    display: flex;
+    flex-direction: column;
+    min-width: 12rem;
+
+    label {
+      font-size: 0.8rem;
+      margin-bottom: 0.25rem;
+      color: var(--text-color-secondary, #6b7280);
+    }
+  }
+}
+
+/* Origen y destino con flechas de dirección: de un vistazo se ve para dónde
+   se movió la plata sin leer los nombres de las cuentas. */
+.extremo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+
+  i {
+    font-size: 0.75rem;
+  }
+
+  .salida {
+    color: #dc2626;
+  }
+
+  .entrada {
+    color: #16a34a;
+  }
+}
+
+.observacion {
+  color: var(--text-color-secondary, #6b7280);
+  font-size: 0.85rem;
+}
+
+.lado-titulo {
+  margin: 0 0 0.25rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #2563eb;
+  border-bottom: 1px solid var(--surface-border, #dfe7ef);
+  padding-bottom: 0.35rem;
+}
+
+.req {
+  color: #dc2626;
+}
+
+.optional {
+  color: var(--text-color-secondary, #6b7280);
+  font-weight: 400;
+  font-size: 0.75rem;
+}
+
+.hint {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--text-color-secondary, #6b7280);
+  font-size: 0.75rem;
+}
+
+.text-right {
+  text-align: right;
+}

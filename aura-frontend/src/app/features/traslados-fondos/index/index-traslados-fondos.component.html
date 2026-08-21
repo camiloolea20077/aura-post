@@ -1,0 +1,332 @@
+<div class="card">
+  <div class="header">
+    <div>
+      <h2>Traslados de fondos</h2>
+      <p class="subtitulo">
+        Mover plata entre cuentas propias: constituir o reembolsar la caja
+        menor, consignar el efectivo del día, pasar dinero entre bancos.
+      </p>
+    </div>
+    <button
+      pButton
+      type="button"
+      label="Nuevo traslado"
+      icon="pi pi-plus"
+      (click)="abrirDialog()"
+    ></button>
+  </div>
+
+  <!-- ── Filtros ──────────────────────────────────────────────────────── -->
+  <form [formGroup]="filtros" class="filtros">
+    <div class="filtro">
+      <label>Desde</label>
+      <p-calendar
+        formControlName="desde"
+        dateFormat="dd/mm/yy"
+        [showIcon]="true"
+      />
+    </div>
+    <div class="filtro">
+      <label>Hasta</label>
+      <p-calendar
+        formControlName="hasta"
+        dateFormat="dd/mm/yy"
+        [showIcon]="true"
+      />
+    </div>
+    <div class="filtro">
+      <label>Concepto</label>
+      <p-dropdown
+        formControlName="concepto"
+        [options]="conceptosOpts"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Todos"
+        [showClear]="true"
+      />
+    </div>
+    <button
+      pButton
+      type="button"
+      label="Buscar"
+      icon="pi pi-search"
+      [loading]="loading"
+      (click)="buscar()"
+    ></button>
+  </form>
+
+  <!-- ── Listado ──────────────────────────────────────────────────────── -->
+  <p-table
+    [value]="traslados"
+    [loading]="loading"
+    styleClass="mt-3"
+    [rowHover]="true"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 6rem">#</th>
+        <th style="width: 8rem">Fecha</th>
+        <th>Concepto</th>
+        <th>Origen</th>
+        <th>Destino</th>
+        <th class="text-right" style="width: 10rem">Monto</th>
+        <th>Observación</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-t>
+      <tr>
+        <td>{{ t.id }}</td>
+        <td>{{ t.fecha | date: "dd/MM/yyyy" }}</td>
+        <td>
+          <p-tag [value]="etiquetaConcepto(t.concepto)" severity="info" />
+        </td>
+        <td>
+          <span class="extremo">
+            <i class="pi pi-arrow-up-right salida"></i>
+            {{ t.origenNombre || t.origenTipo }}
+          </span>
+        </td>
+        <td>
+          <span class="extremo">
+            <i class="pi pi-arrow-down-left entrada"></i>
+            {{ t.destinoNombre || t.destinoTipo }}
+          </span>
+        </td>
+        <td class="text-right">
+          {{ t.monto | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+        </td>
+        <td class="observacion">{{ t.observacion }}</td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="7" class="text-center py-4">
+          No hay traslados en el período seleccionado.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- ── Nuevo traslado ─────────────────────────────────────────────────── -->
+<p-dialog
+  [(visible)]="dialogVisible"
+  header="Nuevo traslado de fondos"
+  [modal]="true"
+  [style]="{ width: '46rem' }"
+  [draggable]="false"
+>
+  <form [formGroup]="frm" class="p-fluid">
+    <div class="p-grid">
+      <div class="col-12 md:col-4 px-1">
+        <label>Concepto <span class="req">*</span></label>
+        <p-dropdown
+          formControlName="concepto"
+          [options]="conceptosOpts"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full mt-1"
+        />
+      </div>
+
+      <div class="col-12 md:col-4 px-1">
+        <label>Fecha <span class="req">*</span></label>
+        <p-calendar
+          formControlName="fecha"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          styleClass="w-full mt-1"
+        />
+      </div>
+
+      <div class="col-12 md:col-4 px-1">
+        <label>Monto <span class="req">*</span></label>
+        <p-inputNumber
+          formControlName="monto"
+          mode="currency"
+          currency="COP"
+          locale="es-CO"
+          [minFractionDigits]="0"
+          styleClass="w-full mt-1"
+        />
+      </div>
+
+      <div class="col-12 px-1 mt-2">
+        <p-message severity="info" styleClass="w-full" [text]="hintConcepto" />
+      </div>
+
+      <!-- ── Origen ─────────────────────────────────────────────────── -->
+      <div class="col-12 px-1 mt-3">
+        <h4 class="lado-titulo">De dónde sale</h4>
+      </div>
+
+      <div class="col-12 md:col-5 px-1">
+        <label>Tipo</label>
+        <p-dropdown
+          formControlName="origenTipo"
+          [options]="extremosOpts"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full mt-1"
+          (onChange)="onTipoChange('origen')"
+        />
+      </div>
+
+      <div class="col-12 md:col-7 px-1" [ngSwitch]="origenTipo">
+        <ng-container *ngSwitchCase="'CAJA'">
+          <label>Caja <span class="optional">(opcional)</span></label>
+          <p-dropdown
+            formControlName="origenTurnoCajaId"
+            [options]="turnosOpts"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="La caja abierta de la sucursal"
+            [showClear]="true"
+            styleClass="w-full mt-1"
+          />
+          <small class="hint" *ngIf="turnosOpts.length === 0">
+            No hay cajas abiertas. Abre una o elige otro origen.
+          </small>
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'BANCO'">
+          <label>Cuenta bancaria <span class="req">*</span></label>
+          <p-dropdown
+            formControlName="origenCuentaBancoId"
+            [options]="bancosOpts"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Seleccionar..."
+            [showClear]="true"
+            styleClass="w-full mt-1"
+          />
+        </ng-container>
+
+        <ng-container *ngSwitchDefault>
+          <label>Cuenta contable <span class="req">*</span></label>
+          <p-dropdown
+            formControlName="origenCuentaId"
+            [options]="cuentasOpts"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Caja menor, otras cuentas de fondos..."
+            [showClear]="true"
+            [filter]="true"
+            appendTo="body"
+            filterBy="label"
+            styleClass="w-full mt-1"
+          />
+        </ng-container>
+      </div>
+
+      <!-- ── Destino ────────────────────────────────────────────────── -->
+      <div class="col-12 px-1 mt-3">
+        <h4 class="lado-titulo">A dónde entra</h4>
+      </div>
+
+      <div class="col-12 md:col-5 px-1">
+        <label>Tipo</label>
+        <p-dropdown
+          formControlName="destinoTipo"
+          [options]="extremosOpts"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full mt-1"
+          (onChange)="onTipoChange('destino')"
+        />
+      </div>
+
+      <div class="col-12 md:col-7 px-1" [ngSwitch]="destinoTipo">
+        <ng-container *ngSwitchCase="'CAJA'">
+          <label>Caja <span class="optional">(opcional)</span></label>
+          <p-dropdown
+            formControlName="destinoTurnoCajaId"
+            [options]="turnosOpts"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="La caja abierta de la sucursal"
+            [showClear]="true"
+            styleClass="w-full mt-1"
+          />
+        </ng-container>
+
+        <ng-container *ngSwitchCase="'BANCO'">
+          <label>Cuenta bancaria <span class="req">*</span></label>
+          <p-dropdown
+            formControlName="destinoCuentaBancoId"
+            [options]="bancosOpts"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Seleccionar..."
+            [showClear]="true"
+            styleClass="w-full mt-1"
+          />
+        </ng-container>
+
+        <ng-container *ngSwitchDefault>
+          <label>Cuenta contable <span class="req">*</span></label>
+          <p-dropdown
+            formControlName="destinoCuentaId"
+            [options]="cuentasOpts"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Caja menor, otras cuentas de fondos..."
+            [showClear]="true"
+            [filter]="true"
+            filterBy="label"
+            styleClass="w-full mt-1"
+          />
+          <small class="hint" *ngIf="cuentasOpts.length === 0">
+            No hay cuentas habilitadas como medio de pago. Marca la caja menor
+            desde el plan de cuentas.
+          </small>
+        </ng-container>
+      </div>
+
+      <div class="col-12 md:col-5 px-1 mt-3">
+        <label>Sucursal</label>
+        <p-dropdown
+          formControlName="sucursalId"
+          [options]="sucursalesOpts"
+          optionLabel="label"
+          optionValue="value"
+          [showClear]="true"
+          styleClass="w-full mt-1"
+        />
+      </div>
+
+      <div class="col-12 md:col-7 px-1 mt-3">
+        <label>Observación</label>
+        <input
+          pInputText
+          formControlName="observacion"
+          placeholder="Ej: reposición del fondo de la sede norte"
+          class="w-full mt-1"
+        />
+        <small class="hint">
+          Si la escribes, es lo que se lee en el libro auxiliar.
+        </small>
+      </div>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cancelar"
+      class="p-button-text"
+      (click)="dialogVisible = false"
+    ></button>
+    <button
+      pButton
+      type="button"
+      label="Registrar"
+      icon="pi pi-check"
+      [loading]="isSubmitting"
+      (click)="guardar()"
+    ></button>
+  </ng-template>
+</p-dialog>

@@ -32,6 +32,7 @@ import {
   VentaMetodoPagoDto,
   ComisionTurnoDto,
   EstadoLiquidacionTurno,
+  MovimientoCajaDto,
 } from '../../../../core/models/caja.model';
 import { TurnoCajaService } from '../../../../core/services/caja.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
@@ -163,6 +164,71 @@ export class CerrarTurnoComponent implements OnChanges {
       hour: '2-digit',
       minute: '2-digit',
     });
+  }
+
+  // ── Movimientos del turno ─────────────────────────────────
+
+  /**
+   * Lo que se movió por operación de este turno.
+   *
+   * Los documentos de otras fechas salen de aquí y se listan aparte: son la
+   * parte del arqueo que el cajero no reconoce, porque él no hizo ese gasto,
+   * solo entregó la plata. Mezclados en el total tenía que cuadrar a ciegas.
+   */
+  get movimientosDelDia(): MovimientoCajaDto[] {
+    return (this.resumen?.movimientos ?? []).filter(
+      (m) => !m.esDeOtraFecha && !m.esAjusteRetroactivo,
+    );
+  }
+
+  get movimientosOtrasFechas(): MovimientoCajaDto[] {
+    return (this.resumen?.movimientosDeOtrasFechas ?? []).filter(
+      (m) => !m.esAjusteRetroactivo,
+    );
+  }
+
+  /**
+   * Correcciones hechas despues de cerrar este turno.
+   *
+   * Solo aparecen al reabrir el detalle de un turno ya cerrado: mientras esta
+   * abierto no hay nada que corregir.
+   */
+  get ajustesRetroactivos(): MovimientoCajaDto[] {
+    return this.resumen?.ajustesRetroactivos ?? [];
+  }
+
+  get hayAjustes(): boolean {
+    return this.ajustesRetroactivos.length > 0;
+  }
+
+  /** Neto que los documentos de otras fechas restan del cajón. */
+  get netoOtrasFechas(): number {
+    const r = this.resumen;
+    if (!r) return 0;
+    return (r.totalEgresosOtrasFechas ?? 0) - (r.totalIngresosOtrasFechas ?? 0);
+  }
+
+  /** Solo el día, sin hora: el documento tiene fecha, no instante. */
+  formatDia(f: string | null | undefined): string {
+    if (!f) return '—';
+    // Se parte el texto en vez de usar new Date(): 'yyyy-MM-dd' se interpreta
+    // como UTC y en Colombia mostraría el día anterior.
+    const [y, m, d] = f.slice(0, 10).split('-');
+    const meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun',
+                   'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    return `${d} ${meses[+m - 1]} ${y}`;
+  }
+
+  /** Nombre legible del documento que originó el movimiento. */
+  etiquetaOrigen(m: MovimientoCajaDto): string {
+    switch (m.origenTipo) {
+      case 'COMPRA':          return `Compra #${m.origenId}`;
+      case 'GASTO':           return `Gasto #${m.origenId}`;
+      case 'DEVOLUCION':      return `Devolución #${m.origenId}`;
+      case 'OBLIGACION':      return `Obligación #${m.origenId}`;
+      case 'TRASLADO_FONDOS': return `Traslado #${m.origenId}`;
+      default:                return 'Movimiento manual';
+    }
   }
 
   // ── Helpers comisiones ────────────────────────────────────

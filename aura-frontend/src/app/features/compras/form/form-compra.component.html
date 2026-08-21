@@ -171,20 +171,70 @@
       <!-- ── Pago ──────────────────────────────────────────────────── -->
       <h3 class="section">Pago</h3>
       <div class="campos">
-        <div class="campo-row">
-          <label>Forma de pago</label>
+        <!-- ¿De dónde sale la plata? Se pregunta en vez de deducirlo: una
+             compra en efectivo caia siempre en la caja abierta del punto,
+             aunque la hubiera pagado el administrador con su caja menor.
+             "Otra cuenta" esta disponible haya o no caja abierta. -->
+        <div class="campo-row campo-row--full">
+          <label>¿De dónde sale la plata? <span class="required">*</span></label>
           <div class="campo-control">
-            <p-dropdown
-              [(ngModel)]="formaPago"
-              [options]="formaPagoOpts"
-              optionLabel="label"
-              optionValue="value"
-              styleClass="w-full"
-            />
+            <div class="origen-opciones">
+              <label
+                *ngFor="let o of origenOpts"
+                class="origen-card"
+                [class.selected]="origenFondos === o.value"
+              >
+                <p-radioButton
+                  name="origenFondos"
+                  [value]="o.value"
+                  [(ngModel)]="origenFondos"
+                  [inputId]="'compra-origen-' + o.value"
+                  (onClick)="onOrigenChange()"
+                />
+                <span class="origen-texto">
+                  <span class="origen-titulo">
+                    <i class="pi {{ o.icon }}"></i> {{ o.label }}
+                  </span>
+                  <small class="origen-hint">{{ o.hint }}</small>
+                </span>
+              </label>
+            </div>
           </div>
         </div>
 
-        <div class="campo-row" *ngIf="formaPago === 'CONTADO'">
+        <!-- Fuera de .campo-row a propósito: esa fila es un grid 160px/1fr y,
+             al no llevar <label>, el aviso caía en la columna de 160px. -->
+        <div class="aviso-retroactivo" *ngIf="esCaja && esFechaRetroactiva">
+          <p-message
+            severity="warn"
+            styleClass="w-full"
+            text="Estás cargando una factura de una fecha anterior al arqueo de hoy.
+                  Si la plata salió aquel día, usa 'Otra cuenta' — la caja menor o
+                  una cuenta de fondos por legalizar — en vez de descuadrarle la
+                  caja al cajero de hoy."
+          />
+        </div>
+
+
+        <!-- Motivo: obligatorio cuando el documento pasa la ventana de gracia
+             de la empresa. El backend decide si lo exige. -->
+        <div class="campo-row" *ngIf="esCaja && esFechaRetroactiva">
+          <label>Motivo <span class="optional">(si es muy antigua)</span></label>
+          <div class="campo-control">
+            <input
+              pInputText
+              [(ngModel)]="motivoRetroactivo"
+              [ngModelOptions]="{ standalone: true }"
+              placeholder="Ej: se pagó hoy al proveedor que vino a cobrar"
+              class="w-full"
+            />
+            <small class="campo-hint">
+              Queda guardado en la compra para poder explicar el arqueo después.
+            </small>
+          </div>
+        </div>
+
+        <div class="campo-row" *ngIf="esBanco">
           <label>Método de pago</label>
           <div class="campo-control">
             <p-dropdown
@@ -197,7 +247,7 @@
           </div>
         </div>
 
-        <div class="campo-row" *ngIf="formaPago === 'CONTADO' && requiereBanco">
+        <div class="campo-row" *ngIf="esBanco">
           <label>Cuenta bancaria <span class="required">*</span></label>
           <div class="campo-control">
             <p-dropdown
@@ -211,19 +261,11 @@
           </div>
         </div>
 
-        <!--
-          Origen alterno del pago. Solo se ofrece cuando el pago es en efectivo:
-          si va por banco ya se eligió la cuenta bancaria arriba, y si hay caja
-          abierta el backend la resuelve solo. Queda opcional a propósito — el
-          cajero no debería tener que tocarlo nunca.
-        -->
-        <div
-          class="campo-row"
-          *ngIf="formaPago === 'CONTADO' && !requiereBanco"
-        >
-          <label>
-            Cuenta contable <span class="optional">(opc.)</span>
-          </label>
+        <!-- Aqui aparece la CAJA MENOR y las cuentas puente de fondos sin
+             legalizar. La lista la decide el contador con el flag
+             "es medio de pago" del plan de cuentas. -->
+        <div class="campo-row" *ngIf="esCuenta">
+          <label>Cuenta de origen <span class="required">*</span></label>
           <div class="campo-control">
             <p-dropdown
               [(ngModel)]="cuentaContableId"
@@ -232,7 +274,7 @@
               [filter]="true"
               filterBy="codigo,nombre"
               [showClear]="true"
-              placeholder="Sale de la caja abierta"
+              placeholder="Caja menor, anticipos a empleados..."
               styleClass="w-full"
             >
               <ng-template pTemplate="selectedItem" let-cuenta>
@@ -242,14 +284,29 @@
                 <span>{{ cuenta.codigo }} — {{ cuenta.nombre }}</span>
               </ng-template>
             </p-dropdown>
-            <small class="campo-hint">
-              Elíjala solo si no hay caja abierta: de lo contrario el pago sale
-              de la caja del punto de venta.
+            <small class="campo-hint" *ngIf="cuentasContables.length === 0">
+              No hay cuentas habilitadas como medio de pago. Marca la caja menor
+              desde el plan de cuentas.
+            </small>
+            <small class="campo-hint" *ngIf="cuentasContables.length > 0">
+              Esta compra no toca el arqueo de ninguna caja.
             </small>
           </div>
         </div>
 
-        <div class="campo-row" *ngIf="formaPago === 'CREDITO'">
+
+        <!-- La via no pide cuenta ni caja: solo afirma un hecho pasado. -->
+        <div class="campo-row campo-row--full" *ngIf="esCajaOtroDia">
+          <div class="campo-control">
+            <small class="campo-hint">
+              La compra queda registrada contra la cuenta <b>Caja</b>, pero
+              <b>no afecta el arqueo de ninguna caja</b>: ni el de hoy ni el de
+              aquel día, que ya cerró contando esa salida.
+            </small>
+          </div>
+        </div>
+
+        <div class="campo-row" *ngIf="esCredito">
           <label>Plazo <span class="optional">(días)</span></label>
           <div class="campo-control">
             <p-inputNumber

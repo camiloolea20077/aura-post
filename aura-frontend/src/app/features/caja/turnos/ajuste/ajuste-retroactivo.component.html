@@ -1,0 +1,113 @@
+<p-dialog
+  [(visible)]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  header="Corregir arqueo cerrado"
+  [modal]="true"
+  [style]="{ width: '40rem' }"
+  [draggable]="false"
+  (onHide)="cerrar()"
+>
+  <div class="ajuste" *ngIf="turno">
+    <!-- La premisa del diálogo: el cierre no se reescribe. Decirlo aquí evita
+         que alguien busque el botón de "reabrir" que a propósito no existe. -->
+    <p-message severity="info" styleClass="w-full">
+      <span class="ajuste-nota">
+        El cierre de <strong>{{ turno.cajaNombre }}</strong> no se reescribe. Lo
+        que el cajero firmó ese día se conserva, y esta corrección se muestra
+        encima como una cifra aparte.
+      </span>
+    </p-message>
+
+    <div class="campo">
+      <label>¿Qué pasó?</label>
+      <div class="tipo-opciones">
+        <label
+          *ngFor="let o of tipoOpts"
+          class="tipo-card"
+          [class.selected]="tipo === o.value"
+        >
+          <p-radioButton
+            name="tipoAjuste"
+            [value]="o.value"
+            [(ngModel)]="tipo"
+            [inputId]="'ajuste-' + o.value"
+          />
+          <span class="tipo-texto">
+            <span class="tipo-titulo">{{ o.label }}</span>
+            <small class="tipo-hint">{{ o.hint }}</small>
+          </span>
+        </label>
+      </div>
+    </div>
+
+    <div class="fila">
+      <div class="campo">
+        <label>Monto <span class="req">*</span></label>
+        <p-inputNumber
+          [(ngModel)]="monto"
+          mode="currency"
+          currency="COP"
+          locale="es-CO"
+          [minFractionDigits]="0"
+          styleClass="w-full"
+        />
+      </div>
+
+      <div class="campo">
+        <label>Fecha del hecho <span class="optional">(opcional)</span></label>
+        <p-calendar
+          [(ngModel)]="fechaDocumento"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          styleClass="w-full"
+        />
+        <small class="hint">
+          Define el período contable del asiento. Sin ella, la del cierre.
+        </small>
+      </div>
+    </div>
+
+    <div class="campo">
+      <label>Concepto <span class="optional">(opcional)</span></label>
+      <input
+        pInputText
+        [(ngModel)]="concepto"
+        placeholder="Ej: pago a proveedor de la ferretería"
+        class="w-full"
+      />
+    </div>
+
+    <div class="campo">
+      <label>Motivo <span class="req">*</span></label>
+      <textarea
+        pTextarea
+        [(ngModel)]="motivo"
+        rows="3"
+        placeholder="Explica qué pasó ese día y por qué no quedó registrado"
+        class="w-full"
+      ></textarea>
+      <small class="hint" [class.hint-warn]="motivoIncompleto">
+        Queda guardado en el ajuste, junto con quién lo autorizó. Un ajuste sin
+        explicación es cuadrar la caja a mano.
+      </small>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cancelar"
+      class="p-button-text"
+      (click)="cerrar()"
+    ></button>
+    <button
+      pButton
+      type="button"
+      label="Registrar ajuste"
+      icon="pi pi-check"
+      [loading]="isSubmitting"
+      (click)="guardar()"
+    ></button>
+  </ng-template>
+</p-dialog>

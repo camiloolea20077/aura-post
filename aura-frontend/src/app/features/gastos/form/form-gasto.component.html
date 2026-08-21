@@ -240,26 +240,73 @@
       </div>
     </p-fieldset>
 
-    <!-- ── Sección 3b: Forma de pago ─────────────────────────────────
-         De dónde sale la plata. Antes no se preguntaba y el asiento
-         acreditaba Caja siempre, aunque el gasto se hubiera pagado por
-         banco. Si es en efectivo el backend exige una caja abierta. -->
-    <p-fieldset legend="Forma de pago" styleClass="fs-section">
+    <!-- ── Sección 3b: ¿De dónde sale la plata? ─────────────────
+         Se pregunta explicitamente en vez de deducirlo. Antes, un gasto en
+         efectivo caia siempre en la caja abierta del punto de venta, aunque lo
+         hubiera pagado el administrador con su caja menor: con una factura de
+         dias atras eso descuadraba el arqueo de HOY con plata que el cajero de
+         hoy nunca gasto. "Otra cuenta" esta siempre disponible, haya o no caja
+         abierta. -->
+    <p-fieldset legend="¿De dónde sale la plata?" styleClass="fs-section">
       <div class="p-grid p-fluid">
-        <div class="col-12 sm:col-12 md:col-6 lg:col-3 py-0 px-1">
-          <label>Forma de pago</label>
-          <div class="field mt-1">
-            <p-dropdown
-              formControlName="formaPago"
-              [options]="formaPagoOpts"
-              optionLabel="label"
-              optionValue="value"
-              styleClass="w-full"
-            />
+        <div class="col-12 py-0 px-1">
+          <div class="origen-opciones">
+            <label
+              *ngFor="let o of origenOpts"
+              class="origen-card"
+              [class.selected]="origen === o.value"
+            >
+              <p-radioButton
+                formControlName="origenFondos"
+                [value]="o.value"
+                [inputId]="'origen-' + o.value"
+                (onClick)="onOrigenChange()"
+              />
+              <span class="origen-texto">
+                <span class="origen-titulo"><i [class]="o.icon"></i> {{ o.label }}</span>
+                <small class="origen-hint">{{ o.hint }}</small>
+              </span>
+            </label>
           </div>
         </div>
 
-        <div class="col-12 sm:col-12 md:col-6 lg:col-3 py-0 px-1" *ngIf="!esCredito">
+        <!-- Advertencia de documento retroactivo: no bloquea (pagar hoy una
+             factura vieja es legitimo) pero evita que el descuadre le caiga a
+             un cajero que no gasto nada. -->
+        <div
+          class="col-12 py-0 px-1 mt-2 aviso-retroactivo"
+          *ngIf="esCaja && esFechaRetroactiva"
+        >
+          <p-message
+            severity="warn"
+            styleClass="w-full"
+            text="Estás cargando un documento de una fecha anterior al arqueo de hoy.
+                  Si la plata salió aquel día, usa 'Otra cuenta' — la caja menor o
+                  una cuenta de fondos por legalizar — en vez de descuadrarle la
+                  caja al cajero de hoy."
+          />
+        </div>
+
+
+        <!-- Motivo: obligatorio cuando el documento pasa la ventana de gracia
+             de la empresa. El backend decide si lo exige; aqui se ofrece
+             siempre que haya desfase para no obligar a reintentar. -->
+        <div class="col-12 py-0 px-1 mt-2" *ngIf="esCaja && esFechaRetroactiva">
+          <label>Motivo <span class="optional">(si el documento es muy antiguo)</span></label>
+          <div class="field mt-1">
+            <input
+              pInputText
+              formControlName="motivoRetroactivo"
+              placeholder="Ej: se pagó hoy al proveedor que vino a cobrar"
+              class="w-full"
+            />
+            <small class="hint">
+              Queda guardado en el gasto para poder explicar el arqueo después.
+            </small>
+          </div>
+        </div>
+
+        <div class="col-12 sm:col-12 md:col-6 lg:col-4 py-0 px-1 mt-2" *ngIf="esBanco">
           <label>Método de pago</label>
           <div class="field mt-1">
             <p-dropdown
@@ -272,10 +319,7 @@
           </div>
         </div>
 
-        <div
-          class="col-12 sm:col-12 md:col-6 lg:col-3 py-0 px-1"
-          *ngIf="!esCredito && requiereBanco"
-        >
+        <div class="col-12 sm:col-12 md:col-6 lg:col-4 py-0 px-1 mt-2" *ngIf="esBanco">
           <label>Cuenta bancaria <span class="req">*</span></label>
           <div class="field mt-1">
             <p-dropdown
@@ -290,32 +334,45 @@
           </div>
         </div>
 
-        <!-- Salida para cuando no hay caja abierta. Opcional: si se deja
-             vacío, el efectivo sale de la caja del punto de venta. -->
-        <div
-          class="col-12 sm:col-12 md:col-6 lg:col-3 py-0 px-1"
-          *ngIf="!esCredito && !requiereBanco"
-        >
-          <label>Cuenta contable <span class="optional">(opcional)</span></label>
+        <!-- Aqui aparece la CAJA MENOR y las cuentas puente de fondos sin
+             legalizar. La lista la decide el contador con el flag
+             "es medio de pago" del plan de cuentas. -->
+        <div class="col-12 sm:col-12 md:col-8 lg:col-6 py-0 px-1 mt-2" *ngIf="esCuenta">
+          <label>Cuenta de origen <span class="req">*</span></label>
           <div class="field mt-1">
             <p-dropdown
               formControlName="cuentaPagoId"
               [options]="cuentasPagoOpts"
               optionLabel="label"
               optionValue="value"
-              placeholder="Sale de la caja abierta"
+              placeholder="Caja menor, anticipos a empleados..."
               [showClear]="true"
               [filter]="true"
               filterBy="label"
               styleClass="w-full"
             />
-            <small class="hint">
-              Elíjala solo si no hay caja abierta.
+            <small class="hint" *ngIf="cuentasPagoOpts.length === 0">
+              No hay cuentas habilitadas como medio de pago. Marca la caja menor
+              como "es medio de pago" desde el plan de cuentas.
+            </small>
+            <small class="hint" *ngIf="cuentasPagoOpts.length > 0">
+              Este gasto no toca el arqueo de ninguna caja.
             </small>
           </div>
         </div>
 
-        <div class="col-12 py-0 px-1" *ngIf="esCredito">
+
+        <!-- La via no pide cuenta ni caja: solo afirma un hecho pasado. El hint
+             explica que NO va a pasar, que es lo que el usuario quiere saber. -->
+        <div class="col-12 py-0 px-1 mt-2" *ngIf="esCajaOtroDia">
+          <small class="hint">
+            El gasto queda registrado contra la cuenta <b>Caja</b>, pero
+            <b>no afecta el arqueo de ninguna caja</b>: ni el de hoy ni el de
+            aquel día, que ya cerró contando esa salida.
+          </small>
+        </div>
+
+        <div class="col-12 py-0 px-1 mt-2" *ngIf="esCredito">
           <small class="hint">
             El gasto a crédito no saca plata hoy: genera una cuenta por pagar al
             tercero, así que el tercero es obligatorio.

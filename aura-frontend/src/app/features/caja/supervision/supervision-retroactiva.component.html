@@ -1,0 +1,184 @@
+<div class="card">
+  <div class="header">
+    <div>
+      <h2>Supervisión de caja</h2>
+      <p class="subtitulo">
+        Qué entró a las cajas sin ser del turno: facturas viejas autorizadas a
+        mano, pagos de otro día, cajas que dedujo el sistema y correcciones de
+        arqueos cerrados.
+      </p>
+    </div>
+  </div>
+
+  <!-- ── Filtros ──────────────────────────────────────────────────────── -->
+  <form [formGroup]="filtros" class="filtros">
+    <div class="filtro">
+      <label>Desde</label>
+      <p-calendar
+        formControlName="desde"
+        dateFormat="dd/mm/yy"
+        [showIcon]="true"
+      />
+    </div>
+    <div class="filtro">
+      <label>Hasta</label>
+      <p-calendar
+        formControlName="hasta"
+        dateFormat="dd/mm/yy"
+        [showIcon]="true"
+      />
+    </div>
+    <button
+      pButton
+      type="button"
+      label="Buscar"
+      icon="pi pi-search"
+      [loading]="loading"
+      (click)="buscar()"
+    ></button>
+  </form>
+
+  <!-- ── Contadores ───────────────────────────────────────────────────────
+       Van arriba porque la pantalla se abre para saber si hay algo que
+       revisar, no para leer la lista. Se puede tocar cada uno para filtrar. -->
+  <div class="tarjetas" *ngIf="data">
+    <button
+      type="button"
+      class="tarjeta tarjeta--warn"
+      [class.activa]="tipoFiltro === 'DOCUMENTO_AUTORIZADO'"
+      [pTooltip]="hallazgos.DOCUMENTO_AUTORIZADO.hint"
+      tooltipPosition="bottom"
+      (click)="filtrarPor('DOCUMENTO_AUTORIZADO')"
+    >
+      <span class="t-num">{{ data.cantidadAutorizados }}</span>
+      <span class="t-label">Autorizados a mano</span>
+      <span class="t-monto">{{ formatCOP(data.montoAutorizados) }}</span>
+    </button>
+
+    <button
+      type="button"
+      class="tarjeta tarjeta--warn"
+      [class.activa]="tipoFiltro === 'AJUSTE_CIERRE'"
+      [pTooltip]="hallazgos.AJUSTE_CIERRE.hint"
+      tooltipPosition="bottom"
+      (click)="filtrarPor('AJUSTE_CIERRE')"
+    >
+      <span class="t-num">{{ data.cantidadAjustes }}</span>
+      <span class="t-label">Correcciones de cierre</span>
+      <span class="t-monto">{{ formatCOP(data.montoAjustes) }}</span>
+    </button>
+
+    <button
+      type="button"
+      class="tarjeta tarjeta--info"
+      [class.activa]="tipoFiltro === 'CAJA_INFERIDA'"
+      [pTooltip]="hallazgos.CAJA_INFERIDA.hint"
+      tooltipPosition="bottom"
+      (click)="filtrarPor('CAJA_INFERIDA')"
+    >
+      <span class="t-num">{{ data.cantidadCajaInferida }}</span>
+      <span class="t-label">Caja deducida</span>
+      <span class="t-monto">{{ formatCOP(data.montoCajaInferida) }}</span>
+    </button>
+
+    <button
+      type="button"
+      class="tarjeta tarjeta--info"
+      [class.activa]="tipoFiltro === 'SALIDA_CAJA_OTRO_DIA'"
+      [pTooltip]="hallazgos.SALIDA_CAJA_OTRO_DIA.hint"
+      tooltipPosition="bottom"
+      (click)="filtrarPor('SALIDA_CAJA_OTRO_DIA')"
+    >
+      <span class="t-num">{{ data.cantidadSalidaOtroDia }}</span>
+      <span class="t-label">Salió otro día</span>
+      <span class="t-monto">{{ formatCOP(data.montoSalidaOtroDia) }}</span>
+    </button>
+
+    <button
+      type="button"
+      class="tarjeta"
+      [class.activa]="tipoFiltro === 'PAGO_DE_OTRA_FECHA'"
+      [pTooltip]="hallazgos.PAGO_DE_OTRA_FECHA.hint"
+      tooltipPosition="bottom"
+      (click)="filtrarPor('PAGO_DE_OTRA_FECHA')"
+    >
+      <span class="t-num">{{ data.cantidadOtrasFechas }}</span>
+      <span class="t-label">Documentos de otro día</span>
+      <span class="t-monto">{{ formatCOP(data.montoOtrasFechas) }}</span>
+    </button>
+  </div>
+
+  <div class="todo-bien" *ngIf="data && sinHallazgos && !loading">
+    <i class="pi pi-check-circle"></i>
+    <div>
+      <strong>Nada que revisar en este período.</strong>
+      <span>
+        Todo lo que salió de las cajas corresponde a su propio turno.
+      </span>
+    </div>
+  </div>
+
+  <!-- ── Detalle ──────────────────────────────────────────────────────── -->
+  <p-table
+    *ngIf="!sinHallazgos"
+    [value]="movimientos"
+    [loading]="loading"
+    styleClass="mt-3"
+    [rowHover]="true"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 11rem">Hallazgo</th>
+        <th>Documento</th>
+        <th style="width: 12rem">Fechas</th>
+        <th style="width: 10rem">Caja</th>
+        <th class="text-right" style="width: 9rem">Monto</th>
+        <th>Motivo y responsable</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-m>
+      <tr>
+        <td>
+          <p-tag
+            [value]="etiquetaHallazgo(m.tipoHallazgo)"
+            [severity]="severidadHallazgo(m.tipoHallazgo)"
+          />
+        </td>
+        <td>
+          <span class="doc">{{ m.concepto || "—" }}</span>
+        </td>
+        <td class="fechas">
+          <span *ngIf="m.fechaDocumento">
+            Doc. {{ formatDia(m.fechaDocumento) }}
+          </span>
+          <span>Reg. {{ formatDia(m.fecha) }}</span>
+          <span class="desfase" *ngIf="desfase(m)"
+            >{{ desfase(m) }} de atraso</span
+          >
+        </td>
+        <td>{{ m.cajaNombre || "—" }}</td>
+        <td class="text-right monto">
+          {{ formatCOP(m.monto) }}
+        </td>
+        <td class="motivo">
+          <span *ngIf="m.motivo">{{ m.motivo }}</span>
+          <span class="quien" *ngIf="m.autorizadoPorNombre">
+            Autorizó: {{ m.autorizadoPorNombre }}
+          </span>
+          <span class="quien" *ngIf="!m.autorizadoPorNombre && m.usuarioNombre">
+            Registró: {{ m.usuarioNombre }}
+          </span>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="6" class="text-center py-4">
+          Sin resultados para el filtro seleccionado.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
