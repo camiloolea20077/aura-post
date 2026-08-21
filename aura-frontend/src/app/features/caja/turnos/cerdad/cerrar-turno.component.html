@@ -89,8 +89,89 @@
           </div>
         </div>
 
+        <!-- ── Correcciones del cierre ─────────────────────────────
+             Solo aparece en un turno ya cerrado que se corrigio despues. Las
+             tres cifras van juntas a proposito: lo que el cajero firmo ese dia
+             se conserva, y encima se ve que se ajusto. -->
+        <div *ngIf="!loadingResumen && hayAjustes">
+          <div class="section-title" style="margin-top:0.85rem">
+            <i class="pi pi-pencil"></i> Correcciones del cierre
+          </div>
+
+          <div class="ajustes">
+            <p class="ajustes-nota">
+              Este arqueo se corrigió después de cerrarse. El cierre original se
+              conserva tal como se firmó.
+            </p>
+
+            <div class="mov-row ajuste-row" *ngFor="let a of ajustesRetroactivos">
+              <span class="mov-concepto">
+                <i [class]="a.tipo === 'INGRESO' ? 'pi pi-arrow-circle-down mov-ingreso-icon' : 'pi pi-arrow-circle-up mov-egreso-icon'"></i>
+                <span class="mov-detalle">
+                  <span class="mov-nombre">{{ a.concepto }}</span>
+                  <span class="mov-sub">{{ a.motivoAjuste }}</span>
+                  <span class="mov-sub">{{ formatDia(a.fecha) }}</span>
+                </span>
+              </span>
+              <span class="mov-monto" [class.mov-ingreso]="a.tipo==='INGRESO'" [class.mov-egreso]="a.tipo==='EGRESO'">
+                {{ a.tipo === 'INGRESO' ? '+' : '-' }}{{ formatCOP(a.monto) }}
+              </span>
+            </div>
+
+            <div class="ajustes-cifras">
+              <div class="cifra">
+                <span>Cierre original</span>
+                <strong>{{ formatCOP(resumen?.diferenciaOriginal) }}</strong>
+              </div>
+              <div class="cifra">
+                <span>Saldo ajustado</span>
+                <strong class="cifra-ajustada">{{ formatCOP(resumen?.diferenciaAjustada) }}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Documentos de otras fechas ───────────────────────────────
+             Van antes y aparte del resto: son la parte del arqueo que el
+             cajero no reconoce, porque él no hizo ese gasto — solo entregó
+             la plata. Mezclados en el total tenía que cuadrar a ciegas un
+             faltante que no podía explicar. -->
+        <div *ngIf="!loadingResumen && movimientosOtrasFechas.length">
+          <div class="section-title" style="margin-top:0.85rem">
+            <i class="pi pi-history"></i> Documentos de otras fechas
+          </div>
+
+          <div class="otras-fechas">
+            <p class="otras-fechas-nota">
+              Estos pagos salieron de esta caja, pero corresponden a documentos
+              de días anteriores. Cuentan en el efectivo esperado.
+            </p>
+
+            <div class="mov-row otras-fechas-row" *ngFor="let m of movimientosOtrasFechas">
+              <span class="mov-concepto">
+                <i [class]="m.tipo === 'INGRESO' ? 'pi pi-arrow-circle-down mov-ingreso-icon' : 'pi pi-arrow-circle-up mov-egreso-icon'"></i>
+                <span class="mov-detalle">
+                  <span class="mov-nombre">{{ etiquetaOrigen(m) }}</span>
+                  <span class="mov-sub">
+                    Documento del {{ formatDia(m.fechaDocumento) }} · pagado el
+                    {{ formatDia(m.fecha) }}
+                  </span>
+                </span>
+              </span>
+              <span class="mov-monto" [class.mov-ingreso]="m.tipo==='INGRESO'" [class.mov-egreso]="m.tipo==='EGRESO'">
+                {{ m.tipo === 'INGRESO' ? '+' : '-' }}{{ formatCOP(m.monto) }}
+              </span>
+            </div>
+
+            <div class="otras-fechas-total">
+              <span>Total de otras fechas</span>
+              <strong>-{{ formatCOP(netoOtrasFechas) }}</strong>
+            </div>
+          </div>
+        </div>
+
         <!-- Movimientos manuales -->
-        <div *ngIf="!loadingResumen && resumen && resumen.movimientos?.length">
+        <div *ngIf="!loadingResumen && movimientosDelDia.length">
           <div class="section-title" style="margin-top:0.85rem">
             <i class="pi pi-arrows-v"></i> Ingresos y egresos manuales
           </div>
@@ -98,7 +179,7 @@
             <div class="mov-header">
               <span>Concepto</span><span>Tipo</span><span>Monto</span>
             </div>
-            <div class="mov-row" *ngFor="let m of resumen.movimientos">
+            <div class="mov-row" *ngFor="let m of movimientosDelDia">
               <span class="mov-concepto">
                 <i [class]="m.tipo === 'INGRESO' ? 'pi pi-arrow-circle-down mov-ingreso-icon' : 'pi pi-arrow-circle-up mov-egreso-icon'"></i>
                 <span class="mov-detalle">

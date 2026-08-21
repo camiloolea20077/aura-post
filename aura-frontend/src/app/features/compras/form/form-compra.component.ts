@@ -15,6 +15,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { CalendarModule } from 'primeng/calendar';
 import { DropdownModule } from 'primeng/dropdown';
+import { RadioButtonModule } from 'primeng/radiobutton';
+import { MessageModule } from 'primeng/message';
 import {
   AutoCompleteModule,
   AutoCompleteSelectEvent,
@@ -79,6 +81,8 @@ import {
     InputNumberModule,
     CalendarModule,
     DropdownModule,
+    RadioButtonModule,
+    MessageModule,
     AutoCompleteModule,
     TableModule,
     SkeletonModule,
@@ -163,31 +167,146 @@ export class FormCompraComponent implements OnInit {
   public cuentasBancarias: CuentaBancariaModel[] = [];
 
   /**
-   * Cuenta contable de la que sale el pago. Opcional a propósito: el flujo
-   * normal es efectivo desde la caja del punto, y ahí no se toca. Solo hace
-   * falta cuando no hay caja abierta y la plata sale de otro lado — el caso del
-   * administrador comprando fuera del horario del punto de venta.
+   * Cuenta contable de la que sale el pago: caja menor, anticipos a empleados,
+   * fondos por legalizar. Es una vía de primera clase, no un recurso de
+   * emergencia — se puede elegir aunque haya una caja abierta, porque que la
+   * caja esté abierta no significa que la plata haya salido de ella.
    */
   public cuentaContableId: number | null = null;
   public cuentasContables: PlanCuentaModel[] = [];
+
+  /**
+   * De dónde sale la plata. Se declara en vez de deducirse: antes, una compra
+   * en efectivo caía siempre en la caja abierta del punto, aunque la hubiera
+   * pagado el administrador con su caja menor. Con una factura de días atrás
+   * eso descuadraba el arqueo de HOY con plata que el cajero no gastó.
+   */
+  public origenFondos:
+    | 'CREDITO'
+    | 'CAJA'
+    | 'BANCO'
+    | 'CUENTA'
+    | 'CAJA_OTRO_DIA'
+    | null = null;
+
+  /**
+   * Por qué esta factura vieja se carga a la caja de hoy. Solo se pide cuando
+   * excede la ventana de gracia; el backend decide si es obligatorio.
+   */
+  public motivoRetroactivo = '';
+
+  /** Se recupera al editar para no reconstruir el origen como caja normal. */
+  public salidaCajaOtroDia = false;
+
+  readonly origenOpts = [
+    {
+      label: 'Credito',
+      value: 'CREDITO',
+      icon: 'pi-clock',
+      hint: 'Queda como cuenta por pagar al proveedor',
+    },
+    {
+      label: 'Caja',
+      value: 'CAJA',
+      icon: 'pi-wallet',
+      hint: 'Sale del cajón del punto de venta y afecta su arqueo',
+    },
+    {
+      label: 'Banco',
+      value: 'BANCO',
+      icon: 'pi-building-columns',
+      hint: 'Sale de una cuenta bancaria de la empresa',
+    },
+    {
+      label: 'Otra cuenta',
+      value: 'CUENTA',
+      icon: 'pi-briefcase',
+      hint: 'Caja menor, anticipos a empleados, fondos por legalizar',
+    },
+    {
+      label: 'Ya salió de la caja',
+      value: 'CAJA_OTRO_DIA',
+      icon: 'pi-history',
+      hint: 'La plata salió otro día y ese arqueo ya se cerró. No toca ninguna caja.',
+    },
+  ];
 
   readonly formaPagoOpts: { label: string; value: FormaPago }[] = [
     { label: 'Contado', value: 'CONTADO' },
     { label: 'Crédito', value: 'CREDITO' },
   ];
 
+  /** Solo medios que pasan por un banco: el efectivo es la vía CAJA. */
   readonly metodosPagoOpts = [
-    { label: 'Efectivo', value: 'EFECTIVO', icon: 'pi-wallet' },
     { label: 'Transferencia', value: 'TRANSFERENCIA', icon: 'pi-send' },
     { label: 'Nequi', value: 'NEQUI', icon: 'pi-mobile' },
     { label: 'Tarjeta', value: 'TARJETA', icon: 'pi-credit-card' },
     { label: 'Cheque', value: 'CHEQUE', icon: 'pi-file' },
   ];
 
-  get requiereBanco(): boolean {
-    return ['TRANSFERENCIA', 'NEQUI', 'TARJETA', 'CHEQUE'].includes(
-      this.metodoPago,
-    );
+  get esCredito(): boolean {
+    return this.origenFondos === 'CREDITO';
+  }
+  get esCaja(): boolean {
+    return this.origenFondos === 'CAJA';
+  }
+  get esBanco(): boolean {
+    return this.origenFondos === 'BANCO';
+  }
+  get esCuenta(): boolean {
+    return this.origenFondos === 'CUENTA';
+  }
+
+  /** La plata salió otro día: contablemente es caja, pero no mueve ningún arqueo. */
+  get esCajaOtroDia(): boolean {
+    return this.origenFondos === 'CAJA_OTRO_DIA';
+  }
+
+  /**
+   * La factura tiene fecha anterior a hoy. No se bloquea — pagar hoy una
+   * factura vieja es legítimo — pero se advierte: si la plata salió aquel día,
+   * cargarla a la caja de hoy le deja el descuadre a quien no gastó nada.
+   */
+  get esFechaRetroactiva(): boolean {
+    if (this.fechaCompra == null) return false;
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const f = new Date(this.fechaCompra);
+    f.setHours(0, 0, 0, 0);
+    return f.getTime() < hoy.getTime();
+  }
+
+  /**
+   * Reconstruye el origen de una compra guardada o de un borrador.
+   *
+   * <p>El pago guarda las tres piezas por separado porque son lo que necesita
+   * el asiento; la UI las presenta como una sola pregunta. El orden de
+   * evaluación es el mismo con el que el backend resuelve el origen.
+   */
+  private deducirOrigen(
+    formaPago: FormaPago,
+    cuentaBancariaId: number | null,
+    cuentaContableId: number | null,
+    salidaCajaOtroDia = false,
+  ): 'CREDITO' | 'CAJA' | 'BANCO' | 'CUENTA' | 'CAJA_OTRO_DIA' {
+    if (formaPago === 'CREDITO') return 'CREDITO';
+    // Va antes que las cuentas: el flag es una afirmacion sobre un hecho, y la
+    // cuenta que quedo guardada es CAJA, que se confundiria con un pago normal.
+    if (salidaCajaOtroDia) return 'CAJA_OTRO_DIA';
+    if (cuentaContableId != null) return 'CUENTA';
+    if (cuentaBancariaId != null) return 'BANCO';
+    return 'CAJA';
+  }
+
+  /** Cambiar de origen limpia los datos del anterior para no mandar basura. */
+  onOrigenChange(): void {
+    this.formaPago = this.esCredito ? 'CREDITO' : 'CONTADO';
+    if (!this.esBanco) {
+      this.cuentaBancariaId = null;
+      this.banco = '';
+    }
+    if (!this.esCuenta) this.cuentaContableId = null;
+    this.metodoPago = this.esBanco ? this.metodoPago : 'EFECTIVO';
   }
 
   // ─── Tipo de documento ────────────────────────────────────────────
@@ -426,6 +545,13 @@ export class FormCompraComponent implements OnInit {
       this.banco = draft.banco || '';
       this.cuentaBancariaId = draft.cuentaBancariaId || null;
       this.cuentaContableId = draft.cuentaContableId || null;
+      this.salidaCajaOtroDia = draft.salidaCajaOtroDia ?? false;
+      this.origenFondos = this.deducirOrigen(
+        this.formaPago,
+        this.cuentaBancariaId,
+        this.cuentaContableId,
+        this.salidaCajaOtroDia,
+      );
       this.tipoDocumento = draft.tipoDocumento || 'FACTURA_COMPRA';
       this.fletes = draft.fletes || 0;
 
@@ -456,6 +582,7 @@ export class FormCompraComponent implements OnInit {
         observaciones: this.observaciones,
         lineas: this.lineas(),
         formaPago: this.formaPago,
+        salidaCajaOtroDia: this.esCajaOtroDia,
         plazoDias: this.plazoDias,
         metodoPago: this.metodoPago,
         banco: this.banco,
@@ -543,6 +670,13 @@ export class FormCompraComponent implements OnInit {
       ),
     );
     this.formaPago = compra.formaPago ?? 'CONTADO';
+    this.salidaCajaOtroDia = compra.salidaCajaOtroDia ?? false;
+    this.origenFondos = this.deducirOrigen(
+      this.formaPago,
+      this.cuentaBancariaId,
+      this.cuentaContableId,
+      this.salidaCajaOtroDia,
+    );
     this.tipoDocumento = compra.tipoDocumento ?? 'FACTURA_COMPRA';
     this.fletes = compra.fletes ?? 0;
     this.cdr.markForCheck();
@@ -589,15 +723,16 @@ export class FormCompraComponent implements OnInit {
         this.indexDBService.getSucursales(),
         this.indexDBService.getSucursalDefault(),
         lastValueFrom(this.cuentaBancariaService.list()).catch(() => null),
-        lastValueFrom(this.contabilidadService.listarPlan()).catch(() => null),
+        lastValueFrom(this.contabilidadService.listarMediosPago()).catch(
+          () => null,
+        ),
       ]);
       this.cuentasBancarias = (cuentasRes?.data ?? []).filter((c) => c.activa);
-      // Solo cuentas auxiliares de activo o pasivo: el pago sale de un fondo
-      // (caja, banco, anticipo) o queda como obligación. Ofrecer cuentas de
-      // gasto aquí llevaría a asientos invertidos.
-      this.cuentasContables = (planRes?.data ?? []).filter(
-        (c) => c.activa && c.auxiliar && (c.tipo === 'ACTIVO' || c.tipo === 'PASIVO'),
-      );
+      // Solo cuentas habilitadas como medio de pago: aquí está la CAJA MENOR.
+      // La lista la decide el contador con el flag del plan de cuentas, no un
+      // filtro por tipo — filtrar por ACTIVO dejaba pasar inventarios y cartera
+      // como si fueran fondos, y el backend los rechaza.
+      this.cuentasContables = planRes?.data ?? [];
       this.sucursalesOpts = sucursales.map((s) => ({
         label: s.nombre,
         value: s.id,
@@ -1019,6 +1154,15 @@ export class FormCompraComponent implements OnInit {
       if (!l.costoUnitario || l.costoUnitario <= 0)
         return `Línea ${n}: el costo debe ser mayor a 0.`;
     }
+
+    // Sin origen no se guarda: es la decisión que define a quién le afecta el
+    // arqueo, y adivinarla es justo lo que descuadraba la caja del cajero.
+    if (!this.origenFondos) return 'Indica de dónde sale la plata.';
+    if (this.esBanco && !this.cuentaBancariaId)
+      return 'Elige de qué cuenta bancaria sale el pago.';
+    if (this.esCuenta && !this.cuentaContableId)
+      return 'Elige de qué cuenta contable sale el pago.';
+
     return null;
   }
 
@@ -1061,24 +1205,32 @@ export class FormCompraComponent implements OnInit {
         retefuentePct: this.retefuentePct || null,
         reteivaPct: this.reteivaPct || null,
         reteicaPct: this.reteicaPct || null,
-        formaPago: this.formaPago,
+        formaPago: this.esCredito ? 'CREDITO' : 'CONTADO',
+        // El backend resuelve la cuenta de CAJA por su cuenta: aqui solo se
+        // afirma el hecho, no se elige contra que cuenta va.
+        salidaCajaOtroDia: this.esCajaOtroDia,
+        motivoRetroactivo:
+          this.esCaja && this.esFechaRetroactiva
+            ? this.motivoRetroactivo.trim() || null
+            : null,
         tipoDocumento: this.tipoDocumento,
         fletes: this.fletes || null,
-        pagos:
-          this.formaPago === 'CONTADO'
-            ? [
-                {
-                  metodoPago: this.metodoPago,
-                  monto:
-                    this.totalRetencionesValue > 0
-                      ? this.netaAPagarValue
-                      : this.totalValue,
-                  banco: this.banco.trim() || null,
-                  cuentaBancariaId: this.cuentaBancariaId,
-                  cuentaContableId: this.cuentaContableId,
-                },
-              ]
-            : null,
+        // Del pago viaja SOLO el identificador de la vía elegida: informar dos
+        // haría que el resolutor use el de más prioridad y no el que se quiso.
+        pagos: this.esCredito
+          ? null
+          : [
+              {
+                metodoPago: this.esBanco ? this.metodoPago : 'EFECTIVO',
+                monto:
+                  this.totalRetencionesValue > 0
+                    ? this.netaAPagarValue
+                    : this.totalValue,
+                banco: this.esBanco ? this.banco.trim() || null : null,
+                cuentaBancariaId: this.esBanco ? this.cuentaBancariaId : null,
+                cuentaContableId: this.esCuenta ? this.cuentaContableId : null,
+              },
+            ],
       };
 
       let res;
@@ -1137,6 +1289,9 @@ export class FormCompraComponent implements OnInit {
     this.reteivaSel = null;
     this.reteicaSel = null;
     this.formaPago = 'CONTADO';
+    this.origenFondos = null;
+    this.motivoRetroactivo = '';
+    this.salidaCajaOtroDia = false;
     this.plazoDias = 30;
     this.metodoPago = 'EFECTIVO';
     this.banco = '';

@@ -27,6 +27,7 @@ import {
   MovimientoCajaDto,
 } from '../../../../core/models/caja.model';
 import { CerrarTurnoComponent } from '../cerdad/cerrar-turno.component';
+import { AjusteRetroactivoComponent } from '../ajuste/ajuste-retroactivo.component';
 import { AbrirTurnoComponent } from '../abrir/abrir-turno.component';
 import { DividerModule } from 'primeng/divider';
 
@@ -56,6 +57,7 @@ type TagSeverity =
     SkeletonModule,
     AbrirTurnoComponent,
     CerrarTurnoComponent,
+    AjusteRetroactivoComponent,
   ],
   providers: [MessageService],
   templateUrl: './index-turnos.component.html',
@@ -64,6 +66,11 @@ type TagSeverity =
 export class IndexTurnosComponent implements OnInit, OnDestroy {
   showAbrir = false;
   showCerrar = false;
+
+  // Correccion de un arqueo ya cerrado. No reabre el turno: el cierre original
+  // se conserva y el ajuste se suma encima.
+  ajusteVisible = false;
+  turnoAjuste: TurnoCajaTableModel | null = null;
   turnoActivo: TurnoCajaModel | null = null;
   turnoParaCerrar: TurnoCajaModel | null = null;
 
@@ -225,6 +232,18 @@ export class IndexTurnosComponent implements OnInit, OnDestroy {
   onCerrarClosed(): void {
     this.showCerrar = false;
     this.turnoParaCerrar = null;
+  }
+
+  openAjuste(item: TurnoCajaTableModel): void {
+    this.turnoAjuste = item;
+    this.ajusteVisible = true;
+    this.cdr.markForCheck();
+  }
+
+  onAjustado(): void {
+    this.turnoAjuste = null;
+    this.reloadTable();
+    this.cdr.markForCheck();
   }
 
   onTurnoCerrado(): void {

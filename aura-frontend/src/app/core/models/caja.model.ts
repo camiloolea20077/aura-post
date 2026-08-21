@@ -81,7 +81,21 @@ export interface MovimientoCajaDto {
   tipo: TipoMovimiento;
   concepto: string | null;
   monto: number;
+  /** Día en que se movió la plata (yyyy-MM-dd). Manda en el arqueo. */
   fecha: string;
+  /** Instante del registro. Solo para ordenar el detalle. */
+  registradoEn?: string | null;
+  /** Fecha del documento, cuando difiere de la del movimiento. */
+  fechaDocumento?: string | null;
+  /** COMPRA | GASTO | DEVOLUCION | OBLIGACION | TRASLADO_FONDOS | MANUAL. */
+  origenTipo?: string | null;
+  origenId?: number | null;
+  /** El documento es de otro día: el cierre lo muestra aparte. */
+  esDeOtraFecha?: boolean;
+  /** Corrige un arqueo ya cerrado, sin reabrirlo. */
+  esAjusteRetroactivo?: boolean;
+  motivoAjuste?: string | null;
+  autorizadoPor?: number | null;
   usuarioNombre?: string;
   cuentaNumero?: string | null;
   terceroNombre?: string | null;
@@ -154,6 +168,26 @@ export interface ResumenTurnoDto {
   totalIngresos: number;
   totalEgresos: number;
 
+  /**
+   * Movimientos cuyo documento es de otro día — una factura de la semana pasada
+   * pagada hoy desde esta caja. Van aparte porque son la parte del arqueo que
+   * el cajero no reconoce: él no hizo ese gasto, solo entregó la plata.
+   *
+   * Es un subconjunto de `movimientos`, no una lista adicional.
+   */
+  movimientosDeOtrasFechas: MovimientoCajaDto[];
+  totalIngresosOtrasFechas: number;
+  totalEgresosOtrasFechas: number;
+
+  /**
+   * Correcciones registradas DESPUÉS de cerrar el turno, sin reabrirlo. El
+   * cierre original (`diferencia`) queda intacto: las tres cifras se muestran
+   * juntas para que se vea qué firmó el cajero y qué se corrigió encima.
+   */
+  ajustesRetroactivos: MovimientoCajaDto[];
+  diferenciaOriginal: number | null;
+  diferenciaAjustada: number | null;
+
   // Comisiones generadas en el turno
   comisiones: ComisionTurnoDto[];
   totalComisiones: number;
@@ -184,4 +218,22 @@ export interface DetalleVentaCreditoItem {
   totalVenta: number;
   montoAbonado: number;
   montoCredito: number;
+}
+
+/**
+ * Corrección de un arqueo ya cerrado.
+ *
+ * El turno no se reabre: el cierre original queda intacto y este ajuste se suma
+ * encima. Por eso el motivo es obligatorio — un ajuste sin explicación es
+ * alguien cuadrando la caja a mano.
+ */
+export interface CreateAjusteRetroactivoDto {
+  /** INGRESO si sobró plata; EGRESO si salió y nadie la registró. */
+  tipo: TipoMovimiento;
+  monto: number;
+  /** Fecha del hecho que se registra tarde. Sin ella, la del cierre. */
+  fechaDocumento?: string | null;
+  motivo: string;
+  concepto?: string | null;
+  conceptoCajaId?: number | null;
 }

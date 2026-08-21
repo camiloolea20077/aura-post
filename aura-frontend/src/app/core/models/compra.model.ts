@@ -41,6 +41,8 @@ export interface CompraModel {
   numeroCompra: string | null;
   fecha: string;
   formaPago: FormaPago | null;
+  /** Se declaró que la plata ya había salido del cajón otro día. */
+  salidaCajaOtroDia?: boolean;
   tipoDocumento: TipoDocumentoCompra | null;
   fletes: number;
   subtotal: number;
@@ -109,6 +111,20 @@ export interface CreateCompraDto {
   reteivaPct?: number | null;
   reteicaPct?: number | null;
   formaPago?: FormaPago | null;
+  /**
+   * Por qué un documento de fecha anterior se carga a la caja de hoy. El
+   * backend lo exige solo cuando excede la ventana de gracia de la empresa y
+   * el pago va por caja.
+   */
+  motivoRetroactivo?: string | null;
+
+  /**
+   * La plata ya salió del cajón otro día y ese arqueo ya se cerró. Registra el
+   * documento contablemente contra CAJA, sin tocar ningún arqueo.
+   */
+  salidaCajaOtroDia?: boolean;
+
+
   tipoDocumento?: TipoDocumentoCompra | null;
   fletes?: number | null;
   pagos?: CreateCompraPagoDto[] | null;

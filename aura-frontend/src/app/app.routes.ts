@@ -490,6 +490,16 @@ export const routes: Routes = [
             (m) => m.IndexCajasComponent,
           ),
       },
+      // Que entro a las cajas sin ser del turno: supervision, no bandeja de
+      // pendientes. El origen ya es obligatorio al registrar.
+      {
+        path: 'caja/supervision',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import(
+            './features/caja/supervision/supervision-retroactiva.component'
+          ).then((m) => m.SupervisionRetroactivaComponent),
+      },
       {
         path: 'caja/turnos',
         loadComponent: () =>
@@ -756,6 +766,16 @@ export const routes: Routes = [
             (m) => m.IndexConciliacionComponent,
           ),
       },
+      // Traslados de FONDOS (plata). No confundir con /traslados, que mueve
+      // inventario entre sucursales.
+      {
+        path: 'tesoreria/traslados-fondos',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/traslados-fondos/index/index-traslados-fondos.component').then(
+            (m) => m.IndexTrasladosFondosComponent,
+          ),
+      },
 
       // Contabilidad — Plan de Cuentas y Asientos
       {
@@ -912,9 +932,9 @@ export const routes: Routes = [
       {
         path: 'reportes/facturacion-electronica',
         loadComponent: () =>
-          import(
-            './features/reportes/facturacion-electronica/reporte-facturacion-electronica.component'
-          ).then((m) => m.ReporteFacturacionElectronicaComponent),
+          import('./features/reportes/facturacion-electronica/reporte-facturacion-electronica.component').then(
+            (m) => m.ReporteFacturacionElectronicaComponent,
+          ),
       },
       {
         path: 'reportes/avanzados',

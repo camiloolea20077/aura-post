@@ -836,3 +836,93 @@
   font-size: 0.78rem;
   padding: 0.28rem 0.45rem;
 }
+
+/* ¿De dónde sale la plata? — tarjetas de origen de fondos.
+   Tarjetas y no un dropdown porque la elección cambia a quién le afecta el
+   arqueo: tiene que verse de un golpe, no esconderse en una lista. */
+.campo-row--full {
+  grid-column: 1 / -1;
+}
+
+.origen-opciones {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.5rem;
+}
+
+.origen-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--surface-border, #dfe7ef);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+
+  &:hover {
+    border-color: #93b4f5;
+  }
+
+  &.selected {
+    border-color: #2563eb;
+    background-color: rgba(37, 99, 235, 0.06);
+  }
+}
+
+.origen-texto {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.origen-titulo {
+  font-weight: 600;
+  font-size: 0.88rem;
+
+  i {
+    margin-right: 0.35rem;
+    color: #2563eb;
+  }
+}
+
+.origen-hint {
+  color: var(--text-color-secondary, #6b7280);
+  font-size: 0.72rem;
+  margin-top: 0.15rem;
+}
+
+/* Aviso de factura con fecha anterior.
+
+   Va suelto en el grid .campos (no dentro de un .campo-row) y ocupa las dos
+   columnas. El host <p-message> es un elemento custom sin display propio, o sea
+   inline: el `w-full` que PrimeNG aplica a su div interno se mide contra una
+   caja que se encoge al contenido, así que hay que ponerlo en block. */
+.aviso-retroactivo {
+  grid-column: 1 / -1;
+  width: 100%;
+  padding: 0.35rem 0;
+
+  ::ng-deep p-message {
+    display: block;
+    width: 100%;
+  }
+
+  ::ng-deep .p-message {
+    width: 100%;
+    margin: 0;
+  }
+
+  /* El icono arriba y el texto fluyendo a su lado: con align-items centrado,
+     un texto de varias líneas deja el icono flotando en la mitad. */
+  ::ng-deep .p-message-content {
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  ::ng-deep .p-message-text {
+    white-space: normal;
+    line-height: 1.45;
+    font-size: 0.8rem;
+  }
+}

@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -16,6 +16,7 @@ import {
   ResumenTurnoDto,
   MovimientoCajaDto,
   CreateMovimientoCajaDto,
+  CreateAjusteRetroactivoDto,
 } from '../models/caja.model';
 import { environment } from '../../../environments/environment';
 import { ResponseTableModel } from '../../shared/utils/response-table.model';
@@ -73,6 +74,21 @@ export class TurnoCajaService {
       `${this.apiUrl}/activo`,
     );
   }
+
+  /**
+   * Cajas con turno abierto, para preguntar de cual sale o entra la plata.
+   *
+   * A diferencia de turnoActivo(), no depende del usuario: el administrador no
+   * tiene turno propio pero sí necesita elegir la caja del punto de venta.
+   */
+  abiertos(sucursalId?: number): Observable<ResponseModel<TurnoCajaModel[]>> {
+    let params = new HttpParams();
+    if (sucursalId != null) params = params.set('sucursalId', sucursalId);
+    return this.http.get<ResponseModel<TurnoCajaModel[]>>(
+      `${this.apiUrl}/abiertos`,
+      { params },
+    );
+  }
   abrir(dto: AbrirTurnoDto): Observable<ResponseModel<TurnoCajaModel>> {
     return this.http.post<ResponseModel<TurnoCajaModel>>(
       `${this.apiUrl}/abrir`,
@@ -100,6 +116,23 @@ export class TurnoCajaService {
   ): Observable<ResponseModel<MovimientoCajaDto>> {
     return this.http.post<ResponseModel<MovimientoCajaDto>>(
       `${this.apiUrl}/${turnoId}/movimientos`,
+      dto,
+    );
+  }
+
+  /**
+   * Corrige un arqueo ya cerrado sin reabrirlo.
+   *
+   * El cierre original queda intacto y el ajuste se suma encima: un arqueo que
+   * se puede reescribir deja de probar lo que el cajero entregó ese día. Solo
+   * el rol autorizador de la empresa puede hacerlo, y con motivo.
+   */
+  registrarAjusteRetroactivo(
+    turnoId: number,
+    dto: CreateAjusteRetroactivoDto,
+  ): Observable<ResponseModel<MovimientoCajaDto>> {
+    return this.http.post<ResponseModel<MovimientoCajaDto>>(
+      `${this.apiUrl}/${turnoId}/ajustes-retroactivos`,
       dto,
     );
   }
