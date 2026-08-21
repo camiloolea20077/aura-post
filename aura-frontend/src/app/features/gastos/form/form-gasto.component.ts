@@ -23,6 +23,8 @@ import { ToastModule } from 'primeng/toast';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { TooltipModule } from 'primeng/tooltip';
 import { FieldsetModule } from 'primeng/fieldset';
+import { RadioButtonModule } from 'primeng/radiobutton';
+import { MessageModule } from 'primeng/message';
 import { MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
@@ -35,6 +37,7 @@ import { CuentaBancariaService } from '../../../core/services/cuenta-bancaria.se
 import {
   CATEGORIAS_GASTO,
   CreateGastoDto,
+  GastoModel,
   GastoTableModel,
   TIPO_DOC_SOPORTE_OPTIONS,
 } from '../../../core/models/gasto.model';
@@ -60,6 +63,8 @@ import { PlanCuentaModel } from '../../../core/models/contabilidad.model';
     AutoCompleteModule,
     TooltipModule,
     FieldsetModule,
+    RadioButtonModule,
+    MessageModule,
   ],
   providers: [MessageService],
   templateUrl: './form-gasto.component.html',
@@ -76,17 +81,52 @@ export class FormGastoComponent implements OnInit {
   sucursalesOpts: { label: string; value: number }[] = [];
   /** Todas las cuentas: el DÉBITO, a qué se imputa el gasto. */
   cuentasOpts: { label: string; value: number }[] = [];
-  /** Solo cuentas de fondo: el CRÉDITO, de dónde sale la plata. */
+  /** Solo cuentas habilitadas como medio de pago: el CRÉDITO, de dónde sale la plata. */
   cuentasPagoOpts: { label: string; value: number }[] = [];
   cuentasBancariasOpts: { label: string; value: number }[] = [];
 
-  readonly formaPagoOpts = [
-    { label: 'Contado', value: 'CONTADO' },
-    { label: 'Crédito', value: 'CREDITO' },
+  /**
+   * De dónde sale la plata. Se pregunta explícitamente en vez de deducirlo:
+   * antes, un gasto en efectivo caía siempre en la caja abierta del punto,
+   * aunque lo hubiera pagado el administrador de su caja menor. Con una factura
+   * de días atrás eso descuadraba el arqueo de HOY con plata que el cajero de
+   * hoy nunca gastó.
+   */
+  readonly origenOpts = [
+    {
+      label: 'No se ha pagado',
+      value: 'CREDITO',
+      icon: 'pi pi-clock',
+      hint: 'Queda como cuenta por pagar al tercero',
+    },
+    {
+      label: 'Caja',
+      value: 'CAJA',
+      icon: 'pi pi-wallet',
+      hint: 'Sale del cajón del punto de venta y afecta su arqueo',
+    },
+    {
+      label: 'Banco',
+      value: 'BANCO',
+      icon: 'pi pi-building-columns',
+      hint: 'Sale de una cuenta bancaria de la empresa',
+    },
+    {
+      label: 'Otra cuenta',
+      value: 'CUENTA',
+      icon: 'pi pi-briefcase',
+      hint: 'Caja menor, anticipos a empleados, fondos por legalizar',
+    },
+    {
+      label: 'Ya salió de la caja',
+      value: 'CAJA_OTRO_DIA',
+      icon: 'pi pi-history',
+      hint: 'La plata salió otro día y ese arqueo ya se cerró. No toca ninguna caja.',
+    },
   ];
 
+  /** Solo medios que pasan por un banco: el efectivo es la vía CAJA. */
   readonly metodosPagoOpts = [
-    { label: 'Efectivo', value: 'EFECTIVO' },
     { label: 'Transferencia', value: 'TRANSFERENCIA' },
     { label: 'Nequi', value: 'NEQUI' },
     { label: 'Tarjeta', value: 'TARJETA' },
@@ -104,7 +144,9 @@ export class FormGastoComponent implements OnInit {
   }));
   readonly tipoDocOpts = TIPO_DOC_SOPORTE_OPTIONS;
 
-  get modoEdicion(): boolean { return this.gastoToEdit != null; }
+  get modoEdicion(): boolean {
+    return this.gastoToEdit != null;
+  }
 
   constructor(
     private readonly gastoService: GastoService,
@@ -125,6 +167,7 @@ export class FormGastoComponent implements OnInit {
     await Promise.all([
       this.loadSucursales(),
       this.loadCuentas(),
+      this.loadMediosPago(),
       this.loadCuentasBancarias(),
     ]);
     if (id) {
@@ -135,30 +178,37 @@ export class FormGastoComponent implements OnInit {
 
   private initForm(): void {
     this.frm = this.fb.group({
-      sucursalId:        [null, Validators.required],
-      categoria:         ['',   Validators.required],
-      monto:             [null, Validators.required],
-      fecha:             [new Date()],
-      deducible:         [false],
-      // Origen de fondos (V142). El backend exige caja abierta cuando el gasto
-      // es en efectivo, así que aquí se declara de dónde sale la plata.
-      formaPago:         ['CONTADO'],
-      metodoPago:        ['EFECTIVO'],
-      cuentaBancariaId:  [null],
-      cuentaPagoId:      [null],
-      tipoDocSoporte:    [null],
-      numeroDocSoporte:  [''],
-      descripcion:       [''],
-      cuentaContableId:  [null],
-      baseIva:           [0],
-      tarifaIva:         [0],
-      valorIva:          [{ value: 0, disabled: true }],
-      baseRetefuente:    [0],
-      tarifaRetefuente:  [0],
-      valorRetefuente:   [{ value: 0, disabled: true }],
-      baseReteica:       [0],
-      tarifaReteica:     [0],
-      valorReteica:      [{ value: 0, disabled: true }],
+      sucursalId: [null, Validators.required],
+      categoria: ['', Validators.required],
+      monto: [null, Validators.required],
+      fecha: [new Date()],
+      deducible: [false],
+      // Origen de fondos (V142/V146): de dónde sale la plata, declarado. De
+      // aquí se derivan formaPago, metodoPago y la cuenta al guardar.
+      //
+      // Arranca VACÍO a propósito. Con "Caja" preseleccionado, quien no tocaba
+      // el bloque terminaba cargando a la caja del punto una factura que había
+      // pagado de otro lado — justo lo que este campo existe para evitar.
+      origenFondos: [null, Validators.required],
+      metodoPago: ['TRANSFERENCIA'],
+      cuentaBancariaId: [null],
+      cuentaPagoId: [null],
+      // Solo se pide cuando el documento excede la ventana de gracia y va por
+      // caja; el backend es quien decide si es obligatorio.
+      motivoRetroactivo: [''],
+      tipoDocSoporte: [null],
+      numeroDocSoporte: [''],
+      descripcion: [''],
+      cuentaContableId: [null],
+      baseIva: [0],
+      tarifaIva: [0],
+      valorIva: [{ value: 0, disabled: true }],
+      baseRetefuente: [0],
+      tarifaRetefuente: [0],
+      valorRetefuente: [{ value: 0, disabled: true }],
+      baseReteica: [0],
+      tarifaReteica: [0],
+      valorReteica: [{ value: 0, disabled: true }],
     });
   }
 
@@ -176,14 +226,27 @@ export class FormGastoComponent implements OnInit {
         label: `${c.codigo} - ${c.nombre}`,
         value: c.id,
       }));
-      // Para el CRÉDITO solo sirven cuentas de fondo (activo) u obligación
-      // (pasivo): de ahí sale la plata. Ofrecer cuentas de gasto aquí
-      // produciría un asiento con gasto contra gasto.
-      this.cuentasPagoOpts = plan
-        .filter((c) => c.activa && c.auxiliar && (c.tipo === 'ACTIVO' || c.tipo === 'PASIVO'))
-        .map((c) => ({ label: `${c.codigo} - ${c.nombre}`, value: c.id }));
     } catch {
       this.cuentasOpts = [];
+    }
+  }
+
+  /**
+   * De dónde puede salir la plata. Lo decide el contador con el flag
+   * es_medio_pago, no un filtro por tipo aquí: filtrar por ACTIVO dejaba pasar
+   * inventarios y cartera como si fueran medios de pago, y el backend los
+   * rechaza. Aquí aparece la CAJA MENOR.
+   */
+  private async loadMediosPago(): Promise<void> {
+    try {
+      const res = await lastValueFrom(
+        this.contabilidadService.listarMediosPago(),
+      );
+      this.cuentasPagoOpts = (res?.data ?? []).map((c: PlanCuentaModel) => ({
+        label: `${c.codigo} - ${c.nombre}`,
+        value: c.id,
+      }));
+    } catch {
       this.cuentasPagoOpts = [];
     }
   }
@@ -194,16 +257,57 @@ export class FormGastoComponent implements OnInit {
       this.cuentasBancariasOpts = (res?.data ?? [])
         .filter((c) => c.activa)
         .map((c) => ({ label: c.nombre, value: c.id }));
-    } catch { this.cuentasBancariasOpts = []; }
+    } catch {
+      this.cuentasBancariasOpts = [];
+    }
   }
 
-  /** El efectivo sale de la caja; el resto de medios necesitan cuenta bancaria. */
-  get requiereBanco(): boolean {
-    return this.frm.get('metodoPago')?.value !== 'EFECTIVO';
+  get origen(): string {
+    return this.frm.get('origenFondos')?.value ?? 'CAJA';
   }
 
   get esCredito(): boolean {
-    return this.frm.get('formaPago')?.value === 'CREDITO';
+    return this.origen === 'CREDITO';
+  }
+  get esCaja(): boolean {
+    return this.origen === 'CAJA';
+  }
+  get esBanco(): boolean {
+    return this.origen === 'BANCO';
+  }
+  get esCuenta(): boolean {
+    return this.origen === 'CUENTA';
+  }
+
+  /** La plata salió otro día: contablemente es caja, pero no mueve ningún arqueo. */
+  get esCajaOtroDia(): boolean {
+    return this.origen === 'CAJA_OTRO_DIA';
+  }
+
+  /**
+   * El documento tiene fecha anterior a hoy.
+   *
+   * <p>No lo bloquea — hay casos legítimos, como pagar hoy una factura vieja —
+   * pero sí advierte: si la plata salió aquel día, cargarla a la caja de hoy le
+   * deja el descuadre a un cajero que no gastó nada.
+   */
+  get esFechaRetroactiva(): boolean {
+    const fecha = this.frm.get('fecha')?.value as Date | null;
+    if (fecha == null) return false;
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const f = new Date(fecha);
+    f.setHours(0, 0, 0, 0);
+    return f.getTime() < hoy.getTime();
+  }
+
+  /** Cambiar de origen limpia los datos del anterior para no mandar basura. */
+  onOrigenChange(): void {
+    if (!this.esBanco)
+      this.frm.patchValue({ cuentaBancariaId: null }, { emitEvent: false });
+    if (!this.esCuenta)
+      this.frm.patchValue({ cuentaPagoId: null }, { emitEvent: false });
+    this.cdr.markForCheck();
   }
 
   private async cargarParaEditar(id: number): Promise<void> {
@@ -215,32 +319,38 @@ export class FormGastoComponent implements OnInit {
       this.gastoToEdit = g;
       if (g) {
         this.frm.patchValue({
-          sucursalId:        g.sucursalId ?? null,
-          categoria:         g.categoria,
-          monto:             g.monto,
-          fecha:             g.fecha ? new Date(g.fecha + 'T00:00:00') : new Date(),
-          deducible:         g.deducible,
-          descripcion:       g.descripcion ?? '',
-          tipoDocSoporte:    g.tipoDocSoporte ?? null,
-          numeroDocSoporte:  g.numeroDocSoporte ?? '',
-          cuentaContableId:  g.cuentaContableId ?? null,
-          formaPago:         g.formaPago ?? 'CONTADO',
-          metodoPago:        g.metodoPago ?? 'EFECTIVO',
-          cuentaBancariaId:  g.cuentaBancariaId ?? null,
-          cuentaPagoId:      g.cuentaPagoId ?? null,
-          baseIva:           g.baseIva ?? 0,
-          tarifaIva:         g.tarifaIva ?? 0,
-          valorIva:          g.valorIva ?? 0,
-          baseRetefuente:    g.baseRetefuente ?? 0,
-          tarifaRetefuente:  g.tarifaRetefuente ?? 0,
-          valorRetefuente:   g.valorRetefuente ?? 0,
-          baseReteica:       g.baseReteica ?? 0,
-          tarifaReteica:     g.tarifaReteica ?? 0,
-          valorReteica:      g.valorReteica ?? 0,
+          sucursalId: g.sucursalId ?? null,
+          categoria: g.categoria,
+          monto: g.monto,
+          fecha: g.fecha ? new Date(g.fecha + 'T00:00:00') : new Date(),
+          deducible: g.deducible,
+          descripcion: g.descripcion ?? '',
+          tipoDocSoporte: g.tipoDocSoporte ?? null,
+          numeroDocSoporte: g.numeroDocSoporte ?? '',
+          cuentaContableId: g.cuentaContableId ?? null,
+          origenFondos: this.deducirOrigen(g),
+          metodoPago:
+            g.metodoPago && g.metodoPago !== 'EFECTIVO'
+              ? g.metodoPago
+              : 'TRANSFERENCIA',
+          cuentaBancariaId: g.cuentaBancariaId ?? null,
+          cuentaPagoId: g.cuentaPagoId ?? null,
+          baseIva: g.baseIva ?? 0,
+          tarifaIva: g.tarifaIva ?? 0,
+          valorIva: g.valorIva ?? 0,
+          baseRetefuente: g.baseRetefuente ?? 0,
+          tarifaRetefuente: g.tarifaRetefuente ?? 0,
+          valorRetefuente: g.valorRetefuente ?? 0,
+          baseReteica: g.baseReteica ?? 0,
+          tarifaReteica: g.tarifaReteica ?? 0,
+          valorReteica: g.valorReteica ?? 0,
         });
         // Reconstruir el tercero seleccionado para el autocomplete (muestra nombreCompleto)
         this.terceroSeleccionado = g.terceroId
-          ? ({ id: g.terceroId, nombreCompleto: g.terceroNombre ?? '' } as unknown as TerceroTableModel)
+          ? ({
+              id: g.terceroId,
+              nombreCompleto: g.terceroNombre ?? '',
+            } as unknown as TerceroTableModel)
           : null;
       }
     } catch {
@@ -251,6 +361,21 @@ export class FormGastoComponent implements OnInit {
     }
   }
 
+  /**
+   * Reconstruye el origen de un gasto ya guardado.
+   *
+   * <p>El backend guarda las tres piezas por separado (forma de pago, cuenta
+   * bancaria, cuenta de pago) porque son lo que necesita el asiento. La UI las
+   * presenta como una sola pregunta, así que al editar hay que deshacer el
+   * camino. El orden importa: es el mismo con el que el backend resuelve.
+   */
+  private deducirOrigen(g: GastoModel): string {
+    if (g.formaPago === 'CREDITO') return 'CREDITO';
+    if (g.cuentaPagoId != null) return 'CUENTA';
+    if (g.cuentaBancariaId != null) return 'BANCO';
+    return 'CAJA';
+  }
+
   onCategoriaChange(val: string): void {
     const cat = CATEGORIAS_GASTO.find((c) => c.value === val);
     if (cat != null) this.frm.patchValue({ deducible: cat.deducible });
@@ -258,77 +383,123 @@ export class FormGastoComponent implements OnInit {
   }
 
   recalcularIva(): void {
-    const base    = this.frm.get('baseIva')?.value ?? 0;
-    const tarifa  = this.frm.get('tarifaIva')?.value ?? 0;
-    this.frm.get('valorIva')?.setValue(+(base * tarifa / 100).toFixed(2));
+    const base = this.frm.get('baseIva')?.value ?? 0;
+    const tarifa = this.frm.get('tarifaIva')?.value ?? 0;
+    this.frm.get('valorIva')?.setValue(+((base * tarifa) / 100).toFixed(2));
     this.cdr.markForCheck();
   }
 
   recalcularRetefuente(): void {
-    const base   = this.frm.get('baseRetefuente')?.value ?? 0;
+    const base = this.frm.get('baseRetefuente')?.value ?? 0;
     const tarifa = this.frm.get('tarifaRetefuente')?.value ?? 0;
-    this.frm.get('valorRetefuente')?.setValue(+(base * tarifa / 100).toFixed(2));
+    this.frm
+      .get('valorRetefuente')
+      ?.setValue(+((base * tarifa) / 100).toFixed(2));
     this.cdr.markForCheck();
   }
 
   recalcularReteica(): void {
-    const base   = this.frm.get('baseReteica')?.value ?? 0;
+    const base = this.frm.get('baseReteica')?.value ?? 0;
     const tarifa = this.frm.get('tarifaReteica')?.value ?? 0;
-    this.frm.get('valorReteica')?.setValue(+(base * tarifa / 100).toFixed(2));
+    this.frm.get('valorReteica')?.setValue(+((base * tarifa) / 100).toFixed(2));
     this.cdr.markForCheck();
   }
 
   async buscarTerceros(event: { query: string }): Promise<void> {
     try {
-      const res = await lastValueFrom(this.terceroService.proveedores(event.query));
+      const res = await lastValueFrom(
+        this.terceroService.proveedores(event.query),
+      );
       this.terceroSugerencias = res?.data ?? [];
-    } catch { this.terceroSugerencias = []; }
+    } catch {
+      this.terceroSugerencias = [];
+    }
     this.cdr.markForCheck();
   }
 
   async save(): Promise<void> {
     if (this.frm.invalid) {
       this.frm.markAllAsTouched();
-      this.alertService.showWarn('Campos requeridos', 'Completa sucursal, categoría y monto.');
+      const faltaOrigen = !this.frm.get('origenFondos')?.value;
+      this.alertService.showWarn(
+        'Campos requeridos',
+        faltaOrigen
+          ? 'Indica de dónde sale la plata.'
+          : 'Completa sucursal, categoría y monto.',
+      );
       return;
     }
     const v = this.frm.getRawValue();
+
+    // El backend rechaza estos casos igual, pero avisar aquí ahorra el viaje y
+    // dice exactamente qué falta.
+    if (this.esBanco && !v.cuentaBancariaId) {
+      this.alertService.showWarn(
+        'Falta la cuenta',
+        'Elige de qué cuenta bancaria sale el pago.',
+      );
+      return;
+    }
+    if (this.esCuenta && !v.cuentaPagoId) {
+      this.alertService.showWarn(
+        'Falta la cuenta',
+        'Elige de qué cuenta contable sale el pago.',
+      );
+      return;
+    }
+
     const dto: CreateGastoDto = {
-      sucursalId:        v.sucursalId,
-      categoria:         v.categoria,
-      descripcion:       v.descripcion?.trim() || null,
-      monto:             v.monto,
-      fecha:             v.fecha ? (v.fecha as Date).toISOString().split('T')[0] : null,
-      deducible:         v.deducible,
-      terceroId:         this.terceroSeleccionado?.id ?? null,
-      cuentaContableId:  v.cuentaContableId,
-      formaPago:         v.formaPago,
-      metodoPago:        v.metodoPago,
-      cuentaBancariaId:  v.metodoPago === 'EFECTIVO' ? null : v.cuentaBancariaId,
-      cuentaPagoId:      v.cuentaPagoId,
-      centroCostoId:     null,
+      sucursalId: v.sucursalId,
+      categoria: v.categoria,
+      descripcion: v.descripcion?.trim() || null,
+      monto: v.monto,
+      fecha: v.fecha ? (v.fecha as Date).toISOString().split('T')[0] : null,
+      deducible: v.deducible,
+      terceroId: this.terceroSeleccionado?.id ?? null,
+      cuentaContableId: v.cuentaContableId,
+      // El origen elegido se descompone en las tres piezas que espera el
+      // backend. Solo viaja el identificador de la vía elegida: mandar dos haría
+      // que el resolutor use el de más prioridad y no el que el usuario quiso.
+      formaPago: this.esCredito ? 'CREDITO' : 'CONTADO',
+      metodoPago: this.esBanco ? v.metodoPago : 'EFECTIVO',
+      cuentaBancariaId: this.esBanco ? v.cuentaBancariaId : null,
+      cuentaPagoId: this.esCuenta ? v.cuentaPagoId : null,
+      // El backend resuelve la cuenta de CAJA por su cuenta: aqui solo se
+      // afirma el hecho, no se elige contra que cuenta va.
+      salidaCajaOtroDia: this.esCajaOtroDia,
+      motivoRetroactivo:
+        this.esCaja && this.esFechaRetroactiva
+          ? v.motivoRetroactivo?.trim() || null
+          : null,
+      centroCostoId: null,
       periodoContableId: null,
-      tipoDocSoporte:    v.tipoDocSoporte,
-      numeroDocSoporte:  v.numeroDocSoporte?.trim() || null,
-      baseIva:           v.baseIva,
-      tarifaIva:         v.tarifaIva,
-      valorIva:          v.valorIva,
-      baseRetefuente:    v.baseRetefuente,
-      tarifaRetefuente:  v.tarifaRetefuente,
-      valorRetefuente:   v.valorRetefuente,
-      baseReteica:       v.baseReteica,
-      tarifaReteica:     v.tarifaReteica,
-      valorReteica:      v.valorReteica,
+      tipoDocSoporte: v.tipoDocSoporte,
+      numeroDocSoporte: v.numeroDocSoporte?.trim() || null,
+      baseIva: v.baseIva,
+      tarifaIva: v.tarifaIva,
+      valorIva: v.valorIva,
+      baseRetefuente: v.baseRetefuente,
+      tarifaRetefuente: v.tarifaRetefuente,
+      valorRetefuente: v.valorRetefuente,
+      baseReteica: v.baseReteica,
+      tarifaReteica: v.tarifaReteica,
+      valorReteica: v.valorReteica,
     };
     this.isSubmitting = true;
     this.cdr.markForCheck();
     try {
       if (this.modoEdicion && this.gastoToEdit) {
         await lastValueFrom(this.gastoService.update(this.gastoToEdit.id, dto));
-        this.alertService.showSuccess('Actualizado', 'Gasto actualizado correctamente.');
+        this.alertService.showSuccess(
+          'Actualizado',
+          'Gasto actualizado correctamente.',
+        );
       } else {
         await lastValueFrom(this.gastoService.create(dto));
-        this.alertService.showSuccess('Registrado', 'Gasto registrado correctamente.');
+        this.alertService.showSuccess(
+          'Registrado',
+          'Gasto registrado correctamente.',
+        );
       }
       this.router.navigate(['/gastos']);
     } catch {

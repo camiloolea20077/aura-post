@@ -12,32 +12,32 @@
       </div>
       <div class="header-actions">
         <div class="turno-activo-chip" *ngIf="turnoActivo">
-        <span class="chip-dot"></span>
-        <div class="chip-info">
-          <span class="chip-caja">{{ turnoActivo.cajaNombre }}</span>
-          <span class="chip-label">Turno activo</span>
+          <span class="chip-dot"></span>
+          <div class="chip-info">
+            <span class="chip-caja">{{ turnoActivo.cajaNombre }}</span>
+            <span class="chip-label">Turno activo</span>
+          </div>
+          <button
+            pButton
+            type="button"
+            label="Cerrar turno"
+            icon="pi pi-lock"
+            class="btn-verde p-button-sm"
+            (click)="openCerrar()"
+          ></button>
         </div>
         <button
           pButton
           type="button"
-          label="Cerrar turno"
-          icon="pi pi-lock"
-          class="btn-verde p-button-sm"
-          (click)="openCerrar()"
+          label="Abrir turno"
+          icon="pi pi-unlock"
+          class="btn-aura"
+          [disabled]="!!turnoActivo"
+          pTooltip="{{
+            turnoActivo ? 'Ya tienes un turno activo' : 'Abrir nuevo turno'
+          }}"
+          (click)="openAbrir()"
         ></button>
-      </div>
-      <button
-        pButton
-        type="button"
-        label="Abrir turno"
-        icon="pi pi-unlock"
-        class="btn-aura"
-        [disabled]="!!turnoActivo"
-        pTooltip="{{
-          turnoActivo ? 'Ya tienes un turno activo' : 'Abrir nuevo turno'
-        }}"
-        (click)="openAbrir()"
-      ></button>
       </div>
     </div>
   </div>
@@ -357,6 +357,17 @@
                 tooltipPosition="left"
                 (click)="openCerrarDesdeTabla(item)"
               ></button>
+              <!-- Corrige el arqueo sin reabrirlo: el turno cerrado sigue
+                   cerrado y la correccion se suma encima. -->
+              <button
+                *ngIf="item.estado === 'CERRADA'"
+                pButton
+                icon="pi pi-pencil"
+                class="p-button-rounded p-button-sm p-button-warning p-button-outlined"
+                pTooltip="Corregir arqueo"
+                tooltipPosition="left"
+                (click)="openAjuste(item)"
+              ></button>
             </div>
           </td>
         </tr>
@@ -429,3 +440,10 @@
 </app-cerrar-turno>
 
 <p-toast />
+
+<!-- Correccion de un arqueo ya cerrado. No reabre el turno. -->
+<app-ajuste-retroactivo
+  [(visible)]="ajusteVisible"
+  [turno]="turnoAjuste"
+  (ajustado)="onAjustado()"
+/>

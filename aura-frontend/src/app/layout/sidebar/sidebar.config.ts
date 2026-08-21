@@ -268,6 +268,13 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         icon: 'pi pi-check-square',
         route: '/tesoreria/conciliacion',
       },
+      // Mueve plata entre cuentas propias: caja menor, consignaciones. No
+      // confundir con "Traslados" de inventario, que está en otro módulo.
+      {
+        label: 'Traslados de Fondos',
+        icon: 'pi pi-sync',
+        route: '/tesoreria/traslados-fondos',
+      },
       {
         label: 'Obligaciones',
         icon: 'pi pi-money-bill',
@@ -291,6 +298,14 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         label: 'Usuarios',
         icon: 'pi pi-user',
         route: '/admin/usuarios',
+        roles: ['SUPER_ADMIN', 'ADMIN'],
+      },
+      // Que entro a las cajas sin ser del turno. No es una bandeja de
+      // pendientes: es donde el administrador revisa el rastro.
+      {
+        label: 'Supervision de Caja',
+        icon: 'pi pi-shield',
+        route: '/caja/supervision',
         roles: ['SUPER_ADMIN', 'ADMIN'],
       },
       {

@@ -2,13 +2,26 @@ export interface PlanCuentaModel {
   id: number;
   codigo: string;
   nombre: string;
-  tipo: 'ACTIVO' | 'PASIVO' | 'PATRIMONIO' | 'INGRESO' | 'GASTO' | 'COSTO' | 'ORDEN';
+  tipo:
+    | 'ACTIVO'
+    | 'PASIVO'
+    | 'PATRIMONIO'
+    | 'INGRESO'
+    | 'GASTO'
+    | 'COSTO'
+    | 'ORDEN';
   naturaleza: 'DEBITO' | 'CREDITO';
   nivel: number;
   padreId: number | null;
   padreNombre?: string;
   activa: boolean;
   auxiliar: boolean;
+  /**
+   * La cuenta puede elegirse como origen de un pago: caja, caja menor, bancos o
+   * las cuentas puente de fondos entregados sin legalizar. Lo administra el
+   * contador desde el plan de cuentas.
+   */
+  esMedioPago?: boolean;
   codigoDian?: string;
 }
 
