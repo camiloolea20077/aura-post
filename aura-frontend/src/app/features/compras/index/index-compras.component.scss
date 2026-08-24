@@ -70,6 +70,56 @@
   border-radius: 6px;
 }
 
+/* Celda de documento: qué es, con qué número y, si corrige algo, a qué
+   compra pertenece. */
+/* Todo en una sola línea a propósito. Apilado, las notas crédito ocupaban tres
+   renglones y las facturas dos: la fila crecía solo en algunas y el resto de
+   columnas dejaba de alinearse de un renglón al siguiente. */
+.cell-documento {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.doc-chip {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 0.1rem 0.4rem;
+  border-radius: 5px;
+  border: 1px solid transparent;
+
+  /* Mismo criterio de color que el estado de cuenta del tercero: la nota
+     crédito en ámbar y la nota débito en rojo. */
+  &--factura {
+    color: #475569;
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+  }
+  &--nc {
+    color: #b45309;
+    background: #fffbeb;
+    border-color: #fde68a;
+  }
+  &--nd {
+    color: #b91c1c;
+    background: #fef2f2;
+    border-color: #fecaca;
+  }
+  &--recibo {
+    color: #1d4ed8;
+    background: #eff6ff;
+    border-color: #bfdbfe;
+  }
+}
+
+.doc-corrige {
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
 .num-compra {
   font-family: "JetBrains Mono", monospace;
   font-size: 0.82rem;
@@ -80,6 +130,12 @@
   font-size: 0.78rem;
   color: #cbd5e1;
   font-style: italic;
+}
+
+/* Una nota crédito resta: el total llega en negativo y se pinta en rojo para
+   que no se sume de un vistazo con las compras de arriba y abajo. */
+.total-val--resta {
+  color: #b91c1c;
 }
 
 .cell-proveedor {
@@ -125,21 +181,6 @@
 .prov-sucursal {
   font-size: 0.68rem;
   color: #94a3b8;
-}
-
-.sucursal-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.2rem 0.5rem;
-  border-radius: 20px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  background: rgba(14, 165, 233, 0.07);
-  color: #0284c7;
-  i {
-    font-size: 0.62rem;
-  }
 }
 
 .fecha-val {

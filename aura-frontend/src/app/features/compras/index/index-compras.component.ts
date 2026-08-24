@@ -17,6 +17,7 @@ import {
   CompraPageableDto,
   CompraTableModel,
   EstadoCompra,
+  TipoDocumentoCompra,
 } from '../../../core/models/compra.model';
 import { CompraService } from '../../../core/services/compra.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
@@ -186,5 +187,41 @@ export class IndexComprasComponent implements OnInit {
 
   getEstadoLabel(e: EstadoCompra): string {
     return e === 'RECIBIDA' ? 'Recibida' : 'Anulada';
+  }
+
+  /**
+   * Qué documento es cada fila. Se muestra siempre, no solo en las notas
+   * crédito: una lista donde solo algunas filas están etiquetadas obliga a
+   * deducir que las demás son facturas.
+   */
+  getTipoDocLabel(t: TipoDocumentoCompra | null): string {
+    switch (t) {
+      case 'NOTA_CREDITO':
+        return 'Nota crédito';
+      case 'NOTA_DEBITO':
+        return 'Nota débito';
+      case 'RECIBO':
+        return 'Recibo';
+      default:
+        return 'Factura';
+    }
+  }
+
+  /** Sufijo de la clase CSS del chip; mismo criterio de color que el estado de cuenta. */
+  getTipoDocClase(t: TipoDocumentoCompra | null): string {
+    switch (t) {
+      case 'NOTA_CREDITO':
+        return 'nc';
+      case 'NOTA_DEBITO':
+        return 'nd';
+      case 'RECIBO':
+        return 'recibo';
+      default:
+        return 'factura';
+    }
+  }
+
+  esNotaCredito(item: CompraTableModel): boolean {
+    return item.tipoDocumento === 'NOTA_CREDITO';
   }
 }

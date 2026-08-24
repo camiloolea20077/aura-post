@@ -844,6 +844,45 @@
   grid-column: 1 / -1;
 }
 
+/* Nota informativa a ancho completo.
+
+   Va suelta en el grid .campos, nunca dentro de un .campo-row: esas filas
+   reservan 160px fijos para la etiqueta, así que una nota sin <label> caía en
+   esa columna y el texto quedaba estrujado contra el borde izquierdo. */
+.nota-doc {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin: 0.2rem 0 0.4rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #dbe4ff;
+  border-left: 3px solid #2563eb;
+  border-radius: 8px;
+  background: #f5f8ff;
+
+  > i {
+    color: #2563eb;
+    font-size: 0.85rem;
+    /* Alineado con la primera línea del texto, no con el bloque entero: con
+       align-items centrado el icono flota en la mitad de una nota larga. */
+    line-height: 1.5;
+    flex: 0 0 auto;
+  }
+
+  > p {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: #475569;
+
+    b {
+      color: #1e293b;
+      font-weight: 600;
+    }
+  }
+}
+
 .origen-opciones {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

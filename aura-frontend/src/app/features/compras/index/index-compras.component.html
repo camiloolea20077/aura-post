@@ -60,19 +60,22 @@
     >
       <ng-template pTemplate="header">
         <tr>
-          <th pSortableColumn="c.id" style="width: 80px">
+          <th pSortableColumn="c.id" style="width: 66px">
             # <p-sortIcon field="c.id" />
           </th>
-          <th style="min-width: 120px">N° Factura</th>
+          <th style="min-width: 215px">Documento</th>
           <th pSortableColumn="t.razon_social" style="min-width: 200px">
             Proveedor <p-sortIcon field="t.razon_social" />
           </th>
-          <th style="min-width: 130px">Sucursal</th>
+          <!-- La sucursal no tiene columna propia: ya aparece bajo el nombre
+               del proveedor en cada fila. Repetirla costaba 150px y en una
+               pantalla de 1366 empujaba la columna de acciones fuera del
+               borde, obligando a hacer scroll para ver o editar. -->
           <th pSortableColumn="c.fecha" style="width: 130px">
             Fecha <p-sortIcon field="c.fecha" />
           </th>
           <th style="width: 140px" class="text-right">Total</th>
-          <th style="width: 100px" class="text-center">Estado</th>
+          <th style="width: 92px" class="text-center">Estado</th>
           <th style="width: 80px" class="text-center">Detalle</th>
         </tr>
       </ng-template>
@@ -84,12 +87,27 @@
             <span class="id-badge">#{{ item.id }}</span>
           </td>
 
-          <!-- Número de factura -->
+          <!-- Documento: qué es y con qué número.
+               El tipo se muestra en TODAS las filas: etiquetar solo las notas
+               crédito obligaría a deducir que el resto son facturas. -->
           <td>
-            <span class="num-compra" *ngIf="item.numeroCompra">{{
-              item.numeroCompra
-            }}</span>
-            <span class="sin-num" *ngIf="!item.numeroCompra">Sin número</span>
+            <div class="cell-documento">
+              <span class="doc-chip doc-chip--{{ getTipoDocClase(item.tipoDocumento) }}">
+                {{ getTipoDocLabel(item.tipoDocumento) }}
+              </span>
+              <span class="num-compra" *ngIf="item.numeroCompra">{{
+                item.numeroCompra
+              }}</span>
+              <span class="sin-num" *ngIf="!item.numeroCompra">Sin número</span>
+              <span
+                class="doc-corrige"
+                *ngIf="esNotaCredito(item) && item.compraOrigenId"
+                pTooltip="Esta nota crédito corrige la compra #{{ item.compraOrigenId }}"
+                tooltipPosition="top"
+              >
+                corrige #{{ item.compraOrigenId }}
+              </span>
+            </div>
           </td>
 
           <!-- Proveedor -->
@@ -105,21 +123,16 @@
             </div>
           </td>
 
-          <!-- Sucursal (columna separada) -->
-          <td>
-            <span class="sucursal-chip">
-              <i class="pi pi-building"></i> {{ item.sucursalNombre }}
-            </span>
-          </td>
-
           <!-- Fecha -->
           <td>
             <span class="fecha-val">{{ formatFecha(item.fecha) }}</span>
           </td>
 
-          <!-- Total -->
+          <!-- Total.
+               Una nota crédito se guarda en negativo — resta de lo comprado —
+               así que se pinta distinto para que no se lea como una compra más. -->
           <td class="text-right">
-            <span class="total-val">{{
+            <span class="total-val" [class.total-val--resta]="item.total < 0">{{
               item.total | currency: "COP" : "symbol-narrow" : "1.0-0"
             }}</span>
           </td>
@@ -169,7 +182,7 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="8">
+          <td colspan="7">
             <div class="empty-state">
               <i class="pi pi-shopping-bag"></i>
               <p>
