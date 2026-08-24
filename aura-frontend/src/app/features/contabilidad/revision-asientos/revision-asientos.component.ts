@@ -25,6 +25,7 @@ import { ContabilidadService } from '../../../core/services/contabilidad.service
 import { AlertService } from '../../../shared/pipes/alert.service';
 import { AsientoContableModel } from '../../../core/models/contabilidad.model';
 
+import { aFechaLocal } from '../../../shared/utils/fecha.util';
 @Component({
   selector: 'app-revision-asientos',
   standalone: true,
@@ -219,6 +220,6 @@ export class RevisionAsientosComponent implements OnInit {
   }
 
   toISO(d: Date): string {
-    return d.toISOString().slice(0, 10);
+    return aFechaLocal(d);
   }
 }

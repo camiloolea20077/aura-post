@@ -31,6 +31,7 @@ import {
 import { CuentaBancariaModel } from '../../../../core/models/cuenta-bancaria.model';
 import { DetalleLiquidacionComponent } from '../detalle/detalle-liquidacion.component';
 import { FormLiquidacionComponent } from '../form/form-liquidacion.component';
+import { aFechaLocal } from '../../../../shared/utils/fecha.util';
 @Component({
   selector: 'app-index-liquidaciones',
   standalone: true,
@@ -206,7 +207,7 @@ export class IndexLiquidacionesComponent implements OnInit {
       return;
     }
     this.submittingPago = true;
-    const fechaPago = new Date().toISOString().split('T')[0];
+    const fechaPago = aFechaLocal(new Date());
     try {
       await lastValueFrom(
         this.comisionService.marcarPagada(this.pagoItem.id, {

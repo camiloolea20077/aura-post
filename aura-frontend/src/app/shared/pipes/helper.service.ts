@@ -7,6 +7,7 @@ import {
 } from '@angular/forms';
 import { addOrSubtractDaysDate, formatDate } from '../utils/date.utils';
 
+import { aFechaLocal } from '../utils/fecha.util';
 @Injectable({
   providedIn: 'root',
 })
@@ -89,7 +90,7 @@ export class HelpersService {
   convertToISODateString(fecha: string | Date): string {
     if (fecha instanceof Date) {
       // Si dateInput es un objeto Date, convertirlo a una cadena en formato yyyy-MM-dd
-      return fecha.toISOString().split('T')[0];
+      return aFechaLocal(fecha);
     } else {
       // Si dateInput es una cadena, convertirla del formato dd/MM/yy a yyyy-MM-dd
       const [day, month, year] = fecha.split('/');

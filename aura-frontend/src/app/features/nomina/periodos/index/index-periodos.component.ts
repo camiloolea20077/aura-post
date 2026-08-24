@@ -19,6 +19,7 @@ import {
 } from '../../../../core/models/nomina.model';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 
+import { aFechaLocal } from '../../../../shared/utils/fecha.util';
 type TagSeverity =
   | 'success'
   | 'secondary'
@@ -106,8 +107,8 @@ export class IndexPeriodosComponent implements OnInit {
     try {
       await lastValueFrom(
         this.nominaService.createPeriodo({
-          fechaInicio: this.fechaInicio.toISOString().split('T')[0],
-          fechaFin: this.fechaFin.toISOString().split('T')[0],
+          fechaInicio: aFechaLocal(this.fechaInicio),
+          fechaFin: aFechaLocal(this.fechaFin),
         }),
       );
       this.alertService.showSuccess('Creado', 'Período creado exitosamente');

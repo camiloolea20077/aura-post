@@ -31,6 +31,7 @@ import {
 } from '../../../core/models/tesoreria.model';
 import { CuentaBancariaModel } from '../../../core/models/cuenta-bancaria.model';
 
+import { aFechaLocal } from '../../../shared/utils/fecha.util';
 @Component({
   selector: 'app-index-egresos',
   standalone: true,
@@ -175,7 +176,7 @@ export class IndexEgresosComponent implements OnInit {
   }
 
   toISO(d: Date): string {
-    return d.toISOString().slice(0, 10);
+    return aFechaLocal(d);
   }
 
   private emptyForm(): CreateMovimientoDto {

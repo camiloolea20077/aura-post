@@ -34,6 +34,7 @@ import { MedioPagoNomina } from '../../../core/models/nomina.model';
 import { CuentaBancariaModel } from '../../../core/models/cuenta-bancaria.model';
 import { AlertService } from '../../../shared/pipes/alert.service';
 
+import { aFechaLocal } from '../../../shared/utils/fecha.util';
 type TagSeverity =
   | 'success'
   | 'secondary'
@@ -469,7 +470,7 @@ export class PrestacionesComponent implements OnInit {
 
   // ── Helpers ──
   private fmt(d: Date): string {
-    return d.toISOString().split('T')[0];
+    return aFechaLocal(d);
   }
   formatMonto(v: number): string {
     return new Intl.NumberFormat('es-CO', {

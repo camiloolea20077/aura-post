@@ -44,6 +44,7 @@ import {
 import { TerceroTableModel } from '../../../core/models/tercero.model';
 import { PlanCuentaModel } from '../../../core/models/contabilidad.model';
 
+import { aFechaLocal } from '../../../shared/utils/fecha.util';
 @Component({
   selector: 'app-form-gasto',
   standalone: true,
@@ -453,7 +454,7 @@ export class FormGastoComponent implements OnInit {
       categoria: v.categoria,
       descripcion: v.descripcion?.trim() || null,
       monto: v.monto,
-      fecha: v.fecha ? (v.fecha as Date).toISOString().split('T')[0] : null,
+      fecha: v.fecha ? aFechaLocal(v.fecha as Date) : null,
       deducible: v.deducible,
       terceroId: this.terceroSeleccionado?.id ?? null,
       cuentaContableId: v.cuentaContableId,

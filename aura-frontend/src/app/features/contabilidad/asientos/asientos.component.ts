@@ -32,6 +32,7 @@ import {
 import { TerceroTableModel } from '../../../core/models/tercero.model';
 import { CentroCostoDto } from '../../../core/models/centro-costo.model';
 
+import { aFechaLocal } from '../../../shared/utils/fecha.util';
 @Component({
   selector: 'app-asientos',
   standalone: true,
@@ -412,12 +413,12 @@ export class AsientosComponent implements OnInit {
   }
 
   toISO(d: Date): string {
-    return d.toISOString().slice(0, 10);
+    return aFechaLocal(d);
   }
 
   private emptyForm(): CreateAsientoDto {
     return {
-      fecha: new Date().toISOString().slice(0, 10),
+      fecha: aFechaLocal(new Date()),
       descripcion: '',
       detalles: [
         { cuentaId: 0, debito: 0, credito: 0, terceroId: null, centroCostoId: null },

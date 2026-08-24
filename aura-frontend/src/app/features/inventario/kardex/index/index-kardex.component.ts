@@ -36,6 +36,7 @@ import {
 import { KardexService } from '../../../../core/services/kardex.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 import { environment } from '../../../../../environments/environment';
+import { aFechaLocal } from '../../../../shared/utils/fecha.util';
 type TagSeverity =
   | 'success'
   | 'secondary'
@@ -255,7 +256,7 @@ export class IndexKardexComponent implements OnInit {
 
   private toIso(date: Date | string): string {
     const d = new Date(date);
-    return d.toISOString().split('T')[0];
+    return aFechaLocal(d);
   }
 
   get filtrosActivos(): number {

@@ -30,6 +30,7 @@ import {
 import { QrScannerComponent } from '../../../shared/components/qr-scanner/qr-scanner.component';
 import { QrScanResult } from '../../../shared/services/qr.scanner.service';
 
+import { aFechaLocal } from '../../../shared/utils/fecha.util';
 @Component({
   selector: 'app-escanear-qr',
   standalone: true,
@@ -232,7 +233,7 @@ export class EscanearQrComponent implements AfterViewInit, OnDestroy {
     const gps = await this.gpsService.getCurrentPosition();
 
     const now = new Date();
-    const fecha = now.toISOString().split('T')[0];
+    const fecha = aFechaLocal(now);
     const hora = now.toTimeString().slice(0, 5);
 
     const dto: CreateVisitaAndConfirmarDto = {

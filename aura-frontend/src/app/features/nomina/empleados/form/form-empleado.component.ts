@@ -30,6 +30,7 @@ import {
 } from '../../../../core/models/nomina.model';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 
+import { aFechaLocal } from '../../../../shared/utils/fecha.util';
 @Component({
   selector: 'app-form-empleado',
   standalone: true,
@@ -182,7 +183,7 @@ export class FormEmpleadoComponent implements OnChanges, OnInit {
     }
 
     if (this.fechaIngreso) {
-      this.form.fechaIngreso = this.fechaIngreso.toISOString().split('T')[0];
+      this.form.fechaIngreso = aFechaLocal(this.fechaIngreso);
     }
 
     if (this.form.tipoContrato === 'FIJO' && !this.fechaFinContrato) {
@@ -194,7 +195,7 @@ export class FormEmpleadoComponent implements OnChanges, OnInit {
     }
     this.form.fechaFinContrato =
       this.form.tipoContrato === 'FIJO' && this.fechaFinContrato
-        ? this.fechaFinContrato.toISOString().split('T')[0]
+        ? aFechaLocal(this.fechaFinContrato)
         : null;
 
     this.saving = true;

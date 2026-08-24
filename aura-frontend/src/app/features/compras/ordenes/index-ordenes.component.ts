@@ -35,6 +35,7 @@ import {
 } from '../../../core/models/orden-compra.model';
 import { ProductoOpcion } from '../../../core/models/compra.model';
 
+import { aFechaLocal } from '../../../shared/utils/fecha.util';
 type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' | undefined;
 
 @Component({
@@ -448,7 +449,7 @@ export class IndexOrdenesComponent implements OnInit {
     }).format(v);
   }
 
-  toISO(d: Date): string { return d.toISOString().slice(0, 10); }
+  toISO(d: Date): string { return aFechaLocal(d); }
 
   trackByIdx(_: number, i: number): number { return i; }
 

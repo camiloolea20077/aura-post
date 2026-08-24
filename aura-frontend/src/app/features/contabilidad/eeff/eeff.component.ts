@@ -23,6 +23,7 @@ import {
   FlujoEfectivoModel,
 } from '../../../core/models/eeff.model';
 
+import { aFechaLocal } from '../../../shared/utils/fecha.util';
 /**
  * E10 · Estados financieros NIIF: estado de cambios en el patrimonio y flujo
  * de efectivo (método indirecto). El EFE trae su propio cuadre contra el Δ
@@ -169,6 +170,6 @@ export class EeffComponent {
   }
 
   private toISO(d: Date): string {
-    return d.toISOString().slice(0, 10);
+    return aFechaLocal(d);
   }
 }

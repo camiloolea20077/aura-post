@@ -11,6 +11,7 @@ import { SelectButtonModule } from 'primeng/selectbutton';
 import { lastValueFrom } from 'rxjs';
 import { ReporteService } from '../../core/services/reporte.service';
 import { VentaService } from '../../core/services/venta.service';
+import { aFechaLocal } from '../../shared/utils/fecha.util';
 interface StatCard {
   label: string;
   value: string;
@@ -228,6 +229,6 @@ export class ReporteVentasComponent implements OnInit {
 
   private fmtDate(d: Date | null): string | undefined {
     if (!d) return undefined;
-    return d.toISOString().split('T')[0];
+    return aFechaLocal(d);
   }
 }

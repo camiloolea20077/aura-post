@@ -28,6 +28,7 @@ import {
 } from '../../../shared/services/socket.service';
 import { MapPickerComponent } from '../../../shared/components/map-picker/map-picker.component';
 
+import { aFechaHoraLocal } from '../../../shared/utils/fecha.util';
 interface VendedorExtended extends VendedorModel {
   online: boolean;
   location: MonitorLocation | null;
@@ -152,7 +153,7 @@ export class IndexVendedoresComponent implements OnInit, OnDestroy {
     const v = this.rows[idx];
     v.online = ['connect', 'update'].includes(type);
     v.location = data?.location ?? null;
-    v.lastUpdate = new Date().toISOString();
+    v.lastUpdate = aFechaHoraLocal(new Date());
     v.battery = data?.battery ?? null;
     v.status = data?.status ?? null;
 

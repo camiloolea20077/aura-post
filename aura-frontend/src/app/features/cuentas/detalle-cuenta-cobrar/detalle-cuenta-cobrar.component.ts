@@ -49,6 +49,7 @@ import { IndexDBService } from '../../../core/services/index-db.service';
 import { ContabilidadService } from '../../../core/services/contabilidad.service';
 import { VentaModel } from '../../../core/models/venta.model';
 
+import { aFechaHoraLocal, aFechaLocal } from '../../../shared/utils/fecha.util';
 type TagSeverity =
   | 'success'
   | 'secondary'
@@ -347,7 +348,7 @@ export class DetalleCuentaCobrarComponent implements OnInit {
       metodoPago: formValue.metodoPago as MetodoPago,
       referencia: formValue.referencia || null,
       cuentaContableId: this.esEfectivo ? formValue.cuentaContableId || null : null,
-      fechaPago: formValue.fechaPago.toISOString(),
+      fechaPago: aFechaHoraLocal(formValue.fechaPago),
       turnoCajaId: this.turnoActivo?.id ?? null,
     };
 
@@ -400,7 +401,7 @@ export class DetalleCuentaCobrarComponent implements OnInit {
   }
 
   isAbonoFromToday(fechaPago: string): boolean {
-    const today = new Date().toISOString().split('T')[0];
+    const today = aFechaLocal(new Date());
     return fechaPago.split('T')[0] === today;
   }
 

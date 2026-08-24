@@ -71,6 +71,7 @@ import {
   ProductoTableModel,
 } from '../../../core/models/producto.model';
 
+import { aFechaHoraLocal } from '../../../shared/utils/fecha.util';
 @Component({
   selector: 'app-form-compra',
   standalone: true,
@@ -952,7 +953,7 @@ export class FormCompraComponent implements OnInit {
         proveedorQuery: this.proveedorQuery,
         sucursalId: this.sucursalId,
         numeroCompra: this.numeroCompra,
-        fechaCompra: this.fechaCompra?.toISOString(),
+        fechaCompra: aFechaHoraLocal(this.fechaCompra),
         observaciones: this.observaciones,
         lineas: this.lineas(),
         formaPago: this.formaPago,
@@ -1589,7 +1590,7 @@ export class FormCompraComponent implements OnInit {
       if (this.formaPago === 'CREDITO' && this.plazoDias > 0) {
         const fv = new Date(this.fechaCompra);
         fv.setDate(fv.getDate() + this.plazoDias);
-        fechaVencimientoStr = fv.toISOString().slice(0, 19);
+        fechaVencimientoStr = aFechaHoraLocal(fv);
       }
 
       const dto: CreateCompraDto = {
@@ -1597,7 +1598,7 @@ export class FormCompraComponent implements OnInit {
         sucursalId: this.sucursalId!,
         numeroCompra: this.numeroCompra.trim() || null,
         fecha: this.fechaCompra
-          ? this.fechaCompra.toISOString().split('.')[0]
+          ? aFechaHoraLocal(this.fechaCompra)
           : null,
         fechaVencimiento: fechaVencimientoStr,
         observaciones: this.observaciones.trim() || null,
