@@ -25,6 +25,7 @@ import {
 import { EmpleadoTableModel } from '../../../core/models/nomina.model';
 import { AlertService } from '../../../shared/pipes/alert.service';
 
+import { aFechaLocal } from '../../../shared/utils/fecha.util';
 type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' | undefined;
 
 @Component({
@@ -248,7 +249,7 @@ export class RevisionAsistenciaComponent implements OnInit {
   }
 
   // ── Helpers ──
-  private fmt(d: Date): string { return d.toISOString().split('T')[0]; }
+  private fmt(d: Date): string { return aFechaLocal(d); }
   private startOfMonth(): Date { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); }
 
   periodoSeverity(e: string): TagSeverity {

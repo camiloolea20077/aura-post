@@ -18,6 +18,7 @@ import { lastValueFrom } from 'rxjs';
 import { CierreContableService } from '../../../core/services/cierre-contable.service';
 import { ReporteIvaDto } from '../../../core/models/cierre-contable.model';
 
+import { aFechaLocal } from '../../../shared/utils/fecha.util';
 @Component({
   selector: 'app-reporte-iva',
   standalone: true,
@@ -69,7 +70,7 @@ export class ReporteIvaComponent implements OnInit {
   }
 
   private fmt(d: Date): string {
-    return d.toISOString().split('T')[0];
+    return aFechaLocal(d);
   }
 
   formatCOP(v: number | null | undefined): string {

@@ -26,6 +26,7 @@ import { VisitaTableModel, EstadoVisita } from '../../models/vendedor.model';
 import { VisitaService } from '../services/visita.service';
 import { ConfirmarLlegadaComponent } from '../form/confirmar-llegada/confirmar-llegada.component';
 
+import { aFechaLocal } from '../../../../shared/utils/fecha.util';
 @Component({
   selector: 'app-index-visitas',
   standalone: true,
@@ -99,9 +100,9 @@ export class IndexVisitasComponent implements OnInit {
           params: {
             estado: this.filtroEstado,
             fechaDesde:
-              this.filtroFechaDesde?.toISOString().split('T')[0] ?? null,
+              aFechaLocal(this.filtroFechaDesde) ?? null,
             fechaHasta:
-              this.filtroFechaHasta?.toISOString().split('T')[0] ?? null,
+              aFechaLocal(this.filtroFechaHasta) ?? null,
           },
         }),
       );

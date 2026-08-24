@@ -41,6 +41,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 
+import { aFechaLocal } from '../../../shared/utils/fecha.util';
 @Component({
   selector: 'app-activos-fijos',
   standalone: true,
@@ -235,9 +236,7 @@ export class ActivosFijosComponent implements OnInit {
       );
       return;
     }
-    this.form.fechaAdquisicion = this.fechaAdquisicion
-      .toISOString()
-      .split('T')[0];
+    this.form.fechaAdquisicion = aFechaLocal(this.fechaAdquisicion);
     this.saving = true;
     this.cdr.markForCheck();
     try {
@@ -372,7 +371,7 @@ export class ActivosFijosComponent implements OnInit {
       codigo: '',
       descripcion: '',
       categoria: 'EQUIPO',
-      fechaAdquisicion: new Date().toISOString().split('T')[0],
+      fechaAdquisicion: aFechaLocal(new Date()),
       valorCompra: 0,
       vidaUtilMeses: 60,
       metodoDepreciacion: 'LINEA_RECTA',

@@ -34,6 +34,7 @@ import {
   TipoLiquidacion,
 } from '../../../../core/models/comision.model';
 
+import { aFechaLocal } from '../../../../shared/utils/fecha.util';
 @Component({
   selector: 'app-form-liquidacion',
   standalone: true,
@@ -204,8 +205,8 @@ export class FormLiquidacionComponent implements OnChanges {
     }
 
     const raw = this.frm.value;
-    const fechaDesde = raw.fechaDesde ? this.formatDate(raw.fechaDesde) : new Date().toISOString().split('T')[0];
-    const fechaHasta = raw.fechaHasta ? this.formatDate(raw.fechaHasta) : new Date().toISOString().split('T')[0];
+    const fechaDesde = raw.fechaDesde ? this.formatDate(raw.fechaDesde) : aFechaLocal(new Date());
+    const fechaHasta = raw.fechaHasta ? this.formatDate(raw.fechaHasta) : aFechaLocal(new Date());
 
     const dto = {
       ...(this.tipo === 'VENDEDOR'
@@ -233,7 +234,7 @@ export class FormLiquidacionComponent implements OnChanges {
   }
 
   private formatDate(d: Date): string {
-    return d.toISOString().split('T')[0];
+    return aFechaLocal(d);
   }
 
   close(): void {

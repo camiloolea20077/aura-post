@@ -19,6 +19,7 @@ import {
   AsientoContableModel, CreateSaldosInicialesDto, PlanCuentaModel,
 } from '../../../core/models/contabilidad.model';
 
+import { aFechaLocal } from '../../../shared/utils/fecha.util';
 interface LineaSaldo {
   cuentaId: number | null;
   saldo: number;
@@ -46,7 +47,7 @@ export class SaldosInicialesComponent implements OnInit {
   cuentasOpts: { label: string; value: number }[] = [];
   patrimonioOpts: { label: string; value: number }[] = [];
 
-  fechaApertura = new Date().toISOString().slice(0, 10);
+  fechaApertura = aFechaLocal(new Date());
   cuentaAjusteId: number | null = null;
   lineas: LineaSaldo[] = [{ cuentaId: null, saldo: 0 }];
 

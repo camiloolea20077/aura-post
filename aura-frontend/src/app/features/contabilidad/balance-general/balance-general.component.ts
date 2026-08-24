@@ -26,6 +26,7 @@ import {
   GrupoBalanceModel,
 } from '../../../core/models/contabilidad.model';
 
+import { aFechaLocal } from '../../../shared/utils/fecha.util';
 const AZUL = '#1d4ed8';
 const ROJO = '#b91c1c';
 const MORADO = '#7e22ce';
@@ -108,7 +109,7 @@ export class BalanceGeneralComponent implements OnInit {
   }
 
   toISO(d: Date): string {
-    return d.toISOString().slice(0, 10);
+    return aFechaLocal(d);
   }
 
   // ── PDF profesional (pdfmake) ────────────────────────────────────────

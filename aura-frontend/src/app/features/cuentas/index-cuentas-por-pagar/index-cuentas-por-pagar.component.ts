@@ -30,6 +30,7 @@ import { DetalleCuentaPagarComponent } from '../detalle-cuenta-pagar/detalle-cue
 import { DatePickerModule } from 'primeng/datepicker';
 import { SelectModule } from 'primeng/select';
 
+import { aFechaLocal } from '../../../shared/utils/fecha.util';
 type TagSeverity =
   | 'success'
   | 'secondary'
@@ -109,10 +110,10 @@ export class IndexCuentasPorPagarComponent implements OnInit {
       },
     };
     if (this.fechaDesde) {
-      filters.fechaDesde = this.fechaDesde.toISOString().split('T')[0];
+      filters.fechaDesde = aFechaLocal(this.fechaDesde);
     }
     if (this.fechaHasta) {
-      filters.fechaHasta = this.fechaHasta.toISOString().split('T')[0];
+      filters.fechaHasta = aFechaLocal(this.fechaHasta);
     }
     if (this.estadoFilter) {
       filters.params.estado = this.estadoFilter as any;

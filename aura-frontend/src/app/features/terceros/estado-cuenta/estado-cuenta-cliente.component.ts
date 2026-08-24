@@ -25,6 +25,7 @@ import {
 } from '../../../core/models/tercero.model';
 import { AlertService } from '../../../shared/pipes/alert.service';
 
+import { aFechaLocal } from '../../../shared/utils/fecha.util';
 type TagSeverity =
   | 'success'
   | 'secondary'
@@ -79,10 +80,10 @@ export class EstadoCuentaClienteComponent implements OnInit {
     this.cdr.markForCheck();
     try {
       const desde = this.fechaDesde
-        ? this.fechaDesde.toISOString().split('T')[0]
+        ? aFechaLocal(this.fechaDesde)
         : undefined;
       const hasta = this.fechaHasta
-        ? this.fechaHasta.toISOString().split('T')[0]
+        ? aFechaLocal(this.fechaHasta)
         : undefined;
 
       const res = await lastValueFrom(

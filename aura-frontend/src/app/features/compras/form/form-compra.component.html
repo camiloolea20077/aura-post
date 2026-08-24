@@ -124,7 +124,12 @@
               optionLabel="label"
               optionValue="value"
               styleClass="w-full"
+              (onChange)="onTipoDocumentoChange()"
             />
+            <small class="campo-hint" *ngIf="esNotaCredito">
+              La nota crédito <b>descuenta</b> del inventario la mercancía que no
+              llegó y baja lo que se le debe al proveedor.
+            </small>
           </div>
         </div>
         <div class="campo-row">
@@ -137,9 +142,112 @@
               optionValue="value"
               placeholder="Selecciona..."
               styleClass="w-full"
+              (onChange)="onSucursalChange()"
             />
           </div>
         </div>
+
+        <!-- ── Nota crédito: qué factura corrige y qué pasa con la plata ──
+             Una NC no compra nada: anula mercancía de una factura concreta.
+             Sin decir cuál, no hay contra qué validar las cantidades ni qué
+             deuda bajar. -->
+        <ng-container *ngIf="esNotaCredito">
+          <div class="campo-row campo-row--full">
+            <label>
+              Factura que corrige <span class="required">*</span>
+            </label>
+            <div class="campo-control">
+              <!-- Se busca de a página contra el servidor: un proveedor de años
+                   tiene miles de facturas y traerlas todas tumba el formulario. -->
+              <div class="factura-origen-picker" *ngIf="!facturaOrigen">
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-search"
+                  label="Buscar factura..."
+                  class="p-button-outlined w-full"
+                  [disabled]="!proveedorSeleccionado"
+                  (click)="abrirFacturaDialog()"
+                ></button>
+              </div>
+
+              <div class="proveedor-chip" *ngIf="facturaOrigen">
+                <i class="pi pi-file"></i>
+                <div class="chip-info">
+                  <span class="chip-nombre">{{ facturaOrigenLabel }}</span>
+                  <span class="chip-doc">Factura que corrige la nota crédito</span>
+                </div>
+                <button
+                  type="button"
+                  class="chip-clear"
+                  (click)="quitarFacturaOrigen()"
+                  pTooltip="Cambiar factura"
+                >
+                  <i class="pi pi-times"></i>
+                </button>
+              </div>
+
+              <small class="campo-hint" *ngIf="!proveedorSeleccionado">
+                Selecciona primero el proveedor.
+              </small>
+              <small class="campo-hint" *ngIf="cargandoItemsAcreditables">
+                Cargando los productos que quedan por acreditar...
+              </small>
+              <small
+                class="campo-hint"
+                *ngIf="facturaOrigen && !cargandoItemsAcreditables"
+              >
+                Se cargaron los productos con la cantidad que aún se puede
+                acreditar. Ajusta o elimina las líneas que sí llegaron.
+              </small>
+            </div>
+          </div>
+
+          <div class="campo-row campo-row--full" *ngIf="compraOrigenId">
+            <label>
+              ¿Qué se hace con el valor? <span class="required">*</span>
+            </label>
+            <div class="campo-control">
+              <div class="origen-opciones">
+                <label
+                  *ngFor="let d of destinoNotaCreditoOpts; trackBy: trackByOpcion"
+                  class="origen-card"
+                  [class.selected]="destinoNotaCredito === d.value"
+                  [class.disabled]="d.disabled"
+                >
+                  <p-radioButton
+                    name="destinoNotaCredito"
+                    [value]="d.value"
+                    [(ngModel)]="destinoNotaCredito"
+                    [disabled]="d.disabled"
+                    [inputId]="'nc-destino-' + d.value"
+                  />
+                  <span class="origen-texto">
+                    <span class="origen-titulo">
+                      <i class="pi {{ d.icon }}"></i> {{ d.label }}
+                    </span>
+                    <small class="origen-hint">{{ d.hint }}</small>
+                  </span>
+                </label>
+              </div>
+
+              <!-- Va aquí, pegada a la elección que la provoca, y suelta del
+                   .campo-row: esas filas reservan 160px para la etiqueta y una
+                   nota sin etiqueta quedaba estrujada en esa columna. -->
+              <div class="nota-doc" *ngIf="!notaCreditoMuevePlata">
+                <i class="pi pi-info-circle"></i>
+                <p *ngIf="destinoNotaCredito === 'CRUCE_CXP'">
+                  El valor se descuenta de lo que se le debe al proveedor por esa
+                  factura. <b>No mueve caja ni bancos.</b>
+                </p>
+                <p *ngIf="destinoNotaCredito === 'SALDO_A_FAVOR'">
+                  El valor queda como crédito con el proveedor para próximas
+                  compras. <b>No mueve caja ni bancos.</b>
+                </p>
+              </div>
+            </div>
+          </div>
+        </ng-container>
         <div class="campo-row">
           <label>N° Documento <span class="optional">(opc.)</span></label>
           <div class="campo-control">
@@ -169,18 +277,26 @@
       </div>
 
       <!-- ── Pago ──────────────────────────────────────────────────── -->
-      <h3 class="section">Pago</h3>
+      <h3 class="section">{{ tituloSeccionPago }}</h3>
       <div class="campos">
         <!-- ¿De dónde sale la plata? Se pregunta en vez de deducirlo: una
              compra en efectivo caia siempre en la caja abierta del punto,
              aunque la hubiera pagado el administrador con su caja menor.
              "Otra cuenta" esta disponible haya o no caja abierta. -->
-        <div class="campo-row campo-row--full">
-          <label>¿De dónde sale la plata? <span class="required">*</span></label>
+        <div
+          class="campo-row campo-row--full"
+          *ngIf="!esNotaCredito || notaCreditoMuevePlata"
+        >
+          <label *ngIf="!esNotaCredito"
+            >¿De dónde sale la plata? <span class="required">*</span></label
+          >
+          <label *ngIf="esNotaCredito"
+            >¿Por dónde entra la plata? <span class="required">*</span></label
+          >
           <div class="campo-control">
             <div class="origen-opciones">
               <label
-                *ngFor="let o of origenOpts"
+                *ngFor="let o of origenOptsVisibles; trackBy: trackByOpcion"
                 class="origen-card"
                 [class.selected]="origenFondos === o.value"
               >
@@ -295,15 +411,17 @@
         </div>
 
 
-        <!-- La via no pide cuenta ni caja: solo afirma un hecho pasado. -->
-        <div class="campo-row campo-row--full" *ngIf="esCajaOtroDia">
-          <div class="campo-control">
-            <small class="campo-hint">
-              La compra queda registrada contra la cuenta <b>Caja</b>, pero
-              <b>no afecta el arqueo de ninguna caja</b>: ni el de hoy ni el de
-              aquel día, que ya cerró contando esa salida.
-            </small>
-          </div>
+        <!-- La via no pide cuenta ni caja: solo afirma un hecho pasado.
+             Suelta en el grid .campos, no dentro de un .campo-row: sin etiqueta
+             que ocupe la primera columna, el texto se apretaba en los 160px
+             reservados para ella. -->
+        <div class="nota-doc" *ngIf="esCajaOtroDia">
+          <i class="pi pi-info-circle"></i>
+          <p>
+            La compra queda registrada contra la cuenta <b>Caja</b>, pero
+            <b>no afecta el arqueo de ninguna caja</b>: ni el de hoy ni el de
+            aquel día, que ya cerró contando esa salida.
+          </p>
         </div>
 
         <div class="campo-row" *ngIf="esCredito">
@@ -851,6 +969,125 @@
         <td><p-skeleton /></td>
         <td><p-skeleton width="90px" styleClass="ml-auto" /></td>
         <td><p-skeleton width="80px" styleClass="ml-auto" /></td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-dialog>
+
+<!-- ═══════ MODAL SELECTOR DE FACTURA A ACREDITAR ════════════════ -->
+<!-- Lazy contra el servidor: el proveedor puede tener miles de facturas y
+     cargarlas todas en un dropdown deja el formulario inservible. -->
+<p-dialog
+  [(visible)]="showFacturaDialog"
+  header="Factura que corrige la nota crédito"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '720px' }"
+  [contentStyle]="{ padding: '0' }"
+  styleClass="aura-dialog prod-dialog"
+  (onHide)="showFacturaDialog = false"
+>
+  <div class="prod-dialog-search">
+    <span class="p-input-icon-left search-wrap-dialog">
+      <i class="pi pi-search"></i>
+      <input
+        type="text"
+        pInputText
+        placeholder="N° de factura, consecutivo u observación..."
+        [(ngModel)]="facturaSearch"
+        (input)="onFacturaSearch()"
+        (keydown.escape)="facturaSearch = ''; onFacturaSearch()"
+        class="search-input-dialog"
+        autocomplete="off"
+      />
+      <button
+        *ngIf="facturaSearch"
+        class="clear-btn-dialog"
+        (click)="facturaSearch = ''; onFacturaSearch()"
+      >
+        <i class="pi pi-times"></i>
+      </button>
+    </span>
+  </div>
+
+  <p-table
+    [value]="facturaItems"
+    [lazy]="true"
+    (onLazyLoad)="loadFacturaTable($event)"
+    [paginator]="true"
+    [rows]="10"
+    [totalRecords]="facturaTotal"
+    [loading]="facturaLoading"
+    [rowsPerPageOptions]="[10, 25]"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="{first}-{last} de {totalRecords}"
+    [tableStyle]="{ 'min-width': '100%' }"
+    styleClass="prod-select-table"
+    selectionMode="single"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="min-width: 160px">Factura</th>
+        <th style="width: 120px">Fecha</th>
+        <th style="width: 90px">Pago</th>
+        <th style="width: 120px" class="text-right">Total</th>
+        <th style="width: 130px" class="text-right">Saldo</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-f>
+      <tr class="prod-dialog-row" (click)="seleccionarFacturaOrigen(f)">
+        <td>
+          <div class="prod-info-cell">
+            <span class="prod-info-nombre">{{ f.numeroCompra || "#" + f.id }}</span>
+            <span class="prod-info-barras">Compra #{{ f.id }}</span>
+          </div>
+        </td>
+        <td>{{ f.fecha | date: "dd/MM/yyyy" }}</td>
+        <td>
+          <span class="sku-chip">{{ f.formaPago || "—" }}</span>
+        </td>
+        <td class="text-right">
+          <span class="price-cell">{{
+            f.total | currency: "COP" : "symbol-narrow" : "1.0-0"
+          }}</span>
+        </td>
+        <td class="text-right">
+          <!-- El saldo decide qué puede hacer la NC con la plata: sin deuda no
+               hay nada que cruzar. -->
+          <span class="cost-cell" *ngIf="f.saldoPendiente > 0">{{
+            f.saldoPendiente | currency: "COP" : "symbol-narrow" : "1.0-0"
+          }}</span>
+          <span class="text-muted" *ngIf="!f.saldoPendiente">Pagada</span>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="5">
+          <div class="dialog-empty">
+            <i class="pi pi-search"></i>
+            <p>
+              {{
+                facturaSearch
+                  ? 'Sin resultados para "' + facturaSearch + '"'
+                  : "Este proveedor no tiene compras acreditables en esta sucursal"
+              }}
+            </p>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="loadingbody">
+      <tr *ngFor="let s of [1, 2, 3, 4, 5]">
+        <td><p-skeleton /></td>
+        <td><p-skeleton width="90px" /></td>
+        <td><p-skeleton width="70px" /></td>
+        <td><p-skeleton width="90px" styleClass="ml-auto" /></td>
+        <td><p-skeleton width="90px" styleClass="ml-auto" /></td>
       </tr>
     </ng-template>
   </p-table>

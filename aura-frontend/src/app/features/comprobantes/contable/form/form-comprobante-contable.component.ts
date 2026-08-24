@@ -35,6 +35,7 @@ import {
 import { TerceroTableModel } from '../../../../core/models/tercero.model';
 import { CentroCostoDto } from '../../../../core/models/centro-costo.model';
 
+import { aFechaLocal } from '../../../../shared/utils/fecha.util';
 @Component({
   selector: 'app-form-comprobante-contable',
   standalone: true,
@@ -508,6 +509,6 @@ export class FormComprobanteContableComponent implements OnInit {
   }
 
   private hoyISO(): string {
-    return new Date().toISOString().slice(0, 10);
+    return aFechaLocal(new Date());
   }
 }
