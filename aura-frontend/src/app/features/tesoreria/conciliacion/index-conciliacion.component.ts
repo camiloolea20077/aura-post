@@ -22,6 +22,7 @@ import { AlertService } from '../../../shared/pipes/alert.service';
 import { TesoreriaMovimientoModel } from '../../../core/models/tesoreria.model';
 import { CuentaBancariaModel } from '../../../core/models/cuenta-bancaria.model';
 
+import { aFechaLocal } from '../../../shared/utils/fecha.util';
 export interface ExtractoLinea {
   fecha: string;
   concepto: string;
@@ -324,7 +325,7 @@ export class IndexConciliacionComponent implements OnInit {
   }
 
   toISO(d: Date): string {
-    return d.toISOString().slice(0, 10);
+    return aFechaLocal(d);
   }
 
   get cuentasOpts() {

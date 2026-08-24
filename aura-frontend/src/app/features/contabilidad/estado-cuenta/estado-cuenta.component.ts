@@ -25,6 +25,7 @@ import {
 } from '../../../core/models/tercero.model';
 import { AlertService } from '../../../shared/pipes/alert.service';
 
+import { aFechaLocal } from '../../../shared/utils/fecha.util';
 type TagSeverity =
   | 'success'
   | 'secondary'
@@ -123,10 +124,10 @@ export class EstadoCuentaComponent implements OnInit {
 
     try {
       const desde = this.fechaDesde
-        ? this.fechaDesde.toISOString().split('T')[0]
+        ? aFechaLocal(this.fechaDesde)
         : undefined;
       const hasta = this.fechaHasta
-        ? this.fechaHasta.toISOString().split('T')[0]
+        ? aFechaLocal(this.fechaHasta)
         : undefined;
 
       const res = await lastValueFrom(
@@ -154,8 +155,8 @@ export class EstadoCuentaComponent implements OnInit {
     this.loadingPdf = true;
     this.cdr.markForCheck();
 
-    const desde = this.fechaDesde ? this.fechaDesde.toISOString().split('T')[0] : undefined;
-    const hasta = this.fechaHasta ? this.fechaHasta.toISOString().split('T')[0] : undefined;
+    const desde = this.fechaDesde ? aFechaLocal(this.fechaDesde) : undefined;
+    const hasta = this.fechaHasta ? aFechaLocal(this.fechaHasta) : undefined;
 
     this.terceroService.getEstadoCuentaPdf(this.clienteSeleccionado.id, desde, hasta)
       .subscribe({

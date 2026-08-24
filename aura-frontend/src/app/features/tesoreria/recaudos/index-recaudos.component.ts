@@ -28,6 +28,7 @@ import {
 } from '../../../core/models/tesoreria.model';
 import { CuentaBancariaModel } from '../../../core/models/cuenta-bancaria.model';
 
+import { aFechaLocal } from '../../../shared/utils/fecha.util';
 @Component({
   selector: 'app-index-recaudos',
   standalone: true,
@@ -146,7 +147,7 @@ export class IndexRecaudosComponent implements OnInit {
   }
 
   toISO(d: Date): string {
-    return d.toISOString().slice(0, 10);
+    return aFechaLocal(d);
   }
 
   private emptyForm(): CreateMovimientoDto {

@@ -29,6 +29,7 @@ import {
   ReporteMovimientosCajaModel,
 } from '../../core/models/reporte-avanzado.model';
 
+import { aFechaLocal } from '../../shared/utils/fecha.util';
 type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' | undefined;
 
 @Component({
@@ -129,7 +130,7 @@ export class ReportesAvanzadosComponent implements OnInit {
   }
 
   private toIso(d: Date): string {
-    return d.toISOString().split('T')[0];
+    return aFechaLocal(d);
   }
 
   private async cargarResumen(desde: string, hasta: string): Promise<void> {

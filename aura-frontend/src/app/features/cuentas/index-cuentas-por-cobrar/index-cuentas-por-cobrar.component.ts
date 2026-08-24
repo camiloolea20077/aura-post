@@ -29,6 +29,7 @@ import { SelectModule } from 'primeng/select';
 import { FormCuentaCobrarComponent } from '../form-cuenta-cobrar/form-cuenta-cobrar.component';
 import { DetalleCuentaCobrarComponent } from '../detalle-cuenta-cobrar/detalle-cuenta-cobrar.component';
 
+import { aFechaLocal } from '../../../shared/utils/fecha.util';
 type TagSeverity =
   | 'success'
   | 'secondary'
@@ -103,10 +104,10 @@ export class IndexCuentasPorCobrarComponent implements OnInit {
     this.loading = true;
     const filters: CuentaCobrarFilters = {};
     if (this.fechaDesde) {
-      filters.fechaDesde = this.fechaDesde.toISOString().split('T')[0];
+      filters.fechaDesde = aFechaLocal(this.fechaDesde);
     }
     if (this.fechaHasta) {
-      filters.fechaHasta = this.fechaHasta.toISOString().split('T')[0];
+      filters.fechaHasta = aFechaLocal(this.fechaHasta);
     }
     if (this.estadoFilter) {
       filters.estado = this.estadoFilter as any;

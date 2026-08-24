@@ -20,6 +20,7 @@ import { saveAs } from 'file-saver';
 import { CierreContableService } from '../../../core/services/cierre-contable.service';
 import { CierreContableDto } from '../../../core/models/cierre-contable.model';
 
+import { aFechaLocal } from '../../../shared/utils/fecha.util';
 @Component({
   selector: 'app-cierre-contable',
   standalone: true,
@@ -78,7 +79,7 @@ export class CierreContableComponent implements OnInit {
   }
 
   private fmt(d: Date): string {
-    return d.toISOString().split('T')[0];
+    return aFechaLocal(d);
   }
 
   formatCOP(v: number | null | undefined): string {

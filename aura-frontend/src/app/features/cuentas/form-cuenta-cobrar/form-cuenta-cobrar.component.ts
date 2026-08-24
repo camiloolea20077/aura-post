@@ -32,6 +32,7 @@ import {
 import { CuentaCobrarService } from '../services/cuenta-cobrar.service';
 import { TerceroService } from '../../../core/services/tercero.service';
 
+import { aFechaHoraLocal } from '../../../shared/utils/fecha.util';
 @Component({
   selector: 'app-form-cuenta-cobrar',
   standalone: true,
@@ -125,8 +126,8 @@ export class FormCuentaCobrarComponent implements OnChanges {
     const dto: CreateCuentaCobrarDto = {
       clienteId: formValue.clienteId,
       totalDeuda: formValue.totalDeuda,
-      fechaEmision: formValue.fechaEmision.toISOString(),
-      fechaVencimiento: formValue.fechaVencimiento?.toISOString() || null,
+      fechaEmision: aFechaHoraLocal(formValue.fechaEmision),
+      fechaVencimiento: aFechaHoraLocal(formValue.fechaVencimiento) || null,
       observaciones: formValue.observaciones || null,
     };
 

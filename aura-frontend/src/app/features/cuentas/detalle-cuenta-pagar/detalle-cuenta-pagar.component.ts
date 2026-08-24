@@ -45,6 +45,7 @@ import {
 import { CuentaBancariaService } from '../../../core/services/cuenta-bancaria.service';
 import { ContabilidadService } from '../../../core/services/contabilidad.service';
 
+import { aFechaHoraLocal, aFechaLocal } from '../../../shared/utils/fecha.util';
 type TagSeverity =
   | 'success'
   | 'secondary'
@@ -300,7 +301,7 @@ export class DetalleCuentaPagarComponent implements OnInit {
       banco: formValue.banco || null,
       cuentaBancariaId: this.esEfectivo ? null : formValue.cuentaBancariaId || null,
       cuentaContableId: this.esEfectivo ? formValue.cuentaContableId || null : null,
-      fechaPago: formValue.fechaPago.toISOString(),
+      fechaPago: aFechaHoraLocal(formValue.fechaPago),
       turnoCajaId: this.turnoActivo?.id ?? null,
     };
 
@@ -353,7 +354,7 @@ export class DetalleCuentaPagarComponent implements OnInit {
   }
 
   isAbonoFromToday(fechaPago: string): boolean {
-    const today = new Date().toISOString().split('T')[0];
+    const today = aFechaLocal(new Date());
     return fechaPago.split('T')[0] === today;
   }
 

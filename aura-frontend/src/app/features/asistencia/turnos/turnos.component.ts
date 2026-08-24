@@ -25,6 +25,7 @@ import {
 import { EmpleadoTableModel } from '../../../core/models/nomina.model';
 import { AlertService } from '../../../shared/pipes/alert.service';
 
+import { aFechaLocal } from '../../../shared/utils/fecha.util';
 @Component({
   selector: 'app-turnos',
   standalone: true,
@@ -291,7 +292,7 @@ export class TurnosComponent implements OnInit {
     return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   }
   private fmtFecha(d: Date): string {
-    return d.toISOString().split('T')[0];
+    return aFechaLocal(d);
   }
   private emptyForm(): CreateTurnoDto {
     return {

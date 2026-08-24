@@ -32,6 +32,7 @@ import { CuentaPagarService } from '../services/cuenta-pagar.service';
 import { TerceroService } from '../../../core/services/tercero.service';
 import { OnInit } from '@angular/core';
 
+import { aFechaHoraLocal } from '../../../shared/utils/fecha.util';
 @Component({
   selector: 'app-form-cuenta-pagar',
   standalone: true,
@@ -142,8 +143,8 @@ export class FormCuentaPagarComponent implements OnChanges, OnInit {
       proveedorId: formValue.proveedorId,
       numeroFacturaExterno: formValue.numeroFacturaExterno,
       totalDeuda: formValue.totalDeuda,
-      fechaEmision: formValue.fechaEmision.toISOString(),
-      fechaVencimiento: formValue.fechaVencimiento?.toISOString() || null,
+      fechaEmision: aFechaHoraLocal(formValue.fechaEmision),
+      fechaVencimiento: aFechaHoraLocal(formValue.fechaVencimiento) || null,
       observaciones: formValue.observaciones || null,
     };
 

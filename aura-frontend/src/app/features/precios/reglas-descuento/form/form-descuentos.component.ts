@@ -38,6 +38,7 @@ import { ProductoService } from '../../../../core/services/producto.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 import { FilterByIdPipe } from '../../../../shared/pipes/filter-by-id.pipe';
 
+import { aFechaHoraLocal } from '../../../../shared/utils/fecha.util';
 @Component({
   selector: 'app-form-descuentos',
   standalone: true,
@@ -332,7 +333,7 @@ export class FormDescuentosComponent implements OnInit, OnChanges {
     this.isSubmitting = true;
     try {
       const formatDate = (d: Date | null): string | null =>
-        d ? d.toISOString().split('.')[0] : null;
+        d ? aFechaHoraLocal(d) : null;
 
       const formatHora = (d: Date | string | null): string | null => {
         if (!d) return null;

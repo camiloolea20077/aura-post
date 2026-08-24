@@ -32,11 +32,14 @@ import { MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import {
+  CompraAcreditableItemModel,
+  CompraAcreditableModel,
   CompraDetalleModel,
   CompraLineaUI,
   CompraModel,
   CreateCompraDetalleDto,
   CreateCompraDto,
+  DestinoNotaCredito,
   FormaPago,
   PrefilledCompraOC,
   ProductoOpcion,
@@ -68,6 +71,7 @@ import {
   ProductoTableModel,
 } from '../../../core/models/producto.model';
 
+import { aFechaHoraLocal } from '../../../shared/utils/fecha.util';
 @Component({
   selector: 'app-form-compra',
   standalone: true,
@@ -321,6 +325,375 @@ export class FormCompraComponent implements OnInit {
     { label: 'Recibo', value: 'RECIBO' },
   ];
 
+  // ─── Nota crédito ─────────────────────────────────────────────────
+  //
+  // Una nota crédito no compra nada: anula mercancía que no llegó de una
+  // factura concreta. Por eso pide la factura que corrige (para no acreditar
+  // más de lo que trajo) y qué se hace con la plata.
+
+  /**
+   * La factura elegida, no la lista de candidatas: el proveedor puede tener
+   * miles y se buscan de a página desde el servidor.
+   */
+  public facturaOrigen: CompraAcreditableModel | null = null;
+  public destinoNotaCredito: DestinoNotaCredito | null = null;
+  public cargandoItemsAcreditables = false;
+
+  // Diálogo de búsqueda de la factura a acreditar (lazy, igual que el de
+  // productos: paginado y con la búsqueda en el servidor).
+  public showFacturaDialog = false;
+  public facturaSearch = '';
+  public facturaItems: CompraAcreditableModel[] = [];
+  public facturaTotal = 0;
+  public facturaLoading = false;
+  private facturaLastEvent: TableLazyLoadEvent | null = null;
+  private facturaSearchTimer: ReturnType<typeof setTimeout> | null = null;
+  private facturaReqId = 0;
+
+  get esNotaCredito(): boolean {
+    return this.tipoDocumento === 'NOTA_CREDITO';
+  }
+
+  get compraOrigenId(): number | null {
+    return this.facturaOrigen?.id ?? null;
+  }
+
+  /** Lo que aún se le debe por la factura que se está corrigiendo. */
+  get saldoFacturaOrigen(): number {
+    return Number(this.facturaOrigen?.saldoPendiente ?? 0);
+  }
+
+  /** Cómo se ve la factura elegida en el campo del formulario. */
+  get facturaOrigenLabel(): string {
+    const f = this.facturaOrigen;
+    if (!f) return '';
+    return (
+      `${f.numeroCompra || '#' + f.id} · ` +
+      `${new Date(f.fecha).toLocaleDateString('es-CO')} · ` +
+      `${this.formatoMoneda(f.total)}` +
+      (Number(f.saldoPendiente) > 0
+        ? ` · debe ${this.formatoMoneda(Number(f.saldoPendiente))}`
+        : ' · pagada')
+    );
+  }
+
+  /**
+   * Cruzar contra la deuda solo tiene sentido si la factura todavía se debe:
+   * ofrecerlo sobre una factura pagada solo produce un error del backend.
+   *
+   * <p>El resultado se memoiza por saldo. Un getter que devuelve un array nuevo
+   * en cada ciclo de detección de cambios hace que el `*ngFor` destruya y
+   * recree los `p-radioButton` una y otra vez — con `ngModel` dentro, eso
+   * dispara más ciclos y termina colgando la pestaña.
+   */
+  private destinoOptsCache: {
+    saldo: number;
+    opts: {
+      label: string;
+      value: DestinoNotaCredito;
+      hint: string;
+      icon: string;
+      disabled: boolean;
+    }[];
+  } | null = null;
+
+  get destinoNotaCreditoOpts(): {
+    label: string;
+    value: DestinoNotaCredito;
+    hint: string;
+    icon: string;
+    disabled: boolean;
+  }[] {
+    const saldo = this.saldoFacturaOrigen;
+    if (this.destinoOptsCache?.saldo === saldo) {
+      return this.destinoOptsCache.opts;
+    }
+    const opts: {
+      label: string;
+      value: DestinoNotaCredito;
+      hint: string;
+      icon: string;
+      disabled: boolean;
+    }[] = [
+      {
+        label: 'Bajar la deuda',
+        value: 'CRUCE_CXP',
+        icon: 'pi-minus-circle',
+        hint:
+          saldo > 0
+            ? `Descuenta de los ${this.formatoMoneda(saldo)} que aún se deben`
+            : 'La factura ya está pagada: no hay deuda que bajar',
+        disabled: saldo <= 0,
+      },
+      {
+        label: 'Devuelve la plata',
+        value: 'DEVOLUCION_DINERO',
+        icon: 'pi-arrow-down-left',
+        hint: 'El proveedor reintegra el dinero a la caja o al banco',
+        disabled: false,
+      },
+      {
+        label: 'Saldo a favor',
+        value: 'SALDO_A_FAVOR',
+        icon: 'pi-bookmark',
+        hint: 'Queda como crédito con el proveedor para próximas compras',
+        disabled: false,
+      },
+    ];
+    this.destinoOptsCache = { saldo, opts };
+    return opts;
+  }
+
+  trackByOpcion(_: number, o: { value: string }): string {
+    return o.value;
+  }
+
+  /** La nota crédito solo mueve plata cuando el proveedor la devuelve. */
+  get notaCreditoMuevePlata(): boolean {
+    return this.destinoNotaCredito === 'DEVOLUCION_DINERO';
+  }
+
+  /**
+   * Cómo se llama la sección del dinero. "Reintegro" solo cuando de verdad
+   * entra plata: titular así una sección que únicamente dice "no mueve caja ni
+   * bancos" es contradecirse en el mismo encabezado.
+   */
+  get tituloSeccionPago(): string {
+    if (!this.esNotaCredito) return 'Pago';
+    return this.notaCreditoMuevePlata ? 'Reintegro' : 'Nota crédito';
+  }
+
+  /**
+   * Formateador único. Se usa desde getters que corren en cada ciclo de
+   * detección de cambios y construir un `Intl.NumberFormat` por llamada es de
+   * lo más caro que puede hacerse ahí.
+   */
+  private static readonly COP = new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    maximumFractionDigits: 0,
+  });
+
+  private formatoMoneda(v: number): string {
+    return FormCompraComponent.COP.format(v || 0);
+  }
+
+  /**
+   * La mercancía de la nota crédito sale de la sucursal donde entró, así que
+   * cambiar de sucursal cambia las facturas que se pueden acreditar.
+   */
+  onSucursalChange(): void {
+    if (!this.esNotaCredito) return;
+    this.limpiarNotaCredito();
+    this.lineas.set([]);
+  }
+
+  /**
+   * En una nota crédito la plata entra, no sale: "Crédito" y "Ya salió de la
+   * caja" no significan nada aquí y ofrecerlos solo confunde.
+   */
+  get origenOptsVisibles(): typeof this.origenOpts {
+    if (!this.esNotaCredito) return this.origenOpts;
+    // Se calcula una sola vez: devolver un array nuevo en cada ciclo de
+    // detección de cambios hace que el `*ngFor` recree los radios cada vez.
+    this.origenOptsNC ??= this.origenOpts.filter(
+      (o) => o.value !== 'CREDITO' && o.value !== 'CAJA_OTRO_DIA',
+    );
+    return this.origenOptsNC;
+  }
+
+  private origenOptsNC: typeof this.origenOpts | null = null;
+
+  /** Cambiar el tipo de documento entra o sale del modo nota crédito. */
+  onTipoDocumentoChange(): void {
+    if (!this.esNotaCredito) {
+      this.limpiarNotaCredito();
+      this.guardarDraft();
+      return;
+    }
+    // En una nota crédito la plata nunca sale: el origen de fondos de la
+    // compra no aplica y se vuelve a preguntar solo si el proveedor devuelve.
+    this.origenFondos = null;
+    this.guardarDraft();
+  }
+
+  private limpiarNotaCredito(): void {
+    this.facturaOrigen = null;
+    this.destinoNotaCredito = null;
+    this.facturaItems = [];
+    this.facturaTotal = 0;
+  }
+
+  // ─── Diálogo de búsqueda de la factura a acreditar ────────────────
+  //
+  // Mismo patrón que el selector de productos: tabla lazy, paginada y con la
+  // búsqueda en el servidor. Un proveedor de años tiene miles de facturas —
+  // traerlas todas para filtrarlas en el navegador tumba el formulario.
+
+  abrirFacturaDialog(): void {
+    if (!this.proveedorSeleccionado) {
+      this.alertService.showWarn(
+        'Falta el proveedor',
+        'Selecciona primero el proveedor de la nota crédito.',
+      );
+      return;
+    }
+    this.facturaSearch = '';
+    this.facturaItems = [];
+    this.facturaTotal = 0;
+    this.facturaLoading = false;
+    this.showFacturaDialog = true;
+
+    // La página se pide aquí a propósito. `p-table` emite `onLazyLoad` solo
+    // cuando se crea, y `p-dialog` no destruye su contenido al cerrarse: de la
+    // segunda apertura en adelante el evento no vuelve a dispararse, así que la
+    // tabla se quedaba vacía —"este proveedor no tiene compras acreditables"—
+    // hasta que el usuario escribiera algo en el buscador.
+    this.loadFacturaTable({ first: 0, rows: 10 });
+  }
+
+  async loadFacturaTable(event: TableLazyLoadEvent): Promise<void> {
+    this.facturaLastEvent = event;
+    if (!this.proveedorSeleccionado) {
+      this.facturaItems = [];
+      this.facturaTotal = 0;
+      this.facturaLoading = false;
+      this.cdr.markForCheck();
+      return;
+    }
+
+    // Solo manda la última petición. Al teclear rápido las respuestas pueden
+    // llegar desordenadas y una vieja pisaría el resultado que el usuario está
+    // viendo; y la que llega tarde tampoco debe apagar el spinner de la nueva.
+    const peticion = ++this.facturaReqId;
+
+    this.facturaLoading = true;
+    this.cdr.markForCheck();
+
+    const page =
+      event.first != null && event.rows
+        ? Math.floor(event.first / event.rows)
+        : 0;
+
+    try {
+      const res = await lastValueFrom(
+        this.compraService.acreditablesPage({
+          page,
+          rows: event.rows ?? 10,
+          search: this.facturaSearch || null,
+          params: {
+            proveedorId: this.proveedorSeleccionado.id,
+            sucursalId: this.sucursalId,
+          },
+        }),
+      );
+      if (peticion !== this.facturaReqId) return;
+      this.facturaItems = res?.data?.content ?? [];
+      this.facturaTotal = res?.data?.totalElements ?? 0;
+    } catch {
+      if (peticion !== this.facturaReqId) return;
+      this.facturaItems = [];
+      this.facturaTotal = 0;
+    } finally {
+      if (peticion === this.facturaReqId) {
+        this.facturaLoading = false;
+        this.cdr.markForCheck();
+      }
+    }
+  }
+
+  /**
+   * Teclear no dispara una consulta por letra: el proveedor puede tener miles
+   * de facturas y cada pulsación sería un COUNT sobre toda la tabla. Se espera
+   * a que el usuario deje de escribir, igual que el buscador de proveedores.
+   */
+  onFacturaSearch(): void {
+    if (this.facturaSearchTimer) clearTimeout(this.facturaSearchTimer);
+    this.facturaSearchTimer = setTimeout(() => {
+      const base = this.facturaLastEvent ?? { first: 0, rows: 10 };
+      this.loadFacturaTable({ ...base, first: 0 });
+    }, 350);
+  }
+
+  async seleccionarFacturaOrigen(f: CompraAcreditableModel): Promise<void> {
+    this.facturaOrigen = f;
+    this.showFacturaDialog = false;
+    await this.onCompraOrigenChange();
+  }
+
+  quitarFacturaOrigen(): void {
+    this.limpiarNotaCredito();
+    this.lineas.set([]);
+    this.origenFondos = null;
+    this.guardarDraft();
+  }
+
+  /**
+   * Al elegir la factura se cargan sus productos con la cantidad que queda por
+   * acreditar. Se prellenan las líneas porque lo normal es acreditar todo y
+   * quitar lo que sí llegó — más rápido que buscar cada producto otra vez.
+   */
+  async onCompraOrigenChange(): Promise<void> {
+    this.destinoNotaCredito =
+      this.saldoFacturaOrigen > 0 ? 'CRUCE_CXP' : 'SALDO_A_FAVOR';
+    this.origenFondos = null;
+
+    if (!this.compraOrigenId) {
+      this.lineas.set([]);
+      return;
+    }
+
+    this.cargandoItemsAcreditables = true;
+    this.cdr.markForCheck();
+    try {
+      const res = await lastValueFrom(
+        this.compraService.itemsAcreditables(this.compraOrigenId),
+      );
+      const items: CompraAcreditableItemModel[] = res?.data ?? [];
+      this.lineas.set(items.map((it) => this.lineaDesdeAcreditable(it)));
+      if (items.length === 0) {
+        this.alertService.showWarn(
+          'Nada por acreditar',
+          'Esta factura ya fue acreditada por completo.',
+        );
+      }
+    } catch {
+      this.lineas.set([]);
+    } finally {
+      this.cargandoItemsAcreditables = false;
+      this.guardarDraft();
+      this.cdr.markForCheck();
+    }
+  }
+
+  private lineaDesdeAcreditable(it: CompraAcreditableItemModel): CompraLineaUI {
+    const cantidad = Number(it.cantidadDisponible) || 0;
+    const costo = Number(it.costoUnitario) || 0;
+    const descuentoPct = Number(it.descuentoPct) || 0;
+    const ivaPct = Number(it.ivaPct) || 0;
+
+    const bruto = cantidad * costo;
+    const descuentoValor = +((bruto * descuentoPct) / 100).toFixed(2);
+    const neto = bruto - descuentoValor;
+    const impuestoValor = +((neto * ivaPct) / 100).toFixed(2);
+
+    return {
+      _id: uuidv4(),
+      productoId: it.productoId,
+      productoNombre: it.productoNombre,
+      cantidad,
+      costoUnitario: costo,
+      descuentoPct,
+      descuentoValor,
+      ivaPorcentaje: ivaPct,
+      impuestoValor,
+      subtotal: neto,
+      precioVenta1: null,
+      precioVenta2: null,
+      precioVenta3: null,
+    };
+  }
+
   // ─── Fletes ───────────────────────────────────────────────────────
   public fletes: number = 0;
 
@@ -553,6 +926,8 @@ export class FormCompraComponent implements OnInit {
         this.salidaCajaOtroDia,
       );
       this.tipoDocumento = draft.tipoDocumento || 'FACTURA_COMPRA';
+      this.facturaOrigen = draft.facturaOrigen ?? null;
+      this.destinoNotaCredito = draft.destinoNotaCredito ?? null;
       this.fletes = draft.fletes || 0;
 
       this.retefuentePct = draft.retefuentePct || 0;
@@ -578,7 +953,7 @@ export class FormCompraComponent implements OnInit {
         proveedorQuery: this.proveedorQuery,
         sucursalId: this.sucursalId,
         numeroCompra: this.numeroCompra,
-        fechaCompra: this.fechaCompra?.toISOString(),
+        fechaCompra: aFechaHoraLocal(this.fechaCompra),
         observaciones: this.observaciones,
         lineas: this.lineas(),
         formaPago: this.formaPago,
@@ -589,6 +964,8 @@ export class FormCompraComponent implements OnInit {
         cuentaBancariaId: this.cuentaBancariaId,
         cuentaContableId: this.cuentaContableId,
         tipoDocumento: this.tipoDocumento,
+        facturaOrigen: this.facturaOrigen,
+        destinoNotaCredito: this.destinoNotaCredito,
         fletes: this.fletes,
         retefuentePct: this.retefuentePct,
         reteivaPct: this.reteivaPct,
@@ -849,6 +1226,12 @@ export class FormCompraComponent implements OnInit {
     this.proveedorSeleccionado = t;
     this.proveedorQuery = t.nombreCompleto;
     this.cargarTerceroFull(t.id);
+    // La nota crédito se emite contra una factura de ESTE proveedor: cambiarlo
+    // invalida la que estuviera elegida.
+    if (this.esNotaCredito) {
+      this.limpiarNotaCredito();
+      this.lineas.set([]);
+    }
   }
 
   // Trae correo, teléfono, dirección y razón social del proveedor
@@ -883,6 +1266,7 @@ export class FormCompraComponent implements OnInit {
     this.proveedorSeleccionado = null;
     this.proveedorQuery = '';
     this.terceroFull = null;
+    this.limpiarNotaCredito();
   }
 
   // ─── Agregar línea vacía ──────────────────────────────────────────
@@ -1155,9 +1539,26 @@ export class FormCompraComponent implements OnInit {
         return `Línea ${n}: el costo debe ser mayor a 0.`;
     }
 
+    if (this.esNotaCredito) {
+      if (!this.compraOrigenId)
+        return 'Elige la factura de compra que corrige la nota crédito.';
+      if (!this.destinoNotaCredito)
+        return 'Indica qué se hace con el valor de la nota crédito.';
+      if (this.destinoNotaCredito === 'CRUCE_CXP' && this.saldoFacturaOrigen <= 0)
+        return 'Esa factura ya está pagada: no hay deuda que bajar.';
+
+      // Solo la devolución de dinero mueve plata; las otras dos no tocan caja
+      // ni bancos, así que preguntar por el origen sobraría.
+      if (!this.notaCreditoMuevePlata) return null;
+    }
+
     // Sin origen no se guarda: es la decisión que define a quién le afecta el
     // arqueo, y adivinarla es justo lo que descuadraba la caja del cajero.
-    if (!this.origenFondos) return 'Indica de dónde sale la plata.';
+    if (!this.origenFondos) {
+      return this.esNotaCredito
+        ? 'Indica por dónde entra la plata que devuelve el proveedor.'
+        : 'Indica de dónde sale la plata.';
+    }
     if (this.esBanco && !this.cuentaBancariaId)
       return 'Elige de qué cuenta bancaria sale el pago.';
     if (this.esCuenta && !this.cuentaContableId)
@@ -1189,7 +1590,7 @@ export class FormCompraComponent implements OnInit {
       if (this.formaPago === 'CREDITO' && this.plazoDias > 0) {
         const fv = new Date(this.fechaCompra);
         fv.setDate(fv.getDate() + this.plazoDias);
-        fechaVencimientoStr = fv.toISOString().slice(0, 19);
+        fechaVencimientoStr = aFechaHoraLocal(fv);
       }
 
       const dto: CreateCompraDto = {
@@ -1197,7 +1598,7 @@ export class FormCompraComponent implements OnInit {
         sucursalId: this.sucursalId!,
         numeroCompra: this.numeroCompra.trim() || null,
         fecha: this.fechaCompra
-          ? this.fechaCompra.toISOString().split('.')[0]
+          ? aFechaHoraLocal(this.fechaCompra)
           : null,
         fechaVencimiento: fechaVencimientoStr,
         observaciones: this.observaciones.trim() || null,
@@ -1214,23 +1615,30 @@ export class FormCompraComponent implements OnInit {
             ? this.motivoRetroactivo.trim() || null
             : null,
         tipoDocumento: this.tipoDocumento,
+        compraOrigenId: this.esNotaCredito ? this.compraOrigenId : null,
+        destinoNotaCredito: this.esNotaCredito ? this.destinoNotaCredito : null,
         fletes: this.fletes || null,
         // Del pago viaja SOLO el identificador de la vía elegida: informar dos
         // haría que el resolutor use el de más prioridad y no el que se quiso.
-        pagos: this.esCredito
-          ? null
-          : [
-              {
-                metodoPago: this.esBanco ? this.metodoPago : 'EFECTIVO',
-                monto:
-                  this.totalRetencionesValue > 0
-                    ? this.netaAPagarValue
-                    : this.totalValue,
-                banco: this.esBanco ? this.banco.trim() || null : null,
-                cuentaBancariaId: this.esBanco ? this.cuentaBancariaId : null,
-                cuentaContableId: this.esCuenta ? this.cuentaContableId : null,
-              },
-            ],
+        //
+        // En una nota crédito el "pago" es al revés — la plata entra — y solo
+        // existe cuando el proveedor la devuelve: cruzar la deuda o dejarla a
+        // favor no mueve caja ni bancos.
+        pagos:
+          (this.esNotaCredito && !this.notaCreditoMuevePlata) || this.esCredito
+            ? null
+            : [
+                {
+                  metodoPago: this.esBanco ? this.metodoPago : 'EFECTIVO',
+                  monto:
+                    this.totalRetencionesValue > 0
+                      ? this.netaAPagarValue
+                      : this.totalValue,
+                  banco: this.esBanco ? this.banco.trim() || null : null,
+                  cuentaBancariaId: this.esBanco ? this.cuentaBancariaId : null,
+                  cuentaContableId: this.esCuenta ? this.cuentaContableId : null,
+                },
+              ],
       };
 
       let res;
@@ -1251,8 +1659,10 @@ export class FormCompraComponent implements OnInit {
         if (res?.status === 201) {
           this.limpiarDraft();
           this.alertService.showSuccess(
-            'Compra registrada',
-            `Compra #${res.data?.id} creada. Stock actualizado.`,
+            this.esNotaCredito ? 'Nota crédito registrada' : 'Compra registrada',
+            this.esNotaCredito
+              ? `Nota crédito #${res.data?.id} creada. Stock descontado.`
+              : `Compra #${res.data?.id} creada. Stock actualizado.`,
           );
           this.router.navigate(['/compras'], {
             state: { savedCompra: res.data },
@@ -1298,6 +1708,7 @@ export class FormCompraComponent implements OnInit {
     this.cuentaBancariaId = null;
     this.cuentaContableId = null;
     this.tipoDocumento = 'FACTURA_COMPRA';
+    this.limpiarNotaCredito();
     this.fletes = 0;
   }
 

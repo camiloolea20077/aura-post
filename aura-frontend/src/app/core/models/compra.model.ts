@@ -2,6 +2,48 @@
 export type EstadoCompra = 'RECIBIDA' | 'ANULADA';
 export type TipoDocumentoCompra = 'FACTURA_COMPRA' | 'NOTA_DEBITO' | 'NOTA_CREDITO' | 'RECIBO';
 
+/**
+ * Qué se hace con la plata de una nota crédito de compra.
+ *
+ * - `CRUCE_CXP`: baja la deuda de la factura que corrige.
+ * - `DEVOLUCION_DINERO`: el proveedor devuelve el dinero (entra a caja/banco).
+ * - `SALDO_A_FAVOR`: queda como crédito con el proveedor.
+ */
+export type DestinoNotaCredito =
+  | 'CRUCE_CXP'
+  | 'DEVOLUCION_DINERO'
+  | 'SALDO_A_FAVOR';
+
+/** Factura de compra sobre la que aún se puede emitir nota crédito. */
+export interface CompraAcreditableModel {
+  id: number;
+  numeroCompra: string | null;
+  fecha: string;
+  total: number;
+  formaPago: FormaPago | null;
+  /** Lo que aún se le debe al proveedor por esa factura; 0 si ya se pagó. */
+  saldoPendiente: number;
+  totalRows?: number;
+}
+
+/** Filtros del selector de facturas acreditables (van en `params`). */
+export interface CompraAcreditableFiltroDto {
+  proveedorId: number;
+  sucursalId?: number | null;
+}
+
+/** Lo que queda por acreditar de un producto de una factura de compra. */
+export interface CompraAcreditableItemModel {
+  productoId: number;
+  productoNombre: string;
+  productoSku: string | null;
+  cantidadDisponible: number;
+  costoUnitario: number;
+  ivaPct: number | null;
+  /** Descuento de la línea original: la NC acredita lo que se cobró, no el bruto. */
+  descuentoPct: number | null;
+}
+
 // ─── Detalle línea ────────────────────────────────────────────
 export interface CompraDetalleModel {
   id: number;
@@ -44,6 +86,10 @@ export interface CompraModel {
   /** Se declaró que la plata ya había salido del cajón otro día. */
   salidaCajaOtroDia?: boolean;
   tipoDocumento: TipoDocumentoCompra | null;
+  /** Factura que corrige la nota crédito (solo NOTA_CREDITO). */
+  compraOrigenId?: number | null;
+  compraOrigenNumero?: string | null;
+  destinoNotaCredito?: DestinoNotaCredito | null;
   fletes: number;
   subtotal: number;
   descuentoTotal: number;
@@ -72,6 +118,9 @@ export interface CompraTableModel {
   fecha: string;
   total: number;
   estado: EstadoCompra;
+  tipoDocumento: TipoDocumentoCompra;
+  /** Factura que corrige, cuando la fila es una nota crédito. */
+  compraOrigenId: number | null;
 }
 
 // ─── DTOs de creación ─────────────────────────────────────────
@@ -126,6 +175,16 @@ export interface CreateCompraDto {
 
 
   tipoDocumento?: TipoDocumentoCompra | null;
+
+  /**
+   * Factura de compra que corrige la nota crédito. El backend lo exige cuando
+   * `tipoDocumento` es NOTA_CREDITO: una NC anula mercancía de una factura
+   * concreta, no del proveedor en abstracto.
+   */
+  compraOrigenId?: number | null;
+  /** Qué se hace con la plata de la nota crédito. */
+  destinoNotaCredito?: DestinoNotaCredito | null;
+
   fletes?: number | null;
   pagos?: CreateCompraPagoDto[] | null;
 }
