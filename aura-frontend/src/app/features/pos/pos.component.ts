@@ -1297,9 +1297,15 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         this.searchProduct = '';
         this.filtrar();
         this.loadProductos();
+        // El numero que ve el cajero es el consecutivo del POS, no el id de la
+        // fila: ese es global de la base y arranca en decenas de miles.
+        const numeroVenta =
+          (res.data as any).numeroVenta ??
+          (res.data as any).consecutivo ??
+          this.ventaCompletadaId;
         this.alertService.showSuccess(
           'Venta registrada',
-          `Venta #${(res.data as any).numero ?? this.ventaCompletadaId} completada exitosamente`,
+          `Venta # ${numeroVenta} completada exitosamente`,
         );
 
         if (this.empresaFacturaElec && this.ventaCompletadaId) {
