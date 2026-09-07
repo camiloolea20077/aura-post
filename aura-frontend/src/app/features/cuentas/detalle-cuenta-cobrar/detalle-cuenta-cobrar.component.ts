@@ -26,6 +26,7 @@ import { TagModule } from 'primeng/tag';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
+import { CheckboxModule } from 'primeng/checkbox';
 import { ConfirmationService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
@@ -78,6 +79,7 @@ type TagSeverity =
     ProgressBarModule,
     ConfirmDialogModule,
     TooltipModule,
+    CheckboxModule,
     ModalTirillaComponent,
   ],
   providers: [ConfirmationService],
@@ -128,6 +130,7 @@ export class DetalleCuentaCobrarComponent implements OnInit {
       metodoPago: ['efectivo', Validators.required],
       referencia: [null],
       cuentaContableId: [null as number | null],
+      cajaOtroDia: [false],
       fechaPago: [new Date(), Validators.required],
     });
   }
@@ -137,12 +140,22 @@ export class DetalleCuentaCobrarComponent implements OnInit {
   }
 
   /**
+   * El cliente trajo la plata otro día. Ya entró al cajón, el conteo de aquel
+   * día la contó y ese turno cerró cuadrado contra el cuaderno; hoy solo se
+   * está digitando el recaudo. Si entrara al arqueo de hoy, el sistema
+   * esperaría un efectivo que hoy nunca llegó y el cajero cerraría corto.
+   */
+  get esCajaOtroDia(): boolean {
+    return this.esEfectivo && this.abonoForm.get('cajaOtroDia')?.value === true;
+  }
+
+  /**
    * El recaudo en efectivo tiene que entrar a una caja abierta. Si quien cobra
    * no tiene turno (el administrador), el backend busca el de la sucursal y, si
    * no hay ninguno, rechaza el abono: ahí hace falta la cuenta contable.
    */
   get sinCajaAbierta(): boolean {
-    return this.esEfectivo && !this.turnoActivo;
+    return this.esEfectivo && !this.esCajaOtroDia && !this.turnoActivo;
   }
 
   /** Cuentas de fondo donde puede entrar el recaudo si no hay caja. */
@@ -307,6 +320,8 @@ export class DetalleCuentaCobrarComponent implements OnInit {
       monto: null,
       metodoPago: 'efectivo',
       referencia: null,
+      cuentaContableId: null,
+      cajaOtroDia: false,
       fechaPago: new Date(),
     });
     this.showAbonoForm = true;
@@ -343,13 +358,19 @@ export class DetalleCuentaCobrarComponent implements OnInit {
     this.loadingAbono = true;
     const formValue = this.abonoForm.value;
 
+    const otroDia = this.esCajaOtroDia;
     const dto: CreateAbonoCobrarDto = {
       monto: formValue.monto,
       metodoPago: formValue.metodoPago as MetodoPago,
       referencia: formValue.referencia || null,
-      cuentaContableId: this.esEfectivo ? formValue.cuentaContableId || null : null,
+      // Cuando ya entró otro día no viaja ni cuenta ni turno: el backend
+      // resuelve Caja por su cuenta y deja el abono fuera de todo arqueo.
+      // Mandar el turno sería inofensivo hoy, pero deja la intención escrita.
+      cuentaContableId:
+        this.esEfectivo && !otroDia ? formValue.cuentaContableId || null : null,
+      cajaOtroDia: otroDia,
       fechaPago: aFechaHoraLocal(formValue.fechaPago),
-      turnoCajaId: this.turnoActivo?.id ?? null,
+      turnoCajaId: otroDia ? null : (this.turnoActivo?.id ?? null),
     };
 
     try {

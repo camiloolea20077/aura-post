@@ -17,6 +17,7 @@ export interface AbonoPagarModel {
   usuarioId: number;
   usuarioNombre: string;
   turnoCajaId: number | null;
+  cajaOtroDia?: boolean;
   createdAt: string;
 }
 
@@ -86,6 +87,13 @@ export interface CreateAbonoPagarDto {
   cuentaContableId?: number | null;
   fechaPago: string;
   turnoCajaId?: number | null;
+  /**
+   * Al proveedor se le pagó del cajón otro día: la plata ya salió y ese turno
+   * cerró cuadrado contra el conteo físico. El abono se registra hoy pero no
+   * baja el arqueo de nadie — si lo bajara, el cajero de hoy cerraría con
+   * sobrante.
+   */
+  cajaOtroDia?: boolean;
 }
 
 export interface CuentaPagarFilters {

@@ -425,41 +425,129 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         label: 'Gestión',
         icon: 'pi pi-briefcase',
         items: [
-          { label: 'Empleados', icon: 'pi pi-users', route: '/nomina/empleados' },
-          { label: 'Saldos iniciales', icon: 'pi pi-database', route: '/nomina/saldos-iniciales' },
-          { label: 'Proyectos y Frentes', icon: 'pi pi-building', route: '/proyectos' },
-          { label: 'Conceptos', icon: 'pi pi-sliders-h', route: '/nomina/conceptos' },
-          { label: 'Períodos', icon: 'pi pi-calendar', route: '/nomina/periodos' },
-          { label: 'Liquidación Nómina', icon: 'pi pi-calculator', route: '/nomina/liquidacion' },
-          { label: 'Preliquidación / Auditoría', icon: 'pi pi-verified', route: '/nomina/preliquidacion' },
-          { label: 'Nómina Electrónica', icon: 'pi pi-file-o', route: '/nomina/electronica' },
+          {
+            label: 'Empleados',
+            icon: 'pi pi-users',
+            route: '/nomina/empleados',
+          },
+          {
+            label: 'Saldos iniciales',
+            icon: 'pi pi-database',
+            route: '/nomina/saldos-iniciales',
+          },
+          {
+            label: 'Proyectos y Frentes',
+            icon: 'pi pi-building',
+            route: '/proyectos',
+          },
+          {
+            label: 'Conceptos',
+            icon: 'pi pi-sliders-h',
+            route: '/nomina/conceptos',
+          },
+          {
+            label: 'Períodos',
+            icon: 'pi pi-calendar',
+            route: '/nomina/periodos',
+          },
+          {
+            label: 'Liquidación Nómina',
+            icon: 'pi pi-calculator',
+            route: '/nomina/liquidacion',
+          },
+          {
+            label: 'Preliquidación / Auditoría',
+            icon: 'pi pi-verified',
+            route: '/nomina/preliquidacion',
+          },
+          {
+            label: 'Nómina Electrónica',
+            icon: 'pi pi-file-o',
+            route: '/nomina/electronica',
+          },
           { label: 'PILA', icon: 'pi pi-shield', route: '/nomina/pila' },
-          { label: 'Prestaciones', icon: 'pi pi-gift', route: '/nomina/prestaciones' },
-          { label: 'Comisiones', icon: 'pi pi-percentage', route: '/comisiones/configuracion' },
-          { label: 'Liquidar Comisiones', icon: 'pi pi-wallet', route: '/comisiones/liquidaciones' },
+          {
+            label: 'Prestaciones',
+            icon: 'pi pi-gift',
+            route: '/nomina/prestaciones',
+          },
+          {
+            label: 'Comisiones',
+            icon: 'pi pi-percentage',
+            route: '/comisiones/configuracion',
+          },
+          {
+            label: 'Liquidar Comisiones',
+            icon: 'pi pi-wallet',
+            route: '/comisiones/liquidaciones',
+          },
         ],
       },
       {
         label: 'Asistencia',
         icon: 'pi pi-clock',
         items: [
-          { label: 'Digitación Asistencia', icon: 'pi pi-pencil', route: '/asistencia-frente/digitacion' },
-          { label: 'Revisión Asistencia (Frente)', icon: 'pi pi-check-square', route: '/asistencia-frente/revision' },
-          { label: 'Preliquidación (Frente)', icon: 'pi pi-calculator', route: '/asistencia-frente/preliquidacion' },
-          { label: 'Turnos Empleado', icon: 'pi pi-clock', route: '/asistencia/turnos' },
-          { label: 'Marcaje', icon: 'pi pi-stopwatch', route: '/asistencia/marcaje' },
-          { label: 'Revisión asistencia', icon: 'pi pi-check-square', route: '/asistencia/revision' },
-          { label: 'Novedades asistencia', icon: 'pi pi-bolt', route: '/asistencia/novedades' },
-          { label: 'Autorizaciones', icon: 'pi pi-shield', route: '/asistencia/autorizaciones' },
+          {
+            label: 'Digitación Asistencia',
+            icon: 'pi pi-pencil',
+            route: '/asistencia-frente/digitacion',
+          },
+          {
+            label: 'Revisión Asistencia (Frente)',
+            icon: 'pi pi-check-square',
+            route: '/asistencia-frente/revision',
+          },
+          {
+            label: 'Preliquidación (Frente)',
+            icon: 'pi pi-calculator',
+            route: '/asistencia-frente/preliquidacion',
+          },
+          {
+            label: 'Turnos Empleado',
+            icon: 'pi pi-clock',
+            route: '/asistencia/turnos',
+          },
+          {
+            label: 'Marcaje',
+            icon: 'pi pi-stopwatch',
+            route: '/asistencia/marcaje',
+          },
+          {
+            label: 'Revisión asistencia',
+            icon: 'pi pi-check-square',
+            route: '/asistencia/revision',
+          },
+          {
+            label: 'Novedades asistencia',
+            icon: 'pi pi-bolt',
+            route: '/asistencia/novedades',
+          },
+          {
+            label: 'Autorizaciones',
+            icon: 'pi pi-shield',
+            route: '/asistencia/autorizaciones',
+          },
         ],
       },
       {
         label: 'Parámetros',
         icon: 'pi pi-sliders-h',
         items: [
-          { label: 'Configuración laboral', icon: 'pi pi-sliders-h', route: '/laboral/configuracion' },
-          { label: 'Calendario laboral', icon: 'pi pi-calendar', route: '/laboral/calendario' },
-          { label: 'Config. Nómina', icon: 'pi pi-cog', route: '/nomina/config' },
+          {
+            label: 'Configuración laboral',
+            icon: 'pi pi-sliders-h',
+            route: '/laboral/configuracion',
+          },
+          {
+            label: 'Calendario laboral',
+            icon: 'pi pi-calendar',
+            route: '/laboral/calendario',
+          },
+          {
+            label: 'Config. Nómina',
+            icon: 'pi pi-cog',
+            route: '/nomina/config',
+          },
         ],
       },
     ],
@@ -471,11 +559,31 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
     icon: 'pi pi-chart-bar',
     roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [
+      {
+        label: 'Reporte gerencial',
+        icon: 'pi pi-shield',
+        route: '/reportes/gerencial',
+      },
       { label: 'Ventas', icon: 'pi pi-chart-line', route: '/reportes/ventas' },
       {
         label: 'Inventario',
         icon: 'pi pi-chart-pie',
         route: '/reportes/inventario',
+      },
+      {
+        label: 'Estado de cuenta Reporte',
+        icon: 'pi pi-users',
+        route: '/reportes/cartera',
+      },
+      {
+        label: 'Gastos Reporte',
+        icon: 'pi pi-wallet',
+        route: '/reportes/gastos',
+      },
+      {
+        label: 'Movimiento de inventario',
+        icon: 'pi pi-box',
+        route: '/reportes/kardex',
       },
       {
         label: 'Facturación Electrónica',

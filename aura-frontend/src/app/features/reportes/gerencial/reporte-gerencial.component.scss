@@ -1,0 +1,466 @@
+.page {
+  padding: 1rem;
+}
+
+.card {
+  background: var(--surface-0, #fff);
+  border: 1px solid var(--surface-border, #e5e7eb);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+}
+
+.header-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  color: #2563eb;
+  font-size: 1.1rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.subtitle {
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-color-secondary, #6b7280);
+}
+
+/* ── Filtros ─────────────────────────────────────────────────── */
+/*
+ * Los overlays van SIN `appendTo="body"` a propósito.
+ *
+ * El scroll de la app no está en el body sino en `.aura-content`, y `.aura-main`
+ * está corrido 260px por el sidebar. Montado en el body, PrimeNG posiciona el
+ * panel en coordenadas del documento y con ese desfase aterriza a la izquierda,
+ * encima de la franja del sidebar. Colgando del propio input no hay desfase.
+ */
+.rg-filtros {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 0.75rem 0.85rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--surface-border, #e5e7eb);
+  border-radius: 10px;
+  background: var(--surface-50, #f8fafc);
+  margin-bottom: 1rem;
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+    grid-column: span 3; /* 4 campos por fila */
+
+    label {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-color-secondary, #6b7280);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  ::ng-deep {
+    p-calendar,
+    p-inputnumber {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .p-calendar,
+    .p-inputnumber {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .p-calendar .p-inputtext,
+    .p-inputnumber .p-inputtext {
+      width: 100%;
+      min-width: 0;
+    }
+
+    /* El panel hereda el ancho del campo si no se le dice lo contrario, y un
+       calendario de 200px no muestra el mes completo. */
+    .p-datepicker:not(.p-datepicker-inline) {
+      width: auto;
+      min-width: 18rem;
+      z-index: 30; /* los controles de PrimeNG son `position: relative`: sin
+                      esto, un campo que viene DESPUÉS en el DOM le gana al
+                      panel abierto y lo tapa. */
+    }
+  }
+
+  /* El panel mide ~18rem de alto y se solapa con la fila siguiente. Subiendo
+     el campo entero, el panel viaja con él; vuelve a `auto` al salir. */
+  .field:focus-within {
+    position: relative;
+    z-index: 40;
+  }
+}
+
+.rg-ayuda {
+  color: var(--text-color-secondary, #9ca3af);
+  cursor: help;
+  font-size: 0.8rem;
+}
+
+/* Fila propia y pegados a la derecha. */
+.rg-acciones {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.15rem;
+  border-top: 1px solid var(--surface-border, #e5e7eb);
+  margin-top: 0.25rem;
+}
+
+@media (max-width: 1000px) {
+  .rg-filtros .field {
+    grid-column: span 6;
+  }
+}
+
+@media (max-width: 640px) {
+  .rg-filtros {
+    padding: 0.75rem;
+  }
+  .rg-filtros .field {
+    grid-column: 1 / -1;
+  }
+  .rg-acciones {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+}
+
+/* ── Aviso de rango ──────────────────────────────────────────── */
+.rg-aviso {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.9rem;
+  margin-bottom: 1rem;
+  border: 1px solid #fcd34d;
+  border-radius: 8px;
+  background: rgba(251, 191, 36, 0.12);
+  color: #92400e;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* ── Veredicto ───────────────────────────────────────────────── */
+/* La primera línea que se lee tiene que responder si el período está bien o
+   no. El detalle viene después; el titular, primero. */
+.rg-veredicto {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  margin-bottom: 0.85rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+
+  i {
+    font-size: 1.2rem;
+  }
+
+  &--ok {
+    border: 1px solid #86efac;
+    background: rgba(21, 128, 61, 0.08);
+    color: #15803d;
+  }
+
+  &--alerta {
+    border: 1px solid #fca5a5;
+    background: rgba(185, 28, 28, 0.07);
+    color: #b91c1c;
+  }
+}
+
+/* ── Semáforo ────────────────────────────────────────────────── */
+.rg-semaforo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.7rem;
+  margin-bottom: 0.6rem;
+}
+
+.rg-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--surface-border, #e5e7eb);
+  border-left: 3px solid #9ca3af;
+  border-radius: 8px;
+  background: var(--surface-0, #fff);
+
+  &__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-color-secondary, #6b7280);
+  }
+
+  &__valor {
+    font-size: 1.35rem;
+    font-weight: 700;
+  }
+
+  small {
+    font-size: 0.7rem;
+    color: var(--text-color-secondary, #9ca3af);
+  }
+
+  &--grave {
+    border-left-color: #b91c1c;
+  }
+
+  &--revisar {
+    border-left-color: #d97706;
+  }
+
+  /* El monto en riesgo es la cifra que se lleva el gerente en la cabeza. */
+  &--destacada {
+    border-left-color: #2563eb;
+    background: rgba(37, 99, 235, 0.05);
+
+    .rg-tarjeta__valor {
+      font-size: 1.15rem;
+      color: #2563eb;
+    }
+  }
+}
+
+.rg-pie {
+  margin: 0 0 1.25rem;
+  font-size: 0.75rem;
+  color: var(--text-color-secondary, #9ca3af);
+}
+
+.rg-vacio {
+  padding: 2rem 1rem;
+  text-align: center;
+  border: 1px dashed #86efac;
+  border-radius: 10px;
+  color: #15803d;
+
+  i {
+    font-size: 1.8rem;
+  }
+
+  p {
+    margin: 0.5rem 0 0;
+    font-weight: 600;
+  }
+}
+
+/* ── Hallazgos ───────────────────────────────────────────────── */
+.rg-seccion {
+  margin: 1.5rem 0 0.25rem;
+  font-size: 1rem;
+  font-weight: 700;
+  padding-bottom: 0.4rem;
+  border-bottom: 2px solid var(--surface-border, #e5e7eb);
+}
+
+.rg-nota {
+  margin: 0.5rem 0 0.85rem;
+  font-size: 0.82rem;
+  color: var(--text-color-secondary, #6b7280);
+}
+
+.rg-hallazgos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.rg-hallazgo {
+  border: 1px solid var(--surface-border, #e5e7eb);
+  border-left: 3px solid #9ca3af;
+  border-radius: 10px;
+  background: var(--surface-0, #fff);
+  overflow: hidden;
+  transition: border-color 0.15s ease;
+
+  &--grave {
+    border-left-color: #b91c1c;
+  }
+
+  &--abierto {
+    border-color: #93b4f5;
+    border-left-color: #2563eb;
+  }
+
+  &__cabeza {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0.9rem;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--surface-50, #f8fafc);
+    }
+  }
+
+  &__texto {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    flex: 1;
+    min-width: 0;
+
+    strong {
+      font-size: 0.92rem;
+    }
+
+    small {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.75rem;
+      color: var(--text-color-secondary, #6b7280);
+    }
+  }
+
+  &__monto {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.1rem;
+    white-space: nowrap;
+
+    strong {
+      font-size: 0.95rem;
+    }
+
+    small {
+      font-size: 0.72rem;
+      color: var(--text-color-secondary, #9ca3af);
+    }
+  }
+
+  &__chevron {
+    color: var(--text-color-secondary, #9ca3af);
+    font-size: 0.85rem;
+  }
+
+  &__cuerpo {
+    padding: 0 0.9rem 0.9rem;
+    border-top: 1px dashed var(--surface-border, #e5e7eb);
+  }
+}
+
+.rg-descripcion {
+  margin: 0.75rem 0 0.85rem;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.rg-bloque {
+  margin-bottom: 0.85rem;
+
+  &__titulo {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--text-color-secondary, #6b7280);
+  }
+
+  code {
+    display: block;
+    padding: 0.5rem 0.65rem;
+    border-radius: 6px;
+    background: var(--surface-100, #f1f5f9);
+    font-size: 0.78rem;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 1.1rem;
+    font-size: 0.85rem;
+    line-height: 1.5;
+
+    li {
+      margin-bottom: 0.2rem;
+    }
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+
+  /* Lo accionable se separa del diagnóstico: es lo único que hay que hacer. */
+  &--accion {
+    padding: 0.6rem 0.75rem;
+    border-radius: 8px;
+    border-left: 3px solid #2563eb;
+    background: rgba(37, 99, 235, 0.05);
+  }
+}
+
+.rg-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+
+  td {
+    padding: 0.35rem 0.5rem;
+    border-bottom: 1px solid var(--surface-border, #e5e7eb);
+    vertical-align: top;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+}
+
+.text-right {
+  text-align: right;
+  white-space: nowrap;
+}

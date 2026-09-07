@@ -233,8 +233,10 @@
             </div>
 
             <!-- Dónde entra el efectivo si no hay caja abierta. Sin esto el
-                 backend rechaza el recaudo por no tener dónde registrarlo. -->
-            <div class="form-field" *ngIf="esEfectivo">
+                 backend rechaza el recaudo por no tener dónde registrarlo.
+                 No aplica si la plata ya entró otro día: ahí no hay caja que
+                 elegir, el recaudo queda fuera de todo arqueo. -->
+            <div class="form-field" *ngIf="esEfectivo && !esCajaOtroDia">
               <label>
                 Cuenta contable
                 <span class="opcional" *ngIf="!sinCajaAbierta">(opcional)</span>
@@ -267,6 +269,30 @@
                 dateFormat="dd/mm/yy"
                 styleClass="w-full"
               ></p-calendar>
+            </div>
+          </div>
+
+          <!-- El cliente trajo la plata otro día y esa caja ya cerró cuadrada
+               contra el conteo físico. Registrar el recaudo hoy dentro del
+               turno de hoy le exigiría al cajero un efectivo que nunca vio
+               entrar: cerraría con faltante. -->
+          <div class="form-row" *ngIf="esEfectivo">
+            <div class="form-field form-field--full">
+              <div class="caja-otro-dia">
+                <p-checkbox
+                  formControlName="cajaOtroDia"
+                  [binary]="true"
+                  inputId="abonoCajaOtroDia"
+                ></p-checkbox>
+                <label for="abonoCajaOtroDia" class="caja-otro-dia__label">
+                  Ya entró a la caja otro día
+                </label>
+              </div>
+              <small class="max-hint">
+                La plata ya estaba en el cajón cuando esa caja se contó y cerró.
+                El recaudo queda registrado y contabilizado, pero no entra al
+                arqueo de ninguna caja.
+              </small>
             </div>
           </div>
 

@@ -85,3 +85,69 @@
 .cmp-muted { color: #94a3b8; }
 .cmp-empty { text-align: center; padding: 1rem; color: #94a3b8; }
 .text-center { text-align: center; }
+
+/* ── Origen de fondos ─────────────────────────────────────────────
+   Mismo lenguaje visual que el formulario de gasto y el de compra: es la
+   misma pregunta y conviene que se vea igual en los tres sitios. */
+.cmp-origen {
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--surface-border, #dfe7ef);
+  border-radius: 10px;
+  background: var(--surface-50, #f8fafc);
+}
+
+.cmp-origen-head {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin-bottom: 0.6rem;
+}
+
+.origen-opciones {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 0.5rem;
+}
+
+.origen-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--surface-border, #dfe7ef);
+  border-radius: 8px;
+  background: var(--surface-0, #ffffff);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+
+  &:hover {
+    border-color: #93b4f5;
+  }
+
+  &.selected {
+    border-color: #2563eb;
+    background-color: rgba(37, 99, 235, 0.06);
+  }
+}
+
+.origen-texto {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.origen-titulo {
+  font-weight: 600;
+  font-size: 0.9rem;
+
+  i {
+    margin-right: 0.35rem;
+    color: #2563eb;
+  }
+}
+
+.origen-hint {
+  color: var(--text-color-secondary, #6b7280);
+  font-size: 0.75rem;
+  margin-top: 0.15rem;
+}

@@ -1,0 +1,411 @@
+<div class="page">
+  <div class="card">
+    <!-- Header -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-wallet"></i></span>
+        <div>
+          <h1 class="title">Reporte de gastos</h1>
+          <p class="subtitle">
+            En qué se fue la plata — con lo deducible separado de lo que no
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-file-excel"
+          label="Excel"
+          class="btn-verde"
+          [loading]="exportando"
+          (click)="exportarExcel()"
+        ></button>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <form [formGroup]="frm" class="rg-filtros">
+      <div class="field">
+        <label>Desde</label>
+        <p-calendar
+          formControlName="fechaDesde"
+          placeholder="dd/mm/yyyy"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          styleClass="w-full"
+        />
+      </div>
+      <div class="field">
+        <label>Hasta</label>
+        <p-calendar
+          formControlName="fechaHasta"
+          placeholder="dd/mm/yyyy"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          styleClass="w-full"
+        />
+      </div>
+
+      <div class="field">
+        <label>Agrupar por</label>
+        <p-dropdown
+          formControlName="agrupacion"
+          [options]="agrupacionOpts"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+        ></p-dropdown>
+      </div>
+
+      <div class="field">
+        <label>Categoría</label>
+        <p-dropdown
+          formControlName="categoria"
+          [options]="categorias"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Todas"
+          [showClear]="true"
+          [filter]="true"
+          styleClass="w-full"
+        ></p-dropdown>
+      </div>
+
+      <div class="field">
+        <label>Sucursal</label>
+        <p-dropdown
+          formControlName="sucursalId"
+          [options]="sucursales"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Todas"
+          [showClear]="true"
+          styleClass="w-full"
+        ></p-dropdown>
+      </div>
+
+      <div class="field">
+        <label>Tercero</label>
+        <p-autoComplete
+          [(ngModel)]="terceroSeleccionado"
+          [ngModelOptions]="{ standalone: true }"
+          [suggestions]="terceroSugerencias"
+          (completeMethod)="buscarTercero($event)"
+          field="nombreCompleto"
+          placeholder="Todos"
+          [forceSelection]="true"
+          styleClass="w-full"
+        ></p-autoComplete>
+      </div>
+
+      <div class="field">
+        <label>Centro de costo</label>
+        <p-dropdown
+          formControlName="centroCostoId"
+          [options]="centrosCosto"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Todos"
+          [showClear]="true"
+          [filter]="true"
+          styleClass="w-full"
+        ></p-dropdown>
+      </div>
+
+      <div class="field">
+        <label>Deducible</label>
+        <p-dropdown
+          formControlName="deducible"
+          [options]="deducibleOpts"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Ambos"
+          [showClear]="true"
+          styleClass="w-full"
+        ></p-dropdown>
+      </div>
+
+      <div class="field">
+        <label>Forma de pago</label>
+        <p-dropdown
+          formControlName="formaPago"
+          [options]="formaPagoOpts"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Todas"
+          [showClear]="true"
+          styleClass="w-full"
+        ></p-dropdown>
+      </div>
+
+      <div class="field">
+        <label>Método</label>
+        <p-dropdown
+          formControlName="metodoPago"
+          [options]="metodoPagoOpts"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Todos"
+          [showClear]="true"
+          styleClass="w-full"
+        ></p-dropdown>
+      </div>
+
+      <div class="field span-2">
+        <label>Buscar</label>
+        <input
+          pInputText
+          formControlName="search"
+          placeholder="Descripción, documento soporte o tercero..."
+          (keyup.enter)="buscar()"
+        />
+      </div>
+
+      <div class="rg-acciones">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-search"
+          label="Buscar"
+          (click)="buscar()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          icon="pi pi-filter-slash"
+          label="Limpiar"
+          class="p-button-outlined"
+          (click)="limpiarFiltros()"
+        ></button>
+      </div>
+    </form>
+
+    <!-- Tarjetas de totales del período -->
+    <div class="rg-totales" *ngIf="resumen && vista === 'RESUMEN'">
+      <div class="rg-tarjeta">
+        <span class="rg-tarjeta__label">Total del período</span>
+        <strong class="rg-tarjeta__valor">{{
+          formatCOP(resumen.total)
+        }}</strong>
+        <small>{{ resumen.cantidad }} gastos</small>
+      </div>
+      <!-- Separados a propósito: lo no deducible baja la utilidad pero no el
+           impuesto de renta. Sumarlos obliga a rehacer la cuenta a mano. -->
+      <div class="rg-tarjeta rg-tarjeta--ok">
+        <span class="rg-tarjeta__label">Deducible</span>
+        <strong class="rg-tarjeta__valor">{{
+          formatCOP(resumen.totalDeducible)
+        }}</strong>
+        <small>Resta en renta</small>
+      </div>
+      <div class="rg-tarjeta rg-tarjeta--alerta">
+        <span class="rg-tarjeta__label">No deducible</span>
+        <strong class="rg-tarjeta__valor">{{
+          formatCOP(resumen.totalNoDeducible)
+        }}</strong>
+        <small>No resta en renta</small>
+      </div>
+      <div class="rg-tarjeta">
+        <span class="rg-tarjeta__label">Quedó debiendo</span>
+        <strong class="rg-tarjeta__valor">{{
+          formatCOP(resumen.totalCredito)
+        }}</strong>
+        <small>Gastos a crédito</small>
+      </div>
+      <div class="rg-tarjeta">
+        <span class="rg-tarjeta__label">IVA</span>
+        <strong class="rg-tarjeta__valor">{{
+          formatCOP(resumen.valorIva)
+        }}</strong>
+        <small>Base {{ formatCOP(resumen.baseIva) }}</small>
+      </div>
+      <div class="rg-tarjeta">
+        <span class="rg-tarjeta__label">Retenciones</span>
+        <strong class="rg-tarjeta__valor">{{
+          formatCOP(resumen.valorRetefuente + resumen.valorReteica)
+        }}</strong>
+        <small>Fuente + ICA</small>
+      </div>
+    </div>
+
+    <!-- Vista -->
+    <div class="rg-tabs">
+      <button
+        type="button"
+        class="rg-tab"
+        [class.active]="vista === 'RESUMEN'"
+        (click)="cambiarVista('RESUMEN')"
+      >
+        <i class="pi pi-chart-pie"></i> Resumen
+      </button>
+      <button
+        type="button"
+        class="rg-tab"
+        [class.active]="vista === 'DETALLE'"
+        (click)="cambiarVista('DETALLE')"
+      >
+        <i class="pi pi-list"></i> Detalle
+      </button>
+    </div>
+
+    <!-- ══ Resumen ══ -->
+    <p-table
+      *ngIf="vista === 'RESUMEN'"
+      [value]="lineas"
+      [loading]="loading"
+      styleClass="p-datatable-sm"
+      showGridlines
+      scrollable
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="rg-col-grupo">{{ tituloGrupo | titlecase }}</th>
+          <th class="text-right">N°</th>
+          <th class="text-right">Total</th>
+          <th class="text-right">Deducible</th>
+          <th class="text-right">No deducible</th>
+          <th class="text-right">Contado</th>
+          <th class="text-right">Crédito</th>
+          <th class="text-right">IVA</th>
+          <th class="text-right">Retenciones</th>
+          <th class="text-right">% del total</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-l>
+        <tr>
+          <td>{{ etiquetaGrupo(l) }}</td>
+          <td class="text-right">{{ l.cantidad }}</td>
+          <td class="text-right">
+            <strong>{{ formatCOP(l.total) }}</strong>
+          </td>
+          <td class="text-right ok">{{ formatCOP(l.totalDeducible) }}</td>
+          <td class="text-right alerta">{{ formatCOP(l.totalNoDeducible) }}</td>
+          <td class="text-right">{{ formatCOP(l.totalContado) }}</td>
+          <td class="text-right">{{ formatCOP(l.totalCredito) }}</td>
+          <td class="text-right">{{ formatCOP(l.valorIva) }}</td>
+          <td class="text-right">
+            {{ formatCOP(l.valorRetefuente + l.valorReteica) }}
+          </td>
+          <td class="text-right">
+            <div class="rg-barra">
+              <span
+                class="rg-barra__relleno"
+                [style.width.%]="l.participacion"
+              ></span>
+              <span class="rg-barra__texto">{{
+                formatPct(l.participacion)
+              }}</span>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="10" class="text-center">
+            No hay gastos con esos filtros.
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="footer" *ngIf="resumen && lineas.length">
+        <tr class="rg-totales-fila">
+          <td>TOTALES</td>
+          <td class="text-right">{{ resumen.cantidad }}</td>
+          <td class="text-right">{{ formatCOP(resumen.total) }}</td>
+          <td class="text-right ok">{{ formatCOP(resumen.totalDeducible) }}</td>
+          <td class="text-right alerta">
+            {{ formatCOP(resumen.totalNoDeducible) }}
+          </td>
+          <td class="text-right">{{ formatCOP(resumen.totalContado) }}</td>
+          <td class="text-right">{{ formatCOP(resumen.totalCredito) }}</td>
+          <td class="text-right">{{ formatCOP(resumen.valorIva) }}</td>
+          <td class="text-right">
+            {{ formatCOP(resumen.valorRetefuente + resumen.valorReteica) }}
+          </td>
+          <td class="text-right">100%</td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <!-- ══ Detalle ══ -->
+    <p-table
+      *ngIf="vista === 'DETALLE'"
+      [value]="detalle"
+      [lazy]="true"
+      (onLazyLoad)="cargarDetalle($event)"
+      [paginator]="true"
+      [rows]="filasPorPagina"
+      [totalRecords]="totalRegistros"
+      [loading]="loading"
+      [rowsPerPageOptions]="[25, 50, 100]"
+      styleClass="p-datatable-sm"
+      showGridlines
+      scrollable
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Fecha</th>
+          <th>Categoría</th>
+          <th>Descripción</th>
+          <th>Tercero</th>
+          <th>Centro de costo</th>
+          <th>Soporte</th>
+          <th class="text-right">Monto</th>
+          <th>Deducible</th>
+          <th>Pago</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-g>
+        <tr>
+          <td>{{ g.fecha | date: "dd/MM/yyyy" }}</td>
+          <td>{{ g.categoria }}</td>
+          <td>
+            {{ g.descripcion || "—" }}
+            <!-- Marcas que el revisor necesita ver sin abrir el gasto. -->
+            <i
+              *ngIf="g.salidaCajaOtroDia"
+              class="pi pi-history rg-marca"
+              pTooltip="La plata salió del cajón otro día: no toca ningún arqueo vivo."
+            ></i>
+            <i
+              *ngIf="g.motivoRetroactivo"
+              class="pi pi-exclamation-triangle rg-marca rg-marca--alerta"
+              [pTooltip]="'Retroactivo autorizado: ' + g.motivoRetroactivo"
+            ></i>
+          </td>
+          <td>{{ g.terceroNombre || "—" }}</td>
+          <td>{{ g.centroCostoNombre || "—" }}</td>
+          <td>
+            {{
+              g.numeroDocSoporte
+                ? (g.tipoDocSoporte || "") + " " + g.numeroDocSoporte
+                : "—"
+            }}
+          </td>
+          <td class="text-right">
+            <strong>{{ formatCOP(g.monto) }}</strong>
+          </td>
+          <td>
+            <p-tag
+              [value]="g.deducible ? 'Sí' : 'No'"
+              [severity]="g.deducible ? 'success' : 'warn'"
+            ></p-tag>
+          </td>
+          <td>{{ g.formaPago }} · {{ g.metodoPago }}</td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9" class="text-center">
+            No hay gastos con esos filtros.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
