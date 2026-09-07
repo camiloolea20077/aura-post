@@ -22,9 +22,14 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { lastValueFrom } from 'rxjs';
 
+import { RadioButtonModule } from 'primeng/radiobutton';
+import { MessageModule } from 'primeng/message';
+
 import { ContabilidadService } from '../../../../core/services/contabilidad.service';
 import { TerceroService } from '../../../../core/services/tercero.service';
 import { CentroCostoService } from '../../../../core/services/centro-costo.service';
+import { CuentaBancariaService } from '../../../../core/services/cuenta-bancaria.service';
+import { IndexDBService } from '../../../../core/services/index-db.service';
 import { CuentaCobrarService } from '../../../cuentas/services/cuenta-cobrar.service';
 import { CuentaPagarService } from '../../../cuentas/services/cuenta-pagar.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
@@ -50,6 +55,8 @@ import { aFechaLocal } from '../../../../shared/utils/fecha.util';
     DropdownModule,
     InputTextModule,
     InputNumberModule,
+    RadioButtonModule,
+    MessageModule,
   ],
   templateUrl: './form-comprobante-contable.component.html',
   styleUrls: ['./form-comprobante-contable.component.scss'],
@@ -62,9 +69,10 @@ export class FormComprobanteContableComponent implements OnInit {
   cuentas: PlanCuentaModel[] = [];
   terceros: TerceroTableModel[] = [];
   cuentasAuxOpts: { label: string; value: number }[] = [];
-  cuentasDisponibleOpts: { label: string; value: number }[] = [];
   terceroOpts: { label: string; value: number }[] = [];
   centroCostoOpts: { label: string; value: number }[] = [];
+  sucursalesOpts: { label: string; value: number }[] = [];
+  cuentasBancariasOpts: { label: string; value: number }[] = [];
 
   // ── Estados de cuenta (cartera) ──
   activeTab = 0;
@@ -74,7 +82,6 @@ export class FormComprobanteContableComponent implements OnInit {
   carteraRows = 8;
   carteraSearch = '';
   private lastCarteraEvent?: TableLazyLoadEvent;
-  cuentaContrapartidaId: number | null = null;
   // id de cuenta seleccionada → valor aplicado (+ datos para la línea)
   sel: Record<
     number,
@@ -93,6 +100,50 @@ export class FormComprobanteContableComponent implements OnInit {
     { label: 'Nota de Diario (CD)', value: 'CD' },
   ];
 
+  /**
+   * De dónde sale (o entra) la plata del comprobante.
+   *
+   * Antes se elegía a mano una cuenta 11xx y ahí se acababa: una cuenta
+   * contable no distingue el cajón de la sucursal 2 de la cuenta del banco, así
+   * que el recaudo no caía en el cierre de ninguna caja y el asiento podía
+   * acreditar CAJA por una transferencia. Es el mismo selector que ya usan el
+   * gasto y la compra; la cuenta de la contrapartida la deriva el backend.
+   */
+  readonly origenOpts = [
+    {
+      label: 'Caja',
+      value: 'CAJA',
+      icon: 'pi pi-wallet',
+      hint: 'Entra o sale del cajón del punto de venta y afecta su arqueo',
+    },
+    {
+      label: 'Banco',
+      value: 'BANCO',
+      icon: 'pi pi-building-columns',
+      hint: 'Se mueve en una cuenta bancaria de la empresa',
+    },
+    {
+      label: 'Otra cuenta',
+      value: 'CUENTA',
+      icon: 'pi pi-briefcase',
+      hint: 'Caja menor, anticipos a empleados, fondos por legalizar',
+    },
+    {
+      label: 'Ya se movió de la caja',
+      value: 'CAJA_OTRO_DIA',
+      icon: 'pi pi-history',
+      hint: 'La plata se movió otro día y ese arqueo ya se cerró. No toca ninguna caja.',
+    },
+  ];
+
+  /** Solo medios que pasan por un banco: el efectivo es la vía CAJA. */
+  readonly metodosPagoOpts = [
+    { label: 'Transferencia', value: 'TRANSFERENCIA' },
+    { label: 'Nequi', value: 'NEQUI' },
+    { label: 'Tarjeta', value: 'TARJETA' },
+    { label: 'Cheque', value: 'CHEQUE' },
+  ];
+
   constructor(
     private readonly fb: FormBuilder,
     private readonly service: ContabilidadService,
@@ -100,6 +151,8 @@ export class FormComprobanteContableComponent implements OnInit {
     private readonly ccService: CentroCostoService,
     private readonly cuentaCobrarService: CuentaCobrarService,
     private readonly cuentaPagarService: CuentaPagarService,
+    private readonly cuentaBancariaService: CuentaBancariaService,
+    private readonly indexDB: IndexDBService,
     private readonly alert: AlertService,
     private readonly router: Router,
     private readonly cdr: ChangeDetectorRef,
@@ -114,6 +167,12 @@ export class FormComprobanteContableComponent implements OnInit {
       beneficiarioTelefono: [null],
       ciudad: [null],
       concepto: ['', Validators.required],
+      // ── Origen de fondos (solo CE/RC) ──
+      origenFondos: ['CAJA'],
+      metodoPago: ['TRANSFERENCIA'],
+      cuentaBancariaId: [null],
+      cuentaContableId: [null],
+      sucursalId: [null],
       lineas: this.fb.array([this.nuevaLinea(), this.nuevaLinea()]),
     });
   }
@@ -184,21 +243,26 @@ export class FormComprobanteContableComponent implements OnInit {
     this.cuentasAuxOpts = this.cuentas
       .filter((c) => c.auxiliar && c.activa)
       .map((c) => ({ label: `${c.codigo} - ${c.nombre}`, value: c.id }));
-    // Cuentas de disponible (caja/bancos, código 11xx) para la contrapartida.
-    const disp = this.cuentas.filter(
-      (c) => c.auxiliar && c.activa && (c.codigo || '').startsWith('11'),
-    );
-    this.cuentasDisponibleOpts = (
-      disp.length ? disp : this.cuentas.filter((c) => c.auxiliar && c.activa)
-    ).map((c) => ({ label: `${c.codigo} - ${c.nombre}`, value: c.id }));
     this.cdr.markForCheck();
   }
 
   private async cargarSelectores(): Promise<void> {
-    const [tercRes, ccRes] = await Promise.all([
+    const [tercRes, ccRes, bancosRes, sucursales] = await Promise.all([
       lastValueFrom(this.terceroService.tercerosSelector()).catch(() => null),
       lastValueFrom(this.ccService.list()).catch(() => null),
+      lastValueFrom(this.cuentaBancariaService.list()).catch(() => null),
+      this.indexDB.getSucursales().catch(() => []),
     ]);
+    this.cuentasBancariasOpts = (bancosRes?.data ?? [])
+      .filter((c: any) => c.activa)
+      .map((c: any) => ({ label: c.nombre, value: c.id }));
+    this.sucursalesOpts = (sucursales ?? []).map((s: any) => ({
+      label: s.nombre,
+      value: s.id,
+    }));
+    if (this.sucursalesOpts.length > 0 && !this.frm.get('sucursalId')!.value) {
+      this.frm.patchValue({ sucursalId: this.sucursalesOpts[0].value });
+    }
     this.terceros = tercRes?.data ?? [];
     this.terceroOpts = this.terceros.map((t: TerceroTableModel) => ({
       label: `${t.numeroDocumento} — ${t.nombreCompleto}`,
@@ -232,6 +296,21 @@ export class FormComprobanteContableComponent implements OnInit {
         beneficiarioTelefono: t.telefono ?? null,
       });
     }
+
+    // La cartera es la del beneficiario: al cambiarlo, lo que estuviera
+    // seleccionado es de otro tercero y no puede cruzarse contra este
+    // comprobante. Se descarta antes de recargar.
+    if (Object.keys(this.sel).length > 0) {
+      this.sel = {};
+      this.sincronizarCartera();
+      this.alert.showInfo(
+        'Cartera reiniciada',
+        'Cambiaste el beneficiario: se quitaron las cuentas que habías seleccionado.',
+      );
+    }
+    if (this.esCartera) {
+      this.cargarCartera({ first: 0, rows: this.carteraRows });
+    }
     this.cdr.markForCheck();
   }
 
@@ -246,6 +325,60 @@ export class FormComprobanteContableComponent implements OnInit {
     return this.esCE || this.esRC;
   }
 
+  // ── Origen de fondos ─────────────────────────────────────────────
+  /** El CD es una reclasificación entre cuentas: no mueve dinero. */
+  get mueveDinero(): boolean {
+    return this.esCE || this.esRC;
+  }
+  get origen(): string {
+    return this.frm.get('origenFondos')!.value ?? 'CAJA';
+  }
+  get esCaja(): boolean {
+    return this.origen === 'CAJA';
+  }
+  get esBanco(): boolean {
+    return this.origen === 'BANCO';
+  }
+  get esCuenta(): boolean {
+    return this.origen === 'CUENTA';
+  }
+  /** La plata se movió otro día: contablemente es caja, pero no toca arqueos. */
+  get esCajaOtroDia(): boolean {
+    return this.origen === 'CAJA_OTRO_DIA';
+  }
+
+  /**
+   * El comprobante tiene fecha anterior a hoy. No lo bloquea — hacer hoy el
+   * recibo de un pago de ayer es legítimo — pero advierte: si la plata se movió
+   * aquel día, cargarla a la caja de hoy le deja el descuadre a un cajero que
+   * no recibió ni entregó nada.
+   */
+  get esFechaRetroactiva(): boolean {
+    const fecha = this.frm.get('fecha')!.value as string | null;
+    if (!fecha) return false;
+    return fecha < this.hoyISO();
+  }
+
+  /** Cambiar de origen limpia los datos del anterior para no mandar basura. */
+  onOrigenChange(): void {
+    if (!this.esBanco) {
+      this.frm.patchValue({ cuentaBancariaId: null }, { emitEvent: false });
+    }
+    if (!this.esCuenta) {
+      this.frm.patchValue({ cuentaContableId: null }, { emitEvent: false });
+    }
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Lo que se manda al backend. El efectivo no es una opción del selector de
+   * método: es la vía CAJA, y CAJA_OTRO_DIA también es efectivo — la plata pasó
+   * por un cajón, solo que otro día.
+   */
+  private metodoPagoEfectivo(): string {
+    return this.esBanco ? this.frm.get('metodoPago')!.value : 'EFECTIVO';
+  }
+
   private nombreItem(x: any): string {
     return this.esCE ? x.proveedorNombre : x.clienteNombre;
   }
@@ -257,7 +390,6 @@ export class FormComprobanteContableComponent implements OnInit {
   onTipoChange(): void {
     this.cargarConsecutivo();
     this.sel = {};
-    this.cuentaContrapartidaId = null;
     this.sincronizarCartera();
     if (this.esCartera) {
       this.cargarCartera({ first: 0, rows: this.carteraRows });
@@ -267,22 +399,52 @@ export class FormComprobanteContableComponent implements OnInit {
     }
   }
 
+  /** Sin beneficiario no hay cartera que mostrar: ver la de todos no sirve. */
+  get faltaBeneficiario(): boolean {
+    return this.esCartera && !this.frm.get('beneficiarioTerceroId')!.value;
+  }
+
   async cargarCartera(event: TableLazyLoadEvent): Promise<void> {
     if (!this.esCartera) return;
     this.lastCarteraEvent = event;
+
+    // El cruce es contra la cartera del beneficiario del comprobante. Listarla
+    // toda invitaba a abonarle a un tercero la factura de otro: el asiento
+    // cuadra y la deuda equivocada queda rebajada, sin nada que lo delate.
+    const terceroId = this.frm.get('beneficiarioTerceroId')!.value;
+    if (!terceroId) {
+      this.carteraItems = [];
+      this.carteraTotal = 0;
+      this.carteraLoading = false;
+      this.cdr.markForCheck();
+      return;
+    }
+
     this.carteraLoading = true;
     this.cdr.markForCheck();
     const rows = event.rows ?? this.carteraRows;
     const page = Math.floor((event.first ?? 0) / rows);
-    const pageable = { page, rows, search: this.carteraSearch || null };
+    // `estado: pendiente` filtra en el SQL. Filtrarlo aquí dejaba páginas
+    // enteras vacías: el servidor pagina antes, así que la página 3 podía no
+    // traer ninguna con saldo aunque más adelante sí las hubiera.
+    const pageable = {
+      page,
+      rows,
+      search: this.carteraSearch || null,
+      params: {
+        estado: 'pendiente',
+        ...(this.esCE ? { proveedorId: terceroId } : { clienteId: terceroId }),
+      },
+    };
     try {
       const res: any = this.esCE
-        ? await lastValueFrom(this.cuentaPagarService.page(pageable))
-        : await lastValueFrom(this.cuentaCobrarService.page(pageable));
+        ? await lastValueFrom(this.cuentaPagarService.page(pageable as any))
+        : await lastValueFrom(this.cuentaCobrarService.page(pageable as any));
       const content: any[] = res?.data?.content ?? [];
       this.carteraItems = content.filter((c) => (c.saldoPendiente ?? 0) > 0);
       this.carteraTotal = res?.data?.totalElements ?? this.carteraItems.length;
     } catch {
+      // 206 sin registros incluido: el tercero no tiene cartera pendiente.
       this.carteraItems = [];
       this.carteraTotal = 0;
     } finally {
@@ -391,11 +553,13 @@ export class FormComprobanteContableComponent implements OnInit {
       total += s.aplicado;
     }
 
-    // Línea consolidada de banco/caja (contrapartida).
+    // Línea consolidada de la contrapartida. La cuenta va vacía a propósito:
+    // la resuelve el backend a partir del origen de fondos declarado, para que
+    // no se pueda acreditar la caja un pago que entró por transferencia.
     const banco = this.nuevaLinea();
     banco.patchValue({
       origen: 'BANCO',
-      cuentaId: this.cuentaContrapartidaId,
+      cuentaId: null,
       descripcion: this.esCE ? 'Pago a proveedores' : 'Recaudo de clientes',
       debito: this.esCE ? 0 : total,
       credito: this.esCE ? total : 0,
@@ -414,28 +578,49 @@ export class FormComprobanteContableComponent implements OnInit {
       );
       return;
     }
-    if (
-      Object.keys(this.sel).length > 0 &&
-      this.cuentaContrapartidaId == null
-    ) {
-      this.alert.showError(
-        'Validación',
-        'Selecciona la cuenta de banco/caja para la contrapartida.',
-      );
-      return;
+    // El origen de fondos es obligatorio en CE/RC: es lo que decide en qué
+    // caja o cuenta queda registrado el dinero, y sin él el comprobante vuelve
+    // a mover plata sin aparecer en el cierre de nadie.
+    if (this.mueveDinero) {
+      if (this.esBanco && !this.frm.get('cuentaBancariaId')!.value) {
+        this.alert.showError(
+          'Validación',
+          'Elige la cuenta bancaria por la que se movió la plata.',
+        );
+        return;
+      }
+      if (this.esCuenta && !this.frm.get('cuentaContableId')!.value) {
+        this.alert.showError(
+          'Validación',
+          'Elige la cuenta contable de origen (caja menor, fondos por legalizar…).',
+        );
+        return;
+      }
+      if (this.esCaja && !this.frm.get('sucursalId')!.value) {
+        this.alert.showError(
+          'Validación',
+          'Indica la sucursal: es donde está la caja que recibe o entrega el dinero.',
+        );
+        return;
+      }
     }
 
     const v = this.frm.value;
     // Ignora líneas totalmente vacías (sin cuenta ni valores).
     const lineasValidas = (v.lineas as any[]).filter(
       (l) =>
-        l.cuentaId != null || (+l.debito || 0) !== 0 || (+l.credito || 0) !== 0,
+        l.cuentaId != null ||
+        l.origen === 'BANCO' ||
+        (+l.debito || 0) !== 0 ||
+        (+l.credito || 0) !== 0,
     );
     if (lineasValidas.length < 2) {
       this.alert.showError('Validación', 'Agrega al menos dos movimientos.');
       return;
     }
-    if (lineasValidas.some((l) => !l.cuentaId)) {
+    // La contrapartida es la única línea sin cuenta: la pone el backend a
+    // partir del origen. Las demás sí la exigen.
+    if (lineasValidas.some((l) => !l.cuentaId && l.origen !== 'BANCO')) {
       this.alert.showError(
         'Validación',
         'Cada línea con valor debe tener una cuenta.',
@@ -460,8 +645,17 @@ export class FormComprobanteContableComponent implements OnInit {
       beneficiarioTelefono: v.beneficiarioTelefono ?? null,
       ciudad: v.ciudad ?? null,
       fechaVencimiento: v.fechaVencimiento || null,
+      // Origen de fondos: solo tiene sentido en CE/RC. En el CD se manda todo
+      // en null para que el backend no intente resolver una caja que no existe.
+      metodoPago: this.mueveDinero ? this.metodoPagoEfectivo() : null,
+      cuentaBancariaId: this.esBanco ? v.cuentaBancariaId : null,
+      cuentaContableId: this.esCuenta ? v.cuentaContableId : null,
+      sucursalId: this.mueveDinero ? v.sucursalId : null,
+      turnoCajaId: null,
+      cajaOtroDia: this.mueveDinero && this.esCajaOtroDia,
       detalles: lineasValidas.map((l: any) => ({
-        cuentaId: l.cuentaId,
+        cuentaId: l.cuentaId ?? null,
+        origen: l.origen ?? 'MANUAL',
         descripcion: l.descripcion || null,
         debito: l.debito || 0,
         credito: l.credito || 0,

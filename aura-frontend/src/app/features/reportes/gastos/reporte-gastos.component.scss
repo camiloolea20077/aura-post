@@ -1,0 +1,404 @@
+.page {
+  padding: 1rem;
+}
+
+.card {
+  background: var(--surface-0, #fff);
+  border: 1px solid var(--surface-border, #e5e7eb);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+}
+
+.header-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  color: #2563eb;
+  font-size: 1.1rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.subtitle {
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-color-secondary, #6b7280);
+}
+
+/* ── Filtros ─────────────────────────────────────────────────── */
+/*
+ * Los overlays (calendario, dropdowns, multiselect, autocompletar) van SIN
+ * `appendTo="body"` a propósito.
+ *
+ * El scroll de la app no está en el body sino en `.aura-content`, y `.aura-main`
+ * está corrido 260px por el sidebar. Montado en el body, PrimeNG posiciona el
+ * panel en coordenadas del documento y con ese desfase aterriza a la izquierda,
+ * encima de la franja del sidebar — que es lo que lo hacía "desaparecer detrás
+ * del menú". Colgando del propio input se posiciona relativo a él y no hay
+ * desfase posible.
+ *
+ * No hace falta `appendTo` para evitar recortes: la `.card` global ya es
+ * `overflow: visible`.
+ */
+/*
+ * Rejilla de 12 columnas con anchos explícitos, no `auto-fit`.
+ *
+ * Con `repeat(auto-fit, minmax(180px, 1fr))` el número de columnas lo decidía
+ * el ancho disponible, pero los `.span-2` seguían pidiendo dos: cuando solo
+ * cabían dos columnas, "Tipos de movimiento" ocupaba la fila entera y empujaba
+ * a Producto y Categoría a compartir uno de los huecos. Y los botones, al ser
+ * un item más de la rejilla, caían en la celda que sobrara — casi nunca la de
+ * la derecha.
+ *
+ * Con 12 columnas cada campo declara cuánto ocupa en cada tamaño, y los
+ * botones tienen su propia fila completa.
+ */
+.rg-filtros {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 0.75rem 0.85rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--surface-border, #e5e7eb);
+  border-radius: 10px;
+  background: var(--surface-50, #f8fafc);
+  margin-bottom: 1rem;
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0; /* sin esto un valor largo estira la columna y descuadra la fila */
+    grid-column: span 3; /* 4 campos por fila */
+
+    label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-color-secondary, #6b7280);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .span-2 {
+    grid-column: span 6; /* el doble de un campo normal */
+  }
+
+  /* Los controles de PrimeNG miden por su contenido: sin esto el calendario,
+     el autocompletar y el multiselect quedan más angostos que los dropdowns
+     de al lado y la rejilla se ve despareja. */
+  ::ng-deep {
+    p-calendar,
+    p-autocomplete,
+    p-dropdown,
+    p-multiselect {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .p-calendar,
+    .p-autocomplete,
+    .p-dropdown,
+    .p-multiselect {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .p-calendar .p-inputtext,
+    .p-autocomplete .p-inputtext {
+      width: 100%;
+      min-width: 0;
+    }
+
+    /* El panel cuelga del campo, así que hereda su ancho si no se le dice lo
+       contrario: un calendario de 200px no muestra el mes completo. */
+    .p-datepicker:not(.p-datepicker-inline) {
+      width: auto;
+      min-width: 18rem;
+    }
+
+    /* Los paneles tienen que pintar por encima de los campos que siguen.
+       Sin esto se superponen: los controles de PrimeNG son `position:
+       relative`, así que un dropdown que viene DESPUÉS en el DOM gana contra
+       un panel abierto que solo tiene `z-index: auto`. Un valor bajo basta —
+       la pelea es entre hermanos de la misma rejilla, no con el layout. */
+    .p-datepicker:not(.p-datepicker-inline),
+    .p-select-overlay,
+    .p-multiselect-overlay,
+    .p-autocomplete-overlay,
+    .p-dropdown-panel,
+    .p-multiselect-panel,
+    .p-autocomplete-panel {
+      z-index: 30;
+    }
+
+    /* El chip de un tipo largo ("Reverso de edición de compra") no puede
+       estirar el control hasta empujar al campo vecino. */
+    .p-multiselect-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  /* El campo con el panel abierto se adelanta a toda la rejilla.
+     El z-index del panel lo pone por encima de sus hermanos, pero no de un
+     campo que empiece más abajo: el calendario mide ~18rem de alto y se
+     solapa con la fila siguiente. Subiendo el campo entero, el panel viaja
+     con él. Vuelve a `auto` al salir del campo, así que no queda nada
+     flotando por encima del resto de la pantalla. */
+  .field:focus-within {
+    position: relative;
+    z-index: 40;
+  }
+}
+
+/* Fila propia y pegados a la derecha: antes caían donde sobrara espacio,
+   normalmente debajo del buscador de producto. */
+.rg-acciones {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.15rem;
+  border-top: 1px solid var(--surface-border, #e5e7eb);
+  margin-top: 0.25rem;
+}
+
+/* ── Puntos de quiebre ───────────────────────────────────────── */
+/* Se reduce el número de campos por fila en vez de dejar que se encojan:
+   un dropdown de 120px no deja leer "Anulación de traslado". */
+
+@media (max-width: 1400px) {
+  .rg-filtros .field {
+    grid-column: span 4; /* 3 por fila */
+  }
+  .rg-filtros .span-2 {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 1000px) {
+  .rg-filtros .field {
+    grid-column: span 6; /* 2 por fila */
+  }
+  .rg-filtros .span-2 {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .rg-filtros {
+    padding: 0.75rem;
+  }
+  .rg-filtros .field,
+  .rg-filtros .span-2 {
+    grid-column: 1 / -1; /* uno por fila */
+  }
+  .rg-acciones {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+}
+
+/* ── Cambio de vista ─────────────────────────────────────────── */
+.rg-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.85rem;
+}
+
+.rg-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--surface-border, #e5e7eb);
+  border-radius: 8px;
+  background: var(--surface-0, #fff);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-color-secondary, #6b7280);
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: #93b4f5;
+  }
+
+  &.active {
+    border-color: #2563eb;
+    background: rgba(37, 99, 235, 0.08);
+    color: #2563eb;
+  }
+}
+
+.rg-nota {
+  padding: 1.25rem;
+  text-align: center;
+  border: 1px dashed var(--surface-border, #e5e7eb);
+  border-radius: 10px;
+  color: var(--text-color-secondary, #6b7280);
+  font-size: 0.9rem;
+}
+
+/* ── Tabla ───────────────────────────────────────────────────── */
+.text-right {
+  text-align: right;
+}
+.text-center {
+  text-align: center;
+}
+
+.delta-pos {
+  color: #15803d;
+  font-weight: 600;
+}
+
+.delta-neg {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+/* Un producto cuyos movimientos no cuadran con sus saldos. */
+.rg-alerta {
+  margin-left: 0.35rem;
+  color: #d97706;
+}
+
+.rg-totales {
+  background: rgba(37, 99, 235, 0.06);
+  font-weight: 700;
+}
+
+/* La tabla del resumen tiene muchas columnas: que scrolee ella, no la página. */
+:host ::ng-deep .p-datatable-wrapper {
+  overflow-x: auto;
+}
+
+/* ── Tarjetas de totales del período ─────────────────────────── */
+.rg-totales {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.7rem;
+  margin-bottom: 1rem;
+}
+
+.rg-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--surface-border, #e5e7eb);
+  border-left: 3px solid #2563eb;
+  border-radius: 8px;
+  background: var(--surface-0, #fff);
+
+  &__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-color-secondary, #6b7280);
+  }
+
+  &__valor {
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+
+  small {
+    font-size: 0.7rem;
+    color: var(--text-color-secondary, #9ca3af);
+  }
+
+  /* Deducible y no deducible se distinguen a simple vista: son las dos
+     cifras que el contador separa para la declaración de renta. */
+  &--ok {
+    border-left-color: #15803d;
+  }
+
+  &--alerta {
+    border-left-color: #d97706;
+  }
+}
+
+.ok {
+  color: #15803d;
+  font-weight: 600;
+}
+
+.alerta {
+  color: #b45309;
+  font-weight: 600;
+}
+
+.rg-totales-fila {
+  background: rgba(37, 99, 235, 0.06);
+  font-weight: 700;
+}
+
+/* Marcas de revisión sobre la descripción del gasto. */
+.rg-marca {
+  margin-left: 0.35rem;
+  color: var(--text-color-secondary, #6b7280);
+
+  &--alerta {
+    color: #d97706;
+  }
+}
+
+/* ── Barra de participación ──────────────────────────────────── */
+.rg-barra {
+  position: relative;
+  display: block;
+  min-width: 70px;
+  height: 18px;
+  border-radius: 4px;
+  background: var(--surface-100, #f1f5f9);
+  overflow: hidden;
+
+  &__relleno {
+    position: absolute;
+    inset: 0 auto 0 0;
+    background: rgba(37, 99, 235, 0.25);
+  }
+
+  &__texto {
+    position: relative;
+    display: block;
+    line-height: 18px;
+    text-align: right;
+    padding-right: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+}

@@ -52,7 +52,14 @@ export interface AsientoDetalleModel {
 }
 
 export interface CreateAsientoDetalleDto {
-  cuentaId: number;
+  /**
+   * Nula solo en la línea de contrapartida (origen 'BANCO'): esa cuenta la
+   * resuelve el backend a partir del origen de fondos declarado, para que no se
+   * pueda acreditar la caja un pago que entró por transferencia.
+   */
+  cuentaId: number | null;
+  /** MANUAL | CARTERA | BANCO. Por defecto MANUAL. */
+  origen?: 'MANUAL' | 'CARTERA' | 'BANCO';
   descripcion?: string;
   debito: number;
   credito: number;
@@ -104,6 +111,18 @@ export interface CreateComprobanteDto {
   fechaVencimiento?: string | null;
   detalles: CreateAsientoDetalleDto[];
   aplicaciones?: AplicacionCarteraDto[];
+
+  // ── Origen de fondos (obligatorio en CE y RC) ──
+  // De dónde sale o entra la plata. Es lo que mete el comprobante en el cierre
+  // de caja: sin esto el abono de cartera nacía sin turno y el efectivo se
+  // movía sin aparecer en el arqueo de nadie.
+  metodoPago?: string | null;
+  turnoCajaId?: number | null;
+  cuentaBancariaId?: number | null;
+  cuentaContableId?: number | null;
+  sucursalId?: number | null;
+  /** La plata se movió del cajón otro día y ese arqueo ya cerró cuadrado. */
+  cajaOtroDia?: boolean;
 }
 
 export interface AplicacionCarteraDto {

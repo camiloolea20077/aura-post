@@ -29,9 +29,8 @@ import {
   KardexFiltroDto,
   MovimientoInventarioModel,
   MovimientoTableModel,
-  TipoMovimiento,
   TipoMovimientoOpcion,
-  TIPOS_MOVIMIENTO_OPCIONES,
+  esEntradaPorSaldo,
 } from '../../../../core/models/kardex.model';
 import { KardexService } from '../../../../core/services/kardex.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
@@ -86,7 +85,10 @@ export class IndexKardexComponent implements OnInit {
   filtrosExpandidos = false;
 
   sucursales: { id: number; nombre: string }[] = [];
-  tiposMovimiento: TipoMovimientoOpcion[] = TIPOS_MOVIMIENTO_OPCIONES;
+  // La lista la sirve el backend desde su enum. Mantenerla aquí fue el bug:
+  // el front conocía 9 de los 17 tipos, así que merma, obsequio, devolución y
+  // reconteo salían en la tabla pero no se podían filtrar.
+  tiposMovimiento: TipoMovimientoOpcion[] = [];
   productoSugerencias: any[] = [];
 
   // Producto seleccionado para filtro
@@ -111,7 +113,18 @@ export class IndexKardexComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadSucursales();
+    this.loadTiposMovimiento();
     this.load();
+  }
+
+  private async loadTiposMovimiento(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.service.tiposMovimiento());
+      this.tiposMovimiento = res?.data ?? [];
+    } catch {
+      this.tiposMovimiento = [];
+    }
+    this.cdr.markForCheck();
   }
 
   private async loadSucursales(): Promise<void> {
@@ -218,31 +231,16 @@ export class IndexKardexComponent implements OnInit {
   }
 
   // ── Helpers visuales ──────────────────────────────────────
-  getSeverity(tipo: TipoMovimiento): TagSeverity {
-    const entradas: TipoMovimiento[] = [
-      'COMPRA',
-      'ANULACION_VENTA',
-      'ANULACION_MERMA',
-      'TRASLADO_ENTRADA',
-      'ANULACION_COMPRA',
-    ];
-
-    const salidas: TipoMovimiento[] = [
-      'VENTA',
-      'MERMA',
-      'TRASLADO_SALIDA',
-      'ANULACION_TRASLADO',
-    ];
-
-    if (entradas.includes(tipo)) return 'success';
-    if (salidas.includes(tipo)) return 'danger';
-    return 'secondary';
+  /**
+   * El color sale del saldo, no del nombre del tipo. La lista que había aquí
+   * pintaba `ANULACION_COMPRA` de verde cuando saca stock.
+   */
+  getSeverity(m: MovimientoTableModel): TagSeverity {
+    return esEntradaPorSaldo(m.saldoAnterior, m.saldoNuevo) ? 'success' : 'danger';
   }
 
-  getLabelTipo(tipo: TipoMovimiento): string {
-    return (
-      TIPOS_MOVIMIENTO_OPCIONES.find((t) => t.value === tipo)?.label ?? tipo
-    );
+  getLabelTipo(m: MovimientoTableModel): string {
+    return m.tipoEtiqueta ?? m.tipoMovimiento;
   }
 
   getDeltaClass(m: MovimientoTableModel): string {

@@ -12,7 +12,6 @@ import { TagModule } from 'primeng/tag';
 import { SkeletonModule } from 'primeng/skeleton';
 import {
   MovimientoInventarioModel,
-  TipoMovimiento,
 } from '../../../../core/models/kardex.model';
 type TagSeverity =
   | 'success'
@@ -46,40 +45,19 @@ export class DetalleKardexComponent {
     this.visibleChange.emit(false);
   }
 
-  getSeverity(tipo: TipoMovimiento): TagSeverity {
-    const entradas: TipoMovimiento[] = [
-      'COMPRA',
-      'ANULACION_VENTA',
-      'ANULACION_MERMA',
-      'TRASLADO_ENTRADA',
-      'ANULACION_COMPRA',
-    ];
-
-    const salidas: TipoMovimiento[] = [
-      'VENTA',
-      'MERMA',
-      'TRASLADO_SALIDA',
-      'ANULACION_TRASLADO',
-    ];
-
-    if (entradas.includes(tipo)) return 'success';
-    if (salidas.includes(tipo)) return 'danger';
-    return 'secondary';
+  /**
+   * El color y la etiqueta salen del saldo y del catálogo del backend, no de
+   * listas locales: las que había aquí cubrían 9 de los 17 tipos y pintaban
+   * `ANULACION_COMPRA` como entrada cuando saca stock.
+   */
+  getSeverity(): TagSeverity {
+    return this.esEntrada ? 'success' : 'danger';
   }
 
-  getLabelTipo(tipo: TipoMovimiento): string {
-    const map: Record<TipoMovimiento, string> = {
-      COMPRA: 'Compra',
-      ANULACION_COMPRA: 'Anulación compra',
-      VENTA: 'Venta',
-      ANULACION_VENTA: 'Anulación venta',
-      MERMA: 'Merma',
-      ANULACION_MERMA: 'Anulación merma',
-      TRASLADO_SALIDA: 'Traslado salida',
-      TRASLADO_ENTRADA: 'Traslado entrada',
-      ANULACION_TRASLADO: 'Anulación traslado',
-    };
-    return map[tipo] ?? tipo;
+  getLabelTipo(): string {
+    return (
+      this.movimiento?.tipoEtiqueta ?? this.movimiento?.tipoMovimiento ?? ''
+    );
   }
 
   get deltaStock(): number {

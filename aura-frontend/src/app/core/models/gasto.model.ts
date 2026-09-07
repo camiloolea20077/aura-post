@@ -1,3 +1,10 @@
+export type OrigenFondos =
+  | 'CREDITO'
+  | 'CAJA'
+  | 'BANCO'
+  | 'CUENTA'
+  | 'CAJA_OTRO_DIA';
+
 export interface GastoModel {
   id: number;
   empresaId: number;
@@ -18,6 +25,17 @@ export interface GastoModel {
   cuentaBancariaId: number | null;
   /** Cuenta acreditada (crédito); distinta de cuentaContableId. */
   cuentaPagoId: number | null;
+  /** La plata ya había salido del cajón otro día y ese arqueo ya se cerró. */
+  salidaCajaOtroDia: boolean | null;
+  /**
+   * De dónde salió la plata, tal como se preguntó al registrarlo.
+   *
+   * Lo calcula el backend. Antes el formulario lo deducía de las tres piezas
+   * sueltas, pero no alcanzan: un pago de caja normal también deja
+   * `cuentaPagoId` lleno — con la cuenta de CAJA que resolvió el sistema — y
+   * cualquier gasto en efectivo se reabría como "Otra cuenta".
+   */
+  origenFondos: OrigenFondos | null;
   // Campos tributarios (V54)
   terceroId: number | null;
   terceroNombre: string | null;
@@ -120,3 +138,97 @@ export const CATEGORIAS_GASTO = [
   { label: 'Otro deducible', value: 'OTRO_DEDUCIBLE', deducible: true },
   { label: 'Otro no deducible', value: 'OTRO_NO_DEDUCIBLE', deducible: false },
 ];
+
+// ─── Reporte de gastos ─────────────────────────────────────────
+
+export type AgrupacionGastos =
+  | 'CATEGORIA'
+  | 'TERCERO'
+  | 'CENTRO_COSTO'
+  | 'CUENTA'
+  | 'MES'
+  | 'SUCURSAL';
+
+export interface ReporteGastosFiltroDto {
+  page?: number;
+  rows?: number;
+  fechaDesde?: string | null;
+  fechaHasta?: string | null;
+  sucursalId?: number | null;
+  categoria?: string | null;
+  terceroId?: number | null;
+  centroCostoId?: number | null;
+  cuentaContableId?: number | null;
+  proyectoId?: number | null;
+  formaPago?: string | null;
+  metodoPago?: string | null;
+  /** true solo deducibles, false solo no deducibles, null ambos. */
+  deducible?: boolean | null;
+  search?: string | null;
+  /** ACTIVO por defecto; TODOS para auditar lo eliminado. */
+  estado?: string | null;
+  agrupacion?: AgrupacionGastos;
+}
+
+export interface ReporteGastosLineaModel {
+  grupo: string;
+  grupoId: number | null;
+  cantidad: number;
+  total: number;
+  totalDeducible: number;
+  totalNoDeducible: number;
+  totalContado: number;
+  totalCredito: number;
+  baseIva: number;
+  valorIva: number;
+  valorRetefuente: number;
+  valorReteica: number;
+  participacion: number;
+}
+
+/**
+ * Los totales vienen del período completo, no de sumar `lineas`: si el resumen
+ * se paginara, el pie tiene que seguir cuadrando con la declaración.
+ */
+export interface ReporteGastosResumenModel {
+  lineas: ReporteGastosLineaModel[];
+  cantidad: number;
+  total: number;
+  totalDeducible: number;
+  totalNoDeducible: number;
+  totalContado: number;
+  totalCredito: number;
+  baseIva: number;
+  valorIva: number;
+  valorRetefuente: number;
+  valorReteica: number;
+}
+
+export interface ReporteGastosDetalleModel {
+  id: number;
+  fecha: string;
+  categoria: string;
+  descripcion: string | null;
+  terceroNombre: string | null;
+  terceroDocumento: string | null;
+  sucursalNombre: string | null;
+  centroCostoNombre: string | null;
+  cuentaCodigo: string | null;
+  cuentaNombre: string | null;
+  proyectoNombre: string | null;
+  monto: number;
+  deducible: boolean;
+  formaPago: string;
+  metodoPago: string;
+  tipoDocSoporte: string | null;
+  numeroDocSoporte: string | null;
+  baseIva: number;
+  valorIva: number;
+  valorRetefuente: number;
+  valorReteica: number;
+  salidaCajaOtroDia: boolean;
+  motivoRetroactivo: string | null;
+  estado: string;
+  usuarioNombre: string | null;
+  totalRows: number;
+}

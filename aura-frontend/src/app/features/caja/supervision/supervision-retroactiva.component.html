@@ -96,6 +96,19 @@
 
     <button
       type="button"
+      class="tarjeta tarjeta--info"
+      [class.activa]="tipoFiltro === 'INGRESO_CAJA_OTRO_DIA'"
+      [pTooltip]="hallazgos.INGRESO_CAJA_OTRO_DIA.hint"
+      tooltipPosition="bottom"
+      (click)="filtrarPor('INGRESO_CAJA_OTRO_DIA')"
+    >
+      <span class="t-num">{{ data.cantidadIngresoOtroDia }}</span>
+      <span class="t-label">Entró otro día</span>
+      <span class="t-monto">{{ formatCOP(data.montoIngresoOtroDia) }}</span>
+    </button>
+
+    <button
+      type="button"
       class="tarjeta"
       [class.activa]="tipoFiltro === 'PAGO_DE_OTRA_FECHA'"
       [pTooltip]="hallazgos.PAGO_DE_OTRA_FECHA.hint"

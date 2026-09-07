@@ -6,6 +6,9 @@ import {
   CreateGastoDto,
   GastoModel,
   GastoTableModel,
+  ReporteGastosDetalleModel,
+  ReporteGastosFiltroDto,
+  ReporteGastosResumenModel,
 } from '../models/gasto.model';
 import { environment } from '../../../environments/environment';
 import { ResponseTableModel } from '../../shared/utils/response-table.model';
@@ -52,5 +55,49 @@ export class GastoService {
 
   delete(id: number): Observable<ResponseModel<void>> {
     return this.http.delete<ResponseModel<void>>(`${this.apiUrl}/${id}`);
+  }
+
+  // ── Reporte ──────────────────────────────────────────────────
+
+  /**
+   * El catálogo de categorías. El formulario de gasto todavía usa su constante
+   * local `CATEGORIAS_GASTO`; migrarlo aquí es lo que cierra la duplicación.
+   */
+  categorias(): Observable<
+    ResponseModel<{ value: string; label: string; deducible: boolean }[]>
+  > {
+    return this.http.get<
+      ResponseModel<{ value: string; label: string; deducible: boolean }[]>
+    >(`${this.apiUrl}/categorias`);
+  }
+
+  reporteResumen(
+    filtro: ReporteGastosFiltroDto,
+  ): Observable<ResponseModel<ReporteGastosResumenModel>> {
+    return this.http.post<ResponseModel<ReporteGastosResumenModel>>(
+      `${environment.apiUrl}reportes/gastos/resumen`,
+      filtro,
+    );
+  }
+
+  reporteDetalle(filtro: ReporteGastosFiltroDto): Observable<any> {
+    return this.http.post<any>(
+      `${environment.apiUrl}reportes/gastos/detalle`,
+      filtro,
+    );
+  }
+
+  reporteExcel(filtro: ReporteGastosFiltroDto): Observable<Blob> {
+    return this.http.post(`${environment.apiUrl}reportes/gastos/excel`, filtro, {
+      responseType: 'blob',
+    });
+  }
+
+  reporteDetalleExcel(filtro: ReporteGastosFiltroDto): Observable<Blob> {
+    return this.http.post(
+      `${environment.apiUrl}reportes/gastos/detalle/excel`,
+      filtro,
+      { responseType: 'blob' },
+    );
   }
 }

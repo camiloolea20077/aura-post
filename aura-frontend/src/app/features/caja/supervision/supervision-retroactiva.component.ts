@@ -71,6 +71,7 @@ export class SupervisionRetroactivaComponent implements OnInit {
     { label: 'Correcciones de cierre', value: 'AJUSTE_CIERRE' },
     { label: 'Caja deducida', value: 'CAJA_INFERIDA' },
     { label: 'Salió otro día', value: 'SALIDA_CAJA_OTRO_DIA' },
+    { label: 'Entró otro día', value: 'INGRESO_CAJA_OTRO_DIA' },
     { label: 'Documentos de otro día', value: 'PAGO_DE_OTRA_FECHA' },
   ];
 

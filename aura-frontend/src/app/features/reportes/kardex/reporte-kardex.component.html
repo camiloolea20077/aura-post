@@ -1,0 +1,365 @@
+<div class="page">
+  <div class="card">
+    <!-- Header -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-box"></i></span>
+        <div>
+          <h1 class="title">Movimiento de inventario</h1>
+          <p class="subtitle">
+            Entradas, salidas y anulaciones por producto — con su kardex
+            detallado
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-file-excel"
+          label="Excel"
+          class="btn-verde"
+          [loading]="exportando"
+          [disabled]="faltaProductoParaDetalle"
+          (click)="exportarExcel()"
+        ></button>
+        <!-- El resumen no tiene PDF: 23 columnas no se leen en una hoja. -->
+        <button
+          *ngIf="vista === 'DETALLE'"
+          pButton
+          type="button"
+          icon="pi pi-file-pdf"
+          label="PDF"
+          class="p-button-outlined"
+          [loading]="exportando"
+          [disabled]="faltaProductoParaDetalle"
+          (click)="exportarPdf()"
+        ></button>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <form [formGroup]="frm" class="rk-filtros">
+      <div class="field">
+        <label>Desde</label>
+        <p-calendar
+          formControlName="fechaDesde"
+          placeholder="dd/mm/yyyy"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          styleClass="w-full"
+        />
+      </div>
+      <div class="field">
+        <label>Hasta</label>
+        <p-calendar
+          formControlName="fechaHasta"
+          placeholder="dd/mm/yyyy"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          styleClass="w-full"
+        />
+      </div>
+
+      <div class="field">
+        <label>Sucursal</label>
+        <p-dropdown
+          formControlName="sucursalId"
+          [options]="sucursales"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Todas"
+          [showClear]="true"
+          styleClass="w-full"
+        ></p-dropdown>
+      </div>
+
+      <div class="field">
+        <label>Producto</label>
+        <p-autoComplete
+          [(ngModel)]="productoSeleccionado"
+          [ngModelOptions]="{ standalone: true }"
+          [suggestions]="productoSugerencias"
+          (completeMethod)="buscarProducto($event)"
+          field="nombre"
+          placeholder="Todos"
+          [forceSelection]="true"
+          styleClass="w-full"
+        ></p-autoComplete>
+      </div>
+
+      <div class="field">
+        <label>Categoría</label>
+        <p-dropdown
+          formControlName="categoriaId"
+          [options]="categorias"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Todas"
+          [showClear]="true"
+          [filter]="true"
+          styleClass="w-full"
+        ></p-dropdown>
+      </div>
+
+      <div class="field">
+        <label>Marca</label>
+        <p-dropdown
+          formControlName="marcaId"
+          [options]="marcas"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Todas"
+          [showClear]="true"
+          [filter]="true"
+          styleClass="w-full"
+        ></p-dropdown>
+      </div>
+
+      <div class="field">
+        <label>Grupo</label>
+        <p-dropdown
+          formControlName="grupoMovimiento"
+          [options]="grupoOpts"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Todos"
+          [showClear]="true"
+          styleClass="w-full"
+        ></p-dropdown>
+      </div>
+
+      <div class="field">
+        <label>Agrupar por</label>
+        <p-dropdown
+          formControlName="agrupacion"
+          [options]="agrupacionOpts"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+        ></p-dropdown>
+      </div>
+
+      <div class="field span-2">
+        <label>Tipos de movimiento</label>
+        <p-multiSelect
+          formControlName="tiposMovimiento"
+          [options]="tiposMovimiento"
+          optionLabel="label"
+          optionValue="value"
+          group="false"
+          placeholder="Todos"
+          display="chip"
+          [filter]="true"
+          styleClass="w-full"
+        ></p-multiSelect>
+      </div>
+
+      <div class="field span-2">
+        <label>Buscar</label>
+        <input
+          pInputText
+          formControlName="search"
+          placeholder="Nombre, SKU, código de barras o documento..."
+          (keyup.enter)="buscar()"
+        />
+      </div>
+
+      <div class="rk-acciones">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-search"
+          label="Buscar"
+          (click)="buscar()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          icon="pi pi-filter-slash"
+          label="Limpiar"
+          class="p-button-outlined"
+          (click)="limpiarFiltros()"
+        ></button>
+      </div>
+    </form>
+
+    <!-- Vista -->
+    <div class="rk-tabs">
+      <button
+        type="button"
+        class="rk-tab"
+        [class.active]="vista === 'RESUMEN'"
+        (click)="cambiarVista('RESUMEN')"
+      >
+        <i class="pi pi-list"></i> Resumen por producto
+      </button>
+      <button
+        type="button"
+        class="rk-tab"
+        [class.active]="vista === 'DETALLE'"
+        (click)="cambiarVista('DETALLE')"
+      >
+        <i class="pi pi-history"></i> Kardex detallado
+      </button>
+    </div>
+
+    <!-- El detalle es de UN producto: sin producto no hay saldo corrido que
+         seguir, y mezclar varios productos daría una columna de saldos sin
+         sentido. -->
+    <div *ngIf="faltaProductoParaDetalle" class="rk-nota">
+      Elige un <b>producto</b> arriba para ver su kardex con saldo corrido.
+    </div>
+
+    <!-- ══ Resumen ══ -->
+    <p-table
+      *ngIf="vista === 'RESUMEN'"
+      [value]="resumen"
+      [lazy]="true"
+      (onLazyLoad)="cargar($event)"
+      [paginator]="true"
+      [rows]="filasPorPagina"
+      [totalRecords]="totalRegistros"
+      [loading]="loading"
+      [rowsPerPageOptions]="[25, 50, 100]"
+      styleClass="p-datatable-sm"
+      showGridlines
+      scrollable
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Producto</th>
+          <th>SKU</th>
+          <th *ngIf="agrupaPorSucursal">Sucursal</th>
+          <th *ngIf="agrupaPorLote">Lote</th>
+          <th class="text-right">Saldo inicial</th>
+          <th class="text-right">Entradas</th>
+          <th class="text-right">Salidas</th>
+          <th class="text-right">Variación</th>
+          <th class="text-right">Saldo final</th>
+          <th class="text-right">Valor entradas</th>
+          <th class="text-right">Valor salidas</th>
+          <th class="text-right">Movs.</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-l>
+        <tr>
+          <td>
+            {{ l.productoNombre }}
+            <!-- Los saldos y los movimientos salen de la misma fuente: si no
+                 cuadran, alguna fila del kardex se grabó mal. Se marca, no se
+                 corrige. -->
+            <i
+              *ngIf="descuadra(l)"
+              class="pi pi-exclamation-triangle rk-alerta"
+              pTooltip="Los movimientos no cuadran con la diferencia de saldos: hay filas mal grabadas en este producto."
+            ></i>
+          </td>
+          <td>{{ l.productoSku || "—" }}</td>
+          <td *ngIf="agrupaPorSucursal">{{ l.sucursalNombre || "—" }}</td>
+          <td *ngIf="agrupaPorLote">{{ l.codigoLote || "—" }}</td>
+          <td class="text-right">{{ formatCantidad(l.saldoInicial) }}</td>
+          <td class="text-right delta-pos">{{ formatCantidad(l.entradas) }}</td>
+          <td class="text-right delta-neg">{{ formatCantidad(l.salidas) }}</td>
+          <td class="text-right" [ngClass]="claseVariacion(l.variacionNeta)">
+            {{ formatCantidad(l.variacionNeta) }}
+          </td>
+          <td class="text-right">{{ formatCantidad(l.saldoFinal) }}</td>
+          <td class="text-right">{{ formatCOP(l.valorEntradas) }}</td>
+          <td class="text-right">{{ formatCOP(l.valorSalidas) }}</td>
+          <td class="text-right">{{ l.cantidadMovimientos }}</td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="12" class="text-center">
+            No hay movimientos con esos filtros.
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="footer" *ngIf="resumen.length">
+        <tr class="rk-totales">
+          <td [attr.colspan]="agrupaPorSucursal || agrupaPorLote ? 4 : 3">
+            TOTALES (página)
+          </td>
+          <td class="text-right delta-pos">
+            {{ formatCantidad(totalEntradas) }}
+          </td>
+          <td class="text-right delta-neg">
+            {{ formatCantidad(totalSalidas) }}
+          </td>
+          <td colspan="2"></td>
+          <td class="text-right">{{ formatCOP(totalValorEntradas) }}</td>
+          <td class="text-right">{{ formatCOP(totalValorSalidas) }}</td>
+          <td></td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <!-- ══ Kardex detallado ══ -->
+    <p-table
+      *ngIf="vista === 'DETALLE' && !faltaProductoParaDetalle"
+      [value]="detalle"
+      [lazy]="true"
+      (onLazyLoad)="cargar($event)"
+      [paginator]="true"
+      [rows]="filasPorPagina"
+      [totalRecords]="totalRegistros"
+      [loading]="loading"
+      [rowsPerPageOptions]="[25, 50, 100]"
+      styleClass="p-datatable-sm"
+      showGridlines
+      scrollable
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Fecha</th>
+          <th>Tipo</th>
+          <th>Documento</th>
+          <th>Sucursal</th>
+          <th>Lote</th>
+          <th class="text-right">Saldo anterior</th>
+          <th class="text-right">Movimiento</th>
+          <th class="text-right">Saldo nuevo</th>
+          <th class="text-right">Costo unit.</th>
+          <th class="text-right">Valor</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-l>
+        <tr>
+          <td>{{ l.fecha | date: "dd/MM/yyyy HH:mm" }}</td>
+          <td>
+            <p-tag
+              [value]="l.tipoEtiqueta"
+              [severity]="l.movimiento >= 0 ? 'success' : 'danger'"
+            ></p-tag>
+          </td>
+          <td>{{ l.referenciaOrigen || "—" }}</td>
+          <td>{{ l.sucursalNombre || "—" }}</td>
+          <td>{{ l.codigoLote || "—" }}</td>
+          <td class="text-right">{{ formatCantidad(l.saldoAnterior) }}</td>
+          <td class="text-right" [ngClass]="claseVariacion(l.movimiento)">
+            {{ formatCantidad(l.movimiento) }}
+          </td>
+          <td class="text-right">
+            <strong>{{ formatCantidad(l.saldoNuevo) }}</strong>
+          </td>
+          <td class="text-right">{{ formatCOP(l.costoHistorico) }}</td>
+          <td class="text-right">{{ formatCOP(l.valorMovimiento) }}</td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="10" class="text-center">
+            Este producto no tiene movimientos en el rango.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
