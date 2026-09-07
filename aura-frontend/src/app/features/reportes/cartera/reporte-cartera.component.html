@@ -1,0 +1,413 @@
+<div class="page">
+  <div class="card">
+    <!-- Header -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-users"></i></span>
+        <div>
+          <h1 class="title">Estado de cuenta</h1>
+          <p class="subtitle">
+            Quién debe qué y desde cuándo — con el detalle de cada abono
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-file-excel"
+          label="Excel"
+          class="btn-verde"
+          [loading]="exportando"
+          (click)="exportarExcel()"
+        ></button>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <form [formGroup]="frm" class="rc-filtros">
+      <div class="field">
+        <label>Cartera</label>
+        <p-dropdown
+          formControlName="tipo"
+          [options]="tipoOpts"
+          optionLabel="label"
+          optionValue="value"
+          (onChange)="cambiarTipo()"
+          styleClass="w-full"
+        ></p-dropdown>
+      </div>
+
+      <div class="field">
+        <label>Estado</label>
+        <p-dropdown
+          formControlName="estado"
+          [options]="estadoOpts"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+        ></p-dropdown>
+      </div>
+
+      <div class="field">
+        <label>{{ etiquetaTercero }}</label>
+        <p-autoComplete
+          [(ngModel)]="terceroSeleccionado"
+          [ngModelOptions]="{ standalone: true }"
+          [suggestions]="terceroSugerencias"
+          (completeMethod)="buscarTercero($event)"
+          field="nombreCompleto"
+          placeholder="Todos"
+          [forceSelection]="true"
+          styleClass="w-full"
+        ></p-autoComplete>
+      </div>
+
+      <div class="field">
+        <label>Mora mínima (días)</label>
+        <p-inputNumber
+          formControlName="diasMoraMin"
+          [min]="0"
+          placeholder="Sin mínimo"
+          styleClass="w-full"
+        ></p-inputNumber>
+      </div>
+
+      <!-- Sin rango por defecto: la cartera se mira completa. Un filtro de
+           fechas puesto de entrada esconde la deuda vieja, que es la que
+           importa. -->
+      <div class="field">
+        <label>Emitidos desde</label>
+        <p-calendar
+          formControlName="fechaDesde"
+          placeholder="Sin límite"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          [showClear]="true"
+          styleClass="w-full"
+        />
+      </div>
+      <div class="field">
+        <label>Emitidos hasta</label>
+        <p-calendar
+          formControlName="fechaHasta"
+          placeholder="Sin límite"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          [showClear]="true"
+          styleClass="w-full"
+        />
+      </div>
+
+      <div class="field span-2">
+        <label>Buscar</label>
+        <input
+          pInputText
+          formControlName="search"
+          placeholder="N° de documento, factura, nombre o NIT..."
+          (keyup.enter)="buscar()"
+        />
+      </div>
+
+      <div class="rc-acciones">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-search"
+          label="Buscar"
+          (click)="buscar()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          icon="pi pi-filter-slash"
+          label="Limpiar"
+          class="p-button-outlined"
+          (click)="limpiarFiltros()"
+        ></button>
+      </div>
+    </form>
+
+    <!-- Totales por edad -->
+    <div class="rc-totales" *ngIf="resumen && vista === 'RESUMEN'">
+      <div class="rc-tarjeta rc-tarjeta--destacada">
+        <span class="rc-tarjeta__label">Saldo total</span>
+        <strong class="rc-tarjeta__valor">{{
+          formatCOP(resumen.saldoPendiente)
+        }}</strong>
+        <small
+          >{{ resumen.documentos }} documentos ·
+          {{ resumen.cantidadTerceros }} {{ etiquetaTercero | lowercase }}s</small
+        >
+      </div>
+      <div class="rc-tarjeta">
+        <span class="rc-tarjeta__label">Corriente</span>
+        <strong class="rc-tarjeta__valor">{{
+          formatCOP(resumen.corriente)
+        }}</strong>
+        <small>Aún no vence</small>
+      </div>
+      <div class="rc-tarjeta rc-tarjeta--aviso">
+        <span class="rc-tarjeta__label">1 – 30 días</span>
+        <strong class="rc-tarjeta__valor">{{
+          formatCOP(resumen.mora1a30)
+        }}</strong>
+      </div>
+      <div class="rc-tarjeta rc-tarjeta--aviso">
+        <span class="rc-tarjeta__label">31 – 60 días</span>
+        <strong class="rc-tarjeta__valor">{{
+          formatCOP(resumen.mora31a60)
+        }}</strong>
+      </div>
+      <div class="rc-tarjeta rc-tarjeta--alerta">
+        <span class="rc-tarjeta__label">61 – 90 días</span>
+        <strong class="rc-tarjeta__valor">{{
+          formatCOP(resumen.mora61a90)
+        }}</strong>
+      </div>
+      <div class="rc-tarjeta rc-tarjeta--alerta">
+        <span class="rc-tarjeta__label">Más de 90 días</span>
+        <strong class="rc-tarjeta__valor">{{
+          formatCOP(resumen.moraMas90)
+        }}</strong>
+        <small>Lo más difícil de recuperar</small>
+      </div>
+    </div>
+
+    <!-- Vista -->
+    <div class="rc-tabs">
+      <button
+        type="button"
+        class="rc-tab"
+        [class.active]="vista === 'RESUMEN'"
+        (click)="cambiarVista('RESUMEN')"
+      >
+        <i class="pi pi-users"></i> Por {{ etiquetaTercero | lowercase }}
+      </button>
+      <button
+        type="button"
+        class="rc-tab"
+        [class.active]="vista === 'DETALLE'"
+        (click)="cambiarVista('DETALLE')"
+      >
+        <i class="pi pi-file"></i> Documentos y abonos
+      </button>
+    </div>
+
+    <!-- ══ Resumen por tercero ══ -->
+    <p-table
+      *ngIf="vista === 'RESUMEN'"
+      [value]="terceros"
+      [loading]="loading"
+      styleClass="p-datatable-sm"
+      showGridlines
+      scrollable
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>{{ etiquetaTercero }}</th>
+          <th>Identificación</th>
+          <th>Teléfono</th>
+          <th class="text-right">Docs.</th>
+          <th class="text-right">Saldo</th>
+          <th class="text-right">Corriente</th>
+          <th class="text-right">1–30</th>
+          <th class="text-right">31–60</th>
+          <th class="text-right">61–90</th>
+          <th class="text-right">+90</th>
+          <th class="text-right">Mora máx.</th>
+          <th style="width: 60px"></th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-t>
+        <tr>
+          <td>{{ t.terceroNombre }}</td>
+          <td>{{ t.terceroDocumento || "—" }}</td>
+          <td>{{ t.terceroTelefono || "—" }}</td>
+          <td class="text-right">{{ t.documentos }}</td>
+          <td class="text-right">
+            <strong>{{ formatCOP(t.saldoPendiente) }}</strong>
+          </td>
+          <td class="text-right">{{ formatCOP(t.corriente) }}</td>
+          <td class="text-right aviso">{{ formatCOP(t.mora1a30) }}</td>
+          <td class="text-right aviso">{{ formatCOP(t.mora31a60) }}</td>
+          <td class="text-right alerta">{{ formatCOP(t.mora61a90) }}</td>
+          <td class="text-right alerta">
+            <strong>{{ formatCOP(t.moraMas90) }}</strong>
+          </td>
+          <td class="text-right">
+            <p-tag
+              *ngIf="t.diasMoraMax > 0"
+              [value]="t.diasMoraMax + ' d.'"
+              [severity]="severidadMora(t.diasMoraMax)"
+            ></p-tag>
+            <span *ngIf="t.diasMoraMax <= 0">Al día</span>
+          </td>
+          <td class="text-center">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-search"
+              class="p-button-text p-button-sm"
+              pTooltip="Ver sus documentos y abonos"
+              (click)="verTercero(t)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="12" class="text-center">
+            No hay cartera con esos filtros.
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="footer" *ngIf="resumen && terceros.length">
+        <tr class="rc-totales-fila">
+          <td colspan="3">TOTALES</td>
+          <td class="text-right">{{ resumen.documentos }}</td>
+          <td class="text-right">{{ formatCOP(resumen.saldoPendiente) }}</td>
+          <td class="text-right">{{ formatCOP(resumen.corriente) }}</td>
+          <td class="text-right aviso">{{ formatCOP(resumen.mora1a30) }}</td>
+          <td class="text-right aviso">{{ formatCOP(resumen.mora31a60) }}</td>
+          <td class="text-right alerta">{{ formatCOP(resumen.mora61a90) }}</td>
+          <td class="text-right alerta">{{ formatCOP(resumen.moraMas90) }}</td>
+          <td colspan="2"></td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <!-- ══ Documentos con sus abonos ══ -->
+    <p-table
+      *ngIf="vista === 'DETALLE'"
+      [value]="documentos"
+      [lazy]="true"
+      (onLazyLoad)="cargarDocumentos($event)"
+      [paginator]="true"
+      [rows]="filasPorPagina"
+      [totalRecords]="totalRegistros"
+      [loading]="loading"
+      [rowsPerPageOptions]="[25, 50, 100]"
+      styleClass="p-datatable-sm"
+      showGridlines
+      scrollable
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 44px"></th>
+          <th>Documento</th>
+          <th>{{ etiquetaTercero }}</th>
+          <th>Emisión</th>
+          <th>Vencimiento</th>
+          <th class="text-right">Total</th>
+          <th class="text-right">Abonado</th>
+          <th class="text-right">Saldo</th>
+          <th>Mora</th>
+          <th>Estado</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-d>
+        <tr>
+          <td class="text-center">
+            <button
+              pButton
+              type="button"
+              [icon]="expandidas[d.id] ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+              class="p-button-text p-button-sm"
+              [disabled]="!d.abonos?.length"
+              [pTooltip]="
+                d.abonos?.length
+                  ? 'Ver los abonos'
+                  : 'Este documento no tiene abonos'
+              "
+              (click)="alternarAbonos(d)"
+            ></button>
+          </td>
+          <td>
+            {{ d.numeroCuenta }}
+            <small *ngIf="d.numeroFacturaExterno" class="rc-sub">
+              Fact. {{ d.numeroFacturaExterno }}
+            </small>
+          </td>
+          <td>
+            {{ d.terceroNombre }}
+            <small class="rc-sub" *ngIf="d.terceroDocumento">
+              {{ d.terceroDocumento }}
+            </small>
+          </td>
+          <td>{{ d.fechaEmision | date: "dd/MM/yyyy" }}</td>
+          <td>{{ (d.fechaVencimiento | date: "dd/MM/yyyy") || "—" }}</td>
+          <td class="text-right">{{ formatCOP(d.totalDeuda) }}</td>
+          <td class="text-right">{{ formatCOP(d.totalAbonado) }}</td>
+          <td class="text-right">
+            <strong>{{ formatCOP(d.saldoPendiente) }}</strong>
+          </td>
+          <td>
+            <p-tag
+              [value]="textoMora(d.diasMora)"
+              [severity]="severidadMora(d.diasMora)"
+            ></p-tag>
+          </td>
+          <td>
+            <p-tag
+              [value]="d.estado"
+              [severity]="severidadEstado(d.estado)"
+            ></p-tag>
+          </td>
+        </tr>
+
+        <!-- Los abonos van debajo de su documento: un saldo parcial se explica
+             donde se lee, sin saltar a otra tabla. -->
+        <tr *ngIf="expandidas[d.id]" class="rc-abonos">
+          <td colspan="10">
+            <div class="rc-abonos__titulo">
+              <i class="pi pi-wallet"></i> Abonos aplicados
+            </div>
+            <table class="rc-abonos__tabla">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th class="text-right">Monto</th>
+                  <th>Método</th>
+                  <th>Dónde entró</th>
+                  <th>Registró</th>
+                  <th>Referencia</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let a of d.abonos">
+                  <td>{{ a.fechaPago | date: "dd/MM/yyyy HH:mm" }}</td>
+                  <td class="text-right">
+                    <strong>{{ formatCOP(a.monto) }}</strong>
+                  </td>
+                  <td>{{ a.metodoPago || "—" }}</td>
+                  <!-- El dato que no existía antes de atar los abonos de
+                       comprobante a su turno. -->
+                  <td>
+                    <span [class.rc-sin-caja]="!a.cajaNombre">
+                      {{ origenAbono(a) }}
+                    </span>
+                  </td>
+                  <td>{{ a.usuarioNombre || "—" }}</td>
+                  <td>{{ a.referencia || "—" }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="10" class="text-center">
+            No hay documentos con esos filtros.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

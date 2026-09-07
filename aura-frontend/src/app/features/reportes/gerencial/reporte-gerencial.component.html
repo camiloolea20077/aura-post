@@ -1,0 +1,262 @@
+<div class="page">
+  <div class="card">
+    <!-- Header -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-shield"></i></span>
+        <div>
+          <h1 class="title">Reporte gerencial</h1>
+          <p class="subtitle">
+            Cómo va el negocio y qué no cuadra — con el soporte de cada cifra
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-file-pdf"
+          label="Descargar PDF"
+          [loading]="descargando"
+          [disabled]="!resultado"
+          (click)="descargarPdf()"
+        ></button>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <form [formGroup]="frm" class="rg-filtros">
+      <div class="field">
+        <label>Desde</label>
+        <p-calendar
+          formControlName="fechaDesde"
+          placeholder="dd/mm/yyyy"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          styleClass="w-full"
+        />
+      </div>
+      <div class="field">
+        <label>Hasta</label>
+        <p-calendar
+          formControlName="fechaHasta"
+          placeholder="dd/mm/yyyy"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          styleClass="w-full"
+        />
+      </div>
+
+      <div class="field">
+        <label>
+          Diferencia mínima
+          <i
+            class="pi pi-question-circle rg-ayuda"
+            pTooltip="Debajo de este monto un descuadre de caja o cartera se considera
+                      redondeo de conteo y no se reporta. No aplica a la contabilidad:
+                      ahí la partida doble tiene que cuadrar al centavo."
+          ></i>
+        </label>
+        <p-inputNumber
+          formControlName="umbralMonto"
+          mode="currency"
+          currency="COP"
+          locale="es-CO"
+          [maxFractionDigits]="0"
+          [min]="0"
+          styleClass="w-full"
+        ></p-inputNumber>
+      </div>
+
+      <div class="field">
+        <label>
+          Incluir descuadres anteriores
+          <i
+            class="pi pi-question-circle rg-ayuda"
+            pTooltip="Problemas que vienen de antes de las correcciones del sistema y
+                      ya están diagnosticados. Se muestran aparte de la operación
+                      del período."
+          ></i>
+        </label>
+        <p-inputSwitch formControlName="incluirHeredados"></p-inputSwitch>
+      </div>
+
+      <div class="rg-acciones">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-search"
+          label="Analizar"
+          [loading]="analizando"
+          (click)="analizar()"
+        ></button>
+      </div>
+    </form>
+
+    <!-- El backend rechaza rangos de más de un trimestre; se avisa antes de
+         que el usuario pierda el viaje. -->
+    <div *ngIf="rangoLargo" class="rg-aviso">
+      <i class="pi pi-exclamation-triangle"></i>
+      El análisis se corre sobre máximo un trimestre. Acorta el rango.
+    </div>
+
+    <!-- ══ Semáforo ══ -->
+    <ng-container *ngIf="resultado">
+      <div
+        class="rg-veredicto"
+        [class.rg-veredicto--ok]="estaLimpio"
+        [class.rg-veredicto--alerta]="!estaLimpio"
+      >
+        <i [class]="estaLimpio ? 'pi pi-check-circle' : 'pi pi-exclamation-circle'"></i>
+        <span *ngIf="estaLimpio">El período cierra sin hallazgos graves.</span>
+        <span *ngIf="!estaLimpio">
+          Hay {{ resultado.alta }} asunto(s) que requieren revisión.
+        </span>
+      </div>
+
+      <div class="rg-semaforo">
+        <div class="rg-tarjeta rg-tarjeta--grave">
+          <span class="rg-tarjeta__label">Graves</span>
+          <strong class="rg-tarjeta__valor">{{ resultado.alta }}</strong>
+          <small>Plata sin explicar o contabilidad que no cierra</small>
+        </div>
+        <div class="rg-tarjeta rg-tarjeta--revisar">
+          <span class="rg-tarjeta__label">Por revisar</span>
+          <strong class="rg-tarjeta__valor">{{ resultado.media }}</strong>
+          <small>Cuadra pero no se puede defender</small>
+        </div>
+        <div class="rg-tarjeta">
+          <span class="rg-tarjeta__label">Menores</span>
+          <strong class="rg-tarjeta__valor">{{ resultado.baja }}</strong>
+          <small>Higiene de datos</small>
+        </div>
+        <div class="rg-tarjeta rg-tarjeta--destacada">
+          <span class="rg-tarjeta__label">En riesgo</span>
+          <strong class="rg-tarjeta__valor">{{
+            formatCOP(resultado.montoEnRiesgo)
+          }}</strong>
+          <!-- Solo los graves: mezclar severidades daría una cifra sin sentido. -->
+          <small>Suma de los hallazgos graves</small>
+        </div>
+      </div>
+
+      <p class="rg-pie">
+        Analizado en {{ resultado.duracionMs }} ms · Cada cifra sale de cruzar
+        dos fuentes independientes del sistema.
+      </p>
+    </ng-container>
+
+    <div *ngIf="sinResultados" class="rg-vacio">
+      <i class="pi pi-check-circle"></i>
+      <p>No se encontró ningún descuadre en el período.</p>
+    </div>
+
+    <!-- ══ Hallazgos ══ -->
+    <ng-container *ngIf="hallazgos.length">
+      <h2 class="rg-seccion">Qué no cuadra</h2>
+      <p class="rg-nota">
+        Debajo de cada hallazgo están las causas más frecuentes, ordenadas por
+        probabilidad. Son puntos por dónde empezar a buscar, no un diagnóstico.
+      </p>
+      <ng-container *ngTemplateOutlet="lista; context: { $implicit: hallazgos }">
+      </ng-container>
+    </ng-container>
+
+    <!-- ══ Heredados ══ -->
+    <ng-container *ngIf="heredados.length">
+      <h2 class="rg-seccion">Descuadres anteriores a las correcciones</h2>
+      <p class="rg-nota">
+        Vienen de antes del período y ya están diagnosticados. Se listan para que
+        quede constancia, no porque sean de esta operación.
+      </p>
+      <ng-container *ngTemplateOutlet="lista; context: { $implicit: heredados }">
+      </ng-container>
+    </ng-container>
+
+    <!-- ══ Plantilla de la lista ══ -->
+    <ng-template #lista let-items>
+      <div class="rg-hallazgos">
+        <div
+          *ngFor="let h of items"
+          class="rg-hallazgo"
+          [class.rg-hallazgo--grave]="h.severidad === 'ALTA'"
+          [class.rg-hallazgo--abierto]="abierto === h.codigo"
+        >
+          <div class="rg-hallazgo__cabeza" (click)="alternar(h.codigo)">
+            <p-tag
+              [value]="etiquetaSeveridad(h.severidad)"
+              [severity]="severidadTag(h.severidad)"
+            ></p-tag>
+            <div class="rg-hallazgo__texto">
+              <strong>{{ h.titulo }}</strong>
+              <small>
+                <i [class]="iconoArea(h.area)"></i>
+                {{ etiquetaArea(h.area) }} · {{ h.cantidad }} caso(s)
+              </small>
+            </div>
+            <div class="rg-hallazgo__monto">
+              <strong>{{ formatCOP(h.monto) }}</strong>
+              <!-- La magnitud aparece cuando la plata sola no cuenta la
+                   historia: 10 unidades valorizadas en $0 no son "nada". -->
+              <small *ngIf="h.magnitud">{{ h.magnitud }}</small>
+            </div>
+            <i
+              class="pi rg-hallazgo__chevron"
+              [class.pi-chevron-down]="abierto === h.codigo"
+              [class.pi-chevron-right]="abierto !== h.codigo"
+            ></i>
+          </div>
+
+          <div *ngIf="abierto === h.codigo" class="rg-hallazgo__cuerpo">
+            <p class="rg-descripcion">{{ h.descripcion }}</p>
+
+            <div class="rg-bloque">
+              <span class="rg-bloque__titulo">Qué se comparó</span>
+              <code>{{ h.cruce }}</code>
+            </div>
+
+            <div class="rg-bloque" *ngIf="h.causasProbables.length">
+              <span class="rg-bloque__titulo">Por qué suele pasar</span>
+              <ul>
+                <li *ngFor="let c of h.causasProbables">{{ c }}</li>
+              </ul>
+            </div>
+
+            <div class="rg-bloque rg-bloque--accion">
+              <span class="rg-bloque__titulo">Qué hacer</span>
+              <p>{{ h.recomendacion }}</p>
+            </div>
+
+            <!-- Evidencia de otra área: un sobrante de caja y una merma del
+                 mismo turno son un hallazgo con dos caras, no dos. -->
+            <div class="rg-bloque" *ngIf="h.contexto.length">
+              <span class="rg-bloque__titulo">
+                {{ h.contextoTitulo || "Evidencia relacionada" }}
+              </span>
+              <table class="rg-tabla">
+                <tr *ngFor="let d of h.contexto">
+                  <td>{{ d.referencia }}</td>
+                  <td>{{ d.fecha | date: "dd/MM/yyyy" }}</td>
+                  <td>{{ d.descripcion }}</td>
+                  <td class="text-right">{{ formatCOP(d.monto) }}</td>
+                </tr>
+              </table>
+            </div>
+
+            <div class="rg-bloque" *ngIf="h.detalle.length">
+              <span class="rg-bloque__titulo">Dónde mirarlo</span>
+              <table class="rg-tabla">
+                <tr *ngFor="let d of h.detalle">
+                  <td>{{ d.referencia }}</td>
+                  <td>{{ d.fecha | date: "dd/MM/yyyy" }}</td>
+                  <td>{{ d.descripcion }}</td>
+                  <td class="text-right">{{ formatCOP(d.monto) }}</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </div>
+</div>

@@ -233,10 +233,35 @@
             </div>
           </div>
 
+          <!-- Al proveedor se le pagó del cajón otro día y esa caja ya cerró
+               cuadrada contra el conteo físico. Bajarle el esperado al turno de
+               hoy le inventaría al cajero un sobrante: el sistema esperaría
+               menos plata de la que hay en el cajón. -->
+          <div class="form-row" *ngIf="esEfectivo">
+            <div class="form-field form-field--full">
+              <div class="caja-otro-dia">
+                <p-checkbox
+                  formControlName="cajaOtroDia"
+                  [binary]="true"
+                  inputId="abonoPagarCajaOtroDia"
+                ></p-checkbox>
+                <label for="abonoPagarCajaOtroDia" class="caja-otro-dia__label">
+                  Ya salió de la caja otro día
+                </label>
+              </div>
+              <small class="max-hint">
+                La plata salió del cajón antes y esa caja ya cerró contándola.
+                El pago queda registrado y contabilizado, pero no baja el arqueo
+                de ninguna caja.
+              </small>
+            </div>
+          </div>
+
           <!-- Salida cuando el pago es en efectivo pero no hay caja abierta:
                sin esto el backend rechaza el abono porque no tiene dónde
-               registrar la salida del dinero. Opcional a propósito. -->
-          <div class="form-row" *ngIf="esEfectivo">
+               registrar la salida del dinero. Opcional a propósito.
+               No aplica si ya salió otro día: no hay caja que elegir. -->
+          <div class="form-row" *ngIf="esEfectivo && !esCajaOtroDia">
             <div class="form-field">
               <label>
                 Cuenta contable

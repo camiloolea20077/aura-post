@@ -930,6 +930,34 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'reportes/gerencial',
+        loadComponent: () =>
+          import('./features/reportes/gerencial/reporte-gerencial.component').then(
+            (m) => m.ReporteGerencialComponent,
+          ),
+      },
+      {
+        path: 'reportes/cartera',
+        loadComponent: () =>
+          import('./features/reportes/cartera/reporte-cartera.component').then(
+            (m) => m.ReporteCarteraComponent,
+          ),
+      },
+      {
+        path: 'reportes/gastos',
+        loadComponent: () =>
+          import('./features/reportes/gastos/reporte-gastos.component').then(
+            (m) => m.ReporteGastosComponent,
+          ),
+      },
+      {
+        path: 'reportes/kardex',
+        loadComponent: () =>
+          import('./features/reportes/kardex/reporte-kardex.component').then(
+            (m) => m.ReporteKardexComponent,
+          ),
+      },
+      {
         path: 'reportes/facturacion-electronica',
         loadComponent: () =>
           import('./features/reportes/facturacion-electronica/reporte-facturacion-electronica.component').then(

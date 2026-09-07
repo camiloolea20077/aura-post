@@ -16,7 +16,9 @@ export type TipoHallazgo =
   /** Corrección hecha sobre un arqueo ya cerrado. */
   | 'AJUSTE_CIERRE'
   /** Se declaró que la plata ya había salido del cajón otro día. */
-  | 'SALIDA_CAJA_OTRO_DIA';
+  | 'SALIDA_CAJA_OTRO_DIA'
+  /** Lo mismo al revés: un recaudo de cartera que entró al cajón otro día. */
+  | 'INGRESO_CAJA_OTRO_DIA';
 
 export interface MovimientoRetroactivoModel {
   tipoHallazgo: TipoHallazgo;
@@ -47,6 +49,8 @@ export interface SupervisionRetroactivaModel {
   montoAjustes: number;
   cantidadSalidaOtroDia: number;
   montoSalidaOtroDia: number;
+  cantidadIngresoOtroDia: number;
+  montoIngresoOtroDia: number;
 }
 
 /**
@@ -78,6 +82,11 @@ export const HALLAZGOS: Record<
   SALIDA_CAJA_OTRO_DIA: {
     label: 'Salió otro día',
     hint: 'Se declaró que la plata ya había salido del cajón antes. No pasa por el freno porque no descuadra ningún arqueo — este es el único sitio donde queda visible.',
+    severity: 'info',
+  },
+  INGRESO_CAJA_OTRO_DIA: {
+    label: 'Entró otro día',
+    hint: 'Recaudo de cartera que el cliente trajo antes: la plata ya estaba en el cajón cuando esa caja se contó y cerró. Tampoco descuadra ningún arqueo.',
     severity: 'info',
   },
   PAGO_DE_OTRA_FECHA: {

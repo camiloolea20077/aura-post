@@ -11,6 +11,7 @@ export interface AbonoCobrarModel {
   usuarioId: number;
   usuarioNombre: string;
   turnoCajaId: number | null;
+  cajaOtroDia?: boolean;
   createdAt: string;
 }
 
@@ -73,6 +74,12 @@ export interface CreateAbonoCobrarDto {
   cuentaContableId?: number | null;
   fechaPago: string;
   turnoCajaId?: number | null;
+  /**
+   * El cliente trajo la plata otro día: ya entró al cajón y ese turno cerró
+   * cuadrado contra el conteo físico. El recaudo se registra hoy pero no entra
+   * al arqueo de nadie — si entrara, el cajero de hoy cerraría con faltante.
+   */
+  cajaOtroDia?: boolean;
 }
 
 export interface CuentaCobrarFilters {

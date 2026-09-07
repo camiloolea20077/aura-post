@@ -26,6 +26,7 @@ import { TagModule } from 'primeng/tag';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
+import { CheckboxModule } from 'primeng/checkbox';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
@@ -73,6 +74,7 @@ type TagSeverity =
     ProgressBarModule,
     ConfirmDialogModule,
     TooltipModule,
+    CheckboxModule,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './detalle-cuenta-pagar.component.html',
@@ -119,6 +121,7 @@ export class DetalleCuentaPagarComponent implements OnInit {
       banco: [null],
       cuentaBancariaId: [null as number | null],
       cuentaContableId: [null as number | null],
+      cajaOtroDia: [false],
       fechaPago: [new Date(), Validators.required],
     });
   }
@@ -129,7 +132,7 @@ export class DetalleCuentaPagarComponent implements OnInit {
    * hay ninguno, rechaza el abono. Ahí es donde entra la cuenta contable.
    */
   get sinCajaAbierta(): boolean {
-    return this.esEfectivo && !this.turnoActivo;
+    return this.esEfectivo && !this.esCajaOtroDia && !this.turnoActivo;
   }
 
   /** Sin cuenta bancaria cuando el abono es en efectivo. */
@@ -137,9 +140,24 @@ export class DetalleCuentaPagarComponent implements OnInit {
     return this.abonoForm.get('metodoPago')?.value === 'efectivo';
   }
 
+  /**
+   * Al proveedor se le pagó del cajón otro día. La plata ya salió, el conteo de
+   * aquel día lo reflejaba y ese turno cerró cuadrado; hoy solo se digita el
+   * abono. Si bajara el arqueo de hoy, el cajero cerraría con sobrante: el
+   * sistema esperaría menos efectivo del que hay en el cajón.
+   */
+  get esCajaOtroDia(): boolean {
+    return this.esEfectivo && this.abonoForm.get('cajaOtroDia')?.value === true;
+  }
+
   onMetodoChange(): void {
     if (this.esEfectivo) {
       this.abonoForm.patchValue({ cuentaBancariaId: null });
+    } else {
+      // "Otro día" es una afirmación sobre el cajón: sin efectivo no aplica, y
+      // dejarla marcada mandaría al backend por la vía CAJA_OTRO_DIA con un
+      // pago que en realidad salió del banco.
+      this.abonoForm.patchValue({ cajaOtroDia: false });
     }
   }
 
@@ -258,6 +276,7 @@ export class DetalleCuentaPagarComponent implements OnInit {
       referencia: null,
       banco: null,
       cuentaBancariaId: null,
+      cajaOtroDia: false,
       fechaPago: new Date(),
     });
     this.showAbonoForm = true;
@@ -294,15 +313,21 @@ export class DetalleCuentaPagarComponent implements OnInit {
     this.loadingAbono = true;
     const formValue = this.abonoForm.value;
 
+    const otroDia = this.esCajaOtroDia;
     const dto: CreateAbonoPagarDto = {
       monto: formValue.monto,
       metodoPago: formValue.metodoPago as MetodoPago,
       referencia: formValue.referencia || null,
       banco: formValue.banco || null,
       cuentaBancariaId: this.esEfectivo ? null : formValue.cuentaBancariaId || null,
-      cuentaContableId: this.esEfectivo ? formValue.cuentaContableId || null : null,
+      // Cuando ya salió otro día no viaja ni cuenta ni turno: el backend
+      // resuelve Caja por su cuenta y deja el abono fuera de todo arqueo.
+      // Mandar el turno sería inofensivo hoy, pero deja la intención escrita.
+      cuentaContableId:
+        this.esEfectivo && !otroDia ? formValue.cuentaContableId || null : null,
+      cajaOtroDia: otroDia,
       fechaPago: aFechaHoraLocal(formValue.fechaPago),
-      turnoCajaId: this.turnoActivo?.id ?? null,
+      turnoCajaId: otroDia ? null : (this.turnoActivo?.id ?? null),
     };
 
     try {

@@ -100,6 +100,105 @@
           </div>
         </div>
 
+        <!-- ── ¿De dónde sale (o entra) la plata? ─────────────────────
+             Se pregunta explícitamente en vez de deducirlo de una cuenta 11xx
+             elegida a mano. Una cuenta contable no distingue el cajón de la
+             sucursal 2 de la cuenta del banco: por eso el recaudo de un
+             comprobante no caía en el cierre de ninguna caja. La cuenta de la
+             contrapartida la deriva el backend de lo que se elija aquí. -->
+        <div class="cmp-origen" *ngIf="mueveDinero">
+          <div class="cmp-origen-head">
+            {{ esCE ? "¿De dónde sale la plata?" : "¿Dónde entra la plata?" }}
+          </div>
+
+          <div class="origen-opciones">
+            <label
+              *ngFor="let o of origenOpts"
+              class="origen-card"
+              [class.selected]="origen === o.value"
+            >
+              <p-radioButton
+                formControlName="origenFondos"
+                [value]="o.value"
+                [inputId]="'origen-' + o.value"
+                (onClick)="onOrigenChange()"
+              />
+              <span class="origen-texto">
+                <span class="origen-titulo"
+                  ><i [class]="o.icon"></i> {{ o.label }}</span
+                >
+                <small class="origen-hint">{{ o.hint }}</small>
+              </span>
+            </label>
+          </div>
+
+          <div class="cmp-grid mt-2">
+            <div class="field" *ngIf="esCaja || esCajaOtroDia">
+              <label>Sucursal <span class="req" *ngIf="esCaja">*</span></label>
+              <p-dropdown
+                formControlName="sucursalId"
+                [options]="sucursalesOpts"
+                optionLabel="label"
+                optionValue="value"
+                appendTo="body"
+                placeholder="Sucursal de la caja"
+                styleClass="w-full"
+              ></p-dropdown>
+            </div>
+
+            <div class="field span-2" *ngIf="esBanco">
+              <label>Cuenta bancaria <span class="req">*</span></label>
+              <p-dropdown
+                formControlName="cuentaBancariaId"
+                [options]="cuentasBancariasOpts"
+                optionLabel="label"
+                optionValue="value"
+                appendTo="body"
+                placeholder="Selecciona la cuenta"
+                [filter]="true"
+                styleClass="w-full"
+              ></p-dropdown>
+            </div>
+            <div class="field" *ngIf="esBanco">
+              <label>Método <span class="req">*</span></label>
+              <p-dropdown
+                formControlName="metodoPago"
+                [options]="metodosPagoOpts"
+                optionLabel="label"
+                optionValue="value"
+                appendTo="body"
+                styleClass="w-full"
+              ></p-dropdown>
+            </div>
+
+            <div class="field span-2" *ngIf="esCuenta">
+              <label>Cuenta contable <span class="req">*</span></label>
+              <p-dropdown
+                formControlName="cuentaContableId"
+                [options]="cuentasAuxOpts"
+                optionLabel="label"
+                optionValue="value"
+                appendTo="body"
+                placeholder="Caja menor, fondos por legalizar..."
+                [filter]="true"
+                filterBy="label"
+                styleClass="w-full"
+              ></p-dropdown>
+            </div>
+          </div>
+
+          <!-- No bloquea: hacer hoy el recibo de un pago de ayer es legítimo.
+               Advierte para que el descuadre no le caiga al cajero de hoy. -->
+          <p-message
+            *ngIf="esCaja && esFechaRetroactiva"
+            severity="warn"
+            styleClass="w-full mt-2"
+            text="El comprobante tiene fecha anterior a hoy. Si la plata ya se movió
+                  aquel día, usa 'Ya se movió de la caja' — si no, le vas a
+                  descuadrar el arqueo al cajero de hoy."
+          />
+        </div>
+
         <!-- Tabs: movimientos + estados de cuenta -->
         <p-tabView [(activeIndex)]="activeTab" styleClass="cmp-tabs">
           <p-tabPanel>
@@ -254,30 +353,16 @@
               pagar) o <b>Recibo de Caja</b> (cuentas por cobrar).
             </div>
 
-            <ng-container *ngIf="esCartera">
+            <!-- La cartera es la del beneficiario. Listarla toda invitaba a
+                 abonarle a un tercero la factura de otro: el asiento cuadra y
+                 la deuda equivocada queda rebajada sin que nada lo delate. -->
+            <div *ngIf="faltaBeneficiario" class="cmp-nota">
+              Elige primero el <b>beneficiario</b> en la cabecera para ver sus
+              cuentas {{ esCE ? "por pagar" : "por cobrar" }}.
+            </div>
+
+            <ng-container *ngIf="esCartera && !faltaBeneficiario">
               <div class="cmp-cartera-bar">
-                <div class="field">
-                  <label
-                    >{{
-                      esCE
-                        ? "Cuenta de banco/caja (crédito)"
-                        : "Cuenta de banco/caja (débito)"
-                    }}
-                    <span class="req">*</span></label
-                  >
-                  <p-dropdown
-                    [options]="cuentasDisponibleOpts"
-                    [(ngModel)]="cuentaContrapartidaId"
-                    [ngModelOptions]="{ standalone: true }"
-                    optionLabel="label"
-                    optionValue="value"
-                    appendTo="body"
-                    placeholder="Banco / Caja"
-                    [filter]="true"
-                    (onChange)="sincronizarCartera()"
-                    styleClass="w-full"
-                  ></p-dropdown>
-                </div>
                 <div class="field cmp-cartera-search">
                   <label>Buscar</label>
                   <input

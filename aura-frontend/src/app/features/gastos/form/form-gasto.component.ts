@@ -335,7 +335,12 @@ export class FormGastoComponent implements OnInit {
               ? g.metodoPago
               : 'TRANSFERENCIA',
           cuentaBancariaId: g.cuentaBancariaId ?? null,
-          cuentaPagoId: g.cuentaPagoId ?? null,
+          // Solo si la eligió alguien. En los demás orígenes `cuentaPagoId`
+          // trae la cuenta que resolvió el sistema (CAJA, o la del banco), y
+          // precargarla haría que al pasar a "Otra cuenta" apareciera
+          // seleccionada una cuenta que nadie escogió.
+          cuentaPagoId:
+            this.deducirOrigen(g) === 'CUENTA' ? (g.cuentaPagoId ?? null) : null,
           baseIva: g.baseIva ?? 0,
           tarifaIva: g.tarifaIva ?? 0,
           valorIva: g.valorIva ?? 0,
@@ -371,9 +376,18 @@ export class FormGastoComponent implements OnInit {
    * camino. El orden importa: es el mismo con el que el backend resuelve.
    */
   private deducirOrigen(g: GastoModel): string {
+    // Lo manda el backend, que es el único que puede distinguir CAJA de
+    // CUENTA: las dos guardan `cuentaPagoId` y saber cuál de las dos cuentas
+    // es la de efectivo de la empresa es cosa del resolutor.
+    if (g.origenFondos) return g.origenFondos;
+
+    // Respaldo para respuestas de un backend anterior. El flag va antes que
+    // las cuentas: es una afirmación sobre un hecho pasado, y la cuenta que
+    // quedó guardada es la de CAJA, que se confundiría con un pago normal.
     if (g.formaPago === 'CREDITO') return 'CREDITO';
-    if (g.cuentaPagoId != null) return 'CUENTA';
+    if (g.salidaCajaOtroDia) return 'CAJA_OTRO_DIA';
     if (g.cuentaBancariaId != null) return 'BANCO';
+    if (g.cuentaPagoId != null) return 'CUENTA';
     return 'CAJA';
   }
 
