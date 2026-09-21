@@ -42,19 +42,30 @@
 
           <div class="field span-2">
             <label>Beneficiario</label>
-            <p-dropdown
-              formControlName="beneficiarioTerceroId"
-              [options]="terceroOpts"
-              optionLabel="label"
-              optionValue="value"
-              appendTo="body"
-              panelStyleClass="cmp-dd-panel"
-              placeholder="Selecciona un tercero"
-              [filter]="true"
-              [showClear]="true"
-              (onChange)="onBeneficiarioChange()"
-              styleClass="w-full"
-            ></p-dropdown>
+            <div class="terc-picker">
+              <button
+                type="button"
+                class="terc-picker-box"
+                [class.vacio]="!beneficiarioLabel"
+                (click)="abrirBuscadorTercero()"
+              >
+                <i class="pi pi-user"></i>
+                <span class="terc-picker-txt">{{
+                  beneficiarioLabel || "Selecciona un tercero"
+                }}</span>
+                <i class="pi pi-search terc-picker-lupa"></i>
+              </button>
+              <button
+                *ngIf="beneficiarioLabel"
+                type="button"
+                class="terc-picker-clear"
+                (click)="limpiarBeneficiario()"
+                pTooltip="Quitar beneficiario"
+                tooltipPosition="top"
+              >
+                <i class="pi pi-times"></i>
+              </button>
+            </div>
           </div>
           <div class="field span-2">
             <label>Nombre del beneficiario</label>
@@ -482,3 +493,11 @@
     </div>
   </form>
 </div>
+
+<!-- Buscador avanzado de terceros: pagina contra el servidor, así que sirve
+     igual con 500 terceros que con 5.000. -->
+<app-buscador-tercero-dialog
+  [(visible)]="buscadorTerceroVisible"
+  header="Buscar beneficiario"
+  (terceroSelected)="onTerceroSeleccionado($event)"
+></app-buscador-tercero-dialog>
