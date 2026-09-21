@@ -1,0 +1,356 @@
+::ng-deep .terc-dialog.p-dialog {
+  .p-dialog-content {
+    padding: 0 !important;
+    background: #f8fafc;
+  }
+}
+
+/* ── Panel de criterios ─────────────────────────────────────── */
+.terc-panel {
+  background: #fff;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.terc-panel-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1rem;
+  background: #fafbfe;
+  border: none;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  font-family: inherit;
+
+  > .pi-filter {
+    color: #2563eb;
+    font-size: 0.85rem;
+  }
+  &:hover {
+    background: #f4f7ff;
+  }
+}
+
+.terc-panel-titulo {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #475569;
+}
+
+.terc-panel-badge {
+  background: #2563eb;
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 0.3rem;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.terc-panel-chevron {
+  margin-left: auto;
+  color: #94a3b8;
+  font-size: 0.72rem;
+}
+
+.terc-panel-body {
+  padding: 0.9rem 1rem 0.75rem;
+}
+
+.terc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.7rem 0.75rem;
+
+  @media (max-width: 860px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.terc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+
+  &.span-2 {
+    grid-column: span 2;
+
+    @media (max-width: 860px) {
+      grid-column: span 2;
+    }
+  }
+
+  label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #64748b;
+  }
+
+  input {
+    width: 100%;
+    height: 36px;
+    border-radius: 8px;
+    border: 1.5px solid #e0e3eb;
+    padding: 0 0.65rem;
+    font-size: 0.82rem;
+    font-family: inherit;
+
+    &:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+      outline: none;
+    }
+  }
+}
+
+::ng-deep .terc-panel-body .p-dropdown {
+  height: 36px;
+  border-radius: 8px;
+  border: 1.5px solid #e0e3eb;
+
+  .p-dropdown-label {
+    font-size: 0.82rem;
+    display: flex;
+    align-items: center;
+    padding: 0 0.65rem;
+  }
+}
+
+.terc-panel-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+.btn-terc {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 34px;
+  padding: 0 0.85rem;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+
+  i {
+    font-size: 0.75rem;
+  }
+}
+
+.btn-terc-ghost {
+  background: #fff;
+  border: 1.5px solid #e0e3eb;
+  color: #64748b;
+
+  &:hover {
+    border-color: #fecaca;
+    color: #ef4444;
+  }
+}
+
+.btn-terc-primary {
+  background: #2563eb;
+  border: 1.5px solid #2563eb;
+  color: #fff;
+
+  &:hover {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+  }
+}
+
+/* ── Resultados ─────────────────────────────────────────────── */
+.terc-resultados {
+  background: #fff;
+}
+
+.terc-resultados-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.terc-resultados-titulo {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #475569;
+}
+
+.terc-quick {
+  margin-left: auto;
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  i {
+    position: absolute;
+    left: 0.7rem;
+    color: #94a3b8;
+    font-size: 0.8rem;
+  }
+
+  input {
+    width: 280px;
+    max-width: 44vw;
+    height: 34px;
+    border-radius: 8px;
+    border: 1.5px solid #e0e3eb;
+    padding: 0 0.7rem 0 2.1rem;
+    font-size: 0.82rem;
+    font-family: inherit;
+
+    &:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+      outline: none;
+    }
+  }
+}
+
+.terc-aviso {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.6rem 1rem 0;
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  font-size: 0.76rem;
+
+  i {
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+}
+
+::ng-deep .terc-select-table {
+  .p-datatable-thead > tr > th {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #64748b;
+    background: #f8fafc;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #e2e8f0;
+  }
+  .p-datatable-tbody > tr > td {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.82rem;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .p-paginator {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.76rem;
+    background: #fafbfe;
+    border-top: 1px solid #f1f5f9;
+  }
+}
+
+.terc-row {
+  cursor: pointer;
+  transition: background 0.1s;
+
+  &:hover {
+    background: #f0f4ff !important;
+  }
+}
+
+.doc-chip {
+  background: #e0e7ff;
+  color: #3730a3;
+  font-size: 0.66rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 5px;
+  margin-right: 0.35rem;
+}
+
+.doc-num {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.78rem;
+  color: #1e293b;
+}
+
+.terc-nombre {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.terc-email {
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.rol-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.rol-tag {
+  font-size: 0.66rem;
+  font-weight: 600;
+  padding: 0.1rem 0.4rem;
+  border-radius: 5px;
+
+  &.cli {
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+  &.prov {
+    background: #dcfce7;
+    color: #15803d;
+  }
+  &.emp {
+    background: #fef3c7;
+    color: #b45309;
+  }
+  &.ban {
+    background: #ede9fe;
+    color: #6d28d9;
+  }
+  &.off {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+}
+
+.text-muted {
+  color: #cbd5e1;
+}
+
+.terc-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2.5rem 1rem;
+  color: #94a3b8;
+
+  i {
+    font-size: 2rem;
+  }
+  p {
+    font-size: 0.83rem;
+    margin: 0;
+  }
+}
