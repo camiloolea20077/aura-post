@@ -1,0 +1,243 @@
+<p-dialog
+  [(visible)]="visible"
+  [header]="header"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '1060px', maxWidth: '96vw' }"
+  [contentStyle]="{ padding: '0' }"
+  styleClass="aura-dialog terc-dialog"
+  (onHide)="close()"
+>
+  <!-- ── CRITERIOS DE BÚSQUEDA ───────────────────────────────── -->
+  <section class="terc-panel">
+    <button type="button" class="terc-panel-head" (click)="togglePanel()">
+      <i class="pi pi-filter"></i>
+      <span class="terc-panel-titulo">Criterios de búsqueda</span>
+      <span class="terc-panel-badge" *ngIf="criteriosActivos">
+        {{ criteriosActivos }}
+      </span>
+      <i
+        class="pi terc-panel-chevron"
+        [class.pi-chevron-up]="panelAbierto"
+        [class.pi-chevron-down]="!panelAbierto"
+      ></i>
+    </button>
+
+    <div class="terc-panel-body" *ngIf="panelAbierto">
+      <div class="terc-grid">
+        <div class="terc-field">
+          <label>Tipo de tercero</label>
+          <p-dropdown
+            [(ngModel)]="criterios.tipoTercero"
+            [options]="tipoTerceroOpts"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todos"
+            [showClear]="!rolFijo"
+            [disabled]="rolFijo"
+            appendTo="body"
+            styleClass="w-full"
+            (onChange)="buscar()"
+          ></p-dropdown>
+        </div>
+
+        <div class="terc-field">
+          <label>Tipo de documento</label>
+          <p-dropdown
+            [(ngModel)]="criterios.tipoDocumento"
+            [options]="tipoDocumentoOpts"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todos"
+            [showClear]="true"
+            appendTo="body"
+            styleClass="w-full"
+            (onChange)="buscar()"
+          ></p-dropdown>
+        </div>
+
+        <div class="terc-field">
+          <label>Número de documento</label>
+          <input
+            pInputText
+            [(ngModel)]="criterios.documento"
+            (keydown.enter)="buscar()"
+            placeholder="Número de documento"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="terc-field">
+          <label>Estado</label>
+          <p-dropdown
+            [(ngModel)]="criterios.estado"
+            [options]="estadoOpts"
+            optionLabel="label"
+            optionValue="value"
+            appendTo="body"
+            styleClass="w-full"
+            (onChange)="buscar()"
+          ></p-dropdown>
+        </div>
+
+        <div class="terc-field span-2">
+          <label>Nombre o razón social</label>
+          <input
+            pInputText
+            [(ngModel)]="criterios.nombre"
+            (keydown.enter)="buscar()"
+            placeholder="Nombre, apellidos o razón social"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="terc-field">
+          <label>Email</label>
+          <input
+            pInputText
+            [(ngModel)]="criterios.email"
+            (keydown.enter)="buscar()"
+            placeholder="Email"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="terc-field">
+          <label>Teléfono</label>
+          <input
+            pInputText
+            [(ngModel)]="criterios.telefono"
+            (keydown.enter)="buscar()"
+            placeholder="Teléfono"
+            autocomplete="off"
+          />
+        </div>
+      </div>
+
+      <div class="terc-panel-acciones">
+        <button type="button" class="btn-terc btn-terc-ghost" (click)="limpiar()">
+          <i class="pi pi-trash"></i> Limpiar
+        </button>
+        <button type="button" class="btn-terc btn-terc-primary" (click)="buscar()">
+          <i class="pi pi-search"></i> Buscar
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── RESULTADOS ──────────────────────────────────────────── -->
+  <section class="terc-resultados">
+    <div class="terc-resultados-head">
+      <span class="terc-resultados-titulo">Resultados de la búsqueda</span>
+
+      <span class="p-input-icon-left terc-quick">
+        <i class="pi pi-search"></i>
+        <input
+          type="text"
+          pInputText
+          [(ngModel)]="criterios.texto"
+          (input)="onBusquedaRapida()"
+          (keydown.escape)="criterios.texto = ''; buscar()"
+          placeholder="Buscar..."
+          autocomplete="off"
+        />
+      </span>
+    </div>
+
+    <!-- El conteo de abajo es el real de lo filtrado, pero el conjunto del que
+         sale está acotado: si se topó, decirlo es la única salida honesta. -->
+    <div class="terc-aviso" *ngIf="truncado && modoLocal">
+      <i class="pi pi-exclamation-triangle"></i>
+      <span>
+        Hay más terceros que coinciden de los que se pudieron revisar. Afina la
+        búsqueda (documento, nombre o texto) para ver el resto.
+      </span>
+    </div>
+
+    <p-table
+      [value]="items"
+      [lazy]="true"
+      (onLazyLoad)="loadTable($event)"
+      [paginator]="true"
+      [(first)]="primeraFila"
+      [rows]="10"
+      [totalRecords]="total"
+      [loading]="cargando"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Mostrando del {first} al {last} de {totalRecords} registros"
+      [tableStyle]="{ 'min-width': '100%' }"
+      styleClass="terc-select-table"
+      selectionMode="single"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 160px">Documento</th>
+          <th style="min-width: 220px">Nombre / Razón social</th>
+          <th style="width: 130px">Teléfono</th>
+          <th style="min-width: 170px">Email</th>
+          <th style="width: 170px">Tipo de tercero</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item>
+        <tr class="terc-row" (click)="seleccionar(item)">
+          <td>
+            <span class="doc-chip">{{ item.tipoDocumento }}</span>
+            <span class="doc-num">{{ item.numeroDocumento }}</span>
+          </td>
+          <td>
+            <span class="terc-nombre">{{ item.nombreCompleto }}</span>
+          </td>
+          <td>
+            <span *ngIf="item.telefono">{{ item.telefono }}</span>
+            <span class="text-muted" *ngIf="!item.telefono">—</span>
+          </td>
+          <td>
+            <span class="terc-email" *ngIf="item.email">{{ item.email }}</span>
+            <span class="text-muted" *ngIf="!item.email">—</span>
+          </td>
+          <td>
+            <div class="rol-tags">
+              <span class="rol-tag cli" *ngIf="item.esCliente">Cliente</span>
+              <span class="rol-tag prov" *ngIf="item.esProveedor">Proveedor</span>
+              <span class="rol-tag emp" *ngIf="item.esEmpleado">Empleado</span>
+              <span class="rol-tag ban" *ngIf="item.esBanco">Banco</span>
+              <!-- Un tercero inactivo sigue siendo beneficiario válido de un
+                   comprobante viejo, así que se lista; el tag avisa. -->
+              <span class="rol-tag off" *ngIf="!item.activo">Inactivo</span>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5">
+            <div class="terc-empty">
+              <i class="pi pi-search"></i>
+              <p>
+                {{
+                  criteriosActivos
+                    ? "Ningún tercero coincide con los criterios"
+                    : "No hay terceros registrados"
+                }}
+              </p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr *ngFor="let s of [1, 2, 3, 4, 5]">
+          <td><p-skeleton width="120px" /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton width="90px" /></td>
+          <td><p-skeleton width="140px" /></td>
+          <td><p-skeleton width="80px" /></td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </section>
+</p-dialog>

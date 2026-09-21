@@ -24,6 +24,9 @@ import { lastValueFrom } from 'rxjs';
 
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { MessageModule } from 'primeng/message';
+import { TooltipModule } from 'primeng/tooltip';
+
+import { BuscadorTerceroDialogComponent } from '../../../../shared/components/buscador-tercero-dialog/buscador-tercero-dialog.component';
 
 import { ContabilidadService } from '../../../../core/services/contabilidad.service';
 import { TerceroService } from '../../../../core/services/tercero.service';
@@ -57,6 +60,8 @@ import { aFechaLocal } from '../../../../shared/utils/fecha.util';
     InputNumberModule,
     RadioButtonModule,
     MessageModule,
+    TooltipModule,
+    BuscadorTerceroDialogComponent,
   ],
   templateUrl: './form-comprobante-contable.component.html',
   styleUrls: ['./form-comprobante-contable.component.scss'],
@@ -70,6 +75,12 @@ export class FormComprobanteContableComponent implements OnInit {
   terceros: TerceroTableModel[] = [];
   cuentasAuxOpts: { label: string; value: number }[] = [];
   terceroOpts: { label: string; value: number }[] = [];
+
+  // ── Buscador avanzado de beneficiario ──
+  buscadorTerceroVisible = false;
+  /** Texto del tercero elegido. No sale de `terceroOpts`: el buscador trae
+   *  terceros que pueden no estar en esa lista (tope de 500 en el backend). */
+  beneficiarioLabel = '';
   centroCostoOpts: { label: string; value: number }[] = [];
   sucursalesOpts: { label: string; value: number }[] = [];
   cuentasBancariasOpts: { label: string; value: number }[] = [];
@@ -286,10 +297,33 @@ export class FormComprobanteContableComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
+  abrirBuscadorTercero(): void {
+    this.buscadorTerceroVisible = true;
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Beneficiario elegido en el buscador avanzado.
+   *
+   * Antes esto era un `<p-dropdown>` alimentado por `/terceros/selector`, que
+   * trae máximo 500 filas de un solo golpe: con más terceros el que se buscaba
+   * podía no estar en la lista y el filtro del dropdown tampoco lo encontraba,
+   * porque solo mira lo ya descargado. El buscador pagina contra el servidor.
+   */
+  onTerceroSeleccionado(t: TerceroTableModel): void {
+    this.frm.patchValue({ beneficiarioTerceroId: t.id });
+    this.beneficiarioLabel = `${t.numeroDocumento} — ${t.nombreCompleto}`;
+    this.onBeneficiarioChange(t);
+  }
+
+  limpiarBeneficiario(): void {
+    this.frm.patchValue({ beneficiarioTerceroId: null });
+    this.beneficiarioLabel = '';
+    this.onBeneficiarioChange(null);
+  }
+
   /** Al elegir el beneficiario, autollena nombre y teléfono; la dirección la completa el backend. */
-  onBeneficiarioChange(): void {
-    const id = this.frm.get('beneficiarioTerceroId')!.value;
-    const t = this.terceros.find((x) => x.id === id);
+  onBeneficiarioChange(t: TerceroTableModel | null): void {
     if (t) {
       this.frm.patchValue({
         beneficiarioNombre: t.nombreCompleto,
