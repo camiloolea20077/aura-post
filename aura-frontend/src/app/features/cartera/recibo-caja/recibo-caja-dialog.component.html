@@ -1,0 +1,286 @@
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="$event ? null : cerrar()"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '920px', maxWidth: '96vw' }"
+  [contentStyle]="{ padding: 0 }"
+  styleClass="aura-dialog"
+  [header]="resultado ? 'Pago registrado' : 'Registrar pago'"
+>
+  <!-- ══ Resultado ═════════════════════════════════════════════════ -->
+  <div class="rc-ok" *ngIf="resultado">
+    <div class="rc-ok__icon"><i class="pi pi-check"></i></div>
+    <h3>Recibo {{ resultado.numero }}</h3>
+    <p>
+      {{ clienteNombre }} pagó <strong>{{ formatCOP(resultado.valorRecibido) }}</strong>
+    </p>
+    <ul class="rc-ok__lista">
+      <li *ngFor="let a of resultado.aplicaciones">
+        <span>{{ a.numeroCuenta }}</span>
+        <span class="mono">{{ formatCOP(a.monto) }}</span>
+        <span class="rc-chip" [class.rc-chip--ok]="a.saldoDespues <= 0">
+          {{ a.saldoDespues <= 0 ? 'Pagada' : 'Queda ' + formatCOP(a.saldoDespues) }}
+        </span>
+      </li>
+      <li *ngIf="resultado.valorAnticipo > 0">
+        <span>Saldo a favor (anticipo)</span>
+        <span class="mono">{{ formatCOP(resultado.valorAnticipo) }}</span>
+        <span class="rc-chip rc-chip--info">Disponible</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- ══ Formulario ════════════════════════════════════════════════ -->
+  <div class="rc" *ngIf="!resultado">
+    <div class="rc-cliente">
+      <div>
+        <span class="rc-label">Cliente</span>
+        <strong>{{ clienteNombre }}</strong>
+      </div>
+      <div class="rc-cliente__saldo">
+        <span class="rc-label">Saldo pendiente</span>
+        <strong class="mono">{{ formatCOP(saldoTotal) }}</strong>
+      </div>
+    </div>
+
+    <div class="rc-grid">
+      <div class="rc-field rc-field--valor">
+        <label>Valor recibido <span class="req">*</span></label>
+        <p-inputNumber
+          [(ngModel)]="valorRecibido"
+          (ngModelChange)="onValorRecibido()"
+          mode="currency"
+          currency="COP"
+          locale="es-CO"
+          [minFractionDigits]="0"
+          [maxFractionDigits]="2"
+          [min]="0"
+          placeholder="$ 0"
+          inputStyleClass="rc-valor-input"
+          styleClass="w-full"
+        />
+      </div>
+      <div class="rc-field">
+        <label>Fecha del pago</label>
+        <p-calendar
+          [(ngModel)]="fechaPago"
+          [showTime]="true"
+          hourFormat="12"
+          dateFormat="dd/mm/yy"
+          [maxDate]="fechaMax"
+          appendTo="body"
+          styleClass="w-full"
+        />
+      </div>
+      <div class="rc-field">
+        <label>Referencia</label>
+        <input pInputText [(ngModel)]="referencia" placeholder="N° transferencia, cheque…" maxlength="120" />
+      </div>
+    </div>
+
+    <div class="rc-field">
+      <label>¿Cómo pagó?</label>
+      <div class="rc-opciones">
+        <button
+          type="button"
+          *ngFor="let m of metodos"
+          class="rc-opcion"
+          [class.activa]="metodo === m.value"
+          (click)="setMetodo(m.value)"
+        >
+          <i class="pi" [ngClass]="m.icon"></i> {{ m.label }}
+        </button>
+      </div>
+    </div>
+
+    <div class="rc-field" *ngIf="esEfectivo">
+      <label>¿Dónde quedó el efectivo?</label>
+      <div class="rc-opciones">
+        <button
+          type="button"
+          class="rc-opcion"
+          [class.activa]="destinoEfectivo === 'CAJA'"
+          [disabled]="turnoId == null && !turnosAbiertos.length"
+          (click)="destinoEfectivo = 'CAJA'"
+        >
+          <i class="pi pi-inbox"></i>
+          En la caja
+          <small *ngIf="turnoActivo">({{ turnoActivo.cajaNombre }})</small>
+          <small *ngIf="!turnoActivo && turnoId == null && !turnosAbiertos.length">(ninguna abierta)</small>
+        </button>
+        <button
+          type="button"
+          class="rc-opcion"
+          [class.activa]="destinoEfectivo === 'OTRO_DIA'"
+          (click)="destinoEfectivo = 'OTRO_DIA'"
+          pTooltip="El cliente pagó otro día y ese arqueo ya cerró: solo se registra el pago"
+          tooltipPosition="top"
+        >
+          <i class="pi pi-history"></i> Entró otro día
+        </button>
+        <button
+          type="button"
+          class="rc-opcion"
+          [class.activa]="destinoEfectivo === 'CUENTA'"
+          (click)="destinoEfectivo = 'CUENTA'"
+        >
+          <i class="pi pi-wallet"></i> Otra cuenta (caja menor…)
+        </button>
+      </div>
+      <div class="rc-inline" *ngIf="destinoEfectivo === 'CAJA' && !turnoActivo && turnosAbiertos.length > 1">
+        <p-dropdown
+          [(ngModel)]="turnoId"
+          [options]="turnosAbiertos"
+          optionLabel="cajaNombre"
+          optionValue="id"
+          placeholder="¿En cuál caja?"
+          appendTo="body"
+          styleClass="w-full"
+        />
+      </div>
+    </div>
+
+    <div class="rc-field" *ngIf="(esEfectivo && destinoEfectivo === 'CUENTA') || !esEfectivo">
+      <label>
+        Cuenta donde entró el dinero
+        <span class="req" *ngIf="esEfectivo">*</span>
+        <small *ngIf="!esEfectivo">(vacío = la de la forma de pago)</small>
+      </label>
+      <p-dropdown
+        [(ngModel)]="cuentaContableId"
+        [options]="cuentasOpts"
+        optionLabel="label"
+        optionValue="value"
+        [filter]="true"
+        [showClear]="true"
+        placeholder="Seleccionar cuenta"
+        appendTo="body"
+        styleClass="w-full"
+      />
+    </div>
+
+    <!-- ── Facturas ── -->
+    <div class="rc-facturas">
+      <div class="rc-facturas__head">
+        <span class="rc-titulo">Aplicar a facturas</span>
+        <div class="rc-facturas__acciones">
+          <button type="button" class="rc-link" (click)="repartir()" [disabled]="!valorRecibido">
+            <i class="pi pi-sort-amount-down-alt"></i> Repartir (más vieja primero)
+          </button>
+          <button type="button" class="rc-link rc-link--muted" (click)="limpiar()">Limpiar</button>
+        </div>
+      </div>
+
+      <div class="rc-tabla-wrap">
+        <table class="rc-tabla">
+          <thead>
+            <tr>
+              <th>Factura</th>
+              <th>Vencimiento</th>
+              <th class="num">Saldo</th>
+              <th class="num col-aplicar">Aplicar</th>
+              <th class="col-acc"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let l of lineas" [class.con-valor]="(l.aplicar ?? 0) > 0">
+              <td>
+                <strong>{{ l.factura.numeroCuenta }}</strong>
+                <small *ngIf="l.factura.numeroVenta"> · Venta {{ l.factura.numeroVenta }}</small>
+              </td>
+              <td>
+                <span
+                  class="rc-chip"
+                  [class.rc-chip--danger]="l.factura.diasVencida > 0"
+                  [class.rc-chip--warn]="l.factura.diasVencida <= 0 && l.factura.diasVencida > -8"
+                >
+                  {{ etiquetaDias(l.factura) }}
+                </span>
+              </td>
+              <td class="num mono">{{ formatCOP(l.factura.saldoPendiente) }}</td>
+              <td class="num">
+                <p-inputNumber
+                  [(ngModel)]="l.aplicar"
+                  (onBlur)="onAplicarManual(l)"
+                  (ngModelChange)="manual = true"
+                  mode="currency"
+                  currency="COP"
+                  locale="es-CO"
+                  [minFractionDigits]="0"
+                  [maxFractionDigits]="2"
+                  [min]="0"
+                  [max]="l.factura.saldoPendiente"
+                  placeholder="$ 0"
+                  styleClass="rc-aplicar"
+                />
+              </td>
+              <td class="col-acc">
+                <button
+                  type="button"
+                  class="rc-icon"
+                  pTooltip="Pagar completa"
+                  tooltipPosition="left"
+                  (click)="pagarCompleta(l)"
+                >
+                  <i class="pi pi-check-circle"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!lineas.length">
+              <td colspan="5" class="rc-vacio">
+                El cliente no tiene facturas pendientes: todo el valor quedará como anticipo.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="rc-field">
+      <label>Observaciones</label>
+      <textarea pTextarea [(ngModel)]="observaciones" rows="2" maxlength="500"></textarea>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <ng-container *ngIf="!resultado">
+      <div class="rc-resumen">
+        <div>
+          <span class="rc-label">Recibido</span>
+          <strong class="mono">{{ formatCOP(valorRecibido) }}</strong>
+        </div>
+        <div>
+          <span class="rc-label">Aplicado</span>
+          <strong class="mono">{{ formatCOP(totalAplicado) }}</strong>
+        </div>
+        <div [class.rc-resumen--info]="sobrante > 0" [class.rc-resumen--danger]="sobrante < 0">
+          <span class="rc-label">{{ sobrante < 0 ? 'Excede lo recibido' : 'Queda como anticipo' }}</span>
+          <strong class="mono">{{ formatCOP(sobrante < 0 ? -sobrante : sobrante) }}</strong>
+        </div>
+      </div>
+      <div class="rc-footer">
+        <span class="rc-bloqueo" *ngIf="bloqueo">
+          <i class="pi pi-info-circle"></i> {{ bloqueo }}
+        </span>
+        <button pButton type="button" label="Cancelar" class="p-button-text" (click)="cerrar()"></button>
+        <button
+          pButton
+          type="button"
+          label="Registrar pago"
+          icon="pi pi-check"
+          [loading]="guardando"
+          [disabled]="!!bloqueo"
+          (click)="guardar()"
+        ></button>
+      </div>
+    </ng-container>
+    <ng-container *ngIf="resultado">
+      <div class="rc-footer">
+        <button pButton type="button" label="Cerrar" class="p-button-text" (click)="cerrar()"></button>
+        <button pButton type="button" label="Imprimir recibo" icon="pi pi-print" (click)="imprimir()"></button>
+      </div>
+    </ng-container>
+  </ng-template>
+</p-dialog>

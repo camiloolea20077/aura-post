@@ -345,3 +345,210 @@
 .text-center {
   text-align: center !important;
 }
+
+// ── Compra de origen y corrección ─────────────────────────────────
+.compra-num {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.compra-prov {
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.edicion-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  label {
+    margin-top: 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #475569;
+  }
+
+  input {
+    width: 100%;
+  }
+}
+
+.edicion-ayuda {
+  margin: 0 0 0.3rem;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.opciones-reglas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.opcion-regla {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  border: 1.5px solid #e0e3eb;
+  border-radius: 10px;
+  background: #fff;
+  color: #475569;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  i {
+    font-size: 0.78rem;
+  }
+
+  &--activa {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+}
+
+// ── Vencimientos ──────────────────────────────────────────────────
+.venc-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.venc-dias {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: #475569;
+
+  ::ng-deep .venc-dias__input {
+    width: 70px;
+    text-align: center;
+  }
+}
+
+.venc-resumen {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.7rem;
+  margin-bottom: 0.9rem;
+}
+
+.venc-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+
+  &--vencido {
+    background: #fef2f2;
+    color: #991b1b;
+  }
+
+  &--pronto {
+    background: #fffbeb;
+    color: #92400e;
+  }
+
+  &__titulo {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__valor {
+    font-size: 1.25rem;
+    font-weight: 800;
+  }
+
+  &__sub {
+    font-size: 0.74rem;
+    opacity: 0.85;
+  }
+}
+
+.venc-tabla {
+  display: flex;
+  flex-direction: column;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.venc-fila {
+  display: grid;
+  grid-template-columns: 28px 2fr 1fr 1fr 1.3fr 0.9fr 0.9fr 0.9fr;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.45rem 0.3rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.8rem;
+  cursor: pointer;
+
+  i {
+    color: #94a3b8;
+  }
+
+  &:hover {
+    background: #f8fafc;
+  }
+
+  &--cab {
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    cursor: default;
+
+    &:hover {
+      background: transparent;
+    }
+  }
+
+  &--vencido {
+    background: #fff5f5;
+  }
+
+  .text-right {
+    text-align: right;
+  }
+}
+
+.venc-producto {
+  display: flex;
+  flex-direction: column;
+  font-weight: 600;
+  color: #1e293b;
+
+  small {
+    font-weight: 400;
+    color: #94a3b8;
+  }
+}
+
+.venc-dias-badge {
+  display: block;
+  font-size: 0.68rem;
+  color: #b45309;
+}
+
+.venc-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+
+  &__acciones {
+    display: flex;
+    gap: 0.5rem;
+  }
+}

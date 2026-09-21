@@ -562,19 +562,26 @@
 // El producto absorbe el ancho restante; las numéricas tienen ancho fijo.
 .th-producto,
 .td-producto {
-  min-width: 240px;
+  min-width: 180px;
 }
 
 ::ng-deep .lineas-table {
-  // Anchos por columna (cant | vlrunit | desc | costo | iva% | iva$ | neto | acc)
-  th:nth-child(2), td:nth-child(2) { width: 84px; }
-  th:nth-child(3), td:nth-child(3) { width: 130px; }
-  th:nth-child(4), td:nth-child(4) { width: 120px; }
-  th:nth-child(5), td:nth-child(5) { width: 120px; }
-  th:nth-child(6), td:nth-child(6) { width: 92px; }
-  th:nth-child(7), td:nth-child(7) { width: 120px; }
-  th:nth-child(8), td:nth-child(8) { width: 120px; }
-  th:nth-child(9), td:nth-child(9) { width: 96px; }
+  // Anchos por columna (cant | vlrunit | desc | costo | iva% | iva$ | neto | acc).
+  // Suman ~980px con el producto: caben en 1366×768 con el menú abierto; el
+  // producto se queda con lo que sobre en pantallas grandes. Si no alcanza,
+  // la tabla hace scroll horizontal en vez de recortar los valores.
+  th:nth-child(2), td:nth-child(2) { width: 168px; }
+  th:nth-child(3), td:nth-child(3) { width: 112px; }
+  th:nth-child(4), td:nth-child(4) { width: 92px; }
+  th:nth-child(5), td:nth-child(5) { width: 96px; }
+  th:nth-child(6), td:nth-child(6) { width: 64px; }
+  th:nth-child(7), td:nth-child(7) { width: 92px; }
+  th:nth-child(8), td:nth-child(8) { width: 104px; }
+  th:nth-child(9), td:nth-child(9) { width: 72px; }
+
+  .p-datatable-table {
+    min-width: 980px;
+  }
 
   .p-datatable-thead > tr > th {
     background: #f8fafc;
@@ -604,10 +611,10 @@
     border-radius: 7px !important;
     border: 1.5px solid #e0e3eb !important;
     font-family: "JetBrains Mono", monospace;
-    font-size: 0.78rem;
+    font-size: 0.76rem;
     text-align: right;
     box-sizing: border-box;
-    padding: 0 0.5rem;
+    padding: 0 0.4rem;
   }
 
   .td-acc .p-button.p-button-sm {
@@ -621,6 +628,45 @@
   }
 }
 
+// ── Cantidad + presentación en la misma fila ──────────────────────
+// Los hijos del flex son los elementos p-inputnumber y p-dropdown, no el div
+// interno de PrimeNG: el ancho se reparte sobre ellos.
+.cant-pres {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+
+  > p-inputnumber {
+    flex: 0 0 56px;
+    min-width: 0;
+  }
+
+  // Sin presentaciones (se compra por kilo o por unidad) no hay selector al
+  // lado: la cantidad ocupa toda la celda.
+  > p-inputnumber:only-child {
+    flex: 1 1 auto;
+  }
+  > p-dropdown {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+::ng-deep .cant-pres__cantidad {
+  width: 100%;
+}
+::ng-deep .cant-pres__presentacion.p-dropdown {
+  width: 100%;
+  height: 32px;
+  border-radius: 7px;
+  .p-dropdown-label {
+    padding: 0 0.25rem 0 0.6rem;
+    line-height: 30px;
+    font-size: 0.78rem;
+  }
+  .p-dropdown-trigger {
+    width: 1.75rem;
+  }
+}
 // ── Valores calculados (readonly) ─────────────────────────────────
 .val-calc {
   font-family: "JetBrains Mono", monospace;
@@ -963,5 +1009,97 @@
     white-space: normal;
     line-height: 1.45;
     font-size: 0.8rem;
+  }
+}
+
+// ── Lotes de la línea ─────────────────────────────────────────────
+.lotes-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.3rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px dashed #f59e0b;
+  border-radius: 6px;
+  background: #fffbeb;
+  color: #b45309;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  i {
+    font-size: 0.72rem;
+  }
+
+  &--ok {
+    border: 1px solid #bfdbfe;
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+}
+
+.lotes-nota {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
+.lotes-ayuda {
+  margin: 0 0 0.8rem;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.lotes-tabla {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.lotes-fila {
+  display: grid;
+  grid-template-columns: 1.3fr 1.2fr 0.9fr 36px;
+  gap: 0.5rem;
+  align-items: center;
+
+  &--head span {
+    font-size: 0.66rem;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  input {
+    width: 100%;
+  }
+}
+
+.lotes-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+
+  &__acciones {
+    display: flex;
+    gap: 0.5rem;
+  }
+}
+
+.lotes-suma {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #b45309;
+
+  &--ok {
+    color: #15803d;
   }
 }

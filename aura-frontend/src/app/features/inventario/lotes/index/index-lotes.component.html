@@ -6,7 +6,7 @@
         <div>
           <h1 class="title">Lotes</h1>
           <p class="subtitle">
-            Control de fechas de vencimiento y stock por lote (FEFO)
+            Los lotes entran con la compra; aquí se consultan y se corrigen
           </p>
         </div>
       </div>
@@ -16,18 +16,19 @@
             pButton
             type="button"
             icon="pi pi-clock"
-            label="Por vencer"
+            label="Vencimientos"
             class="p-button-outlined p-button-warning p-button-sm"
-            pTooltip="Lotes que vencen en los próximos 30 días"
-            (click)="verPorVencer()"
+            pTooltip="Lotes vencidos y por vencer, con su valor"
+            (click)="verVencimientos()"
           ></button>
           <button
             pButton
             type="button"
-            label="Nuevo lote"
-            icon="pi pi-plus"
-            class="btn-verde"
-            (click)="openCreate()"
+            icon="pi pi-cog"
+            label="Reglas"
+            class="p-button-outlined p-button-sm"
+            pTooltip="Vencidos y días de alerta"
+            (click)="abrirReglas()"
           ></button>
         </div>
         <div class="card-head__search">
@@ -75,11 +76,12 @@
             Producto <p-sortIcon field="p.nombre" />
           </th>
           <th style="min-width: 120px">Sucursal</th>
+          <th style="min-width: 140px">Compra</th>
           <th style="width: 130px" class="text-center">Vencimiento</th>
           <th style="width: 110px" class="text-right">Stock</th>
           <th style="width: 130px" class="text-right">Costo unit.</th>
           <th style="width: 90px" class="text-center">Estado</th>
-          <th style="width: 80px" class="text-center">Acc.</th>
+          <th style="width: 100px" class="text-center">Acc.</th>
         </tr>
       </ng-template>
 
@@ -107,6 +109,21 @@
             </span>
           </td>
 
+          <!-- Compra de origen -->
+          <td>
+            <ng-container *ngIf="item.compraNumero; else sinCompra">
+              <span class="compra-num">{{ item.compraNumero }}</span>
+              <div class="compra-prov" *ngIf="item.proveedorNombre">
+                {{ item.proveedorNombre }}
+              </div>
+            </ng-container>
+            <ng-template #sinCompra>
+              <span class="compra-prov">{{
+                item.codigoLote === "SIN-LOTE" ? "Stock sin lote" : "—"
+              }}</span>
+            </ng-template>
+          </td>
+
           <!-- Vencimiento -->
           <td class="text-center">
             <span class="venc-badge" [ngClass]="getVencimientoClass(item)">
@@ -119,6 +136,7 @@
           <td class="text-right">
             <span class="stock-valor" [class.cero]="item.stockActual <= 0">
               {{ item.stockActual | number: "1.0-4" }}
+              {{ item.unidadAbreviatura }}
             </span>
           </td>
 
@@ -145,6 +163,15 @@
             <button
               pButton
               type="button"
+              icon="pi pi-pencil"
+              class="p-button-text p-button-sm"
+              pTooltip="Corregir código o vencimiento"
+              tooltipPosition="top"
+              (click)="abrirEdicion(item)"
+            ></button>
+            <button
+              pButton
+              type="button"
               icon="pi pi-trash"
               class="p-button-text p-button-danger p-button-sm action-delete"
               pTooltip="Desactivar lote"
@@ -157,23 +184,16 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="8">
+          <td colspan="9">
             <div class="empty-state">
               <i class="pi pi-calendar"></i>
               <p>
                 {{
-                  searchQuery ? "Sin resultados" : "No hay lotes registrados"
+                  searchQuery
+                    ? "Sin resultados"
+                    : "No hay lotes. Se crean al registrar la compra de un producto que maneja lotes."
                 }}
               </p>
-              <button
-                *ngIf="!searchQuery"
-                pButton
-                type="button"
-                label="Crear primer lote"
-                icon="pi pi-plus"
-                class="btn-verde p-button-sm"
-                (click)="openCreate()"
-              ></button>
             </div>
           </td>
         </tr>
@@ -181,6 +201,7 @@
 
       <ng-template pTemplate="loadingbody">
         <tr *ngFor="let s of [1, 2, 3, 4, 5]">
+          <td><p-skeleton /></td>
           <td><p-skeleton /></td>
           <td><p-skeleton /></td>
           <td><p-skeleton /></td>
@@ -205,70 +226,253 @@
   </div>
 </div>
 
-<!-- Sidebar: por vencer -->
-<p-sidebar
-  [(visible)]="showVencerSidebar"
-  position="right"
-  [style]="{ width: '420px' }"
-  styleClass="aura-sidebar"
+<!-- Vencimientos -->
+<p-dialog
+  [(visible)]="vencVisible"
+  header="Lotes vencidos y por vencer"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '1040px', maxWidth: '96vw' }"
 >
-  <ng-template pTemplate="header">
-    <div class="sidebar-header">
-      <div class="vencer-icon"><i class="pi pi-clock"></i></div>
-      <div>
-        <h4 class="sidebar-title">Próximos a vencer</h4>
-        <p class="sidebar-sub">Lotes con vencimiento en los próximos 30 días</p>
-      </div>
-    </div>
-  </ng-template>
+  <div class="venc-filtros">
+    <p-dropdown
+      [options]="sucursalesOpts"
+      [(ngModel)]="vencSucursalId"
+      optionLabel="label"
+      optionValue="value"
+      (onChange)="cargarVencimientos()"
+      appendTo="body"
+    />
+    <span class="venc-dias">
+      Vencen en los próximos
+      <p-inputNumber
+        [(ngModel)]="vencDias"
+        [min]="0"
+        [max]="3650"
+        inputStyleClass="venc-dias__input"
+        (onBlur)="cargarVencimientos()"
+        (keydown.enter)="cargarVencimientos()"
+      />
+      días
+    </span>
+  </div>
 
-  <div class="sidebar-loading" *ngIf="loadingPorVencer">
+  <div class="venc-resumen">
+    <div class="venc-tarjeta venc-tarjeta--vencido">
+      <span class="venc-tarjeta__titulo">Vencido</span>
+      <span class="venc-tarjeta__valor">{{ sumar(vencidos, "valorCosto") | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span>
+      <span class="venc-tarjeta__sub">
+        {{ vencidos.length }} lotes · en venta {{ sumar(vencidos, "valorVenta") | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+      </span>
+    </div>
+    <div class="venc-tarjeta venc-tarjeta--pronto">
+      <span class="venc-tarjeta__titulo">Por vencer</span>
+      <span class="venc-tarjeta__valor">{{ sumar(porVencer, "valorCosto") | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span>
+      <span class="venc-tarjeta__sub">
+        {{ porVencer.length }} lotes · en venta {{ sumar(porVencer, "valorVenta") | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+      </span>
+    </div>
+  </div>
+
+  <div class="sidebar-loading" *ngIf="vencCargando">
     <i class="pi pi-spin pi-spinner"></i><span>Cargando...</span>
   </div>
 
-  <div
-    class="sidebar-empty"
-    *ngIf="!loadingPorVencer && porVencerItems.length === 0"
-  >
+  <div class="sidebar-empty" *ngIf="!vencCargando && !vencItems.length">
     <i class="pi pi-check-circle" style="color: #22c55e"></i>
-    <p>No hay lotes próximos a vencer. ¡Inventario en orden!</p>
+    <p>No hay lotes vencidos ni por vencer en esa ventana.</p>
   </div>
 
-  <div
-    class="vencer-list"
-    *ngIf="!loadingPorVencer && porVencerItems.length > 0"
-  >
+  <div class="venc-tabla" *ngIf="!vencCargando && vencItems.length">
+    <div class="venc-fila venc-fila--cab">
+      <span></span>
+      <span>Producto</span>
+      <span>Lote</span>
+      <span>Sucursal</span>
+      <span>Vence</span>
+      <span class="text-right">Stock</span>
+      <span class="text-right">Costo</span>
+      <span class="text-right">En venta</span>
+    </div>
     <div
-      class="vencer-row"
-      *ngFor="let lote of porVencerItems"
-      [class.critico]="getVencimientoClass(lote) === 'critico'"
-      [class.vencido]="getVencimientoClass(lote) === 'vencido'"
+      class="venc-fila"
+      *ngFor="let v of vencItems"
+      [class.venc-fila--vencido]="v.diasParaVencer < 0"
+      (click)="alternarVencimiento(v)"
     >
-      <div class="vencer-info">
-        <span class="vencer-codigo">{{ lote.codigoLote }}</span>
-        <span class="vencer-producto">{{ lote.productoNombre }}</span>
-        <span class="vencer-sucursal"
-          ><i class="pi pi-building"></i> {{ lote.sucursalNombre }}</span
-        >
-      </div>
-      <div class="vencer-right">
-        <span class="venc-badge" [ngClass]="getVencimientoClass(lote)">
-          <i class="pi pi-clock"></i> {{ getVencimientoLabel(lote) }}
-        </span>
-        <span class="vencer-stock"
-          >{{ lote.stockActual | number: "1.0-4" }} u.</span
-        >
-      </div>
+      <span>
+        <i class="pi" [class.pi-check-square]="vencSeleccion.has(v.loteId)" [class.pi-stop]="!vencSeleccion.has(v.loteId)"></i>
+      </span>
+      <span class="venc-producto">
+        {{ v.productoNombre }}
+        <small *ngIf="v.categoriaNombre">{{ v.categoriaNombre }}</small>
+      </span>
+      <span class="lote-codigo">{{ v.codigoLote }}</span>
+      <span>{{ v.sucursalNombre }}</span>
+      <span>
+        {{ v.fechaVencimiento | date: "dd/MM/yyyy" }}
+        <small class="venc-dias-badge">{{ etiquetaDias(v.diasParaVencer) }}</small>
+      </span>
+      <span class="text-right">{{ v.stockActual | number: "1.0-4" }} {{ v.unidadAbreviatura }}</span>
+      <span class="text-right">{{ v.valorCosto | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span>
+      <span class="text-right">{{ v.valorVenta | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span>
     </div>
   </div>
-</p-sidebar>
 
-<app-form-lote
-  [displayModal]="showModal"
-  (modalClosed)="onModalClosed()"
-  (itemSaved)="onItemSaved()"
+  <ng-template pTemplate="footer">
+    <div class="venc-footer">
+      <button
+        pButton
+        type="button"
+        label="Elegir los vencidos"
+        icon="pi pi-filter"
+        class="p-button-text"
+        [disabled]="!vencidos.length"
+        (click)="seleccionarVencidos()"
+      ></button>
+      <div class="venc-footer__acciones">
+        <button pButton type="button" label="Cerrar" class="btn-amarillo" (click)="vencVisible = false"></button>
+        <button
+          pButton
+          type="button"
+          icon="pi pi-trash"
+          [label]="'Hacer merma (' + vencSeleccion.size + ')'"
+          class="p-button-danger"
+          [disabled]="!vencSeleccion.size"
+          pTooltip="Abre la merma con los lotes elegidos y todo su stock"
+          tooltipPosition="top"
+          (click)="hacerMerma()"
+        ></button>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Reglas de vencimiento -->
+<p-dialog
+  [(visible)]="reglasVisible"
+  header="Reglas de vencimiento"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '460px', maxWidth: '96vw' }"
 >
-</app-form-lote>
+  <div class="edicion-form">
+    <label>¿Bloquear la venta de lotes vencidos?</label>
+    <div class="opciones-reglas">
+      <button
+        type="button"
+        class="opcion-regla"
+        [class.opcion-regla--activa]="reglas.bloquearVencidos"
+        (click)="reglas.bloquearVencidos = true"
+      >
+        <i
+          class="pi"
+          [class.pi-circle-fill]="reglas.bloquearVencidos"
+          [class.pi-circle]="!reglas.bloquearVencidos"
+        ></i>
+        Sí, bloquear
+      </button>
+      <button
+        type="button"
+        class="opcion-regla"
+        [class.opcion-regla--activa]="!reglas.bloquearVencidos"
+        (click)="reglas.bloquearVencidos = false"
+      >
+        <i
+          class="pi"
+          [class.pi-circle-fill]="!reglas.bloquearVencidos"
+          [class.pi-circle]="reglas.bloquearVencidos"
+        ></i>
+        No, solo avisar
+      </button>
+    </div>
+    <p class="edicion-ayuda">
+      Aplica a la venta, el obsequio y el consumo interno. La merma y la nota
+      crédito al proveedor siempre pueden sacar lo vencido.
+    </p>
+    <label>Avisar cuando falten (días)</label>
+    <p-inputNumber
+      [(ngModel)]="reglas.diasAlerta"
+      [min]="0"
+      [max]="365"
+      [showButtons]="true"
+      styleClass="w-full"
+    />
+    <p class="edicion-ayuda">
+      El POS muestra "Vence en N d" y avisa al agregar el producto al carrito.
+    </p>
+  </div>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cancelar"
+      class="btn-amarillo"
+      (click)="reglasVisible = false"
+    ></button>
+    <button
+      pButton
+      type="button"
+      label="Guardar"
+      icon="pi pi-check"
+      class="btn-verde"
+      [loading]="guardandoReglas"
+      (click)="guardarReglas()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Corregir lote -->
+<p-dialog
+  [(visible)]="edicionVisible"
+  [header]="'Corregir lote ' + (loteEdicion?.codigoLote || '')"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '460px', maxWidth: '96vw' }"
+>
+  <div class="edicion-form" *ngIf="loteEdicion">
+    <p class="edicion-ayuda">
+      {{ loteEdicion.productoNombre }} · {{ loteEdicion.sucursalNombre }}. El
+      stock no se cambia aquí: se mueve con compras, ventas y mermas.
+    </p>
+    <label>Código de lote</label>
+    <input pInputText [(ngModel)]="edicion.codigoLote" maxlength="100" />
+    <label>Vence</label>
+    <p-calendar
+      [(ngModel)]="edicion.fechaVencimiento"
+      dateFormat="dd/mm/yy"
+      [showIcon]="true"
+      [showClear]="true"
+      appendTo="body"
+      styleClass="w-full"
+    />
+    <label>Motivo de la corrección</label>
+    <input
+      pInputText
+      [(ngModel)]="edicion.motivo"
+      maxlength="300"
+      placeholder="Ej: la fecha quedó mal digitada en la compra"
+    />
+  </div>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cancelar"
+      class="btn-amarillo"
+      (click)="loteEdicion = null"
+    ></button>
+    <button
+      pButton
+      type="button"
+      label="Guardar"
+      icon="pi pi-check"
+      class="btn-verde"
+      [loading]="guardandoEdicion"
+      (click)="guardarEdicion()"
+    ></button>
+  </ng-template>
+</p-dialog>
 
 <p-toast />
 <p-confirmDialog />

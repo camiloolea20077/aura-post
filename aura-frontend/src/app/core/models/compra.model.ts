@@ -37,6 +37,7 @@ export interface CompraAcreditableItemModel {
   productoId: number;
   productoNombre: string;
   productoSku: string | null;
+  manejaSerial?: boolean;
   cantidadDisponible: number;
   costoUnitario: number;
   ivaPct: number | null;
@@ -59,6 +60,35 @@ export interface CompraDetalleModel {
   precioVenta1: number | null;
   precioVenta2: number | null;
   precioVenta3: number | null;
+  /** Si la línea se escribió en una presentación (4 Pacas a $52.500). */
+  productoPresentacionId?: number | null;
+  presentacionNombre?: string | null;
+  presentacionFactor?: number | null;
+  cantidadPresentacion?: number | null;
+  costoPresentacion?: number | null;
+  manejaLotes?: boolean;
+  manejaSerial?: boolean;
+  /** Seriales que entraron (compra) o salieron (nota crédito) con la línea. */
+  seriales?: string[];
+  serialIds?: number[];
+  unidadAbreviatura?: string | null;
+  /** Lotes en que entró la línea; la cantidad en unidad base. */
+  lotes?: CompraDetalleLoteModel[];
+}
+
+export interface CompraDetalleLoteModel {
+  loteId: number;
+  codigoLote: string;
+  fechaVencimiento: string | null;
+  fechaFabricacion: string | null;
+  cantidadBase: number;
+}
+
+/** Lote que se escribe en la línea de la compra (cantidad en la presentación de la línea). */
+export interface LoteLineaUI {
+  codigoLote: string;
+  fechaVencimiento: Date | string | null;
+  cantidad: number | null;
 }
 
 // ─── Pago de compra ───────────────────────────────────────────
@@ -126,6 +156,8 @@ export interface CompraTableModel {
 // ─── DTOs de creación ─────────────────────────────────────────
 export interface CreateCompraDetalleDto {
   productoId: number;
+  /** Si viene, cantidad y costoUnitario están en esa presentación. */
+  productoPresentacionId?: number | null;
   cantidad: number;
   costoUnitario: number;
   descuentoPct: number;
@@ -133,6 +165,15 @@ export interface CreateCompraDetalleDto {
   precioVenta1: number | null;
   precioVenta2: number | null;
   precioVenta3: number | null;
+  lotes?: {
+    codigoLote: string;
+    fechaVencimiento: string | null;
+    cantidad: number;
+  }[];
+  /** Compra: uno por unidad. */
+  seriales?: string[];
+  /** Nota crédito: los que se devuelven al proveedor. */
+  serialIds?: number[];
 }
 
 export interface CreateCompraPagoDto {
@@ -213,6 +254,25 @@ export interface CompraLineaUI {
   precioVenta1: number | null;
   precioVenta2: number | null;
   precioVenta3: number | null;
+  /** 0 = unidad de inventario; si no, la presentación en que se escriben cantidad y costo. */
+  presentacionId?: number;
+  /** Abreviatura de la unidad de inventario (kg, und) para rotular la conversión. */
+  unidadAbreviatura?: string | null;
+  /** El producto maneja lotes: la compra exige código, vencimiento y cantidad. */
+  manejaLotes?: boolean;
+  lotes?: LoteLineaUI[];
+  /** El producto maneja serial: compra = seriales escritos; nota crédito = seriales elegidos. */
+  manejaSerial?: boolean;
+  seriales?: string[];
+  serialIds?: number[];
+  /** Unidad + presentaciones del producto; vacío si no tiene. */
+  presentaciones?: {
+    id: number;
+    nombre: string;
+    factor: number;
+    precio: number | null;
+    costo: number | null;
+  }[];
 }
 
 // ─── Pre-fill desde Orden de Compra ──────────────────────────
@@ -239,4 +299,7 @@ export interface ProductoOpcion {
   precio: number | null;
   precio2: number | null;
   precio3: number | null;
+  unidadAbreviatura?: string | null;
+  manejaLotes?: boolean;
+  manejaSerial?: boolean;
 }

@@ -108,6 +108,8 @@ export interface CreateVentaDetalleDto {
   descuentoValor: number;
   impuestoValor: number;
   seriales?: number[];
+  /** Seriales que salen, uno por unidad (el back espera serialIds). */
+  serialIds?: number[];
 }
 
 export interface CreateVentaPagoDto {
@@ -148,6 +150,9 @@ export interface CartItem {
   _id: string; // UUID local
   productoId: number;
   presentacionId: number | null; // para aplicar precios de lista
+  /** Unidades de inventario que contiene la presentación de la línea (1 sin presentación). */
+  factor?: number;
+  presentacionNombre?: string | null;
   productoNombre: string;
   productoSku: string | null;
   precio: number;
@@ -168,6 +173,10 @@ export interface CartItem {
   unidadMedida: string | null;
   impuestoValor: number;
   preciosDisponibles?: PrecioDisponible[]; // precios de todas las listas para este producto
+  /** Producto con serial: los elegidos o escaneados, uno por unidad. */
+  manejaSerial?: boolean;
+  serialIds?: number[];
+  seriales?: string[];
 }
 
 // ─── UI — pago en el modal ────────────────────────────────────
@@ -190,6 +199,8 @@ export interface ProductoPOS {
   precio2?: number | null;
   precio3?: number | null;
   unidadMedidaNombre: string | null;
+  /** kg, und… rotula la forma de venta suelta y el stock. */
+  unidadMedidaAbreviatura?: string | null;
   stock: number;
   categoriaId: number | null;
   categoriaNombre: string | null;
@@ -201,11 +212,40 @@ export interface ProductoPOS {
   permitirStockNegativo: boolean;
   stockActual: number;
   codigoBarras: string | null;
-  presentacionId: number | null;
-  presentacionNombre: string | null;
-  presentacionCodigoBarras: string | null;
-  presentacionPrecio: number | null;
-  presentacionFactorConversion: number | null;
+  /** Lotes: próximo vencimiento con stock, lo ya vencido y las reglas de la empresa. */
+  manejaLotes?: boolean;
+  /** Cada unidad es un serial: la línea pide cuáles salen. */
+  manejaSerial?: boolean;
+  proximoVencimiento?: string | null;
+  diasParaVencer?: number | null;
+  stockVencido?: number | null;
+  diasAlertaVencimiento?: number | null;
+  bloquearVencidos?: boolean;
+  /** false = solo se vende en sus presentaciones. */
+  vendePorUnidad?: boolean;
+  /** Presentaciones a la venta (una tarjeta por producto). */
+  presentaciones?: PresentacionPOS[];
+  // Campos de la versión anterior (una fila por presentación); ya no llegan.
+  presentacionId?: number | null;
+  presentacionNombre?: string | null;
+  presentacionCodigoBarras?: string | null;
+  presentacionPrecio?: number | null;
+  presentacionFactorConversion?: number | null;
+}
+
+// ─── UI — presentación a la venta en el POS ──────────────────
+export interface PresentacionPOS {
+  productoId: number;
+  id: number;
+  nombre: string;
+  codigoBarras: string | null;
+  /** Con IVA incluido. */
+  precio: number;
+  /** Unidades de inventario que contiene. */
+  factorConversion: number;
+  esDefaultVenta: boolean;
+  /** Presentaciones completas que alcanza el stock. */
+  stock: number;
 }
 
 // ─── Opciones UI ─────────────────────────────────────────────

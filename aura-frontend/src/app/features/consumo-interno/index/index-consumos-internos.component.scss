@@ -1,0 +1,90 @@
+$indigo: #6366f1;
+$red: #ef4444;
+$border: #e2e8f0;
+$text: #1e293b;
+$muted: #94a3b8;
+$bg: #f8fafc;
+$mono: "JetBrains Mono", monospace;
+
+// Página (.page), card (.card), header (.card-head) y buscador (.search-wrap)
+// son estándar global en styles.scss.
+
+.clickable-row {
+  cursor: pointer;
+  transition: background 0.1s;
+  &:hover {
+    background: #fafbff !important;
+  }
+}
+
+.actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.text-muted {
+  color: $muted;
+}
+.text-danger {
+  color: $red;
+}
+.mono {
+  font-family: $mono;
+}
+.fw-600 {
+  font-weight: 600;
+}
+
+.empty-row {
+  text-align: center;
+  color: $muted;
+  font-size: 0.85rem;
+  padding: 2rem !important;
+}
+
+// ── Diálogo de conceptos ──────────────────────────────────────────
+.conceptos-ayuda {
+  margin: 0 0 0.9rem;
+  font-size: 0.82rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.conceptos-cargando {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  color: #64748b;
+}
+
+.concepto-inactivo td {
+  opacity: 0.6;
+}
+
+.opciones-mini {
+  display: inline-flex;
+  border: 1.5px solid #e0e3eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.opcion-mini {
+  padding: 0.35rem 0.65rem;
+  border: none;
+  background: #fff;
+  color: #475569;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  & + & {
+    border-left: 1.5px solid #e0e3eb;
+  }
+
+  &--activa {
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+}

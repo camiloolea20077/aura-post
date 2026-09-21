@@ -35,4 +35,17 @@ export class EmpresaService {
   getConfig(): Observable<{ data: EmpresaConfig }> {
     return this.http.get<any>(`${environment.apiUrl}empresa`);
   }
+
+  /**
+   * Contacto de la empresa desde "Mi perfil". El back exige rol ADMIN o
+   * SUPER_ADMIN: para los demás responde 403.
+   */
+  actualizarContacto(dto: {
+    telefono?: string | null;
+    correo?: string | null;
+    direccion?: string | null;
+    municipio?: string | null;
+  }): Observable<{ data: EmpresaConfig }> {
+    return this.http.put<any>(`${environment.apiUrl}empresa/contacto`, dto);
+  }
 }

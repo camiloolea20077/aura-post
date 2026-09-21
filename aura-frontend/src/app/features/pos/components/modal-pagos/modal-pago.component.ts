@@ -3,9 +3,13 @@ import {
   EventEmitter,
   Input,
   OnChanges,
+  OnDestroy,
   Output,
   SimpleChanges,
 } from '@angular/core';
+import { lastValueFrom } from 'rxjs';
+import { CarteraService } from '../../../../core/services/cartera.service';
+import { SolicitudCreditoModel } from '../../../../core/models/cartera.model';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -41,7 +45,7 @@ import { ValidacionCreditoModel } from '../../../../core/models/cartera.model';
   templateUrl: './modal-pago.component.html',
   styleUrls: ['./modal-pago.component.scss'],
 })
-export class ModalPagoComponent implements OnChanges {
+export class ModalPagoComponent implements OnChanges, OnDestroy {
   @Input() displayModal = false;
   @Input() total = 0;
   @Input() subtotal = 0;
@@ -52,6 +56,15 @@ export class ModalPagoComponent implements OnChanges {
   @Input() cuentasBancarias: CuentaBancariaModel[] = [];
   @Input() creditoInfo: ValidacionCreditoModel | null = null;
   @Input() clienteNombre: string | null = null;
+  @Input() clienteId: number | null = null;
+
+  // ── Autorización para pasar el cupo ──────────────────────────────
+  solicitud: SolicitudCreditoModel | null = null;
+  solicitando = false;
+  observacionSolicitud = '';
+  private sondeo: ReturnType<typeof setInterval> | null = null;
+
+  constructor(private readonly carteraService: CarteraService) {}
 
   @Output() modalClosed = new EventEmitter<void>();
   @Output() ventaConfirmada = new EventEmitter<{
@@ -66,6 +79,13 @@ export class ModalPagoComponent implements OnChanges {
   readonly metodos = METODOS_PAGO;
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['displayModal'] && !this.displayModal) this.detenerSondeo();
+    if (changes['creditoInfo'] && this.displayModal) {
+      this.solicitud = null;
+      this.observacionSolicitud = '';
+      // Si ya había una solicitud enviada para este cliente, se sigue esperando.
+      if (this.creditoInfo?.solicitudPendienteId) this.esperar(this.creditoInfo.solicitudPendienteId);
+    }
     if (changes['displayModal'] && this.displayModal) {
       this.pagos = this.pagosPrev.length
         ? [...this.pagosPrev.map((p) => ({ ...p }))]
@@ -195,7 +215,67 @@ export class ModalPagoComponent implements OnChanges {
     });
   }
 
+  ngOnDestroy(): void {
+    this.detenerSondeo();
+  }
+
+  get puedeSolicitarAutorizacion(): boolean {
+    return !!this.creditoInfo && !this.creditoInfo.permitido && this.creditoInfo.requiereAutorizacion && !!this.clienteId;
+  }
+
+  async solicitarAutorizacion(): Promise<void> {
+    if (!this.creditoInfo || !this.clienteId) return;
+    this.solicitando = true;
+    try {
+      const res = await lastValueFrom(
+        this.carteraService.solicitarAutorizacion(
+          this.clienteId,
+          this.creditoInfo.montoSolicitado,
+          this.observacionSolicitud.trim() || null,
+        ),
+      );
+      this.esperar(res.data.id);
+      this.solicitud = res.data;
+    } catch (err: any) {
+      this.solicitud = null;
+      this.errorSolicitud = err?.error?.message ?? 'No se pudo enviar la solicitud';
+    } finally {
+      this.solicitando = false;
+    }
+  }
+
+  errorSolicitud: string | null = null;
+
+  /** Pregunta cada 5 segundos si un administrador ya respondió. */
+  private esperar(id: number): void {
+    this.detenerSondeo();
+    this.errorSolicitud = null;
+    const revisar = async () => {
+      try {
+        const res = await lastValueFrom(this.carteraService.solicitud(id));
+        this.solicitud = res.data;
+        if (res.data.estado === 'APROBADA' && this.clienteId && this.creditoInfo) {
+          this.detenerSondeo();
+          const v = await lastValueFrom(this.carteraService.validarVenta(this.clienteId, this.creditoInfo.montoSolicitado));
+          if (v.data) this.creditoInfo = v.data;
+        } else if (res.data.estado !== 'PENDIENTE') {
+          this.detenerSondeo();
+        }
+      } catch {
+        /* se reintenta en la siguiente vuelta */
+      }
+    };
+    revisar();
+    this.sondeo = setInterval(revisar, 5000);
+  }
+
+  private detenerSondeo(): void {
+    if (this.sondeo) clearInterval(this.sondeo);
+    this.sondeo = null;
+  }
+
   closeModal(): void {
+    this.detenerSondeo();
     this.modalClosed.emit();
     this.descuentoGeneral = 0;
   }

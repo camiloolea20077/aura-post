@@ -1,0 +1,252 @@
+:host {
+  --ad-surface: #ffffff;
+  --ad-soft: #f8fafc;
+  --ad-border: #e5e7eb;
+  --ad-text: #0f172a;
+  --ad-muted: #64748b;
+  --ad-primary: #2563eb;
+  --ad-primary-soft: #eff6ff;
+  --ad-green: #059669;
+  --ad-green-soft: #ecfdf5;
+  --ad-amber: #b45309;
+  --ad-amber-soft: #fffbeb;
+  --ad-red: #dc2626;
+  --ad-red-soft: #fef2f2;
+}
+
+:host-context(.dark-mode) {
+  --ad-surface: #1a1d2e;
+  --ad-soft: #22263a;
+  --ad-border: #2d3148;
+  --ad-text: #f1f5f9;
+  --ad-muted: #94a3b8;
+  --ad-primary-soft: rgba(37, 99, 235, 0.16);
+  --ad-green-soft: rgba(5, 150, 105, 0.16);
+  --ad-amber-soft: rgba(180, 83, 9, 0.18);
+  --ad-red-soft: rgba(220, 38, 38, 0.16);
+}
+
+.mono {
+  font-variant-numeric: tabular-nums;
+}
+
+.req {
+  color: var(--ad-red);
+}
+
+.ad {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem 1.25rem 0.5rem;
+  color: var(--ad-text);
+}
+
+.ad-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ad-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ad-sub {
+  font-size: 0.78rem;
+  color: var(--ad-muted);
+}
+
+.ad-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+
+  &__cliente {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+
+    strong {
+      font-size: 1.05rem;
+    }
+  }
+}
+
+.ad-chip {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--ad-soft);
+  color: var(--ad-muted);
+
+  &--ok {
+    background: var(--ad-green-soft);
+    color: var(--ad-green);
+  }
+
+  &--warn {
+    background: var(--ad-amber-soft);
+    color: var(--ad-amber);
+  }
+
+  &--danger {
+    background: var(--ad-red-soft);
+    color: var(--ad-red);
+  }
+
+  &--info {
+    background: var(--ad-primary-soft);
+    color: var(--ad-primary);
+  }
+}
+
+.ad-aviso {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 10px;
+  font-size: 0.82rem;
+
+  &--danger {
+    background: var(--ad-red-soft);
+    color: var(--ad-red);
+  }
+
+  &--ok {
+    background: var(--ad-green-soft);
+    color: var(--ad-green);
+  }
+
+  &--muted {
+    background: var(--ad-soft);
+    color: var(--ad-muted);
+  }
+}
+
+.ad-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border: 1px solid var(--ad-border);
+  border-radius: 12px;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ad-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.75rem 1rem;
+
+  & + & {
+    border-left: 1px solid var(--ad-border);
+  }
+
+  strong {
+    font-size: 1.15rem;
+  }
+}
+
+.ad-barra {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--ad-soft);
+  overflow: hidden;
+
+  &__uso {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--ad-green);
+  }
+}
+
+.ad-seccion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  h4 {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+}
+
+.ad-tabla-wrap {
+  border: 1px solid var(--ad-border);
+  border-radius: 10px;
+  max-height: 280px;
+  overflow: auto;
+}
+
+.ad-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+
+  th,
+  td {
+    padding: 0.45rem 0.75rem;
+    border-bottom: 1px solid var(--ad-border);
+    text-align: left;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  th {
+    position: sticky;
+    top: 0;
+    background: var(--ad-soft);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--ad-muted);
+    text-transform: uppercase;
+  }
+
+  .n {
+    width: 3rem;
+    color: var(--ad-muted);
+  }
+
+  .num {
+    text-align: right;
+  }
+}
+
+.ad-nota,
+.ad-obs {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.ad-anular {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.75rem;
+  border: 1px solid var(--ad-red-soft);
+  border-radius: 10px;
+
+  label {
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+
+  textarea {
+    width: 100%;
+    resize: vertical;
+  }
+}
+
+.ad-izq {
+  margin-right: auto;
+}

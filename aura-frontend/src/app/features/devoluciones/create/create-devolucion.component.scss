@@ -572,3 +572,25 @@
 .w-full {
   width: 100%;
 }
+
+.det-seriales {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &--falta {
+    border: 1px dashed #f59e0b;
+    background: #fffbeb;
+    color: #b45309;
+  }
+}

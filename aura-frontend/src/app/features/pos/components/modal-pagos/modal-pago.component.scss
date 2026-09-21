@@ -690,3 +690,76 @@
     padding-bottom: calc(0.3rem + env(safe-area-inset-bottom));
   }
 }
+
+// ─── Autorización para pasar el cupo ──────────────────────────────────────────
+.autorizacion-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0.8rem;
+  border: 1.5px solid #fcd34d;
+  border-radius: 12px;
+  background: #fffbeb;
+
+  strong {
+    display: block;
+    font-size: 0.84rem;
+    color: #0f172a;
+  }
+
+  span {
+    font-size: 0.76rem;
+    color: #64748b;
+  }
+}
+
+.aut-head,
+.aut-ok {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+
+  > i {
+    margin-top: 0.15rem;
+    font-size: 1.1rem;
+    color: #b45309;
+  }
+}
+
+.aut-ok > i {
+  color: #059669;
+}
+
+.autorizacion-panel:has(.aut-ok) {
+  border-color: #6ee7b7;
+  background: #ecfdf5;
+}
+
+.aut-pedir {
+  display: flex;
+  gap: 0.45rem;
+
+  input {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.aut-esperando,
+.aut-rechazo {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #b45309;
+}
+
+.aut-rechazo {
+  color: #dc2626;
+}
+
+.aut-error {
+  color: #dc2626 !important;
+  font-weight: 600;
+}

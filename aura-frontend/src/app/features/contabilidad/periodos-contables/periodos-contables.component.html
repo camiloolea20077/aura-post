@@ -9,8 +9,8 @@
         <div>
           <h1 class="title">Períodos Contables</h1>
           <p class="subtitle">
-            Control de apertura y cierre de períodos — bloquea asientos en
-            períodos cerrados
+            Cada mes es su propio período. El sistema abre el mes al llegar su primer
+            documento y solo bloquea los meses cerrados
           </p>
         </div>
       </div>
@@ -20,42 +20,58 @@
         label="Abrir Período"
         icon="pi pi-plus"
         class="btn-verde"
-        [disabled]="!!periodoActivo"
-        [pTooltip]="
-          periodoActivo ? 'Cierre el período activo antes de abrir uno nuevo' : ''
-        "
+        pTooltip="Solo hace falta para adelantar un mes: el mes en curso se abre solo"
+        tooltipPosition="left"
         (click)="abrirDialogNuevo()"
       ></button>
     </div>
   </div>
 
-  <!-- Banner período activo -->
-  <div class="periodo-activo-banner" *ngIf="periodoActivo">
-    <i class="pi pi-calendar-plus"></i>
-    <span>
-      Período activo:
-      <strong
-        >{{ mesLabel(periodoActivo.mes) }} {{ periodoActivo.anio }}</strong
+  <!-- Meses abiertos: pueden ser varios (se registra febrero mientras se cierra enero) -->
+  <div class="periodos-abiertos" *ngIf="abiertos.length">
+    <div class="periodos-abiertos__head">
+      <i class="pi pi-calendar-plus"></i>
+      <span>
+        <strong>{{ abiertos.length }}</strong>
+        {{ abiertos.length === 1 ? "mes abierto" : "meses abiertos" }}
+        <ng-container *ngIf="masAntiguoAbierto as m">
+          · sigue cerrar <strong>{{ mesLabel(m.mes) }} {{ m.anio }}</strong>
+        </ng-container>
+      </span>
+      <button
+        *ngIf="masAntiguoAbierto as m"
+        pButton
+        [label]="'Cerrar ' + mesLabel(m.mes) + ' ' + m.anio"
+        icon="pi pi-lock"
+        class="btn-rojo p-button-sm"
+        (click)="abrirDialogCerrar(m)"
+      ></button>
+    </div>
+    <div class="periodos-abiertos__chips">
+      <span
+        class="periodo-chip"
+        *ngFor="let p of abiertos"
+        [class.periodo-chip--siguiente]="p.id === masAntiguoAbierto?.id"
+        [pTooltip]="
+          p.creadoAutomatico
+            ? 'Lo abrió el sistema al llegar el primer documento del mes'
+            : 'Abierto a mano'
+        "
       >
-      — abierto el {{ periodoActivo.fechaApertura | date: "dd/MM/yyyy" }}
-    </span>
-    <button
-      pButton
-      label="Cerrar período"
-      icon="pi pi-lock"
-      class="btn-rojo p-button-sm"
-      (click)="abrirDialogCerrar(periodoActivo)"
-    ></button>
+        {{ mesLabel(p.mes) }} {{ p.anio }}
+        <em>{{ p.totalAsientos }}</em>
+        <span class="periodo-chip__borr" *ngIf="p.borradores > 0">
+          {{ p.borradores }} borr.
+        </span>
+      </span>
+    </div>
   </div>
 
-  <div
-    class="periodo-activo-banner banner-warn"
-    *ngIf="!periodoActivo && !loading"
-  >
-    <i class="pi pi-exclamation-triangle"></i>
+  <div class="periodo-activo-banner banner-warn" *ngIf="!abiertos.length && !loading">
+    <i class="pi pi-info-circle"></i>
     <span
-      >No hay ningún período contable abierto. Los asientos automáticos desde
-      ventas y compras quedarán bloqueados.</span
+      >Ningún mes abierto todavía. El primero se abre solo cuando entre un
+      documento, o ábralo a mano para adelantarse.</span
     >
   </div>
 
@@ -106,10 +122,17 @@
               </td>
               <td>
                 <span class="badge-count">{{ p.totalAsientos }}</span>
+                <span class="badge-count badge-warn" *ngIf="p.borradores > 0"
+                  pTooltip="Comprobantes en borrador: bloquean el cierre">{{ p.borradores }} borr.</span>
               </td>
               <td>
                 <span *ngIf="p.observaciones">{{ p.observaciones }}</span>
-                <span *ngIf="!p.observaciones" class="text-muted">—</span>
+                <span *ngIf="!p.observaciones && !p.motivoReapertura" class="text-muted">—</span>
+                <div class="text-muted" *ngIf="p.reaperturas > 0">
+                  Reabierto {{ p.reaperturas }}
+                  {{ p.reaperturas === 1 ? "vez" : "veces" }}
+                  <ng-container *ngIf="p.motivoReapertura">: {{ p.motivoReapertura }}</ng-container>
+                </div>
               </td>
               <td>
                 <button
@@ -117,8 +140,21 @@
                   pButton
                   icon="pi pi-lock"
                   class="p-button-text p-button-sm p-button-rounded p-button-danger"
-                  pTooltip="Cerrar período"
+                  [disabled]="pendientesAntesDe(p).length > 0"
+                  [pTooltip]="
+                    pendientesAntesDe(p).length
+                      ? 'Cierre primero los meses anteriores'
+                      : 'Cerrar período'
+                  "
                   (click)="abrirDialogCerrar(p)"
+                ></button>
+                <button
+                  *ngIf="esUltimoCerrado(p)"
+                  pButton
+                  icon="pi pi-lock-open"
+                  class="p-button-text p-button-sm p-button-rounded"
+                  pTooltip="Reabrir período"
+                  (click)="abrirDialogReabrir(p)"
                 ></button>
               </td>
             </tr>
@@ -352,6 +388,59 @@
   </ng-template>
 </p-dialog>
 
+<!-- Dialog: Reabrir período -->
+<p-dialog
+  [(visible)]="showReabrirDialog"
+  [modal]="true"
+  header="Reabrir Período Contable"
+  [style]="{ width: '460px' }"
+  [draggable]="false"
+>
+  <div class="aviso-cierre" *ngIf="periodoReabrir">
+    <i class="pi pi-lock-open"></i>
+    <p>
+      <strong>{{ mesLabel(periodoReabrir.mes) }} {{ periodoReabrir.anio }}</strong>
+      volverá a admitir movimientos y se anularán los asientos que generó su cierre
+      (cancelación de resultados y reclasificación de sobregiros).
+    </p>
+    <p>
+      Queda registrado quién reabrió, cuándo y por qué. Después hay que volver a
+      cerrar el mes.
+    </p>
+  </div>
+
+  <div class="form-group" style="margin-top: 1rem">
+    <label>Motivo <span class="req">*</span></label>
+    <textarea
+      pTextarea
+      [(ngModel)]="motivoReapertura"
+      rows="2"
+      maxlength="300"
+      placeholder="Faltó registrar una factura, se corrigió un asiento…"
+      style="width: 100%; resize: vertical"
+    ></textarea>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="btn-amarillo"
+      (click)="showReabrirDialog = false"
+    ></button>
+    <button
+      pButton
+      label="Reabrir período"
+      icon="pi pi-lock-open"
+      class="btn-rojo"
+      [loading]="saving"
+      [disabled]="!motivoReapertura.trim()"
+      (click)="confirmarReabrir()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
 <!-- Dialog: Cerrar período -->
 <p-dialog
   [(visible)]="showCerrarDialog"
@@ -360,15 +449,20 @@
   [style]="{ width: '420px' }"
   [draggable]="false"
 >
-  <div class="aviso-cierre">
+  <div class="aviso-cierre" *ngIf="periodoCerrar">
     <i class="pi pi-exclamation-triangle"></i>
     <p>
-      Esta acción <strong>bloqueará</strong> todos los asientos del período. No
-      se podrán generar ni modificar asientos en un período cerrado.
+      Se cierra <strong>{{ mesLabel(periodoCerrar.mes) }} {{ periodoCerrar.anio }}</strong>:
+      ese mes deja de admitir documentos nuevos. Los demás meses abiertos siguen
+      funcionando normal.
     </p>
     <p>
-      Se validará que todos los comprobantes cuadren (débito = crédito) antes de
-      cerrar.
+      Antes de cerrar se verifica que no queden comprobantes en borrador ni
+      descuadrados, y que los extractos bancarios del mes estén conciliados.
+    </p>
+    <p>
+      Al cerrar se generan el asiento de cancelación de resultados y la
+      reclasificación de sobregiros, fechados el último día del mes.
     </p>
   </div>
 

@@ -1,0 +1,109 @@
+.se-cab {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.se-input {
+  flex: 1;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.se-contador {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #b45309;
+  white-space: nowrap;
+
+  &--ok {
+    color: #15803d;
+  }
+}
+
+.se-aviso {
+  display: block;
+  margin-top: 0.35rem;
+  color: #b91c1c;
+  font-size: 0.75rem;
+}
+
+.se-acciones {
+  margin-top: 0.3rem;
+}
+
+.se-pegar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+
+  textarea {
+    width: 100%;
+    font-family: "JetBrains Mono", monospace;
+  }
+}
+
+.se-generar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem;
+  border: 1px dashed #e0e3eb;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  color: #475569;
+
+  input {
+    width: 140px;
+  }
+
+  ::ng-deep .se-desde {
+    width: 80px;
+  }
+}
+
+.se-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.6rem;
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
+.se-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 6px;
+  background: #f8fafc;
+}
+
+.se-num {
+  width: 1.6rem;
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+.se-serial {
+  flex: 1;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.se-quitar {
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.se-vacio {
+  padding: 1rem;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.8rem;
+}

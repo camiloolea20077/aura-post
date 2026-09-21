@@ -43,10 +43,10 @@
       <div class="modulo-item" *ngFor="let modulo of modulos">
         <div class="modulo-header">
           <div class="modulo-toggle">
-            <p-inputSwitch
+            <p-toggleswitch
               [(ngModel)]="modulo.activo"
               (onChange)="onModuloChange(modulo)"
-            ></p-inputSwitch>
+            ></p-toggleswitch>
           </div>
           <div class="modulo-info">
             <span class="modulo-nombre">{{ modulo.moduloNombre }}</span>

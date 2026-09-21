@@ -18,7 +18,7 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { InputSwitchModule } from 'primeng/inputswitch';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
@@ -42,7 +42,7 @@ import { ProductoTableModel } from '../../../../core/models/producto.model';
     DialogModule,
     InputTextModule,
     InputNumberModule,
-    InputSwitchModule,
+    ToggleSwitchModule,
     ButtonModule,
     ToastModule,
     BuscadorProductoDialogComponent,

@@ -14,6 +14,11 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { CalendarModule } from 'primeng/calendar';
+import { SerialEntradaComponent } from '../../../shared/components/serial-entrada/serial-entrada.component';
+import {
+  SerialPickerComponent,
+  SerialesElegidos,
+} from '../../../shared/components/serial-picker/serial-picker.component';
 import { DropdownModule } from 'primeng/dropdown';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { MessageModule } from 'primeng/message';
@@ -36,6 +41,7 @@ import {
   CompraAcreditableModel,
   CompraDetalleModel,
   CompraLineaUI,
+  LoteLineaUI,
   CompraModel,
   CreateCompraDetalleDto,
   CreateCompraDto,
@@ -52,6 +58,8 @@ import {
 import { CompraService } from '../../../core/services/compra.service';
 import { TerceroService } from '../../../core/services/tercero.service';
 import { ProductoService } from '../../../core/services/producto.service';
+import { ProductoPresentacionService } from '../../../core/services/producto-presentacion.service';
+import { ProductoPresentacionTableModel } from '../../../core/models/producto-presentacion.model';
 import { AlertService } from '../../../shared/pipes/alert.service';
 import { IndexDBService } from '../../../core/services/index-db.service';
 import { CuentaBancariaService } from '../../../core/services/cuenta-bancaria.service';
@@ -84,6 +92,8 @@ import { aFechaHoraLocal } from '../../../shared/utils/fecha.util';
     InputTextModule,
     InputNumberModule,
     CalendarModule,
+    SerialEntradaComponent,
+    SerialPickerComponent,
     DropdownModule,
     RadioButtonModule,
     MessageModule,
@@ -679,6 +689,8 @@ export class FormCompraComponent implements OnInit {
 
     return {
       _id: uuidv4(),
+      manejaSerial: !!it.manejaSerial,
+      serialIds: [],
       productoId: it.productoId,
       productoNombre: it.productoNombre,
       cantidad,
@@ -993,6 +1005,7 @@ export class FormCompraComponent implements OnInit {
     private readonly tarifaRetencionService: TarifaRetencionService,
     private readonly alertService: AlertService,
     private readonly indexDBService: IndexDBService,
+    private readonly presentacionService: ProductoPresentacionService,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly cdr: ChangeDetectorRef,
@@ -1033,8 +1046,39 @@ export class FormCompraComponent implements OnInit {
           _id: uuidv4(),
           productoId: d.productoId,
           productoNombre: d.productoNombre,
-          cantidad: d.cantidad,
-          costoUnitario: d.costoUnitario,
+          // Lo escrito en la presentación (4 Pacas a $52.500), si la hubo.
+          cantidad: d.cantidadPresentacion ?? d.cantidad,
+          costoUnitario: d.costoPresentacion ?? d.costoUnitario,
+          presentacionId: d.productoPresentacionId ?? 0,
+          presentaciones: d.productoPresentacionId
+            ? [
+                { id: 0, nombre: 'Unidad', factor: 1, precio: null, costo: null },
+                {
+                  id: d.productoPresentacionId,
+                  nombre: d.presentacionNombre ?? 'Presentación',
+                  factor: d.presentacionFactor ?? 1,
+                  precio: null,
+                  costo: null,
+                },
+              ]
+            : [],
+          manejaLotes: !!d.manejaLotes,
+          manejaSerial: !!d.manejaSerial,
+          seriales: d.seriales ?? [],
+          serialIds: d.serialIds ?? [],
+          unidadAbreviatura: d.unidadAbreviatura ?? null,
+          lotes: (d.lotes ?? []).map((x) => ({
+            codigoLote: x.codigoLote,
+            fechaVencimiento: x.fechaVencimiento
+              ? new Date(`${x.fechaVencimiento}T00:00:00`)
+              : null,
+            cantidad:
+              Math.round(
+                (x.cantidadBase /
+                  (d.productoPresentacionId ? d.presentacionFactor || 1 : 1)) *
+                  10000,
+              ) / 10000,
+          })),
           descuentoPct: d.descuentoPct ?? 0,
           descuentoValor: d.descuentoValor ?? 0,
           ivaPorcentaje: 0,
@@ -1046,6 +1090,11 @@ export class FormCompraComponent implements OnInit {
         }),
       ),
     );
+    // Opciones de presentación de cada línea, sin cambiar lo que ya tenía.
+    this.lineas().forEach((l, i) => {
+      if (l.productoId)
+        this.cargarPresentacionesLinea(i, l.productoId, null, false);
+    });
     this.formaPago = compra.formaPago ?? 'CONTADO';
     this.salidaCajaOtroDia = compra.salidaCajaOtroDia ?? false;
     this.origenFondos = this.deducirOrigen(
@@ -1179,6 +1228,9 @@ export class FormCompraComponent implements OnInit {
       precio: item.precio ?? null,
       precio2: (item as any).precio2 ?? null,
       precio3: (item as any).precio3 ?? null,
+      unidadAbreviatura: item.unidadAbreviatura ?? null,
+      manejaLotes: !!item.manejaLotes,
+      manejaSerial: !!item.manejaSerial,
     };
     await this.onProductoChange(this.dialogLineIdx, opcion.value, opcion);
     this.showProductDialog = false;
@@ -1320,6 +1372,8 @@ export class FormCompraComponent implements OnInit {
             precio: p.precio ?? null,
             precio2: p.precio2 ?? null,
             precio3: p.precio3 ?? null,
+            manejaLotes: !!p.manejaLotes,
+            manejaSerial: !!p.manejaSerial,
           };
         }
       } catch {
@@ -1330,12 +1384,11 @@ export class FormCompraComponent implements OnInit {
     if (!prod) return;
 
     const ivaPorcentaje = prod.ivaPorcentaje ?? 0;
-    // Cargar el costo ya con IVA incluido
+    // El costo del producto es sin IVA, igual que el Vlr. Unitario de la línea:
+    // calcLinea suma el IVA encima. Cargarlo con IVA lo cobraba dos veces y
+    // guardaba el costo inflado, que la siguiente compra volvía a inflar.
     const costoBase = prod.costo ?? null;
-    const costoUnitario: number | null =
-      costoBase != null
-        ? Math.round(costoBase * (1 + ivaPorcentaje / 100) * 100) / 100
-        : null;
+    const costoUnitario: number | null = costoBase;
     const cantidad = this.lineas()[idx].cantidad ?? 0;
     const ivaPct = ivaPorcentaje;
     const descuento = this.lineas()[idx].descuentoValor ?? 0;
@@ -1363,10 +1416,122 @@ export class FormCompraComponent implements OnInit {
                 precioVenta1: prod!.precio ?? null,
                 precioVenta2: prod!.precio2 ?? null,
                 precioVenta3: prod!.precio3 ?? null,
+                presentacionId: 0,
+                presentaciones: [],
+                unidadAbreviatura: prod!.unidadAbreviatura ?? null,
+                manejaLotes: !!prod!.manejaLotes,
+                lotes: [],
+                manejaSerial: !!prod!.manejaSerial,
+                seriales: [],
+                serialIds: [],
               },
       ),
     );
+    await this.cargarPresentacionesLinea(idx, productoId, costoBase, true);
     this.cdr.markForCheck();
+  }
+
+  // ─── Presentaciones de compra (4 Pacas) ──────────────────────────
+  /**
+   * Opciones de la línea: la unidad y las presentaciones del producto. Con
+   * `aplicarDefault` preselecciona la de compra por defecto y lleva el costo a
+   * esa presentación. El back convierte cantidad y costo a unidad base.
+   */
+  private async cargarPresentacionesLinea(
+    idx: number,
+    productoId: number,
+    costoBase: number | null,
+    aplicarDefault: boolean,
+  ): Promise<void> {
+    let lista: ProductoPresentacionTableModel[] = [];
+    try {
+      const res = await lastValueFrom(
+        this.presentacionService.listByProducto(productoId),
+      );
+      lista = (res?.data ?? []).filter((x) => x.factorConversion > 0);
+    } catch {
+      lista = [];
+    }
+    const linea = this.lineas()[idx];
+    if (!linea || linea.productoId !== productoId) return;
+
+    const presentaciones = lista.length
+      ? [
+          {
+            id: 0,
+            nombre: linea.unidadAbreviatura || 'Unidad',
+            factor: 1,
+            precio: null,
+            costo: costoBase,
+          },
+          ...lista.map((x) => ({
+            id: x.id,
+            nombre: x.nombre,
+            factor: x.factorConversion,
+            precio: x.precio ?? null,
+            costo: x.costo ?? null,
+          })),
+        ]
+      : [];
+
+    if (!aplicarDefault) {
+      // Solo las opciones: la línea cargada conserva sus valores e impuestos.
+      this.actualizarLinea(idx, { presentaciones }, false);
+      return;
+    }
+
+    const porDefecto = lista.find(
+      (x) => x.esDefaultCompra && x.factorConversion > 1,
+    );
+    if (!porDefecto) {
+      this.actualizarLinea(idx, { presentaciones }, false);
+      return;
+    }
+    const costoPresentacion =
+      porDefecto.costo && porDefecto.costo > 0
+        ? porDefecto.costo
+        : (costoBase ?? 0) * porDefecto.factorConversion;
+    this.actualizarLinea(idx, {
+      presentaciones,
+      presentacionId: porDefecto.id,
+      costoUnitario: Math.round(costoPresentacion * 100) / 100,
+    });
+  }
+
+  private actualizarLinea(
+    idx: number,
+    cambios: Partial<CompraLineaUI>,
+    recalcular = true,
+  ): void {
+    this.lineas.set(
+      this.lineas().map((l, i): CompraLineaUI => {
+        if (i !== idx) return l;
+        const nueva = { ...l, ...cambios };
+        return recalcular ? { ...nueva, ...this.calcLinea(nueva) } : nueva;
+      }),
+    );
+    this.guardarDraft();
+    this.cdr.markForCheck();
+  }
+
+  factorDe(l: CompraLineaUI): number {
+    return l.presentaciones?.find((o) => o.id === l.presentacionId)?.factor ?? 1;
+  }
+
+  /** Unidad ↔ Paca: el costo se lleva a la otra presentación (costo por unidad × lo que contiene). */
+  onPresentacionChange(idx: number, id: number | null): void {
+    const l = this.lineas()[idx];
+    if (!l) return;
+    const nuevoId = id ?? 0;
+    const factorAnterior = this.factorDe(l);
+    const factorNuevo =
+      l.presentaciones?.find((o) => o.id === nuevoId)?.factor ?? 1;
+    const costoUnitario =
+      l.costoUnitario != null
+        ? Math.round((l.costoUnitario / factorAnterior) * factorNuevo * 100) /
+          100
+        : null;
+    this.actualizarLinea(idx, { presentacionId: nuevoId, costoUnitario });
   }
 
   private calcLinea(l: CompraLineaUI): {
@@ -1524,6 +1689,155 @@ export class FormCompraComponent implements OnInit {
     return l._id;
   }
 
+  // ─── Seriales de la línea ─────────────────────────────────────────
+  serialesIdx: number | null = null;
+
+  get lineaSeriales(): CompraLineaUI | null {
+    return this.serialesIdx !== null ? (this.lineas()[this.serialesIdx] ?? null) : null;
+  }
+
+  get entradaSerialesVisible(): boolean {
+    return this.serialesIdx !== null && !this.esNotaCredito;
+  }
+  set entradaSerialesVisible(v: boolean) {
+    if (!v) this.serialesIdx = null;
+  }
+
+  get pickerSerialesVisible(): boolean {
+    return this.serialesIdx !== null && this.esNotaCredito;
+  }
+  set pickerSerialesVisible(v: boolean) {
+    if (!v) this.serialesIdx = null;
+  }
+
+  /** Unidades en unidad base: un serial por cada una. */
+  unidadesSerial(l: CompraLineaUI): number {
+    return Math.round((l.cantidad || 0) * this.factorDe(l) * 10000) / 10000;
+  }
+
+  serialesDeLinea(l: CompraLineaUI): number {
+    return this.esNotaCredito ? (l.serialIds ?? []).length : (l.seriales ?? []).length;
+  }
+
+  abrirSeriales(idx: number): void {
+    this.serialesIdx = idx;
+    this.cdr.markForCheck();
+  }
+
+  onSerialesEscritos(seriales: string[]): void {
+    if (this.serialesIdx === null) return;
+    this.actualizarLinea(this.serialesIdx, { seriales }, false);
+  }
+
+  onSerialesElegidos(e: SerialesElegidos): void {
+    if (this.serialesIdx === null) return;
+    this.actualizarLinea(this.serialesIdx, { serialIds: e.ids }, false);
+  }
+
+  // ─── Lotes de la línea ────────────────────────────────────────────
+  lotesDialogIdx: number | null = null;
+  lotesEdit: LoteLineaUI[] = [];
+
+  get lotesDialogVisible(): boolean {
+    return this.lotesDialogIdx !== null;
+  }
+
+  set lotesDialogVisible(v: boolean) {
+    if (!v) this.lotesDialogIdx = null;
+  }
+
+  get lineaLotes(): CompraLineaUI | null {
+    return this.lotesDialogIdx !== null
+      ? (this.lineas()[this.lotesDialogIdx] ?? null)
+      : null;
+  }
+
+  /** Nombre de la presentación de la línea: los lotes se escriben en ella (bultos). */
+  nombrePresentacion(l: CompraLineaUI): string {
+    const p = l.presentaciones?.find((o) => o.id === (l.presentacionId ?? 0));
+    return p && p.id ? p.nombre : l.unidadAbreviatura || 'und';
+  }
+
+  sumaLotes(l: { lotes?: LoteLineaUI[] }): number {
+    return (l.lotes ?? []).reduce((s, x) => s + (x.cantidad || 0), 0);
+  }
+
+  lotesCuadran(l: CompraLineaUI): boolean {
+    return (
+      !!l.lotes?.length && Math.abs(this.sumaLotes(l) - (l.cantidad || 0)) < 0.0001
+    );
+  }
+
+  abrirLotes(idx: number): void {
+    const l = this.lineas()[idx];
+    if (!l) return;
+    this.lotesEdit = (l.lotes ?? []).map((x) => ({ ...x }));
+    // Con la línea sin lotes, la primera fila ya trae toda la cantidad.
+    if (!this.lotesEdit.length)
+      this.lotesEdit = [
+        { codigoLote: '', fechaVencimiento: null, cantidad: l.cantidad || null },
+      ];
+    this.lotesDialogIdx = idx;
+    this.cdr.markForCheck();
+  }
+
+  agregarLoteFila(): void {
+    const l = this.lineaLotes;
+    const falta = Math.max(
+      0,
+      (l?.cantidad || 0) - this.sumaLotes({ lotes: this.lotesEdit }),
+    );
+    this.lotesEdit = [
+      ...this.lotesEdit,
+      { codigoLote: '', fechaVencimiento: null, cantidad: falta || null },
+    ];
+    this.cdr.markForCheck();
+  }
+
+  quitarLoteFila(j: number): void {
+    this.lotesEdit = this.lotesEdit.filter((_, k) => k !== j);
+    this.cdr.markForCheck();
+  }
+
+  aceptarLotes(): void {
+    if (this.lotesDialogIdx === null) return;
+    const lotes = this.lotesEdit.filter(
+      (x) => x.codigoLote?.trim() || (x.cantidad ?? 0) > 0,
+    );
+    this.actualizarLinea(this.lotesDialogIdx, { lotes }, false);
+    this.lotesDialogIdx = null;
+  }
+
+  get sumaLotesEdit(): number {
+    return this.sumaLotes({ lotes: this.lotesEdit });
+  }
+
+  private errorLotes(l: CompraLineaUI): string | null {
+    const lotes = l.lotes ?? [];
+    if (!lotes.length) return 'indica el lote y su vencimiento.';
+    for (const x of lotes) {
+      if (!x.codigoLote?.trim()) return 'hay un lote sin código.';
+      if (!x.cantidad || x.cantidad <= 0)
+        return `el lote ${x.codigoLote} no tiene cantidad.`;
+    }
+    const codigos = lotes.map((x) => x.codigoLote.trim().toUpperCase());
+    if (new Set(codigos).size !== codigos.length)
+      return 'hay un lote repetido: junta sus cantidades en una sola fila.';
+    if (!this.lotesCuadran(l))
+      return `los lotes suman ${this.sumaLotes(l)} y la línea tiene ${l.cantidad}.`;
+    return null;
+  }
+
+  /** Fecha del lote a yyyy-MM-dd local (el borrador la guarda como texto). */
+  private aFechaISO(v: Date | string | null): string | null {
+    if (!v) return null;
+    const d = typeof v === 'string' ? new Date(v) : v;
+    if (isNaN(d.getTime())) return null;
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${d.getFullYear()}-${mm}-${dd}`;
+  }
+
   // ─── Validación ───────────────────────────────────────────────────
   private validar(): string | null {
     if (!this.proveedorSeleccionado) return 'Selecciona un proveedor.';
@@ -1537,6 +1851,20 @@ export class FormCompraComponent implements OnInit {
         return `Línea ${n}: la cantidad debe ser mayor a 0.`;
       if (!l.costoUnitario || l.costoUnitario <= 0)
         return `Línea ${n}: el costo debe ser mayor a 0.`;
+      if (l.manejaLotes && !this.esNotaCredito) {
+        const errLotes = this.errorLotes(l);
+        if (errLotes) return `Línea ${n} (${l.productoNombre}): ${errLotes}`;
+      }
+      if (l.manejaSerial) {
+        const unidades = this.unidadesSerial(l);
+        if (!Number.isInteger(unidades))
+          return `Línea ${n} (${l.productoNombre}): maneja serial, la cantidad tiene que ser entera.`;
+        const llevan = this.esNotaCredito
+          ? (l.serialIds ?? []).length
+          : (l.seriales ?? []).length;
+        if (llevan !== unidades)
+          return `Línea ${n} (${l.productoNombre}): ${this.esNotaCredito ? 'elige' : 'escribe'} ${unidades} seriales (van ${llevan}).`;
+      }
     }
 
     if (this.esNotaCredito) {
@@ -1577,6 +1905,7 @@ export class FormCompraComponent implements OnInit {
     try {
       const detalles: CreateCompraDetalleDto[] = this.lineas().map((l) => ({
         productoId: l.productoId!,
+        productoPresentacionId: l.presentacionId || null,
         cantidad: l.cantidad!,
         costoUnitario: l.costoUnitario!,
         descuentoPct: l.descuentoPct ?? 0,
@@ -1584,6 +1913,19 @@ export class FormCompraComponent implements OnInit {
         precioVenta1: l.precioVenta1 ?? null,
         precioVenta2: l.precioVenta2 ?? null,
         precioVenta3: l.precioVenta3 ?? null,
+        // En nota crédito no se mandan: sale primero el lote que vence antes.
+        lotes:
+          l.manejaLotes && !this.esNotaCredito
+            ? (l.lotes ?? []).map((x) => ({
+                codigoLote: x.codigoLote.trim(),
+                fechaVencimiento: this.aFechaISO(x.fechaVencimiento),
+                cantidad: x.cantidad ?? 0,
+              }))
+            : undefined,
+        seriales:
+          l.manejaSerial && !this.esNotaCredito ? (l.seriales ?? []) : undefined,
+        serialIds:
+          l.manejaSerial && this.esNotaCredito ? (l.serialIds ?? []) : undefined,
       }));
 
       let fechaVencimientoStr: string | null = null;

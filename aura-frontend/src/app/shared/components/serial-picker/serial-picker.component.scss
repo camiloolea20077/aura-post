@@ -1,0 +1,84 @@
+.sp-cab {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.sp-buscar {
+  flex: 1;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.sp-contador {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #b45309;
+  white-space: nowrap;
+
+  &--ok {
+    color: #15803d;
+  }
+}
+
+.sp-aviso {
+  display: block;
+  margin-top: 0.35rem;
+  color: #b91c1c;
+  font-size: 0.75rem;
+}
+
+.sp-cargando,
+.sp-vacio {
+  padding: 1.5rem;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.82rem;
+}
+
+.sp-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.7rem;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.sp-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  border: 1.5px solid #e0e3eb;
+  border-radius: 8px;
+  background: #fff;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  i {
+    color: #94a3b8;
+  }
+
+  &--marcado {
+    border-color: #2563eb;
+    background: #eff6ff;
+
+    i {
+      color: #2563eb;
+    }
+  }
+}
+
+.sp-serial {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.sp-extra {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: #64748b;
+}

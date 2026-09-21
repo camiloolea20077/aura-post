@@ -76,9 +76,41 @@
       </ng-template>
       <ng-template pTemplate="body" let-d>
         <tr>
-          <td class="fw-600">{{ d.productoNombre }}</td>
+          <td class="fw-600">
+            {{ d.productoNombre }}
+            <div class="mono text-muted" *ngIf="d.productoSku" style="font-weight: 400; font-size: 0.72rem">
+              {{ d.productoSku }}
+            </div>
+            <div
+              *ngIf="d.componentes?.length"
+              style="
+                margin-top: 0.25rem;
+                font-weight: 400;
+                font-size: 0.75rem;
+                color: #64748b;
+              "
+            >
+              <div *ngFor="let c of d.componentes">
+                <i class="pi pi-angle-right" style="font-size: 0.65rem"></i>
+                <span class="mono"
+                  >{{ c.cantidad | number: "1.0-4" }}
+                  {{ c.unidadAbreviatura }}</span
+                >
+                · {{ c.productoNombre }}
+              </div>
+            </div>
+          </td>
           <td class="mono text-muted">{{ d.codigoLote || "—" }}</td>
-          <td class="mono text-center">{{ d.cantidad }}</td>
+          <td class="mono text-center">
+            <ng-container *ngIf="d.presentacionNombre; else cantidadUnidades">
+              {{ d.cantidadPresentacion | number: "1.0-4" }}
+              {{ d.presentacionNombre }}
+              <div class="text-muted" style="font-size: 0.72rem">
+                {{ d.cantidad | number: "1.0-4" }} und
+              </div>
+            </ng-container>
+            <ng-template #cantidadUnidades>{{ d.cantidad }}</ng-template>
+          </td>
           <td class="mono text-right">{{ formatCOP(d.costoUnitario) }}</td>
           <td class="mono text-right text-muted">
             {{ formatCOP(d.baseComercialUnitaria) }}

@@ -17,7 +17,7 @@ import {
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
-import { InputSwitchModule } from 'primeng/inputswitch';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
@@ -37,7 +37,7 @@ import { AlertService } from '../../../../shared/pipes/alert.service';
     ReactiveFormsModule,
     DialogModule,
     InputTextModule,
-    InputSwitchModule,
+    ToggleSwitchModule,
     ButtonModule,
     ToastModule,
   ],

@@ -31,24 +31,58 @@
 
         <div class="field">
           <label class="field-label"
+            >Bodega origen <span class="required">*</span></label
+          >
+          <p-dropdown
+            formControlName="bodegaOrigenId"
+            [options]="bodegasOrigen"
+            optionLabel="nombre"
+            optionValue="id"
+            placeholder="Selecciona la bodega"
+            styleClass="w-full"
+            [class.ng-invalid]="isInvalid('bodegaOrigenId')"
+          />
+          <small class="field-error" *ngIf="isInvalid('bodegaOrigenId')"
+            >Obligatorio</small
+          >
+        </div>
+
+        <div class="field">
+          <label class="field-label"
             >Sucursal destino <span class="required">*</span></label
           >
           <p-dropdown
             formControlName="sucursalDestinoId"
-            [options]="sucursalesDestino"
+            [options]="sucursales"
             optionLabel="nombre"
             optionValue="id"
             placeholder="Selecciona destino"
             styleClass="w-full"
-            [class.ng-invalid]="
-              isInvalid('sucursalDestinoId') || mismasSucursales
-            "
+            [class.ng-invalid]="isInvalid('sucursalDestinoId')"
           />
           <small class="field-error" *ngIf="isInvalid('sucursalDestinoId')"
             >Obligatorio</small
           >
-          <small class="field-error" *ngIf="mismasSucursales"
-            >Origen y destino no pueden ser iguales</small
+        </div>
+
+        <div class="field">
+          <label class="field-label"
+            >Bodega destino <span class="required">*</span></label
+          >
+          <p-dropdown
+            formControlName="bodegaDestinoId"
+            [options]="bodegasDestino"
+            optionLabel="nombre"
+            optionValue="id"
+            placeholder="Selecciona la bodega"
+            styleClass="w-full"
+            [class.ng-invalid]="isInvalid('bodegaDestinoId') || mismaBodega"
+          />
+          <small class="field-error" *ngIf="isInvalid('bodegaDestinoId')"
+            >Obligatorio</small
+          >
+          <small class="field-error" *ngIf="mismaBodega"
+            >La bodega de origen y la de destino no pueden ser la misma</small
           >
         </div>
 
@@ -112,6 +146,16 @@
               (onSelect)="seleccionarProducto($event, l)"
               [minLength]="2"
             />
+            <button
+                *ngIf="l.manejaSerial"
+                type="button"
+                class="seriales-link"
+                [class.seriales-link--ok]="(l.serialIds?.length ?? 0) === unidadesSerial(l) && unidadesSerial(l) > 0"
+                (click)="abrirSeriales(l)"
+              >
+                <i class="pi pi-barcode"></i>
+                Seriales {{ l.serialIds?.length ?? 0 }}/{{ unidadesSerial(l) | number: "1.0-4" }}
+              </button>
           </div>
 
           <!-- Lote -->
@@ -121,9 +165,10 @@
               [(ngModel)]="l.loteId"
               [ngModelOptions]="{ standalone: true }"
               [options]="l.lotesDisponibles"
-              optionLabel="codigoLote"
+              optionLabel="etiqueta"
               optionValue="id"
-              placeholder="Lote..."
+              [showClear]="true"
+              placeholder="Automático (vence primero)"
               styleClass="w-full"
               (onChange)="onLoteChange(l, $event.value)"
             />
@@ -216,3 +261,13 @@
     </div>
   </ng-template>
 </p-dialog>
+
+<app-serial-picker
+  [(visible)]="serialPickerVisible"
+  [productoId]="serialLinea?.productoId ?? null"
+  [productoNombre]="serialLinea?.productoNombre || ''"
+  [sucursalId]="sucursalSeriales"
+  [cantidad]="serialLinea ? unidadesSerial(serialLinea) : 0"
+  [seleccionados]="serialLinea?.serialIds || []"
+  (confirmar)="onSerialesElegidos($event)"
+/>

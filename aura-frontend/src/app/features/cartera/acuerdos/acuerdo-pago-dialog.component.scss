@@ -1,0 +1,323 @@
+:host {
+  --ap-surface: #ffffff;
+  --ap-soft: #f8fafc;
+  --ap-border: #e5e7eb;
+  --ap-text: #0f172a;
+  --ap-muted: #64748b;
+  --ap-primary: #2563eb;
+  --ap-primary-soft: #eff6ff;
+  --ap-green: #059669;
+  --ap-green-soft: #ecfdf5;
+  --ap-amber: #b45309;
+  --ap-amber-soft: #fffbeb;
+}
+
+:host-context(.dark-mode) {
+  --ap-surface: #1a1d2e;
+  --ap-soft: #22263a;
+  --ap-border: #2d3148;
+  --ap-text: #f1f5f9;
+  --ap-muted: #94a3b8;
+  --ap-primary-soft: rgba(37, 99, 235, 0.16);
+  --ap-green-soft: rgba(5, 150, 105, 0.16);
+  --ap-amber-soft: rgba(180, 83, 9, 0.18);
+}
+
+.mono {
+  font-variant-numeric: tabular-nums;
+}
+
+.ap {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem 1.25rem 0.5rem;
+  color: var(--ap-text);
+}
+
+.ap-label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ap-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ap-sub {
+  font-size: 0.78rem;
+  color: var(--ap-muted);
+}
+
+.ap-cliente {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--ap-border);
+  border-radius: 12px;
+  background: var(--ap-soft);
+
+  strong {
+    font-size: 1rem;
+  }
+
+  &__total {
+    text-align: right;
+
+    strong {
+      font-size: 1.35rem;
+      color: var(--ap-primary);
+    }
+  }
+}
+
+.ap-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+
+  @media (max-width: 760px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ap-seccion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+
+  &__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+
+    h4 {
+      margin: 0;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+  }
+}
+
+.ap-links {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.ap-link {
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ap-primary);
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.ap-facturas {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.ap-factura {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--ap-border);
+  border-radius: 10px;
+  background: var(--ap-surface);
+  cursor: pointer;
+
+  &.activa {
+    border-color: var(--ap-primary);
+    background: var(--ap-primary-soft);
+  }
+
+  &__info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.ap-vacio,
+.ap-nota {
+  font-size: 0.8rem;
+  color: var(--ap-muted);
+  padding: 0.4rem 0.2rem;
+}
+
+.ap-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.ap-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+
+  label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--ap-muted);
+  }
+
+  textarea {
+    width: 100%;
+    resize: vertical;
+  }
+
+  &--full {
+    grid-column: 1 / -1;
+  }
+}
+
+.ap-ayuda {
+  justify-content: flex-end;
+  font-size: 0.75rem;
+  color: var(--ap-muted);
+}
+
+.opciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.opcion {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--ap-border);
+  border-radius: 9px;
+  background: var(--ap-surface);
+  color: var(--ap-text);
+  font-family: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--ap-primary);
+  }
+
+  &--activa {
+    border-color: var(--ap-primary);
+    background: var(--ap-primary-soft);
+    color: var(--ap-primary);
+    font-weight: 600;
+  }
+}
+
+.ap-tabla-wrap {
+  border: 1px solid var(--ap-border);
+  border-radius: 10px;
+  max-height: 300px;
+  overflow: auto;
+}
+
+.ap-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+
+  th,
+  td {
+    padding: 0.4rem 0.75rem;
+    border-bottom: 1px solid var(--ap-border);
+    text-align: left;
+  }
+
+  th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--ap-soft);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--ap-muted);
+    text-transform: uppercase;
+  }
+
+  .n {
+    width: 3rem;
+    color: var(--ap-muted);
+  }
+
+  .num {
+    text-align: right;
+  }
+
+  tfoot td {
+    border-bottom: none;
+    background: var(--ap-soft);
+  }
+}
+
+:host ::ng-deep .ap-tabla .ap-input {
+  width: 100%;
+  max-width: 190px;
+}
+
+.ap-descuadre {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 9px;
+  background: var(--ap-amber-soft);
+  color: var(--ap-amber);
+  font-size: 0.8rem;
+
+  span {
+    flex: 1;
+  }
+}
+
+.ap-pie-problema {
+  margin-right: auto;
+  font-size: 0.78rem;
+  color: var(--ap-amber);
+}
+
+.ap-ok {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 2rem 1.5rem 1rem;
+  text-align: center;
+  color: var(--ap-text);
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 3.2rem;
+    height: 3.2rem;
+    border-radius: 50%;
+    background: var(--ap-green-soft);
+    color: var(--ap-green);
+    font-size: 1.4rem;
+  }
+
+  h3 {
+    margin: 0.4rem 0 0;
+  }
+
+  p {
+    margin: 0;
+  }
+}

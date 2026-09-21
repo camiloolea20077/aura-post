@@ -509,18 +509,73 @@
                   <i class="pi pi-search"></i>
                 </button>
               </div>
+              <!-- Producto con lotes: código, vencimiento y cantidad -->
+              <button
+                *ngIf="l.manejaLotes && !esNotaCredito"
+                type="button"
+                class="lotes-link"
+                [class.lotes-link--ok]="lotesCuadran(l)"
+                (click)="abrirLotes(i)"
+              >
+                <i
+                  class="pi"
+                  [class.pi-check-circle]="lotesCuadran(l)"
+                  [class.pi-calendar]="!lotesCuadran(l)"
+                ></i>
+                <ng-container *ngIf="l.lotes?.length === 1 && lotesCuadran(l); else resumenLotes">
+                  Lote {{ l.lotes![0].codigoLote }}
+                  <span *ngIf="l.lotes![0].fechaVencimiento">
+                    · vence {{ l.lotes![0].fechaVencimiento | date: "dd/MM/yyyy" }}</span
+                  >
+                </ng-container>
+                <ng-template #resumenLotes>
+                  Lotes {{ sumaLotes(l) | number: "1.0-4" }}/{{
+                    l.cantidad || 0 | number: "1.0-4"
+                  }}
+                  {{ nombrePresentacion(l) }}
+                </ng-template>
+              </button>
+              <span
+                *ngIf="l.manejaLotes && esNotaCredito"
+                class="lotes-nota"
+                >Sale del lote que vence primero</span
+              >
+              <!-- Producto con serial: uno por unidad -->
+              <button
+                *ngIf="l.manejaSerial"
+                type="button"
+                class="lotes-link"
+                [class.lotes-link--ok]="serialesDeLinea(l) === unidadesSerial(l) && unidadesSerial(l) > 0"
+                (click)="abrirSeriales(i)"
+              >
+                <i class="pi pi-barcode"></i>
+                Seriales {{ serialesDeLinea(l) }}/{{ unidadesSerial(l) | number: "1.0-4" }}
+              </button>
             </td>
 
             <!-- Cantidad -->
             <td class="td-num">
-              <p-inputNumber
-                [ngModel]="l.cantidad"
-                (ngModelChange)="onCantidadChange(i, $event)"
-                [min]="0.0001"
-                [maxFractionDigits]="4"
-                styleClass="w-full input-num"
-                placeholder="0"
-              />
+              <!-- 4 [Bulto ▾]: la cantidad y en qué viene, en la misma fila -->
+              <div class="cant-pres">
+                <p-inputNumber
+                  [ngModel]="l.cantidad"
+                  (ngModelChange)="onCantidadChange(i, $event)"
+                  [min]="0.0001"
+                  [maxFractionDigits]="4"
+                  styleClass="input-num cant-pres__cantidad"
+                  placeholder="0"
+                />
+                <p-dropdown
+                  *ngIf="(l.presentaciones?.length ?? 0) > 1"
+                  appendTo="body"
+                  [options]="l.presentaciones"
+                  optionLabel="nombre"
+                  optionValue="id"
+                  [ngModel]="l.presentacionId ?? 0"
+                  (ngModelChange)="onPresentacionChange(i, $event)"
+                  styleClass="cant-pres__presentacion"
+                />
+              </div>
             </td>
 
             <!-- Vlr. Unitario -->
@@ -565,7 +620,7 @@
               <p-inputNumber
                 [ngModel]="l.ivaPorcentaje"
                 (ngModelChange)="onIvaPctChange(i, $event)"
-                suffix=" %"
+                suffix="%"
                 [min]="0"
                 [max]="100"
                 [maxFractionDigits]="2"
@@ -824,6 +879,124 @@
     </div>
   </div>
 </div>
+
+<!-- ═══════ SERIALES DE LA LÍNEA ═════════════════════════════════ -->
+<app-serial-entrada
+  [(visible)]="entradaSerialesVisible"
+  [productoNombre]="lineaSeriales?.productoNombre || ''"
+  [cantidad]="lineaSeriales ? unidadesSerial(lineaSeriales) : 0"
+  [seriales]="lineaSeriales?.seriales || []"
+  (confirmar)="onSerialesEscritos($event)"
+/>
+<app-serial-picker
+  [(visible)]="pickerSerialesVisible"
+  [productoId]="lineaSeriales?.productoId ?? null"
+  [productoNombre]="lineaSeriales?.productoNombre || ''"
+  [sucursalId]="sucursalId"
+  [cantidad]="lineaSeriales ? unidadesSerial(lineaSeriales) : 0"
+  [seleccionados]="lineaSeriales?.serialIds || []"
+  (confirmar)="onSerialesElegidos($event)"
+/>
+
+<!-- ═══════ MODAL LOTES DE LA LÍNEA ═══════════════════════════════ -->
+<p-dialog
+  [(visible)]="lotesDialogVisible"
+  [header]="'Lotes · ' + (lineaLotes?.productoNombre || '')"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '640px', maxWidth: '96vw' }"
+  styleClass="aura-dialog"
+>
+  <p class="lotes-ayuda" *ngIf="lineaLotes">
+    Escribe cada lote que llegó con su vencimiento. Las cantidades van en
+    <b>{{ nombrePresentacion(lineaLotes) }}</b> y tienen que sumar
+    <b>{{ lineaLotes.cantidad || 0 | number: "1.0-4" }}</b>.
+  </p>
+
+  <div class="lotes-tabla">
+    <div class="lotes-fila lotes-fila--head">
+      <span>Código de lote</span>
+      <span>Vence</span>
+      <span>Cantidad</span>
+      <span></span>
+    </div>
+    <div class="lotes-fila" *ngFor="let x of lotesEdit; let j = index">
+      <input
+        pInputText
+        [(ngModel)]="x.codigoLote"
+        placeholder="Ej: L2409-A"
+        maxlength="100"
+        autocomplete="off"
+      />
+      <p-calendar
+        [(ngModel)]="x.fechaVencimiento"
+        dateFormat="dd/mm/yy"
+        placeholder="dd/mm/aaaa"
+        appendTo="body"
+        [showIcon]="true"
+        styleClass="w-full"
+      />
+      <p-inputNumber
+        [(ngModel)]="x.cantidad"
+        [min]="0"
+        [maxFractionDigits]="4"
+        styleClass="w-full"
+        inputStyleClass="text-right"
+      />
+      <button
+        pButton
+        type="button"
+        icon="pi pi-trash"
+        class="p-button-text p-button-danger p-button-sm"
+        (click)="quitarLoteFila(j)"
+      ></button>
+    </div>
+  </div>
+
+  <button
+    pButton
+    type="button"
+    label="Agregar otro lote"
+    icon="pi pi-plus"
+    class="p-button-text p-button-sm"
+    (click)="agregarLoteFila()"
+  ></button>
+
+  <ng-template pTemplate="footer">
+    <div class="lotes-footer" *ngIf="lineaLotes">
+      <span
+        class="lotes-suma"
+        [class.lotes-suma--ok]="
+          lotesEdit.length &&
+          sumaLotesEdit - (lineaLotes.cantidad || 0) < 0.0001 &&
+          (lineaLotes.cantidad || 0) - sumaLotesEdit < 0.0001
+        "
+      >
+        Suma {{ sumaLotesEdit | number: "1.0-4" }} de
+        {{ lineaLotes.cantidad || 0 | number: "1.0-4" }}
+        {{ nombrePresentacion(lineaLotes) }}
+      </span>
+      <div class="lotes-footer__acciones">
+        <button
+          pButton
+          type="button"
+          label="Cancelar"
+          class="btn-amarillo"
+          (click)="lotesDialogIdx = null"
+        ></button>
+        <button
+          pButton
+          type="button"
+          label="Aceptar"
+          icon="pi pi-check"
+          class="btn-verde"
+          (click)="aceptarLotes()"
+        ></button>
+      </div>
+    </div>
+  </ng-template>
+</p-dialog>
 
 <!-- ═══════ MODAL SELECTOR DE PRODUCTO ═══════════════════════════ -->
 <p-dialog

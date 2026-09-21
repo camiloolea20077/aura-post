@@ -1,0 +1,166 @@
+<p-dialog
+  [header]="isEdit ? 'Editar bodega' : 'Nueva bodega'"
+  [(visible)]="visible"
+  (onHide)="close()"
+  [modal]="true"
+  [style]="{ width: '560px' }"
+  [draggable]="false"
+>
+  <form [formGroup]="form" class="dialog-form">
+    <!-- ── Dónde está ───────────────────────────────────────────── -->
+    <div class="form-grid">
+      <div class="field">
+        <label class="field-label">
+          Sucursal <span class="required">*</span>
+        </label>
+        <p-select
+          formControlName="sucursalId"
+          [options]="sucursales"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Elige la sucursal"
+          styleClass="w-full"
+          [filter]="true"
+          filterBy="label"
+        />
+        <small class="field-hint" *ngIf="isEdit">
+          La sucursal no se cambia: moverla movería el stock.
+        </small>
+        <small class="field-error" *ngIf="isInvalid('sucursalId')">
+          Elige la sucursal
+        </small>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Código</label>
+        <input
+          type="text"
+          pInputText
+          formControlName="codigo"
+          placeholder="BOD-01"
+          class="w-full"
+        />
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Nombre <span class="required">*</span></label>
+      <input
+        type="text"
+        pInputText
+        formControlName="nombre"
+        placeholder="Bodega Principal, Averías, Nevera, Vitrina..."
+        class="w-full"
+        [class.ng-invalid]="isInvalid('nombre')"
+      />
+      <small class="field-error" *ngIf="isInvalid('nombre')">
+        El nombre es obligatorio
+      </small>
+    </div>
+
+    <!-- ── Quién responde ───────────────────────────────────────── -->
+    <div class="form-grid">
+      <div class="field">
+        <label class="field-label">Responsable</label>
+        <p-select
+          formControlName="responsableUsuarioId"
+          [options]="usuarios"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Sin responsable"
+          styleClass="w-full"
+          [showClear]="true"
+          [filter]="true"
+          filterBy="label"
+        />
+        <small class="field-hint">Quién responde por un faltante.</small>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Ubicación</label>
+        <input
+          type="text"
+          pInputText
+          formControlName="ubicacion"
+          placeholder="Segundo piso, patio trasero..."
+          class="w-full"
+        />
+      </div>
+    </div>
+
+    <!-- ── Cómo se comporta ─────────────────────────────────────── -->
+    <div class="form-grid">
+      <div class="field">
+        <label class="field-label">¿Es la bodega principal?</label>
+        <p-selectButton
+          formControlName="esPrincipal"
+          [options]="opcionesSiNo"
+          optionLabel="label"
+          optionValue="value"
+          [allowEmpty]="false"
+        />
+        <small class="field-hint">
+          Recibe el stock cuando un documento no dice bodega. Solo una por
+          sucursal.
+        </small>
+      </div>
+
+      <div class="field">
+        <label class="field-label">¿Despacha ventas?</label>
+        <p-selectButton
+          formControlName="permiteVenta"
+          [options]="opcionesSiNo"
+          optionLabel="label"
+          optionValue="value"
+          [allowEmpty]="false"
+        />
+        <small class="field-hint">
+          Averías o cuarentena guardan stock, pero el POS no las ofrece.
+        </small>
+      </div>
+    </div>
+
+    <div class="field" *ngIf="isEdit">
+      <label class="field-label">¿Está activa?</label>
+      <p-selectButton
+        formControlName="activa"
+        [options]="opcionesSiNo"
+        optionLabel="label"
+        optionValue="value"
+        [allowEmpty]="false"
+      />
+      <small class="field-hint" *ngIf="esPrincipalActual">
+        La principal no se puede desactivar: marca otra como principal primero.
+      </small>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Observación</label>
+      <textarea
+        pTextarea
+        formControlName="observacion"
+        rows="2"
+        class="w-full"
+        placeholder="Para qué se usa esta bodega"
+      ></textarea>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="btn-amarillo"
+      (click)="close()"
+    ></button>
+    <button
+      pButton
+      [label]="isEdit ? 'Actualizar' : 'Guardar'"
+      icon="pi pi-check"
+      class="btn-verde"
+      [loading]="loading"
+      (click)="save()"
+    ></button>
+  </ng-template>
+</p-dialog>

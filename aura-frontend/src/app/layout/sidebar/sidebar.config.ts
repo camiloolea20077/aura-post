@@ -92,6 +92,11 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
     roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [
       { label: 'Stock', icon: 'pi pi-database', route: '/inventario/stock' },
+      {
+        label: 'Bodegas',
+        icon: 'pi pi-building',
+        route: '/inventario/bodegas',
+      },
       { label: 'Lotes', icon: 'pi pi-calendar', route: '/inventario/lotes' },
       {
         label: 'Seriales',
@@ -106,6 +111,11 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
       },
       { label: 'Mermas', icon: 'pi pi-trash', route: '/mermas' },
       { label: 'Obsequios', icon: 'pi pi-gift', route: '/obsequios' },
+      {
+        label: 'Consumo interno',
+        icon: 'pi pi-building',
+        route: '/consumo-interno',
+      },
       { label: 'Traslados', icon: 'pi pi-arrows-h', route: '/traslados' },
     ],
   },
@@ -361,8 +371,8 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         route: '/contabilidad/periodos',
       },
       {
-        label: 'Cierre Contable',
-        icon: 'pi pi-calendar-times',
+        label: 'Resultados del Período',
+        icon: 'pi pi-chart-line',
         route: '/contabilidad/cierre',
       },
       {

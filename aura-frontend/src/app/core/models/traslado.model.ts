@@ -41,6 +41,9 @@ export interface TrasladoDetalleModel {
 export interface CreateTrasladoDto {
   sucursalOrigenId: number;
   sucursalDestinoId: number;
+  /** Bodegas del traslado (V172). Sin ellas, la principal de cada sucursal. */
+  bodegaOrigenId?: number | null;
+  bodegaDestinoId?: number | null;
   observacion?: string | null;
   detalles: CreateTrasladoDetalleDto[];
 }
@@ -71,6 +74,11 @@ export interface TrasladoLineaUI {
   loteId: number | null;
   codigoLote: string | null;
   lotesDisponibles: LoteDisponible[];
+  /** Stock en origen, para volver a él al quitar el lote elegido. */
+  stockOrigenProducto?: number;
+  /** Producto con serial: los que se trasladan, uno por unidad. */
+  manejaSerial?: boolean;
+  serialIds?: number[];
   cantidad: number;
   costoUnitario: number;
 }
@@ -80,6 +88,8 @@ export interface LoteDisponible {
   codigoLote: string;
   stockActual: number;
   fechaVencimiento: string | null;
+  diasParaVencer?: number | null;
+  etiqueta?: string;
 }
 
 // ─── Sucursal selector ────────────────────────────────────────

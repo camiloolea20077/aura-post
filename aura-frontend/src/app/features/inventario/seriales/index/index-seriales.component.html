@@ -6,7 +6,7 @@
         <div>
           <h1 class="title">Seriales</h1>
           <p class="subtitle">
-            Control de productos por número de serie individual
+            Los seriales entran con la compra y salen con cada venta o salida
           </p>
         </div>
       </div>
@@ -14,9 +14,19 @@
         <button
           pButton
           type="button"
+          label="Trazabilidad"
+          icon="pi pi-history"
+          class="p-button-outlined"
+          (click)="abrirTrazabilidad()"
+        ></button>
+        <button
+          pButton
+          type="button"
           label="Registrar serial"
           icon="pi pi-plus"
           class="btn-verde"
+          pTooltip="Para el stock que ya existía sin serial; los nuevos entran con la compra"
+          tooltipPosition="bottom"
           (click)="openCreate()"
         ></button>
         <div class="card-head__search">
@@ -73,8 +83,11 @@
             Producto <p-sortIcon field="p.nombre" />
           </th>
           <th style="min-width: 130px">Sucursal</th>
+          <th style="width: 130px">Compra</th>
+          <th style="width: 120px" class="text-right">Costo</th>
+          <th style="width: 120px" class="text-center">Garantía hasta</th>
           <th style="width: 120px" class="text-center">Estado</th>
-          <th style="width: 80px" class="text-center">Acc.</th>
+          <th style="width: 100px" class="text-center">Acc.</th>
         </tr>
       </ng-template>
 
@@ -102,6 +115,19 @@
             </span>
           </td>
 
+          <td>
+            <span class="serial-code" *ngIf="item.compraNumero; else sinCompra">{{
+              item.compraNumero
+            }}</span>
+            <ng-template #sinCompra><span class="text-muted">—</span></ng-template>
+          </td>
+          <td class="text-right">
+            {{ item.costo != null ? (item.costo | currency: "COP" : "symbol-narrow" : "1.0-0") : "—" }}
+          </td>
+          <td class="text-center">
+            {{ item.garantiaClienteHasta ? (item.garantiaClienteHasta | date: "dd/MM/yyyy") : "—" }}
+          </td>
+
           <!-- Estado -->
           <td class="text-center">
             <p-tag
@@ -113,6 +139,15 @@
 
           <!-- Acciones -->
           <td class="text-center">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-history"
+              class="p-button-text p-button-sm"
+              pTooltip="Ver su historia"
+              tooltipPosition="top"
+              (click)="abrirTrazabilidad(item.serial)"
+            ></button>
             <button
               pButton
               type="button"
@@ -128,7 +163,7 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="5">
+          <td colspan="8">
             <div class="empty-state">
               <i class="pi pi-barcode"></i>
               <p>
@@ -155,6 +190,9 @@
           <td><p-skeleton /></td>
           <td><p-skeleton /></td>
           <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton /></td>
           <td class="text-center">
             <p-skeleton width="80px" styleClass="mx-auto" />
           </td>
@@ -166,6 +204,51 @@
     </p-table>
   </div>
 </div>
+
+<!-- Trazabilidad -->
+<p-dialog
+  [(visible)]="trazaVisible"
+  header="Trazabilidad de serial"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '640px', maxWidth: '96vw' }"
+>
+  <div class="traza-buscar">
+    <input
+      pInputText
+      [(ngModel)]="trazaBusqueda"
+      (keydown.enter)="buscarTraza()"
+      placeholder="Escanea o escribe el serial"
+      autocomplete="off"
+    />
+    <button pButton type="button" icon="pi pi-search" label="Buscar" [loading]="trazaCargando" (click)="buscarTraza()"></button>
+  </div>
+
+  <div class="traza-vacio" *ngIf="trazaBuscada && !trazaCargando && !traza.length">
+    No hay seriales que coincidan
+  </div>
+
+  <div class="traza-serial" *ngFor="let s of traza">
+    <div class="traza-cab">
+      <span class="serial-code">{{ s.serial }}</span>
+      <p-tag [value]="getEstadoLabel(s.estado)" [severity]="getEstadoSeverity(s.estado)" [rounded]="true" />
+    </div>
+    <div class="traza-datos">
+      {{ s.productoNombre }} · {{ s.sucursalNombre }}
+      <span *ngIf="s.costo != null"> · costo {{ s.costo | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span>
+      <span *ngIf="s.garantiaClienteHasta"> · garantía hasta {{ s.garantiaClienteHasta | date: "dd/MM/yyyy" }}</span>
+    </div>
+    <div class="traza-linea">
+      <div class="traza-evento" *ngFor="let e of s.eventos" [class.traza-evento--anulado]="e.estadoDocumento?.startsWith('ANULAD')">
+        <span class="traza-fecha">{{ e.fecha | date: "dd/MM/yyyy HH:mm" }}</span>
+        <span class="traza-tipo">{{ e.tipo }} {{ e.documento }}</span>
+        <span class="traza-tercero" *ngIf="e.tercero">{{ e.tercero }}</span>
+        <span class="traza-estado" *ngIf="e.estadoDocumento?.startsWith('ANULAD')">anulado</span>
+      </div>
+      <div class="traza-vacio" *ngIf="!s.eventos.length">Registrado a mano, sin movimientos</div>
+    </div>
+  </div>
+</p-dialog>
 
 <app-form-serial
   [displayModal]="showModal"

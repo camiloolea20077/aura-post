@@ -21,20 +21,23 @@ export interface LoteTableModel {
   sucursalNombre: string;
   codigoLote: string;
   fechaVencimiento: string | null;
+  fechaFabricacion?: string | null;
   stockActual: number;
   costoUnitario: number;
   activo: boolean;
+  unidadAbreviatura?: string | null;
+  /** Compra que metió mercancía al lote; null en SIN-LOTE. */
+  compraId?: number | null;
+  compraNumero?: string | null;
+  proveedorNombre?: string | null;
 }
 
 // ─── DTOs ────────────────────────────────────────────────────
-export interface CreateLoteDto {
-  productoId: number;
-  sucursalId: number;
+/** Los lotes nacen con la compra: aquí solo se corrige código y vencimiento. */
+export interface UpdateLoteDto {
   codigoLote: string;
   fechaVencimiento: string | null; // "YYYY-MM-DD"
-  stockActual: number;
-  costoUnitario: number;
-  activo: boolean;
+  motivo: string;
 }
 
 // ─── Pageable ─────────────────────────────────────────────────
@@ -63,4 +66,31 @@ export function estadoVencimiento(
   if (dias <= 7) return 'critico';
   if (dias <= 30) return 'proximo';
   return 'ok';
+}
+
+// ─── Vencimientos ─────────────────────────────────────────────
+export interface VencimientoLoteModel {
+  loteId: number;
+  productoId: number;
+  productoNombre: string;
+  productoSku: string | null;
+  categoriaNombre: string | null;
+  sucursalId: number;
+  sucursalNombre: string;
+  codigoLote: string;
+  fechaVencimiento: string;
+  /** Negativo = ya venció. */
+  diasParaVencer: number;
+  stockActual: number;
+  unidadAbreviatura: string | null;
+  costoUnitario: number;
+  valorCosto: number;
+  precioVenta: number;
+  valorVenta: number;
+}
+
+/** Lo que Lotes le pasa a Mermas para abrir el formulario ya lleno. */
+export interface MermaDesdeLotes {
+  sucursalId: number;
+  lineas: { productoId: number; loteId: number; cantidad: number }[];
 }

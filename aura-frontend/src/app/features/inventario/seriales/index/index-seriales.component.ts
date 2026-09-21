@@ -10,15 +10,18 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
 import { DropdownModule } from 'primeng/dropdown';
+import { DialogModule } from 'primeng/dialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
 import { FormSerialComponent } from '../form/form-serial.component';
 import {
+  ESTADO_SERIAL_OPTIONS,
   ESTADO_SEVERITY,
   EstadoSerial,
-  SerialPageableDto,
   SerialProductoTableModel,
+  SerialTrazaModel,
+  etiquetaEstadoSerial,
 } from '../../../../core/models/serial-producto.model';
 import { SerialProductoService } from '../../../../core/services/serial-producto.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
@@ -46,6 +49,7 @@ type TagSeverity =
     TooltipModule,
     SkeletonModule,
     DropdownModule,
+    DialogModule,
     FormSerialComponent,
   ],
   providers: [MessageService, ConfirmationService],
@@ -67,10 +71,15 @@ export class IndexSerialesComponent implements OnInit {
 
   public estadoOpts = [
     { label: 'Todos los estados', value: null },
-    { label: 'Disponible', value: 'DISPONIBLE' },
-    { label: 'Vendido', value: 'VENDIDO' },
-    { label: 'Garantía', value: 'GARANTIA' },
+    ...ESTADO_SERIAL_OPTIONS,
   ];
+
+  // Trazabilidad
+  public trazaVisible = false;
+  public trazaBusqueda = '';
+  public trazaCargando = false;
+  public traza: SerialTrazaModel[] = [];
+  public trazaBuscada = false;
 
   constructor(
     private readonly serialService: SerialProductoService,
@@ -139,17 +148,40 @@ export class IndexSerialesComponent implements OnInit {
   }
 
   getEstadoLabel(e: EstadoSerial): string {
-    return (
-      { DISPONIBLE: 'Disponible', VENDIDO: 'Vendido', GARANTIA: 'Garantía' }[
-        e
-      ] ?? e
-    );
+    return etiquetaEstadoSerial(e);
+  }
+
+  abrirTrazabilidad(serial?: string): void {
+    this.trazaVisible = true;
+    this.trazaBusqueda = serial ?? '';
+    this.traza = [];
+    this.trazaBuscada = false;
+    if (serial) this.buscarTraza();
+  }
+
+  async buscarTraza(): Promise<void> {
+    const q = this.trazaBusqueda.trim();
+    if (q.length < 3) {
+      this.alertService.showWarn('Trazabilidad', 'Escribe al menos 3 caracteres del serial');
+      return;
+    }
+    this.trazaCargando = true;
+    try {
+      const res = await lastValueFrom(this.serialService.trazabilidad(q));
+      this.traza = res?.data ?? [];
+    } catch (err: any) {
+      this.traza = [];
+      this.alertService.showError('Error', err?.error?.message ?? 'No se pudo buscar el serial.');
+    } finally {
+      this.trazaCargando = false;
+      this.trazaBuscada = true;
+    }
   }
 
   confirmDelete(item: SerialProductoTableModel): void {
     this.confirmationService.confirm({
       message: `¿Eliminar el serial <strong>${item.serial}</strong>?<br>
-                <small>Esta acción es definitiva (hard delete).</small>`,
+                <small>Solo se puede con un serial disponible y sin historial.</small>`,
       header: 'Confirmar eliminación',
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Sí, eliminar',
@@ -163,7 +195,7 @@ export class IndexSerialesComponent implements OnInit {
         } catch (err: any) {
           this.alertService.showError(
             'Error',
-            err?.message ?? 'No se pudo eliminar.',
+            err?.error?.message ?? 'No se pudo eliminar.',
           );
         }
       },

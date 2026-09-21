@@ -76,16 +76,51 @@
       tooltipPosition="bottom"
     >
       <i class="pi pi-bell"></i>
-      <span class="notif-dot" *ngIf="notifCount > 0">{{ notifCount }}</span>
+      <span class="notif-dot" *ngIf="notifCount > 0">{{ notifCount > 99 ? "99+" : notifCount }}</span>
     </button>
 
     <p-overlayPanel #notifPanel styleClass="notif-panel">
       <div class="notif-header">
         <span>Notificaciones</span>
       </div>
-      <div class="notif-empty">
+      <div class="notif-empty" *ngIf="!notificaciones.length">
         <i class="pi pi-check-circle"></i>
         <span>Todo al día</span>
+      </div>
+      <div class="notif-lista" *ngIf="notificaciones.length">
+        <div
+          class="notif-item"
+          *ngFor="let n of notificaciones"
+          [ngClass]="'notif-item--' + n.severidad"
+        >
+          <div class="notif-icono">
+            <i
+              class="pi"
+              [class.pi-exclamation-circle]="n.tipo === 'LOTES_VENCIDOS'"
+              [class.pi-clock]="n.tipo === 'LOTES_POR_VENCER'"
+              [class.pi-arrow-down-circle]="n.tipo === 'STOCK_BAJO'"
+              [class.pi-calendar-times]="n.tipo === 'PROMESAS_INCUMPLIDAS'"
+              [class.pi-calendar]="n.tipo === 'PROMESAS_HOY'"
+              [class.pi-shield]="n.tipo === 'SOLICITUDES_CREDITO'"
+              [class.pi-file-excel]="n.tipo === 'FACTURAS_VENCIDAS'"
+              [class.pi-hourglass]="n.tipo === 'FACTURAS_POR_VENCER'"
+              [class.pi-ban]="n.tipo === 'ACUERDOS_INCUMPLIDOS'"
+              [class.pi-list-check]="n.tipo === 'CUOTAS_POR_VENCER'"
+            ></i>
+          </div>
+          <div class="notif-cuerpo">
+            <span class="notif-titulo">{{ n.titulo }}</span>
+            <span class="notif-mensaje">{{ n.mensaje }}</span>
+            <span class="notif-valor" *ngIf="n.valor">{{ formatCOP(n.valor) }}{{ n.tipo.startsWith('LOTES') ? ' en costo' : ' por cobrar' }}</span>
+            <button
+              type="button"
+              class="notif-accion"
+              (click)="abrirNotificacion(n, notifPanel)"
+            >
+              {{ n.accion }} <i class="pi pi-arrow-right"></i>
+            </button>
+          </div>
+        </div>
       </div>
     </p-overlayPanel>
 

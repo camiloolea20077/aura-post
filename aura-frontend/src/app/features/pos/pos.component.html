@@ -196,25 +196,19 @@
           <div class="prod-overlay"><i class="pi pi-plus"></i></div>
         </div>
 
-        <!-- 2. Precio -->
+        <!-- 2. Precio (de la forma de venta por defecto) -->
         <div class="prod-footer">
           <div class="precio-wrap">
             <span
               class="precio-original"
-              *ngIf="!p.presentacionNombre && p.descuentoValor"
+              *ngIf="
+                p.descuentoValor && opcionDefault(p)?.presentacionId == null
+              "
             >
               {{ formatCOP(p.precio) }}
             </span>
             <span class="prod-precio">
-              {{
-                formatCOP(
-                  p.presentacionPrecio != null && p.presentacionPrecio > 0
-                    ? p.presentacionPrecio
-                    : p.ivaIncluido
-                      ? (p.precioFinal || p.precio)
-                      : (p.precioFinal || p.precio) * (1 + (p.ivaPorcentaje || 0) / 100)
-                )
-              }}
+              {{ formatCOP(opcionDefault(p)?.precio ?? 0) }}
             </span>
           </div>
           <!-- Stock pill: solo visible en modo lista -->
@@ -226,14 +220,8 @@
             [class.empty]="p.stockActual <= 0 && !p.permitirStockNegativo"
             [class.negativo]="p.stockActual <= 0 && p.permitirStockNegativo"
           >
-            {{ p.stockActual }}
-            <span class="stock-unit">{{
-              p.tipoProducto === "PESABLE"
-                ? (p.unidadMedidaNombre | lowercase)
-                : p.presentacionNombre
-                  ? (p.presentacionNombre | lowercase)
-                  : "uds"
-            }}</span>
+            {{ p.stockActual | number: "1.0-4" }}
+            <span class="stock-unit">{{ unidadStock(p) }}</span>
           </span>
           <span
             class="prod-stock-pill servicio"
@@ -245,19 +233,41 @@
 
         <!-- 3. Nombre + SKU -->
         <div class="prod-body">
-          <span class="prod-nombre">{{
-            p.presentacionNombre ?? p.nombre
-          }}</span>
+          <span class="prod-nombre">{{ p.nombre }}</span>
           <span class="prod-sku" *ngIf="p.sku">{{ p.sku }}</span>
-          <span class="prod-presentacion" *ngIf="p.presentacionNombre">
-            <i class="pi pi-box"></i> {{ p.presentacionNombre }}
+          <span
+            class="prod-presentacion"
+            *ngIf="p.presentaciones?.length && p.tipoProducto !== 'SERVICIO'"
+          >
+            <i class="pi pi-box"></i> {{ stockLegible(p) }}
+          </span>
+          <span class="prod-vence" *ngIf="alertaVencimiento(p) as alerta">
+            <i class="pi pi-clock"></i> {{ alerta }}
           </span>
           <span
-            class="prod-unidad"
-            *ngIf="p.tipoProducto === 'PESABLE' && !p.presentacionNombre"
+            class="prod-vence prod-vence--vencido"
+            *ngIf="p.bloquearVencidos && (p.stockVencido ?? 0) > 0"
+            pTooltip="Stock en lotes vencidos: no se vende"
+            tooltipPosition="top"
           >
+            <i class="pi pi-ban"></i>
+            {{ p.stockVencido | number: "1.0-2" }} vencido
+          </span>
+          <span class="prod-unidad" *ngIf="p.tipoProducto === 'PESABLE'">
             {{ p.unidadMedidaNombre | lowercase }}
           </span>
+          <!-- Formas de venta: tocar un botón agrega esa (Und o Paca) -->
+          <div class="prod-opciones" *ngIf="opcionesDe(p).length > 1">
+            <button
+              type="button"
+              class="prod-opcion"
+              *ngFor="let op of opcionesDe(p)"
+              (click)="$event.stopPropagation(); addToCart(p, op)"
+            >
+              <span class="prod-opcion-nombre">{{ op.nombre }}</span>
+              <span class="prod-opcion-precio">{{ formatCOP(op.precio) }}</span>
+            </button>
+          </div>
         </div>
 
         <!-- 4. Cantidad (solo modo grid) -->
@@ -268,15 +278,9 @@
             [class.low]="p.stockActual > 0 && p.stockActual < 5"
             [class.empty]="p.stockActual <= 0 && !p.permitirStockNegativo"
             [class.negativo]="p.stockActual <= 0 && p.permitirStockNegativo"
-            >{{ p.stockActual }}</span
+            >{{ p.stockActual | number: "1.0-4" }}</span
           >
-          <span class="prod-stock-unit">{{
-            p.tipoProducto === "PESABLE"
-              ? (p.unidadMedidaNombre | lowercase)
-              : p.presentacionNombre
-                ? (p.presentacionNombre | lowercase)
-                : "uds"
-          }}</span>
+          <span class="prod-stock-unit">{{ unidadStock(p) }}</span>
         </div>
       </div>
 
@@ -475,6 +479,34 @@
             </span>
           </span>
           <span class="line-subtotal">{{ formatCOP(item.subtotal) }}</span>
+        </div>
+
+        <!-- Producto con serial: cuáles unidades salen -->
+        <button
+          type="button"
+          class="line-seriales"
+          *ngIf="item.manejaSerial"
+          [class.line-seriales--ok]="(item.serialIds?.length ?? 0) === unidadesSerial(item)"
+          (click)="abrirSeriales(item)"
+        >
+          <i class="pi pi-barcode"></i>
+          Seriales {{ item.serialIds?.length ?? 0 }}/{{ unidadesSerial(item) }}
+          <span class="line-seriales__lista" *ngIf="item.seriales?.length">
+            · {{ item.seriales!.join(", ") }}
+          </span>
+        </button>
+
+        <!-- Cambiar Und ↔ Paca sin borrar la línea -->
+        <div class="line-presentaciones" *ngIf="opcionesLinea(item).length > 1">
+          <button
+            type="button"
+            class="line-pres-btn"
+            *ngFor="let op of opcionesLinea(item)"
+            [class.active]="esOpcionActiva(item, op)"
+            (click)="cambiarPresentacionLinea(item, op)"
+          >
+            {{ op.nombre }}
+          </button>
         </div>
 
         <div class="line-actions">
@@ -843,6 +875,7 @@
   [cuentasBancarias]="cuentasBancarias"
   [creditoInfo]="creditoInfo"
   [clienteNombre]="clienteNombre"
+  [clienteId]="clienteId"
   (modalClosed)="showPago = false"
   (ventaConfirmada)="onVentaConfirmada($event)"
 />
@@ -1021,3 +1054,13 @@
 }
 
 <p-toast />
+
+<app-serial-picker
+  [(visible)]="serialPickerVisible"
+  [productoId]="serialItem?.productoId ?? null"
+  [productoNombre]="serialItem?.productoNombre || ''"
+  [sucursalId]="sucursalSeriales"
+  [cantidad]="serialItem ? unidadesSerial(serialItem) : 0"
+  [seleccionados]="serialItem?.serialIds || []"
+  (confirmar)="onSerialesElegidos($event)"
+/>

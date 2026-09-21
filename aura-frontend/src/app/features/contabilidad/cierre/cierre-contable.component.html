@@ -1,420 +1,333 @@
 <p-toast />
 
-<div class="cc-wrapper">
-  <!-- ══ HEADER ══════════════════════════════════════════════════════ -->
-  <div class="cc-header">
-    <div class="cc-header-left">
-      <div class="cc-header-icon"><i class="pi pi-book"></i></div>
-      <div>
-        <h2 class="cc-title">Cierre Contable</h2>
-        <p class="cc-sub">Resumen financiero del período seleccionado</p>
-      </div>
-    </div>
-    <div class="cc-header-actions">
-      <div class="date-range-group">
-        <p-calendar
-          [(ngModel)]="fechaDesde"
-          dateFormat="yy-mm-dd"
-          [showIcon]="true"
-          placeholder="Desde"
-          styleClass="cal-sm"
-        />
-        <span class="date-sep"><i class="pi pi-arrow-right"></i></span>
-        <p-calendar
-          [(ngModel)]="fechaHasta"
-          dateFormat="yy-mm-dd"
-          [showIcon]="true"
-          placeholder="Hasta"
-          styleClass="cal-sm"
-        />
-      </div>
-      <button
-        pButton
-        icon="pi pi-refresh"
-        label="Actualizar"
-        class="btn-aura"
-        [loading]="loading"
-        (click)="cargar()"
-      ></button>
-      <button
-        pButton
-        icon="pi pi-file-excel"
-        label="Excel"
-        class="btn-aura btn-success"
-        [disabled]="!data"
-        (click)="exportarExcel()"
-      ></button>
-    </div>
-  </div>
-
-  <!-- ══ SKELETONS ═══════════════════════════════════════════════════ -->
-  <div class="kpi-grid" *ngIf="loading">
-    <div class="sk-kpi" *ngFor="let i of [1, 2, 3, 4]">
-      <p-skeleton height="96px" borderRadius="16px" />
-    </div>
-  </div>
-
-  <ng-container *ngIf="!loading && data">
-    <!-- ══ KPIs ════════════════════════════════════════════════════════ -->
-    <div class="kpi-grid">
-      <!-- Ventas (sin IVA) -->
-      <div class="kpi-card kpi-ventas">
-        <div class="kpi-accent"></div>
-        <div class="kpi-content">
-          <div class="kpi-top">
-            <span class="kpi-label">Ventas sin IVA</span>
-            <div class="kpi-badge kpi-badge-indigo">
-              <i class="pi pi-receipt"></i>
-            </div>
-          </div>
-          <div class="kpi-val">{{ formatCOP(data.totalVentasSinIva) }}</div>
-          <div class="kpi-meta">
-            <span class="kpi-chip kpi-chip-indigo"
-              >{{ data.cantidadVentas }} transacciones</span
-            >
-            <span class="kpi-muted"
-              >IVA {{ formatCOP(data.totalImpuestos) }}</span
-            >
-          </div>
+<div class="page">
+  <div class="card rp">
+    <!-- ══ Encabezado ══════════════════════════════════════════════ -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-chart-line"></i></span>
+        <div>
+          <h1 class="title">Resultados del Período</h1>
+          <p class="subtitle">
+            Qué pasó entre las dos fechas: qué se vendió, qué costó y qué quedó.
+            El cierre formal se hace en Períodos contables
+          </p>
         </div>
       </div>
-
-      <!-- Utilidad bruta -->
-      <div
-        class="kpi-card"
-        [ngClass]="'kpi-util-bruta kpi-util-' + utilClass(data.utilidadBruta)"
-      >
-        <div class="kpi-accent"></div>
-        <div class="kpi-content">
-          <div class="kpi-top">
-            <span class="kpi-label">Utilidad bruta</span>
-            <div
-              class="kpi-badge"
-              [ngClass]="'kpi-badge-' + utilClass(data.utilidadBruta)"
-            >
-              <i class="pi pi-chart-line"></i>
-            </div>
-          </div>
-          <div class="kpi-val" [ngClass]="utilClass(data.utilidadBruta)">
-            {{ formatCOP(data.utilidadBruta) }}
-          </div>
-          <div class="kpi-meta">
-            <span
-              class="kpi-chip"
-              [ngClass]="'kpi-chip-' + utilClass(data.utilidadBruta)"
-            >
-              Margen {{ pct(data.margenBruto) }}
-            </span>
-            <span class="kpi-muted">vs costo de venta</span>
-          </div>
+      <div class="card-head__btns rp-head-extra">
+        <div class="date-range-group">
+          <p-calendar
+            [(ngModel)]="fechaDesde"
+            dateFormat="yy-mm-dd"
+            [showIcon]="true"
+            placeholder="Desde"
+            styleClass="cal-sm"
+          />
+          <span class="date-sep"><i class="pi pi-arrow-right"></i></span>
+          <p-calendar
+            [(ngModel)]="fechaHasta"
+            dateFormat="yy-mm-dd"
+            [showIcon]="true"
+            placeholder="Hasta"
+            styleClass="cal-sm"
+          />
         </div>
-      </div>
-
-      <!-- Utilidad operativa -->
-      <div
-        class="kpi-card"
-        [ngClass]="'kpi-util-op kpi-util-' + utilClass(data.utilidadOperativa)"
-      >
-        <div class="kpi-accent"></div>
-        <div class="kpi-content">
-          <div class="kpi-top">
-            <span class="kpi-label">Utilidad operativa</span>
-            <div
-              class="kpi-badge"
-              [ngClass]="'kpi-badge-' + utilClass(data.utilidadOperativa)"
-            >
-              <i class="pi pi-cog"></i>
-            </div>
-          </div>
-          <div class="kpi-val" [ngClass]="utilClass(data.utilidadOperativa)">
-            {{ formatCOP(data.utilidadOperativa) }}
-          </div>
-          <div class="kpi-meta">
-            <span
-              class="kpi-chip"
-              [ngClass]="'kpi-chip-' + utilClass(data.utilidadOperativa)"
-            >
-              Margen {{ pct(data.margenOperativo) }}
-            </span>
-            <span class="kpi-muted">inc. gastos deducibles</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Utilidad neta -->
-      <div
-        class="kpi-card kpi-neta"
-        [ngClass]="'kpi-util-neta kpi-util-' + utilClass(data.utilidadNeta)"
-      >
-        <div class="kpi-accent"></div>
-        <div class="kpi-content">
-          <div class="kpi-top">
-            <span class="kpi-label">Utilidad neta</span>
-            <div
-              class="kpi-badge"
-              [ngClass]="'kpi-badge-' + utilClass(data.utilidadNeta)"
-            >
-              <i class="pi pi-star"></i>
-            </div>
-          </div>
-          <div
-            class="kpi-val kpi-val-lg"
-            [ngClass]="utilClass(data.utilidadNeta)"
-          >
-            {{ formatCOP(data.utilidadNeta) }}
-          </div>
-          <div class="kpi-meta">
-            <span
-              class="kpi-chip"
-              [ngClass]="'kpi-chip-' + utilClass(data.utilidadNeta)"
-            >
-              Margen {{ pct(data.margenNeto) }}
-            </span>
-            <span class="kpi-muted">final, todo descontado</span>
-          </div>
-        </div>
+        <button
+          pButton
+          icon="pi pi-refresh"
+          label="Actualizar"
+          class="p-button-outlined p-button-sm"
+          [loading]="loading"
+          (click)="cargar()"
+        ></button>
+        <button
+          pButton
+          icon="pi pi-file-excel"
+          label="Excel"
+          class="btn-verde p-button-sm"
+          [disabled]="!data"
+          (click)="exportarExcel()"
+        ></button>
       </div>
     </div>
 
-    <!-- ══ WARNING productos sin costo ════════════════════════════ -->
-    <div class="cc-warning" *ngIf="(data.productosSinCosto ?? 0) > 0">
-      <i class="pi pi-exclamation-triangle"></i>
-      <div class="cc-warning-body">
-        <strong>{{ data.productosSinCosto }}</strong> ítem(s) vendido(s) sin
-        costo configurado — representan
-        <strong>{{ formatCOP(data.valorVentasSinCosto) }}</strong> en ventas. El
-        cálculo del COGS los toma como costo cero (margen inflado). Configura el
-        costo unitario en el módulo de productos para mejorar la precisión.
+    <!-- ══ Cargando ════════════════════════════════════════════════ -->
+    <div class="rp-seccion" *ngIf="loading">
+      <div class="rp-stats">
+        <div class="rp-stat" *ngFor="let i of [1, 2, 3, 4, 5]">
+          <p-skeleton width="60%" height="0.8rem" />
+          <p-skeleton width="80%" height="1.6rem" styleClass="mt-2" />
+        </div>
       </div>
+      <p-skeleton height="280px" borderRadius="12px" styleClass="mt-4" />
     </div>
 
-    <!-- ══ CUERPO ═══════════════════════════════════════════════════ -->
-    <div class="cc-body">
-      <!-- P&L ────────────────────────────────────────────────────── -->
-      <div class="cc-panel cc-panel-pl">
-        <div class="cc-panel-header">
-          <div class="cc-panel-title">
-            <i class="pi pi-file-edit"></i>
-            <span>Estado de resultados</span>
-          </div>
-          <span class="cc-period-badge">
-            <i class="pi pi-calendar"></i>
-            {{ data.fechaDesde }} → {{ data.fechaHasta }}
+    <ng-container *ngIf="!loading && data">
+      <!-- ══ Cifras del período ════════════════════════════════════ -->
+      <div class="rp-stats">
+        <div class="rp-stat">
+          <span class="rp-stat__label">Ventas sin IVA</span>
+          <span class="rp-stat__valor">{{ formatCOP(data.totalVentasSinIva) }}</span>
+          <span class="rp-stat__meta">
+            {{ data.cantidadVentas }} ventas · ticket {{ formatCOP(ticketPromedio) }}
           </span>
         </div>
+        <div class="rp-stat">
+          <span class="rp-stat__label">Costo de lo vendido</span>
+          <span class="rp-stat__valor">{{ formatCOP(data.costoVentas) }}</span>
+          <span class="rp-stat__meta">
+            <ng-container *ngIf="data.totalMermas > 0">
+              + {{ formatCOP(data.totalMermas) }} en mermas
+            </ng-container>
+            <ng-container *ngIf="!data.totalMermas">Sin mermas</ng-container>
+          </span>
+        </div>
+        <div class="rp-stat">
+          <span class="rp-stat__label">Gastos</span>
+          <span class="rp-stat__valor">{{ formatCOP(data.totalGastos) }}</span>
+          <span class="rp-stat__meta">
+            {{ formatCOP(data.totalGastosDeducibles) }} deducibles
+          </span>
+        </div>
+        <div class="rp-stat">
+          <span class="rp-stat__label">Utilidad neta</span>
+          <span class="rp-stat__valor" [ngClass]="utilClass(data.utilidadNeta)">
+            {{ formatCOP(data.utilidadNeta) }}
+          </span>
+          <span class="rp-stat__meta">Margen {{ pct(data.margenNeto) }} sobre ventas</span>
+        </div>
+        <div class="rp-stat">
+          <span class="rp-stat__label">Posición de cartera</span>
+          <span class="rp-stat__valor" [ngClass]="utilClass(data.posicionNeta)">
+            {{ formatCOP(data.posicionNeta) }}
+          </span>
+          <span class="rp-stat__meta">
+            Te deben {{ formatCOP(data.cxcSaldoPendiente) }} · debes
+            {{ formatCOP(data.cxpSaldoPendiente) }}
+          </span>
+        </div>
+      </div>
 
-        <div class="pl-body">
-          <!-- Sección: Ingresos -->
-          <div class="pl-section">
-            <div class="pl-section-tag pl-tag-ingreso">INGRESOS (sin IVA)</div>
-            <div class="pl-line">
-              <span class="pl-line-label">Ventas brutas (subtotal)</span>
-              <span class="pl-line-val">{{
-                formatCOP(data.totalVentasBruto)
-              }}</span>
-            </div>
-            <div class="pl-line pl-line-info">
-              <span class="pl-line-label pl-muted"
-                >+ Disponible (caja/bancos)</span
-              >
-              <span class="pl-line-val pl-muted">{{
-                formatCOP(data.totalDisponible)
-              }}</span>
-            </div>
-            <div class="pl-line">
-              <span class="pl-line-label">Ventas brutas + disponible</span>
-              <span class="pl-line-val">{{
-                formatCOP(data.ventasBrutasConDisponible)
-              }}</span>
-            </div>
-            <div
-              class="pl-line pl-line-deduct"
-              *ngIf="data.totalDescuentos > 0"
-            >
-              <span class="pl-line-label"
-                ><i class="pi pi-minus-circle"></i> Descuentos</span
-              >
-              <span class="pl-line-val negativo"
-                >({{ formatCOP(data.totalDescuentos) }})</span
-              >
-            </div>
-            <div class="pl-line pl-line-info">
-              <span class="pl-line-label pl-muted"
-                >IVA cobrado (no es utilidad)</span
-              >
-              <span class="pl-line-val pl-muted">{{
-                formatCOP(data.totalImpuestos)
-              }}</span>
-            </div>
-            <div class="pl-result pl-result-ingreso">
-              <span>= Ventas netas sin IVA</span>
-              <span class="pl-result-val">{{
-                formatCOP(data.totalVentasSinIva)
-              }}</span>
-            </div>
-          </div>
-
-          <!-- Sección: COGS y mermas -->
-          <div class="pl-section">
-            <div class="pl-section-tag pl-tag-costo">COSTO DE VENTAS</div>
-            <div class="pl-line pl-line-deduct">
-              <span class="pl-line-label"
-                ><i class="pi pi-minus-circle"></i> Costo de lo vendido (COGS)
-              </span>
-              <span class="pl-line-val negativo"
-                >({{ formatCOP(data.costoVentas) }})</span
-              >
-            </div>
-            <div class="pl-line pl-line-deduct" *ngIf="data.totalMermas > 0">
-              <span class="pl-line-label"
-                ><i class="pi pi-minus-circle"></i> Mermas aprobadas</span
-              >
-              <span class="pl-line-val negativo"
-                >({{ formatCOP(data.totalMermas) }})</span
-              >
-            </div>
-            <div
-              class="pl-result pl-result-bruta"
-              [ngClass]="utilClass(data.utilidadBruta)"
-            >
-              <span>= Utilidad bruta</span>
-              <div class="pl-result-right">
-                <span class="pl-result-val">{{
-                  formatCOP(data.utilidadBruta)
-                }}</span>
-                <span class="pl-result-pct">{{ pct(data.margenBruto) }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Sección: Gastos operativos -->
-          <div
-            class="pl-section"
-            *ngIf="
-              data.totalComisionesTecnicos > 0 || data.totalGastosDeducibles > 0
-            "
-          >
-            <div class="pl-section-tag pl-tag-gasto">GASTOS OPERATIVOS</div>
-            <div
-              class="pl-line pl-line-deduct"
-              *ngIf="data.totalComisionesTecnicos > 0"
-            >
-              <span class="pl-line-label"
-                ><i class="pi pi-minus-circle"></i> Comisiones técnicos</span
-              >
-              <span class="pl-line-val negativo"
-                >({{ formatCOP(data.totalComisionesTecnicos) }})</span
-              >
-            </div>
-            <div
-              class="pl-line pl-line-deduct"
-              *ngIf="data.totalGastosDeducibles > 0"
-            >
-              <span class="pl-line-label"
-                ><i class="pi pi-minus-circle"></i> Gastos deducibles</span
-              >
-              <span class="pl-line-val negativo"
-                >({{ formatCOP(data.totalGastosDeducibles) }})</span
-              >
-            </div>
-            <div
-              class="pl-result pl-result-bruta"
-              [ngClass]="utilClass(data.utilidadOperativa)"
-            >
-              <span>= Utilidad operativa</span>
-              <div class="pl-result-right">
-                <span class="pl-result-val">{{
-                  formatCOP(data.utilidadOperativa)
-                }}</span>
-                <span class="pl-result-pct">{{
-                  pct(data.margenOperativo)
-                }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Sección: Gastos no deducibles -->
-          <div class="pl-section" *ngIf="data.totalGastosNoDeducibles > 0">
-            <div class="pl-section-tag pl-tag-gasto">GASTOS NO DEDUCIBLES</div>
-            <div class="pl-line pl-line-deduct">
-              <span class="pl-line-label"
-                ><i class="pi pi-minus-circle"></i> Gastos no deducibles</span
-              >
-              <span class="pl-line-val negativo"
-                >({{ formatCOP(data.totalGastosNoDeducibles) }})</span
-              >
-            </div>
-          </div>
-
-          <!-- Resultado final -->
-          <div class="pl-final" [ngClass]="utilClass(data.utilidadNeta)">
-            <div class="pl-final-label">Utilidad neta final</div>
-            <div class="pl-final-right">
-              <div class="pl-final-val">{{ formatCOP(data.utilidadNeta) }}</div>
-              <div class="pl-final-pct">
-                {{ pct(data.margenNeto) }} sobre ventas sin IVA
-              </div>
-            </div>
+      <!-- ══ Aviso de productos sin costo ══════════════════════════ -->
+      <div class="rp-seccion" *ngIf="(data.productosSinCosto ?? 0) > 0">
+        <div class="rp-aviso">
+          <i class="pi pi-exclamation-triangle"></i>
+          <div>
+            <strong>{{ data.productosSinCosto }}</strong> ítems vendidos no tienen costo
+            configurado y representan
+            <strong>{{ formatCOP(data.valorVentasSinCosto) }}</strong> en ventas: el margen
+            que ves sale inflado. Cárgales el costo en el módulo de productos.
           </div>
         </div>
       </div>
 
-      <!-- Columna derecha ─────────────────────────────────────────── -->
-      <div class="cc-right-col">
-        <!-- Posición de cartera -->
-        <div class="cc-panel">
-          <div class="cc-panel-header">
-            <div class="cc-panel-title">
-              <i class="pi pi-balance-scale"></i>
-              <span>Posición de cartera</span>
-            </div>
-            <p-tag
-              [value]="
-                data.posicionNeta > 0
-                  ? 'Favorable'
-                  : data.posicionNeta < 0
-                    ? 'Desfavorable'
-                    : 'Neutro'
-              "
-              [severity]="posNeta(data.posicionNeta)"
-            />
+      <!-- ══ Evolución ═════════════════════════════════════════════ -->
+      <section class="rp-seccion">
+        <div class="rp-seccion__head">
+          <h2>Cómo se movió el período</h2>
+          <span class="rp-sub">
+            Cada barra es la venta {{ graficas?.granularidad === "MES" ? "del mes" : "del día" }}:
+            abajo lo que costó, arriba lo que quedó de margen
+          </span>
+        </div>
+        <div class="rp-chart" *ngIf="chartEvolucion; else sinVentas">
+          <p-chart type="bar" [data]="chartEvolucion" [options]="opcionesEvolucion" height="300" />
+        </div>
+        <ng-template #sinVentas>
+          <div class="rp-vacio"><i class="pi pi-chart-bar"></i> No hubo ventas en estas fechas</div>
+        </ng-template>
+        <p class="rp-nota" *ngIf="mejorPunto as mejor">
+          <i class="pi pi-arrow-up-right"></i>
+          El mejor {{ graficas?.granularidad === "MES" ? "mes" : "día" }} fue
+          <strong>{{ mejor.etiqueta }}</strong>, con
+          <strong>{{ formatCOP(mejor.utilidadBruta) }}</strong> de margen ·
+          {{ diasConVenta }}
+          {{ graficas?.granularidad === "MES" ? "meses" : "días" }} con venta
+        </p>
+      </section>
+
+      <!-- ══ Cascada + medios de pago ══════════════════════════════ -->
+      <div class="rp-cols">
+        <section class="rp-seccion">
+          <div class="rp-seccion__head">
+            <h2>En qué se convirtió la venta</h2>
+            <span class="rp-sub">De las ventas sin IVA a la utilidad neta, paso por paso</span>
           </div>
+          <div class="rp-chart" *ngIf="chartCascada">
+            <p-chart type="bar" [data]="chartCascada" [options]="opcionesCascada" height="260" />
+          </div>
+        </section>
+
+        <section class="rp-seccion rp-seccion--lado">
+          <div class="rp-seccion__head">
+            <h2>Con qué pagaron</h2>
+            <span class="rp-sub">Ventas del período por medio de pago</span>
+          </div>
+          <div class="rp-dona" *ngIf="chartMedios; else sinMedios">
+            <p-chart type="doughnut" [data]="chartMedios" [options]="opcionesMedios" height="200" />
+            <ul class="rp-leyenda">
+              <li *ngFor="let m of leyendaMedios">
+                <span class="rp-punto" [style.background]="m.color"></span>
+                <span class="rp-leyenda__txt">{{ m.etiqueta }}</span>
+                <span class="rp-leyenda__val">{{ formatCOP(m.valor) }}</span>
+                <span class="rp-leyenda__pct">{{ m.pct | number: "1.0-0" }}%</span>
+              </li>
+            </ul>
+          </div>
+          <ng-template #sinMedios>
+            <div class="rp-vacio"><i class="pi pi-wallet"></i> Sin pagos registrados</div>
+          </ng-template>
+        </section>
+      </div>
+
+      <!-- ══ Gastos por categoría ══════════════════════════════════ -->
+      <section class="rp-seccion" *ngIf="chartGastos">
+        <div class="rp-seccion__head">
+          <h2>En qué se fue el gasto</h2>
+          <span class="rp-sub">
+            {{ data.cantidadGastos }} gastos por {{ formatCOP(data.totalGastos) }} ·
+            {{ formatCOP(data.totalGastosNoDeducibles) }} no deducibles
+          </span>
+        </div>
+        <div class="rp-chart">
+          <p-chart type="bar" [data]="chartGastos" [options]="opcionesGastos" height="220" />
+        </div>
+      </section>
+
+      <!-- ══ Estado de resultados + posición ═══════════════════════ -->
+      <div class="rp-cols">
+        <section class="rp-seccion">
+          <div class="rp-seccion__head">
+            <h2>Estado de resultados</h2>
+            <span class="rp-sub">{{ data.fechaDesde }} → {{ data.fechaHasta }}</span>
+          </div>
+
+          <div class="pl-body">
+            <div class="pl-section">
+              <div class="pl-section-tag pl-tag-ingreso">INGRESOS (sin IVA)</div>
+              <div class="pl-line">
+                <span class="pl-line-label">Ventas brutas (subtotal)</span>
+                <span class="pl-line-val">{{ formatCOP(data.totalVentasBruto) }}</span>
+              </div>
+              <div class="pl-line pl-line-deduct" *ngIf="data.totalDescuentos > 0">
+                <span class="pl-line-label"><i class="pi pi-minus-circle"></i> Descuentos</span>
+                <span class="pl-line-val negativo">({{ formatCOP(data.totalDescuentos) }})</span>
+              </div>
+              <div class="pl-line pl-line-info">
+                <span class="pl-line-label pl-muted">IVA cobrado (no es utilidad)</span>
+                <span class="pl-line-val pl-muted">{{ formatCOP(data.totalImpuestos) }}</span>
+              </div>
+              <div class="pl-result pl-result-ingreso">
+                <span>= Ventas netas sin IVA</span>
+                <span class="pl-result-val">{{ formatCOP(data.totalVentasSinIva) }}</span>
+              </div>
+            </div>
+
+            <div class="pl-section">
+              <div class="pl-section-tag pl-tag-costo">COSTO DE VENTAS</div>
+              <div class="pl-line pl-line-deduct">
+                <span class="pl-line-label">
+                  <i class="pi pi-minus-circle"></i> Costo de lo vendido (COGS)
+                </span>
+                <span class="pl-line-val negativo">({{ formatCOP(data.costoVentas) }})</span>
+              </div>
+              <div class="pl-line pl-line-deduct" *ngIf="data.totalMermas > 0">
+                <span class="pl-line-label">
+                  <i class="pi pi-minus-circle"></i> Mermas aprobadas
+                </span>
+                <span class="pl-line-val negativo">({{ formatCOP(data.totalMermas) }})</span>
+              </div>
+              <div class="pl-result" [ngClass]="utilClass(data.utilidadBruta)">
+                <span>= Utilidad bruta</span>
+                <div class="pl-result-right">
+                  <span class="pl-result-val">{{ formatCOP(data.utilidadBruta) }}</span>
+                  <span class="pl-result-pct">{{ pct(data.margenBruto) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="pl-section"
+              *ngIf="data.totalComisionesTecnicos > 0 || data.totalGastosDeducibles > 0"
+            >
+              <div class="pl-section-tag pl-tag-gasto">GASTOS OPERATIVOS</div>
+              <div class="pl-line pl-line-deduct" *ngIf="data.totalComisionesTecnicos > 0">
+                <span class="pl-line-label">
+                  <i class="pi pi-minus-circle"></i> Comisiones técnicos
+                </span>
+                <span class="pl-line-val negativo">
+                  ({{ formatCOP(data.totalComisionesTecnicos) }})
+                </span>
+              </div>
+              <div class="pl-line pl-line-deduct" *ngIf="data.totalGastosDeducibles > 0">
+                <span class="pl-line-label">
+                  <i class="pi pi-minus-circle"></i> Gastos deducibles
+                </span>
+                <span class="pl-line-val negativo">
+                  ({{ formatCOP(data.totalGastosDeducibles) }})
+                </span>
+              </div>
+              <div class="pl-result" [ngClass]="utilClass(data.utilidadOperativa)">
+                <span>= Utilidad operativa</span>
+                <div class="pl-result-right">
+                  <span class="pl-result-val">{{ formatCOP(data.utilidadOperativa) }}</span>
+                  <span class="pl-result-pct">{{ pct(data.margenOperativo) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pl-section" *ngIf="data.totalGastosNoDeducibles > 0">
+              <div class="pl-section-tag pl-tag-gasto">GASTOS NO DEDUCIBLES</div>
+              <div class="pl-line pl-line-deduct">
+                <span class="pl-line-label">
+                  <i class="pi pi-minus-circle"></i> Salarios, multas, personales
+                </span>
+                <span class="pl-line-val negativo">
+                  ({{ formatCOP(data.totalGastosNoDeducibles) }})
+                </span>
+              </div>
+            </div>
+
+            <div class="pl-final" [ngClass]="utilClass(data.utilidadNeta)">
+              <div class="pl-final-label">Utilidad neta final</div>
+              <div class="pl-final-right">
+                <div class="pl-final-val">{{ formatCOP(data.utilidadNeta) }}</div>
+                <div class="pl-final-pct">{{ pct(data.margenNeto) }} sobre ventas sin IVA</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="rp-seccion rp-seccion--lado">
+          <div class="rp-seccion__head">
+            <h2>Cartera y caja</h2>
+            <span class="rp-sub">Cómo quedó la plata al cierre de las fechas</span>
+          </div>
+
           <div class="posicion-grid">
-            <div class="posicion-col pos-col-cobrar">
-              <div class="posicion-col-label">
-                <i class="pi pi-arrow-circle-down"></i> Te deben
-              </div>
-              <div class="posicion-col-val green">
-                {{ formatCOP(data.cxcSaldoPendiente) }}
-              </div>
+            <div class="posicion-col">
+              <div class="posicion-col-label"><i class="pi pi-arrow-circle-down"></i> Te deben</div>
+              <div class="posicion-col-val green">{{ formatCOP(data.cxcSaldoPendiente) }}</div>
               <div class="posicion-col-sub">
                 {{ data.cxcCantidadActivas }} activas
-                <span class="badge-vencida" *ngIf="data.cxcCantidadVencidas > 0"
-                  >· {{ data.cxcCantidadVencidas }} vencidas</span
-                >
+                <span class="badge-vencida" *ngIf="data.cxcCantidadVencidas > 0">
+                  · {{ data.cxcCantidadVencidas }} vencidas
+                </span>
               </div>
             </div>
-            <div class="posicion-divider">
-              <span>−</span>
-            </div>
-            <div class="posicion-col pos-col-pagar">
-              <div class="posicion-col-label">
-                <i class="pi pi-arrow-circle-up"></i> Debes
-              </div>
-              <div class="posicion-col-val red">
-                {{ formatCOP(data.cxpSaldoPendiente) }}
-              </div>
+            <div class="posicion-divider"><span>−</span></div>
+            <div class="posicion-col">
+              <div class="posicion-col-label"><i class="pi pi-arrow-circle-up"></i> Debes</div>
+              <div class="posicion-col-val red">{{ formatCOP(data.cxpSaldoPendiente) }}</div>
               <div class="posicion-col-sub">
                 {{ data.cxpCantidadActivas }} activas
-                <span class="badge-vencida" *ngIf="data.cxpCantidadVencidas > 0"
-                  >· {{ data.cxpCantidadVencidas }} vencidas</span
-                >
+                <span class="badge-vencida" *ngIf="data.cxpCantidadVencidas > 0">
+                  · {{ data.cxpCantidadVencidas }} vencidas
+                </span>
               </div>
             </div>
-            <div class="posicion-divider">
-              <span>=</span>
-            </div>
-            <div class="posicion-col pos-col-neta">
+            <div class="posicion-divider"><span>=</span></div>
+            <div class="posicion-col">
               <div class="posicion-col-label">Posición neta</div>
               <div
                 class="posicion-col-val posicion-neta-val"
@@ -424,217 +337,92 @@
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- CxC + CxP en grid -->
-        <div class="cuentas-grid">
-          <div class="cc-panel panel-cxc">
-            <div class="cc-panel-header cc-panel-header-sm">
-              <div class="cc-panel-title">
-                <span class="panel-dot dot-green"></span>
-                <span>Cuentas por cobrar</span>
-              </div>
-            </div>
-            <div class="mini-stat-list">
-              <div class="mini-stat">
-                <span class="mini-stat-label">Total facturado</span>
-                <span class="mini-stat-val">{{
-                  formatCOP(data.cxcTotalDeuda)
-                }}</span>
-              </div>
-              <div class="mini-stat mini-stat-highlight">
-                <span class="mini-stat-label"
-                  ><i class="pi pi-clock"></i> Pendiente</span
-                >
-                <span class="mini-stat-val green-bold">{{
-                  formatCOP(data.cxcSaldoPendiente)
-                }}</span>
-              </div>
-              <div
-                class="mini-stat mini-stat-alert"
-                *ngIf="data.cxcCantidadVencidas > 0"
-              >
-                <span class="mini-stat-label"
-                  ><i class="pi pi-exclamation-triangle"></i> Vencidas</span
-                >
-                <span class="mini-stat-val red-bold">{{
-                  data.cxcCantidadVencidas
-                }}</span>
-              </div>
-              <div class="mini-stat">
-                <span class="mini-stat-label">Activas</span>
-                <span class="mini-stat-val">{{ data.cxcCantidadActivas }}</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="cc-panel panel-cxp">
-            <div class="cc-panel-header cc-panel-header-sm">
-              <div class="cc-panel-title">
-                <span class="panel-dot dot-red"></span>
-                <span>Cuentas por pagar</span>
-              </div>
-            </div>
-            <div class="mini-stat-list">
-              <div class="mini-stat">
-                <span class="mini-stat-label">Total comprometido</span>
-                <span class="mini-stat-val">{{
-                  formatCOP(data.cxpTotalDeuda)
-                }}</span>
-              </div>
-              <div class="mini-stat mini-stat-highlight">
-                <span class="mini-stat-label"
-                  ><i class="pi pi-clock"></i> Pendiente</span
-                >
-                <span class="mini-stat-val red-bold">{{
-                  formatCOP(data.cxpSaldoPendiente)
-                }}</span>
-              </div>
-              <div
-                class="mini-stat mini-stat-alert"
-                *ngIf="data.cxpCantidadVencidas > 0"
-              >
-                <span class="mini-stat-label"
-                  ><i class="pi pi-exclamation-triangle"></i> Vencidas</span
-                >
-                <span class="mini-stat-val red-bold">{{
-                  data.cxpCantidadVencidas
-                }}</span>
-              </div>
-              <div class="mini-stat">
-                <span class="mini-stat-label">Activas</span>
-                <span class="mini-stat-val">{{ data.cxpCantidadActivas }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Movimientos de caja -->
-        <div class="cc-panel">
-          <div class="cc-panel-header cc-panel-header-sm">
-            <div class="cc-panel-title">
-              <i class="pi pi-wallet"></i>
-              <span>Movimientos de caja</span>
-            </div>
-          </div>
           <div class="caja-grid">
             <div class="caja-item caja-ingreso">
               <div class="caja-icon"><i class="pi pi-arrow-down"></i></div>
               <div class="caja-body">
-                <span class="caja-label">Ingresos</span>
-                <span class="caja-val green">{{
-                  formatCOP(data.totalIngresos)
-                }}</span>
-                <span class="caja-count"
-                  >{{ data.cantidadIngresos }} movimientos</span
-                >
+                <span class="caja-label">Ingresos de caja</span>
+                <span class="caja-val green">{{ formatCOP(data.totalIngresos) }}</span>
+                <span class="caja-count">{{ data.cantidadIngresos }} movimientos</span>
               </div>
             </div>
             <div class="caja-divider"></div>
             <div class="caja-item caja-egreso">
               <div class="caja-icon"><i class="pi pi-arrow-up"></i></div>
               <div class="caja-body">
-                <span class="caja-label">Egresos</span>
-                <span class="caja-val red">{{
-                  formatCOP(data.totalEgresos)
-                }}</span>
-                <span class="caja-count"
-                  >{{ data.cantidadEgresos }} movimientos</span
-                >
+                <span class="caja-label">Egresos de caja</span>
+                <span class="caja-val red">{{ formatCOP(data.totalEgresos) }}</span>
+                <span class="caja-count">{{ data.cantidadEgresos }} movimientos</span>
               </div>
             </div>
           </div>
 
-          <!-- Detalle movimientos -->
-          <div class="cc-mov-table" *ngIf="data.detalleMovimientos?.length">
-            <div class="cc-mov-header">
-              <span>Tipo</span>
-              <span>Concepto</span>
-              <span>Fecha</span>
-              <span>Caja</span>
-              <span>Monto</span>
+          <div class="mini-stat-list" *ngIf="data.disponible?.length">
+            <div class="mini-stat mini-stat-highlight">
+              <span class="mini-stat-label">
+                <i class="pi pi-wallet"></i> Disponible en caja y bancos
+              </span>
+              <span class="mini-stat-val">{{ formatCOP(data.totalDisponible) }}</span>
             </div>
-            <div
-              class="cc-mov-row"
-              *ngFor="let m of data.detalleMovimientos"
-              [class.cc-mov-ingreso]="m.tipo === 'INGRESO'"
-              [class.cc-mov-egreso]="m.tipo === 'EGRESO'"
-            >
-              <span class="cc-mov-tipo">
-                <i
-                  [class]="
-                    m.tipo === 'INGRESO'
-                      ? 'pi pi-arrow-circle-down'
-                      : 'pi pi-arrow-circle-up'
-                  "
-                ></i>
-                {{ m.tipo === "INGRESO" ? "Ingreso" : "Egreso" }}
-              </span>
-              <span class="cc-mov-concepto">
-                <span class="cc-mov-concepto-txt">{{ m.concepto ?? "—" }}</span>
-                <span class="cc-mov-usuario">{{ m.usuarioNombre }}</span>
-              </span>
-              <span class="cc-mov-fecha">{{ m.fecha | date: "dd/MM/yy" }}</span>
-              <span class="cc-mov-caja">{{ m.cajaNombre }}</span>
-              <span
-                class="cc-mov-monto"
-                [class.green]="m.tipo === 'INGRESO'"
-                [class.red]="m.tipo === 'EGRESO'"
-              >
-                {{ m.tipo === "INGRESO" ? "+" : "-" }}{{ formatCOP(m.monto) }}
-              </span>
+            <div class="mini-stat" *ngFor="let c of data.disponible">
+              <span class="mini-stat-label">{{ c.codigo }} · {{ c.nombre }}</span>
+              <span class="mini-stat-val">{{ formatCOP(c.saldo) }}</span>
             </div>
           </div>
-        </div>
-
-        <!-- Gastos del período -->
-        <div class="cc-panel" *ngIf="(data.cantidadGastos ?? 0) > 0">
-          <div class="cc-panel-header cc-panel-header-sm">
-            <div class="cc-panel-title">
-              <i class="pi pi-wallet"></i>
-              <span>Gastos del período</span>
-            </div>
-            <p-tag [value]="data.cantidadGastos + ' gastos'" severity="info" />
-          </div>
-          <div class="gastos-grid">
-            <div class="gasto-item gasto-deducible">
-              <div class="gasto-icon"><i class="pi pi-check-circle"></i></div>
-              <div class="gasto-body">
-                <span class="gasto-label">Deducibles</span>
-                <span class="gasto-val green">{{
-                  formatCOP(data.totalGastosDeducibles)
-                }}</span>
-                <small>Reducen la base gravable</small>
-              </div>
-            </div>
-            <div class="caja-divider"></div>
-            <div class="gasto-item gasto-no-deducible">
-              <div class="gasto-icon"><i class="pi pi-times-circle"></i></div>
-              <div class="gasto-body">
-                <span class="gasto-label">No deducibles</span>
-                <span class="gasto-val red">{{
-                  formatCOP(data.totalGastosNoDeducibles)
-                }}</span>
-                <small>Salarios, multas, personales</small>
-              </div>
-            </div>
-            <div class="caja-divider"></div>
-            <div class="gasto-item gasto-total">
-              <div class="gasto-icon"><i class="pi pi-equals"></i></div>
-              <div class="gasto-body">
-                <span class="gasto-label">Total gastos</span>
-                <span class="gasto-val">{{ formatCOP(data.totalGastos) }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        </section>
       </div>
-    </div>
-  </ng-container>
 
-  <!-- ══ EMPTY ═══════════════════════════════════════════════════════ -->
-  <div class="cc-empty" *ngIf="!loading && !data">
-    <div class="cc-empty-icon"><i class="pi pi-book"></i></div>
-    <p>No se pudo cargar el cierre contable</p>
+      <!-- ══ Movimientos de caja ═══════════════════════════════════ -->
+      <section class="rp-seccion" *ngIf="data.detalleMovimientos?.length">
+        <div class="rp-seccion__head">
+          <h2>Movimientos de caja del período</h2>
+          <span class="rp-sub">Ingresos y egresos registrados a mano en las cajas</span>
+        </div>
+        <div class="cc-mov-table">
+          <div class="cc-mov-header">
+            <span>Tipo</span>
+            <span>Concepto</span>
+            <span>Fecha</span>
+            <span>Caja</span>
+            <span>Monto</span>
+          </div>
+          <div
+            class="cc-mov-row"
+            *ngFor="let m of data.detalleMovimientos"
+            [class.cc-mov-ingreso]="m.tipo === 'INGRESO'"
+            [class.cc-mov-egreso]="m.tipo === 'EGRESO'"
+          >
+            <span class="cc-mov-tipo">
+              <i
+                [class]="
+                  m.tipo === 'INGRESO' ? 'pi pi-arrow-circle-down' : 'pi pi-arrow-circle-up'
+                "
+              ></i>
+              {{ m.tipo === "INGRESO" ? "Ingreso" : "Egreso" }}
+            </span>
+            <span class="cc-mov-concepto">
+              <span class="cc-mov-concepto-txt">{{ m.concepto ?? "—" }}</span>
+              <span class="cc-mov-usuario">{{ m.usuarioNombre }}</span>
+            </span>
+            <span class="cc-mov-fecha">{{ m.fecha | date: "dd/MM/yy" }}</span>
+            <span class="cc-mov-caja">{{ m.cajaNombre }}</span>
+            <span
+              class="cc-mov-monto"
+              [class.green]="m.tipo === 'INGRESO'"
+              [class.red]="m.tipo === 'EGRESO'"
+            >
+              {{ m.tipo === "INGRESO" ? "+" : "-" }}{{ formatCOP(m.monto) }}
+            </span>
+          </div>
+        </div>
+      </section>
+    </ng-container>
+
+    <!-- ══ Vacío ═══════════════════════════════════════════════════ -->
+    <div class="rp-vacio rp-vacio--grande" *ngIf="!loading && !data">
+      <i class="pi pi-book"></i>
+      <p>No se pudo cargar el informe del período</p>
+    </div>
   </div>
 </div>

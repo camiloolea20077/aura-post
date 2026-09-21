@@ -1,0 +1,822 @@
+// Ficha del cliente: una sola card con encabezado estándar y secciones
+// separadas por líneas finas, como el resto de módulos.
+
+:host {
+  --f-surface: var(--aura-surface, #ffffff);
+  --f-soft: var(--aura-bg, #f8fafc);
+  --f-border: var(--aura-border, #e5e7eb);
+  --f-text: var(--aura-text, #0f172a);
+  --f-muted: var(--aura-text-muted, #64748b);
+  --f-faint: #94a3b8;
+  --f-primary: #2563eb;
+  --f-primary-soft: #eff6ff;
+  --f-green: #059669;
+  --f-green-soft: #ecfdf5;
+  --f-amber: #b45309;
+  --f-amber-soft: #fffbeb;
+  --f-red: #dc2626;
+  --f-red-soft: #fef2f2;
+  display: block;
+}
+
+:host-context(.dark-mode) {
+  --f-faint: #64748b;
+  --f-primary-soft: rgba(37, 99, 235, 0.16);
+  --f-green-soft: rgba(5, 150, 105, 0.16);
+  --f-amber-soft: rgba(180, 83, 9, 0.18);
+  --f-red-soft: rgba(220, 38, 38, 0.16);
+}
+
+.ficha {
+  color: var(--f-text);
+  overflow: hidden;
+}
+
+.f-sub {
+  font-size: 0.76rem;
+  color: var(--f-muted);
+}
+
+.req {
+  color: var(--f-red);
+}
+
+// ── Encabezado ────────────────────────────────────────────────────
+.card-head__title {
+  min-width: 0;
+}
+
+.f-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--f-border);
+  border-radius: 10px;
+  background: var(--f-surface);
+  color: var(--f-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+
+  &:hover {
+    border-color: var(--f-primary);
+    color: var(--f-primary);
+  }
+}
+
+.header-icon {
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.f-titulo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  &__linea {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .title {
+    text-transform: capitalize;
+  }
+}
+
+.f-contacto {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.9rem;
+
+  span,
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: var(--f-primary);
+  }
+
+  i {
+    font-size: 0.72rem;
+  }
+}
+
+.f-semaforo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+
+  i {
+    font-size: 0.45rem;
+  }
+
+  &--ok {
+    background: var(--f-green-soft);
+    color: var(--f-green);
+  }
+
+  &--warn {
+    background: var(--f-amber-soft);
+    color: var(--f-amber);
+  }
+
+  &--danger {
+    background: var(--f-red-soft);
+    color: var(--f-red);
+  }
+
+  &--info {
+    background: var(--f-primary-soft);
+    color: var(--f-primary);
+
+    i {
+      font-size: 0.7rem;
+    }
+  }
+}
+
+.f-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--f-primary);
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  i {
+    font-size: 0.65rem;
+  }
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.f-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--f-muted);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--f-primary-soft);
+    color: var(--f-primary);
+  }
+
+  &--danger:hover {
+    background: var(--f-red-soft);
+    color: var(--f-red);
+  }
+}
+
+.f-btn--small {
+  padding: 0.3rem 0.7rem;
+  border: none;
+  border-radius: 8px;
+  background: var(--f-primary-soft);
+  color: var(--f-primary);
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// ── Cifras: una franja dividida, no tarjetas sueltas ──────────────
+.f-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  border-bottom: 1px solid var(--f-border);
+}
+
+.f-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 1rem 1.5rem;
+  border-left: 1px solid var(--f-border);
+
+  &:first-child {
+    border-left: none;
+  }
+
+  &__label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--f-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  &__valor {
+    overflow: hidden;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    &--muted {
+      color: var(--f-faint);
+    }
+  }
+
+  &__meta {
+    font-size: 0.74rem;
+    color: var(--f-muted);
+  }
+
+  &--danger .f-stat__valor {
+    color: var(--f-red);
+  }
+
+  &--info .f-stat__valor {
+    color: var(--f-primary);
+  }
+}
+
+.f-barra {
+  height: 5px;
+  margin: 0.15rem 0;
+  border-radius: 999px;
+  background: var(--f-soft);
+  overflow: hidden;
+
+  &__uso {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--f-primary);
+
+    &--alto {
+      background: var(--f-red);
+    }
+  }
+}
+
+// ── Edades + crédito ──────────────────────────────────────────────
+.f-seccion {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  border-bottom: 1px solid var(--f-border);
+}
+
+.f-bloque {
+  min-width: 0;
+  padding: 1.1rem 1.5rem;
+
+  & + & {
+    border-left: 1px solid var(--f-border);
+  }
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.8rem;
+    min-height: 30px;
+
+    h2 {
+      margin: 0;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+  }
+}
+
+.f-edad-barra {
+  display: flex;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--f-soft);
+  overflow: hidden;
+
+  &__seg {
+    height: 100%;
+    min-width: 4px;
+  }
+}
+
+.e0 {
+  background: #10b981;
+}
+.e1 {
+  background: #f59e0b;
+}
+.e2 {
+  background: #f97316;
+}
+.e3 {
+  background: #ef4444;
+}
+.e4 {
+  background: #991b1b;
+}
+
+.f-edad-leyenda {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+
+    .f-sub {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    strong {
+      font-size: 0.86rem;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 3px;
+  }
+}
+
+.f-credito {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.1rem;
+
+  &__score {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-right: 1.1rem;
+    border-right: 1px solid var(--f-border);
+  }
+}
+
+.f-score {
+  font-size: 1.7rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--f-primary);
+}
+
+.f-dl {
+  display: grid;
+  flex: 1;
+  grid-template-columns: auto 1fr;
+  gap: 0.3rem 0.6rem;
+  margin: 0;
+  font-size: 0.78rem;
+
+  dt {
+    color: var(--f-muted);
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 700;
+    text-align: right;
+  }
+}
+
+.f-sin-credito {
+  margin: 0;
+}
+
+// ── Pestañas y tablas ─────────────────────────────────────────────
+.f-detalle {
+  min-width: 0;
+}
+
+.f-tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0 1rem;
+  border-bottom: 1px solid var(--f-border);
+  overflow-x: auto;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.85rem 0.8rem;
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: var(--f-muted);
+    font-family: inherit;
+    font-size: 0.84rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &.activa {
+      border-bottom-color: var(--f-primary);
+      color: var(--f-primary);
+    }
+  }
+}
+
+.f-count {
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: var(--f-soft);
+  font-size: 0.7rem;
+}
+
+.f-tabla-wrap {
+  overflow-x: auto;
+}
+
+.f-tabla {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  font-size: 0.83rem;
+
+  th {
+    padding: 0.6rem 0.9rem;
+    background: var(--f-soft);
+    color: var(--f-muted);
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  td {
+    padding: 0.6rem 0.9rem;
+    border-top: 1px solid var(--f-border);
+    vertical-align: middle;
+  }
+
+  th:first-child,
+  td:first-child {
+    padding-left: 1.5rem;
+  }
+
+  th:last-child,
+  td:last-child {
+    padding-right: 1.5rem;
+  }
+
+  .num {
+    text-align: right;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .acc {
+    width: 1%;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  tr.anulado td {
+    color: var(--f-faint);
+
+    strong {
+      text-decoration: line-through;
+    }
+  }
+}
+
+.f-chip {
+  display: inline-block;
+  margin-top: 0.15rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--f-soft);
+  color: var(--f-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+
+  &--ok {
+    background: var(--f-green-soft);
+    color: var(--f-green);
+  }
+
+  &--warn {
+    background: var(--f-amber-soft);
+    color: var(--f-amber);
+  }
+
+  &--danger {
+    background: var(--f-red-soft);
+    color: var(--f-red);
+  }
+
+  &--info {
+    background: var(--f-primary-soft);
+    color: var(--f-primary);
+  }
+}
+
+.f-vacio {
+  padding: 1.5rem !important;
+  color: var(--f-muted);
+  font-size: 0.84rem;
+  text-align: center;
+}
+
+// ── Línea de tiempo ───────────────────────────────────────────────
+.f-timeline {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 1.5rem;
+
+  &__item {
+    display: flex;
+    gap: 0.8rem;
+    padding: 0.8rem 0;
+    border-top: 1px solid var(--f-border);
+
+    &:first-child {
+      border-top: none;
+    }
+  }
+
+  &__icono {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: var(--f-primary-soft);
+    color: var(--f-primary);
+    flex-shrink: 0;
+  }
+
+  &__cuerpo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+
+    p {
+      margin: 0;
+      font-size: 0.84rem;
+      white-space: pre-line;
+    }
+  }
+
+  &__titulo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.86rem;
+
+    .f-chip {
+      margin-top: 0;
+    }
+  }
+}
+
+.f-promesa {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  align-self: flex-start;
+  padding: 0.25rem 0.6rem;
+  border-radius: 8px;
+  background: var(--f-amber-soft);
+  color: var(--f-amber);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+// ── Diálogos ──────────────────────────────────────────────────────
+.f-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.f-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+
+  label {
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  textarea {
+    width: 100%;
+  }
+}
+
+.f-grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.f-opciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.f-opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--f-border);
+  border-radius: 9px;
+  background: var(--f-surface);
+  color: var(--f-text);
+  font-family: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--f-primary);
+  }
+
+  &.activa {
+    border-color: var(--f-primary);
+    background: var(--f-primary-soft);
+    color: var(--f-primary);
+    font-weight: 600;
+  }
+}
+
+.f-aviso {
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  background: var(--f-soft);
+  color: var(--f-muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+// ── Responsive ────────────────────────────────────────────────────
+@media (max-width: 1280px) {
+  .f-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .f-stat {
+    border-bottom: 1px solid var(--f-border);
+
+    &:nth-child(3n + 1) {
+      border-left: none;
+    }
+  }
+
+  .f-stats {
+    border-bottom: none;
+  }
+
+  .f-seccion {
+    grid-template-columns: minmax(0, 1fr) 280px;
+  }
+}
+
+@media (max-width: 960px) {
+  .f-seccion {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .f-bloque + .f-bloque {
+    border-left: none;
+    border-top: 1px solid var(--f-border);
+  }
+
+  .f-edad-leyenda {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .f-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .f-stat {
+    padding: 0.85rem 1rem;
+    border-left: none;
+
+    &:nth-child(2n) {
+      border-left: 1px solid var(--f-border);
+    }
+  }
+
+  .f-grid2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.f-promesa {
+  &--ok {
+    background: var(--f-green-soft);
+    color: var(--f-green);
+  }
+
+  &--danger {
+    background: var(--f-red-soft);
+    color: var(--f-red);
+  }
+
+  &--muted {
+    background: var(--f-soft);
+    color: var(--f-muted);
+    text-decoration: line-through;
+  }
+}
+
+.f-hist--ok {
+  background: var(--f-green-soft) !important;
+  color: var(--f-green) !important;
+}
+
+.f-hist--warn {
+  background: var(--f-amber-soft) !important;
+  color: var(--f-amber) !important;
+}
+
+.f-hist--danger {
+  background: var(--f-red-soft) !important;
+  color: var(--f-red) !important;
+}
+
+// ── Acuerdos de pago ──────────────────────────────────────────────
+.f-semaforo--btn {
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+
+  i {
+    font-size: 0.7rem;
+  }
+
+  &:hover {
+    filter: brightness(0.95);
+  }
+}
+
+.f-acuerdo-link {
+  display: flex;
+  margin-top: 0.2rem;
+  font-size: 0.72rem;
+
+  i {
+    font-size: 0.7rem;
+  }
+}
+
+.f-barra--acuerdo {
+  width: 140px;
+  max-width: 100%;
+}
+
+.f-barra__uso--ok {
+  background: var(--f-green);
+}

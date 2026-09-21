@@ -14,6 +14,50 @@
     <!-- ══ IZQUIERDA: métodos + monto ══ -->
     <div class="cobro-izq">
 
+      <!-- Autorización para pasar el cupo -->
+      <div class="autorizacion-panel" *ngIf="puedeSolicitarAutorizacion || creditoInfo?.autorizacion">
+        <ng-container *ngIf="creditoInfo?.autorizacion; else sinAutorizar">
+          <div class="aut-ok">
+            <i class="pi pi-verified"></i>
+            <div>
+              <strong>Crédito autorizado</strong>
+              <span>{{ creditoInfo?.autorizacion }}. Ya puedes elegir Crédito.</span>
+            </div>
+          </div>
+        </ng-container>
+        <ng-template #sinAutorizar>
+          <div class="aut-head">
+            <i class="pi pi-shield"></i>
+            <div>
+              <strong>{{ clienteNombre }} pasa su cupo por {{ formatCOP(creditoInfo?.excedente ?? 0) }}</strong>
+              <span>Disponible {{ formatCOP(creditoInfo?.saldoDisponible ?? 0) }} de {{ formatCOP(creditoInfo?.cupoActual ?? 0) }}. Un administrador puede autorizarlo.</span>
+            </div>
+          </div>
+
+          <ng-container [ngSwitch]="solicitud?.estado">
+            <div class="aut-esperando" *ngSwitchCase="'PENDIENTE'">
+              <i class="pi pi-spin pi-spinner"></i>
+              Esperando respuesta del administrador… puedes cobrar de otra forma mientras tanto.
+            </div>
+            <div class="aut-rechazo" *ngSwitchCase="'RECHAZADA'">
+              <i class="pi pi-times-circle"></i>
+              Rechazada<span *ngIf="solicitud?.aprobadoPor"> por {{ solicitud?.aprobadoPor }}</span>: {{ solicitud?.motivoRechazo }}
+            </div>
+            <div class="aut-rechazo" *ngSwitchCase="'VENCIDA'">
+              <i class="pi pi-clock"></i> La autorización venció. Vuelve a pedirla.
+            </div>
+            <div class="aut-pedir" *ngSwitchDefault>
+              <input pInputText [(ngModel)]="observacionSolicitud" maxlength="200" placeholder="Nota para el administrador (opcional)" />
+              <button pButton type="button" label="Pedir autorización" icon="pi pi-send" class="p-button-sm"
+                [loading]="solicitando" (click)="solicitarAutorizacion()"></button>
+            </div>
+          </ng-container>
+          <span class="aut-error" *ngIf="errorSolicitud">{{ errorSolicitud }}</span>
+          <button pButton type="button" *ngIf="solicitud?.estado === 'RECHAZADA' || solicitud?.estado === 'VENCIDA'"
+            label="Pedir de nuevo" class="p-button-text p-button-sm" (click)="solicitud = null"></button>
+        </ng-template>
+      </div>
+
       <!-- Panel crédito (cuando se selecciona CREDITO) -->
       <div class="credito-panel" *ngIf="tieneCredito">
         <div class="credito-panel-header">

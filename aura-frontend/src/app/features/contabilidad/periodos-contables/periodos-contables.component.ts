@@ -66,8 +66,13 @@ export class PeriodosContablesComponent implements OnInit {
 
   // Dialog cerrar período
   showCerrarDialog = false;
-  periodoCerrarId: number | null = null;
+  periodoCerrar: PeriodoContableModel | null = null;
   observacionesCierre = '';
+
+  // Dialog reabrir período
+  showReabrirDialog = false;
+  periodoReabrir: PeriodoContableModel | null = null;
+  motivoReapertura = '';
 
   // Balance de Comprobación
   periodoBalanceId: number | null = null;
@@ -134,19 +139,87 @@ export class PeriodosContablesComponent implements OnInit {
   }
 
   abrirDialogCerrar(periodo: PeriodoContableModel): void {
-    this.periodoCerrarId = periodo.id;
+    this.periodoCerrar = periodo;
     this.observacionesCierre = '';
     this.showCerrarDialog = true;
     this.cdr.markForCheck();
   }
 
-  async confirmarCerrar(): Promise<void> {
-    if (!this.periodoCerrarId) return;
+  abrirDialogReabrir(periodo: PeriodoContableModel): void {
+    this.periodoReabrir = periodo;
+    this.motivoReapertura = '';
+    this.showReabrirDialog = true;
+    this.cdr.markForCheck();
+  }
+
+  async confirmarReabrir(): Promise<void> {
+    if (!this.periodoReabrir || !this.motivoReapertura.trim()) return;
     this.saving = true;
     this.cdr.markForCheck();
     try {
       await lastValueFrom(
-        this.service.cerrar(this.periodoCerrarId, { observaciones: this.observacionesCierre || null }),
+        this.service.reabrir(this.periodoReabrir.id, {
+          observaciones: this.motivoReapertura.trim(),
+        }),
+      );
+      this.alertService.showSuccess(
+        'Período reabierto',
+        'Se anularon los asientos de cierre: el mes vuelve a admitir movimientos',
+      );
+      this.showReabrirDialog = false;
+      await this.cargar();
+    } catch (e: any) {
+      this.alertService.showError(
+        'No se pudo reabrir',
+        e?.error?.message ?? 'No se pudo reabrir el período',
+      );
+    } finally {
+      this.saving = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  /** Solo el último mes cerrado se puede reabrir: los de atrás piden reabrir primero los de adelante. */
+  esUltimoCerrado(periodo: PeriodoContableModel): boolean {
+    if (periodo.estado !== 'CERRADO') return false;
+    return !this.periodos.some(
+      (p) =>
+        p.estado === 'CERRADO' &&
+        p.id !== periodo.id &&
+        (p.anio > periodo.anio || (p.anio === periodo.anio && p.mes > periodo.mes)),
+    );
+  }
+
+  /** Meses abiertos anteriores a este: hay que cerrarlos primero. */
+  pendientesAntesDe(periodo: PeriodoContableModel): PeriodoContableModel[] {
+    return this.periodos.filter(
+      (p) =>
+        p.estado === 'ABIERTO' &&
+        p.id !== periodo.id &&
+        (p.anio < periodo.anio || (p.anio === periodo.anio && p.mes < periodo.mes)),
+    );
+  }
+
+  /** El mes abierto más viejo: es el único que se puede cerrar. */
+  get masAntiguoAbierto(): PeriodoContableModel | null {
+    return (
+      [...this.abiertos].sort(
+        (a, b) => a.anio - b.anio || a.mes - b.mes,
+      )[0] ?? null
+    );
+  }
+
+  get abiertos(): PeriodoContableModel[] {
+    return this.periodos.filter((p) => p.estado === 'ABIERTO');
+  }
+
+  async confirmarCerrar(): Promise<void> {
+    if (!this.periodoCerrar) return;
+    this.saving = true;
+    this.cdr.markForCheck();
+    try {
+      await lastValueFrom(
+        this.service.cerrar(this.periodoCerrar!.id, { observaciones: this.observacionesCierre || null }),
       );
       this.alertService.showSuccess('Período cerrado', 'El período fue cerrado exitosamente');
       this.showCerrarDialog = false;

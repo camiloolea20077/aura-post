@@ -19,6 +19,10 @@ import { IndexDBService } from '../../core/services/index-db.service';
 import { StateStore } from '../../core/store/state';
 import { MobileMenuComponent } from '../mobile-menu/mobile-menu.component';
 import { SIDEBAR_MENU } from '../sidebar/sidebar.config';
+import { lastValueFrom } from 'rxjs';
+import { NotificacionService } from '../../core/services/notificacion.service';
+import { NotificacionModel } from '../../core/models/notificacion.model';
+import { AlertService } from '../../shared/pipes/alert.service';
 
 interface BreadcrumbItem {
   label: string;
@@ -57,6 +61,8 @@ export class TopbarComponent implements OnInit {
   public turnoActivo = false;
   public darkMode = false;
   public notifCount = 0;
+  public notificaciones: NotificacionModel[] = [];
+  private notifTimer: ReturnType<typeof setInterval> | null = null;
   public currentTime = '';
   public currentDate = '';
   public menuGroups: {
@@ -100,6 +106,8 @@ export class TopbarComponent implements OnInit {
     private readonly router: Router,
     private readonly fb: FormBuilder,
     private readonly indexDBService: IndexDBService,
+    private readonly notificacionService: NotificacionService,
+    private readonly alertService: AlertService,
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -108,6 +116,61 @@ export class TopbarComponent implements OnInit {
     this.startClock();
     this.initDarkMode();
     await this.loadUserInfo();
+    await this.cargarNotificaciones(true);
+    // Cada 5 minutos: lo que vence hoy aparece sin recargar la página.
+    // Cada minuto: un cajero puede estar esperando una autorización de crédito.
+    this.notifTimer = setInterval(() => this.cargarNotificaciones(false), 60 * 1000);
+  }
+
+  private async cargarNotificaciones(alEntrar: boolean): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.notificacionService.listar());
+      this.notificaciones = res?.data ?? [];
+    } catch {
+      this.notificaciones = [];
+    }
+    this.notifCount = this.notificaciones.reduce((s, n) => s + (n.cantidad || 0), 0);
+
+    // Vencidos: se avisa al entrar, una vez por sesión, para que se den de baja ya.
+    const vencidos = this.notificaciones.find((n) => n.tipo === 'LOTES_VENCIDOS');
+    const clave = 'aviso-vencidos-' + new Date().toDateString();
+    if (alEntrar && vencidos && !sessionStorage.getItem(clave)) {
+      sessionStorage.setItem(clave, '1');
+      this.alertService.showError(
+        vencidos.titulo,
+        `${vencidos.mensaje} Ábrelos desde la campana de notificaciones.`,
+      );
+    }
+  }
+
+  abrirNotificacion(n: NotificacionModel, panel: { hide: () => void }): void {
+    panel.hide();
+    if (n.tipo === 'LOTES_VENCIDOS') {
+      // Abre vencimientos con los vencidos ya elegidos: un clic a la merma.
+      this.router.navigate([n.ruta], { state: { abrirVencimientos: true, elegirVencidos: true } });
+    } else if (n.tipo === 'LOTES_POR_VENCER') {
+      this.router.navigate([n.ruta], { state: { abrirVencimientos: true } });
+    } else if (n.tipo === 'PROMESAS_INCUMPLIDAS' || n.tipo === 'PROMESAS_HOY') {
+      this.router.navigate([n.ruta], { state: { tab: 'agenda' } });
+    } else if (n.tipo === 'FACTURAS_VENCIDAS') {
+      this.router.navigate([n.ruta], { state: { tab: 'alertas' } });
+    } else if (n.tipo === 'FACTURAS_POR_VENCER') {
+      this.router.navigate([n.ruta], { state: { tab: 'agenda' } });
+    } else if (n.tipo === 'ACUERDOS_INCUMPLIDOS' || n.tipo === 'CUOTAS_POR_VENCER') {
+      this.router.navigate([n.ruta], { state: { tab: 'acuerdos' } });
+    } else if (n.tipo === 'SOLICITUDES_CREDITO') {
+      this.router.navigate([n.ruta], { state: { tab: 'autorizaciones' } });
+    } else {
+      this.router.navigate([n.ruta]);
+    }
+  }
+
+  formatCOP(v: number | null): string {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      maximumFractionDigits: 0,
+    }).format(v ?? 0);
   }
 
   private initForm(): void {

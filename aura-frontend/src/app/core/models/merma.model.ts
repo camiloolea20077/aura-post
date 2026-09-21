@@ -1,3 +1,5 @@
+import { ConsumoComponenteModel, OpcionPresentacion } from './producto.model';
+
 // ─── Motivo Merma ─────────────────────────────────────────────
 export interface MotivoMermaModel {
   id: number;
@@ -57,6 +59,11 @@ export interface MermaDetalleModel {
   cantidad: number;
   costoUnitario: number;
   subtotalCosto: number;
+  /** Si se registró en una presentación (1 Paca); cantidad sigue en unidades. */
+  presentacionNombre?: string | null;
+  cantidadPresentacion?: number | null;
+  /** Si salió por receta: lo que se descontó de cada componente. */
+  componentes?: ConsumoComponenteModel[];
 }
 
 export interface CreateMermaDto {
@@ -68,6 +75,8 @@ export interface CreateMermaDto {
 
 export interface CreateMermaDetalleDto {
   productoId: number;
+  /** Si viene, cantidad está en esa presentación; costoUnitario sigue por unidad. */
+  productoPresentacionId?: number | null;
   loteId?: number | null;
   cantidad: number;
   costoUnitario: number;
@@ -79,6 +88,7 @@ export interface MermaLineaUI {
   productoId: number | null;
   productoNombre: string;
   productoSku: string;
+  unidadAbreviatura: string | null;
   stockActual: number;
   loteId: number | null;
   codigoLote: string | null;
@@ -87,11 +97,25 @@ export interface MermaLineaUI {
     codigoLote: string;
     stockActual: number;
     fechaVencimiento: string;
+    diasParaVencer?: number | null;
+    etiqueta?: string;
   }[];
+  /** Stock del producto, para volver a él al quitar el lote elegido. */
+  stockProducto?: number;
+  /** Producto con serial: uno por unidad, elegidos de los disponibles. */
+  manejaSerial?: boolean;
+  serialIds?: number[];
   cantidad: number;
   costoUnitario: number;
   subtotalCosto: number;
+  /** 0 = unidad de inventario; si no, la presentación en que se escribe la cantidad. */
+  presentacionId: number;
+  presentaciones: OpcionPresentacion[];
   manejaLotes: boolean;
+  /** Tiene receta: salen sus componentes y el costo lo calculan ellos. */
+  esCompuesto: boolean;
+  /** Consumo de cada componente por UNA unidad; se escala con la cantidad. */
+  componentesPorUnidad: ConsumoComponenteModel[];
 }
 
 export interface MermaPageableDto {

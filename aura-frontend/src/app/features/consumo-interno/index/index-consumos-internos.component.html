@@ -1,0 +1,267 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-building"></i></span>
+        <div>
+          <h1 class="title">Consumo interno</h1>
+          <p class="subtitle">
+            Producto que usa el propio negocio: aseo, cafetería, mantenimiento
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          label="Conceptos"
+          icon="pi pi-cog"
+          class="p-button-outlined"
+          (click)="abrirConceptos()"
+        ></button>
+        <button
+          pButton
+          label="Registrar consumo"
+          icon="pi pi-plus"
+          class="btn-verde"
+          (click)="nuevo()"
+        ></button>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              placeholder="Buscar por concepto o responsable..."
+              [(ngModel)]="search"
+              (input)="onSearch()"
+              class="search-input"
+            />
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <p-table
+      [value]="rows"
+      [lazy]="true"
+      [loading]="loading"
+      [totalRecords]="totalRows"
+      [rows]="pageSize"
+      [paginator]="true"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      (onPage)="onPage($event)"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords}"
+      styleClass="p-datatable-sm p-datatable-gridlines"
+      showGridlines
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 80px">#</th>
+          <th>Concepto</th>
+          <th>Responsable</th>
+          <th>Sucursal</th>
+          <th style="width: 160px">Fecha</th>
+          <th style="width: 140px">Costo</th>
+          <th style="width: 130px">IVA asumido</th>
+          <th style="width: 110px">Estado</th>
+          <th style="width: 110px">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-o>
+        <tr class="clickable-row" (click)="verDetalle(o)">
+          <td class="mono text-muted">{{ o.id }}</td>
+          <td class="fw-600">{{ o.conceptoNombre }}</td>
+          <td>{{ o.responsableNombre || "—" }}</td>
+          <td>{{ o.sucursalNombre }}</td>
+          <td class="mono text-muted">
+            {{ o.fecha | date: "dd/MM/yyyy HH:mm" }}
+          </td>
+          <td class="mono fw-600 text-danger">{{ formatCOP(o.costoTotal) }}</td>
+          <td class="mono text-muted">{{ formatCOP(o.ivaTotal) }}</td>
+          <td>
+            <p-tag [value]="o.estado" [severity]="getSeverity(o.estado)" />
+          </td>
+          <td (click)="$event.stopPropagation()">
+            <div class="actions">
+              <button
+                pButton
+                icon="pi pi-eye"
+                class="p-button-text p-button-sm"
+                pTooltip="Ver detalle"
+                (click)="verDetalle(o)"
+              ></button>
+              <button
+                pButton
+                icon="pi pi-ban"
+                class="p-button-text p-button-danger p-button-sm"
+                pTooltip="Anular"
+                [disabled]="o.estado === 'ANULADO'"
+                (click)="confirmAnular(o)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9" class="empty-row">
+            No hay consumos internos registrados
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- Conceptos: para qué se usa y a qué cuenta va -->
+<p-dialog
+  header="Conceptos de consumo interno"
+  [(visible)]="showConceptos"
+  [modal]="true"
+  [style]="{ width: '900px', maxWidth: '96vw' }"
+  [draggable]="false"
+>
+  <p class="conceptos-ayuda">
+    Cada concepto decide a qué cuenta va el costo. Sin cuenta, se usa la del
+    concepto contable <b>Consumo interno de inventario</b> (5195 por defecto).
+    Una herramienta que se queda en el negocio puede ir a una cuenta 15.
+  </p>
+
+  <div class="conceptos-cargando" *ngIf="loadingConceptos">
+    <i class="pi pi-spin pi-spinner"></i> Cargando…
+  </div>
+
+  <p-table
+    *ngIf="!loadingConceptos"
+    [value]="conceptos"
+    styleClass="p-datatable-sm"
+    [scrollable]="true"
+    scrollHeight="55vh"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Concepto</th>
+        <th style="width: 290px">Cuenta</th>
+        <th style="width: 120px">IVA</th>
+        <th style="width: 130px">Estado</th>
+        <th style="width: 90px"></th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-c>
+      <tr [class.concepto-inactivo]="!c.activo">
+        <td>
+          <input
+            pInputText
+            class="w-full"
+            maxlength="80"
+            [(ngModel)]="c.nombre"
+            placeholder="Ej: Aseo y cafetería"
+          />
+        </td>
+        <td>
+          <p-dropdown
+            [options]="cuentasOpts"
+            optionLabel="label"
+            optionValue="id"
+            [(ngModel)]="c.cuentaId"
+            [filter]="true"
+            filterBy="label"
+            [showClear]="true"
+            placeholder="Por defecto (5195)"
+            appendTo="body"
+            styleClass="w-full"
+          />
+        </td>
+        <td>
+          <div class="opciones-mini">
+            <button
+              type="button"
+              class="opcion-mini"
+              [class.opcion-mini--activa]="c.generaIva"
+              (click)="c.generaIva = true"
+            >
+              Sí
+            </button>
+            <button
+              type="button"
+              class="opcion-mini"
+              [class.opcion-mini--activa]="!c.generaIva"
+              (click)="c.generaIva = false"
+            >
+              No
+            </button>
+          </div>
+        </td>
+        <td>
+          <div class="opciones-mini">
+            <button
+              type="button"
+              class="opcion-mini"
+              [class.opcion-mini--activa]="c.activo"
+              (click)="c.activo = true"
+            >
+              Activo
+            </button>
+            <button
+              type="button"
+              class="opcion-mini"
+              [class.opcion-mini--activa]="!c.activo"
+              (click)="c.activo = false"
+            >
+              Inactivo
+            </button>
+          </div>
+        </td>
+        <td>
+          <div class="actions">
+            <button
+              pButton
+              icon="pi pi-check"
+              class="p-button-text p-button-sm"
+              pTooltip="Guardar"
+              [loading]="!!c._guardando"
+              (click)="guardarConcepto(c)"
+            ></button>
+            <button
+              pButton
+              *ngIf="c._nuevo"
+              icon="pi pi-times"
+              class="p-button-text p-button-danger p-button-sm"
+              pTooltip="Quitar"
+              (click)="quitarNuevo(c)"
+            ></button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Nuevo concepto"
+      icon="pi pi-plus"
+      class="p-button-outlined"
+      (click)="agregarConcepto()"
+    ></button>
+    <button
+      pButton
+      label="Cerrar"
+      icon="pi pi-times"
+      class="btn-amarillo"
+      (click)="showConceptos = false"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Modal detalle -->
+<app-detalle-consumo-interno
+  [(visible)]="showDetalle"
+  [consumo]="consumoDetalle"
+  [loading]="loadingDetalle"
+  (anular)="confirmAnular($event)"
+/>
+<app-form-consumo-interno [(visible)]="showForm" (saved)="onSaved()" />
+<p-confirmDialog />
+<p-toast />

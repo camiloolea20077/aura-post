@@ -41,6 +41,11 @@ import { VentaService } from '../../core/services/venta.service';
 import { CotizacionService } from '../../core/services/cotizacion.service';
 import { TurnoCajaService } from '../../core/services/caja.service';
 import { TerceroService } from '../../core/services/tercero.service';
+import {
+  SerialPickerComponent,
+  SerialesElegidos,
+} from '../../shared/components/serial-picker/serial-picker.component';
+import { SerialProductoService } from '../../core/services/serial-producto.service';
 import { AlertService } from '../../shared/pipes/alert.service';
 import { ListaPreciosService } from '../../core/services/lista-precios.service';
 import { ProductoPrecioService } from '../../core/services/producto-precio.service';
@@ -88,6 +93,19 @@ interface CartTab {
   exentoIva?: boolean;
 }
 
+/** Forma de vender un producto en el POS: la unidad suelta o una presentación. */
+interface OpcionVenta {
+  presentacionId: number | null;
+  nombre: string;
+  /** Precio final al cliente (con IVA). */
+  precio: number;
+  /** Unidades de inventario que salen por cada una. */
+  factor: number;
+  stock: number;
+  esDefault: boolean;
+  codigoBarras: string | null;
+}
+
 @Component({
   selector: 'app-pos',
   standalone: true,
@@ -115,6 +133,7 @@ interface CartTab {
     TextareaModule,
     FormTerceroComponent,
     TicketComprobanteCajaComponent,
+    SerialPickerComponent,
   ],
   providers: [MessageService],
   templateUrl: './pos.component.html',
@@ -200,6 +219,8 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   public listaPreciosOpts: { label: string; value: number }[] = [];
   public listaSeleccionada: { id: number; nombre: string } | null = null;
   private preciosPorLista = new Map<number, number>(); // presentacionId → precio
+  /** Formas de venta por producto (unidad + presentaciones); arreglo estable para las vistas. */
+  private opcionesPorProducto = new Map<number, OpcionVenta[]>();
   // Todas las listas precargadas: listaPrecioId → { nombre, precios: Map<productKey, precio> }
   private todasListasPrecio = new Map<
     number,
@@ -236,9 +257,11 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly productoPrecioService: ProductoPrecioService,
     private readonly cuentaBancariaService: CuentaBancariaService,
     private readonly carteraService: CarteraService,
+    private readonly serialService: SerialProductoService,
   ) {}
 
   ngOnInit(): void {
+    this.indexDBService.getSucursalDefault().then((id) => (this.sucursalPos = id));
     this.checkTurno();
     this.setupSearch();
     this.loadEmpresaConfig();
@@ -392,6 +415,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         this.http.get<any>(`${environment.apiUrl}productos/pos`),
       );
       this.productos = res?.data ?? [];
+      this.construirOpciones();
       this.extraerCategorias();
       this.filtrar();
     } catch {
@@ -462,11 +486,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       let precioPOS = precioValido;
       let listaNombre: string | undefined;
       if (this.listaSeleccionada) {
-        const listaPrice =
-          p.presentacionId != null
-            ? (this.preciosPorLista.get(p.presentacionId) ??
-              this.preciosPorLista.get(-p.id))
-            : this.preciosPorLista.get(-p.id);
+        const listaPrice = this.preciosPorLista.get(-p.id);
         if (listaPrice != null && isFinite(listaPrice)) {
           precioPOS = listaPrice;
           listaNombre = this.listaSeleccionada.nombre;
@@ -476,7 +496,8 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       const item: CartItem = {
         _id: uuid(),
         productoId: p.id,
-        presentacionId: p.presentacionId,
+        presentacionId: null,
+        factor: 1,
         productoNombre: p.nombre || 'Producto sin nombre',
         productoSku: p.sku,
         precio: precioPOS,
@@ -495,10 +516,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         showDescuento: false,
         precio2: p.precio2 ?? null,
         precio3: p.precio3 ?? null,
-        preciosDisponibles: this.buildPreciosDisponibles(
-          p.id,
-          p.presentacionId,
-        ),
+        preciosDisponibles: this.buildPreciosDisponibles(p.id, null),
       };
       this.cart = [item, ...this.cart];
       this.calcLine(item);
@@ -547,20 +565,40 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         // Si no se encuentra producto PESABLE, cae al flujo normal de barcode
       }
 
-      // Flujo normal existente — sin modificaciones
-      const matchBarcode = this.productos.find(
+      // Código del producto o SKU → su forma de venta por defecto;
+      // código de una presentación (la paca) → esa presentación.
+      let encontrado: { p: ProductoPOS; opcion: OpcionVenta | null } | null =
+        null;
+      const porProducto = this.productos.find(
         (p) =>
-          (p.codigoBarras && p.codigoBarras === q) ||
-          (p.sku && p.sku === q) ||
-          (p.presentacionCodigoBarras && p.presentacionCodigoBarras === q),
+          (p.codigoBarras && p.codigoBarras === q) || (p.sku && p.sku === q),
       );
+      if (porProducto) {
+        const unidad = this.opcionesDe(porProducto).find(
+          (o) => o.presentacionId == null,
+        );
+        encontrado = { p: porProducto, opcion: unidad ?? null };
+      } else {
+        for (const p of this.productos) {
+          const opcion = this.opcionesDe(p).find(
+            (o) => o.presentacionId != null && o.codigoBarras === q,
+          );
+          if (opcion) {
+            encontrado = { p, opcion };
+            break;
+          }
+        }
+      }
 
-      if (matchBarcode) {
-        this.addToCart(matchBarcode);
+      if (encontrado) {
+        this.addToCart(encontrado.p, encontrado.opcion);
         this.searchProduct = '';
         this.filtrar();
         this.focusSearch();
         this.cdr.markForCheck();
+      } else {
+        // No es un código de producto: puede ser el serial de una unidad.
+        void this.agregarPorSerial(q);
       }
     }, 150);
   }
@@ -589,10 +627,12 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         p.nombre.toLowerCase().includes(q) ||
         (p.sku != null && p.sku.toLowerCase().includes(q)) ||
         (p.codigoBarras != null && p.codigoBarras.toLowerCase().includes(q)) ||
-        (p.presentacionNombre != null &&
-          p.presentacionNombre.toLowerCase().includes(q)) ||
-        (p.presentacionCodigoBarras != null &&
-          p.presentacionCodigoBarras.toLowerCase().includes(q))
+        (p.presentaciones ?? []).some(
+          (pr) =>
+            pr.nombre?.toLowerCase().includes(q) ||
+            (pr.codigoBarras != null &&
+              pr.codigoBarras.toLowerCase().includes(q)),
+        )
       );
     });
   }
@@ -668,9 +708,10 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   ): PrecioDisponible[] {
     const result: PrecioDisponible[] = [];
     for (const [listaId, { nombre, precios }] of this.todasListasPrecio) {
+      // El precio de lista del producto es por unidad: no aplica a la paca.
       const precio =
         presentacionId != null
-          ? (precios.get(presentacionId) ?? precios.get(-productoId))
+          ? precios.get(presentacionId)
           : precios.get(-productoId);
       if (precio != null && isFinite(precio)) {
         result.push({ listaId, listaNombre: nombre, precio });
@@ -782,67 +823,354 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private getPrecioDeListaParaItem(item: CartItem): number | undefined {
-    // 1. Buscar por presentacionId
-    if (item.presentacionId != null) {
-      const p = this.preciosPorLista.get(item.presentacionId);
-      if (p != null) return p;
-    }
-    // 2. Fallback: buscar por productoId (clave negativa)
-    const pProd = this.preciosPorLista.get(-item.productoId);
-    return pProd != null ? pProd : undefined;
+    return this.precioListaDeOpcion(item.productoId, item.presentacionId);
   }
 
-  // ── Carrito ───────────────────────────────────────────────
-  addToCart(p: ProductoPOS): void {
-    const tieneInventario = p.tipoProducto !== 'SERVICIO';
+  /** Precio de la lista activa para la unidad o para una presentación (sin mezclarlos). */
+  private precioListaDeOpcion(
+    productoId: number,
+    presentacionId: number | null,
+  ): number | undefined {
+    const precio =
+      presentacionId != null
+        ? this.preciosPorLista.get(presentacionId)
+        : this.preciosPorLista.get(-productoId);
+    return precio != null && isFinite(precio) ? precio : undefined;
+  }
 
-    if (tieneInventario && p.stockActual <= 0 && !p.permitirStockNegativo) {
-      this.alertService.showWarn(
-        'Sin stock',
-        `${p.nombre} no tiene stock disponible.`,
-      );
+  // ── Formas de venta (una tarjeta por producto) ────────────
+  private construirOpciones(): void {
+    this.opcionesPorProducto.clear();
+    for (const p of this.productos) {
+      const opciones: OpcionVenta[] = [];
+      if (p.vendePorUnidad !== false) {
+        const base = p.precioFinal || p.precio || 0;
+        opciones.push({
+          presentacionId: null,
+          nombre: this.nombreVentaSuelta(p),
+          precio: p.ivaIncluido
+            ? base
+            : base * (1 + (p.ivaPorcentaje || 0) / 100),
+          factor: 1,
+          stock: p.stockActual,
+          esDefault: false,
+          codigoBarras: p.codigoBarras,
+        });
+      }
+      for (const pr of p.presentaciones ?? []) {
+        opciones.push({
+          presentacionId: pr.id,
+          nombre: pr.nombre,
+          precio: pr.precio,
+          factor: pr.factorConversion || 1,
+          stock: pr.stock,
+          esDefault: !!pr.esDefaultVenta,
+          codigoBarras: pr.codigoBarras,
+        });
+      }
+      this.opcionesPorProducto.set(p.id, opciones);
+    }
+  }
+
+  opcionesDe(p: ProductoPOS): OpcionVenta[] {
+    return this.opcionesPorProducto.get(p.id) ?? [];
+  }
+
+  opcionesLinea(item: CartItem): OpcionVenta[] {
+    return this.opcionesPorProducto.get(item.productoId) ?? [];
+  }
+
+  /** La presentación marcada para venta; si no hay, la unidad; si no se vende suelto, la primera. */
+  opcionDefault(p: ProductoPOS): OpcionVenta | null {
+    const opciones = this.opcionesDe(p);
+    return opciones.find((o) => o.esDefault) ?? opciones[0] ?? null;
+  }
+
+  esOpcionActiva(item: CartItem, op: OpcionVenta): boolean {
+    return (item.presentacionId ?? null) === op.presentacionId;
+  }
+
+  private factorDeItem(item: CartItem): number {
+    if (item.factor) return item.factor;
+    if (item.presentacionId == null) return 1;
+    return (
+      this.opcionesLinea(item).find(
+        (o) => o.presentacionId === item.presentacionId,
+      )?.factor ?? 1
+    );
+  }
+
+  /** Unidades de inventario del producto que ya van en el carrito. */
+  private cantidadBaseEnCarrito(productoId: number, excluirId?: string): number {
+    return this.cart
+      .filter((c) => c.productoId === productoId && c._id !== excluirId)
+      .reduce((s, c) => s + c.cantidad * this.factorDeItem(c), 0);
+  }
+
+  /** Unidad de inventario para el stock: "kg", "und"… */
+  unidadStock(p: ProductoPOS): string {
+    const abreviatura = (p.unidadMedidaAbreviatura ?? '').trim().toLowerCase();
+    if (abreviatura) return abreviatura;
+    return p.tipoProducto === 'PESABLE'
+      ? (p.unidadMedidaNombre ?? '').toLowerCase()
+      : 'uds';
+  }
+
+  /** Botón de la venta suelta: "kg" para el arroz a granel, "Und" para lo que se cuenta. */
+  private nombreVentaSuelta(p: ProductoPOS): string {
+    const unidad = this.unidadStock(p);
+    return ['und', 'uds', 'un', 'u', 'unidad'].includes(unidad) ? 'Und' : unidad;
+  }
+
+  // ── Seriales ─────────────────────────────────────────────
+  private sucursalPos: number | null = null;
+  serialItem: CartItem | null = null;
+
+  get sucursalSeriales(): number | null {
+    return this.esVendedor ? this.vendedorSucursalId : this.sucursalPos;
+  }
+
+  get serialPickerVisible(): boolean {
+    return this.serialItem !== null;
+  }
+  set serialPickerVisible(v: boolean) {
+    if (!v) this.serialItem = null;
+  }
+
+  /** Unidades de inventario de la línea: un serial por cada una. */
+  unidadesSerial(item: CartItem): number {
+    return Math.round(item.cantidad * this.factorDe(item) * 10000) / 10000;
+  }
+
+  private factorDe(item: CartItem): number {
+    return item.factor ?? 1;
+  }
+
+  abrirSeriales(item: CartItem): void {
+    this.serialItem = item;
+    this.cdr.markForCheck();
+  }
+
+  onSerialesElegidos(e: SerialesElegidos): void {
+    if (!this.serialItem) return;
+    this.serialItem.serialIds = e.ids;
+    this.serialItem.seriales = e.seriales;
+    this.saveState();
+    this.cdr.markForCheck();
+  }
+
+  /** El texto escaneado es un serial disponible: agrega su producto con ese serial. */
+  private async agregarPorSerial(codigo: string): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.serialService.buscar(codigo, this.sucursalSeriales));
+      const encontrado = res?.data?.[0];
+      if (!encontrado) return;
+      const p = this.productos.find((x) => x.id === encontrado.productoId);
+      if (!p) {
+        this.alertService.showWarn('Serial', `${encontrado.productoNombre} no está a la venta en el POS.`);
+        return;
+      }
+      const yaEsta = this.cart.some((c) => c.serialIds?.includes(encontrado.serialId));
+      if (yaEsta) {
+        this.alertService.showWarn('Serial', `El serial ${encontrado.serial} ya está en el carrito.`);
+        return;
+      }
+      const unidad = this.opcionesDe(p).find((o) => o.presentacionId == null) ?? null;
+      const linea = this.cart.find((c) => c.productoId === p.id && (c.presentacionId ?? null) === null);
+      const antes = linea?.cantidad ?? 0;
+      // Si la línea ya tenía unidades sin serial, el escaneado ocupa uno de esos huecos.
+      if (linea && (linea.serialIds?.length ?? 0) < this.unidadesSerial(linea)) {
+        linea.serialIds = [...(linea.serialIds ?? []), encontrado.serialId];
+        linea.seriales = [...(linea.seriales ?? []), encontrado.serial];
+      } else {
+        this.addToCart(p, unidad);
+        const nueva = this.cart.find((c) => c.productoId === p.id && (c.presentacionId ?? null) === null);
+        if (!nueva || nueva.cantidad === antes) return;   // no se pudo agregar (stock)
+        nueva.serialIds = [...(nueva.serialIds ?? []), encontrado.serialId];
+        nueva.seriales = [...(nueva.seriales ?? []), encontrado.serial];
+      }
+      this.searchProduct = '';
+      this.filtrar();
+      this.focusSearch();
+      this.saveState();
+      this.cdr.markForCheck();
+    } catch {
+      /* no era un serial: se queda como búsqueda normal */
+    }
+  }
+
+  // ── Vencimientos ─────────────────────────────────────────
+  private avisadosVencimiento = new Set<number>();
+
+  /** Stock que se puede vender: lo vencido no cuenta si la empresa lo bloquea. */
+  stockVendible(p: ProductoPOS): number {
+    const vencido = p.bloquearVencidos ? Number(p.stockVencido ?? 0) : 0;
+    return (p.stockActual ?? 0) - vencido;
+  }
+
+  /** "Vence en 5 d" si el próximo lote entra en la ventana de alerta de la empresa. */
+  alertaVencimiento(p: ProductoPOS): string | null {
+    const d = p.diasParaVencer;
+    if (!p.manejaLotes || d === null || d === undefined) return null;
+    if (d > (p.diasAlertaVencimiento ?? 30)) return null;
+    return d === 0 ? 'Vence hoy' : `Vence en ${d} d`;
+  }
+
+  private avisarVencimiento(p: ProductoPOS): void {
+    const alerta = this.alertaVencimiento(p);
+    if (!alerta || this.avisadosVencimiento.has(p.id)) return;
+    this.avisadosVencimiento.add(p.id);
+    this.alertService.showWarn(
+      'Producto por vencer',
+      `${p.nombre}: el lote que sale ${alerta.toLowerCase().replace(' d', ' días')}.`,
+    );
+  }
+
+  private mensajeSinStock(p: ProductoPOS): string {
+    const vencido = p.bloquearVencidos ? Number(p.stockVencido ?? 0) : 0;
+    const base =
+      this.stockVendible(p) > 0
+        ? `Solo hay ${this.stockLegible(p)} de ${p.nombre}`
+        : `${p.nombre} no tiene stock disponible`;
+    return vencido > 0
+      ? `${base}: ${vencido.toLocaleString('es-CO', { maximumFractionDigits: 4 })} está vencido y no se vende.`
+      : `${base}.`;
+  }
+
+  /** Stock como se cuenta: "2 Paca + 22 uds" cuando hay una presentación entera. */
+  stockLegible(p: ProductoPOS): string {
+    const unidad = this.unidadStock(p);
+    const stock = p.stockActual ?? 0;
+    const grande = [...(p.presentaciones ?? [])]
+      .filter(
+        (x) =>
+          x.factorConversion >= 2 && Number.isInteger(+x.factorConversion),
+      )
+      .sort((a, b) => b.factorConversion - a.factorConversion)[0];
+    const num = (n: number) =>
+      n.toLocaleString('es-CO', { maximumFractionDigits: 2 });
+    if (!grande || stock < grande.factorConversion)
+      return `${num(stock)} ${unidad}`;
+    const enteras = Math.floor(stock / grande.factorConversion);
+    const resto = round2(stock - enteras * grande.factorConversion);
+    return resto > 0
+      ? `${enteras} ${grande.nombre} + ${num(resto)} ${unidad}`
+      : `${enteras} ${grande.nombre}`;
+  }
+
+  /** Precio base (sin IVA) de la forma de venta: el de la presentación o el del producto. */
+  private precioBaseDeOpcion(p: ProductoPOS, op: OpcionVenta): number {
+    const ivaFactor = 1 + (p.ivaPorcentaje ?? 0) / 100;
+    if (op.presentacionId != null) {
+      // El precio de la presentación viene con IVA: calcLine se lo vuelve a sumar.
+      return ivaFactor > 0 ? round2(op.precio / ivaFactor) : op.precio;
+    }
+    if (p.ivaIncluido && ivaFactor > 1) {
+      return round2((p.precioFinal ?? p.precio ?? 0) / ivaFactor);
+    }
+    return p.precioFinal ?? p.precio ?? 0;
+  }
+
+  /** Cambia Und ↔ Paca en una línea sin borrarla; si ya existe esa forma, las une. */
+  cambiarPresentacionLinea(item: CartItem, op: OpcionVenta): void {
+    if (this.esOpcionActiva(item, op)) return;
+    const p = this.productos.find((x) => x.id === item.productoId);
+    if (!p) return;
+
+    const otros = this.cantidadBaseEnCarrito(p.id, item._id);
+    if (
+      p.tipoProducto !== 'SERVICIO' &&
+      !p.permitirStockNegativo &&
+      otros + item.cantidad * op.factor > this.stockVendible(p) + 1e-9
+    ) {
+      this.alertService.showWarn('Stock insuficiente', this.mensajeSinStock(p));
       return;
     }
 
+    const destino = this.cart.find(
+      (c) =>
+        c._id !== item._id &&
+        c.productoId === p.id &&
+        (c.presentacionId ?? null) === op.presentacionId,
+    );
+    if (destino) {
+      destino.cantidad += item.cantidad;
+      this.cart = this.cart.filter((c) => c._id !== item._id);
+      this.calcLine(destino);
+    } else {
+      const precioCatalogo = this.precioBaseDeOpcion(p, op);
+      const precioLista = this.listaSeleccionada
+        ? this.precioListaDeOpcion(p.id, op.presentacionId)
+        : undefined;
+      item.presentacionId = op.presentacionId;
+      item.presentacionNombre = op.presentacionId != null ? op.nombre : null;
+      item.factor = op.factor;
+      item.productoNombre =
+        op.presentacionId != null ? `${p.nombre} · ${op.nombre}` : p.nombre;
+      item.precioCatalogo = precioCatalogo;
+      item.precio = precioLista ?? precioCatalogo;
+      item.listaPrecioNombre =
+        precioLista != null ? this.listaSeleccionada?.nombre : undefined;
+      item.listaPrecioId =
+        precioLista != null ? this.listaSeleccionada?.id : undefined;
+      item.precioOriginal = undefined;
+      item.descuento = 0;
+      item.preciosDisponibles = this.buildPreciosDisponibles(
+        p.id,
+        op.presentacionId,
+      );
+      this.calcLine(item);
+    }
+    this.recalcularTotales();
+    this.cdr.markForCheck();
+  }
+
+  // ── Carrito ───────────────────────────────────────────────
+  /**
+   * Agrega el producto en la forma de venta indicada (tocar un botón [Paca]);
+   * sin forma, la de por defecto (tocar la tarjeta). El stock se valida por
+   * producto, en unidades: 1 paca + 3 bolsas consumen 28.
+   */
+  addToCart(p: ProductoPOS, opcion?: OpcionVenta | null): void {
+    const op = opcion ?? this.opcionDefault(p);
+    if (!op) {
+      this.alertService.showWarn(
+        'Sin forma de venta',
+        `${p.nombre} no tiene unidad ni presentación a la venta.`,
+      );
+      return;
+    }
+    const tieneInventario = p.tipoProducto !== 'SERVICIO';
+
+    if (
+      tieneInventario &&
+      !p.permitirStockNegativo &&
+      this.cantidadBaseEnCarrito(p.id) + op.factor > this.stockVendible(p) + 1e-9
+    ) {
+      this.alertService.showWarn(
+        this.stockVendible(p) > 0 ? 'Stock insuficiente' : 'Sin stock',
+        this.mensajeSinStock(p),
+      );
+      return;
+    }
+    if (tieneInventario) this.avisarVencimiento(p);
+
     const existing = this.cart.find(
-      (c) => c.productoId === p.id && c.presentacionId === p.presentacionId,
+      (c) =>
+        c.productoId === p.id &&
+        (c.presentacionId ?? null) === op.presentacionId,
     );
     if (existing) {
-      if (
-        tieneInventario &&
-        !p.permitirStockNegativo &&
-        existing.cantidad >= p.stockActual
-      ) {
-        this.alertService.showWarn(
-          'Stock insuficiente',
-          `Solo hay ${p.stockActual} unidades.`,
-        );
-        return;
-      }
       existing.cantidad++;
       this.calcLine(existing);
     } else {
-      // presentacionPrecio viene CON IVA incluido → dividimos para obtener el base
-      // calcLine luego le suma el IVA y el subtotal coincide con el precio configurado
-      let precioBase: number;
-      const ivaFactor = 1 + (p.ivaPorcentaje ?? 0) / 100;
-      if (p.presentacionPrecio != null && p.presentacionPrecio > 0) {
-        precioBase =
-          ivaFactor > 0
-            ? round2(p.presentacionPrecio / ivaFactor)
-            : p.presentacionPrecio;
-      } else if (p.ivaIncluido && ivaFactor > 1) {
-        // El precio del producto ya tiene IVA adentro → extraemos la base
-        precioBase = round2((p.precioFinal ?? p.precio ?? 0) / ivaFactor);
-      } else {
-        precioBase = p.precioFinal ?? p.precio ?? 0;
-      }
+      const precioBase = this.precioBaseDeOpcion(p, op);
       const precioValido = isFinite(precioBase) ? precioBase : 0;
 
       if (precioValido <= 0) {
         this.alertService.showWarn(
           'Precio inválido',
-          `${p.nombre} no tiene un precio válido.`,
+          `${p.nombre}${op.presentacionId != null ? ' · ' + op.nombre : ''} no tiene un precio válido.`,
         );
         return;
       }
@@ -850,23 +1178,23 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       let precioPOS = precioValido;
       let listaNombre: string | undefined;
       if (this.listaSeleccionada) {
-        const listaPrice =
-          p.presentacionId != null
-            ? (this.preciosPorLista.get(p.presentacionId) ??
-              this.preciosPorLista.get(-p.id))
-            : this.preciosPorLista.get(-p.id);
-        if (listaPrice != null && isFinite(listaPrice)) {
+        const listaPrice = this.precioListaDeOpcion(p.id, op.presentacionId);
+        if (listaPrice != null) {
           precioPOS = listaPrice;
           listaNombre = this.listaSeleccionada.nombre;
         }
       }
       const nombreEnCarrito =
-        p.presentacionNombre ?? p.nombre ?? 'Producto sin nombre';
+        op.presentacionId != null
+          ? `${p.nombre} · ${op.nombre}`
+          : (p.nombre ?? 'Producto sin nombre');
       const ivaOriginal = (p.ivaPorcentaje ?? 0) || 0;
       const item: CartItem = {
         _id: uuid(),
         productoId: p.id,
-        presentacionId: p.presentacionId,
+        presentacionId: op.presentacionId,
+        factor: op.factor,
+        presentacionNombre: op.presentacionId != null ? op.nombre : null,
         productoNombre: nombreEnCarrito,
         productoSku: p.sku,
         precio: precioPOS,
@@ -881,13 +1209,16 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         impuestoValor: 0,
         subtotal: 0,
         esPesable: p.tipoProducto === 'PESABLE',
+        manejaSerial: !!p.manejaSerial,
+        serialIds: [],
+        seriales: [],
         unidadMedida: p.unidadMedidaNombre ?? 'UND',
         showDescuento: false,
         precio2: p.precio2 ?? null,
         precio3: p.precio3 ?? null,
         preciosDisponibles: this.buildPreciosDisponibles(
           p.id,
-          p.presentacionId,
+          op.presentacionId,
         ),
       };
       this.cart = [item, ...this.cart];
@@ -1196,6 +1527,17 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   // ── Pago ──────────────────────────────────────────────────
   async irAlPago(): Promise<void> {
     if (!this.cart.length) return;
+    const faltaSerial = this.cart.find(
+      (c) => c.manejaSerial && (c.serialIds?.length ?? 0) !== this.unidadesSerial(c),
+    );
+    if (faltaSerial) {
+      this.alertService.showWarn(
+        'Faltan seriales',
+        `${faltaSerial.productoNombre}: elige ${this.unidadesSerial(faltaSerial)} seriales antes de cobrar.`,
+      );
+      this.abrirSeriales(faltaSerial);
+      return;
+    }
     this.mobileCartOpen = false;
     this.pagosPrev = [
       {
@@ -1251,6 +1593,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         precioUnitario: c.precio,
         descuentoValor: c.descuento,
         impuestoValor: c.impuestoValor,
+        serialIds: c.manejaSerial ? (c.serialIds ?? []) : undefined,
       })),
       pagos,
       descuentoGeneral,
@@ -1358,7 +1701,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     return item._id;
   }
   trackByProd(_: number, p: ProductoPOS): string {
-    return `${p.id}-${p.presentacionId ?? 'base'}`;
+    return `${p.id}`;
   }
 
   formatCOP = (v: number): string =>

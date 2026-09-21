@@ -64,6 +64,22 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'catalogo/productos/nuevo',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/catalogo/productos/form/form-productos.component').then(
+            (m) => m.FormProductosComponent,
+          ),
+      },
+      {
+        path: 'catalogo/productos/editar/:id',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/catalogo/productos/form/form-productos.component').then(
+            (m) => m.FormProductosComponent,
+          ),
+      },
+      {
         path: 'catalogo/categorias',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
@@ -238,6 +254,21 @@ export const routes: Routes = [
           import('./features/inventario/inventario/index/index-inventario.component').then(
             (m) => m.IndexInventarioComponent,
           ),
+      },
+      {
+        path: 'perfil',
+        loadComponent: () =>
+          import('./features/perfil/perfil.component').then(
+            (m) => m.PerfilComponent,
+          ),
+      },
+      {
+        path: 'inventario/bodegas',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import(
+            './features/inventario/bodegas/index/index-bodegas.component'
+          ).then((m) => m.IndexBodegasComponent),
       },
       {
         path: 'inventario/lotes',
@@ -445,6 +476,14 @@ export const routes: Routes = [
           import('./features/obsequios/index/index-obsequios.component').then(
             (m) => m.IndexObsequiosComponent,
           ),
+      },
+      {
+        path: 'consumo-interno',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import(
+            './features/consumo-interno/index/index-consumos-internos.component'
+          ).then((m) => m.IndexConsumosInternosComponent),
       },
       {
         path: 'traslados',
@@ -730,6 +769,22 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/cartera/index/index-cartera.component').then(
             (m) => m.IndexCarteraComponent,
+          ),
+      },
+      {
+        path: 'cartera/reglas',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/cartera/reglas/reglas-credito.component').then(
+            (m) => m.ReglasCreditoComponent,
+          ),
+      },
+      {
+        path: 'cartera/cliente/:id',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/cartera/ficha-cliente/ficha-cliente.component').then(
+            (m) => m.FichaClienteComponent,
           ),
       },
 

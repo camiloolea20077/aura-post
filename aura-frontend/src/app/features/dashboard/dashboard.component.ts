@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { ChartModule } from 'primeng/chart';
 import { TagModule } from 'primeng/tag';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -8,6 +8,9 @@ import { TooltipModule } from 'primeng/tooltip';
 import { lastValueFrom } from 'rxjs';
 
 import { DashboardService } from '../../core/services/dashboard.service';
+import { LoteService } from '../../core/services/lote.service';
+import { IndexDBService } from '../../core/services/index-db.service';
+import { VencimientoLoteModel } from '../../core/models/lote.model';
 import {
   DashboardDto,
   MetodoPagoDto,
@@ -42,11 +45,108 @@ export class DashboardComponent implements OnInit {
   public today = new Date();
   public userName = '';
   public metodoPagoLider = '';
+  public sucursalNombre = '';
 
-  constructor(private readonly dashboardService: DashboardService) {}
+  // Vencimientos (todas las sucursales, ventana de alerta de la empresa)
+  public vencimientos: VencimientoLoteModel[] = [];
+  public diasAlerta = 30;
+
+  constructor(
+    private readonly dashboardService: DashboardService,
+    private readonly loteService: LoteService,
+    private readonly indexDB: IndexDBService,
+    private readonly router: Router,
+  ) {}
 
   async ngOnInit(): Promise<void> {
-    await Promise.all([this.loadDashboard(), this.loadCharts()]);
+    this.cargarUsuario();
+    await Promise.all([this.loadDashboard(), this.loadCharts(), this.cargarVencimientos()]);
+  }
+
+  private async cargarUsuario(): Promise<void> {
+    this.userName = (await this.indexDB.getUserNombre()) ?? '';
+    const sucursales = await this.indexDB.getSucursales();
+    const def = sucursales.find((x: any) => x.esDefault) ?? sucursales[0];
+    this.sucursalNombre = def?.nombre ?? '';
+  }
+
+  private async cargarVencimientos(): Promise<void> {
+    try {
+      const [reglas, lista] = await Promise.all([
+        lastValueFrom(this.loteService.reglas()),
+        lastValueFrom(this.loteService.vencimientos(null, null)),
+      ]);
+      this.diasAlerta = reglas?.data?.diasAlerta ?? 30;
+      this.vencimientos = lista?.data ?? [];
+    } catch {
+      this.vencimientos = [];
+    }
+  }
+
+  get saludo(): string {
+    const h = new Date().getHours();
+    return h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches';
+  }
+
+  get primerNombre(): string {
+    return this.userName.trim().split(/\s+/)[0] ?? '';
+  }
+
+  get vencidos(): VencimientoLoteModel[] {
+    return this.vencimientos.filter((v) => v.diasParaVencer < 0);
+  }
+
+  get porVencer(): VencimientoLoteModel[] {
+    return this.vencimientos.filter((v) => v.diasParaVencer >= 0);
+  }
+
+  sumar(items: VencimientoLoteModel[], campo: 'valorCosto' | 'valorVenta'): number {
+    return items.reduce((s, v) => s + Number(v[campo] ?? 0), 0);
+  }
+
+  textoDias(dias: number): string {
+    if (dias < 0) return `Venció hace ${Math.abs(dias)} d`;
+    if (dias === 0) return 'Vence hoy';
+    return `${dias} d`;
+  }
+
+  chipVencimiento(dias: number): string {
+    if (dias < 0) return 'chip--danger';
+    if (dias <= 7) return 'chip--warn';
+    return '';
+  }
+
+  /** Abre Lotes › Vencimientos con los vencidos ya elegidos: un clic a la merma. */
+  darDeBaja(): void {
+    this.router.navigate(['/inventario/lotes'], {
+      state: { abrirVencimientos: true, elegirVencidos: true },
+    });
+  }
+
+  verVencimientos(): void {
+    this.router.navigate(['/inventario/lotes'], { state: { abrirVencimientos: true } });
+  }
+
+  etiquetaMovimiento(tipo: string): string {
+    const etiquetas: Record<string, string> = {
+      COMPRA: 'Compra',
+      EDICION_COMPRA: 'Edición de compra',
+      EDICION_COMPRA_REVERSION: 'Reverso de edición',
+      NOTA_CREDITO_COMPRA: 'Nota crédito proveedor',
+      VENTA: 'Venta',
+      DEVOLUCION: 'Devolución',
+      DEVOLUCION_CAMBIO: 'Cambio',
+      MERMA: 'Merma',
+      OBSEQUIO: 'Obsequio',
+      CONSUMO_INTERNO: 'Consumo interno',
+      TRASLADO_SALIDA: 'Traslado salida',
+      TRASLADO_ENTRADA: 'Traslado entrada',
+      RECONTEO_AJUSTE_POSITIVO: 'Reconteo sobrante',
+      RECONTEO_AJUSTE_NEGATIVO: 'Reconteo faltante',
+    };
+    if (etiquetas[tipo]) return etiquetas[tipo];
+    if (tipo.startsWith('ANULACION_')) return 'Anulación ' + tipo.substring(10).toLowerCase().replace(/_/g, ' ');
+    return tipo.charAt(0) + tipo.slice(1).toLowerCase().replace(/_/g, ' ');
   }
 
   // ─── Carga principal ────────────────────────────────────────
@@ -96,15 +196,14 @@ export class DashboardComponent implements OnInit {
           {
             label: 'Ventas ($)',
             data: totales,
-            backgroundColor: 'rgba(46, 108, 246, 0.15)',
-            borderColor: '#2E6CF6',
+            backgroundColor: 'rgba(37, 99, 235, 0.08)',
+            borderColor: '#2563eb',
             borderWidth: 2,
-            borderRadius: 8,
-            tension: 0.4,
+            tension: 0.35,
             fill: true,
-            pointBackgroundColor: '#2E6CF6',
-            pointRadius: 5,
-            pointHoverRadius: 7,
+            pointBackgroundColor: '#2563eb',
+            pointRadius: 3,
+            pointHoverRadius: 6,
           },
         ],
       };
@@ -126,14 +225,15 @@ export class DashboardComponent implements OnInit {
       }
 
       const colores: Record<string, string> = {
-        EFECTIVO: '#10B981',
-        TARJETA: '#2E6CF6',
-        CREDITO: '#F59E0B',
-        NEQUI: '#7B4DFF',
+        EFECTIVO: '#059669',
+        TARJETA: '#2563eb',
+        TRANSFERENCIA: '#0891b2',
+        CREDITO: '#d97706',
+        NEQUI: '#7c3aed',
       };
 
       this.chartMetodoPago = {
-        labels: data.map((d) => d.metodo_pago),
+        labels: data.map((d) => this.formatMetodoPago(d.metodo_pago)),
         datasets: [
           {
             data: data.map((d) => d.total),
@@ -280,6 +380,6 @@ export class DashboardComponent implements OnInit {
   }
 
   get skeletons(): number[] {
-    return [1, 2, 3, 4, 5];
+    return [1, 2, 3, 4];
   }
 }

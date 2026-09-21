@@ -110,6 +110,11 @@
   [loading]="loadingDetalle"
   (anular)="confirmAnular($event)"
 />
-<app-form-merma [(visible)]="showForm" (saved)="onSaved()" />
+<app-form-merma
+  [(visible)]="showForm"
+  [prefill]="prefill"
+  (visibleChange)="!$event && (prefill = null)"
+  (saved)="onSaved()"
+/>
 <p-confirmDialog />
 <p-toast />

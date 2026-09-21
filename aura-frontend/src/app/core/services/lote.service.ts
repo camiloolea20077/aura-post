@@ -4,7 +4,8 @@ import { Observable } from 'rxjs';
 import {
   LoteModel,
   LoteTableModel,
-  CreateLoteDto,
+  UpdateLoteDto,
+  VencimientoLoteModel,
   LotePageableDto,
 } from '../models/lote.model';
 import { environment } from '../../../environments/environment';
@@ -30,11 +31,33 @@ export class LoteService {
       `${this.apiUrl}/por-vencer`,
     );
   }
-  create(dto: CreateLoteDto): Observable<ResponseModel<LoteModel>> {
-    return this.http.post<ResponseModel<LoteModel>>(
-      `${this.apiUrl}/create`,
+  vencimientos(
+    sucursalId: number | null,
+    dias: number | null,
+  ): Observable<ResponseModel<VencimientoLoteModel[]>> {
+    const params: string[] = [];
+    if (sucursalId) params.push(`sucursalId=${sucursalId}`);
+    if (dias !== null && dias !== undefined) params.push(`dias=${dias}`);
+    return this.http.get<ResponseModel<VencimientoLoteModel[]>>(
+      `${this.apiUrl}/vencimientos${params.length ? '?' + params.join('&') : ''}`,
+    );
+  }
+  reglas(): Observable<ResponseModel<{ bloquearVencidos: boolean; diasAlerta: number }>> {
+    return this.http.get<ResponseModel<{ bloquearVencidos: boolean; diasAlerta: number }>>(
+      `${this.apiUrl}/reglas`,
+    );
+  }
+  guardarReglas(dto: {
+    bloquearVencidos: boolean;
+    diasAlerta: number;
+  }): Observable<ResponseModel<{ bloquearVencidos: boolean; diasAlerta: number }>> {
+    return this.http.put<ResponseModel<{ bloquearVencidos: boolean; diasAlerta: number }>>(
+      `${this.apiUrl}/reglas`,
       dto,
     );
+  }
+  update(id: number, dto: UpdateLoteDto): Observable<ResponseModel<LoteModel>> {
+    return this.http.put<ResponseModel<LoteModel>>(`${this.apiUrl}/${id}`, dto);
   }
   delete(id: number): Observable<ResponseModel<void>> {
     return this.http.delete<ResponseModel<void>>(`${this.apiUrl}/${id}`);

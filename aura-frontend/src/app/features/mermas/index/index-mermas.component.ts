@@ -55,6 +55,8 @@ export class IndexMermasComponent implements OnInit {
 
   // Dialogs
   showForm = false;
+  /** Lotes que llegan desde la pantalla de vencimientos. */
+  prefill: import('../../../core/models/lote.model').MermaDesdeLotes | null = null;
   showDetalle = false;
   mermaDetalle: MermaModel | null = null;
   loadingDetalle = false;
@@ -68,6 +70,13 @@ export class IndexMermasComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
+    const desdeLotes = history.state?.mermaDesdeLotes;
+    if (desdeLotes?.lineas?.length) {
+      this.prefill = desdeLotes;
+      this.showForm = true;
+      // Que un F5 no vuelva a abrir la merma.
+      history.replaceState({ ...history.state, mermaDesdeLotes: null }, '');
+    }
   }
 
   async load(): Promise<void> {
@@ -106,6 +115,7 @@ export class IndexMermasComponent implements OnInit {
   }
 
   onSaved(): void {
+    this.prefill = null;
     this.load();
   }
 

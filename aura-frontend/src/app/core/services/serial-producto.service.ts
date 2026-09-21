@@ -7,6 +7,8 @@ import {
   SerialProductoTableModel,
   CreateSerialProductoDto,
   SerialPageableDto,
+  SerialBuscadoModel,
+  SerialTrazaModel,
 } from '../models/serial-producto.model';
 import { environment } from '../../../environments/environment';
 import { ResponseTableModel } from '../../shared/utils/response-table.model';
@@ -37,6 +39,38 @@ export class SerialProductoService {
     return this.http.post<ResponseModel<SerialProductoModel>>(
       `${this.apiUrl}/create`,
       dto,
+    );
+  }
+  /** Seriales DISPONIBLES de un producto en una sucursal. */
+  disponibles(
+    productoId: number,
+    sucursalId: number,
+  ): Observable<ResponseModel<SerialProductoTableModel[]>> {
+    return this.http.get<ResponseModel<SerialProductoTableModel[]>>(
+      `${this.apiUrl}/disponibles/${productoId}/${sucursalId}`,
+    );
+  }
+  /** Seriales de una línea vendida que se pueden devolver. */
+  vendidosEnLinea(
+    ventaDetalleId: number,
+  ): Observable<ResponseModel<SerialProductoTableModel[]>> {
+    return this.http.get<ResponseModel<SerialProductoTableModel[]>>(
+      `${this.apiUrl}/venta-detalle/${ventaDetalleId}`,
+    );
+  }
+  /** POS: el texto escaneado es un serial disponible. */
+  buscar(
+    codigo: string,
+    sucursalId?: number | null,
+  ): Observable<ResponseModel<SerialBuscadoModel[]>> {
+    const suc = sucursalId ? `&sucursalId=${sucursalId}` : '';
+    return this.http.get<ResponseModel<SerialBuscadoModel[]>>(
+      `${this.apiUrl}/buscar?codigo=${encodeURIComponent(codigo)}${suc}`,
+    );
+  }
+  trazabilidad(serial: string): Observable<ResponseModel<SerialTrazaModel[]>> {
+    return this.http.get<ResponseModel<SerialTrazaModel[]>>(
+      `${this.apiUrl}/trazabilidad?serial=${encodeURIComponent(serial)}`,
     );
   }
   delete(id: number): Observable<ResponseModel<void>> {

@@ -300,3 +300,26 @@
     box-shadow: 0 4px 14px rgba(30, 41, 59, 0.45) !important;
   }
 }
+
+.det-lotes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
+}
+
+.det-lote {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.7rem;
+  font-weight: 600;
+
+  i {
+    font-size: 0.65rem;
+  }
+}
