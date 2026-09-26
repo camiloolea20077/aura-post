@@ -29,7 +29,7 @@ import {
   UpdateCuentaPagarDto,
 } from '../models/cuenta-pagar.model';
 import { CuentaPagarService } from '../services/cuenta-pagar.service';
-import { TerceroService } from '../../../core/services/tercero.service';
+import { TerceroAutocompleteComponent } from '../../../shared/components/tercero-autocomplete/tercero-autocomplete.component';
 import { OnInit } from '@angular/core';
 
 import { aFechaHoraLocal } from '../../../shared/utils/fecha.util';
@@ -47,6 +47,7 @@ import { aFechaHoraLocal } from '../../../shared/utils/fecha.util';
     TextareaModule,
     CalendarModule,
     DropdownModule,
+    TerceroAutocompleteComponent,
   ],
   templateUrl: './form-cuenta-pagar.component.html',
   styleUrls: ['./form-cuenta-pagar.component.scss'],
@@ -59,7 +60,6 @@ export class FormCuentaPagarComponent implements OnChanges, OnInit {
 
   form: FormGroup;
   loading = false;
-  proveedores: any[] = [];
 
   metodosPago = [
     { label: 'Efectivo', value: 'efectivo' },
@@ -75,7 +75,6 @@ export class FormCuentaPagarComponent implements OnChanges, OnInit {
   constructor(
     private readonly fb: FormBuilder,
     private readonly service: CuentaPagarService,
-    private readonly terceroService: TerceroService,
     private readonly alert: AlertService,
     private readonly cdr: ChangeDetectorRef,
   ) {
@@ -89,19 +88,7 @@ export class FormCuentaPagarComponent implements OnChanges, OnInit {
     });
   }
 
-  ngOnInit(): void {
-    this.cargarProveedores();
-  }
-
-  async cargarProveedores(): Promise<void> {
-    try {
-      const resp = await lastValueFrom(this.terceroService.proveedores());
-      this.proveedores = resp.data || [];
-      this.cdr.markForCheck();
-    } catch (err: any) {
-      console.error('Error cargando proveedores', err);
-    }
-  }
+  ngOnInit(): void {}
 
   ngOnChanges(): void {
     if (this.visible) {

@@ -1,0 +1,143 @@
+// .page, .card, .card-head y .card-footer son estándar global (styles.scss).
+
+// Las columnas se acomodan al ancho de la card (no de la ventana): el menú
+// lateral se abre y se cierra.
+.cb-body {
+  container-type: inline-size;
+  padding: 0.5rem 1.5rem 1.25rem;
+}
+
+.cb-seccion {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--aura-border);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &__titulo {
+    margin: 0 0 0.75rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1e293b;
+  }
+}
+
+.cb-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+
+  label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #475569;
+  }
+
+  input {
+    width: 100%;
+  }
+
+  small {
+    color: #64748b;
+    font-size: 0.75rem;
+  }
+}
+
+.span-2 {
+  grid-column: span 2;
+}
+
+.req {
+  color: #ef4444;
+}
+
+.opcional {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.field .field-error {
+  color: #ef4444;
+}
+
+.cb-codigo {
+  font-family: "JetBrains Mono", monospace;
+  text-transform: uppercase;
+}
+
+:host ::ng-deep .cb-estado {
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+:host ::ng-deep .field {
+  .p-inputnumber,
+  .p-dropdown {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+.opciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.95rem;
+  border: 1.5px solid #e0e3eb;
+  border-radius: 10px;
+  background: #fff;
+  color: #475569;
+  font-family: inherit;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  i {
+    font-size: 0.8rem;
+  }
+
+  &:hover {
+    border-color: #93c5fd;
+  }
+
+  &--activa {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+}
+
+.cb-footer {
+  flex-wrap: wrap;
+}
+
+@container (max-width: 899px) {
+  .cb-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 559px) {
+  .cb-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .span-2 {
+    grid-column: auto;
+  }
+}

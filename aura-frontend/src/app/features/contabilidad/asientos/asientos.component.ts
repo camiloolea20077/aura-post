@@ -17,6 +17,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { RouterLink } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 
 import { ContabilidadService } from '../../../core/services/contabilidad.service';
@@ -42,6 +43,7 @@ import { aFechaLocal } from '../../../shared/utils/fecha.util';
     ButtonModule, TableModule, CalendarModule, DropdownModule,
     DialogModule, TabViewModule, TagModule, ToastModule, TooltipModule,
     InputTextModule, InputNumberModule, SkeletonModule, ConfirmDialogModule,
+    RouterLink,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './asientos.component.html',

@@ -375,12 +375,11 @@
       </div>
       <!-- Input buscar cliente -->
       <div class="cliente-search" *ngIf="!clienteNombre">
-        <input
-          type="text"
+        <app-tercero-autocomplete
+          class="cliente-ac"
+          rol="CLIENTE"
           placeholder="Consumidor final — buscar cliente..."
-          class="cliente-input"
-          #clienteInput
-          (input)="buscarCliente(clienteInput.value)"
+          (seleccionado)="$event && selectCliente($event)"
         />
         <button
           class="btn-nuevo-cliente"
@@ -390,21 +389,6 @@
           icon="pi pi-user-plus"
           (click)="showNuevoCliente = true"
         ></button>
-        <div class="cliente-sugerencias" *ngIf="clienteSugerencias.length">
-          <div
-            class="sug-item"
-            *ngFor="let c of clienteSugerencias"
-            (click)="selectCliente(c)"
-          >
-            <i class="pi pi-user sug-icon"></i>
-            <div>
-              <span class="sug-nombre">{{ c.nombreCompleto }}</span>
-              <span class="sug-doc"
-                >{{ c.tipoDocumento }} {{ c.numeroDocumento }}</span
-              >
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -935,28 +919,13 @@
         </button>
       </div>
       <div class="cliente-search-wrap" *ngIf="!cotizacionTerceroNombre">
-        <input
-          type="text"
+        <!-- Dentro del p-dialog el panel va al body: si no, el diálogo lo recorta. -->
+        <app-tercero-autocomplete
+          rol="CLIENTE"
           placeholder="Buscar cliente..."
-          class="cliente-input"
-          #cotInputRef
-          (input)="buscarClienteCotizacion(cotInputRef.value)"
+          appendTo="body"
+          (seleccionado)="$event && selectClienteCotizacion($event)"
         />
-        <div class="cliente-sugerencias" *ngIf="cotizacionSugerencias.length">
-          <div
-            class="sug-item"
-            *ngFor="let c of cotizacionSugerencias"
-            (click)="selectClienteCotizacion(c); cotInputRef.value = ''"
-          >
-            <i class="pi pi-user sug-icon"></i>
-            <div>
-              <span class="sug-nombre">{{ c.nombreCompleto }}</span>
-              <span class="sug-doc"
-                >{{ c.tipoDocumento }} {{ c.numeroDocumento }}</span
-              >
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 

@@ -1,0 +1,115 @@
+// ┌──────────────────────────────────────────────┬────┐
+// │ texto / sugerencias                       ×  │ 🔍 │
+// └──────────────────────────────────────────────┴────┘
+// La lupa va DENTRO del borde del input, separada por una línea.
+
+:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.tac {
+  position: relative;
+  width: 100%;
+}
+
+:host ::ng-deep .tac-ac {
+  display: block;
+  width: 100%;
+}
+
+:host ::ng-deep .tac-input {
+  width: 100%;
+  min-width: 0;
+  // Espacio para la lupa (2.5rem) y, si hay elegido, la ×.
+  padding-right: 2.9rem;
+  text-overflow: ellipsis;
+}
+
+:host ::ng-deep .tac--elegido .tac-input {
+  padding-right: 4.9rem;
+}
+
+.tac-lupa {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  bottom: 1px;
+  width: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-left: 1px solid var(--p-inputtext-border-color, #cbd5e1);
+  border-radius: 0 var(--p-inputtext-border-radius, 6px) var(--p-inputtext-border-radius, 6px) 0;
+  background: #f8fafc;
+  color: #2563eb;
+  cursor: pointer;
+  transition: background-color 0.15s;
+
+  &:hover:not(:disabled) {
+    background: #eff6ff;
+  }
+
+  &:disabled {
+    color: #94a3b8;
+    cursor: default;
+  }
+
+  i {
+    font-size: 0.85rem;
+  }
+}
+
+.tac-clear {
+  position: absolute;
+  top: 50%;
+  right: 2.9rem;
+  transform: translateY(-50%);
+  width: 1.6rem;
+  height: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+
+  &:hover {
+    color: #ef4444;
+    background: #fef2f2;
+  }
+
+  i {
+    font-size: 0.7rem;
+  }
+}
+
+// El panel puede ser más ancho que el campo (nombres largos), sin salirse de la pantalla.
+:host ::ng-deep .tac-panel {
+  min-width: min(22rem, calc(100vw - 2rem));
+}
+
+.tac-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  line-height: 1.25;
+
+  &__nombre {
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+
+  &__meta {
+    font-size: 0.73rem;
+    opacity: 0.7;
+  }
+
+  &--inactivo {
+    opacity: 0.6;
+  }
+}

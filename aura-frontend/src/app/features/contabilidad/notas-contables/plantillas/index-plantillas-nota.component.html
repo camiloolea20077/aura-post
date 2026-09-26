@@ -1,0 +1,183 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon">
+          <i class="pi pi-copy"></i>
+        </span>
+        <div>
+          <h1 class="title">Plantillas de notas</h1>
+          <p class="subtitle">
+            Notas que se repiten: amortizaciones, provisiones fijas,
+            causaciones mensuales.
+          </p>
+        </div>
+      </div>
+
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button
+            pButton
+            type="button"
+            label="Notas contables"
+            icon="pi pi-arrow-left"
+            class="btn-rojo"
+            (click)="volver()"
+          ></button>
+          <button
+            pButton
+            type="button"
+            label="Nueva plantilla"
+            icon="pi pi-plus"
+            class="btn-aura"
+            (click)="nueva()"
+          ></button>
+        </div>
+
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              class="search-input"
+              placeholder="Buscar plantilla..."
+              [(ngModel)]="searchQuery"
+              (keydown.escape)="clearSearch()"
+            />
+            <button
+              *ngIf="searchQuery"
+              class="clear-btn"
+              (click)="clearSearch()"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <p-table
+      [value]="filtradas"
+      [loading]="loading"
+      [paginator]="filtradas.length > 10"
+      [rows]="10"
+      showGridlines
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Plantilla</th>
+          <th style="width: 150px" class="text-right">Valor</th>
+          <th style="width: 200px">Se repite</th>
+          <th style="width: 110px">Estado</th>
+          <th style="width: 170px">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-p>
+        <tr [class.row-inactiva]="!p.activa">
+          <td>
+            <div class="pl-nombre">{{ p.nombre }}</div>
+            <div class="pl-meta">
+              {{ p.descripcion }}
+              · {{ p.cantidadLineas }}
+              {{ p.cantidadLineas === 1 ? "línea" : "líneas" }}
+              <ng-container *ngIf="p.clasificacion">
+                · {{ clasificacionLabel(p.clasificacion) }}</ng-container
+              >
+            </div>
+          </td>
+          <td class="text-right mono">{{ formatCOP(p.totalDebito) }}</td>
+          <td>
+            <ng-container *ngIf="p.recurrente; else manual">
+              <div>
+                <i class="pi pi-sync pl-icono"></i> Cada mes, el día
+                {{ p.diaMes }}
+              </div>
+              <div class="pl-meta" *ngIf="p.ultimoPeriodo">
+                Último borrador: {{ p.ultimoPeriodo + "-01" | fechaEs: "mes" }}
+              </div>
+            </ng-container>
+            <ng-template #manual
+              ><span class="sin-dato">Cuando se use</span></ng-template
+            >
+          </td>
+          <td>
+            <p-tag
+              [value]="p.activa ? 'Activa' : 'Inactiva'"
+              [severity]="p.activa ? 'success' : 'secondary'"
+              styleClass="tag-mini"
+            />
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button
+                pButton
+                type="button"
+                icon="pi pi-file-edit"
+                class="p-button-text p-button-sm"
+                pTooltip="Crear nota con esta plantilla"
+                tooltipPosition="top"
+                [disabled]="!p.activa"
+                (click)="usar(p)"
+              ></button>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-list"
+                class="p-button-text p-button-sm"
+                pTooltip="Editar líneas"
+                tooltipPosition="top"
+                (click)="editarLineas(p)"
+              ></button>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm action-edit"
+                pTooltip="Editar nombre y recurrencia"
+                tooltipPosition="top"
+                (click)="editar(p)"
+              ></button>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-trash"
+                class="p-button-text p-button-danger p-button-sm action-delete"
+                pTooltip="Eliminar"
+                tooltipPosition="top"
+                (click)="eliminar(p)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5">
+            <div class="empty-state">
+              <i class="pi pi-copy"></i>
+              <p>
+                {{
+                  searchQuery
+                    ? "Ninguna plantilla coincide con la búsqueda"
+                    : "Todavía no hay plantillas. Cree una con «Nueva plantilla»."
+                }}
+              </p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<app-plantilla-dialog
+  [(visible)]="showEditar"
+  [plantilla]="seleccionada"
+  (guardada)="load()"
+/>
+
+<p-confirmDialog />
+<p-toast />

@@ -41,6 +41,7 @@ import { VentaService } from '../../core/services/venta.service';
 import { CotizacionService } from '../../core/services/cotizacion.service';
 import { TurnoCajaService } from '../../core/services/caja.service';
 import { TerceroService } from '../../core/services/tercero.service';
+import { TerceroAutocompleteComponent } from '../../shared/components/tercero-autocomplete/tercero-autocomplete.component';
 import {
   SerialPickerComponent,
   SerialesElegidos,
@@ -111,6 +112,7 @@ interface OpcionVenta {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    TerceroAutocompleteComponent,
     CommonModule,
     FormsModule,
     PopoverModule,
@@ -1477,24 +1479,6 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // ── Cliente ───────────────────────────────────────────────
-  async buscarCliente(query: string): Promise<void> {
-    if (!query || query.length < 2) {
-      this.clienteSugerencias = [];
-      return;
-    }
-    try {
-      const res: any = await lastValueFrom(
-        this.http.get<any>(
-          `${environment.apiUrl}terceros/clientes?search=${query}`,
-        ),
-      );
-      this.clienteSugerencias = res?.data ?? [];
-      this.cdr.markForCheck();
-    } catch {
-      this.clienteSugerencias = [];
-    }
-  }
-
   selectCliente(c: any): void {
     this.clienteId = c.id;
     this.clienteNombre =
@@ -1763,24 +1747,6 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cotizacionSugerencias = [];
     this.showCotizacion = true;
     this.cdr.markForCheck();
-  }
-
-  async buscarClienteCotizacion(query: string): Promise<void> {
-    if (!query || query.length < 2) {
-      this.cotizacionSugerencias = [];
-      return;
-    }
-    try {
-      const res: any = await lastValueFrom(
-        this.http.get<any>(
-          `${environment.apiUrl}terceros/clientes?search=${query}`,
-        ),
-      );
-      this.cotizacionSugerencias = res?.data ?? [];
-      this.cdr.markForCheck();
-    } catch {
-      this.cotizacionSugerencias = [];
-    }
   }
 
   selectClienteCotizacion(c: any): void {

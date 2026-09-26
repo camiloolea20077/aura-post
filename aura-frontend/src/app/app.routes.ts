@@ -798,6 +798,22 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'tesoreria/cuentas-bancarias/nueva',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/tesoreria/cuentas-bancarias/form/form-cuenta-bancaria.component').then(
+            (m) => m.FormCuentaBancariaComponent,
+          ),
+      },
+      {
+        path: 'tesoreria/cuentas-bancarias/:id',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/tesoreria/cuentas-bancarias/form/form-cuenta-bancaria.component').then(
+            (m) => m.FormCuentaBancariaComponent,
+          ),
+      },
+      {
         path: 'tesoreria/egresos',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
@@ -847,6 +863,41 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/contabilidad/asientos/asientos.component').then(
             (m) => m.AsientosComponent,
+          ),
+      },
+      // Notas contables (comprobante de diario CD): el contador las elabora,
+      // las deja en borrador y las contabiliza después.
+      {
+        path: 'contabilidad/notas',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/notas-contables/index/index-notas-contables.component').then(
+            (m) => m.IndexNotasContablesComponent,
+          ),
+      },
+      // Antes de ':id': si no, 'plantillas' se tomaría como id de una nota.
+      {
+        path: 'contabilidad/notas/plantillas',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/notas-contables/plantillas/index-plantillas-nota.component').then(
+            (m) => m.IndexPlantillasNotaComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/notas/nueva',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/notas-contables/form/form-nota-contable.component').then(
+            (m) => m.FormNotaContableComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/notas/:id',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/notas-contables/form/form-nota-contable.component').then(
+            (m) => m.FormNotaContableComponent,
           ),
       },
       {

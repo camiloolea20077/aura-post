@@ -1,0 +1,104 @@
+<p-dialog
+  header="Pegar líneas desde Excel"
+  [visible]="visible"
+  (visibleChange)="$event ? null : cerrar()"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '760px' }"
+  [breakpoints]="{ '800px': '95vw' }"
+>
+  <p class="imp-ayuda">
+    Copie las filas en Excel y péguelas aquí. Columnas, en este orden:
+  </p>
+  <div class="imp-columnas">
+    <span><b>Cuenta</b> (código)</span>
+    <span>Tercero (NIT o cédula)</span>
+    <span>Centro de costo (código)</span>
+    <span>Descripción</span>
+    <span><b>Débito</b></span>
+    <span><b>Crédito</b></span>
+  </div>
+  <p class="imp-ayuda imp-ayuda--sub">
+    Tercero, centro de costo y descripción pueden ir vacíos. La fila de títulos se ignora.
+  </p>
+
+  <textarea
+    pTextarea
+    rows="8"
+    class="w-full imp-texto"
+    [(ngModel)]="texto"
+    (ngModelChange)="onTextoCambia()"
+    placeholder="519530	900123456		Papelería	150000	&#10;110505				150000"
+  ></textarea>
+
+  <div class="imp-acciones">
+    <button
+      pButton
+      type="button"
+      label="Revisar"
+      icon="pi pi-search"
+      class="p-button-outlined"
+      [loading]="procesando"
+      [disabled]="!texto.trim()"
+      (click)="interpretar()"
+    ></button>
+  </div>
+
+  <ng-container *ngIf="resultado">
+    <div class="imp-resumen" [class.imp-resumen--ok]="resultado.errores.length === 0">
+      <i
+        [class]="resultado.errores.length === 0 ? 'pi pi-check-circle' : 'pi pi-exclamation-triangle'"
+      ></i>
+      <span>
+        <b>{{ resultado.lineas.length }}</b>
+        {{ resultado.lineas.length === 1 ? "línea lista" : "líneas listas" }}
+        · Débito {{ formatCOP(totalDebito) }} · Crédito {{ formatCOP(totalCredito) }}
+        <ng-container *ngIf="resultado.errores.length">
+          · <b>{{ resultado.errores.length }}</b>
+          {{ resultado.errores.length === 1 ? "fila no se pudo usar" : "filas no se pudieron usar" }}
+        </ng-container>
+      </span>
+    </div>
+
+    <ul class="imp-errores" *ngIf="resultado.errores.length">
+      <li *ngFor="let e of resultado.errores">{{ e.mensaje }}</li>
+    </ul>
+
+    <div class="imp-modo" *ngIf="hayLineas && resultado.lineas.length">
+      <label class="imp-label">La nota ya tiene líneas. ¿Qué hago con ellas?</label>
+      <div class="opciones">
+        <button
+          type="button"
+          class="opcion"
+          [class.opcion--activa]="reemplazar"
+          (click)="reemplazar = true"
+        >
+          <i class="pi" [class.pi-circle-fill]="reemplazar" [class.pi-circle]="!reemplazar"></i>
+          Reemplazarlas
+        </button>
+        <button
+          type="button"
+          class="opcion"
+          [class.opcion--activa]="!reemplazar"
+          (click)="reemplazar = false"
+        >
+          <i class="pi" [class.pi-circle-fill]="!reemplazar" [class.pi-circle]="reemplazar"></i>
+          Agregar al final
+        </button>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancelar" class="btn-amarillo" (click)="cerrar()"></button>
+    <button
+      pButton
+      type="button"
+      [label]="resultado?.errores?.length ? 'Agregar las válidas' : 'Agregar a la nota'"
+      icon="pi pi-check"
+      class="btn-verde"
+      [disabled]="!resultado?.lineas?.length"
+      (click)="agregar()"
+    ></button>
+  </ng-template>
+</p-dialog>

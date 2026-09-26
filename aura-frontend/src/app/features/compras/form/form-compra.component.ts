@@ -56,6 +56,7 @@ import {
   TerceroTableModel,
 } from '../../../core/models/tercero.model';
 import { CompraService } from '../../../core/services/compra.service';
+import { TerceroAutocompleteComponent } from '../../../shared/components/tercero-autocomplete/tercero-autocomplete.component';
 import { TerceroService } from '../../../core/services/tercero.service';
 import { ProductoService } from '../../../core/services/producto.service';
 import { ProductoPresentacionService } from '../../../core/services/producto-presentacion.service';
@@ -85,6 +86,7 @@ import { aFechaHoraLocal } from '../../../shared/utils/fecha.util';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    TerceroAutocompleteComponent,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
@@ -121,7 +123,6 @@ export class FormCompraComponent implements OnInit {
   // ─── Cabecera ─────────────────────────────────────────────────────
   public proveedorQuery = '';
   public proveedorSeleccionado: TerceroTableModel | null = null;
-  public proveedoresSugerencias: TerceroTableModel[] = [];
   // Datos completos del proveedor (correo, teléfono, dirección, razón social)
   public terceroFull: TerceroModel | null = null;
 
@@ -1264,17 +1265,21 @@ export class FormCompraComponent implements OnInit {
   }
 
   // ─── Autocomplete proveedor ───────────────────────────────────────
-  async buscarProveedores(query: string): Promise<void> {
-    try {
-      const res = await lastValueFrom(this.terceroService.proveedores(query));
-      this.proveedoresSugerencias = res?.data ?? [];
-    } catch {
-      this.proveedoresSugerencias = [];
-    }
+  /** Texto del proveedor elegido en el autocomplete ("NIT — nombre"). */
+  get proveedorLabel(): string | null {
+    const p = this.proveedorSeleccionado;
+    if (!p) return null;
+    return p.numeroDocumento ? `${p.numeroDocumento} — ${p.nombreCompleto}` : p.nombreCompleto;
   }
 
-  seleccionarProveedor(event: AutoCompleteSelectEvent): void {
-    const t = event.value as TerceroTableModel;
+  /** Elegido (o quitado) en el autocomplete / buscador avanzado. */
+  onProveedor(t: TerceroTableModel | null): void {
+    if (t) this.seleccionarProveedor(t);
+    else this.limpiarProveedor();
+    this.cdr.markForCheck();
+  }
+
+  seleccionarProveedor(t: TerceroTableModel): void {
     this.proveedorSeleccionado = t;
     this.proveedorQuery = t.nombreCompleto;
     this.cargarTerceroFull(t.id);
@@ -2025,7 +2030,6 @@ export class FormCompraComponent implements OnInit {
     this.proveedorQuery = '';
     this.proveedorSeleccionado = null;
     this.terceroFull = null;
-    this.proveedoresSugerencias = [];
     this.sucursalId = this.defaultSucursalId;
     this.numeroCompra = '';
     this.fechaCompra = new Date();

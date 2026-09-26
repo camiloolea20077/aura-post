@@ -204,16 +204,14 @@
             >Proveedor / Tercero <span class="optional">(opcional)</span></label
           >
           <div class="field mt-1">
-            <p-autoComplete
-              [(ngModel)]="terceroSeleccionado"
-              [ngModelOptions]="{ standalone: true }"
-              [suggestions]="terceroSugerencias"
-              [style]="{ width: '100%' }"
-              (completeMethod)="buscarTerceros($event)"
-              field="nombreCompleto"
+            <!-- Sugiere proveedores; en la lupa se puede buscar cualquier tercero. -->
+            <app-tercero-autocomplete
+              [terceroId]="terceroSeleccionado?.id ?? null"
+              [label]="terceroSeleccionado?.nombreCompleto ?? null"
+              rol="PROVEEDOR"
+              [rolFijo]="false"
               placeholder="Buscar por nombre o NIT..."
-              [showClear]="true"
-              styleClass="w-full"
+              (seleccionado)="terceroSeleccionado = $event"
             />
           </div>
         </div>

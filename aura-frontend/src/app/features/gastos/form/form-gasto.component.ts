@@ -20,7 +20,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { CalendarModule } from 'primeng/calendar';
 import { ToastModule } from 'primeng/toast';
-import { AutoCompleteModule } from 'primeng/autocomplete';
+import { TerceroAutocompleteComponent } from '../../../shared/components/tercero-autocomplete/tercero-autocomplete.component';
 import { TooltipModule } from 'primeng/tooltip';
 import { FieldsetModule } from 'primeng/fieldset';
 import { RadioButtonModule } from 'primeng/radiobutton';
@@ -61,7 +61,7 @@ import { aFechaLocal } from '../../../shared/utils/fecha.util';
     InputTextModule,
     CalendarModule,
     ToastModule,
-    AutoCompleteModule,
+    TerceroAutocompleteComponent,
     TooltipModule,
     FieldsetModule,
     RadioButtonModule,
@@ -135,7 +135,6 @@ export class FormGastoComponent implements OnInit {
   ];
 
   // Autocomplete tercero (objeto completo, fuera del form)
-  terceroSugerencias: TerceroTableModel[] = [];
   terceroSeleccionado: TerceroTableModel | null = null;
 
   readonly categoriasOpts = CATEGORIAS_GASTO.map((c) => ({
@@ -417,18 +416,6 @@ export class FormGastoComponent implements OnInit {
     const base = this.frm.get('baseReteica')?.value ?? 0;
     const tarifa = this.frm.get('tarifaReteica')?.value ?? 0;
     this.frm.get('valorReteica')?.setValue(+((base * tarifa) / 100).toFixed(2));
-    this.cdr.markForCheck();
-  }
-
-  async buscarTerceros(event: { query: string }): Promise<void> {
-    try {
-      const res = await lastValueFrom(
-        this.terceroService.proveedores(event.query),
-      );
-      this.terceroSugerencias = res?.data ?? [];
-    } catch {
-      this.terceroSugerencias = [];
-    }
     this.cdr.markForCheck();
   }
 

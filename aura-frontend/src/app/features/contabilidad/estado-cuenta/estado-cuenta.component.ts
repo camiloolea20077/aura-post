@@ -14,7 +14,7 @@ import { TagModule } from 'primeng/tag';
 import { CalendarModule } from 'primeng/calendar';
 import { ToastModule } from 'primeng/toast';
 import { SkeletonModule } from 'primeng/skeleton';
-import { DropdownModule } from 'primeng/dropdown';
+import { TerceroAutocompleteComponent } from '../../../shared/components/tercero-autocomplete/tercero-autocomplete.component';
 import { MessageService } from 'primeng/api';
 
 import { TerceroService } from '../../../core/services/tercero.service';
@@ -48,7 +48,7 @@ type TagSeverity =
     CalendarModule,
     ToastModule,
     SkeletonModule,
-    DropdownModule,
+    TerceroAutocompleteComponent,
   ],
   providers: [MessageService],
   templateUrl: './estado-cuenta.component.html',
@@ -56,10 +56,7 @@ type TagSeverity =
 })
 export class EstadoCuentaComponent implements OnInit {
   // ── Selector de cliente ─────────────────────────────────────
-  clientes: TerceroTableModel[] = [];
   clienteSeleccionado: TerceroTableModel | null = null;
-  loadingClientes = false;
-  private _searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
   // ── Filtros fecha ───────────────────────────────────────────
   fechaDesde: Date | null = null;
@@ -78,33 +75,9 @@ export class EstadoCuentaComponent implements OnInit {
 
   ngOnInit(): void {}
 
-  onFiltroCliente(event: { filter: string }): void {
-    const q = event.filter?.trim() ?? '';
-    if (this._searchTimeout) clearTimeout(this._searchTimeout);
-    if (q.length < 2) {
-      this.clientes = this.clienteSeleccionado ? [this.clienteSeleccionado] : [];
-      this.cdr.markForCheck();
-      return;
-    }
-    this._searchTimeout = setTimeout(async () => {
-      this.loadingClientes = true;
-      this.cdr.markForCheck();
-      try {
-        const res = await lastValueFrom(this.terceroService.terceros(q));
-        const resultados = res?.data ?? [];
-        // mantener el seleccionado en la lista aunque no esté en los resultados
-        if (this.clienteSeleccionado && !resultados.find(c => c.id === this.clienteSeleccionado!.id)) {
-          this.clientes = [this.clienteSeleccionado, ...resultados];
-        } else {
-          this.clientes = resultados;
-        }
-      } catch {
-        this.clientes = [];
-      } finally {
-        this.loadingClientes = false;
-        this.cdr.markForCheck();
-      }
-    }, 300);
+  onClienteSeleccionado(t: TerceroTableModel | null): void {
+    this.clienteSeleccionado = t;
+    this.onClienteChange();
   }
 
   async onClienteChange(): Promise<void> {

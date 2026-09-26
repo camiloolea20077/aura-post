@@ -1,0 +1,54 @@
+<p-dialog
+  [header]="'Reversar nota ' + (nota?.numeroComprobante ?? '')"
+  [visible]="visible"
+  (visibleChange)="$event ? null : cerrar()"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '480px' }"
+  [breakpoints]="{ '560px': '95vw' }"
+>
+  <p class="rev-aviso">
+    Se registra y contabiliza una nota con las mismas cuentas y los valores al lado
+    contrario. La nota original no cambia: las dos quedan enlazadas y en los informes
+    suman cero.
+  </p>
+
+  <div class="rev-campo">
+    <label for="fechaReversion">Fecha de la reversión <span class="req">*</span></label>
+    <p-calendar
+      inputId="fechaReversion"
+      [(ngModel)]="fecha"
+      dateFormat="dd/mm/yy"
+      [minDate]="minFecha"
+      [showIcon]="true"
+      styleClass="w-full"
+    />
+    <small *ngIf="fecha">{{ fecha | fechaEs: "larga" }} · debe caer en un período abierto</small>
+  </div>
+
+  <div class="rev-campo">
+    <label for="conceptoReversion">Concepto</label>
+    <input
+      id="conceptoReversion"
+      pInputText
+      class="w-full"
+      [(ngModel)]="concepto"
+      [placeholder]="'Reversión de ' + (nota?.numeroComprobante ?? '')"
+      maxlength="500"
+    />
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancelar" class="btn-amarillo" (click)="cerrar()"></button>
+    <button
+      pButton
+      type="button"
+      label="Reversar"
+      icon="pi pi-replay"
+      class="btn-aura"
+      [loading]="saving"
+      [disabled]="!fecha"
+      (click)="confirmar()"
+    ></button>
+  </ng-template>
+</p-dialog>

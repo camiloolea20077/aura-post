@@ -920,6 +920,12 @@ $mono: "JetBrains Mono", monospace;
   align-items: center;
 }
 
+// El buscador de cliente ocupa todo el ancho que deja el botón de nuevo cliente.
+.cliente-ac {
+  flex: 1;
+  min-width: 0;
+}
+
 // ── Exento de IVA ────────────────────────────────────────────
 .exento-area {
   padding: 0.4rem 0.9rem;

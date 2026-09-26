@@ -20,7 +20,7 @@ import { MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
 import { OrdenCompraService } from '../../../core/services/orden-compra.service';
-import { TerceroService } from '../../../core/services/tercero.service';
+import { TerceroAutocompleteComponent } from '../../../shared/components/tercero-autocomplete/tercero-autocomplete.component';
 import { SucursalService } from '../../../core/services/sucursal.service';
 import { ProductoService } from '../../../core/services/producto.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
@@ -43,6 +43,7 @@ type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contr
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    TerceroAutocompleteComponent,
     CommonModule, FormsModule,
     ButtonModule, InputTextModule, InputNumberModule,
     DropdownModule, CalendarModule, TableModule, TagModule,
@@ -57,7 +58,8 @@ export class IndexOrdenesComponent implements OnInit {
   loading = false;
 
   // ── Dropdowns cabecera ────────────────────────────────────────
-  proveedores: { label: string; value: number }[] = [];
+  /** Texto del proveedor al editar (el autocomplete no precarga lista). */
+  proveedorLabel: string | null = null;
   sucursales: { label: string; value: number }[] = [];
 
   // ── Búsqueda de productos server-side (igual que form-compra) ─
@@ -106,7 +108,6 @@ export class IndexOrdenesComponent implements OnInit {
 
   constructor(
     private readonly service: OrdenCompraService,
-    private readonly terceroService: TerceroService,
     private readonly sucursalService: SucursalService,
     private readonly productoService: ProductoService,
     private readonly alertService: AlertService,
@@ -115,10 +116,7 @@ export class IndexOrdenesComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    Promise.all([
-      this.cargarProveedores(),
-      this.cargarSucursales(),
-    ]).then(() => this.cargar());
+    this.cargarSucursales().then(() => this.cargar());
   }
 
   async cargar(): Promise<void> {
@@ -135,10 +133,6 @@ export class IndexOrdenesComponent implements OnInit {
     }
   }
 
-  private async cargarProveedores(): Promise<void> {
-    const res = await lastValueFrom(this.terceroService.proveedores()).catch(() => null);
-    this.proveedores = (res?.data ?? []).map((t) => ({ label: t.nombreCompleto, value: t.id }));
-  }
 
   private async cargarSucursales(): Promise<void> {
     const res = await lastValueFrom(this.sucursalService.getActivas()).catch(() => null);
@@ -179,6 +173,7 @@ export class IndexOrdenesComponent implements OnInit {
   abrirNueva(): void {
     this.editingId = null;
     this.formOC = this.emptyForm();
+    this.proveedorLabel = null;
     this.lineas = [this.emptyLinea()];
     this.productosOpts = [];
     this.fechaForm = new Date();
@@ -201,6 +196,7 @@ export class IndexOrdenesComponent implements OnInit {
         observaciones: orden.observaciones,
         detalles: [],
       };
+      this.proveedorLabel = orden.proveedorNombre ?? null;
       this.fechaForm = new Date(orden.fecha);
       this.fechaEntregaForm = orden.fechaEntregaEsperada ? new Date(orden.fechaEntregaEsperada) : null;
       // Pre-populate productosOpts with the existing lines so the dropdown shows names

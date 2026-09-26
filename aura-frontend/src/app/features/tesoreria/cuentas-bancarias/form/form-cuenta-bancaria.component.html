@@ -1,0 +1,237 @@
+<div class="page">
+  <form [formGroup]="frm" (ngSubmit)="guardar()">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-head__title">
+          <span class="header-icon"><i class="pi pi-credit-card"></i></span>
+          <div>
+            <h1 class="title">
+              {{ esEdicion ? "Editar cuenta" : "Nueva cuenta bancaria" }}
+              <p-tag
+                *ngIf="cuenta && !cuenta.activa"
+                value="Inactiva"
+                severity="secondary"
+                styleClass="tag-mini cb-estado"
+              />
+            </h1>
+            <p class="subtitle">
+              Cuenta de banco, caja o billetera digital y la cuenta contable donde se registra
+            </p>
+          </div>
+        </div>
+        <button
+          pButton
+          type="submit"
+          label="Guardar"
+          icon="pi pi-check"
+          class="btn-aura"
+          [loading]="saving"
+          [disabled]="loading"
+        ></button>
+      </div>
+
+      <div class="cb-body">
+        <!-- ── Identificación ───────────────────────────────────────── -->
+        <section class="cb-seccion">
+          <h2 class="cb-seccion__titulo">Identificación</h2>
+          <div class="cb-grid">
+            <div class="field">
+              <label for="codigo">Código</label>
+              <input
+                id="codigo"
+                pInputText
+                formControlName="codigo"
+                class="cb-codigo"
+                maxlength="20"
+                [placeholder]="siguienteCodigo || 'CB-001'"
+              />
+              <small *ngIf="!esEdicion && !frm.get('codigo')?.value && siguienteCodigo">
+                Si lo deja vacío se asigna <b>{{ siguienteCodigo }}</b>.
+              </small>
+              <small class="field-error" *ngIf="invalido('codigo')">
+                Solo letras, números, guion y guion bajo (máximo 20).
+              </small>
+            </div>
+
+            <div class="field span-2">
+              <label for="nombre">Nombre de la cuenta <span class="req">*</span></label>
+              <input
+                id="nombre"
+                pInputText
+                formControlName="nombre"
+                placeholder="Ej.: Bancolombia principal"
+              />
+              <small class="field-error" *ngIf="invalido('nombre')">El nombre es obligatorio.</small>
+            </div>
+
+            <div class="field">
+              <label for="tipo">Tipo <span class="req">*</span></label>
+              <p-dropdown
+                inputId="tipo"
+                formControlName="tipo"
+                [options]="tiposOpts"
+                optionLabel="label"
+                optionValue="value"
+                styleClass="w-full"
+              ></p-dropdown>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Datos de la cuenta ───────────────────────────────────── -->
+        <section class="cb-seccion">
+          <h2 class="cb-seccion__titulo">Datos de la cuenta</h2>
+          <div class="cb-grid">
+            <div class="field" *ngIf="esBanco">
+              <label for="banco">Banco</label>
+              <input
+                id="banco"
+                pInputText
+                formControlName="banco"
+                placeholder="Ej.: Bancolombia, Davivienda…"
+              />
+            </div>
+
+            <div class="field">
+              <label for="numeroCuenta">Número de cuenta / billetera</label>
+              <input
+                id="numeroCuenta"
+                pInputText
+                formControlName="numeroCuenta"
+                placeholder="Ej.: 300 123 4567"
+              />
+            </div>
+
+            <div class="field">
+              <label for="titular">Titular</label>
+              <input id="titular" pInputText formControlName="titular" placeholder="Nombre del titular" />
+            </div>
+
+            <div class="field" [class.span-2]="!esBanco">
+              <label>Banco como tercero <span class="opcional">(opcional)</span></label>
+              <app-tercero-autocomplete
+                formControlName="terceroId"
+                [label]="cuenta?.terceroNombre ?? null"
+                rol="BANCO"
+                placeholder="Buscar el banco…"
+              />
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Contabilidad ─────────────────────────────────────────── -->
+        <section class="cb-seccion">
+          <h2 class="cb-seccion__titulo">Contabilidad</h2>
+          <div class="cb-grid">
+            <div class="field span-2">
+              <label for="cuentaContable">Cuenta contable <span class="req">*</span></label>
+              <p-dropdown
+                inputId="cuentaContable"
+                formControlName="cuentaContableId"
+                [options]="cuentasContablesOpts"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccione una cuenta del disponible (11xx)"
+                [filter]="true"
+                filterBy="label"
+                [showClear]="true"
+                styleClass="w-full"
+              ></p-dropdown>
+              <small>
+                Donde se registran los movimientos de esta cuenta: 1105 Caja, 1110 Bancos…
+              </small>
+              <small class="field-error" *ngIf="invalido('cuentaContableId')">
+                La cuenta contable es obligatoria.
+              </small>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── Saldo inicial y sobregiro ────────────────────────────── -->
+        <section class="cb-seccion">
+          <h2 class="cb-seccion__titulo">Saldo inicial y sobregiro</h2>
+          <div class="cb-grid">
+            <div class="field">
+              <label for="saldoInicial">Saldo inicial</label>
+              <p-inputNumber
+                inputId="saldoInicial"
+                formControlName="saldoInicial"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [minFractionDigits]="0"
+                [maxFractionDigits]="0"
+                styleClass="w-full"
+                inputStyleClass="w-full"
+              ></p-inputNumber>
+              <small>Con este saldo arranca la cuenta en el sistema.</small>
+            </div>
+
+            <div class="field span-2">
+              <label>¿Permite sobregiro?</label>
+              <div class="opciones">
+                <button
+                  type="button"
+                  class="opcion"
+                  [class.opcion--activa]="!permiteSobregiro"
+                  (click)="setSobregiro(false)"
+                >
+                  <i class="pi" [class.pi-circle-fill]="!permiteSobregiro" [class.pi-circle]="permiteSobregiro"></i>
+                  No
+                </button>
+                <button
+                  type="button"
+                  class="opcion"
+                  [class.opcion--activa]="permiteSobregiro"
+                  (click)="setSobregiro(true)"
+                >
+                  <i class="pi" [class.pi-circle-fill]="permiteSobregiro" [class.pi-circle]="!permiteSobregiro"></i>
+                  Sí, puede quedar negativa
+                </button>
+              </div>
+            </div>
+
+            <div class="field" *ngIf="permiteSobregiro">
+              <label for="cupo">Cupo de sobregiro <span class="opcional">(vacío = sin límite)</span></label>
+              <p-inputNumber
+                inputId="cupo"
+                formControlName="cupoSobregiro"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [minFractionDigits]="0"
+                [maxFractionDigits]="0"
+                [min]="0"
+                placeholder="Sin límite"
+                styleClass="w-full"
+                inputStyleClass="w-full"
+              ></p-inputNumber>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="card-footer cb-footer">
+        <button
+          pButton
+          type="button"
+          label="Regresar"
+          icon="pi pi-arrow-left"
+          class="btn-rojo"
+          (click)="volver()"
+        ></button>
+        <button
+          pButton
+          type="submit"
+          [label]="esEdicion ? 'Actualizar' : 'Crear cuenta'"
+          icon="pi pi-check"
+          class="btn-verde"
+          [loading]="saving"
+          [disabled]="loading"
+        ></button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<p-toast />

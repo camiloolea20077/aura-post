@@ -15,7 +15,6 @@ import { ButtonModule } from 'primeng/button';
 import { CalendarModule } from 'primeng/calendar';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
-import { AutoCompleteModule } from 'primeng/autocomplete';
 import { TableModule, TableLazyLoadEvent } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
@@ -23,7 +22,8 @@ import { lastValueFrom } from 'rxjs';
 
 import { GastoService } from '../../../core/services/gasto.service';
 import { CentroCostoService } from '../../../core/services/centro-costo.service';
-import { TerceroService } from '../../../core/services/tercero.service';
+import { TerceroAutocompleteComponent } from '../../../shared/components/tercero-autocomplete/tercero-autocomplete.component';
+import { TerceroTableModel } from '../../../core/models/tercero.model';
 import { IndexDBService } from '../../../core/services/index-db.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
 import {
@@ -58,7 +58,7 @@ import { aFechaLocal } from '../../../shared/utils/fecha.util';
     CalendarModule,
     DropdownModule,
     InputTextModule,
-    AutoCompleteModule,
+    TerceroAutocompleteComponent,
     TableModule,
     TagModule,
     TooltipModule,
@@ -82,7 +82,6 @@ export class ReporteGastosComponent implements OnInit {
   sucursales: { label: string; value: number }[] = [];
   centrosCosto: { label: string; value: number }[] = [];
 
-  terceroSugerencias: any[] = [];
   terceroSeleccionado: any = null;
 
   readonly agrupacionOpts: { label: string; value: AgrupacionGastos }[] = [
@@ -116,7 +115,6 @@ export class ReporteGastosComponent implements OnInit {
     private readonly fb: FormBuilder,
     private readonly gastoService: GastoService,
     private readonly centroCostoService: CentroCostoService,
-    private readonly terceroService: TerceroService,
     private readonly indexDB: IndexDBService,
     private readonly alert: AlertService,
     private readonly cdr: ChangeDetectorRef,
@@ -160,23 +158,6 @@ export class ReporteGastosComponent implements OnInit {
       label: `${cc.codigo} — ${cc.nombre}`,
       value: cc.id,
     }));
-    this.cdr.markForCheck();
-  }
-
-  async buscarTercero(event: { query: string }): Promise<void> {
-    try {
-      const res: any = await lastValueFrom(
-        this.terceroService.tercerosSelector(),
-      );
-      const q = event.query.toLowerCase();
-      this.terceroSugerencias = (res?.data ?? []).filter(
-        (t: any) =>
-          t.nombreCompleto?.toLowerCase().includes(q) ||
-          t.numeroDocumento?.includes(q),
-      );
-    } catch {
-      this.terceroSugerencias = [];
-    }
     this.cdr.markForCheck();
   }
 
@@ -256,6 +237,11 @@ export class ReporteGastosComponent implements OnInit {
       this.loading = false;
       this.cdr.markForCheck();
     }
+  }
+
+  onTercero(t: TerceroTableModel | null): void {
+    this.terceroSeleccionado = t ? { id: t.id, nombreCompleto: t.nombreCompleto } : null;
+    this.cdr.markForCheck();
   }
 
   limpiarFiltros(): void {

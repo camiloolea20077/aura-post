@@ -30,7 +30,7 @@ import {
   MetodoPago,
 } from '../models/cuenta-cobrar.model';
 import { CuentaCobrarService } from '../services/cuenta-cobrar.service';
-import { TerceroService } from '../../../core/services/tercero.service';
+import { TerceroAutocompleteComponent } from '../../../shared/components/tercero-autocomplete/tercero-autocomplete.component';
 
 import { aFechaHoraLocal } from '../../../shared/utils/fecha.util';
 @Component({
@@ -47,6 +47,7 @@ import { aFechaHoraLocal } from '../../../shared/utils/fecha.util';
     TextareaModule,
     CalendarModule,
     DropdownModule,
+    TerceroAutocompleteComponent,
   ],
   templateUrl: './form-cuenta-cobrar.component.html',
   styleUrls: ['./form-cuenta-cobrar.component.scss'],
@@ -59,7 +60,6 @@ export class FormCuentaCobrarComponent implements OnChanges {
 
   form: FormGroup;
   loading = false;
-  clientes: any[] = [];
 
   metodosPago = [
     { label: 'Efectivo', value: 'efectivo' },
@@ -75,7 +75,6 @@ export class FormCuentaCobrarComponent implements OnChanges {
   constructor(
     private readonly fb: FormBuilder,
     private readonly service: CuentaCobrarService,
-    private readonly terceroService: TerceroService,
     private readonly alert: AlertService,
     private readonly cdr: ChangeDetectorRef,
   ) {
@@ -109,7 +108,6 @@ export class FormCuentaCobrarComponent implements OnChanges {
           observaciones: null,
         });
       }
-      this.loadClientes();
       this.cdr.markForCheck();
     }
   }
@@ -155,20 +153,6 @@ export class FormCuentaCobrarComponent implements OnChanges {
       );
     } finally {
       this.loading = false;
-      this.cdr.markForCheck();
-    }
-  }
-
-  async loadClientes(): Promise<void> {
-    try {
-      const res = await lastValueFrom(this.terceroService.clientes());
-      this.clientes = (res?.data ?? []).map((t) => ({
-        label: t.nombreCompleto,
-        value: t.id,
-      }));
-    } catch (err) {
-      this.clientes = [];
-    } finally {
       this.cdr.markForCheck();
     }
   }

@@ -1,0 +1,38 @@
+// .page, .card, .card-head y el buscador son estándar global (styles.scss).
+
+.pl-nombre {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.85rem;
+}
+
+.pl-meta {
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.pl-icono {
+  color: #2563eb;
+  font-size: 0.75rem;
+  margin-right: 0.2rem;
+}
+
+.sin-dato {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+.row-inactiva {
+  opacity: 0.6;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.mono {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+}

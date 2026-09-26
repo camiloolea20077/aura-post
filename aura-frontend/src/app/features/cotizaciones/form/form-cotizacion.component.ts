@@ -39,6 +39,7 @@ import {
 } from '../../../core/models/cotizacion.model';
 import { TerceroTableModel } from '../../../core/models/tercero.model';
 import { CotizacionService } from '../../../core/services/cotizacion.service';
+import { TerceroAutocompleteComponent } from '../../../shared/components/tercero-autocomplete/tercero-autocomplete.component';
 import { TerceroService } from '../../../core/services/tercero.service';
 import { ProductoService } from '../../../core/services/producto.service';
 import { EmpresaService } from '../../../core/services/empresa.service';
@@ -55,6 +56,7 @@ import { InputIconModule } from 'primeng/inputicon';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    TerceroAutocompleteComponent,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
@@ -89,7 +91,6 @@ export class FormCotizacionComponent implements OnInit {
   // Header
   terceroQuery = '';
   terceroSeleccionado: TerceroTableModel | null = null;
-  tercerosSugeridos: TerceroTableModel[] = [];
   observaciones = '';
   diasVigencia = 30;
   fechaVencimiento: Date = new Date();
@@ -106,12 +107,6 @@ export class FormCotizacionComponent implements OnInit {
   dialogLoading = false;
   private dialogLastEvent!: TableLazyLoadEvent;
 
-  // Modal selector tercero
-  showTerceroDialog = false;
-  tercerosItems: any[] = [];
-  tercerosTotal = 0;
-  tercerosLoading = false;
-  private tercerosLastEvent!: TableLazyLoadEvent;
 
   // Estados
   get puedeEditar(): boolean {
@@ -224,76 +219,22 @@ export class FormCotizacionComponent implements OnInit {
     }));
   }
 
-  // ─── Autocomplete tercero ───────────────────────────────────────
-  async buscarTerceros(query: string): Promise<void> {
-    try {
-      const res = await lastValueFrom(this.terceroService.clientes(query));
-      this.tercerosSugeridos = res?.data ?? [];
-    } catch {
-      this.tercerosSugeridos = [];
-    }
+  // ─── Cliente ───────────────────────────────────────────────────
+  get terceroLabel(): string | null {
+    const c = this.terceroSeleccionado;
+    if (!c) return null;
+    return c.numeroDocumento ? `${c.numeroDocumento} — ${c.nombreCompleto}` : c.nombreCompleto;
   }
 
-  seleccionarTercero(event: AutoCompleteSelectEvent): void {
-    const t = event.value as TerceroTableModel;
+  /** Elegido (o quitado) en el autocomplete / buscador avanzado. */
+  onCliente(t: TerceroTableModel | null): void {
     this.terceroSeleccionado = t;
-    this.terceroQuery = t.nombreCompleto;
+    this.terceroQuery = t?.nombreCompleto ?? '';
     this.cdr.markForCheck();
   }
 
   limpiarTercero(): void {
-    this.terceroSeleccionado = null;
-    this.terceroQuery = '';
-    this.cdr.markForCheck();
-  }
-
-  openTerceroDialog(): void {
-    this.tercerosItems = [];
-    this.tercerosTotal = 0;
-    this.showTerceroDialog = true;
-    this.loadTercerosTable({ first: 0, rows: 10 });
-  }
-
-  async loadTercerosTable(event: TableLazyLoadEvent): Promise<void> {
-    this.tercerosLastEvent = event;
-    this.tercerosLoading = true;
-    this.cdr.markForCheck();
-
-    const page =
-      event.first != null && event.rows
-        ? Math.floor(event.first / event.rows)
-        : 0;
-
-    const dto = {
-      page,
-      rows: event.rows ?? 10,
-      search: this.dialogSearch || null,
-      order_by: 't.nombre_completo',
-      order: 'ASC',
-    };
-
-    try {
-      const res = await lastValueFrom(this.terceroService.page(dto));
-      this.tercerosItems = res?.data?.content ?? [];
-      this.tercerosTotal = res?.data?.totalElements ?? 0;
-    } catch {
-      this.tercerosItems = [];
-      this.tercerosTotal = 0;
-    } finally {
-      this.tercerosLoading = false;
-      this.cdr.markForCheck();
-    }
-  }
-
-  onTercerosSearch(): void {
-    this.loadTercerosTable({ ...this.tercerosLastEvent, first: 0 });
-  }
-
-  selectTerceroFromDialog(item: any): void {
-    this.terceroSeleccionado = item;
-    this.terceroQuery = item.nombreCompleto;
-    this.showTerceroDialog = false;
-    this.cdr.markForCheck();
+    this.onCliente(null);
   }
 
   // ─── Líneas ───────────────────────────────────────────────────

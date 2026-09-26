@@ -1,0 +1,594 @@
+<div class="page">
+  <form [formGroup]="frm" (ngSubmit)="guardarBorrador()">
+    <div class="card">
+      <!-- Header -->
+      <div class="card-head">
+        <div class="card-head__title">
+          <span class="header-icon"><i class="pi pi-file-edit"></i></span>
+          <div>
+            <h1 class="title">
+              {{ titulo }}
+              <p-tag
+                *ngIf="estado"
+                [value]="estadoLabel(estado)"
+                [severity]="estadoSeverity(estado)"
+                styleClass="tag-mini nota-estado"
+              />
+            </h1>
+            <p class="subtitle">
+              <ng-container *ngIf="modoPlantilla">
+                Arme las líneas que se repiten. Cada nota que salga de la
+                plantilla pone su propia fecha.
+              </ng-container>
+              <ng-container *ngIf="editable && !modoPlantilla">
+                El borrador se guarda aunque esté descuadrado. El consecutivo CD
+                se asigna al contabilizar.
+              </ng-container>
+              <ng-container *ngIf="!editable">
+                Período
+                {{
+                  nota?.periodo ? (nota!.periodo + "-01" | fechaEs: "mes") : ""
+                }}
+                · solo lectura
+              </ng-container>
+            </p>
+          </div>
+        </div>
+        <div class="card-head__btns">
+          <button
+            *ngIf="nota"
+            pButton
+            type="button"
+            label="PDF"
+            icon="pi pi-file-pdf"
+            class="p-button-outlined"
+            pTooltip="Comprobante con firmas para imprimir o archivar"
+            tooltipPosition="bottom"
+            (click)="verPdf()"
+          ></button>
+          <button
+            *ngIf="editable"
+            pButton
+            type="submit"
+            [label]="modoPlantilla ? 'Guardar plantilla' : 'Guardar borrador'"
+            [icon]="modoPlantilla ? 'pi pi-copy' : 'pi pi-save'"
+            class="btn-aura"
+            [loading]="saving"
+          ></button>
+        </div>
+      </div>
+
+      <div class="nota-body">
+        <!-- Cabecera -->
+        <div class="nota-grid">
+          <div class="field" *ngIf="!modoPlantilla">
+            <label for="fecha">Fecha <span class="req">*</span></label>
+            <p-calendar
+              inputId="fecha"
+              formControlName="fecha"
+              dateFormat="dd/mm/yy"
+              [showIcon]="true"
+              [showButtonBar]="true"
+              styleClass="w-full"
+              placeholder="dd/mm/aaaa"
+            />
+          </div>
+          <div class="field">
+            <label for="clasificacion">Clasificación</label>
+            <p-dropdown
+              inputId="clasificacion"
+              formControlName="clasificacion"
+              [options]="clasificacionOpts"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sin clasificar"
+              [showClear]="editable"
+              styleClass="w-full"
+            ></p-dropdown>
+          </div>
+          <div class="field span-2">
+            <label for="descripcion">Concepto <span class="req">*</span></label>
+            <input
+              id="descripcion"
+              pInputText
+              formControlName="descripcion"
+              placeholder="Ej.: Provisión de servicios públicos de septiembre"
+            />
+            <small
+              class="field-error"
+              *ngIf="
+                frm.get('descripcion')?.touched &&
+                frm.get('descripcion')?.invalid
+              "
+            >
+              El concepto es obligatorio.
+            </small>
+          </div>
+        </div>
+
+        <!-- Provisiones y causaciones que se deshacen solas al mes siguiente -->
+        <div
+          class="nota-reversion"
+          *ngIf="editable && !modoPlantilla && !nota?.reversaDeId"
+        >
+          <label class="nota-reversion__label">
+            ¿Se reversa sola el día 1 del mes siguiente?
+          </label>
+          <div class="opciones">
+            <button
+              type="button"
+              class="opcion"
+              [class.opcion--activa]="!reversionAutomatica"
+              (click)="setReversionAutomatica(false)"
+            >
+              <i
+                class="pi"
+                [class.pi-circle-fill]="!reversionAutomatica"
+                [class.pi-circle]="reversionAutomatica"
+              ></i>
+              No
+            </button>
+            <button
+              type="button"
+              class="opcion"
+              [class.opcion--activa]="reversionAutomatica"
+              (click)="setReversionAutomatica(true)"
+            >
+              <i
+                class="pi"
+                [class.pi-circle-fill]="reversionAutomatica"
+                [class.pi-circle]="!reversionAutomatica"
+              ></i>
+              Sí, al contabilizarla
+            </button>
+          </div>
+          <small *ngIf="reversionAutomatica">
+            Al contabilizar se registra también la nota inversa con fecha del 1
+            del mes siguiente (útil para provisiones que se reemplazan cuando
+            llega la factura).
+          </small>
+        </div>
+
+        <!-- Enlaces: reversión y plantilla de origen -->
+        <div
+          class="nota-enlaces"
+          *ngIf="
+            nota &&
+            (nota.reversaDeId || nota.revertidoPorId || nota.plantillaNombre)
+          "
+        >
+          <a
+            *ngIf="nota.reversaDeId"
+            class="enlace"
+            [routerLink]="['/contabilidad/notas', nota.reversaDeId]"
+          >
+            <i class="pi pi-replay"></i> Reversión de
+            <b>{{ nota.reversaDeNumero }}</b>
+          </a>
+          <a
+            *ngIf="nota.revertidoPorId"
+            class="enlace enlace--aviso"
+            [routerLink]="['/contabilidad/notas', nota.revertidoPorId]"
+          >
+            <i class="pi pi-replay"></i> Reversada por
+            <b>{{ nota.revertidoPorNumero }}</b>
+          </a>
+          <span *ngIf="nota.plantillaNombre" class="enlace enlace--plano">
+            <i class="pi pi-copy"></i> Desde la plantilla
+            <b>{{ nota.plantillaNombre }}</b>
+          </span>
+        </div>
+
+        <!-- Traza: quién la hizo, quién la aprobó, quién la anuló -->
+        <div class="nota-traza" *ngIf="nota">
+          <span>
+            <i class="pi pi-user-edit"></i>
+            Elaboró <b>{{ nota.elaboradoPor || "—" }}</b> el
+            {{ nota.createdAt | fechaEs: "fechaHora" }}
+          </span>
+          <span *ngIf="nota.contabilizadoAt">
+            <i class="pi pi-check-circle"></i>
+            Contabilizó <b>{{ nota.contabilizadoPor || "—" }}</b> el
+            {{ nota.contabilizadoAt | fechaEs: "fechaHora" }}
+          </span>
+          <span *ngIf="nota.anuladoAt" class="traza-anulada">
+            <i class="pi pi-ban"></i>
+            Anuló <b>{{ nota.anuladoPor || "—" }}</b> el
+            {{ nota.anuladoAt | fechaEs: "fechaHora" }}:
+            {{ nota.motivoAnulacion }}
+          </span>
+        </div>
+
+        <!-- Movimientos -->
+        <div class="nota-lineas">
+          <div class="nota-lineas-head">
+            <span>Movimientos</span>
+            <div class="nota-lineas-acciones" *ngIf="editable">
+              <button
+                *ngIf="!modoPlantilla"
+                pButton
+                type="button"
+                label="Usar plantilla"
+                icon="pi pi-copy"
+                class="p-button-outlined p-button-sm"
+                (click)="showElegirPlantilla = true"
+              ></button>
+              <button
+                pButton
+                type="button"
+                label="Pegar desde Excel"
+                icon="pi pi-file-excel"
+                class="p-button-outlined p-button-sm"
+                (click)="showImportar = true"
+              ></button>
+              <button
+                pButton
+                type="button"
+                label="Agregar línea"
+                icon="pi pi-plus"
+                class="btn-verde p-button-sm"
+                pTooltip="La línea nueva trae la diferencia para cuadrar"
+                tooltipPosition="left"
+                (click)="agregarLinea()"
+              ></button>
+            </div>
+          </div>
+
+          <!-- Grilla propia, sin p-table: el contenedor con scroll de p-table
+               recorta los paneles de los desplegables de cada fila. Se acomoda
+               al ANCHO DE LA CARD (container queries), no al de la ventana:
+               con el menú abierto o cerrado queda bien igual.
+               · ancho:   una fila por línea, como un libro diario
+               · mediano: dos filas por línea (cuentas arriba, valores abajo)
+               · angosto: la línea es una tarjeta con sus etiquetas -->
+          <div class="lineas" formArrayName="lineas">
+            <div class="linea linea--head" aria-hidden="true">
+              <span class="c-n">#</span>
+              <span class="c-cuenta">Cuenta <span class="req">*</span></span>
+              <span class="c-tercero">Tercero</span>
+              <span class="c-cc">Centro de costo</span>
+              <span class="c-desc">Descripción</span>
+              <span class="c-deb text-right">Débito</span>
+              <span class="c-cre text-right">Crédito</span>
+              <span class="c-acc"></span>
+            </div>
+
+            <div
+              class="linea"
+              *ngFor="let row of lineas.controls; let i = index"
+              [formGroupName]="i"
+            >
+              <span class="c-n">{{ i + 1 }}</span>
+
+              <div class="c-cuenta celda">
+                <label class="celda-label"
+                  >Cuenta <span class="req">*</span></label
+                >
+                <p-dropdown
+                  formControlName="cuentaId"
+                  [options]="cuentaOpts"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Cuenta auxiliar"
+                  [filter]="true"
+                  filterBy="label"
+                  [resetFilterOnHide]="true"
+                  [virtualScroll]="true"
+                  [virtualScrollItemSize]="36"
+                  styleClass="w-full"
+                  panelStyleClass="nota-dd-panel"
+                ></p-dropdown>
+              </div>
+
+              <div class="c-tercero celda">
+                <label class="celda-label">Tercero</label>
+                <app-tercero-autocomplete
+                  formControlName="terceroId"
+                  [label]="row.get('terceroLabel')?.value || null"
+                  [placeholder]="editable ? 'Opcional' : '—'"
+                  header="Tercero de la línea"
+                  (seleccionado)="onTerceroLinea(i, $event)"
+                />
+              </div>
+
+              <div class="c-cc celda">
+                <label class="celda-label">Centro de costo</label>
+                <p-dropdown
+                  formControlName="centroCostoId"
+                  [options]="centroCostoOpts"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Opcional"
+                  [filter]="true"
+                  filterBy="label"
+                  [showClear]="editable"
+                  styleClass="w-full"
+                  panelStyleClass="nota-dd-panel"
+                ></p-dropdown>
+              </div>
+
+              <div class="c-desc celda">
+                <label class="celda-label">Descripción</label>
+                <input
+                  pInputText
+                  formControlName="descripcion"
+                  class="w-full"
+                  [placeholder]="frm.get('descripcion')?.value || 'Opcional'"
+                />
+              </div>
+
+              <div class="c-deb celda monto">
+                <label class="celda-label">Débito</label>
+                <p-inputNumber
+                  formControlName="debito"
+                  mode="currency"
+                  currency="COP"
+                  locale="es-CO"
+                  [minFractionDigits]="0"
+                  [maxFractionDigits]="2"
+                  [min]="0"
+                  (onInput)="onMonto(i, 'debito', $event.value)"
+                  styleClass="w-full"
+                  inputStyleClass="w-full text-right"
+                ></p-inputNumber>
+              </div>
+
+              <div class="c-cre celda monto">
+                <label class="celda-label">Crédito</label>
+                <p-inputNumber
+                  formControlName="credito"
+                  mode="currency"
+                  currency="COP"
+                  locale="es-CO"
+                  [minFractionDigits]="0"
+                  [maxFractionDigits]="2"
+                  [min]="0"
+                  (onInput)="onMonto(i, 'credito', $event.value)"
+                  styleClass="w-full"
+                  inputStyleClass="w-full text-right"
+                ></p-inputNumber>
+              </div>
+
+              <div class="c-acc" *ngIf="editable">
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-copy"
+                  class="p-button-text p-button-sm p-button-rounded"
+                  pTooltip="Duplicar línea"
+                  tooltipPosition="top"
+                  (click)="duplicarLinea(i)"
+                ></button>
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-trash"
+                  class="p-button-text p-button-danger p-button-sm p-button-rounded"
+                  pTooltip="Quitar línea"
+                  tooltipPosition="top"
+                  [disabled]="lineas.length <= 1"
+                  (click)="quitarLinea(i)"
+                ></button>
+              </div>
+            </div>
+
+            <div class="linea linea--total">
+              <span class="c-tot-label">Totales</span>
+              <div class="c-deb celda">
+                <label class="celda-label">Débito</label>
+                <span class="tot-valor">{{ formatCOP(totalDebito) }}</span>
+              </div>
+              <div class="c-cre celda">
+                <label class="celda-label">Crédito</label>
+                <span class="tot-valor">{{ formatCOP(totalCredito) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div
+            class="nota-cuadre"
+            [class.ok]="cuadrado"
+            [class.bad]="!cuadrado"
+          >
+            <i
+              [class]="
+                cuadrado ? 'pi pi-check-circle' : 'pi pi-exclamation-circle'
+              "
+            ></i>
+            {{
+              cuadrado
+                ? "Nota cuadrada"
+                : totalDebito === 0 && totalCredito === 0
+                  ? "Sin valores todavía"
+                  : "Diferencia: " +
+                    formatCOP(diferencia) +
+                    (diferencia > 0 ? " (falta crédito)" : " (falta débito)")
+            }}
+          </div>
+        </div>
+
+        <!-- Soportes: la factura, el cálculo de la provisión, el acta… -->
+        <div class="nota-soportes" *ngIf="!modoPlantilla">
+          <div class="nota-lineas-head">
+            <span>
+              Soportes
+              <small class="soportes-cuenta" *ngIf="nota?.soportes?.length"
+                >({{ nota!.soportes.length }})</small
+              >
+            </span>
+            <ng-container *ngIf="nota && estado !== 'ANULADO'">
+              <input
+                #archivo
+                type="file"
+                hidden
+                accept=".pdf,.jpg,.jpeg,.png,.webp,.xlsx,.xls,.csv,.docx"
+                (change)="onSoporteSeleccionado($event)"
+              />
+              <button
+                pButton
+                type="button"
+                label="Adjuntar"
+                icon="pi pi-paperclip"
+                class="p-button-outlined p-button-sm"
+                [loading]="subiendoSoporte"
+                (click)="archivo.click()"
+              ></button>
+            </ng-container>
+          </div>
+
+          <p class="soportes-vacio" *ngIf="!nota">
+            Guarde la nota para adjuntarle soportes (PDF, imágenes, Excel o
+            Word, hasta 10 MB).
+          </p>
+          <p class="soportes-vacio" *ngIf="nota && !nota.soportes?.length">
+            Sin soportes. Adjunte la factura, el cálculo o el documento que
+            respalda la nota.
+          </p>
+
+          <ul class="soportes-lista" *ngIf="nota?.soportes?.length">
+            <li *ngFor="let s of nota!.soportes">
+              <i [class]="iconoSoporte(s)"></i>
+              <a
+                class="soporte-nombre"
+                [href]="s.archivoUrl"
+                target="_blank"
+                rel="noopener"
+                >{{ s.nombreArchivo }}</a
+              >
+              <span class="soporte-meta">
+                {{ tamano(s.tamanoBytes) }}
+                <ng-container *ngIf="s.subidoPor">
+                  · {{ s.subidoPor }}</ng-container
+                >
+                · {{ s.createdAt | fechaEs: "fechaHora" }}
+              </span>
+              <button
+                *ngIf="editable"
+                pButton
+                type="button"
+                icon="pi pi-times"
+                class="p-button-text p-button-danger p-button-sm p-button-rounded"
+                pTooltip="Quitar soporte"
+                tooltipPosition="top"
+                (click)="eliminarSoporte(s)"
+              ></button>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Pie -->
+      <div class="card-footer nota-footer">
+        <button
+          pButton
+          type="button"
+          label="Regresar"
+          icon="pi pi-arrow-left"
+          class="btn-rojo"
+          (click)="volver()"
+        ></button>
+
+        <ng-container *ngIf="editable && !modoPlantilla">
+          <button
+            *ngIf="nota"
+            pButton
+            type="button"
+            label="Eliminar borrador"
+            icon="pi pi-trash"
+            class="p-button-outlined p-button-danger"
+            [disabled]="saving"
+            (click)="eliminar()"
+          ></button>
+          <button
+            pButton
+            type="submit"
+            label="Guardar borrador"
+            icon="pi pi-save"
+            class="p-button-outlined"
+            [loading]="saving"
+          ></button>
+          <button
+            pButton
+            type="button"
+            label="Guardar y contabilizar"
+            icon="pi pi-check"
+            class="btn-verde"
+            [loading]="saving"
+            [disabled]="!cuadrado"
+            (click)="nota ? contabilizarExistente() : guardarYContabilizar()"
+          ></button>
+        </ng-container>
+
+        <button
+          pButton
+          type="button"
+          [label]="modoPlantilla ? 'Guardar plantilla' : 'Guardar como plantilla'"
+          icon="pi pi-copy"
+          [ngClass]="modoPlantilla ? 'btn-verde' : 'p-button-outlined'"
+          pTooltip="Guarda concepto, clasificación y líneas para repetir la nota"
+          tooltipPosition="top"
+          (click)="abrirGuardarPlantilla()"
+        ></button>
+
+        <button
+          *ngIf="puedeReversar"
+          pButton
+          type="button"
+          label="Reversar"
+          icon="pi pi-replay"
+          class="p-button-outlined"
+          pTooltip="Registra la nota inversa en un mes abierto; sirve aunque este mes ya esté cerrado"
+          tooltipPosition="top"
+          (click)="showReversar = true"
+        ></button>
+
+        <!-- Reversada: se anula primero la reversión (si no, quedaría restando sola). -->
+        <button
+          *ngIf="estado === 'CONTABILIZADO' && !nota?.revertidoPorId"
+          pButton
+          type="button"
+          label="Anular"
+          icon="pi pi-ban"
+          class="p-button-outlined p-button-danger"
+          (click)="showAnular = true"
+        ></button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<app-anular-nota-dialog
+  [(visible)]="showAnular"
+  [notaId]="nota?.id ?? null"
+  [numero]="nota?.numeroComprobante ?? null"
+  (anulada)="onAnulada()"
+/>
+
+<app-reversar-nota-dialog
+  [(visible)]="showReversar"
+  [nota]="nota"
+  (reversada)="onReversada($event)"
+/>
+
+<app-importar-lineas-dialog
+  [(visible)]="showImportar"
+  [hayLineas]="hayLineas"
+  (importadas)="onLineasImportadas($event)"
+/>
+
+<app-elegir-plantilla-dialog
+  [(visible)]="showElegirPlantilla"
+  (elegida)="onPlantillaElegida($event)"
+/>
+
+<app-plantilla-dialog
+  [(visible)]="showPlantilla"
+  [lineas]="lineasParaPlantilla"
+  [reemplazarId]="plantillaEditId"
+  (guardada)="onPlantillaGuardada()"
+  [descripcion]="frm.get('descripcion')?.value ?? ''"
+  [clasificacion]="frm.get('clasificacion')?.value ?? null"
+/>
+
+<p-confirmDialog />
+<p-toast />

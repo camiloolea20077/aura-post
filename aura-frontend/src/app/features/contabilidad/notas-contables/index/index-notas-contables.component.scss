@@ -1,0 +1,90 @@
+// La página (.page), la card (.card), el header (.card-head), el buscador
+// (.search-wrap) y el botón (.btn-aura) son estándar global en styles.scss.
+// Aquí solo va lo propio de la tabla de notas.
+
+.nota-numero {
+  cursor: pointer;
+
+  code {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.8rem;
+    color: #2563eb;
+    background: #eff6ff;
+    border-radius: 5px;
+    padding: 0.1rem 0.4rem;
+  }
+}
+
+.nota-concepto {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.85rem;
+}
+
+.nota-meta {
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.nota-clase {
+  display: inline-block;
+  margin-right: 0.35rem;
+  padding: 0 0.4rem;
+  border-radius: 4px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+.nota-reversion {
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: #92400e;
+
+  i {
+    font-size: 0.65rem;
+  }
+}
+
+.nota-descuadre {
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.sin-dato {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
+// La anulada se ve, pero apagada: conserva su número y su traza.
+.row-anulada {
+  opacity: 0.6;
+}
+
+// Sin appendTo="body": el panel cuelga del input y no se corre tras el menú.
+:host ::ng-deep .filtro-fecha {
+  width: 160px;
+
+  .p-datepicker {
+    width: auto;
+    min-width: 18rem;
+  }
+}
+
+:host ::ng-deep .filtro-estado {
+  min-width: 180px;
+  height: 38px;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.mono {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+}

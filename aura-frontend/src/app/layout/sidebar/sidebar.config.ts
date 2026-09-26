@@ -346,6 +346,13 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         route: '/contabilidad/asientos',
       },
       {
+        // El label define el submódulo: normalize('Notas Contables') = 'notas-contables'
+        // (docs/sql/menu_submodulo_notas_contables.sql en el backend).
+        label: 'Notas Contables',
+        icon: 'pi pi-file-edit',
+        route: '/contabilidad/notas',
+      },
+      {
         label: 'Revisión de Comprobantes',
         icon: 'pi pi-check-square',
         route: '/contabilidad/revision',

@@ -10,18 +10,14 @@
   <form [formGroup]="form" class="dialog-form">
     <div class="form-field">
       <label for="proveedorId">Proveedor <span class="required">*</span></label>
-      <p-dropdown
-        id="proveedorId"
+      <!-- Dentro de un p-dialog el panel va al body: si no, el diálogo lo recorta. -->
+      <app-tercero-autocomplete
         formControlName="proveedorId"
-        [options]="proveedores"
-        placeholder="Seleccione un proveedor"
-        [filter]="true"
-        filterPlaceholder="Buscar proveedor..."
-        optionLabel="nombreCompleto"
-        optionValue="id"
+        rol="PROVEEDOR"
+        placeholder="Escriba nombre o NIT del proveedor…"
+        appendTo="body"
         [class.ng-invalid]="isInvalid('proveedorId')"
-        styleClass="w-full"
-      ></p-dropdown>
+      />
       <small *ngIf="isInvalid('proveedorId')" class="p-error">
         El proveedor es requerido
       </small>

@@ -7,7 +7,7 @@
           <span class="header-icon"><i class="pi pi-file-edit"></i></span>
           <div>
             <h1 class="title">Nuevo comprobante</h1>
-            <p class="subtitle">Egreso, recibo de caja o nota de diario</p>
+            <p class="subtitle">Egreso o recibo de caja</p>
           </div>
         </div>
       </div>
@@ -42,30 +42,13 @@
 
           <div class="field span-2">
             <label>Beneficiario</label>
-            <div class="terc-picker">
-              <button
-                type="button"
-                class="terc-picker-box"
-                [class.vacio]="!beneficiarioLabel"
-                (click)="abrirBuscadorTercero()"
-              >
-                <i class="pi pi-user"></i>
-                <span class="terc-picker-txt">{{
-                  beneficiarioLabel || "Selecciona un tercero"
-                }}</span>
-                <i class="pi pi-search terc-picker-lupa"></i>
-              </button>
-              <button
-                *ngIf="beneficiarioLabel"
-                type="button"
-                class="terc-picker-clear"
-                (click)="limpiarBeneficiario()"
-                pTooltip="Quitar beneficiario"
-                tooltipPosition="top"
-              >
-                <i class="pi pi-times"></i>
-              </button>
-            </div>
+            <app-tercero-autocomplete
+              formControlName="beneficiarioTerceroId"
+              [label]="beneficiarioLabel || null"
+              placeholder="Escriba nombre o documento…"
+              header="Buscar beneficiario"
+              (seleccionado)="onBeneficiarioSeleccionado($event)"
+            />
           </div>
           <div class="field span-2">
             <label>Nombre del beneficiario</label>
@@ -263,18 +246,13 @@
                       ></p-dropdown>
                     </td>
                     <td>
-                      <p-dropdown
+                      <app-tercero-autocomplete
                         formControlName="terceroId"
-                        [options]="terceroOpts"
-                        optionLabel="label"
-                        optionValue="value"
-                        appendTo="body"
-                        panelStyleClass="cmp-dd-panel"
+                        [label]="row.get('terceroLabel')?.value || null"
                         placeholder="Opcional"
-                        [filter]="true"
-                        [showClear]="true"
-                        styleClass="w-full"
-                      ></p-dropdown>
+                        appendTo="body"
+                        (seleccionado)="onTerceroLinea(row, $event)"
+                      />
                     </td>
                     <td>
                       <p-dropdown
@@ -494,10 +472,3 @@
   </form>
 </div>
 
-<!-- Buscador avanzado de terceros: pagina contra el servidor, así que sirve
-     igual con 500 terceros que con 5.000. -->
-<app-buscador-tercero-dialog
-  [(visible)]="buscadorTerceroVisible"
-  header="Buscar beneficiario"
-  (terceroSelected)="onTerceroSeleccionado($event)"
-></app-buscador-tercero-dialog>

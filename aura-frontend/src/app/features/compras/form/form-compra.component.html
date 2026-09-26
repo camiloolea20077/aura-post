@@ -39,48 +39,13 @@
         <div class="campo-row campo-row--full">
           <label>Proveedor <span class="required">*</span></label>
           <div class="campo-control">
-            <p-autoComplete
-              *ngIf="!proveedorSeleccionado"
-              [(ngModel)]="proveedorQuery"
-              [suggestions]="proveedoresSugerencias"
-              field="nombreCompleto"
+            <app-tercero-autocomplete
+              [terceroId]="proveedorSeleccionado?.id ?? null"
+              [label]="proveedorLabel"
+              rol="PROVEEDOR"
               placeholder="Nombre, NIT o razón social..."
-              (completeMethod)="buscarProveedores($event.query)"
-              (onSelect)="seleccionarProveedor($event)"
-              styleClass="w-full auto-proveedor"
-              [minLength]="1"
-              [delay]="300"
-            >
-              <ng-template let-t pTemplate="item">
-                <div class="sug-item">
-                  <span class="sug-nombre">{{ t.nombreCompleto }}</span>
-                  <span class="sug-doc"
-                    >{{ t.tipoDocumento }} {{ t.numeroDocumento }}</span
-                  >
-                </div>
-              </ng-template>
-            </p-autoComplete>
-
-            <div class="proveedor-chip" *ngIf="proveedorSeleccionado">
-              <i class="pi pi-truck"></i>
-              <div class="chip-info">
-                <span class="chip-nombre">{{
-                  proveedorSeleccionado.nombreCompleto
-                }}</span>
-                <span class="chip-doc"
-                  >{{ proveedorSeleccionado.tipoDocumento }}
-                  {{ proveedorSeleccionado.numeroDocumento }}</span
-                >
-              </div>
-              <button
-                type="button"
-                class="chip-clear"
-                (click)="limpiarProveedor()"
-                pTooltip="Cambiar proveedor"
-              >
-                <i class="pi pi-times"></i>
-              </button>
-            </div>
+              (seleccionado)="onProveedor($event)"
+            />
           </div>
         </div>
 

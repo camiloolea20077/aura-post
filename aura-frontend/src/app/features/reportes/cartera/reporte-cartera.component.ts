@@ -16,14 +16,14 @@ import { CalendarModule } from 'primeng/calendar';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { AutoCompleteModule } from 'primeng/autocomplete';
 import { TableModule, TableLazyLoadEvent } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { lastValueFrom } from 'rxjs';
 
 import { ReporteCarteraService } from '../../../core/services/reporte-cartera.service';
-import { TerceroService } from '../../../core/services/tercero.service';
+import { TerceroAutocompleteComponent } from '../../../shared/components/tercero-autocomplete/tercero-autocomplete.component';
+import { TerceroTableModel } from '../../../core/models/tercero.model';
 import { AlertService } from '../../../shared/pipes/alert.service';
 import {
   EstadoCartera,
@@ -59,7 +59,7 @@ import { aFechaLocal } from '../../../shared/utils/fecha.util';
     DropdownModule,
     InputTextModule,
     InputNumberModule,
-    AutoCompleteModule,
+    TerceroAutocompleteComponent,
     TableModule,
     TagModule,
     TooltipModule,
@@ -80,7 +80,6 @@ export class ReporteCarteraComponent implements OnInit {
   filasPorPagina = 25;
   expandidas: Record<number, boolean> = {};
 
-  terceroSugerencias: any[] = [];
   terceroSeleccionado: any = null;
 
   readonly tipoOpts: { label: string; value: TipoCartera }[] = [
@@ -98,7 +97,6 @@ export class ReporteCarteraComponent implements OnInit {
   constructor(
     private readonly fb: FormBuilder,
     private readonly service: ReporteCarteraService,
-    private readonly terceroService: TerceroService,
     private readonly alert: AlertService,
     private readonly cdr: ChangeDetectorRef,
   ) {
@@ -127,20 +125,13 @@ export class ReporteCarteraComponent implements OnInit {
     return this.esCxC ? 'Cliente' : 'Proveedor';
   }
 
-  async buscarTercero(event: { query: string }): Promise<void> {
-    try {
-      const res: any = await lastValueFrom(
-        this.terceroService.tercerosSelector(),
-      );
-      const q = event.query.toLowerCase();
-      this.terceroSugerencias = (res?.data ?? []).filter(
-        (t: any) =>
-          t.nombreCompleto?.toLowerCase().includes(q) ||
-          t.numeroDocumento?.includes(q),
-      );
-    } catch {
-      this.terceroSugerencias = [];
-    }
+  /** La cartera por cobrar es de clientes; la por pagar, de proveedores. */
+  get rolTercero(): 'CLIENTE' | 'PROVEEDOR' {
+    return this.esCxC ? 'CLIENTE' : 'PROVEEDOR';
+  }
+
+  onTercero(t: TerceroTableModel | null): void {
+    this.terceroSeleccionado = t ? { id: t.id, nombreCompleto: t.nombreCompleto } : null;
     this.cdr.markForCheck();
   }
 
