@@ -256,6 +256,12 @@ export const routes: Routes = [
           ),
       },
       {
+        // Manual de usuario: lo ve cualquier rol, no depende del menú.
+        path: 'ayuda',
+        loadComponent: () =>
+          import('./features/ayuda/ayuda.component').then((m) => m.AyudaComponent),
+      },
+      {
         path: 'perfil',
         loadComponent: () =>
           import('./features/perfil/perfil.component').then(
@@ -310,6 +316,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/compras/index/index-compras.component').then(
             (m) => m.IndexComprasComponent,
+          ),
+      },
+      {
+        path: 'compras/documentos-soporte',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/compras/documentos-soporte/index-documentos-soporte.component').then(
+            (m) => m.IndexDocumentosSoporteComponent,
           ),
       },
       {
@@ -909,6 +923,30 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'contabilidad/importar',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/importar/importar-datos.component').then(
+            (m) => m.ImportarDatosComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/declaraciones',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/declaraciones/declaraciones.component').then(
+            (m) => m.DeclaracionesComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/libros',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/libros/libros-contables.component').then(
+            (m) => m.LibrosContablesComponent,
+          ),
+      },
+      {
         path: 'contabilidad/balance-general',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
@@ -1047,6 +1085,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/reportes/cartera/reporte-cartera.component').then(
             (m) => m.ReporteCarteraComponent,
+          ),
+      },
+      {
+        path: 'reportes/carritos-abandonados',
+        loadComponent: () =>
+          import('./features/reportes/carritos-abandonados/reporte-carritos-abandonados.component').then(
+            (m) => m.ReporteCarritosAbandonadosComponent,
           ),
       },
       {

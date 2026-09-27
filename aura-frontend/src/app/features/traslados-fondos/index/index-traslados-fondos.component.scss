@@ -98,3 +98,37 @@
 .text-right {
   text-align: right;
 }
+
+.text-center {
+  text-align: center;
+}
+
+/* Reposición de la caja menor: las tres cifras que explican el monto. */
+.reembolso {
+  border: 1px solid var(--surface-border, #dfe7ef);
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: var(--surface-ground, #f8fafc);
+
+  &__cifras {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    font-size: 0.85rem;
+  }
+
+  &__sugerido b {
+    color: #2563eb;
+  }
+
+  &__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+}
+
+.entrada-fondo {
+  color: #16a34a;
+}

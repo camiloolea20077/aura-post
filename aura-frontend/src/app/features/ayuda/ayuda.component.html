@@ -1,0 +1,142 @@
+<div class="page">
+  <div class="card">
+    <!-- Header -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-question-circle"></i></span>
+        <div>
+          <h1 class="title">Centro de ayuda</h1>
+          <p class="subtitle">Cómo funciona cada módulo y qué hacer con cada error</p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button pButton type="button" icon="pi pi-download" label="Manual completo (PDF)"
+          class="btn-aura" [loading]="generandoPdf" (click)="descargarTodo()"></button>
+      </div>
+    </div>
+
+    <div class="ay-cuerpo">
+      <!-- Buscador -->
+      <div class="ay-buscar">
+        <i class="pi pi-search"></i>
+        <input pInputText type="text" [(ngModel)]="consulta" (ngModelChange)="buscar()"
+          placeholder="Busque un tema o pegue el mensaje de error que le apareció…" />
+        <button *ngIf="consulta" type="button" class="ay-buscar__limpiar" (click)="limpiarBusqueda()"
+          aria-label="Limpiar búsqueda">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+
+      <button type="button" class="ay-temas-btn" (click)="indiceAbierto = !indiceAbierto">
+        <i class="pi pi-list"></i>
+        <span>{{ modulo.titulo }}</span>
+        <i class="pi" [class.pi-chevron-down]="!indiceAbierto" [class.pi-chevron-up]="indiceAbierto"></i>
+      </button>
+
+      <div class="ay-layout">
+        <!-- Índice -->
+        <nav class="ay-indice" [class.ay-indice--abierto]="indiceAbierto">
+          <div class="ay-grupo" *ngFor="let g of grupos">
+            <span class="ay-grupo__nombre">{{ g.nombre }}</span>
+            <button type="button" *ngFor="let m of g.modulos" class="ay-link"
+              [class.ay-link--activo]="m === modulo && !consulta" (click)="elegir(m)">
+              <i [class]="m.icono"></i>
+              <span>{{ m.titulo }}</span>
+            </button>
+          </div>
+        </nav>
+
+        <!-- Contenido -->
+        <main class="ay-contenido" #contenido>
+          <!-- Resultados de búsqueda -->
+          <ng-container *ngIf="consulta.trim(); else tema">
+            <p class="ay-resultados-info" *ngIf="resultados.length">
+              {{ resultados.length }} tema(s) para «{{ consulta }}»
+            </p>
+
+            <div class="ay-vacio" *ngIf="!resultados.length">
+              <i class="pi pi-search"></i>
+              <strong>No encontramos nada con esas palabras</strong>
+              <span>Pruebe con menos palabras o con el nombre del módulo (compras, caja, cartera…).</span>
+            </div>
+
+            <div class="ay-resultado" *ngFor="let r of resultados">
+              <button type="button" class="ay-resultado__head" (click)="elegir(r.modulo)">
+                <i [class]="r.modulo.icono"></i>
+                <div>
+                  <span class="ay-resultado__grupo">{{ r.modulo.grupo }}</span>
+                  <strong>{{ r.modulo.titulo }}</strong>
+                  <p>{{ r.modulo.resumen }}</p>
+                </div>
+                <i class="pi pi-chevron-right"></i>
+              </button>
+              <button type="button" class="ay-resultado__error" *ngFor="let e of r.errores"
+                (click)="elegir(r.modulo, e)">
+                <span class="ay-msg">{{ e.mensaje }}</span>
+                <span class="ay-resultado__sol"><b>Qué hacer:</b> {{ e.solucion }}</span>
+              </button>
+            </div>
+          </ng-container>
+
+          <!-- Tema -->
+          <ng-template #tema>
+            <article class="ay-articulo">
+              <header class="ay-articulo__head">
+                <div>
+                  <span class="ay-chip"><i [class]="modulo.icono"></i> {{ modulo.grupo }}</span>
+                  <h2>{{ modulo.titulo }}</h2>
+                  <p class="ay-resumen">{{ modulo.resumen }}</p>
+                </div>
+                <button pButton type="button" icon="pi pi-file-pdf" label="Descargar este tema"
+                  class="p-button-outlined p-button-sm" [disabled]="generandoPdf"
+                  (click)="descargarTema()"></button>
+              </header>
+
+              <section class="ay-seccion" *ngFor="let s of modulo.secciones">
+                <h3>{{ s.titulo }}</h3>
+                <p *ngFor="let t of s.texto">{{ t }}</p>
+                <ol *ngIf="s.pasos?.length" class="ay-pasos">
+                  <li *ngFor="let p of s.pasos">{{ p }}</li>
+                </ol>
+                <div class="ay-nota" *ngFor="let n of s.notas">
+                  <i class="pi pi-info-circle"></i>
+                  <span>{{ n }}</span>
+                </div>
+              </section>
+
+              <section class="ay-seccion" *ngIf="modulo.errores.length">
+                <h3><i class="pi pi-exclamation-triangle"></i> Errores comunes y cómo resolverlos</h3>
+                <div class="ay-error" *ngFor="let e of modulo.errores"
+                  [class.ay-error--resaltado]="e === resaltado"
+                  [attr.id]="e === resaltado ? 'ay-error-resaltado' : null">
+                  <div class="ay-msg">{{ e.mensaje }}</div>
+                  <div class="ay-error__fila">
+                    <span class="ay-error__etq">Por qué pasa</span>
+                    <span>{{ e.causa }}</span>
+                  </div>
+                  <div class="ay-error__fila">
+                    <span class="ay-error__etq ay-error__etq--ok">Qué hacer</span>
+                    <span>{{ e.solucion }}</span>
+                  </div>
+                </div>
+              </section>
+
+              <nav class="ay-navegar">
+                <button type="button" *ngIf="anterior as a" class="ay-navegar__btn" (click)="elegir(a)">
+                  <i class="pi pi-arrow-left"></i>
+                  <span><small>Anterior</small>{{ a.titulo }}</span>
+                </button>
+                <span></span>
+                <button type="button" *ngIf="siguiente as n" class="ay-navegar__btn ay-navegar__btn--sig"
+                  (click)="elegir(n)">
+                  <span><small>Siguiente</small>{{ n.titulo }}</span>
+                  <i class="pi pi-arrow-right"></i>
+                </button>
+              </nav>
+            </article>
+          </ng-template>
+        </main>
+      </div>
+    </div>
+  </div>
+</div>

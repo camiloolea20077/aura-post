@@ -32,11 +32,17 @@ import {
   FichaFacturaModel,
   METODOS_RECIBO,
   ReciboCajaModel,
+  RetencionRecaudo,
 } from '../../../core/models/cartera.model';
 
 interface LineaRecibo {
   factura: FichaFacturaModel;
   aplicar: number | null;
+  /** Lo que el cliente retuvo sobre esta factura (renta, IVA, ICA). */
+  verRetenciones: boolean;
+  retefuente: number | null;
+  reteiva: number | null;
+  reteica: number | null;
 }
 
 /** Dónde entró el efectivo. */
@@ -124,7 +130,14 @@ export class ReciboCajaDialogComponent implements OnChanges {
     this.referencia = '';
     this.observaciones = '';
     this.manual = false;
-    this.lineas = this.facturas.map((f) => ({ factura: f, aplicar: null }));
+    this.lineas = this.facturas.map((f) => ({
+      factura: f,
+      aplicar: null,
+      verRetenciones: false,
+      retefuente: null,
+      reteiva: null,
+      reteica: null,
+    }));
 
     const inicial = this.facturas.find((f) => f.id === this.facturaInicialId);
     if (inicial) {
@@ -179,7 +192,7 @@ export class ReciboCajaDialogComponent implements OnChanges {
   repartir(): void {
     let resto = this.valorRecibido ?? 0;
     for (const l of this.lineas) {
-      const va = Math.min(resto, l.factura.saldoPendiente);
+      const va = Math.min(resto, this.disponible(l));
       l.aplicar = va > 0 ? this.redondear(va) : null;
       resto = this.redondear(resto - va);
     }
@@ -195,12 +208,49 @@ export class ReciboCajaDialogComponent implements OnChanges {
 
   onAplicarManual(l: LineaRecibo): void {
     this.manual = true;
-    if (l.aplicar != null && l.aplicar > l.factura.saldoPendiente) l.aplicar = l.factura.saldoPendiente;
+    if (l.aplicar != null && l.aplicar > this.disponible(l)) l.aplicar = this.disponible(l);
     this.cdr.markForCheck();
   }
 
+  // ── Retenciones ─────────────────────────────────────────────────────
+  /** Lo que el cliente retuvo sobre la factura. */
+  retenido(l: LineaRecibo): number {
+    return this.redondear((l.retefuente ?? 0) + (l.reteiva ?? 0) + (l.reteica ?? 0));
+  }
+
+  /** Lo que queda por pagar con dinero después de lo retenido. */
+  disponible(l: LineaRecibo): number {
+    return Math.max(0, this.redondear(l.factura.saldoPendiente - this.retenido(l)));
+  }
+
+  toggleRetenciones(l: LineaRecibo): void {
+    l.verRetenciones = !l.verRetenciones;
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Si la factura se estaba pagando completa, al registrar una retención el
+   * pago en dinero baja solo: el cliente pagó el neto.
+   */
+  onRetencion(l: LineaRecibo): void {
+    if (l.aplicar != null && l.aplicar > this.disponible(l)) l.aplicar = this.disponible(l);
+    this.cdr.markForCheck();
+  }
+
+  get totalRetenido(): number {
+    return this.redondear(this.lineas.reduce((s, l) => s + this.retenido(l), 0));
+  }
+
+  private retencionesDe(l: LineaRecibo): RetencionRecaudo[] {
+    const out: RetencionRecaudo[] = [];
+    if ((l.retefuente ?? 0) > 0) out.push({ tipo: 'RETEFUENTE', valor: l.retefuente! });
+    if ((l.reteiva ?? 0) > 0) out.push({ tipo: 'RETEIVA', valor: l.reteiva! });
+    if ((l.reteica ?? 0) > 0) out.push({ tipo: 'RETEICA', valor: l.reteica! });
+    return out;
+  }
+
   pagarCompleta(l: LineaRecibo): void {
-    l.aplicar = l.factura.saldoPendiente;
+    l.aplicar = this.disponible(l);
     this.manual = true;
     if ((this.valorRecibido ?? 0) < this.totalAplicado) this.valorRecibido = this.totalAplicado;
     this.cdr.markForCheck();
@@ -230,6 +280,12 @@ export class ReciboCajaDialogComponent implements OnChanges {
   get bloqueo(): string | null {
     if (!this.valorRecibido || this.valorRecibido <= 0) return 'Escriba el valor que entregó el cliente';
     if (this.sobrante < 0) return 'Lo aplicado supera el valor recibido';
+    for (const l of this.lineas) {
+      if (this.retenido(l) > 0 && !(l.aplicar ?? 0))
+        return `A ${l.factura.numeroCuenta} le registró retenciones: escriba también lo que pagó`;
+      if ((l.aplicar ?? 0) + this.retenido(l) > l.factura.saldoPendiente + 0.001)
+        return `A ${l.factura.numeroCuenta} el pago más las retenciones supera el saldo`;
+    }
     if (this.entraACaja && this.turnoId == null) return 'No hay caja abierta: elija otra opción';
     if (this.entraACaja && this.sobrante > 0)
       return 'En efectivo a la caja entregue el cambio: no puede quedar sobrante';
@@ -262,7 +318,11 @@ export class ReciboCajaDialogComponent implements OnChanges {
       observaciones: this.observaciones.trim() || null,
       aplicaciones: this.lineas
         .filter((l) => (l.aplicar ?? 0) > 0)
-        .map((l) => ({ cuentaCobrarId: l.factura.id, monto: l.aplicar! })),
+        .map((l) => ({
+          cuentaCobrarId: l.factura.id,
+          monto: l.aplicar!,
+          retenciones: this.retencionesDe(l),
+        })),
     };
     try {
       const res = await lastValueFrom(this.carteraService.crearRecibo(dto));

@@ -421,3 +421,46 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Retenciones que el cliente practicó sobre una factura (V181). */
+.rc-icon--activo {
+  color: #2563eb;
+}
+
+.rc-retenciones td {
+  background: var(--surface-ground, #f8fafc);
+}
+
+.rc-ret {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem 0.9rem;
+  padding: 0.25rem 0;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    font-size: 0.75rem;
+    color: var(--text-color-secondary, #6b7280);
+    min-width: 0;
+  }
+
+  &__titulo {
+    font-size: 0.8rem;
+    font-weight: 600;
+    align-self: center;
+  }
+
+  &__nota {
+    font-size: 0.75rem;
+    color: #2563eb;
+    align-self: center;
+  }
+
+  :host ::ng-deep &__input {
+    width: 9rem;
+    min-width: 0;
+  }
+}

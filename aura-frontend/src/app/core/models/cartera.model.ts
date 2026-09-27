@@ -359,7 +359,19 @@ export interface CreateReciboCajaDto {
   cajaOtroDia: boolean;
   fechaPago: string;
   observaciones: string | null;
-  aplicaciones: { cuentaCobrarId: number; monto: number }[];
+  aplicaciones: {
+    cuentaCobrarId: number;
+    monto: number;
+    /** Lo que el cliente retuvo sobre esta factura; baja el saldo con el pago. */
+    retenciones?: RetencionRecaudo[];
+  }[];
+}
+
+/** Retención que el cliente practicó al pagar (renta, IVA o ICA). */
+export interface RetencionRecaudo {
+  tipo: 'RETEFUENTE' | 'RETEIVA' | 'RETEICA';
+  valor: number;
+  base?: number | null;
 }
 
 export interface ReciboCajaModel extends Omit<ReciboCajaTableModel, 'facturas'> {
@@ -375,6 +387,7 @@ export interface ReciboCajaModel extends Omit<ReciboCajaTableModel, 'facturas'> 
     fechaVencimiento: string | null;
     saldoAnterior: number;
     monto: number;
+    retenciones: number;
     saldoDespues: number;
   }[];
 }

@@ -170,6 +170,7 @@ export class PlanCuentasComponent implements OnInit {
       nivel: c.nivel,
       padreId: c.padreId ?? null,
       auxiliar: c.auxiliar,
+      esMedioPago: !!c.esMedioPago,
       codigoDian: c.codigoDian ?? '',
     };
     this.showDialog = true;
@@ -250,6 +251,7 @@ export class PlanCuentasComponent implements OnInit {
       nivel: 1,
       padreId: null,
       auxiliar: false,
+      esMedioPago: false,
       codigoDian: '',
     };
   }

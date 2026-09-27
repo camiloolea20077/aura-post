@@ -1,0 +1,89 @@
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '480px' }"
+  [header]="titulo"
+>
+  <div class="pago-form">
+    <p class="total" *ngIf="total != null">
+      Neto a pagar <b>{{ formatCOP(total) }}</b>
+    </p>
+
+    <label class="titulo-bloque">¿De dónde sale la plata?</label>
+    <div class="vias">
+      <button
+        *ngFor="let v of vias"
+        type="button"
+        class="via"
+        [class.via--activa]="via === v.value"
+        (click)="elegir(v.value)"
+      >
+        <i [class]="v.icon"></i>
+        <span class="via__label">{{ v.label }}</span>
+        <span class="via__hint">{{ v.hint }}</span>
+      </button>
+    </div>
+
+    <div class="field" *ngIf="via === 'TRANSFERENCIA'">
+      <label>Cuenta bancaria</label>
+      <p-dropdown
+        [options]="bancosOpts"
+        [(ngModel)]="cuentaBancariaId"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona la cuenta"
+        [filter]="true"
+        [style]="{ width: '100%' }"
+      />
+    </div>
+
+    <div class="field" *ngIf="via === 'CAJA'">
+      <label>Caja abierta</label>
+      <p-dropdown
+        [options]="turnosOpts"
+        [(ngModel)]="turnoCajaId"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona la caja"
+        [style]="{ width: '100%' }"
+      />
+      <small class="hint" *ngIf="turnosOpts.length === 0">
+        No hay cajas abiertas. Abre una o paga desde otra cuenta.
+      </small>
+    </div>
+
+    <div class="field" *ngIf="via === 'CUENTA'">
+      <label>Cuenta de fondos</label>
+      <p-dropdown
+        [options]="cuentasOpts"
+        [(ngModel)]="cuentaContableId"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Caja menor, fondos..."
+        [filter]="true"
+        [style]="{ width: '100%' }"
+      />
+      <small class="hint">No puede pagar más de lo que tenga la cuenta.</small>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cancelar"
+      class="p-button-text"
+      (click)="cerrar()"
+    ></button>
+    <button
+      pButton
+      type="button"
+      label="Confirmar pago"
+      icon="pi pi-check"
+      [loading]="pagando"
+      (click)="aceptar()"
+    ></button>
+  </ng-template>
+</p-dialog>

@@ -1,13 +1,21 @@
 <div class="dash">
   <!-- ══ Encabezado ══════════════════════════════════════════════ -->
   <header class="dash-header">
-    <div>
-      <p class="dash-eyebrow">
-        {{ today | date: "EEEE d 'de' MMMM, yyyy" : "" : "es" }}
-        <span *ngIf="sucursalNombre"> · {{ sucursalNombre }}</span>
-      </p>
-      <h1 class="dash-title">{{ saludo }}{{ userName ? ", " + primerNombre : "" }}</h1>
-      <p class="dash-subtitle">Así va el negocio hoy</p>
+    <div class="dash-hola">
+      <span class="dash-avatar">{{ (primerNombre || "?").charAt(0).toUpperCase() }}</span>
+      <div class="dash-hola__texto">
+        <h1 class="dash-title">{{ saludo }}{{ userName ? ", " + primerNombre : "" }}</h1>
+        <p class="dash-subtitle">Así va el negocio hoy</p>
+        <div class="dash-meta">
+          <span class="dash-chip">
+            <i class="pi pi-calendar"></i>
+            {{ today | date: "EEEE d 'de' MMMM, yyyy" : "" : "es" }}
+          </span>
+          <span class="dash-chip dash-chip--sede" *ngIf="sucursalNombre">
+            <i class="pi pi-building"></i> {{ sucursalNombre }}
+          </span>
+        </div>
+      </div>
     </div>
     <div class="dash-actions">
       <a routerLink="/mermas" class="btn btn-ghost">

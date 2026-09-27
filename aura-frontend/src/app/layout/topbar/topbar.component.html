@@ -68,6 +68,17 @@
       <i [class]="darkMode ? 'pi pi-sun' : 'pi pi-moon'"></i>
     </button> -->
 
+    <!-- Ayuda -->
+    <button
+      class="topbar-btn"
+      (click)="abrirAyuda()"
+      pTooltip="Ayuda y manual"
+      tooltipPosition="bottom"
+      aria-label="Ayuda y manual"
+    >
+      <i class="pi pi-question-circle"></i>
+    </button>
+
     <!-- Notificaciones -->
     <button
       class="topbar-btn notif-btn"

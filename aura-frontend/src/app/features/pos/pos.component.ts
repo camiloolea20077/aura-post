@@ -52,6 +52,8 @@ import { ListaPreciosService } from '../../core/services/lista-precios.service';
 import { ProductoPrecioService } from '../../core/services/producto-precio.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { CarritoAbandonadoService, MotivoAbandono } from '../../core/services/carrito-abandonado.service';
+import { aFechaHoraLocal } from '../../shared/utils/fecha.util';
 import { ModalPagoComponent } from './components/modal-pagos/modal-pago.component';
 import { ModalMovimientoCajaComponent } from './components/modal-movimiento-caja/modal-movimiento-caja.component';
 import { VentaResponse } from '../../core/models/venta-response.model';
@@ -260,6 +262,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     private readonly cuentaBancariaService: CuentaBancariaService,
     private readonly carteraService: CarteraService,
     private readonly serialService: SerialProductoService,
+    private readonly carritoAbandonadoService: CarritoAbandonadoService,
   ) {}
 
   ngOnInit(): void {
@@ -1280,6 +1283,56 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
+  // ── Carritos abandonados ──────────────────────────────────
+  /**
+   * El cajero vació el carrito a mano. Vender o convertir en cotización
+   * también vacía el carrito, pero por clearCart directo: eso no es abandono.
+   */
+  vaciarCarrito(): void {
+    this.registrarAbandono(this.cart, 'VACIADO', this.clienteId);
+    this.clearCart();
+  }
+
+  /** El cajero cerró una orden (pestaña) que tenía productos. */
+  cerrarPestana(i: number, event: Event): void {
+    const tab = this.tabs[i];
+    const items = i === this.tabActivo ? this.cart : (tab?.cart ?? []);
+    const cliente = i === this.tabActivo ? this.clienteId : (tab?.clienteId ?? null);
+    this.registrarAbandono(items, 'PESTANA_CERRADA', cliente);
+    this.closeTab(i, event);
+  }
+
+  /** Se envía sin esperar: si falla, el cajero no debe notarlo. */
+  private registrarAbandono(items: CartItem[], motivo: MotivoAbandono, clienteId: number | null): void {
+    if (!items?.length) return;
+    const ahora = aFechaHoraLocal(new Date());
+    const iniciado = items
+      .map((c) => c.agregadoAt)
+      .filter((x): x is string => !!x)
+      .sort()[0] ?? ahora;
+    this.carritoAbandonadoService
+      .registrar({
+        sucursalId: this.sucursalPos,
+        turnoCajaId: this.turnoActivo?.id ?? null,
+        clienteId,
+        motivo,
+        iniciadoAt: iniciado,
+        vaciadoAt: ahora,
+        items: items.map((c) => ({
+          productoId: c.productoId ?? null,
+          presentacionId: c.presentacionId ?? null,
+          nombre: c.presentacionNombre ? `${c.productoNombre} (${c.presentacionNombre})` : c.productoNombre,
+          cantidad: c.cantidad ?? 0,
+          // Precio final por unidad (con impuesto y descuento), para que
+          // cuadre con el subtotal: c.precio es antes de IVA.
+          precio: c.cantidad ? (c.subtotal ?? 0) / c.cantidad : (c.precio ?? 0),
+          subtotal: c.subtotal ?? (c.precio ?? 0) * (c.cantidad ?? 0),
+          agregadoAt: c.agregadoAt ?? null,
+        })),
+      })
+      .subscribe({ error: () => undefined });
+  }
+
   clearCart(): void {
     this.cart = [];
     this.clienteId = null;
@@ -1450,6 +1503,13 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   total = 0;
 
   private recalcularTotales(): void {
+    // Cualquier camino que agrega productos (búsqueda, lector, balanza,
+    // seriales, cotización) termina aquí: se marca la hora de los nuevos.
+    const ahora = aFechaHoraLocal(new Date());
+    for (const c of this.cart) {
+      if (!c.agregadoAt) c.agregadoAt = ahora;
+    }
+
     let sub = 0;
     let desc = 0;
     let imp = 0;

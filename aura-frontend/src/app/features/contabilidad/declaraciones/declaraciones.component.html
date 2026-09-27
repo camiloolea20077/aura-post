@@ -1,0 +1,155 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon">
+          <i class="pi pi-file-edit"></i>
+        </span>
+        <div>
+          <h1 class="title">Borradores de Declaraciones</h1>
+          <p class="subtitle">
+            IVA (300) y retención en la fuente (350) leídos de la contabilidad,
+            para trasladarlos al formulario de la DIAN
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #borrador let-b let-verCuentas="verCuentas" let-toggle="toggle">
+      <div class="advertencias" *ngIf="b.advertencias.length">
+        <div *ngFor="let a of b.advertencias">
+          <i class="pi pi-exclamation-triangle"></i> {{ a }}
+        </div>
+      </div>
+
+      <div class="secciones">
+        <div class="seccion" *ngFor="let s of b.secciones" [class.seccion--info]="s.informativa">
+          <div class="seccion__head">
+            <span>{{ s.titulo }}</span>
+            <span class="seccion__total">
+              {{ s.resta && !s.informativa ? "−" : "" }}{{ formatCOP(s.total) }}
+            </span>
+          </div>
+          <div class="renglon" *ngFor="let r of s.renglones">
+            <span>{{ r.concepto }}</span>
+            <span class="num" [class.negativo]="r.valor < 0">{{ formatCOP(r.valor) }}</span>
+          </div>
+          <div class="renglon renglon--vacio" *ngIf="!s.renglones.length">Sin movimientos</div>
+          <small *ngIf="s.informativa" class="nota">Informativo: no entra al resultado</small>
+        </div>
+      </div>
+
+      <div class="resultado" [class.resultado--favor]="b.resultado < 0">
+        <span>{{ b.resultadoEtiqueta }}</span>
+        <b>{{ formatCOP(b.resultado < 0 ? -b.resultado : b.resultado) }}</b>
+      </div>
+
+      <div class="bloque" *ngIf="b.basesPorTarifa.length">
+        <h3>Bases por tarifa (según los documentos)</h3>
+        <div class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Origen</th>
+                <th class="num">Tarifa</th>
+                <th class="num">Base</th>
+                <th class="num">Valor</th>
+                <th class="num">Documentos</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let t of b.basesPorTarifa">
+                <td>{{ t.origen }}</td>
+                <td class="num">{{ t.tarifa }}%</td>
+                <td class="num">{{ formatCOP(t.base) }}</td>
+                <td class="num">{{ formatCOP(t.valor) }}</td>
+                <td class="num">{{ t.documentos }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bloque">
+        <button type="button" class="link" (click)="toggle()">
+          {{ verCuentas ? "Ocultar" : "Ver" }} el detalle por cuenta ({{ b.cuentas.length }})
+        </button>
+        <div class="tabla-wrap" *ngIf="verCuentas">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Cuenta</th>
+                <th>Documento</th>
+                <th class="num">Débito</th>
+                <th class="num">Crédito</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let c of b.cuentas">
+                <td><code>{{ c.codigo }}</code> {{ c.nombre }}</td>
+                <td>{{ c.tipoOrigen }}</td>
+                <td class="num">{{ c.debito ? formatCOP(c.debito) : "" }}</td>
+                <td class="num">{{ c.credito ? formatCOP(c.credito) : "" }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </ng-template>
+
+    <p-tabView>
+      <!-- ── IVA ──────────────────────────────────────────────────────── -->
+      <p-tabPanel header="IVA (300)" leftIcon="pi pi-percentage">
+        <div class="filtros">
+          <div class="filtro">
+            <label>Periodicidad</label>
+            <p-dropdown [options]="periodicidades" [(ngModel)]="periodicidad"
+              optionLabel="label" optionValue="value" (onChange)="onPeriodicidad()" />
+          </div>
+          <div class="filtro">
+            <label>Año</label>
+            <p-dropdown [options]="anios" [(ngModel)]="anioIva" optionLabel="label" optionValue="value" />
+          </div>
+          <div class="filtro filtro--ancho">
+            <label>Período</label>
+            <p-dropdown [options]="periodosIva" [(ngModel)]="periodoIva" optionLabel="label" optionValue="value" />
+          </div>
+          <div class="acciones">
+            <button pButton type="button" label="Generar" icon="pi pi-search" class="btn-aura"
+              [loading]="cargandoIva" (click)="generarIva()"></button>
+            <button pButton type="button" label="Excel" icon="pi pi-file-excel" class="p-button-outlined"
+              [disabled]="!iva" (click)="exportar(iva!)"></button>
+          </div>
+        </div>
+        <ng-container *ngIf="iva">
+          <ng-container *ngTemplateOutlet="borrador; context: {
+            $implicit: iva, verCuentas: verCuentasIva, toggle: toggleCuentasIva }"></ng-container>
+        </ng-container>
+      </p-tabPanel>
+
+      <!-- ── Retención ────────────────────────────────────────────────── -->
+      <p-tabPanel header="Retención en la fuente (350)" leftIcon="pi pi-wallet">
+        <div class="filtros">
+          <div class="filtro">
+            <label>Año</label>
+            <p-dropdown [options]="anios" [(ngModel)]="anioRet" optionLabel="label" optionValue="value" />
+          </div>
+          <div class="filtro">
+            <label>Mes</label>
+            <p-dropdown [options]="meses" [(ngModel)]="mesRet" optionLabel="label" optionValue="value" />
+          </div>
+          <div class="acciones">
+            <button pButton type="button" label="Generar" icon="pi pi-search" class="btn-aura"
+              [loading]="cargandoRet" (click)="generarRet()"></button>
+            <button pButton type="button" label="Excel" icon="pi pi-file-excel" class="p-button-outlined"
+              [disabled]="!ret" (click)="exportar(ret!)"></button>
+          </div>
+        </div>
+        <ng-container *ngIf="ret">
+          <ng-container *ngTemplateOutlet="borrador; context: {
+            $implicit: ret, verCuentas: verCuentasRet, toggle: toggleCuentasRet }"></ng-container>
+        </ng-container>
+      </p-tabPanel>
+    </p-tabView>
+  </div>
+</div>

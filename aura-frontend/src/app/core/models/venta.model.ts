@@ -148,6 +148,8 @@ export interface PrecioDisponible {
 // ─── UI — carrito ─────────────────────────────────────────────
 export interface CartItem {
   _id: string; // UUID local
+  /** Hora local en que entró al carrito: mide cuánto duró armado si se abandona. */
+  agregadoAt?: string;
   productoId: number;
   presentacionId: number | null; // para aplicar precios de lista
   /** Unidades de inventario que contiene la presentación de la línea (1 sin presentación). */

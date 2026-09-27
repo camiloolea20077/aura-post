@@ -49,24 +49,82 @@
 }
 
 // ── Encabezado ─────────────────────────────────────────────────────
+// Card igual a los paneles: saludo y sede juntos, acciones a la derecha.
 .dash-header {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  padding: 1.1rem 1.3rem;
+  background: var(--d-surface);
+  border: 1px solid var(--d-border);
+  border-left: 4px solid var(--d-primary);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
-.dash-eyebrow {
-  margin: 0;
-  font-size: 0.78rem;
-  font-weight: 500;
+.dash-hola {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-width: 0;
+
+  &__texto {
+    min-width: 0;
+  }
+}
+
+.dash-avatar {
+  flex: 0 0 auto;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--d-primary-soft);
+  color: var(--d-primary);
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.dash-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+.dash-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: var(--d-soft);
+  border: 1px solid var(--d-border);
   color: var(--d-muted);
+  font-size: 0.75rem;
+  font-weight: 500;
   text-transform: capitalize;
+  white-space: nowrap;
+
+  i {
+    font-size: 0.72rem;
+  }
+
+  &--sede {
+    background: var(--d-primary-soft);
+    border-color: transparent;
+    color: var(--d-primary);
+    font-weight: 600;
+    text-transform: none;
+  }
 }
 
 .dash-title {
-  margin: 0.15rem 0 0;
+  margin: 0;
   font-size: 1.6rem;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -588,6 +646,20 @@
 
   .dash-title {
     font-size: 1.3rem;
+  }
+
+  .dash-header {
+    padding: 0.9rem 1rem;
+  }
+
+  .dash-avatar {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.1rem;
+  }
+
+  .dash-chip {
+    white-space: normal;
   }
 
   .dash-actions {

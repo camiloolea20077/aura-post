@@ -132,6 +132,13 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         icon: 'pi pi-file-edit',
         route: '/compras/ordenes',
       },
+      {
+        // normalize('Documentos Soporte') = 'documentos-soporte'
+        // (docs/sql/menu_submodulo_documentos_soporte.sql en el backend).
+        label: 'Documentos Soporte',
+        icon: 'pi pi-verified',
+        route: '/compras/documentos-soporte',
+      },
     ],
   },
 
@@ -388,6 +395,27 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         route: '/contabilidad/balance-general',
       },
       {
+        // normalize('Libros Contables') = 'libros-contables'
+        // (docs/sql/menu_submodulo_libros_contables.sql en el backend).
+        label: 'Libros Contables',
+        icon: 'pi pi-book',
+        route: '/contabilidad/libros',
+      },
+      {
+        // normalize('Declaraciones') = 'declaraciones'
+        // (docs/sql/menu_submodulo_declaraciones.sql en el backend).
+        label: 'Declaraciones',
+        icon: 'pi pi-file-edit',
+        route: '/contabilidad/declaraciones',
+      },
+      {
+        // normalize('Importar Datos') = 'importar-datos'
+        // (docs/sql/menu_submodulo_importar_datos.sql en el backend).
+        label: 'Importar Datos',
+        icon: 'pi pi-upload',
+        route: '/contabilidad/importar',
+      },
+      {
         label: 'Estado de Cuenta',
         icon: 'pi pi-file-edit',
         route: '/contabilidad/estado-cuenta',
@@ -606,6 +634,13 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         label: 'Facturación Electrónica',
         icon: 'pi pi-file-export',
         route: '/reportes/facturacion-electronica',
+      },
+      {
+        // normalize('Carritos Abandonados') = 'carritos-abandonados'
+        // (docs/sql/menu_submodulo_carritos_abandonados.sql en el backend).
+        label: 'Carritos Abandonados',
+        icon: 'pi pi-shopping-cart',
+        route: '/reportes/carritos-abandonados',
       },
       {
         label: 'Reportes Avanzados',

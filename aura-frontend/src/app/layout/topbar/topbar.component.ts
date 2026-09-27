@@ -274,6 +274,13 @@ export class TopbarComponent implements OnInit {
     document.documentElement.classList.toggle('dark-mode', saved);
   }
 
+  /** Abre el manual en el tema de la pantalla actual. */
+  abrirAyuda(): void {
+    const actual = this.router.url;
+    if (actual.startsWith('/ayuda')) return;
+    void this.router.navigate(['/ayuda'], { queryParams: { desde: actual.split(/[?#]/)[0] } });
+  }
+
   toggleDarkMode(): void {
     this.darkMode = !this.darkMode;
     localStorage.setItem('darkMode', String(this.darkMode));

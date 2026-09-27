@@ -176,6 +176,16 @@
               tooltipPosition="top"
               (click)="verComprobante(item)"
             ></button>
+            <button
+              *ngIf="item.estado !== 'ANULADA'"
+              pButton
+              type="button"
+              icon="pi pi-verified"
+              class="p-button-text p-button-sm p-button-help"
+              pTooltip="Documento soporte (proveedor no obligado a facturar)"
+              tooltipPosition="top"
+              (click)="abrirDocumentoSoporte(item)"
+            ></button>
           </td>
         </tr>
       </ng-template>
@@ -244,3 +254,9 @@
 </app-detalle-compra>
 
 <p-toast />
+
+<app-documento-soporte-dialog
+  [(visible)]="showDocSoporte"
+  origenTipo="COMPRA"
+  [origenId]="compraDocSoporteId"
+/>

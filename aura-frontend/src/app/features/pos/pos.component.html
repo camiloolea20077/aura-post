@@ -331,7 +331,7 @@
         <span class="tab-badge" *ngIf="tab.cart.length">{{
           tab.cart.length
         }}</span>
-        <span class="tab-close" (click)="closeTab(i, $event)">
+        <span class="tab-close" (click)="cerrarPestana(i, $event)">
           <i class="pi pi-times"></i>
         </span>
       </button>
@@ -359,7 +359,7 @@
         class="p-button-text p-button-danger p-button-sm clear-btn"
         pTooltip="Vaciar carrito"
         *ngIf="cart.length"
-        (click)="clearCart()"
+        (click)="vaciarCarrito()"
       ></button>
     </div>
 

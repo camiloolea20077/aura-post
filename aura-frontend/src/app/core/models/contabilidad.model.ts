@@ -33,6 +33,8 @@ export interface CreatePlanCuentaDto {
   nivel: number;
   padreId?: number | null;
   auxiliar?: boolean;
+  /** Se puede elegir como origen o destino de un pago (caja menor, bancos…). */
+  esMedioPago?: boolean;
   codigoDian?: string;
 }
 

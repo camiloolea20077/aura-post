@@ -303,62 +303,12 @@
 </div>
 
 <!-- Pago del período -->
-<p-dialog
+<app-pago-nomina-dialog
   [(visible)]="showPago"
-  [modal]="true"
-  [draggable]="false"
-  [style]="{ width: '460px' }"
-  header="Pagar nóminas aprobadas del período"
->
-  <div class="pago-form">
-    <div class="field">
-      <label>Medio de pago</label>
-      <p-dropdown
-        [options]="mediosPago"
-        [(ngModel)]="medioPago"
-        optionLabel="label"
-        optionValue="value"
-        [style]="{ width: '100%' }"
-      />
-    </div>
-    <div class="field" *ngIf="medioPago === 'TRANSFERENCIA'">
-      <label>Cuenta bancaria de origen</label>
-      <p-dropdown
-        [options]="cuentasOpts"
-        [(ngModel)]="cuentaBancariaId"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="Selecciona la cuenta"
-        [filter]="true"
-        [style]="{ width: '100%' }"
-      />
-    </div>
-    <p class="pago-hint">
-      <i class="pi pi-info-circle"></i>
-      Se paga el neto de cada empleado y se genera el asiento
-      <b
-        >DB Salarios por pagar / CR
-        {{ medioPago === "EFECTIVO" ? "Caja" : "Banco" }}</b
-      >.
-    </p>
-  </div>
-  <ng-template pTemplate="footer">
-    <button
-      pButton
-      label="Cancelar"
-      class="btn-amarillo"
-      (click)="showPago = false"
-    ></button>
-    <button
-      pButton
-      label="Confirmar pago"
-      icon="pi pi-check"
-      class="btn-verde"
-      [loading]="pagando"
-      (click)="confirmarPago()"
-    ></button>
-  </ng-template>
-</p-dialog>
+  titulo="Pagar nóminas aprobadas del período"
+  [pagando]="pagando"
+  (confirmar)="confirmarPago($event)"
+/>
 
 <p-confirmDialog />
 
