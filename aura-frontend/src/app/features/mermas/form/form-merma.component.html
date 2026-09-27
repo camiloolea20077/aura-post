@@ -3,7 +3,7 @@
   [(visible)]="visible"
   (onHide)="close()"
   [modal]="true"
-  [style]="{ width: '860px', maxHeight: '90vh' }"
+  [style]="{ width: '980px', maxHeight: '90vh' }"
   [draggable]="false"
   [resizable]="false"
 >
@@ -68,16 +68,38 @@
         ></button>
       </div>
 
+      <!-- SKU / código de barras -->
+      <div class="scan-bar">
+        <i
+          class="pi"
+          [class.pi-barcode]="!buscandoCodigo"
+          [class.pi-spin]="buscandoCodigo"
+          [class.pi-spinner]="buscandoCodigo"
+        ></i>
+        <input
+          #scanInput
+          pInputText
+          type="text"
+          class="scan-input"
+          [(ngModel)]="codigoEscaneo"
+          [ngModelOptions]="{ standalone: true }"
+          (keydown.enter)="onCodigoEnter($event)"
+          placeholder="SKU o código de barras — escanea o escribe y presiona Enter"
+          autocomplete="off"
+        />
+      </div>
+
       <!-- Empty -->
       <div class="lines-empty" *ngIf="lineas.length === 0">
         <i class="pi pi-inbox"></i>
-        <p>Agrega los productos que se perdieron</p>
+        <p>Escanea un SKU o agrega los productos que se perdieron</p>
       </div>
 
       <!-- Tabla -->
       <div class="lines-wrap" *ngIf="lineas.length > 0">
         <div class="lines-header">
           <span class="col-producto">Producto</span>
+          <span class="col-sku">SKU</span>
           <span class="col-lote">Lote</span>
           <span class="col-stock">Stock</span>
           <span class="col-cantidad">Cantidad</span>
@@ -86,104 +108,198 @@
           <span class="col-accion"></span>
         </div>
 
-        <div class="line-row" *ngFor="let l of lineas; trackBy: trackById">
-          <!-- Producto -->
-          <div class="col-producto">
-            <p-dropdown
-              appendTo="body"
-              [ngModel]="l.productoId"
-              [ngModelOptions]="{ standalone: true }"
-              (ngModelChange)="onProductoChange(l, $event)"
-              [options]="productosOpts"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Escribe para buscar..."
-              [filter]="true"
-              filterPlaceholder="Nombre o SKU (2+ letras)..."
-              (onFilter)="onFiltroProducto($event)"
-              styleClass="w-full"
-              [class.sin-seleccion]="!l.productoId"
-            />
+        <ng-container *ngFor="let l of lineas; trackBy: trackById">
+          <div class="line-row">
+            <!-- Producto -->
+            <div class="col-producto">
+              <p-dropdown
+                appendTo="body"
+                [ngModel]="l.productoId"
+                [ngModelOptions]="{ standalone: true }"
+                (ngModelChange)="onProductoChange(l, $event)"
+                [options]="productosOpts"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Escribe para buscar..."
+                [filter]="true"
+                filterPlaceholder="Nombre o SKU (2+ letras)..."
+                (onFilter)="onFiltroProducto($event)"
+                styleClass="w-full"
+                [class.sin-seleccion]="!l.productoId"
+              />
+              <button
+                *ngIf="l.manejaSerial"
+                type="button"
+                class="seriales-link"
+                [class.seriales-link--ok]="(l.serialIds?.length ?? 0) === unidadesSerial(l) && unidadesSerial(l) > 0"
+                (click)="abrirSeriales(l)"
+              >
+                <i class="pi pi-barcode"></i>
+                Seriales {{ l.serialIds?.length ?? 0 }}/{{ unidadesSerial(l) | number: "1.0-4" }}
+              </button>
+            </div>
+
+            <!-- SKU -->
+            <div class="col-sku">
+              <span class="sku-chip" *ngIf="l.productoSku">{{
+                l.productoSku
+              }}</span>
+              <span class="no-aplica" *ngIf="!l.productoSku">—</span>
+            </div>
+
+            <!-- Lote -->
+            <div class="col-lote">
+              <span
+                class="receta-chip"
+                *ngIf="l.esCompuesto"
+                pTooltip="Se descuentan los componentes de su receta"
+                tooltipPosition="top"
+                ><i class="pi pi-sitemap"></i> Receta</span
+              >
+              <p-dropdown
+                appendTo="body"
+                *ngIf="l.manejaLotes"
+                [(ngModel)]="l.loteId"
+                [ngModelOptions]="{ standalone: true }"
+                [options]="l.lotesDisponibles"
+                optionLabel="etiqueta"
+                optionValue="id"
+                [showClear]="true"
+                placeholder="Automático (vence primero)"
+                pTooltip="Sin elegir, sale el lote que vence primero"
+                tooltipPosition="top"
+                styleClass="w-full"
+                (onChange)="onLoteChange(l, $event.value)"
+              />
+              <span
+                class="no-aplica"
+                *ngIf="!l.manejaLotes && !l.esCompuesto"
+                >—</span
+              >
+            </div>
+
+            <!-- Stock -->
+            <div class="col-stock">
+              <span
+                class="stock-pill"
+                [class.danger]="l.productoId && cantidadBase(l) > l.stockActual"
+                [pTooltip]="l.esCompuesto ? 'Unidades que alcanzan con el stock de sus componentes' : ''"
+                tooltipPosition="top"
+              >
+                {{
+                  esIlimitado(l.stockActual)
+                    ? "—"
+                    : (l.stockActual | number: "1.0-2")
+                }}
+              </span>
+            </div>
+
+            <!-- Cantidad -->
+            <div class="col-cantidad">
+              <!-- 1 [Bulto ▾]: la cantidad y en qué va, en la misma fila -->
+              <div class="cant-pres">
+                <p-inputNumber
+                  [ngModel]="l.cantidad"
+                  [ngModelOptions]="{ standalone: true }"
+                  (ngModelChange)="updateCantidad(l, $event)"
+                  [min]="0.001"
+                  [maxFractionDigits]="4"
+                  inputStyleClass="line-input text-center"
+                  styleClass="cant-pres__cantidad"
+                />
+                <p-dropdown
+                  *ngIf="l.presentaciones.length > 1"
+                  appendTo="body"
+                  [options]="l.presentaciones"
+                  optionLabel="nombre"
+                  optionValue="id"
+                  [ngModel]="l.presentacionId"
+                  [ngModelOptions]="{ standalone: true }"
+                  (ngModelChange)="onPresentacionChange(l, $event)"
+                  styleClass="cant-pres__presentacion"
+                />
+              </div>
+            </div>
+
+            <!-- Costo -->
+            <div class="col-costo">
+              <p-inputNumber
+                *ngIf="!l.esCompuesto"
+                [ngModel]="l.costoUnitario"
+                [ngModelOptions]="{ standalone: true }"
+                (ngModelChange)="updateCosto(l, $event)"
+                [min]="0"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [minFractionDigits]="0"
+                inputStyleClass="line-input text-right"
+                styleClass="w-full"
+              />
+              <span
+                class="costo-calculado"
+                *ngIf="l.esCompuesto"
+                pTooltip="Suma del costo de sus componentes"
+                tooltipPosition="top"
+                >{{ formatCOP(l.costoUnitario) }}</span
+              >
+            </div>
+
+            <!-- Subtotal -->
+            <div class="col-subtotal">
+              <span class="subtotal-val">{{ formatCOP(l.subtotalCosto) }}</span>
+            </div>
+
+            <!-- Eliminar -->
+            <div class="col-accion">
+              <button
+                pButton
+                icon="pi pi-trash"
+                class="p-button-text p-button-danger p-button-sm"
+                (click)="removeLinea(l._id)"
+              ></button>
+            </div>
           </div>
 
-          <!-- Lote -->
-          <div class="col-lote">
-            <p-dropdown
-              appendTo="body"
-              *ngIf="l.manejaLotes"
-              [(ngModel)]="l.loteId"
-              [ngModelOptions]="{ standalone: true }"
-              [options]="l.lotesDisponibles"
-              optionLabel="codigoLote"
-              optionValue="id"
-              placeholder="Lote..."
-              styleClass="w-full"
-              (onChange)="onLoteChange(l, $event.value)"
-            />
-            <span class="no-aplica" *ngIf="!l.manejaLotes">—</span>
-          </div>
-
-          <!-- Stock -->
-          <div class="col-stock">
-            <span
-              class="stock-pill"
-              [class.danger]="l.productoId && l.cantidad > l.stockActual"
+          <!-- Componentes de la receta -->
+          <div class="line-componentes" *ngIf="l.esCompuesto">
+            <div
+              class="comp-row"
+              *ngFor="let c of l.componentesPorUnidad"
+              [class.falta]="faltaComponente(l, c)"
             >
-              {{ l.stockActual }}
-            </span>
+              <i class="pi pi-angle-right"></i>
+              <span class="comp-nombre">{{ c.productoNombre }}</span>
+              <span class="comp-cant"
+                >{{ requerido(l, c) | number: "1.0-4" }}
+                {{ c.unidadAbreviatura }}</span
+              >
+              <span class="comp-stock">
+                <ng-container
+                  *ngIf="
+                    c.stockDisponible !== null &&
+                      c.stockDisponible !== undefined;
+                    else sinInventario
+                  "
+                  >Stock: {{ c.stockDisponible | number: "1.0-4" }}</ng-container
+                >
+                <ng-template #sinInventario
+                  >Sin inventario en esta sucursal</ng-template
+                >
+              </span>
+            </div>
+            <div class="comp-vacio" *ngIf="!l.componentesPorUnidad.length">
+              La receta no tiene componentes que manejen inventario
+            </div>
           </div>
-
-          <!-- Cantidad -->
-          <div class="col-cantidad">
-            <p-inputNumber
-              [ngModel]="l.cantidad"
-              [ngModelOptions]="{ standalone: true }"
-              (ngModelChange)="updateCantidad(l, $event)"
-              [min]="0.001"
-              [maxFractionDigits]="4"
-              inputStyleClass="line-input text-center"
-              styleClass="w-full"
-            />
-          </div>
-
-          <!-- Costo -->
-          <div class="col-costo">
-            <p-inputNumber
-              [ngModel]="l.costoUnitario"
-              [ngModelOptions]="{ standalone: true }"
-              (ngModelChange)="updateCosto(l, $event)"
-              [min]="0"
-              mode="currency"
-              currency="COP"
-              locale="es-CO"
-              [minFractionDigits]="0"
-              inputStyleClass="line-input text-right"
-              styleClass="w-full"
-            />
-          </div>
-
-          <!-- Subtotal -->
-          <div class="col-subtotal">
-            <span class="subtotal-val">{{ formatCOP(l.subtotalCosto) }}</span>
-          </div>
-
-          <!-- Eliminar -->
-          <div class="col-accion">
-            <button
-              pButton
-              icon="pi pi-trash"
-              class="p-button-text p-button-danger p-button-sm"
-              (click)="removeLinea(l._id)"
-            ></button>
-          </div>
-        </div>
+        </ng-container>
       </div>
     </div>
 
     <!-- Alerta stock inválido -->
     <div class="stock-alert" *ngIf="hayStockInvalido">
       <i class="pi pi-exclamation-triangle"></i>
-      Hay productos con cantidad mayor al stock disponible
+      Hay productos o componentes con cantidad mayor al stock disponible
     </div>
   </div>
 
@@ -219,4 +335,14 @@
   [(visible)]="showMotivoDialog"
   [motivo]="null"
   (saved)="onMotivoCreado($event)"
+/>
+
+<app-serial-picker
+  [(visible)]="serialPickerVisible"
+  [productoId]="serialLinea?.productoId ?? null"
+  [productoNombre]="serialLinea?.productoNombre || ''"
+  [sucursalId]="sucursalSeriales"
+  [cantidad]="serialLinea ? unidadesSerial(serialLinea) : 0"
+  [seleccionados]="serialLinea?.serialIds || []"
+  (confirmar)="onSerialesElegidos($event)"
 />

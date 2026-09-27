@@ -16,6 +16,15 @@ export class CuentaBancariaService {
     return this.http.get<ResponseModel<CuentaBancariaModel[]>>(this.api);
   }
 
+  getById(id: number): Observable<ResponseModel<CuentaBancariaModel>> {
+    return this.http.get<ResponseModel<CuentaBancariaModel>>(`${this.api}/${id}`);
+  }
+
+  /** El código que recibiría una cuenta nueva si no se digita. */
+  siguienteCodigo(): Observable<ResponseModel<string>> {
+    return this.http.get<ResponseModel<string>>(`${this.api}/siguiente-codigo`);
+  }
+
   create(dto: CreateCuentaBancariaDto): Observable<ResponseModel<CuentaBancariaModel>> {
     return this.http.post<ResponseModel<CuentaBancariaModel>>(this.api, dto);
   }

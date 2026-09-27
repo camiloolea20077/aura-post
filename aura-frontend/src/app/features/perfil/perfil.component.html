@@ -1,0 +1,209 @@
+<div class="page">
+  <div class="card">
+    <!-- ── Encabezado ─────────────────────────────────────────── -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-user"></i></span>
+        <div>
+          <h1 class="title">Mi perfil</h1>
+          <p class="subtitle">Tu cuenta y los datos de la empresa actual</p>
+        </div>
+      </div>
+
+      <div class="card-head__actions" *ngIf="!cargando && empresa">
+        <div class="card-head__btns">
+          <button
+            *ngIf="puedeEditar && !editando"
+            pButton
+            type="button"
+            icon="pi pi-pencil"
+            label="Editar empresa"
+            class="p-button-sm p-button-outlined"
+            (click)="editar()"
+          ></button>
+
+          <ng-container *ngIf="editando">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-times"
+              label="Cancelar"
+              class="p-button-sm btn-amarillo"
+              (click)="cancelar()"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-check"
+              label="Guardar"
+              class="p-button-sm btn-verde"
+              [loading]="guardando"
+              (click)="guardar()"
+            ></button>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Cargando ───────────────────────────────────────────── -->
+    <div class="seccion estado-carga" *ngIf="cargando">
+      <p-progressSpinner strokeWidth="3" styleClass="spinner-sm" />
+      <span>Cargando tu perfil...</span>
+    </div>
+
+    <ng-container *ngIf="!cargando">
+      <!-- ── Usuario ──────────────────────────────────────────── -->
+      <div class="seccion">
+        <h2 class="seccion-titulo">Tu cuenta</h2>
+
+        <div class="usuario">
+          <div class="avatar">{{ iniciales | uppercase }}</div>
+          <div class="usuario-datos">
+            <div class="usuario-nombre">{{ nombreCompleto || username }}</div>
+            <div class="usuario-meta">
+              <p-tag [value]="rol" severity="info" styleClass="tag-mini" />
+              <span *ngIf="username" class="mono">{{ username }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="datos-grid">
+          <div class="dato">
+            <span class="dato-label">Sucursal actual</span>
+            <span class="dato-valor">{{ sucursalNombre || "—" }}</span>
+          </div>
+          <div class="dato" *ngIf="sucursales.length > 1">
+            <span class="dato-label">Sucursales con acceso</span>
+            <span class="dato-valor">{{ sucursales.join(", ") }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Empresa ──────────────────────────────────────────── -->
+      <div class="seccion" *ngIf="empresa">
+        <h2 class="seccion-titulo">Empresa actual</h2>
+
+        <!-- Identidad: no se edita desde aquí -->
+        <div class="datos-grid">
+          <div class="dato">
+            <span class="dato-label">Razón social</span>
+            <span class="dato-valor">{{ empresa.razonSocial || "—" }}</span>
+          </div>
+          <div class="dato" *ngIf="empresa.nombreComercial">
+            <span class="dato-label">Nombre comercial</span>
+            <span class="dato-valor">{{ empresa.nombreComercial }}</span>
+          </div>
+          <div class="dato">
+            <span class="dato-label">NIT</span>
+            <span class="dato-valor mono">
+              {{ empresa.nit }}<span *ngIf="empresa.dv">-{{ empresa.dv }}</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Contacto: lo que sí se edita -->
+        <form [formGroup]="form" class="datos-grid">
+          <div class="dato">
+            <span class="dato-label">Teléfono</span>
+            <span class="dato-valor" *ngIf="!editando">
+              {{ empresa.telefono || "—" }}
+            </span>
+            <input
+              *ngIf="editando"
+              type="text"
+              pInputText
+              formControlName="telefono"
+              placeholder="3001234567"
+              class="w-full"
+            />
+          </div>
+
+          <div class="dato">
+            <span class="dato-label">Correo</span>
+            <span class="dato-valor" *ngIf="!editando">
+              {{ empresa.correo || "—" }}
+            </span>
+            <ng-container *ngIf="editando">
+              <input
+                type="email"
+                pInputText
+                formControlName="correo"
+                placeholder="contacto@empresa.com"
+                class="w-full"
+                [class.ng-invalid]="isInvalid('correo')"
+              />
+              <small class="dato-error" *ngIf="isInvalid('correo')">
+                El correo no tiene un formato válido
+              </small>
+            </ng-container>
+          </div>
+
+          <div class="dato">
+            <span class="dato-label">Dirección</span>
+            <span class="dato-valor" *ngIf="!editando">
+              {{ empresa.direccion || "—" }}
+            </span>
+            <input
+              *ngIf="editando"
+              type="text"
+              pInputText
+              formControlName="direccion"
+              placeholder="Calle 1 # 2-3"
+              class="w-full"
+            />
+          </div>
+
+          <div class="dato">
+            <span class="dato-label">Municipio</span>
+            <span class="dato-valor" *ngIf="!editando">
+              {{ empresa.municipio || "—" }}
+            </span>
+            <input
+              *ngIf="editando"
+              type="text"
+              pInputText
+              formControlName="municipio"
+              placeholder="Montería"
+              class="w-full"
+            />
+          </div>
+        </form>
+
+        <p class="nota" *ngIf="editando">
+          Este contacto es el que sale en la factura. La razón social y el NIT
+          no se cambian desde aquí.
+        </p>
+        <p class="nota" *ngIf="!editando && !puedeEditar">
+          Solo un administrador puede cambiar estos datos.
+        </p>
+      </div>
+
+      <!-- ── Sucursal / facturación ───────────────────────────── -->
+      <div class="seccion" *ngIf="empresa?.sucursalNombre">
+        <h2 class="seccion-titulo">Sucursal en la que estás trabajando</h2>
+        <div class="datos-grid">
+          <div class="dato">
+            <span class="dato-label">Sucursal</span>
+            <span class="dato-valor">{{ empresa?.sucursalNombre }}</span>
+          </div>
+          <div class="dato" *ngIf="empresa?.sucursalDireccion">
+            <span class="dato-label">Dirección</span>
+            <span class="dato-valor">{{ empresa?.sucursalDireccion }}</span>
+          </div>
+          <div class="dato" *ngIf="empresa?.sucursalTelefono">
+            <span class="dato-label">Teléfono</span>
+            <span class="dato-valor">{{ empresa?.sucursalTelefono }}</span>
+          </div>
+          <div class="dato" *ngIf="empresa?.sucursalPrefijoFacturacion">
+            <span class="dato-label">Prefijo de facturación</span>
+            <span class="dato-valor mono">
+              {{ empresa?.sucursalPrefijoFacturacion }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>
+
+<p-toast />

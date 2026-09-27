@@ -216,18 +216,16 @@ export class IndexKardexComponent implements OnInit {
   }
 
   // ── Detalle ───────────────────────────────────────────────
-  async verDetalle(m: MovimientoTableModel): Promise<void> {
-    this.loadingDetalle = true;
+  /**
+   * La fila ya trae todo lo que muestra el detalle. Antes se pedía
+   * kardex/resumen/{id} con el id del MOVIMIENTO, pero ese endpoint espera el
+   * id del PRODUCTO: respondía [] y el detalle quedaba vacío.
+   */
+  verDetalle(m: MovimientoTableModel): void {
+    this.movimientoDetalle = m as unknown as MovimientoInventarioModel;
+    this.loadingDetalle = false;
     this.showDetalle = true;
-    this.movimientoDetalle = null;
     this.cdr.markForCheck();
-    try {
-      const res = await lastValueFrom(this.service.getById(m.id));
-      this.movimientoDetalle = res?.data ?? null;
-    } finally {
-      this.loadingDetalle = false;
-      this.cdr.markForCheck();
-    }
   }
 
   // ── Helpers visuales ──────────────────────────────────────

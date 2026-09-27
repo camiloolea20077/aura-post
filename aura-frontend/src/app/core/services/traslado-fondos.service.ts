@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 
 import {
   CreateTrasladoFondosDto,
+  ReembolsoFondoModel,
   TrasladoFondosModel,
 } from '../models/traslado-fondos.model';
 import { environment } from '../../../environments/environment';
@@ -46,5 +47,24 @@ export class TrasladoFondosService {
     dto: CreateTrasladoFondosDto,
   ): Observable<ResponseModel<TrasladoFondosModel>> {
     return this.http.post<ResponseModel<TrasladoFondosModel>>(this.api, dto);
+  }
+
+  /** Cuánto reponer a la caja menor y la relación de gastos que lo soporta. */
+  reembolso(cuentaId: number): Observable<ResponseModel<ReembolsoFondoModel>> {
+    return this.http.get<ResponseModel<ReembolsoFondoModel>>(
+      `${this.api}/reembolso`,
+      { params: new HttpParams().set('cuentaId', cuentaId) },
+    );
+  }
+
+  /** Devuelve la plata a su origen y reversa el asiento; el traslado no se borra. */
+  anular(
+    id: number,
+    motivo: string,
+  ): Observable<ResponseModel<TrasladoFondosModel>> {
+    return this.http.patch<ResponseModel<TrasladoFondosModel>>(
+      `${this.api}/${id}/anular`,
+      { motivo },
+    );
   }
 }

@@ -1,0 +1,58 @@
+<p-dialog
+  [(visible)]="visible"
+  (onHide)="cerrar()"
+  [header]="'Seriales · ' + productoNombre"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '480px', maxWidth: '96vw' }"
+  appendTo="body"
+>
+  <div class="sp-cab">
+    <input
+      pInputText
+      class="sp-buscar"
+      [(ngModel)]="filtro"
+      (keydown.enter)="onEnter()"
+      placeholder="Escanea o escribe el serial y presiona Enter"
+      autocomplete="off"
+    />
+    <span class="sp-contador" [class.sp-contador--ok]="marcados.size === unidades">
+      {{ marcados.size }} de {{ unidades }}
+    </span>
+  </div>
+  <small class="sp-aviso" *ngIf="aviso">{{ aviso }}</small>
+
+  <div class="sp-cargando" *ngIf="cargando">
+    <i class="pi pi-spin pi-spinner"></i> Cargando seriales…
+  </div>
+
+  <div class="sp-lista" *ngIf="!cargando">
+    <button
+      type="button"
+      class="sp-item"
+      *ngFor="let s of filtrados"
+      [class.sp-item--marcado]="marcados.has(s.id)"
+      (click)="alternar(s)"
+    >
+      <i class="pi" [class.pi-check-square]="marcados.has(s.id)" [class.pi-stop]="!marcados.has(s.id)"></i>
+      <span class="sp-serial">{{ s.serial }}</span>
+      <span class="sp-extra" *ngIf="s.garantiaClienteHasta">
+        garantía hasta {{ s.garantiaClienteHasta | date: "dd/MM/yyyy" }}
+      </span>
+    </button>
+    <div class="sp-vacio" *ngIf="!filtrados.length">
+      {{
+        lista.length
+          ? "Ningún serial coincide"
+          : ventaDetalleId
+            ? "Esta venta no tiene seriales por devolver"
+            : "No hay seriales disponibles de este producto en la sucursal"
+      }}
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancelar" class="btn-amarillo" (click)="cerrar()"></button>
+    <button pButton type="button" label="Aceptar" icon="pi pi-check" class="btn-verde" (click)="aceptar()"></button>
+  </ng-template>
+</p-dialog>

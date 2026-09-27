@@ -25,8 +25,19 @@
           (click)="openCreate()"
         ></button>
 
-        <!-- Búsqueda (debajo) -->
+        <!-- Filtro por uso + búsqueda (debajo) -->
         <div class="card-head__search">
+          <p-dropdown
+            [options]="usoOptions"
+            [(ngModel)]="usoFiltro"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todos los usos"
+            [showClear]="true"
+            styleClass="uso-filtro"
+            (onChange)="onUsoChange()"
+            (onClear)="onUsoChange()"
+          />
           <span class="search-wrap">
             <i class="pi pi-search"></i>
             <input
@@ -80,6 +91,7 @@
             Marca <p-sortIcon field="m.nombre" />
           </th>
           <th style="width: 110px">Tipo</th>
+          <th style="width: 120px">Uso</th>
           <th
             pSortableColumn="p.precio"
             style="width: 130px"
@@ -145,6 +157,15 @@
             />
           </td>
 
+          <!-- Uso -->
+          <td>
+            <p-tag
+              [value]="getUsoLabel(item.usoProducto)"
+              [severity]="getUsoSeverity(item.usoProducto)"
+              [rounded]="true"
+            />
+          </td>
+
           <!-- Precio -->
           <td class="text-right">
             <span class="price-value">
@@ -197,7 +218,7 @@
       <!-- Empty -->
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="9">
+          <td colspan="10">
             <div class="empty-state">
               <i class="pi pi-shopping-bag"></i>
               <p>
@@ -248,16 +269,6 @@
     </p-table>
   </div>
 </div>
-
-<!-- Modal -->
-<app-form-productos
-  [displayModal]="showModal"
-  [productoId]="selectedId"
-  [slug]="modalSlug"
-  (modalClosed)="onModalClosed()"
-  (productoSaved)="onItemSaved()"
->
-</app-form-productos>
 
 <p-toast />
 <p-confirmDialog />

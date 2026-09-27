@@ -64,6 +64,22 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'catalogo/productos/nuevo',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/catalogo/productos/form/form-productos.component').then(
+            (m) => m.FormProductosComponent,
+          ),
+      },
+      {
+        path: 'catalogo/productos/editar/:id',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/catalogo/productos/form/form-productos.component').then(
+            (m) => m.FormProductosComponent,
+          ),
+      },
+      {
         path: 'catalogo/categorias',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
@@ -240,6 +256,27 @@ export const routes: Routes = [
           ),
       },
       {
+        // Manual de usuario: lo ve cualquier rol, no depende del menú.
+        path: 'ayuda',
+        loadComponent: () =>
+          import('./features/ayuda/ayuda.component').then((m) => m.AyudaComponent),
+      },
+      {
+        path: 'perfil',
+        loadComponent: () =>
+          import('./features/perfil/perfil.component').then(
+            (m) => m.PerfilComponent,
+          ),
+      },
+      {
+        path: 'inventario/bodegas',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import(
+            './features/inventario/bodegas/index/index-bodegas.component'
+          ).then((m) => m.IndexBodegasComponent),
+      },
+      {
         path: 'inventario/lotes',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
@@ -279,6 +316,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/compras/index/index-compras.component').then(
             (m) => m.IndexComprasComponent,
+          ),
+      },
+      {
+        path: 'compras/documentos-soporte',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/compras/documentos-soporte/index-documentos-soporte.component').then(
+            (m) => m.IndexDocumentosSoporteComponent,
           ),
       },
       {
@@ -445,6 +490,14 @@ export const routes: Routes = [
           import('./features/obsequios/index/index-obsequios.component').then(
             (m) => m.IndexObsequiosComponent,
           ),
+      },
+      {
+        path: 'consumo-interno',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import(
+            './features/consumo-interno/index/index-consumos-internos.component'
+          ).then((m) => m.IndexConsumosInternosComponent),
       },
       {
         path: 'traslados',
@@ -732,6 +785,22 @@ export const routes: Routes = [
             (m) => m.IndexCarteraComponent,
           ),
       },
+      {
+        path: 'cartera/reglas',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/cartera/reglas/reglas-credito.component').then(
+            (m) => m.ReglasCreditoComponent,
+          ),
+      },
+      {
+        path: 'cartera/cliente/:id',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/cartera/ficha-cliente/ficha-cliente.component').then(
+            (m) => m.FichaClienteComponent,
+          ),
+      },
 
       // Tesorería
       {
@@ -740,6 +809,22 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/tesoreria/cuentas-bancarias/index-cuentas-bancarias.component').then(
             (m) => m.IndexCuentasBancariasComponent,
+          ),
+      },
+      {
+        path: 'tesoreria/cuentas-bancarias/nueva',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/tesoreria/cuentas-bancarias/form/form-cuenta-bancaria.component').then(
+            (m) => m.FormCuentaBancariaComponent,
+          ),
+      },
+      {
+        path: 'tesoreria/cuentas-bancarias/:id',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/tesoreria/cuentas-bancarias/form/form-cuenta-bancaria.component').then(
+            (m) => m.FormCuentaBancariaComponent,
           ),
       },
       {
@@ -794,12 +879,71 @@ export const routes: Routes = [
             (m) => m.AsientosComponent,
           ),
       },
+      // Notas contables (comprobante de diario CD): el contador las elabora,
+      // las deja en borrador y las contabiliza después.
+      {
+        path: 'contabilidad/notas',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/notas-contables/index/index-notas-contables.component').then(
+            (m) => m.IndexNotasContablesComponent,
+          ),
+      },
+      // Antes de ':id': si no, 'plantillas' se tomaría como id de una nota.
+      {
+        path: 'contabilidad/notas/plantillas',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/notas-contables/plantillas/index-plantillas-nota.component').then(
+            (m) => m.IndexPlantillasNotaComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/notas/nueva',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/notas-contables/form/form-nota-contable.component').then(
+            (m) => m.FormNotaContableComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/notas/:id',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/notas-contables/form/form-nota-contable.component').then(
+            (m) => m.FormNotaContableComponent,
+          ),
+      },
       {
         path: 'contabilidad/revision',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/revision-asientos/revision-asientos.component').then(
             (m) => m.RevisionAsientosComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/importar',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/importar/importar-datos.component').then(
+            (m) => m.ImportarDatosComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/declaraciones',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/declaraciones/declaraciones.component').then(
+            (m) => m.DeclaracionesComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/libros',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/libros/libros-contables.component').then(
+            (m) => m.LibrosContablesComponent,
           ),
       },
       {
@@ -941,6 +1085,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/reportes/cartera/reporte-cartera.component').then(
             (m) => m.ReporteCarteraComponent,
+          ),
+      },
+      {
+        path: 'reportes/carritos-abandonados',
+        loadComponent: () =>
+          import('./features/reportes/carritos-abandonados/reporte-carritos-abandonados.component').then(
+            (m) => m.ReporteCarritosAbandonadosComponent,
           ),
       },
       {

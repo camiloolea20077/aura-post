@@ -1,0 +1,23 @@
+.anular-aviso {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  color: var(--aura-text-muted);
+}
+
+.anular-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+
+  .req {
+    color: #ef4444;
+  }
+}
+
+.anular-error {
+  display: block;
+  margin-top: 0.3rem;
+  color: #ef4444;
+}

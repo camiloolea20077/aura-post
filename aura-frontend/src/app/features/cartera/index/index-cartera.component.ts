@@ -18,18 +18,29 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { DropdownModule } from 'primeng/dropdown';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TextareaModule } from 'primeng/textarea';
+import { CalendarModule } from 'primeng/calendar';
+import { Router } from '@angular/router';
+import { aFechaLocal } from '../../../shared/utils/fecha.util';
+import { ViewChild } from '@angular/core';
+import { AgendaCobroComponent } from '../agenda/agenda-cobro.component';
+import { TableroCarteraComponent } from '../tablero/tablero-cartera.component';
+import { AutorizacionesCreditoComponent } from '../autorizaciones/autorizaciones-credito.component';
+import { AcuerdoDetalleDialogComponent } from '../acuerdos/acuerdo-detalle-dialog.component';
 import { MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
 import { CarteraService } from '../../../core/services/cartera.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
 import {
-  CarteraDashboardModel,
+  AcuerdoPagoModel,
   ClienteCarteraModel,
   CreateGestionCobroDto,
+  ESTADOS_ACUERDO,
+  EstadoAcuerdo,
   CreateTerceroCreditoDto,
   CuentaVencidaAlertaModel,
   EdadCarteraModel,
+  ReciboCajaTableModel,
   ESTADOS_CREDITO,
   NIVELES_RIESGO,
   RESULTADOS_GESTION,
@@ -56,6 +67,11 @@ import {
     DropdownModule,
     CheckboxModule,
     TextareaModule,
+    CalendarModule,
+    AgendaCobroComponent,
+    TableroCarteraComponent,
+    AutorizacionesCreditoComponent,
+    AcuerdoDetalleDialogComponent,
   ],
   providers: [MessageService, CurrencyPipe],
   templateUrl: './index-cartera.component.html',
@@ -65,9 +81,6 @@ export class IndexCarteraComponent implements OnInit {
   // ── Tab activo ────────────────────────────────────────────────────
   tab: TabCartera = 'dashboard';
 
-  // ── Dashboard ─────────────────────────────────────────────────────
-  dashboard: CarteraDashboardModel | null = null;
-  loadingDashboard = false;
 
   // ── Alertas ───────────────────────────────────────────────────────
   alertas: CuentaVencidaAlertaModel[] = [];
@@ -84,6 +97,38 @@ export class IndexCarteraComponent implements OnInit {
   loadingClientes = false;
   searchClientes = '';
   private searchTimer?: ReturnType<typeof setTimeout>;
+
+  // ── Recibos de caja ───────────────────────────────────────────────
+  recibos: ReciboCajaTableModel[] = [];
+  totalRecibos = 0;
+  rowsRecibos = 20;
+  loadingRecibos = false;
+  searchRecibos = '';
+  estadoRecibos: string | null = null;
+  readonly estadosRecibo = [
+    { label: 'Todos', value: null },
+    { label: 'Activos', value: 'ACTIVO' },
+    { label: 'Anulados', value: 'ANULADO' },
+  ];
+  private searchRecibosTimer?: ReturnType<typeof setTimeout>;
+
+  // ── Acuerdos de pago ──────────────────────────────────────────────
+  acuerdos: AcuerdoPagoModel[] = [];
+  totalAcuerdos = 0;
+  rowsAcuerdos = 20;
+  loadingAcuerdos = false;
+  searchAcuerdos = '';
+  estadoAcuerdos: EstadoAcuerdo | null = null;
+  readonly estadosAcuerdoFiltro = [
+    { label: 'Todos', value: null },
+    { label: 'Vigentes', value: 'VIGENTE' },
+    { label: 'Incumplidos', value: 'INCUMPLIDO' },
+    { label: 'Cumplidos', value: 'CUMPLIDO' },
+    { label: 'Anulados', value: 'ANULADO' },
+  ];
+  acuerdoDetalleId: number | null = null;
+  acuerdoDetalleVisible = false;
+  private searchAcuerdosTimer?: ReturnType<typeof setTimeout>;
 
   // ── Modal crédito ─────────────────────────────────────────────────
   showCreditoModal = false;
@@ -110,6 +155,8 @@ export class IndexCarteraComponent implements OnInit {
   };
   savingGestion = false;
   cuentaSeleccionadaId: number | null = null;
+  fechaPromesa: Date | null = null;
+  readonly hoy = new Date();
 
   // ── Opciones ──────────────────────────────────────────────────────
   readonly tiposGestion = TIPOS_GESTION;
@@ -121,40 +168,38 @@ export class IndexCarteraComponent implements OnInit {
     private readonly carteraService: CarteraService,
     private readonly alertService: AlertService,
     private readonly cdr: ChangeDetectorRef,
+    private readonly router: Router,
   ) {}
 
+  @ViewChild(AgendaCobroComponent) agendaCmp?: AgendaCobroComponent;
+  @ViewChild(TableroCarteraComponent) tableroCmp?: TableroCarteraComponent;
+  @ViewChild(AutorizacionesCreditoComponent) autorizacionesCmp?: AutorizacionesCreditoComponent;
+  pendientesAutorizacion = 0;
+
   ngOnInit(): void {
-    this.cargarDashboard();
+    this.contarAutorizaciones();
+    // La campana abre la pestaña que corresponde al aviso.
+    const estado = history.state;
+    const desdeCampana: TabCartera[] = ['agenda', 'autorizaciones', 'alertas', 'acuerdos'];
+    if (desdeCampana.includes(estado?.tab)) {
+      history.replaceState({ ...estado, tab: null }, '');
+      this.setTab(estado.tab);
+      return;
+    }
   }
 
   // ── Navegación tabs ───────────────────────────────────────────────
   setTab(t: TabCartera): void {
     this.tab = t;
-    if (t === 'dashboard' && !this.dashboard) this.cargarDashboard();
     if (t === 'alertas' && !this.alertas.length) this.cargarAlertas();
     if (t === 'edades' && !this.edades.length) this.cargarEdades();
     if (t === 'clientes' && !this.clientes.length) this.cargarClientes(0);
+    if (t === 'recibos' && !this.recibos.length) this.cargarRecibos(0);
+    if (t === 'acuerdos' && !this.acuerdos.length) this.cargarAcuerdos(0);
     this.cdr.markForCheck();
   }
 
   // ── Carga datos ───────────────────────────────────────────────────
-  async cargarDashboard(): Promise<void> {
-    this.loadingDashboard = true;
-    this.cdr.markForCheck();
-    try {
-      const res = await lastValueFrom(this.carteraService.dashboard());
-      this.dashboard = res?.data ?? null;
-    } catch {
-      this.alertService.showError(
-        'Error',
-        'No se pudo cargar el dashboard de cartera',
-      );
-    } finally {
-      this.loadingDashboard = false;
-      this.cdr.markForCheck();
-    }
-  }
-
   async cargarAlertas(): Promise<void> {
     this.loadingAlertas = true;
     this.cdr.markForCheck();
@@ -219,6 +264,105 @@ export class IndexCarteraComponent implements OnInit {
     const page = Math.floor(event.first / event.rows);
     this.rowsClientes = event.rows;
     this.cargarClientes(page);
+  }
+
+  verFicha(terceroId: number): void {
+    this.router.navigate(['/cartera/cliente', terceroId]);
+  }
+
+  // ── Recibos de caja ───────────────────────────────────────────────
+  async cargarRecibos(page: number): Promise<void> {
+    this.loadingRecibos = true;
+    this.cdr.markForCheck();
+    try {
+      const res = await lastValueFrom(
+        this.carteraService.recibos({
+          page,
+          rows: this.rowsRecibos,
+          estado: this.estadoRecibos,
+          search: this.searchRecibos || null,
+        }),
+      );
+      this.recibos = res?.data?.content ?? [];
+      this.totalRecibos = res?.data?.totalElements ?? 0;
+    } catch {
+      this.alertService.showError('Error', 'No se pudieron cargar los recibos');
+    } finally {
+      this.loadingRecibos = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  onSearchRecibos(): void {
+    clearTimeout(this.searchRecibosTimer);
+    this.searchRecibosTimer = setTimeout(() => this.cargarRecibos(0), 400);
+  }
+
+  onPageRecibos(event: any): void {
+    this.rowsRecibos = event.rows;
+    this.cargarRecibos(Math.floor(event.first / event.rows));
+  }
+
+  async imprimirRecibo(id: number): Promise<void> {
+    try {
+      const blob = await lastValueFrom(this.carteraService.reciboPdf(id));
+      window.open(URL.createObjectURL(blob), '_blank');
+    } catch {
+      this.alertService.showError('Error', 'No se pudo generar el PDF del recibo');
+    }
+  }
+
+  // ── Acuerdos de pago ──────────────────────────────────────────────
+  async cargarAcuerdos(page: number): Promise<void> {
+    this.loadingAcuerdos = true;
+    this.cdr.markForCheck();
+    try {
+      const res = await lastValueFrom(
+        this.carteraService.acuerdos({
+          page,
+          rows: this.rowsAcuerdos,
+          estado: this.estadoAcuerdos,
+          search: this.searchAcuerdos || null,
+        }),
+      );
+      this.acuerdos = res?.data?.content ?? [];
+      this.totalAcuerdos = res?.data?.totalElements ?? 0;
+    } catch {
+      this.alertService.showError('Error', 'No se pudieron cargar los acuerdos de pago');
+    } finally {
+      this.loadingAcuerdos = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  onSearchAcuerdos(): void {
+    clearTimeout(this.searchAcuerdosTimer);
+    this.searchAcuerdosTimer = setTimeout(() => this.cargarAcuerdos(0), 400);
+  }
+
+  onPageAcuerdos(event: any): void {
+    this.rowsAcuerdos = event.rows;
+    this.cargarAcuerdos(Math.floor(event.first / event.rows));
+  }
+
+  verAcuerdo(a: AcuerdoPagoModel): void {
+    this.acuerdoDetalleId = a.id;
+    this.acuerdoDetalleVisible = true;
+    this.cdr.markForCheck();
+  }
+
+  estadoAcuerdo(a: AcuerdoPagoModel): { label: string; color: string } {
+    const colores: Record<EstadoAcuerdo, string> = {
+      VIGENTE: '#2563eb',
+      INCUMPLIDO: '#ef4444',
+      CUMPLIDO: '#10b981',
+      ANULADO: '#94a3b8',
+    };
+    return { label: ESTADOS_ACUERDO[a.estado].label, color: colores[a.estado] };
+  }
+
+  avanceAcuerdo(a: AcuerdoPagoModel): number {
+    return a.valorTotal > 0 ? Math.min(100, Math.round((a.valorPagado / a.valorTotal) * 100)) : 0;
   }
 
   // ── Modal crédito ─────────────────────────────────────────────────
@@ -291,6 +435,7 @@ export class IndexCarteraComponent implements OnInit {
       nota: null,
       montoPrometido: null,
     };
+    this.fechaPromesa = null;
     this.showGestionModal = true;
     this.cdr.markForCheck();
   }
@@ -301,16 +446,23 @@ export class IndexCarteraComponent implements OnInit {
     this.cdr.markForCheck();
     try {
       await lastValueFrom(
-        this.carteraService.registrarGestion(this.gestionForm),
+        this.carteraService.registrarGestion({
+          ...this.gestionForm,
+          fechaPromesaPago:
+            this.gestionForm.resultado === 'PROMESA_PAGO' && this.fechaPromesa
+              ? aFechaLocal(this.fechaPromesa)
+              : null,
+        }),
       );
       this.alertService.showSuccess('Gestión registrada', '');
       this.showGestionModal = false;
       if (this.tab === 'alertas') this.cargarAlertas();
       if (this.tab === 'clientes') this.cargarClientes(0);
+      if (this.tab === 'agenda') this.agendaCmp?.cargar();
     } catch (err: any) {
       this.alertService.showError(
         'Error',
-        err?.message ?? 'No se pudo registrar la gestión',
+        err?.error?.message ?? err?.message ?? 'No se pudo registrar la gestión',
       );
     } finally {
       this.savingGestion = false;
@@ -350,12 +502,6 @@ export class IndexCarteraComponent implements OnInit {
     return '#7f1d1d';
   }
 
-  getEdadPct(valor: number | null | undefined): number {
-    const total = this.dashboard?.totalCartera ?? 0;
-    if (!total || !valor) return 0;
-    return Math.min(100, Math.round((valor / total) * 100));
-  }
-
   sumEdad(
     campo: 'corriente' | 'dias31a60' | 'dias61a90' | 'mas90dias' | 'total',
   ): number {
@@ -363,9 +509,27 @@ export class IndexCarteraComponent implements OnInit {
   }
 
   refreshTab(): void {
-    if (this.tab === 'dashboard') this.cargarDashboard();
+    if (this.tab === 'dashboard') this.tableroCmp?.cargar();
     if (this.tab === 'alertas') this.cargarAlertas();
     if (this.tab === 'edades') this.cargarEdades();
     if (this.tab === 'clientes') this.cargarClientes(0);
+    if (this.tab === 'recibos') this.cargarRecibos(0);
+    if (this.tab === 'acuerdos') this.cargarAcuerdos(0);
+    if (this.tab === 'agenda') this.agendaCmp?.cargar();
+    if (this.tab === 'autorizaciones') this.autorizacionesCmp?.cargar();
+  }
+
+  irAReglas(): void {
+    this.router.navigate(['/cartera/reglas']);
+  }
+
+  private async contarAutorizaciones(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.carteraService.solicitudes('PENDIENTE'));
+      this.pendientesAutorizacion = res.data?.length ?? 0;
+      this.cdr.markForCheck();
+    } catch {
+      /* la pestaña funciona igual sin el contador */
+    }
   }
 }

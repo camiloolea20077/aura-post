@@ -1,0 +1,47 @@
+<p-dialog
+  [header]="'Anular nota ' + (numero ?? '')"
+  [visible]="visible"
+  (visibleChange)="$event ? null : cerrar()"
+  [modal]="true"
+  [style]="{ width: '460px' }"
+  [draggable]="false"
+>
+  <p class="anular-aviso">
+    La nota deja de sumar en los libros pero conserva su número y su traza. Solo
+    se puede anular si su período sigue abierto.
+  </p>
+
+  <label class="anular-label" for="motivoAnulacion">
+    Motivo <span class="req">*</span>
+  </label>
+  <textarea
+    id="motivoAnulacion"
+    pTextarea
+    rows="3"
+    class="w-full"
+    [formControl]="motivo"
+    placeholder="Ej.: valor mal digitado, se registra de nuevo en la nota siguiente"
+  ></textarea>
+  <small class="anular-error" *ngIf="motivo.touched && motivo.invalid">
+    Escriba el motivo (mínimo 5 caracteres).
+  </small>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cancelar"
+      class="btn-amarillo"
+      (click)="cerrar()"
+    ></button>
+    <button
+      pButton
+      type="button"
+      label="Anular nota"
+      icon="pi pi-ban"
+      class="btn-rojo"
+      [loading]="saving"
+      (click)="confirmar()"
+    ></button>
+  </ng-template>
+</p-dialog>

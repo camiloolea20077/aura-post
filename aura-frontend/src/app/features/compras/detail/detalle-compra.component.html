@@ -73,13 +73,39 @@
               d.productoSku
             }}</span>
           </div>
+          <div class="det-lotes" *ngIf="d.lotes?.length">
+            <span class="det-lote" *ngFor="let x of d.lotes">
+              <i class="pi pi-calendar"></i>
+              {{ x.codigoLote }}
+              <ng-container *ngIf="x.fechaVencimiento">
+                · vence {{ x.fechaVencimiento | date: "dd/MM/yyyy" }}</ng-container
+              >
+              · {{ x.cantidadBase | number: "1.0-4" }}
+              {{ d.unidadAbreviatura || "und" }}
+            </span>
+          </div>
         </div>
         <div class="det-nums">
-          <div class="det-cant">{{ d.cantidad | number: "1.0-4" }} u.</div>
-          <div class="det-costo">
-            ×
-            {{ d.costoUnitario | currency: "COP" : "symbol-narrow" : "1.0-0" }}
-          </div>
+          <ng-container *ngIf="d.presentacionNombre; else lineaEnUnidades">
+            <div class="det-cant">
+              {{ d.cantidadPresentacion | number: "1.0-4" }}
+              {{ d.presentacionNombre }}
+            </div>
+            <div class="det-costo">
+              ×
+              {{
+                d.costoPresentacion | currency: "COP" : "symbol-narrow" : "1.0-0"
+              }}
+              · {{ d.cantidad | number: "1.0-4" }} u.
+            </div>
+          </ng-container>
+          <ng-template #lineaEnUnidades>
+            <div class="det-cant">{{ d.cantidad | number: "1.0-4" }} u.</div>
+            <div class="det-costo">
+              ×
+              {{ d.costoUnitario | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+            </div>
+          </ng-template>
         </div>
         <div class="det-subtotal">
           {{ d.subtotalLinea | currency: "COP" : "symbol-narrow" : "1.0-0" }}

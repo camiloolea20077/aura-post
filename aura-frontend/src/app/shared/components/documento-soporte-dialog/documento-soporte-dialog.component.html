@@ -1,0 +1,145 @@
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '46rem' }"
+  [breakpoints]="{ '768px': '96vw' }"
+  header="Documento soporte electrónico"
+>
+  <div class="cargando" *ngIf="cargando">Preparando el documento…</div>
+
+  <ng-container *ngIf="previa && !cargando">
+    <!-- Ya emitido -->
+    <div class="aceptado" *ngIf="previa.aceptado as a">
+      <i class="pi pi-check-circle"></i>
+      <div>
+        <b>Aceptado por la DIAN · {{ a.numero }}</b>
+        <small class="cude" *ngIf="a.cude">CUDE {{ a.cude }}</small>
+      </div>
+      <button
+        pButton
+        type="button"
+        label="PDF"
+        icon="pi pi-file-pdf"
+        class="p-button-sm p-button-outlined"
+        [loading]="descargando"
+        (click)="descargarPdf(a.id)"
+      ></button>
+    </div>
+
+    <div class="bloque">
+      <span class="etiqueta">{{ previa.origenTipo === "COMPRA" ? "Compra" : "Gasto" }}</span>
+      <b>{{ previa.origenNumero }}</b>
+      <span class="sep">·</span>
+      <span>{{ previa.formaPago === "CREDITO" ? "A crédito" : "De contado" }}</span>
+    </div>
+
+    <div class="bloque proveedor">
+      <span class="etiqueta">Proveedor</span>
+      <div *ngIf="previa.proveedorNombre; else sinProveedor">
+        <b>{{ previa.proveedorNombre }}</b> · {{ previa.proveedorDocumento }}
+        <div class="sub">
+          {{ previa.proveedorDireccion || "Sin dirección" }} ·
+          {{ previa.proveedorMunicipio || "Sin municipio" }}
+        </div>
+      </div>
+      <ng-template #sinProveedor><span class="error">Sin proveedor</span></ng-template>
+    </div>
+
+    <div class="faltantes" *ngIf="previa.faltantes.length > 0">
+      <b><i class="pi pi-times-circle"></i> Falta para poder enviarlo</b>
+      <ul>
+        <li *ngFor="let f of previa.faltantes">{{ f }}</li>
+      </ul>
+      <small>Complete los datos en la ficha del tercero y vuelva a abrir esta ventana.</small>
+    </div>
+
+    <div class="advertencias" *ngIf="previa.advertencias.length > 0">
+      <div *ngFor="let a of previa.advertencias">
+        <i class="pi pi-exclamation-triangle"></i> {{ a }}
+      </div>
+    </div>
+
+    <div class="tabla-wrap">
+      <table class="items">
+        <thead>
+          <tr>
+            <th>Ítem</th>
+            <th class="num">Cant.</th>
+            <th class="num">Precio</th>
+            <th class="num">Desc.</th>
+            <th class="num">IVA reg.</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let it of previa.items">
+            <td>{{ it.nombre }}</td>
+            <td class="num">{{ it.cantidad }}</td>
+            <td class="num">{{ formatCOP(it.precio) }}</td>
+            <td class="num">{{ it.descuentoPct ?? 0 }}%</td>
+            <td class="num">{{ it.ivaPct ?? 0 }}%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="totales">
+      <span *ngIf="previa.iva > 0">IVA incluido en el precio <b>{{ formatCOP(previa.iva) }}</b></span>
+      <span>Total <b>{{ formatCOP(previa.total) }}</b></span>
+      <span *ngIf="previa.retenciones > 0">Retenciones <b>{{ formatCOP(previa.retenciones) }}</b></span>
+      <span class="neto">Neto a pagar <b>{{ formatCOP(previa.netoAPagar) }}</b></span>
+    </div>
+
+    <ng-container *ngIf="!previa.aceptado">
+      <div class="campo">
+        <label>Observación (opcional)</label>
+        <input pInputText [(ngModel)]="observacion" maxlength="500" class="w-full" />
+      </div>
+      <button type="button" class="link" (click)="verOpciones = !verOpciones">
+        {{ verOpciones ? "Ocultar" : "Más opciones" }}
+      </button>
+      <div class="campo" *ngIf="verOpciones">
+        <label>Rango de numeración de Factus</label>
+        <input
+          pInputText
+          [(ngModel)]="numberingRangeId"
+          placeholder="Solo si tiene varios rangos de documento soporte activos"
+          class="w-full"
+        />
+      </div>
+    </ng-container>
+
+    <div class="intentos" *ngIf="previa.intentos.length > 0">
+      <b>Intentos anteriores</b>
+      <div class="intento" *ngFor="let i of previa.intentos">
+        <p-tag
+          [value]="i.estado === 'RECHAZADO' ? 'Rechazado' : 'Descartado'"
+          [severity]="i.estado === 'RECHAZADO' ? 'danger' : 'secondary'"
+        />
+        <span class="fecha">{{ i.createdAt | date: "dd/MM/yyyy HH:mm" }}</span>
+        <div class="motivo" *ngIf="i.mensajeError">{{ i.mensajeError }}</div>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cerrar"
+      class="p-button-text"
+      (click)="cerrar()"
+    ></button>
+    <button
+      *ngIf="previa && !previa.aceptado"
+      pButton
+      type="button"
+      label="Enviar a la DIAN"
+      icon="pi pi-send"
+      [disabled]="!previa.puedeEmitirse"
+      [loading]="enviando"
+      (click)="enviar()"
+    ></button>
+  </ng-template>
+</p-dialog>

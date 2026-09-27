@@ -453,6 +453,14 @@
   </ng-template>
 </p-dialog>
 
+<app-pago-nomina-dialog
+  [(visible)]="showPago"
+  titulo="Pagar nómina"
+  [total]="nomina?.netoPagar ?? null"
+  [pagando]="pagando"
+  (confirmar)="confirmarPago($event)"
+/>
+
 <app-desprendible
   [visible]="showDesprendible"
   [nominaId]="nomina?.id ?? null"

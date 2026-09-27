@@ -1,0 +1,716 @@
+<div class="page">
+  <div class="card ficha">
+    <!-- ══ Encabezado ══════════════════════════════════════════════ -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <button type="button" class="f-back" (click)="volver()" pTooltip="Volver a cartera" tooltipPosition="bottom">
+          <i class="pi pi-arrow-left"></i>
+        </button>
+        <span class="header-icon">
+          <ng-container *ngIf="ficha; else iconoVacio">{{ (ficha.cliente.nombre || '?').charAt(0) }}</ng-container>
+          <ng-template #iconoVacio><i class="pi pi-user"></i></ng-template>
+        </span>
+        <div class="f-titulo" *ngIf="ficha; else skNombre">
+          <div class="f-titulo__linea">
+            <h1 class="title">{{ ficha.cliente.nombre }}</h1>
+            <span class="f-semaforo" [ngClass]="'f-semaforo--' + semaforo.clase">
+              <i class="pi pi-circle-fill"></i> {{ semaforo.texto }}
+            </span>
+            <button type="button" class="f-semaforo f-semaforo--btn" *ngIf="acuerdoVivo as av"
+              [ngClass]="av.estado === 'INCUMPLIDO' ? 'f-semaforo--danger' : 'f-semaforo--info'"
+              (click)="verAcuerdo(av.id)">
+              <i class="pi pi-file-edit"></i>
+              {{ av.numero }} · {{ av.estado === 'INCUMPLIDO' ? 'incumplido' : 'cuota ' + formatCOP(av.proximaCuotaSaldo) + ' el ' + (av.proximaCuotaFecha | date: 'dd/MM') }}
+            </button>
+            <span class="f-semaforo f-semaforo--info" *ngIf="promesaPendiente as pp">
+              <i class="pi pi-calendar"></i>
+              Promete {{ formatCOP(pp.montoPrometido) }} el {{ pp.fechaPromesaPago | date: 'dd/MM' }}
+            </span>
+          </div>
+          <div class="subtitle f-contacto">
+            <span *ngIf="ficha.cliente.numeroDocumento">
+              {{ ficha.cliente.tipoDocumento }} {{ ficha.cliente.numeroDocumento }}
+            </span>
+            <a *ngIf="ficha.cliente.telefono" [href]="'tel:' + ficha.cliente.telefono">
+              <i class="pi pi-phone"></i> {{ ficha.cliente.telefono }}
+            </a>
+            <a *ngIf="ficha.cliente.email" [href]="'mailto:' + ficha.cliente.email">
+              <i class="pi pi-envelope"></i> {{ ficha.cliente.email }}
+            </a>
+            <span *ngIf="ficha.cliente.direccion">
+              <i class="pi pi-map-marker"></i> {{ ficha.cliente.direccion }}
+            </span>
+          </div>
+        </div>
+        <ng-template #skNombre>
+          <div class="f-titulo">
+            <p-skeleton width="260px" height="1.4rem" />
+            <p-skeleton width="180px" height="0.9rem" styleClass="mt-2" />
+          </div>
+        </ng-template>
+      </div>
+
+      <div class="card-head__btns" *ngIf="ficha">
+        <button pButton type="button" icon="pi pi-file-pdf" label="Estado de cuenta"
+          class="p-button-outlined p-button-secondary p-button-sm" (click)="estadoCuenta()"></button>
+        <button pButton type="button" icon="pi pi-phone" label="Gestión de cobro"
+          class="p-button-outlined p-button-sm" (click)="abrirGestion()"></button>
+        <button pButton type="button" icon="pi pi-file-edit" label="Acuerdo de pago"
+          class="p-button-outlined p-button-sm" [disabled]="!facturasSinAcuerdo"
+          [pTooltip]="facturasSinAcuerdo ? 'Pagar facturas en cuotas' : 'No hay facturas libres para un acuerdo'"
+          tooltipPosition="bottom" (click)="nuevoAcuerdo()"></button>
+        <button pButton type="button" icon="pi pi-wallet" label="Registrar pago"
+          class="p-button-sm" (click)="registrarPago()"></button>
+      </div>
+    </div>
+
+    <ng-container *ngIf="ficha; else skCuerpo">
+      <!-- ══ Cifras ═════════════════════════════════════════════════ -->
+      <div class="f-stats">
+        <div class="f-stat">
+          <span class="f-stat__label">Saldo por cobrar</span>
+          <span class="f-stat__valor">{{ formatCOP(ficha.resumen.saldoTotal) }}</span>
+          <span class="f-stat__meta">
+            {{ ficha.resumen.facturasAbiertas }}
+            {{ ficha.resumen.facturasAbiertas === 1 ? 'factura abierta' : 'facturas abiertas' }}
+          </span>
+        </div>
+
+        <div class="f-stat" [class.f-stat--danger]="ficha.resumen.saldoVencido > 0">
+          <span class="f-stat__label">Vencido</span>
+          <span class="f-stat__valor">{{ formatCOP(ficha.resumen.saldoVencido) }}</span>
+          <span class="f-stat__meta">
+            <ng-container *ngIf="ficha.resumen.facturasVencidas > 0; else alDia">
+              {{ ficha.resumen.facturasVencidas }} vencidas · hasta {{ ficha.resumen.diasMoraMaximo }} días
+            </ng-container>
+            <ng-template #alDia>Nada vencido</ng-template>
+          </span>
+        </div>
+
+        <div class="f-stat">
+          <span class="f-stat__label">Cupo disponible</span>
+          <ng-container *ngIf="ficha.cliente.cupoCredito != null; else sinCupo">
+            <span class="f-stat__valor">{{ formatCOP(ficha.resumen.cupoDisponible) }}</span>
+            <div class="f-barra">
+              <div class="f-barra__uso" [class.f-barra__uso--alto]="usoCupoPct >= 80" [style.width.%]="usoCupoPct"></div>
+            </div>
+            <span class="f-stat__meta">{{ usoCupoPct }}% usado de {{ formatCOP(ficha.cliente.cupoCredito) }}</span>
+          </ng-container>
+          <ng-template #sinCupo>
+            <span class="f-stat__valor f-stat__valor--muted">Sin cupo</span>
+            <span class="f-stat__meta">Se configura en la lista de clientes</span>
+          </ng-template>
+        </div>
+
+        <div class="f-stat" [class.f-stat--info]="ficha.resumen.anticipoDisponible > 0">
+          <span class="f-stat__label">Saldo a favor</span>
+          <span class="f-stat__valor">{{ formatCOP(ficha.resumen.anticipoDisponible) }}</span>
+          <span class="f-stat__meta">
+            <button *ngIf="ficha.anticipos.length && ficha.facturas.length" type="button" class="f-link"
+              (click)="setTab('anticipos')">
+              Aplicar a facturas <i class="pi pi-arrow-right"></i>
+            </button>
+            <ng-container *ngIf="!ficha.anticipos.length">Sin anticipos</ng-container>
+          </span>
+        </div>
+
+        <div class="f-stat">
+          <span class="f-stat__label">Días promedio en pagar</span>
+          <span class="f-stat__valor">
+            {{ ficha.resumen.promedioDiasPago != null ? ficha.resumen.promedioDiasPago + ' días' : '—' }}
+          </span>
+          <span class="f-stat__meta">{{ formatCOP(ficha.resumen.recaudado90Dias) }} recaudado en 90 días</span>
+        </div>
+      </div>
+
+      <!-- ══ Edades + crédito ═══════════════════════════════════════ -->
+      <div class="f-seccion">
+        <div class="f-bloque f-bloque--edades">
+          <div class="f-bloque__head">
+            <h2>Edad del saldo</h2>
+            <span class="f-sub" *ngIf="ficha.resumen.ultimoPagoFecha">
+              Último pago {{ ficha.resumen.ultimoPagoFecha | date: 'dd/MM/yyyy' }} ·
+              {{ formatCOP(ficha.resumen.ultimoPagoMonto) }}
+            </span>
+          </div>
+          <div class="f-edad-barra" [class.f-edad-barra--vacia]="ficha.resumen.saldoTotal <= 0">
+            <ng-container *ngIf="ficha.resumen.saldoTotal > 0">
+              <ng-container *ngFor="let e of edades">
+                <div *ngIf="e.valor > 0" class="f-edad-barra__seg" [ngClass]="e.clase"
+                  [style.width.%]="edadPct(e.valor)" [pTooltip]="e.label + ': ' + formatCOP(e.valor)"
+                  tooltipPosition="top"></div>
+              </ng-container>
+            </ng-container>
+          </div>
+          <div class="f-edad-leyenda">
+            <div *ngFor="let e of edades" class="f-edad-leyenda__item">
+              <span class="f-sub"><span class="dot" [ngClass]="e.clase"></span> {{ e.label }}</span>
+              <strong>{{ formatCOP(e.valor) }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="f-bloque f-bloque--credito">
+          <div class="f-bloque__head">
+            <h2>Crédito</h2>
+            <button *ngIf="ficha.cliente.creditoId" type="button" class="f-icon" pTooltip="Recalcular score"
+              tooltipPosition="left" (click)="recalcularScore()">
+              <i class="pi pi-refresh"></i>
+            </button>
+          </div>
+          <ng-container *ngIf="ficha.cliente.creditoId; else sinCredito">
+            <div class="f-credito">
+              <div class="f-credito__score">
+                <span class="f-score">{{ ficha.cliente.scoreCrediticio ?? '—' }}</span>
+                <span class="f-sub">score / 1000</span>
+              </div>
+              <dl class="f-dl">
+                <dt>Estado</dt>
+                <dd [style.color]="colorEstadoCredito(ficha.cliente.estadoCredito)">{{ ficha.cliente.estadoCredito }}</dd>
+                <dt>Riesgo</dt>
+                <dd [style.color]="colorRiesgo(ficha.cliente.nivelRiesgo)">{{ ficha.cliente.nivelRiesgo ?? '—' }}</dd>
+                <dt>Plazo</dt>
+                <dd>{{ ficha.cliente.plazoDias ?? '—' }} días</dd>
+                <dt>Tolerancia mora</dt>
+                <dd>{{ ficha.cliente.diasMoraTolerancia ?? '—' }} días</dd>
+              </dl>
+            </div>
+          </ng-container>
+          <ng-template #sinCredito>
+            <p class="f-sub f-sin-credito">Este cliente no tiene cupo de crédito configurado.</p>
+          </ng-template>
+        </div>
+      </div>
+
+    <!-- ══ Pestañas ═══════════════════════════════════════════════ -->
+    <div class="f-detalle">
+      <div class="f-tabs">
+        <button type="button" [class.activa]="tab === 'facturas'" (click)="setTab('facturas')">
+          Facturas abiertas <span class="f-count">{{ ficha.facturas.length }}</span>
+        </button>
+        <button type="button" [class.activa]="tab === 'pagos'" (click)="setTab('pagos')">
+          Pagos <span class="f-count">{{ ficha.pagos.length }}</span>
+        </button>
+        <button type="button" [class.activa]="tab === 'recibos'" (click)="setTab('recibos')">
+          Recibos <span class="f-count">{{ ficha.recibos.length }}</span>
+        </button>
+        <button type="button" [class.activa]="tab === 'acuerdos'" (click)="setTab('acuerdos')">
+          Acuerdos <span class="f-count">{{ ficha.acuerdos.length }}</span>
+        </button>
+        <button type="button" [class.activa]="tab === 'gestiones'" (click)="setTab('gestiones')">
+          Gestiones <span class="f-count">{{ ficha.gestiones.length }}</span>
+        </button>
+        <button type="button" [class.activa]="tab === 'anticipos'" (click)="setTab('anticipos')">
+          Anticipos <span class="f-count">{{ ficha.anticipos.length }}</span>
+        </button>
+        <button type="button" [class.activa]="tab === 'credito'" (click)="setTab('credito')">
+          Historial de crédito <span class="f-count">{{ ficha.historialCredito.length }}</span>
+        </button>
+      </div>
+
+      <!-- Facturas -->
+      <div class="f-tabla-wrap" *ngIf="tab === 'facturas'">
+        <table class="f-tabla">
+          <thead>
+            <tr>
+              <th>Cuenta</th>
+              <th>Emisión</th>
+              <th>Vencimiento</th>
+              <th class="num">Total</th>
+              <th class="num">Abonado</th>
+              <th class="num">Saldo</th>
+              <th class="acc"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let f of ficha.facturas">
+              <td>
+                <strong>{{ f.numeroCuenta }}</strong>
+                <div class="f-sub" *ngIf="f.numeroVenta">Venta {{ f.numeroVenta }}</div>
+              </td>
+              <td>{{ f.fechaEmision | date: 'dd/MM/yyyy' }}</td>
+              <td>
+                <div>{{ f.fechaVencimiento ? (f.fechaVencimiento | date: 'dd/MM/yyyy') : '—' }}</div>
+                <span
+                  class="f-chip"
+                  [class.f-chip--danger]="f.diasVencida > 30"
+                  [class.f-chip--warn]="f.diasVencida > 0 && f.diasVencida <= 30"
+                  [class.f-chip--ok]="f.diasVencida <= 0"
+                >
+                  {{ etiquetaDias(f) }}
+                </span>
+                <button *ngIf="f.acuerdoId" type="button" class="f-link f-acuerdo-link" (click)="verAcuerdo(f.acuerdoId)"
+                  pTooltip="El vencimiento es el de la próxima cuota del acuerdo">
+                  <i class="pi pi-file-edit"></i> {{ f.acuerdoNumero }}
+                </button>
+              </td>
+              <td class="num">{{ formatCOP(f.totalDeuda) }}</td>
+              <td class="num">{{ formatCOP(f.totalAbonado) }}</td>
+              <td class="num"><strong>{{ formatCOP(f.saldoPendiente) }}</strong></td>
+              <td class="acc">
+                <button type="button" class="f-icon" pTooltip="Pagar esta factura" (click)="registrarPago(f.id)">
+                  <i class="pi pi-wallet"></i>
+                </button>
+                <button type="button" class="f-icon" pTooltip="Gestión sobre esta factura" (click)="abrirGestion(f.id)">
+                  <i class="pi pi-phone"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!ficha.facturas.length">
+              <td colspan="7" class="f-vacio"><i class="pi pi-check-circle"></i> Sin facturas pendientes</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagos -->
+      <div class="f-tabla-wrap" *ngIf="tab === 'pagos'">
+        <table class="f-tabla">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Cuenta</th>
+              <th>Medio</th>
+              <th>Recibo / referencia</th>
+              <th>Registró</th>
+              <th class="num">Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of ficha.pagos">
+              <td>{{ p.fecha | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ p.numeroCuenta }}</td>
+              <td>
+                <span class="f-chip" [class.f-chip--info]="p.tipo === 'CRUCE_ANTICIPO'">
+                  {{ p.tipo === 'CRUCE_ANTICIPO' ? 'Cruce de anticipo' : p.metodoPago }}
+                </span>
+              </td>
+              <td>
+                <button *ngIf="p.reciboCajaId" type="button" class="f-link" (click)="imprimirRecibo(p.reciboCajaId)">
+                  {{ p.reciboNumero }}
+                </button>
+                <span class="f-sub" *ngIf="!p.reciboCajaId">{{ p.referencia || '—' }}</span>
+              </td>
+              <td class="f-sub">{{ p.usuarioNombre }}</td>
+              <td class="num"><strong>{{ formatCOP(p.monto) }}</strong></td>
+            </tr>
+            <tr *ngIf="!ficha.pagos.length">
+              <td colspan="6" class="f-vacio">Todavía no hay pagos registrados</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Recibos -->
+      <div class="f-tabla-wrap" *ngIf="tab === 'recibos'">
+        <table class="f-tabla">
+          <thead>
+            <tr>
+              <th>Recibo</th>
+              <th>Fecha</th>
+              <th>Medio</th>
+              <th class="num">Recibido</th>
+              <th class="num">A facturas</th>
+              <th class="num">Anticipo</th>
+              <th>Estado</th>
+              <th class="acc"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of ficha.recibos" [class.anulado]="r.estado === 'ANULADO'">
+              <td>
+                <strong>{{ r.numero }}</strong>
+                <div class="f-sub">{{ r.facturas }} {{ r.facturas === 1 ? 'factura' : 'facturas' }}</div>
+              </td>
+              <td>{{ r.fechaPago | date: 'dd/MM/yyyy HH:mm' }}</td>
+              <td>{{ r.metodoPago }}</td>
+              <td class="num"><strong>{{ formatCOP(r.valorRecibido) }}</strong></td>
+              <td class="num">{{ formatCOP(r.valorAplicado) }}</td>
+              <td class="num">{{ r.valorAnticipo > 0 ? formatCOP(r.valorAnticipo) : '—' }}</td>
+              <td>
+                <span class="f-chip" [class.f-chip--ok]="r.estado === 'ACTIVO'" [class.f-chip--danger]="r.estado === 'ANULADO'">
+                  {{ r.estado === 'ACTIVO' ? 'Activo' : 'Anulado' }}
+                </span>
+              </td>
+              <td class="acc">
+                <button type="button" class="f-icon" pTooltip="Imprimir" (click)="imprimirRecibo(r.id)">
+                  <i class="pi pi-print"></i>
+                </button>
+                <button
+                  *ngIf="r.estado === 'ACTIVO'"
+                  type="button"
+                  class="f-icon f-icon--danger"
+                  pTooltip="Anular"
+                  (click)="pedirAnulacion(r)"
+                >
+                  <i class="pi pi-ban"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!ficha.recibos.length">
+              <td colspan="8" class="f-vacio">Sin recibos de caja</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Gestiones -->
+      <div class="f-timeline" *ngIf="tab === 'gestiones'">
+        <div class="f-timeline__item" *ngFor="let g of ficha.gestiones">
+          <div class="f-timeline__icono"><i class="pi" [ngClass]="iconoGestion(g.tipoGestion)"></i></div>
+          <div class="f-timeline__cuerpo">
+            <div class="f-timeline__titulo">
+              <strong>{{ etiquetaTipoGestion(g.tipoGestion) }}</strong>
+              <span *ngIf="g.resultado" class="f-chip" [class.f-chip--info]="g.resultado === 'PROMESA_PAGO'"
+                [class.f-chip--ok]="g.resultado === 'PAGADO'" [class.f-chip--danger]="g.resultado === 'RENUENTE'">
+                {{ etiquetaResultado(g.resultado) }}
+              </span>
+              <span class="f-sub" *ngIf="g.numeroCuenta">· {{ g.numeroCuenta }}</span>
+            </div>
+            <p *ngIf="g.nota">{{ g.nota }}</p>
+            <div class="f-promesa" *ngIf="g.fechaPromesaPago"
+              [ngClass]="'f-promesa--' + (estadoPromesa(g.estadoPromesa)?.clase ?? 'warn')">
+              <i class="pi pi-calendar"></i>
+              Prometió {{ formatCOP(g.montoPrometido) }} para el {{ g.fechaPromesaPago | date: 'dd/MM/yyyy' }}
+              <span class="f-promesa__estado" *ngIf="estadoPromesa(g.estadoPromesa) as ep">
+                · {{ ep.label }}<ng-container *ngIf="(g.montoPagadoPromesa ?? 0) > 0 && g.estadoPromesa !== 'CUMPLIDA'">
+                  (abonó {{ formatCOP(g.montoPagadoPromesa) }})</ng-container>
+              </span>
+            </div>
+            <span class="f-sub">{{ g.createdAt | date: 'dd/MM/yyyy HH:mm' }} · {{ g.usuarioNombre }}</span>
+          </div>
+        </div>
+        <div class="f-vacio" *ngIf="!ficha.gestiones.length">
+          Sin gestiones de cobro.
+          <button type="button" class="f-link" (click)="abrirGestion()">Registrar la primera</button>
+        </div>
+      </div>
+
+      <!-- Acuerdos de pago -->
+      <div class="f-tabla-wrap" *ngIf="tab === 'acuerdos'">
+        <table class="f-tabla">
+          <thead>
+            <tr>
+              <th>Acuerdo</th>
+              <th class="num">Acordado</th>
+              <th>Avance</th>
+              <th>Próxima cuota</th>
+              <th>Estado</th>
+              <th class="acc"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let a of ficha.acuerdos" [class.anulado]="a.estado === 'ANULADO'">
+              <td>
+                <button type="button" class="f-link" (click)="verAcuerdo(a.id)"><strong>{{ a.numero }}</strong></button>
+                <div class="f-sub">{{ a.createdAt | date: 'dd/MM/yyyy' }} · {{ a.cuentas?.length }} {{ a.cuentas?.length === 1 ? 'factura' : 'facturas' }}</div>
+              </td>
+              <td class="num"><strong>{{ formatCOP(a.valorTotal) }}</strong></td>
+              <td>
+                <div class="f-barra f-barra--acuerdo">
+                  <div class="f-barra__uso f-barra__uso--ok" [style.width.%]="avanceAcuerdo(a)"></div>
+                </div>
+                <span class="f-sub">{{ a.cuotasPagadas }}/{{ a.numeroCuotas }} cuotas · {{ formatCOP(a.valorPagado) }}</span>
+              </td>
+              <td>
+                <ng-container *ngIf="a.proximaCuotaFecha; else sinCuota">
+                  <strong>{{ formatCOP(a.proximaCuotaSaldo) }}</strong>
+                  <div class="f-sub">{{ a.proximaCuotaFecha | date: 'dd/MM/yyyy' }}
+                    <ng-container *ngIf="a.diasMora > 0"> · {{ a.diasMora }} d de mora</ng-container>
+                  </div>
+                </ng-container>
+                <ng-template #sinCuota><span class="f-sub">—</span></ng-template>
+              </td>
+              <td>
+                <span class="f-chip" [ngClass]="'f-chip--' + estadoAcuerdo(a).clase">{{ estadoAcuerdo(a).label }}</span>
+              </td>
+              <td class="acc">
+                <button type="button" class="f-icon" pTooltip="Ver cuotas" (click)="verAcuerdo(a.id)">
+                  <i class="pi pi-eye"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!ficha.acuerdos.length">
+              <td colspan="6" class="f-vacio">
+                Sin acuerdos de pago.
+                <button *ngIf="facturasSinAcuerdo" type="button" class="f-link" (click)="nuevoAcuerdo()">Crear uno</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Historial de crédito -->
+      <div class="f-timeline" *ngIf="tab === 'credito'">
+        <div class="f-timeline__item" *ngFor="let h of ficha.historialCredito">
+          <div class="f-timeline__icono" [ngClass]="'f-hist--' + claseHistorial(h.tipoEvento)">
+            <i class="pi" [ngClass]="iconoHistorial(h.tipoEvento)"></i>
+          </div>
+          <div class="f-timeline__cuerpo">
+            <div class="f-timeline__titulo">
+              <strong>{{ etiquetaHistorial(h.tipoEvento) }}</strong>
+              <span class="f-chip f-chip--info" *ngIf="h.reglaNombre">Regla: {{ h.reglaNombre }}</span>
+            </div>
+            <span *ngIf="h.cupoAnterior != null || h.cupoNuevo != null">
+              Cupo {{ formatCOP(h.cupoAnterior) }} → <strong>{{ formatCOP(h.cupoNuevo) }}</strong>
+            </span>
+            <span class="f-sub" *ngIf="h.motivo">{{ h.motivo }}</span>
+            <span class="f-sub">{{ h.createdAt | date: 'dd/MM/yyyy HH:mm' }}<ng-container *ngIf="h.usuarioNombre"> · {{ h.usuarioNombre }}</ng-container></span>
+          </div>
+        </div>
+        <div class="f-vacio" *ngIf="!ficha.historialCredito.length">Sin cambios de crédito registrados</div>
+      </div>
+
+      <!-- Anticipos -->
+      <div class="f-tabla-wrap" *ngIf="tab === 'anticipos'">
+        <table class="f-tabla">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Origen</th>
+              <th>Medio</th>
+              <th class="num">Valor</th>
+              <th class="num">Disponible</th>
+              <th class="acc"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let a of ficha.anticipos">
+              <td>{{ a.fecha | date: 'dd/MM/yyyy' }}</td>
+              <td>{{ a.reciboNumero ? 'Sobrante ' + a.reciboNumero : (a.observaciones || 'Anticipo') }}</td>
+              <td>{{ a.metodoPago }}</td>
+              <td class="num">{{ formatCOP(a.monto) }}</td>
+              <td class="num"><strong>{{ formatCOP(a.saldo) }}</strong></td>
+              <td class="acc">
+                <button
+                  type="button"
+                  class="f-btn f-btn--small"
+                  [disabled]="!ficha.facturas.length"
+                  (click)="abrirCruce(a)"
+                >
+                  Aplicar
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!ficha.anticipos.length">
+              <td colspan="6" class="f-vacio">El cliente no tiene saldo a favor</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+
+    <ng-template #skCuerpo>
+      <div class="f-stats" *ngIf="cargando">
+        <div class="f-stat" *ngFor="let i of [1, 2, 3, 4, 5]">
+          <p-skeleton width="60%" height="0.8rem" />
+          <p-skeleton width="80%" height="1.5rem" styleClass="mt-2" />
+        </div>
+      </div>
+    </ng-template>
+  </div>
+</div>
+
+<!-- ══ Registrar pago ═════════════════════════════════════════════ -->
+<app-recibo-caja-dialog
+  [(visible)]="reciboVisible"
+  [terceroId]="terceroId"
+  [clienteNombre]="ficha?.cliente?.nombre ?? ''"
+  [facturas]="ficha?.facturas ?? []"
+  [facturaInicialId]="facturaInicialId"
+  (registrado)="onReciboRegistrado($event)"
+/>
+
+<!-- ══ Acuerdos de pago ══════════════════════════════════════════ -->
+<app-acuerdo-pago-dialog
+  [(visible)]="acuerdoVisible"
+  [terceroId]="terceroId"
+  [clienteNombre]="ficha?.cliente?.nombre ?? ''"
+  [facturas]="ficha?.facturas ?? []"
+  (creado)="onAcuerdoCreado($event)"
+/>
+
+<app-acuerdo-detalle-dialog
+  [(visible)]="acuerdoDetalleVisible"
+  [acuerdoId]="acuerdoDetalleId"
+  [mostrarFicha]="false"
+  (cambiado)="cargar()"
+/>
+
+<!-- ══ Gestión de cobro ══════════════════════════════════════════ -->
+<p-dialog
+  [(visible)]="gestionVisible"
+  header="Gestión de cobro"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '520px', maxWidth: '96vw' }"
+  styleClass="aura-dialog"
+>
+  <div class="f-form">
+    <div class="f-field">
+      <label>¿Qué se hizo?</label>
+      <div class="f-opciones">
+        <button
+          type="button"
+          *ngFor="let t of tiposGestion"
+          class="f-opcion"
+          [class.activa]="gestion.tipoGestion === t.value"
+          (click)="gestion.tipoGestion = t.value"
+        >
+          <i class="pi" [ngClass]="iconoGestion(t.value)"></i> {{ t.label }}
+        </button>
+      </div>
+    </div>
+    <div class="f-field">
+      <label>Resultado</label>
+      <div class="f-opciones">
+        <button
+          type="button"
+          *ngFor="let r of resultadosGestion"
+          class="f-opcion"
+          [class.activa]="gestion.resultado === r.value"
+          (click)="gestion.resultado = gestion.resultado === r.value ? null : r.value"
+        >
+          {{ r.label }}
+        </button>
+      </div>
+    </div>
+    <div class="f-grid2" *ngIf="gestion.resultado === 'PROMESA_PAGO'">
+      <div class="f-field">
+        <label>¿Cuándo paga? <span class="req">*</span></label>
+        <p-calendar [(ngModel)]="fechaPromesa" dateFormat="dd/mm/yy" [minDate]="hoy" appendTo="body" styleClass="w-full" />
+      </div>
+      <div class="f-field">
+        <label>¿Cuánto? <span class="req">*</span></label>
+        <p-inputNumber
+          [(ngModel)]="gestion.montoPrometido"
+          mode="currency"
+          currency="COP"
+          locale="es-CO"
+          [minFractionDigits]="0"
+          styleClass="w-full"
+        />
+      </div>
+    </div>
+    <div class="f-field" *ngIf="ficha?.facturas?.length">
+      <label>Factura (opcional)</label>
+      <p-dropdown
+        [(ngModel)]="gestion.cuentaCobrarId"
+        [options]="facturasOpts"
+        optionLabel="label"
+        optionValue="value"
+        [showClear]="true"
+        placeholder="Toda la cartera del cliente"
+        appendTo="body"
+        styleClass="w-full"
+      />
+    </div>
+    <div class="f-field">
+      <label>Nota</label>
+      <textarea pTextarea [(ngModel)]="gestion.nota" rows="3" placeholder="Qué dijo el cliente…"></textarea>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="gestionVisible = false"></button>
+    <button
+      pButton
+      type="button"
+      label="Registrar"
+      icon="pi pi-check"
+      [loading]="guardandoGestion"
+      [disabled]="gestionInvalida"
+      (click)="guardarGestion()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ══ Anular recibo ═════════════════════════════════════════════ -->
+<p-dialog
+  [(visible)]="anularVisible"
+  [header]="'Anular recibo ' + (reciboAnular?.numero ?? '')"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '460px', maxWidth: '96vw' }"
+  styleClass="aura-dialog"
+>
+  <div class="f-form">
+    <p class="f-aviso">
+      Las facturas recuperan su saldo, se reversan los asientos
+      <ng-container *ngIf="(reciboAnular?.valorAnticipo ?? 0) > 0"> y se anula el anticipo del sobrante</ng-container>.
+      El número del recibo no se reutiliza.
+    </p>
+    <div class="f-field">
+      <label>Motivo <span class="req">*</span></label>
+      <textarea pTextarea [(ngModel)]="motivoAnulacion" rows="3" maxlength="300"></textarea>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="anularVisible = false"></button>
+    <button
+      pButton
+      type="button"
+      label="Anular recibo"
+      icon="pi pi-ban"
+      class="p-button-danger"
+      [loading]="anulando"
+      [disabled]="!motivoAnulacion.trim()"
+      (click)="anularRecibo()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ══ Aplicar anticipo ══════════════════════════════════════════ -->
+<p-dialog
+  [(visible)]="cruceVisible"
+  header="Aplicar saldo a favor"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '460px', maxWidth: '96vw' }"
+  styleClass="aura-dialog"
+>
+  <div class="f-form" *ngIf="anticipoCruce">
+    <p class="f-aviso">Disponible: <strong>{{ formatCOP(anticipoCruce.saldo) }}</strong>. No mueve caja: solo descuenta la factura.</p>
+    <div class="f-field">
+      <label>Factura</label>
+      <p-dropdown
+        [(ngModel)]="cruceFacturaId"
+        (onChange)="onCruceFactura()"
+        [options]="facturasOpts"
+        optionLabel="label"
+        optionValue="value"
+        appendTo="body"
+        styleClass="w-full"
+      />
+    </div>
+    <div class="f-field">
+      <label>Valor a aplicar</label>
+      <p-inputNumber
+        [(ngModel)]="cruceMonto"
+        mode="currency"
+        currency="COP"
+        locale="es-CO"
+        [minFractionDigits]="0"
+        [maxFractionDigits]="2"
+        [min]="0"
+        [max]="cruceMaximo"
+        styleClass="w-full"
+      />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="cruceVisible = false"></button>
+    <button
+      pButton
+      type="button"
+      label="Aplicar"
+      icon="pi pi-check"
+      [loading]="cruzando"
+      [disabled]="!cruceFacturaId || !cruceMonto || cruceMonto > cruceMaximo"
+      (click)="cruzar()"
+    ></button>
+  </ng-template>
+</p-dialog>

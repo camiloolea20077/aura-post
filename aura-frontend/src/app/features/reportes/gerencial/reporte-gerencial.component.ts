@@ -14,7 +14,7 @@ import {
 import { ButtonModule } from 'primeng/button';
 import { CalendarModule } from 'primeng/calendar';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { InputSwitchModule } from 'primeng/inputswitch';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { lastValueFrom } from 'rxjs';
@@ -50,7 +50,7 @@ import { aFechaLocal } from '../../../shared/utils/fecha.util';
     ButtonModule,
     CalendarModule,
     InputNumberModule,
-    InputSwitchModule,
+    ToggleSwitchModule,
     TagModule,
     TooltipModule,
   ],

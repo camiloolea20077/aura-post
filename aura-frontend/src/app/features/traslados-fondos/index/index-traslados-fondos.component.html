@@ -71,6 +71,8 @@
         <th>Destino</th>
         <th class="text-right" style="width: 10rem">Monto</th>
         <th>Observación</th>
+        <th style="width: 7rem">Estado</th>
+        <th style="width: 4rem"></th>
       </tr>
     </ng-template>
 
@@ -97,12 +99,36 @@
           {{ t.monto | currency: "COP" : "symbol-narrow" : "1.0-0" }}
         </td>
         <td class="observacion">{{ t.observacion }}</td>
+        <td>
+          <p-tag
+            *ngIf="t.estado === 'ANULADO'; else confirmado"
+            value="Anulado"
+            severity="danger"
+            [pTooltip]="t.motivoAnulacion"
+            tooltipPosition="left"
+          />
+          <ng-template #confirmado>
+            <p-tag value="Confirmado" severity="success" />
+          </ng-template>
+        </td>
+        <td class="text-center">
+          <button
+            *ngIf="t.estado !== 'ANULADO'"
+            pButton
+            type="button"
+            icon="pi pi-ban"
+            class="p-button-text p-button-danger p-button-sm"
+            pTooltip="Anular traslado"
+            tooltipPosition="left"
+            (click)="abrirAnular(t)"
+          ></button>
+        </td>
       </tr>
     </ng-template>
 
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="7" class="text-center py-4">
+        <td colspan="9" class="text-center py-4">
           No hay traslados en el período seleccionado.
         </td>
       </tr>
@@ -155,6 +181,47 @@
 
       <div class="col-12 px-1 mt-2">
         <p-message severity="info" styleClass="w-full" [text]="hintConcepto" />
+      </div>
+
+      <!-- Reembolso: el sistema dice cuánto reponer y con qué soportes. -->
+      <div class="col-12 px-1 mt-2" *ngIf="esReembolso && destinoTipo === 'CUENTA'">
+        <div class="reembolso">
+          <ng-container *ngIf="reembolso; else sinReembolso">
+            <div class="reembolso__cifras">
+              <span>Fondo fijo <b>{{ reembolso.fondoFijo | currency: "COP" : "symbol-narrow" : "1.0-0" }}</b></span>
+              <span>Saldo hoy <b>{{ reembolso.saldoActual | currency: "COP" : "symbol-narrow" : "1.0-0" }}</b></span>
+              <span class="reembolso__sugerido">
+                A reponer <b>{{ reembolso.montoSugerido | currency: "COP" : "symbol-narrow" : "1.0-0" }}</b>
+              </span>
+            </div>
+            <div class="reembolso__acciones">
+              <button
+                pButton
+                type="button"
+                label="Usar este monto"
+                class="p-button-sm p-button-outlined"
+                [disabled]="reembolso.montoSugerido <= 0"
+                (click)="usarMontoSugerido()"
+              ></button>
+              <button
+                pButton
+                type="button"
+                class="p-button-sm p-button-text"
+                [label]="'Ver relación de gastos (' + reembolso.movimientos.length + ')'"
+                (click)="relacionVisible = true"
+              ></button>
+            </div>
+            <small class="hint" *ngIf="reembolso.fondoFijo === 0">
+              Esta cuenta no tiene constitución registrada: el monto sugerido
+              sale de cero. Registra primero la constitución de la caja menor.
+            </small>
+          </ng-container>
+          <ng-template #sinReembolso>
+            <small class="hint">
+              {{ cargandoReembolso ? "Calculando cuánto reponer..." : "Elige la caja menor de destino para calcular cuánto reponer." }}
+            </small>
+          </ng-template>
+        </div>
       </div>
 
       <!-- ── Origen ─────────────────────────────────────────────────── -->
@@ -327,6 +394,106 @@
       icon="pi pi-check"
       [loading]="isSubmitting"
       (click)="guardar()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ── Relación de gastos de la caja menor ───────────────────────────── -->
+<p-dialog
+  [(visible)]="relacionVisible"
+  [header]="'Relación de gastos — ' + (reembolso?.cuentaNombre ?? '')"
+  [modal]="true"
+  [style]="{ width: '52rem' }"
+  [draggable]="false"
+>
+  <p class="hint" *ngIf="reembolso?.ultimaReposicion">
+    Movimientos desde la última reposición
+    ({{ reembolso?.ultimaReposicion | date: "dd/MM/yyyy" }}).
+  </p>
+  <p-table [value]="reembolso?.movimientos ?? []" [rowHover]="true">
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 7rem">Fecha</th>
+        <th style="width: 8rem">Comprobante</th>
+        <th>Detalle</th>
+        <th>Tercero</th>
+        <th class="text-right" style="width: 9rem">Salida</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-m>
+      <tr>
+        <td>{{ m.fecha | date: "dd/MM/yyyy" }}</td>
+        <td>{{ m.numeroComprobante }}</td>
+        <td class="observacion">{{ m.descripcion }}</td>
+        <td>{{ m.tercero }}</td>
+        <td class="text-right">
+          <ng-container *ngIf="m.credito > 0; else entrada">
+            {{ m.credito | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+          </ng-container>
+          <ng-template #entrada>
+            <span class="entrada-fondo">
+              +{{ m.debito | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+            </span>
+          </ng-template>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="footer">
+      <tr>
+        <td colspan="4" class="text-right"><b>Total salidas</b></td>
+        <td class="text-right">
+          <b>{{ reembolso?.totalSalidas | currency: "COP" : "symbol-narrow" : "1.0-0" }}</b>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="5" class="text-center py-4">
+          No hay gastos desde la última reposición.
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-dialog>
+
+<!-- ── Anular traslado ──────────────────────────────────────────────────── -->
+<p-dialog
+  [(visible)]="anularVisible"
+  header="Anular traslado de fondos"
+  [modal]="true"
+  [style]="{ width: '32rem' }"
+  [draggable]="false"
+>
+  <p class="mt-0" *ngIf="trasladoAAnular">
+    Se anulará el traslado #{{ trasladoAAnular.id }} por
+    <b>{{ trasladoAAnular.monto | currency: "COP" : "symbol-narrow" : "1.0-0" }}</b>:
+    la plata vuelve a {{ trasladoAAnular.origenNombre || trasladoAAnular.origenTipo }}
+    y el asiento se reversa con fecha de hoy. El traslado no se borra.
+  </p>
+  <label>Motivo <span class="req">*</span></label>
+  <textarea
+    pInputText
+    rows="3"
+    class="w-full mt-1"
+    [(ngModel)]="motivoAnulacion"
+    placeholder="Ej: se registró dos veces la constitución de la caja menor"
+  ></textarea>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cancelar"
+      class="p-button-text"
+      (click)="anularVisible = false"
+    ></button>
+    <button
+      pButton
+      type="button"
+      label="Anular"
+      icon="pi pi-ban"
+      class="p-button-danger"
+      [loading]="anulando"
+      (click)="confirmarAnular()"
     ></button>
   </ng-template>
 </p-dialog>

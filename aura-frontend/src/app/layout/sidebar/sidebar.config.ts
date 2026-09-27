@@ -92,6 +92,11 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
     roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [
       { label: 'Stock', icon: 'pi pi-database', route: '/inventario/stock' },
+      {
+        label: 'Bodegas',
+        icon: 'pi pi-building',
+        route: '/inventario/bodegas',
+      },
       { label: 'Lotes', icon: 'pi pi-calendar', route: '/inventario/lotes' },
       {
         label: 'Seriales',
@@ -106,6 +111,11 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
       },
       { label: 'Mermas', icon: 'pi pi-trash', route: '/mermas' },
       { label: 'Obsequios', icon: 'pi pi-gift', route: '/obsequios' },
+      {
+        label: 'Consumo interno',
+        icon: 'pi pi-building',
+        route: '/consumo-interno',
+      },
       { label: 'Traslados', icon: 'pi pi-arrows-h', route: '/traslados' },
     ],
   },
@@ -121,6 +131,13 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         label: 'Órdenes de Compra',
         icon: 'pi pi-file-edit',
         route: '/compras/ordenes',
+      },
+      {
+        // normalize('Documentos Soporte') = 'documentos-soporte'
+        // (docs/sql/menu_submodulo_documentos_soporte.sql en el backend).
+        label: 'Documentos Soporte',
+        icon: 'pi pi-verified',
+        route: '/compras/documentos-soporte',
       },
     ],
   },
@@ -336,6 +353,13 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         route: '/contabilidad/asientos',
       },
       {
+        // El label define el submódulo: normalize('Notas Contables') = 'notas-contables'
+        // (docs/sql/menu_submodulo_notas_contables.sql en el backend).
+        label: 'Notas Contables',
+        icon: 'pi pi-file-edit',
+        route: '/contabilidad/notas',
+      },
+      {
         label: 'Revisión de Comprobantes',
         icon: 'pi pi-check-square',
         route: '/contabilidad/revision',
@@ -361,14 +385,35 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         route: '/contabilidad/periodos',
       },
       {
-        label: 'Cierre Contable',
-        icon: 'pi pi-calendar-times',
+        label: 'Resultados del Período',
+        icon: 'pi pi-chart-line',
         route: '/contabilidad/cierre',
       },
       {
         label: 'Balance General',
         icon: 'pi pi-chart-bar',
         route: '/contabilidad/balance-general',
+      },
+      {
+        // normalize('Libros Contables') = 'libros-contables'
+        // (docs/sql/menu_submodulo_libros_contables.sql en el backend).
+        label: 'Libros Contables',
+        icon: 'pi pi-book',
+        route: '/contabilidad/libros',
+      },
+      {
+        // normalize('Declaraciones') = 'declaraciones'
+        // (docs/sql/menu_submodulo_declaraciones.sql en el backend).
+        label: 'Declaraciones',
+        icon: 'pi pi-file-edit',
+        route: '/contabilidad/declaraciones',
+      },
+      {
+        // normalize('Importar Datos') = 'importar-datos'
+        // (docs/sql/menu_submodulo_importar_datos.sql en el backend).
+        label: 'Importar Datos',
+        icon: 'pi pi-upload',
+        route: '/contabilidad/importar',
       },
       {
         label: 'Estado de Cuenta',
@@ -589,6 +634,13 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         label: 'Facturación Electrónica',
         icon: 'pi pi-file-export',
         route: '/reportes/facturacion-electronica',
+      },
+      {
+        // normalize('Carritos Abandonados') = 'carritos-abandonados'
+        // (docs/sql/menu_submodulo_carritos_abandonados.sql en el backend).
+        label: 'Carritos Abandonados',
+        icon: 'pi pi-shopping-cart',
+        route: '/reportes/carritos-abandonados',
       },
       {
         label: 'Reportes Avanzados',

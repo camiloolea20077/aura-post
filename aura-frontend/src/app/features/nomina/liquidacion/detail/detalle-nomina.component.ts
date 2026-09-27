@@ -27,7 +27,9 @@ import {
   VacacionesSaldoModel,
 } from '../../../../core/models/nomina.model';
 import { AlertService } from '../../../../shared/pipes/alert.service';
+import { PagoNominaDto } from '../../../../core/models/nomina.model';
 import { DesprendibleComponent } from '../desprendible/desprendible.component';
+import { PagoNominaDialogComponent } from '../pago/pago-nomina-dialog.component';
 
 type TagSeverity =
   | 'success'
@@ -53,6 +55,7 @@ type TagSeverity =
     CalendarModule,
     TooltipModule,
     DesprendibleComponent,
+    PagoNominaDialogComponent,
   ],
   templateUrl: './detalle-nomina.component.html',
   styleUrls: ['./detalle-nomina.component.scss'],
@@ -67,6 +70,7 @@ export class DetalleNominaComponent implements OnChanges {
   public loading = false;
   public aprobando = false;
   public pagando = false;
+  public showPago = false;
   public anulando = false;
   public agregando = false;
 
@@ -221,18 +225,28 @@ export class DetalleNominaComponent implements OnChanges {
     }
   }
 
-  async pagar(): Promise<void> {
+  /** Pagar siempre pregunta de dónde sale la plata: nunca se asume efectivo. */
+  pagar(): void {
+    if (!this.nomina) return;
+    this.showPago = true;
+  }
+
+  async confirmarPago(dto: PagoNominaDto): Promise<void> {
     if (!this.nomina) return;
     this.pagando = true;
     try {
       const res = await lastValueFrom(
-        this.nominaService.pagarNomina(this.nomina.id),
+        this.nominaService.pagarNomina(this.nomina.id, dto),
       );
       this.nomina = res?.data ?? this.nomina;
+      this.showPago = false;
       this.alertService.showSuccess('Pagada', 'Nómina marcada como pagada');
       this.actualizada.emit();
-    } catch {
-      this.alertService.showError('Error', 'No se pudo pagar la nómina');
+    } catch (err: any) {
+      this.alertService.showError(
+        'Error',
+        err?.error?.message ?? 'No se pudo pagar la nómina',
+      );
     } finally {
       this.pagando = false;
     }

@@ -10,18 +10,14 @@
   <form [formGroup]="form" class="dialog-form">
     <div class="form-field">
       <label for="clienteId">Cliente <span class="required">*</span></label>
-      <p-dropdown
-        id="clienteId"
+      <!-- Dentro de un p-dialog el panel va al body: si no, el diálogo lo recorta. -->
+      <app-tercero-autocomplete
         formControlName="clienteId"
-        [options]="clientes"
-        placeholder="Seleccione un cliente"
-        [filter]="true"
-        filterPlaceholder="Buscar cliente..."
-        optionLabel="label"
-        optionValue="value"
+        rol="CLIENTE"
+        placeholder="Escriba nombre o documento del cliente…"
+        appendTo="body"
         [class.ng-invalid]="isInvalid('clienteId')"
-        styleClass="w-full"
-      ></p-dropdown>
+      />
       <small *ngIf="isInvalid('clienteId')" class="p-error">
         El cliente es requerido
       </small>

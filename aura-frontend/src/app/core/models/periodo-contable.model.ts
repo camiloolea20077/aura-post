@@ -8,6 +8,14 @@ export interface PeriodoContableModel {
   observaciones: string | null;
   createdAt: string;
   totalAsientos: number;
+  /** Comprobantes en borrador: bloquean el cierre. */
+  borradores: number;
+  /** Cuántas veces se reabrió el mes. */
+  reaperturas: number;
+  fechaReapertura: string | null;
+  motivoReapertura: string | null;
+  /** Lo abrió el sistema al llegar el primer documento del mes. */
+  creadoAutomatico: boolean;
 }
 
 export interface AbrirPeriodoDto {

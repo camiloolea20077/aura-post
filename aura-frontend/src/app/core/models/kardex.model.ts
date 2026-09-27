@@ -133,6 +133,7 @@ export interface KardexReporteLineaModel {
   devoluciones: number;
   mermas: number;
   obsequios: number;
+  consumosInternos: number;
   traslados: number;
   anulaciones: number;
   reconteos: number;

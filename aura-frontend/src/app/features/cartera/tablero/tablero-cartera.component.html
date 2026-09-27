@@ -1,0 +1,255 @@
+<div class="tb">
+  <!-- ══ Cabecera ════════════════════════════════════════════════════ -->
+  <div class="tb-head">
+    <div>
+      <h2>Tablero de cartera</h2>
+      <p>
+        <ng-container *ngIf="corte">Corte al {{ corte | date: 'dd/MM/yyyy' }} · </ng-container>
+        cada mes es la foto al cierre
+      </p>
+    </div>
+    <div class="tb-periodo">
+      <span>Historia</span>
+      <button type="button" *ngFor="let p of periodos" [class.activa]="meses === p" (click)="setMeses(p)">
+        {{ p }} meses
+      </button>
+      <button type="button" class="tb-icon" pTooltip="Actualizar" (click)="cargar()">
+        <i class="pi pi-refresh" [class.pi-spin]="cargando"></i>
+      </button>
+    </div>
+  </div>
+
+  <ng-container *ngIf="tablero; else skTablero">
+    <!-- ══ Indicadores ═════════════════════════════════════════════ -->
+    <div class="tb-stats">
+      <div class="tb-stat">
+        <span class="tb-stat__label">Cartera total</span>
+        <span class="tb-stat__valor">{{ formatCOP(tablero.kpis.saldoTotal) }}</span>
+        <span class="tb-stat__meta">
+          <ng-container *ngIf="variacion(tablero.kpis.saldoTotal, tablero.kpis.saldoTotalAnterior) as d">
+            <span class="tb-delta" [ngClass]="claseVariacion(d, 'subirEsMalo')">
+              <i class="pi" [ngClass]="d > 0 ? 'pi-arrow-up' : 'pi-arrow-down'"></i> {{ d > 0 ? '+' : '' }}{{ d }}%
+            </span>
+          </ng-container>
+          {{ tablero.kpis.clientesConSaldo }} {{ tablero.kpis.clientesConSaldo === 1 ? 'cliente' : 'clientes' }}
+        </span>
+      </div>
+
+      <div class="tb-stat" [class.tb-stat--danger]="(tablero.kpis.pctVencido ?? 0) > 30">
+        <span class="tb-stat__label">Vencida</span>
+        <span class="tb-stat__valor">{{ formatCOP(tablero.kpis.vencido) }}</span>
+        <span class="tb-stat__meta">
+          {{ tablero.kpis.pctVencido ?? 0 }}% del total · {{ tablero.kpis.clientesEnMora }} en mora
+        </span>
+      </div>
+
+      <div class="tb-stat">
+        <span class="tb-stat__label" pTooltip="Días promedio que tarda en cobrarse: saldo ÷ ventas a crédito de los últimos 90 días × 90" tooltipPosition="top">
+          Días de cobro (DSO) <i class="pi pi-info-circle"></i>
+        </span>
+        <span class="tb-stat__valor">{{ tablero.kpis.dso != null ? tablero.kpis.dso + ' días' : '—' }}</span>
+        <span class="tb-stat__meta">
+          <ng-container *ngIf="tablero.kpis.dsoAnterior != null; else sinVentas">
+            <span class="tb-delta" *ngIf="tablero.kpis.dso != null"
+              [ngClass]="claseVariacion(tablero.kpis.dso - tablero.kpis.dsoAnterior, 'subirEsMalo')">
+              {{ tablero.kpis.dso - tablero.kpis.dsoAnterior > 0 ? '+' : '' }}{{ tablero.kpis.dso - tablero.kpis.dsoAnterior }} d
+            </span>
+            mes anterior {{ tablero.kpis.dsoAnterior }} días
+          </ng-container>
+          <ng-template #sinVentas>Sin ventas a crédito en 90 días</ng-template>
+        </span>
+      </div>
+
+      <div class="tb-stat tb-stat--ok">
+        <span class="tb-stat__label">Recaudo del mes</span>
+        <span class="tb-stat__valor">{{ formatCOP(tablero.kpis.recaudoMes) }}</span>
+        <span class="tb-stat__meta">
+          <ng-container *ngIf="variacion(tablero.kpis.recaudoMes, tablero.kpis.recaudoMesAnterior) as d">
+            <span class="tb-delta" [ngClass]="claseVariacion(d, 'subirEsBueno')">
+              <i class="pi" [ngClass]="d > 0 ? 'pi-arrow-up' : 'pi-arrow-down'"></i> {{ d > 0 ? '+' : '' }}{{ d }}%
+            </span>
+          </ng-container>
+          anterior {{ formatCOP(tablero.kpis.recaudoMesAnterior) }}
+        </span>
+      </div>
+
+      <div class="tb-stat">
+        <span class="tb-stat__label" pTooltip="De lo que vencía hasta fin de mes, cuánto se ha cobrado" tooltipPosition="top">
+          Efectividad de cobro <i class="pi pi-info-circle"></i>
+        </span>
+        <span class="tb-stat__valor">{{ tablero.kpis.efectividadMes != null ? tablero.kpis.efectividadMes + '%' : '—' }}</span>
+        <div class="tb-barra" *ngIf="tablero.kpis.efectividadMes != null">
+          <div class="tb-barra__relleno" [style.width.%]="tablero.kpis.efectividadMes"></div>
+        </div>
+        <span class="tb-stat__meta">
+          Promesas: {{ tablero.kpis.promesasCumplidasMes }} de {{ tablero.kpis.promesasResueltasMes }} cumplidas
+        </span>
+      </div>
+    </div>
+
+    <!-- ══ Gráficas ════════════════════════════════════════════════ -->
+    <div class="tb-seccion tb-seccion--dos">
+      <div class="tb-bloque">
+        <div class="tb-bloque__head">
+          <h3>Evolución por edades</h3>
+          <span class="tb-sub">Saldo al cierre de cada mes</span>
+        </div>
+        <div class="tb-chart">
+          <p-chart *ngIf="chartEdades" type="bar" [data]="chartEdades" [options]="opcionesEdades" height="260" />
+          <div class="tb-vacio" *ngIf="!chartEdades"><i class="pi pi-chart-bar"></i> Sin cartera en el periodo</div>
+        </div>
+      </div>
+      <div class="tb-bloque">
+        <div class="tb-bloque__head">
+          <h3>Cobrado vs. lo que vencía</h3>
+          <span class="tb-sub">Barras en pesos · línea en %</span>
+        </div>
+        <div class="tb-chart">
+          <p-chart *ngIf="chartRecaudo" type="bar" [data]="chartRecaudo" [options]="opcionesRecaudo" height="260" />
+          <div class="tb-vacio" *ngIf="!chartRecaudo"><i class="pi pi-chart-line"></i> Sin cobros en el periodo</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ Deudores + composición ══════════════════════════════════ -->
+    <div class="tb-seccion tb-seccion--deudores">
+      <div class="tb-bloque">
+        <div class="tb-bloque__head">
+          <h3>Mayores deudores</h3>
+          <span class="tb-sub" *ngIf="tablero.kpis.concentracionTop5 != null">
+            Los 5 primeros concentran <strong>{{ tablero.kpis.concentracionTop5 }}%</strong> de la cartera
+          </span>
+        </div>
+        <div class="tb-tabla-wrap">
+          <table class="tb-tabla">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th class="num">Saldo</th>
+                <th class="num">Vencido</th>
+                <th class="num">Mora</th>
+                <th class="col-part">Participación</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let d of tablero.topDeudores; let i = index" (click)="verFicha(d.terceroId)" class="clic">
+                <td>
+                  <div class="tb-cliente">
+                    <span class="tb-rank" [class.tb-rank--top]="i < 3">{{ i + 1 }}</span>
+                    <div>
+                      <strong>{{ d.terceroNombre }}</strong>
+                      <div class="tb-sub">{{ d.numeroDocumento }} · {{ d.facturas }} {{ d.facturas === 1 ? 'factura' : 'facturas' }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="num"><strong>{{ formatCOP(d.saldo) }}</strong></td>
+                <td class="num" [class.rojo]="d.vencido > 0">{{ d.vencido > 0 ? formatCOP(d.vencido) : '—' }}</td>
+                <td class="num">
+                  <span class="tb-chip" [class.tb-chip--danger]="d.diasMoraMaximo > 60"
+                    [class.tb-chip--warn]="d.diasMoraMaximo > 0 && d.diasMoraMaximo <= 60">
+                    {{ d.diasMoraMaximo > 0 ? d.diasMoraMaximo + ' d' : 'Al día' }}
+                  </span>
+                </td>
+                <td class="col-part">
+                  <div class="tb-part">
+                    <div class="tb-barra"><div class="tb-barra__relleno" [style.width.%]="d.pctTotal ?? 0"></div></div>
+                    <span>{{ d.pctTotal ?? 0 }}%</span>
+                  </div>
+                </td>
+              </tr>
+              <tr *ngIf="!tablero.topDeudores.length">
+                <td colspan="5" class="tb-vacio">No hay saldos por cobrar</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="tb-bloque tb-bloque--lado">
+        <div class="tb-bloque__head">
+          <h3>Saldo por vendedor</h3>
+        </div>
+        <div class="tb-lista">
+          <div class="tb-lista__item" *ngFor="let v of tablero.porVendedor">
+            <div class="tb-lista__fila">
+              <span class="tb-lista__nombre">{{ v.nombre }}</span>
+              <strong>{{ formatCOP(v.valor) }}</strong>
+            </div>
+            <div class="tb-barra tb-barra--doble">
+              <div class="tb-barra__relleno" [style.width.%]="pct(v.valor, maxVendedor)"></div>
+              <div class="tb-barra__vencido" [style.width.%]="pct(v.vencido ?? 0, maxVendedor)" *ngIf="(v.vencido ?? 0) > 0"></div>
+            </div>
+            <span class="tb-sub">{{ v.cantidad }} {{ v.cantidad === 1 ? 'cliente' : 'clientes' }}<ng-container *ngIf="(v.vencido ?? 0) > 0"> · {{ formatCOP(v.vencido) }} vencido</ng-container></span>
+          </div>
+          <div class="tb-vacio" *ngIf="!tablero.porVendedor.length">Sin saldos</div>
+        </div>
+
+        <div class="tb-bloque__head tb-bloque__head--sep">
+          <h3>Recaudo del mes por medio</h3>
+        </div>
+        <div class="tb-lista">
+          <div class="tb-lista__item" *ngFor="let m of tablero.recaudoPorMedio">
+            <div class="tb-lista__fila">
+              <span class="tb-lista__nombre">{{ m.nombre }}</span>
+              <strong>{{ formatCOP(m.valor) }}</strong>
+            </div>
+            <div class="tb-barra"><div class="tb-barra__relleno tb-barra__relleno--verde" [style.width.%]="pct(m.valor, maxMedio)"></div></div>
+            <span class="tb-sub">{{ m.cantidad }} {{ m.cantidad === 1 ? 'pago' : 'pagos' }} · {{ totalMedios > 0 ? ((m.valor / totalMedios) * 100 | number: '1.0-0') : 0 }}%</span>
+          </div>
+          <div class="tb-vacio" *ngIf="!tablero.recaudoPorMedio.length">Sin pagos este mes</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ Mes a mes ═══════════════════════════════════════════════ -->
+    <div class="tb-bloque tb-bloque--full">
+      <div class="tb-bloque__head">
+        <h3>Mes a mes</h3>
+      </div>
+      <div class="tb-tabla-wrap">
+        <table class="tb-tabla">
+          <thead>
+            <tr>
+              <th>Mes</th>
+              <th class="num">Cartera</th>
+              <th class="num">Vencida</th>
+              <th class="num">% vencida</th>
+              <th class="num">Ventas a crédito</th>
+              <th class="num">Recaudo</th>
+              <th class="num">Efectividad</th>
+              <th class="num">DSO</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let m of mesesDesc; let first = first" [class.actual]="first">
+              <td>
+                <strong>{{ etiquetaMes(m) }}</strong>
+                <span class="tb-sub" *ngIf="first"> · a hoy</span>
+              </td>
+              <td class="num">{{ formatCOP(m.saldoTotal) }}</td>
+              <td class="num" [class.rojo]="m.vencido > 0">{{ formatCOP(m.vencido) }}</td>
+              <td class="num">{{ m.saldoTotal > 0 ? ((m.vencido / m.saldoTotal) * 100 | number: '1.0-1') + '%' : '—' }}</td>
+              <td class="num">{{ formatCOP(m.ventasCredito) }}</td>
+              <td class="num">{{ formatCOP(m.recaudado) }}</td>
+              <td class="num">{{ m.efectividad != null ? m.efectividad + '%' : '—' }}</td>
+              <td class="num">{{ m.dso != null ? m.dso + ' d' : '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-template #skTablero>
+    <div class="tb-stats">
+      <div class="tb-stat" *ngFor="let i of [1, 2, 3, 4, 5]">
+        <p-skeleton width="60%" height="0.8rem" />
+        <p-skeleton width="80%" height="1.5rem" styleClass="mt-2" />
+      </div>
+    </div>
+    <div class="tb-seccion tb-seccion--dos">
+      <div class="tb-bloque"><p-skeleton height="260px" /></div>
+      <div class="tb-bloque"><p-skeleton height="260px" /></div>
+    </div>
+  </ng-template>
+</div>

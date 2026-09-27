@@ -1,0 +1,173 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon">
+          <i class="pi pi-building"></i>
+        </span>
+        <div>
+          <h1 class="title">Bodegas</h1>
+          <p class="subtitle">
+            Dónde vive el stock dentro de cada sucursal, y quién responde por él
+          </p>
+        </div>
+      </div>
+
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          label="Nueva bodega"
+          icon="pi pi-plus"
+          class="btn-aura"
+          (click)="openCreate()"
+        ></button>
+
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              class="search-input"
+              placeholder="Buscar bodega, código o sucursal..."
+              [(ngModel)]="searchQuery"
+              (input)="onSearch()"
+              (keydown.escape)="clearSearch()"
+            />
+            <button
+              *ngIf="searchQuery"
+              class="clear-btn"
+              (click)="clearSearch()"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <p-table
+      [value]="rows"
+      [lazy]="true"
+      [loading]="loading"
+      [totalRecords]="totalRows"
+      [rows]="pageSize"
+      [paginator]="true"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      (onPage)="onPage($event)"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords} registros"
+      showGridlines
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Bodega</th>
+          <th style="width: 170px">Sucursal</th>
+          <th style="width: 190px">Responsable</th>
+          <th style="width: 120px" class="text-right">Referencias</th>
+          <th style="width: 150px" class="text-right">Inventario</th>
+          <th style="width: 150px">Estado</th>
+          <th style="width: 110px">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-b>
+        <tr [class.row-inactiva]="!b.activa">
+          <td>
+            <div class="bodega-nombre">
+              {{ b.nombre }}
+              <p-tag
+                *ngIf="b.esPrincipal"
+                value="Principal"
+                severity="info"
+                styleClass="tag-mini"
+              />
+            </div>
+            <div class="bodega-meta">
+              <code *ngIf="b.codigo">{{ b.codigo }}</code>
+              <span *ngIf="b.ubicacion">
+                <i class="pi pi-map-marker"></i> {{ b.ubicacion }}
+              </span>
+            </div>
+          </td>
+
+          <td>{{ b.sucursalNombre }}</td>
+
+          <td>
+            <span *ngIf="b.responsableNombre">{{ b.responsableNombre }}</span>
+            <span class="sin-dato" *ngIf="!b.responsableNombre">
+              Sin responsable
+            </span>
+          </td>
+
+          <td class="text-right mono">{{ b.referencias }}</td>
+
+          <td class="text-right mono">
+            {{ b.valorInventario | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+          </td>
+
+          <td>
+            <div class="estados">
+              <p-tag
+                [value]="b.activa ? 'Activa' : 'Inactiva'"
+                [severity]="b.activa ? 'success' : 'secondary'"
+                styleClass="tag-mini"
+              />
+              <p-tag
+                *ngIf="!b.permiteVenta"
+                value="No vende"
+                severity="warn"
+                styleClass="tag-mini"
+                pTooltip="El POS no despacha desde esta bodega"
+              />
+            </div>
+          </td>
+
+          <td>
+            <div class="action-buttons">
+              <button
+                pButton
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm action-edit"
+                pTooltip="Editar"
+                (click)="openEdit(b)"
+              ></button>
+              <button
+                pButton
+                icon="pi pi-trash"
+                class="p-button-text p-button-danger p-button-sm action-delete"
+                pTooltip="Eliminar"
+                [disabled]="b.esPrincipal"
+                (click)="confirmDelete(b)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              <i class="pi pi-building"></i>
+              <p>
+                No hay bodegas registradas.<br />
+                Cada sucursal necesita al menos una.
+              </p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<app-form-bodega
+  [(visible)]="showForm"
+  [bodega]="selected"
+  (saved)="onSaved()"
+/>
+
+<p-confirmDialog />
+<p-toast />

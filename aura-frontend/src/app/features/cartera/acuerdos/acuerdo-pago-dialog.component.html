@@ -1,0 +1,217 @@
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="$event ? null : cerrar()"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '880px', maxWidth: '96vw' }"
+  [contentStyle]="{ padding: 0 }"
+  styleClass="aura-dialog"
+  [header]="resultado ? 'Acuerdo registrado' : 'Acuerdo de pago'"
+>
+  <!-- ══ Resultado ═════════════════════════════════════════════════ -->
+  <div class="ap-ok" *ngIf="resultado">
+    <div class="ap-ok__icon"><i class="pi pi-check"></i></div>
+    <h3>Acuerdo {{ resultado.numero }}</h3>
+    <p>
+      {{ clienteNombre }} pagará <strong>{{ formatCOP(resultado.valorTotal) }}</strong> en
+      {{ resultado.numeroCuotas }} {{ resultado.numeroCuotas === 1 ? 'cuota' : 'cuotas' }}.
+    </p>
+    <p class="ap-sub">
+      Las facturas ahora vencen con cada cuota. Imprime el acuerdo para que el cliente lo firme.
+    </p>
+  </div>
+
+  <!-- ══ Formulario ════════════════════════════════════════════════ -->
+  <div class="ap" *ngIf="!resultado">
+    <div class="ap-cliente">
+      <div>
+        <span class="ap-label">Cliente</span>
+        <strong>{{ clienteNombre }}</strong>
+      </div>
+      <div class="ap-cliente__total">
+        <span class="ap-label">Deuda que entra al acuerdo</span>
+        <strong class="mono">{{ formatCOP(total) }}</strong>
+      </div>
+    </div>
+
+    <div class="ap-cols">
+      <!-- Facturas -->
+      <section class="ap-seccion">
+        <div class="ap-seccion__head">
+          <h4>1. Facturas</h4>
+          <div class="ap-links" *ngIf="disponibles.length > 1">
+            <button type="button" class="ap-link" (click)="todas(true)">Todas</button>
+            <button type="button" class="ap-link" (click)="todas(false)">Ninguna</button>
+          </div>
+        </div>
+        <div class="ap-facturas">
+          <label class="ap-factura" *ngFor="let f of disponibles" [class.activa]="seleccion.has(f.id)">
+            <p-checkbox
+              [binary]="true"
+              [ngModel]="seleccion.has(f.id)"
+              (ngModelChange)="toggleFactura(f.id, $event)"
+            />
+            <span class="ap-factura__info">
+              <strong>{{ f.numeroCuenta }}</strong>
+              <span class="ap-sub">
+                {{ f.fechaVencimiento ? 'Vence ' + (f.fechaVencimiento | date: 'dd/MM/yyyy') : 'Sin vencimiento' }}
+                <ng-container *ngIf="f.diasVencida > 0"> · {{ f.diasVencida }} d de mora</ng-container>
+              </span>
+            </span>
+            <span class="mono">{{ formatCOP(f.saldoPendiente) }}</span>
+          </label>
+          <div class="ap-vacio" *ngIf="!disponibles.length">
+            Todas las facturas del cliente ya están en un acuerdo.
+          </div>
+          <div class="ap-nota" *ngIf="enAcuerdo.length">
+            <i class="pi pi-info-circle"></i>
+            {{ enAcuerdo.length }} {{ enAcuerdo.length === 1 ? 'factura ya está' : 'facturas ya están' }} en otro acuerdo.
+          </div>
+        </div>
+      </section>
+
+      <!-- Plan -->
+      <section class="ap-seccion">
+        <div class="ap-seccion__head"><h4>2. Plan de pagos</h4></div>
+        <div class="ap-grid">
+          <div class="ap-field">
+            <label>Número de cuotas</label>
+            <p-inputNumber
+              [(ngModel)]="numeroCuotas"
+              (onBlur)="generar()"
+              (onInput)="generar()"
+              [showButtons]="true"
+              buttonLayout="horizontal"
+              [min]="1"
+              [max]="60"
+              incrementButtonIcon="pi pi-plus"
+              decrementButtonIcon="pi pi-minus"
+              styleClass="w-full"
+            />
+          </div>
+          <div class="ap-field">
+            <label>Primera cuota</label>
+            <p-calendar
+              [(ngModel)]="primeraFecha"
+              (onSelect)="generar()"
+              dateFormat="dd/mm/yy"
+              [minDate]="hoy"
+              appendTo="body"
+              styleClass="w-full"
+            />
+          </div>
+          <div class="ap-field ap-field--full">
+            <label>Cada cuánto</label>
+            <div class="opciones">
+              <button
+                type="button"
+                *ngFor="let f of frecuencias"
+                class="opcion"
+                [class.opcion--activa]="frecuencia === f.value && !editado"
+                (click)="setFrecuencia(f.value)"
+              >
+                {{ f.label }}
+              </button>
+            </div>
+          </div>
+          <div class="ap-field">
+            <label>Días de gracia</label>
+            <p-inputNumber [(ngModel)]="diasGracia" [min]="0" [max]="60" suffix=" días" styleClass="w-full" />
+          </div>
+          <div class="ap-field ap-ayuda">
+            Una cuota sin pagar después de su fecha más estos días deja el acuerdo incumplido.
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Cuotas -->
+    <section class="ap-seccion">
+      <div class="ap-seccion__head">
+        <h4>3. Cuotas</h4>
+        <span class="ap-sub" *ngIf="editado">Plan personalizado ·
+          <button type="button" class="ap-link" (click)="generar()">Volver a repartir igual</button>
+        </span>
+      </div>
+      <div class="ap-tabla-wrap">
+        <table class="ap-tabla">
+          <thead>
+            <tr>
+              <th class="n">#</th>
+              <th>Fecha límite</th>
+              <th class="num">Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of cuotas; let i = index">
+              <td class="n">{{ i + 1 }}</td>
+              <td>
+                <p-calendar
+                  [(ngModel)]="c.fecha"
+                  (onSelect)="onCuotaEditada()"
+                  dateFormat="dd/mm/yy"
+                  [minDate]="hoy"
+                  appendTo="body"
+                  styleClass="ap-input"
+                />
+              </td>
+              <td class="num">
+                <p-inputNumber
+                  [(ngModel)]="c.valor"
+                  (onInput)="onCuotaEditada()"
+                  mode="currency"
+                  currency="COP"
+                  locale="es-CO"
+                  [minFractionDigits]="0"
+                  [maxFractionDigits]="2"
+                  [min]="0"
+                  styleClass="ap-input"
+                  inputStyleClass="text-right"
+                />
+              </td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td></td>
+              <td>Total de las cuotas</td>
+              <td class="num mono"><strong>{{ formatCOP(sumaCuotas) }}</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="ap-descuadre" *ngIf="diferencia !== 0 && cuotas.length">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>{{ problema }}</span>
+        <button type="button" class="ap-link" (click)="ajustarUltima()">Ajustar la última cuota</button>
+      </div>
+    </section>
+
+    <div class="ap-field">
+      <label>Observaciones</label>
+      <textarea pTextarea [(ngModel)]="observaciones" rows="2" maxlength="500"
+        placeholder="Condiciones acordadas, quién autorizó…"></textarea>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <ng-container *ngIf="resultado; else pieForm">
+      <button pButton type="button" label="Cerrar" class="p-button-text" (click)="cerrar()"></button>
+      <button pButton type="button" label="Imprimir para firmar" icon="pi pi-print" (click)="imprimir()"></button>
+    </ng-container>
+    <ng-template #pieForm>
+      <span class="ap-pie-problema" *ngIf="problema && diferencia === 0">{{ problema }}</span>
+      <button pButton type="button" label="Cancelar" class="p-button-text" (click)="cerrar()"></button>
+      <button
+        pButton
+        type="button"
+        label="Crear acuerdo"
+        icon="pi pi-check"
+        [loading]="guardando"
+        [disabled]="!!problema"
+        (click)="guardar()"
+      ></button>
+    </ng-template>
+  </ng-template>
+</p-dialog>

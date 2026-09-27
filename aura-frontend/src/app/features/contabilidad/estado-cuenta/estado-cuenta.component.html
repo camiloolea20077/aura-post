@@ -20,38 +20,13 @@
       <!-- Selector de cliente -->
       <div class="field-group field-cliente">
         <label>Cliente</label>
-        <p-dropdown
-          appendTo="body"
-          [options]="clientes"
-          [(ngModel)]="clienteSeleccionado"
-          [filter]="true"
-          filterBy="nombreCompleto,numeroDocumento"
-          filterPlaceholder="Escribe 2+ letras..."
-          [resetFilterOnHide]="false"
-          placeholder="Buscar cliente o proveedor..."
-          [showClear]="true"
-          styleClass="w-full"
-          [loading]="loadingClientes"
-          (onFilter)="onFiltroCliente($event)"
-          (onChange)="onClienteChange()"
-        >
-          <ng-template pTemplate="selectedItem" let-c>
-            <div class="cliente-selected" *ngIf="c">
-              <span class="cliente-nombre">{{ c.nombreCompleto }}</span>
-              <span class="cliente-doc text-muted"
-                >{{ c.tipoDocumento }} {{ c.numeroDocumento }}</span
-              >
-            </div>
-          </ng-template>
-          <ng-template pTemplate="item" let-c>
-            <div class="cliente-option">
-              <span class="cliente-nombre">{{ c.nombreCompleto }}</span>
-              <span class="cliente-doc text-muted"
-                >{{ c.tipoDocumento }} {{ c.numeroDocumento }}</span
-              >
-            </div>
-          </ng-template>
-        </p-dropdown>
+        <app-tercero-autocomplete
+          [terceroId]="clienteSeleccionado?.id ?? null"
+          [label]="clienteSeleccionado ? clienteSeleccionado.numeroDocumento + ' — ' + clienteSeleccionado.nombreCompleto : null"
+          placeholder="Buscar cliente o proveedor…"
+          header="Buscar cliente o proveedor"
+          (seleccionado)="onClienteSeleccionado($event)"
+        />
       </div>
 
       <!-- Fecha desde -->

@@ -1,0 +1,69 @@
+.pl-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.pl-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+
+  label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #475569;
+  }
+
+  input {
+    width: 100%;
+  }
+
+  small {
+    color: #64748b;
+  }
+}
+
+.req {
+  color: #ef4444;
+}
+
+:host ::ng-deep .pl-dia {
+  width: 9rem;
+}
+
+.opciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.95rem;
+  border: 1.5px solid #e0e3eb;
+  border-radius: 10px;
+  background: #fff;
+  color: #475569;
+  font-family: inherit;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  i {
+    font-size: 0.8rem;
+  }
+
+  &:hover {
+    border-color: #93c5fd;
+  }
+
+  &--activa {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+}

@@ -1,0 +1,112 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon">
+          <i class="pi pi-verified"></i>
+        </span>
+        <div>
+          <h1 class="title">Documentos Soporte</h1>
+          <p class="subtitle">
+            Compras y gastos a proveedores no obligados a facturar, emitidos
+            ante la DIAN. Se generan desde Compras o Gastos.
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__search filtros">
+          <p-calendar [(ngModel)]="desde" dateFormat="dd/mm/yy" [showIcon]="true" />
+          <p-calendar [(ngModel)]="hasta" dateFormat="dd/mm/yy" [showIcon]="true" />
+          <button
+            pButton
+            type="button"
+            label="Buscar"
+            icon="pi pi-search"
+            class="btn-aura"
+            [loading]="loading"
+            (click)="buscar()"
+          ></button>
+        </div>
+      </div>
+    </div>
+
+    <p-table [value]="documentos" [loading]="loading" [rowHover]="true" styleClass="p-datatable-sm">
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 9rem">Fecha</th>
+          <th>Número</th>
+          <th>Origen</th>
+          <th>Proveedor</th>
+          <th class="text-right">Total</th>
+          <th>Estado</th>
+          <th style="width: 7rem"></th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-d>
+        <tr>
+          <td>{{ d.createdAt | date: "dd/MM/yyyy HH:mm" }}</td>
+          <td>
+            <code *ngIf="d.numero; else sinNumero">{{ d.numero }}</code>
+            <ng-template #sinNumero>—</ng-template>
+          </td>
+          <td>{{ d.origenTipo === "COMPRA" ? "Compra" : "Gasto" }} #{{ d.origenId }}</td>
+          <td>{{ d.terceroNombre }}</td>
+          <td class="text-right">{{ formatCOP(d.total) }}</td>
+          <td>
+            <p-tag
+              [value]="etiqueta(d.estado)"
+              [severity]="severidad(d.estado)"
+              [pTooltip]="d.mensajeError"
+              tooltipPosition="left"
+            />
+          </td>
+          <td class="acciones">
+            <button
+              *ngIf="d.estado === 'ACEPTADO'"
+              pButton
+              type="button"
+              icon="pi pi-file-pdf"
+              class="p-button-text p-button-sm"
+              pTooltip="Ver PDF"
+              [loading]="descargandoId === d.id"
+              (click)="pdf(d)"
+            ></button>
+            <ng-container *ngIf="d.estado === 'RECHAZADO'">
+              <button
+                pButton
+                type="button"
+                icon="pi pi-refresh"
+                class="p-button-text p-button-sm"
+                pTooltip="Revisar y reintentar"
+                (click)="reintentar(d)"
+              ></button>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-times"
+                class="p-button-text p-button-sm p-button-danger"
+                pTooltip="Descartar intento"
+                (click)="descartar(d)"
+              ></button>
+            </ng-container>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center py-4">
+            No hay documentos soporte en el rango. Se emiten desde Compras o
+            Gastos con el botón <i class="pi pi-verified"></i>.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<app-documento-soporte-dialog
+  [(visible)]="showDialog"
+  [origenTipo]="dialogOrigen"
+  [origenId]="dialogOrigenId"
+  (emitido)="buscar()"
+/>

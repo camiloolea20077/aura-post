@@ -129,6 +129,15 @@
             <button
               pButton
               type="button"
+              icon="pi pi-verified"
+              class="p-button-text p-button-sm p-button-help"
+              pTooltip="Documento soporte (proveedor no obligado a facturar)"
+              tooltipPosition="top"
+              (click)="abrirDocumentoSoporte(item)"
+            ></button>
+            <button
+              pButton
+              type="button"
               icon="pi pi-trash"
               class="p-button-text p-button-sm p-button-danger"
               pTooltip="Eliminar"
@@ -185,3 +194,9 @@
     </p-table>
   </div>
 </div>
+
+<app-documento-soporte-dialog
+  [(visible)]="showDocSoporte"
+  origenTipo="GASTO"
+  [origenId]="gastoDocSoporteId"
+/>

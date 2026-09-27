@@ -230,6 +230,15 @@
         Cuenta auxiliar (acepta movimientos)
       </label>
     </div>
+    <div class="form-group" style="grid-column: 1/-1" *ngIf="form.auxiliar">
+      <label style="display: flex; align-items: center; gap: 0.5rem">
+        <p-checkbox [(ngModel)]="form.esMedioPago" [binary]="true" />
+        Es medio de pago (caja menor, banco, fondo por legalizar)
+      </label>
+      <small style="color: var(--text-color-secondary)">
+        Aparece en "¿De dónde sale la plata?" de gastos, compras, pagos y traslados de fondos.
+      </small>
+    </div>
   </div>
 
   <ng-template pTemplate="footer">

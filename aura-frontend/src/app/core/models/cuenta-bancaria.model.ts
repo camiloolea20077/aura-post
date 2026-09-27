@@ -2,6 +2,8 @@ export type TipoCuenta = 'BANCO' | 'CAJA' | 'NEQUI' | 'DAVIPLATA' | 'OTROS';
 
 export interface CuentaBancariaModel {
   id: number;
+  /** CB-001, CB-002… único por empresa. */
+  codigo: string | null;
   nombre: string;
   tipo: TipoCuenta;
   banco: string | null;
@@ -19,6 +21,8 @@ export interface CuentaBancariaModel {
 }
 
 export interface CreateCuentaBancariaDto {
+  /** Vacío = el backend asigna el siguiente CB-###. */
+  codigo?: string | null;
   nombre: string;
   tipo: TipoCuenta;
   banco?: string | null;

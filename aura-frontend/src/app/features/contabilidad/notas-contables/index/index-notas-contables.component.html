@@ -1,0 +1,261 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon">
+          <i class="pi pi-file-edit"></i>
+        </span>
+        <div>
+          <h1 class="title">Notas Contables</h1>
+          <p class="subtitle">
+            Ajustes, provisiones y reclasificaciones del contador (comprobante
+            de diario CD)
+          </p>
+        </div>
+      </div>
+
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button
+            pButton
+            type="button"
+            label="Plantillas"
+            icon="pi pi-copy"
+            class="p-button-outlined"
+            (click)="plantillas()"
+          ></button>
+          <button
+            pButton
+            type="button"
+            label="Nueva nota"
+            icon="pi pi-plus"
+            class="btn-aura"
+            (click)="nueva()"
+          ></button>
+        </div>
+
+        <div class="card-head__search">
+          <p-dropdown
+            [options]="estadoOpts"
+            [(ngModel)]="estado"
+            optionLabel="label"
+            optionValue="value"
+            (onChange)="aplicarFiltros()"
+            styleClass="filtro-estado"
+          ></p-dropdown>
+          <p-dropdown
+            [options]="clasificacionOpts"
+            [(ngModel)]="clasificacion"
+            optionLabel="label"
+            optionValue="value"
+            (onChange)="aplicarFiltros()"
+            styleClass="filtro-estado"
+          ></p-dropdown>
+          <p-calendar
+            [(ngModel)]="fechaDesde"
+            dateFormat="dd/mm/yy"
+            placeholder="Desde"
+            [showIcon]="true"
+            [showClear]="true"
+            [maxDate]="fechaHasta"
+            (onSelect)="aplicarFiltros()"
+            (onClear)="aplicarFiltros()"
+            styleClass="filtro-fecha"
+          />
+          <p-calendar
+            [(ngModel)]="fechaHasta"
+            dateFormat="dd/mm/yy"
+            placeholder="Hasta"
+            [showIcon]="true"
+            [showClear]="true"
+            [minDate]="fechaDesde"
+            (onSelect)="aplicarFiltros()"
+            (onClear)="aplicarFiltros()"
+            styleClass="filtro-fecha"
+          />
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              class="search-input"
+              placeholder="Buscar concepto o número..."
+              [(ngModel)]="searchQuery"
+              (input)="onSearch()"
+              (keydown.escape)="clearSearch()"
+            />
+            <button
+              *ngIf="searchQuery"
+              class="clear-btn"
+              (click)="clearSearch()"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <p-table
+      [value]="rows"
+      [lazy]="true"
+      (onLazyLoad)="onLazyLoad($event)"
+      [loading]="loading"
+      [totalRecords]="totalRows"
+      [rows]="pageSize"
+      [paginator]="true"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords} registros"
+      showGridlines
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 130px">Número</th>
+          <th style="width: 110px">Fecha</th>
+          <th>Concepto</th>
+          <th style="width: 160px" class="text-right">Valor</th>
+          <th style="width: 180px">Elaboró</th>
+          <th style="width: 140px">Estado</th>
+          <th style="width: 150px">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-n>
+        <tr [class.row-anulada]="n.estado === 'ANULADO'">
+          <td>
+            <a class="nota-numero" (click)="abrir(n)">
+              <code *ngIf="n.numeroComprobante">{{ n.numeroComprobante }}</code>
+              <span *ngIf="!n.numeroComprobante" class="sin-dato"
+                >Sin número</span
+              >
+            </a>
+          </td>
+          <td>{{ n.fecha | fechaEs }}</td>
+          <td>
+            <div class="nota-concepto">{{ n.descripcion }}</div>
+            <div class="nota-meta">
+              <span *ngIf="n.clasificacion" class="nota-clase">{{
+                clasificacionLabel(n.clasificacion)
+              }}</span>
+              {{ n.cantidadLineas }}
+              {{ n.cantidadLineas === 1 ? "línea" : "líneas" }}
+              <span *ngIf="n.cantidadSoportes">
+                · <i class="pi pi-paperclip"></i> {{ n.cantidadSoportes }}</span
+              >
+              <span *ngIf="n.contabilizadoPor">
+                · aprobó {{ n.contabilizadoPor }}</span
+              >
+            </div>
+            <div
+              class="nota-reversion"
+              *ngIf="n.reversaDeNumero || n.revertidoPorNumero"
+            >
+              <i class="pi pi-replay"></i>
+              {{
+                n.reversaDeNumero
+                  ? "Reversión de " + n.reversaDeNumero
+                  : "Reversada por " + n.revertidoPorNumero
+              }}
+            </div>
+          </td>
+          <td class="text-right mono">
+            {{ formatCOP(n.totalDebito) }}
+            <div
+              *ngIf="n.estado === 'BORRADOR' && descuadrada(n)"
+              class="nota-descuadre"
+            >
+              Descuadre {{ formatCOP(n.totalDebito - n.totalCredito) }}
+            </div>
+          </td>
+          <td>
+            <span *ngIf="n.elaboradoPor">{{ n.elaboradoPor }}</span>
+            <span *ngIf="!n.elaboradoPor" class="sin-dato">—</span>
+          </td>
+          <td>
+            <p-tag
+              [value]="estadoLabel(n.estado)"
+              [severity]="estadoSeverity(n.estado)"
+              styleClass="tag-mini"
+            />
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button
+                pButton
+                type="button"
+                [icon]="n.estado === 'BORRADOR' ? 'pi pi-pencil' : 'pi pi-eye'"
+                class="p-button-text p-button-sm action-edit"
+                [pTooltip]="n.estado === 'BORRADOR' ? 'Editar' : 'Ver'"
+                tooltipPosition="top"
+                (click)="abrir(n)"
+              ></button>
+              <ng-container *ngIf="n.estado === 'BORRADOR'">
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-check-circle"
+                  class="p-button-text p-button-success p-button-sm"
+                  pTooltip="Contabilizar"
+                  tooltipPosition="top"
+                  [disabled]="descuadrada(n)"
+                  (click)="contabilizar(n)"
+                ></button>
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-trash"
+                  class="p-button-text p-button-danger p-button-sm action-delete"
+                  pTooltip="Eliminar borrador"
+                  tooltipPosition="top"
+                  (click)="eliminar(n)"
+                ></button>
+              </ng-container>
+              <button
+                *ngIf="n.estado === 'CONTABILIZADO' && !n.revertidoPorNumero"
+                pButton
+                type="button"
+                icon="pi pi-ban"
+                class="p-button-text p-button-danger p-button-sm"
+                pTooltip="Anular"
+                tooltipPosition="top"
+                (click)="abrirAnular(n)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              <i class="pi pi-file-edit"></i>
+              <p>
+                {{
+                  searchQuery ||
+                  estado ||
+                  clasificacion ||
+                  fechaDesde ||
+                  fechaHasta
+                    ? "Sin notas para los filtros elegidos"
+                    : "Todavía no hay notas contables"
+                }}
+              </p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<app-anular-nota-dialog
+  [(visible)]="showAnular"
+  [notaId]="anularId"
+  [numero]="anularNumero"
+  (anulada)="load()"
+/>
+
+<p-confirmDialog />
+<p-toast />

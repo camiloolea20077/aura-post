@@ -1,0 +1,113 @@
+.imp-ayuda {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: #475569;
+
+  &--sub {
+    margin-top: 0.5rem;
+    font-size: 0.78rem;
+    color: #94a3b8;
+  }
+}
+
+.imp-columnas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+
+  span {
+    padding: 0.2rem 0.55rem;
+    border: 1px solid #e0e3eb;
+    border-radius: 6px;
+    background: #f8fafc;
+    font-size: 0.75rem;
+    color: #334155;
+  }
+}
+
+.imp-texto {
+  margin-top: 0.75rem;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.78rem;
+  white-space: pre;
+}
+
+.imp-acciones {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
+.imp-resumen {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 0.83rem;
+
+  &--ok {
+    background: #f0fdf4;
+    color: #166534;
+  }
+}
+
+.imp-errores {
+  max-height: 160px;
+  overflow-y: auto;
+  margin: 0.5rem 0 0;
+  padding-left: 1.2rem;
+  font-size: 0.8rem;
+  color: #b91c1c;
+}
+
+.imp-modo {
+  margin-top: 0.9rem;
+}
+
+.imp-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.opciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.95rem;
+  border: 1.5px solid #e0e3eb;
+  border-radius: 10px;
+  background: #fff;
+  color: #475569;
+  font-family: inherit;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  i {
+    font-size: 0.8rem;
+  }
+
+  &:hover {
+    border-color: #93c5fd;
+  }
+
+  &--activa {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+}

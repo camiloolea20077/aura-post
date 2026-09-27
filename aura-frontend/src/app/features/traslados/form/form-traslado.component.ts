@@ -26,13 +26,20 @@ import { lastValueFrom } from 'rxjs';
 import { v4 as uuid } from 'uuid';
 import { HttpClient } from '@angular/common/http';
 
+import {
+  SerialPickerComponent,
+  SerialesElegidos,
+} from '../../../shared/components/serial-picker/serial-picker.component';
 import { AlertService } from '../../../shared/pipes/alert.service';
+import { BodegaService } from '../../../core/services/bodega.service';
+import { BodegaDto } from '../../../core/models/bodega.model';
 import {
   CreateTrasladoDto,
   SucursalSelectorModel,
   TrasladoLineaUI,
 } from '../../../core/models/traslado.model';
 import { TrasladoService } from '../../../core/services/traslado.service';
+import { etiquetaLote } from '../../../shared/utils/lote-etiqueta';
 import { environment } from '../../../../environments/environment';
 
 @Component({
@@ -50,6 +57,7 @@ import { environment } from '../../../../environments/environment';
     TextareaModule,
     TooltipModule,
     AutoCompleteModule,
+    SerialPickerComponent,
   ],
   templateUrl: './form-traslado.component.html',
   styleUrls: ['./form-traslado.component.scss'],
@@ -63,7 +71,10 @@ export class FormTrasladoComponent implements OnChanges {
   loading = false;
 
   sucursales: SucursalSelectorModel[] = [];
-  sucursalesDestino: SucursalSelectorModel[] = []; // excluye origen
+  // Con bodegas el destino ya NO excluye la sucursal origen: pasar de la
+  // bodega de atras a la vitrina es un traslado dentro de la misma sede.
+  bodegasOrigen: BodegaDto[] = [];
+  bodegasDestino: BodegaDto[] = [];
   lineas: TrasladoLineaUI[] = [];
   productoSugerencias: any[] = [];
 
@@ -71,20 +82,35 @@ export class FormTrasladoComponent implements OnChanges {
     private readonly fb: FormBuilder,
     private readonly service: TrasladoService,
     private readonly alert: AlertService,
+    private readonly bodegaService: BodegaService,
     private readonly http: HttpClient,
     private cdr: ChangeDetectorRef,
   ) {
     this.form = this.fb.group({
       sucursalOrigenId: [null, Validators.required],
+      bodegaOrigenId: [null, Validators.required],
       sucursalDestinoId: [null, Validators.required],
+      bodegaDestinoId: [null, Validators.required],
       observacion: [null],
     });
 
-    // Cuando cambia origen → recalcular destinos disponibles y limpiar líneas
-    this.form.get('sucursalOrigenId')!.valueChanges.subscribe(() => {
-      this.form.get('sucursalDestinoId')!.setValue(null);
+    // Cambiar de sucursal cambia las bodegas y anula las lineas: el stock
+    // que se estaba trasladando era el de la bodega anterior.
+    this.form.get('sucursalOrigenId')!.valueChanges.subscribe((id) => {
+      this.form.get('bodegaOrigenId')!.setValue(null);
       this.lineas = [];
-      this.filtrarDestinos();
+      this.cargarBodegas(id, 'origen');
+      this.cdr.markForCheck();
+    });
+
+    this.form.get('sucursalDestinoId')!.valueChanges.subscribe((id) => {
+      this.form.get('bodegaDestinoId')!.setValue(null);
+      this.cargarBodegas(id, 'destino');
+      this.cdr.markForCheck();
+    });
+
+    this.form.get('bodegaOrigenId')!.valueChanges.subscribe(() => {
+      this.lineas = [];
       this.cdr.markForCheck();
     });
   }
@@ -101,18 +127,38 @@ export class FormTrasladoComponent implements OnChanges {
     try {
       const res = await lastValueFrom(this.service.getSucursales());
       this.sucursales = res?.data ?? [];
-      this.filtrarDestinos();
     } catch {
       this.sucursales = [];
     }
     this.cdr.markForCheck();
   }
 
-  private filtrarDestinos(): void {
-    const origenId = this.form.get('sucursalOrigenId')!.value;
-    this.sucursalesDestino = origenId
-      ? this.sucursales.filter((s) => s.id !== origenId)
-      : this.sucursales;
+  private async cargarBodegas(
+    sucursalId: number | null,
+    lado: 'origen' | 'destino',
+  ): Promise<void> {
+    if (!sucursalId) {
+      if (lado === 'origen') this.bodegasOrigen = [];
+      else this.bodegasDestino = [];
+      return;
+    }
+    try {
+      const res = await lastValueFrom(this.bodegaService.list({ sucursalId }));
+      const bodegas = res?.data ?? [];
+      if (lado === 'origen') this.bodegasOrigen = bodegas;
+      else this.bodegasDestino = bodegas;
+
+      // Con una sola bodega no hay nada que elegir: se preselecciona.
+      if (bodegas.length === 1) {
+        this.form
+          .get(lado === 'origen' ? 'bodegaOrigenId' : 'bodegaDestinoId')!
+          .setValue(bodegas[0].id);
+      }
+    } catch {
+      if (lado === 'origen') this.bodegasOrigen = [];
+      else this.bodegasDestino = [];
+    }
+    this.cdr.markForCheck();
   }
 
   // ── Búsqueda de productos ─────────────────────────────────
@@ -125,9 +171,11 @@ export class FormTrasladoComponent implements OnChanges {
     }
 
     try {
+      // /productos/inventario con la sucursal origen: el endpoint anterior
+      // (inventario/disponible) no existía y la búsqueda nunca traía nada.
       const res: any = await lastValueFrom(
         this.http.get<any>(
-          `${environment.apiUrl}inventario/disponible?sucursalId=${origenId}&search=${q}`,
+          `${environment.apiUrl}productos/inventario?search=${encodeURIComponent(q)}&sucursalId=${origenId}`,
         ),
       );
       this.productoSugerencias = (res?.data ?? []).map((p: any) => ({
@@ -146,8 +194,11 @@ export class FormTrasladoComponent implements OnChanges {
     linea.productoNombre = p.nombre;
     linea.productoSku = p.sku ?? null;
     linea.stockOrigen = p.stockActual ?? 0;
+    linea.stockOrigenProducto = linea.stockOrigen;
     linea.costoUnitario = p.costo ?? 0;
     linea.manejaLotes = p.manejaLotes ?? false;
+    linea.manejaSerial = !!p.manejaSerial;
+    linea.serialIds = [];
     linea.loteId = null;
     linea.codigoLote = null;
     linea.lotesDisponibles = [];
@@ -163,10 +214,13 @@ export class FormTrasladoComponent implements OnChanges {
     try {
       const res: any = await lastValueFrom(
         this.http.get<any>(
-          `${environment.apiUrl}lotes/disponibles?productoId=${productoId}&sucursalId=${origenId}`,
+          `${environment.apiUrl}lotes/disponibles/${productoId}/${origenId}`,
         ),
       );
-      linea.lotesDisponibles = res?.data ?? [];
+      linea.lotesDisponibles = (res?.data ?? []).map((l: any) => ({
+        ...l,
+        etiqueta: etiquetaLote(l),
+      }));
       this.cdr.markForCheck();
     } catch {
       linea.lotesDisponibles = [];
@@ -216,7 +270,9 @@ export class FormTrasladoComponent implements OnChanges {
     const lote = linea.lotesDisponibles.find((l) => l.id === loteId);
     linea.loteId = loteId;
     linea.codigoLote = lote?.codigoLote ?? null;
-    linea.stockOrigen = lote?.stockActual ?? 0;
+    linea.stockOrigen = lote
+      ? lote.stockActual
+      : (linea.stockOrigenProducto ?? linea.stockOrigen);
     this.cdr.markForCheck();
   }
 
@@ -231,24 +287,29 @@ export class FormTrasladoComponent implements OnChanges {
     );
   }
 
-  get mismasSucursales(): boolean {
-    const o = this.form.get('sucursalOrigenId')!.value;
-    const d = this.form.get('sucursalDestinoId')!.value;
+  /** Lo que no puede repetirse es la BODEGA, no la sucursal. */
+  get mismaBodega(): boolean {
+    const o = this.form.get('bodegaOrigenId')!.value;
+    const d = this.form.get('bodegaDestinoId')!.value;
     return !!(o && d && o === d);
   }
 
   // ── Validar y guardar ─────────────────────────────────────
   private validar(): string | null {
-    if (this.mismasSucursales)
-      return 'La sucursal de origen y destino no pueden ser la misma';
+    if (this.mismaBodega)
+      return 'La bodega de origen y la de destino no pueden ser la misma';
     if (!this.lineas.length) return 'Agrega al menos un producto al traslado';
     for (const l of this.lineas) {
       if (!l.productoId) return 'Hay líneas sin producto seleccionado';
       if (l.cantidad <= 0) return 'La cantidad debe ser mayor a 0';
+      if (l.manejaSerial) {
+        if (!Number.isInteger(l.cantidad))
+          return `"${l.productoNombre}" maneja serial: la cantidad tiene que ser entera`;
+        if ((l.serialIds ?? []).length !== l.cantidad)
+          return `"${l.productoNombre}": elige ${l.cantidad} seriales (van ${(l.serialIds ?? []).length})`;
+      }
       if (l.cantidad > l.stockOrigen)
         return `"${l.productoNombre}" supera el stock disponible en origen (${l.stockOrigen})`;
-      if (l.manejaLotes && !l.loteId)
-        return `"${l.productoNombre}" requiere seleccionar un lote`;
     }
     return null;
   }
@@ -267,10 +328,13 @@ export class FormTrasladoComponent implements OnChanges {
     const dto: CreateTrasladoDto = {
       sucursalOrigenId: this.form.value.sucursalOrigenId,
       sucursalDestinoId: this.form.value.sucursalDestinoId,
+      bodegaOrigenId: this.form.value.bodegaOrigenId,
+      bodegaDestinoId: this.form.value.bodegaDestinoId,
       observacion: this.form.value.observacion || null,
       detalles: this.lineas.map((l) => ({
         productoId: l.productoId!,
         loteId: l.loteId ?? undefined,
+        serialIds: l.manejaSerial ? (l.serialIds ?? []) : undefined,
         cantidad: l.cantidad,
         costoUnitario: l.costoUnitario,
       })),
@@ -303,6 +367,35 @@ export class FormTrasladoComponent implements OnChanges {
   isInvalid(field: string): boolean {
     const c = this.form.get(field);
     return !!(c?.invalid && c?.touched);
+  }
+
+
+  // ── Seriales de la línea ─────────────────────────────────────
+  serialLinea: TrasladoLineaUI | null = null;
+
+  get serialPickerVisible(): boolean {
+    return this.serialLinea !== null;
+  }
+  set serialPickerVisible(v: boolean) {
+    if (!v) this.serialLinea = null;
+  }
+
+  get sucursalSeriales(): number | null {
+    return this.form.get('sucursalOrigenId')?.value ?? null;
+  }
+
+  unidadesSerial(l: TrasladoLineaUI): number {
+    return Math.round((l.cantidad || 0) * 10000) / 10000;
+  }
+
+  abrirSeriales(l: TrasladoLineaUI): void {
+    this.serialLinea = l;
+    this.cdr.markForCheck();
+  }
+
+  onSerialesElegidos(e: SerialesElegidos): void {
+    if (this.serialLinea) this.serialLinea.serialIds = e.ids;
+    this.cdr.markForCheck();
   }
 
   trackById(_: number, l: TrasladoLineaUI): string {

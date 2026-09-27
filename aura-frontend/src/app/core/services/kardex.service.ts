@@ -17,8 +17,9 @@ export class KardexService {
     return this.http.post<any>(`${this.base}kardex/page`, filtro);
   }
 
-  getById(id: number): Observable<any> {
-    return this.http.get<any>(`${this.base}kardex/resumen/${id}`);
+  /** Stock del producto por sucursal. Recibe el id del PRODUCTO, no del movimiento. */
+  resumenProducto(productoId: number): Observable<any> {
+    return this.http.get<any>(`${this.base}kardex/resumen/${productoId}`);
   }
 
   // Selectores auxiliares

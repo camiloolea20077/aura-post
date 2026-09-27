@@ -1,0 +1,64 @@
+<div class="tac" [class.tac--disabled]="disabled" [class.tac--elegido]="hayElegido">
+  <p-autoComplete
+    [(ngModel)]="valor"
+    [suggestions]="sugerencias"
+    optionLabel="label"
+    [placeholder]="placeholder"
+    [minLength]="1"
+    [delay]="300"
+    [forceSelection]="false"
+    [disabled]="disabled"
+    [appendTo]="appendTo"
+    [showEmptyMessage]="true"
+    emptyMessage="Sin coincidencias. Use la lupa para buscar con más criterios."
+    (completeMethod)="buscar($event)"
+    (onSelect)="onSelect($event)"
+    (onBlur)="onBlur()"
+    styleClass="tac-ac"
+    inputStyleClass="tac-input"
+    panelStyleClass="tac-panel"
+  >
+    <ng-template let-t pTemplate="item">
+      <div class="tac-item" [class.tac-item--inactivo]="t.activo === false">
+        <span class="tac-item__nombre">{{ t.nombreCompleto }}</span>
+        <span class="tac-item__meta">
+          {{ t.tipoDocumento }} {{ t.numeroDocumento }}
+          <ng-container *ngIf="roles(t)"> · {{ roles(t) }}</ng-container>
+          <ng-container *ngIf="t.activo === false"> · inactivo</ng-container>
+        </span>
+      </div>
+    </ng-template>
+  </p-autoComplete>
+
+  <button
+    *ngIf="showClear && hayElegido && !disabled"
+    type="button"
+    class="tac-clear"
+    (click)="limpiar()"
+    pTooltip="Quitar"
+    tooltipPosition="top"
+    aria-label="Quitar tercero"
+  >
+    <i class="pi pi-times"></i>
+  </button>
+
+  <button
+    type="button"
+    class="tac-lupa"
+    [disabled]="disabled"
+    (click)="abrirBuscador()"
+    pTooltip="Buscador avanzado"
+    tooltipPosition="top"
+    aria-label="Buscador avanzado de terceros"
+  >
+    <i class="pi pi-search"></i>
+  </button>
+</div>
+
+<app-buscador-tercero-dialog
+  [(visible)]="buscadorVisible"
+  [header]="tituloBuscador"
+  [rol]="rol"
+  [rolFijo]="rolBloqueado"
+  (terceroSelected)="onElegidoEnBuscador($event)"
+></app-buscador-tercero-dialog>

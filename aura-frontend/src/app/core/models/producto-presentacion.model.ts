@@ -8,6 +8,8 @@ export interface ProductoPresentacionModel {
   factorConversion: number;
   esDefaultCompra: boolean;
   esDefaultVenta: boolean;
+  /** false = solo para comprar: el POS no la ofrece. */
+  seVende?: boolean;
   precio: number;
   costo: number;
   activo: boolean;
@@ -21,6 +23,11 @@ export interface ProductoPresentacionTableModel {
   nombre: string;
   codigoBarras: string | null;
   factorConversion: number;
+  precio?: number;
+  costo?: number;
+  esDefaultCompra?: boolean;
+  esDefaultVenta?: boolean;
+  seVende?: boolean;
   activo: boolean;
 }
 
@@ -32,6 +39,7 @@ export interface CreateProductoPresentacionDto {
   factorConversion: number;
   esDefaultCompra: boolean;
   esDefaultVenta: boolean;
+  seVende?: boolean;
   precio: number;
   costo: number;
   activo: boolean;
@@ -43,6 +51,7 @@ export interface UpdateProductoPresentacionDto {
   factorConversion: number;
   esDefaultCompra: boolean;
   esDefaultVenta: boolean;
+  seVende?: boolean;
   precio: number;
   costo: number;
   activo: boolean;

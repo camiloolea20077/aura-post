@@ -22,7 +22,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { DropdownModule } from 'primeng/dropdown';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { CalendarModule } from 'primeng/calendar';
-import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { TooltipModule } from 'primeng/tooltip';
 import { lastValueFrom } from 'rxjs';
 
 import {
@@ -35,7 +35,9 @@ import {
 } from '../../../core/models/tercero.model';
 import { TerceroService } from '../../../core/services/tercero.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
-import { TerceroPickerComponent } from '../../../shared/components/tercero-picker/tercero-picker.component';
+import { TerceroAutocompleteComponent } from '../../../shared/components/tercero-autocomplete/tercero-autocomplete.component';
+import { TerceroTableModel } from '../../../core/models/tercero.model';
+import { aDate } from '../../../shared/utils/fecha.util';
 
 /** Roles del tercero. BANCO es exclusivo (sin rol comercial). */
 const ROL_OPTIONS = [
@@ -54,6 +56,34 @@ const ROL_OPTIONS = [
 /** Roles de seguridad social: los que exigen código UGPP. */
 const ROLES_SS = ['EPS', 'AFP', 'CCF', 'ARL', 'CESANTIAS'];
 
+/**
+ * Países más frecuentes para terceros de empresas colombianas. `value` es el
+ * código ISO que va en `codigoPais`; `label` se guarda en `pais`.
+ */
+const PAIS_OPTIONS = [
+  { label: 'Colombia', value: 'CO' },
+  { label: 'Venezuela', value: 'VE' },
+  { label: 'Ecuador', value: 'EC' },
+  { label: 'Perú', value: 'PE' },
+  { label: 'Panamá', value: 'PA' },
+  { label: 'México', value: 'MX' },
+  { label: 'Chile', value: 'CL' },
+  { label: 'Argentina', value: 'AR' },
+  { label: 'Brasil', value: 'BR' },
+  { label: 'Estados Unidos', value: 'US' },
+  { label: 'España', value: 'ES' },
+  { label: 'China', value: 'CN' },
+  { label: 'Otro', value: 'ZZ' },
+];
+
+/** Indicadores fiscales (no aplican a banco ni entidad de seguridad social). */
+const INDICADORES_FISCALES = [
+  { control: 'granContribuyente', label: 'Gran contribuyente' },
+  { control: 'esAutoretenedorFuente', label: 'Autorretenedor de renta' },
+  { control: 'esAutoretenedorIca', label: 'Autorretenedor de ICA' },
+  { control: 'declarante', label: 'Declarante de renta' },
+];
+
 @Component({
   selector: 'app-form-tercero-plano',
   standalone: true,
@@ -66,9 +96,9 @@ const ROLES_SS = ['EPS', 'AFP', 'CCF', 'ARL', 'CESANTIAS'];
     InputTextModule,
     DropdownModule,
     MultiSelectModule,
-    ToggleSwitchModule,
+    TooltipModule,
     CalendarModule,
-    TerceroPickerComponent,
+    TerceroAutocompleteComponent,
   ],
   templateUrl: './form-tercero-plano.component.html',
   styleUrls: ['./form-tercero-plano.component.scss'],
@@ -99,6 +129,7 @@ export class FormTerceroPlanoComponent implements OnInit {
   readonly regimenOpts = REGIMEN_OPTIONS;
   readonly respFiscalOpts = RESPONSABILIDAD_FISCAL_OPTIONS;
   readonly rolOpts = ROL_OPTIONS;
+  readonly paisOpts = PAIS_OPTIONS;
 
   /** Roles seleccionados (multiselect). */
   roles: string[] = ['CLIENTE'];
@@ -146,9 +177,51 @@ export class FormTerceroPlanoComponent implements OnInit {
 
   bancoNombre: string | null = null;
 
-  onBancoSeleccionado(e: { id: number; nombre: string } | null): void {
-    this.frm.patchValue({ bancoTerceroId: e?.id ?? null });
-    this.bancoNombre = e?.nombre ?? null;
+  /** El id lo pone el propio control; aquí se guarda el texto a mostrar. */
+  onBancoSeleccionado(t: TerceroTableModel | null): void {
+    this.bancoNombre = t ? t.nombreCompleto : null;
+  }
+
+  get esColombia(): boolean {
+    return (this.frm?.get('codigoPais')?.value ?? 'CO') === 'CO';
+  }
+
+  /** Los municipios son de Colombia: fuera de Colombia no aplica. */
+  onPaisChange(): void {
+    if (!this.esColombia) this.frm.patchValue({ municipioId: null });
+    this.cdr.markForCheck();
+  }
+
+  /** Banco / entidad SS solo marcan "Activo"; los demás, también los fiscales. */
+  get indicadores(): { control: string; label: string }[] {
+    const activo = { control: 'activo', label: 'Activo' };
+    return this.esEntidadSimple ? [activo] : [...INDICADORES_FISCALES, activo];
+  }
+
+  alternar(control: string): void {
+    const c = this.frm.get(control);
+    if (!c) return;
+    c.setValue(!c.value);
+    c.markAsDirty();
+    this.cdr.markForCheck();
+  }
+
+  invalido(campo: string): boolean {
+    const c = this.frm.get(campo);
+    return !!c && c.invalid && (c.touched || c.dirty);
+  }
+
+  /**
+   * Banco y entidades de seguridad social son siempre persona jurídica (y las
+   * EPS/AFP… con NIT): esos campos se bloquean para no poder equivocarse.
+   */
+  private aplicarBloqueos(): void {
+    const persona = this.frm.get('tipoPersona')!;
+    const doc = this.frm.get('tipoDocumento')!;
+    if (this.esEntidadSimple) persona.disable({ emitEvent: false });
+    else persona.enable({ emitEvent: false });
+    if (this.esEntidadSeguridadSocial) doc.disable({ emitEvent: false });
+    else doc.enable({ emitEvent: false });
   }
 
   /** ¿Tiene algún rol de seguridad social? Ahí se pide el código UGPP. */
@@ -206,6 +279,7 @@ export class FormTerceroPlanoComponent implements OnInit {
         emailFe: [null, [Validators.email, Validators.maxLength(100)]],
         direccion: [null, Validators.maxLength(200)],
         pais: ['Colombia', Validators.maxLength(60)],
+        codigoPais: ['CO'],
         municipioId: [null],
         responsabilidadFiscal: [null],
         regimen: ['NO_RESPONSABLE_IVA'],
@@ -284,6 +358,7 @@ export class FormTerceroPlanoComponent implements OnInit {
     if (this.esEntidadSeguridadSocial) {
       this.frm.patchValue({ tipoPersona: 'JURIDICA', tipoDocumento: 'NIT' });
     }
+    this.aplicarBloqueos();
     this.cdr.markForCheck();
   }
   private rolesPrevHadBanco = false;
@@ -370,6 +445,7 @@ export class FormTerceroPlanoComponent implements OnInit {
           emailFe: d.emailFe,
           direccion: d.direccion,
           pais: d.pais ?? 'Colombia',
+          codigoPais: d.codigoPais ?? 'CO',
           municipioId: d.municipioId ?? null,
           responsabilidadFiscal: d.responsabilidadFiscal,
           regimen: d.regimen ?? 'NO_RESPONSABLE_IVA',
@@ -384,9 +460,10 @@ export class FormTerceroPlanoComponent implements OnInit {
           nombre2: d.nombre2 ?? null,
           apellido1: d.apellido1 ?? null,
           apellido2: d.apellido2 ?? null,
-          fechaNacimiento: d.fechaNacimiento ?? null,
+          // El p-calendar trabaja con Date; del backend llega 'YYYY-MM-DD'.
+          fechaNacimiento: aDate(d.fechaNacimiento ?? null),
           sexo: d.sexo ?? null,
-          fechaExpedicionDocumento: d.fechaExpedicionDocumento ?? null,
+          fechaExpedicionDocumento: aDate(d.fechaExpedicionDocumento ?? null),
           municipioExpedicionId: d.municipioExpedicionId ?? null,
           nombreComercial: d.nombreComercial ?? null,
           representanteLegalNombre: d.representanteLegalNombre ?? null,
@@ -404,6 +481,7 @@ export class FormTerceroPlanoComponent implements OnInit {
         });
         // El selector de banco necesita el nombre para mostrarlo.
         this.bancoNombre = d.bancoTerceroNombre ?? null;
+        this.aplicarBloqueos();
       }
     } catch {
       this.alert.showError('Error', 'No se pudo cargar el tercero.');
@@ -433,7 +511,9 @@ export class FormTerceroPlanoComponent implements OnInit {
       return;
     }
 
-    const v = this.frm.value;
+    // getRawValue: tipo de persona y de documento pueden estar bloqueados y
+    // `value` los dejaría por fuera.
+    const v = this.frm.getRawValue();
     const juridica = this.esJuridica;
 
     // El backend exige `nombres` (campo legacy, usado para mostrar el nombre).
@@ -460,7 +540,7 @@ export class FormTerceroPlanoComponent implements OnInit {
       email: v.email?.trim() || null,
       emailFe: v.emailFe?.trim() || null,
       direccion: v.direccion?.trim() || null,
-      municipioId: v.municipioId ?? null,
+      municipioId: v.codigoPais === 'CO' ? (v.municipioId ?? null) : null,
       municipio: this.municipioOpts.find((o) => o.value === v.municipioId)?.label ?? null,
       responsabilidadFiscal: v.responsabilidadFiscal || null,
       esCliente: this.roles.includes('CLIENTE'),
@@ -479,8 +559,8 @@ export class FormTerceroPlanoComponent implements OnInit {
       autoRetenedor: v.autoRetenedor,
       codigoCIIU: v.codigoCIIU?.trim() || null,
       actividadEconomica: v.actividadEconomica?.trim() || null,
-      pais: v.pais?.trim() || 'Colombia',
-      codigoPais: 'CO',
+      pais: PAIS_OPTIONS.find((o) => o.value === v.codigoPais)?.label ?? 'Colombia',
+      codigoPais: v.codigoPais || 'CO',
 
       // ── Fase 1: identificación desagregada ────────────────────────
       // Solo para persona natural: una jurídica usa razón social.

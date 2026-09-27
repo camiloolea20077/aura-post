@@ -1,0 +1,224 @@
+<div class="page">
+  <div class="card">
+    <!-- Header -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-shopping-cart"></i></span>
+        <div>
+          <h1 class="title">Carritos Abandonados</h1>
+          <p class="subtitle">
+            Lo que se armó en el POS y se vació sin vender: cuánto duró y qué productos tenía
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button pButton type="button" icon="pi pi-file-excel" label="Excel" class="btn-verde"
+          [disabled]="!reporte?.lista?.length" (click)="exportar()"></button>
+      </div>
+    </div>
+
+    <div class="ca-cuerpo">
+    <!-- Filtros -->
+    <div class="ca-filtros">
+      <div class="ca-rangos">
+        <button *ngFor="let r of rangos" type="button" class="ca-rango"
+          [class.ca-rango--activo]="rango === r.value" (click)="elegirRango(r.value)">
+          {{ r.label }}
+        </button>
+      </div>
+      <div class="ca-campos">
+        <div class="field">
+          <label>Desde</label>
+          <p-calendar [(ngModel)]="desde" (onSelect)="fechaManual()" dateFormat="dd/mm/yy"
+            [showIcon]="true" styleClass="w-full" />
+        </div>
+        <div class="field">
+          <label>Hasta</label>
+          <p-calendar [(ngModel)]="hasta" (onSelect)="fechaManual()" dateFormat="dd/mm/yy"
+            [showIcon]="true" styleClass="w-full" />
+        </div>
+        <div class="field field--min">
+          <label>
+            Contar desde
+            <i class="pi pi-info-circle" pTooltip="Un carrito vaciado antes de estos minutos no se cuenta como abandonado: suele ser una corrección rápida del cajero." tooltipPosition="top"></i>
+          </label>
+          <p-inputNumber [(ngModel)]="minutosMinimos" [min]="0" [max]="600" [showButtons]="true"
+            buttonLayout="horizontal" suffix=" min" incrementButtonIcon="pi pi-plus"
+            decrementButtonIcon="pi pi-minus" styleClass="w-full" />
+        </div>
+        <div class="ca-buscar">
+          <button pButton type="button" icon="pi pi-search" label="Buscar" [loading]="cargando"
+            (click)="buscar()"></button>
+        </div>
+      </div>
+    </div>
+
+    <ng-container *ngIf="reporte as r">
+      <!-- Indicadores -->
+      <div class="ca-kpis">
+        <div class="ca-kpi">
+          <span class="ca-kpi__icono ca-kpi__icono--azul"><i class="pi pi-shopping-cart"></i></span>
+          <div>
+            <span class="ca-kpi__label">Carritos abandonados</span>
+            <strong class="ca-kpi__valor">{{ r.carritos }}</strong>
+            <small>{{ r.productos }} producto(s) en total</small>
+          </div>
+        </div>
+        <div class="ca-kpi">
+          <span class="ca-kpi__icono ca-kpi__icono--rojo"><i class="pi pi-money-bill"></i></span>
+          <div>
+            <span class="ca-kpi__label">Valor que no se vendió</span>
+            <strong class="ca-kpi__valor">{{ formatCOP(r.valor) }}</strong>
+            <small>Suma de los carritos abandonados</small>
+          </div>
+        </div>
+        <div class="ca-kpi">
+          <span class="ca-kpi__icono ca-kpi__icono--ambar"><i class="pi pi-clock"></i></span>
+          <div>
+            <span class="ca-kpi__label">Tiempo promedio armado</span>
+            <strong class="ca-kpi__valor">{{ formatoDuracion(r.minutosPromedio) }}</strong>
+            <small>Antes de vaciarse</small>
+          </div>
+        </div>
+        <div class="ca-kpi ca-kpi--suave">
+          <span class="ca-kpi__icono ca-kpi__icono--gris"><i class="pi pi-filter-slash"></i></span>
+          <div>
+            <span class="ca-kpi__label">Vaciados en menos de {{ r.minutosMinimos }} min</span>
+            <strong class="ca-kpi__valor">{{ r.descartadosPorTiempo }}</strong>
+            <small>No cuentan como abandono</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sin datos -->
+      <div class="ca-vacio" *ngIf="!r.carritos">
+        <i class="pi pi-inbox"></i>
+        <strong>No hay carritos abandonados en este rango</strong>
+        <span>
+          Se cuentan los que duraron armados {{ r.minutosMinimos }} minutos o más.
+          <ng-container *ngIf="r.descartadosPorTiempo">
+            Hubo {{ r.descartadosPorTiempo }} vaciado(s) más rápido(s): baje el mínimo para verlos.
+          </ng-container>
+        </span>
+      </div>
+
+      <ng-container *ngIf="r.carritos">
+        <div class="ca-columnas">
+          <!-- Productos -->
+          <section class="ca-panel">
+            <header class="ca-panel__head">
+              <h3><i class="pi pi-box"></i> Productos que más se abandonan</h3>
+              <span class="ca-panel__nota">Por número de carritos</span>
+            </header>
+            <div class="ca-ranking">
+              <div class="ca-rank" *ngFor="let p of r.topProductos; let i = index">
+                <span class="ca-rank__pos" [class.ca-rank__pos--top]="i < 3">{{ i + 1 }}</span>
+                <div class="ca-rank__cuerpo">
+                  <div class="ca-rank__linea">
+                    <span class="ca-rank__nombre" [title]="p.nombre">{{ p.nombre }}</span>
+                    <strong>{{ formatCOP(p.valor) }}</strong>
+                  </div>
+                  <div class="ca-barra">
+                    <span class="ca-barra__relleno" [style.width.%]="(p.valor / maxValorProducto) * 100"></span>
+                  </div>
+                  <div class="ca-rank__meta">
+                    <span>{{ p.carritos }} carrito(s)</span>
+                    <span>· {{ p.cantidad }} und</span>
+                    <span>· {{ participacion(p.valor) }}% del valor</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Cajeros -->
+          <section class="ca-panel">
+            <header class="ca-panel__head">
+              <h3><i class="pi pi-users"></i> Por cajero</h3>
+            </header>
+            <div class="ca-cajeros">
+              <div class="ca-cajero" *ngFor="let c of r.porCajero">
+                <span class="ca-avatar">{{ iniciales(c.usuario) }}</span>
+                <div class="ca-cajero__cuerpo">
+                  <div class="ca-rank__linea">
+                    <span class="ca-rank__nombre" [title]="c.usuario">{{ c.usuario }}</span>
+                    <strong>{{ c.carritos }}</strong>
+                  </div>
+                  <div class="ca-barra ca-barra--suave">
+                    <span class="ca-barra__relleno" [style.width.%]="(c.valor / maxValorCajero) * 100"></span>
+                  </div>
+                  <div class="ca-rank__meta">{{ formatCOP(c.valor) }} sin vender</div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Carritos -->
+        <section class="ca-panel">
+          <header class="ca-panel__head">
+            <h3><i class="pi pi-list"></i> Carritos</h3>
+            <span class="ca-panel__nota">Clic en un carrito para ver sus productos</span>
+          </header>
+
+          <div class="ca-lista">
+            <div class="ca-carrito" *ngFor="let c of r.lista" [class.ca-carrito--abierto]="abierto.has(c.id)">
+              <button type="button" class="ca-carrito__fila" (click)="toggle(c.id)">
+                <i class="pi ca-carrito__flecha" [class.pi-chevron-right]="!abierto.has(c.id)"
+                  [class.pi-chevron-down]="abierto.has(c.id)"></i>
+
+                <div class="ca-carrito__cuando">
+                  <strong>{{ c.vaciadoAt | date: "dd MMM yyyy" }}</strong>
+                  <span>{{ c.iniciadoAt | date: "h:mm a" }} → {{ c.vaciadoAt | date: "h:mm a" }}</span>
+                </div>
+
+                <span [class]="duracionClase(c.minutos)">
+                  <i class="pi pi-clock"></i> {{ formatoDuracion(c.minutos) }}
+                </span>
+
+                <span class="ca-motivo">
+                  <i class="pi" [class.pi-trash]="c.motivo === 'VACIADO'" [class.pi-times-circle]="c.motivo !== 'VACIADO'"></i>
+                  {{ motivo(c.motivo) }}
+                </span>
+
+                <div class="ca-carrito__quien">
+                  <span><i class="pi pi-user"></i> {{ c.usuario || "Sin usuario" }}</span>
+                  <small *ngIf="c.cliente"><i class="pi pi-id-card"></i> {{ c.cliente }}</small>
+                </div>
+
+                <div class="ca-carrito__total">
+                  <strong>{{ formatCOP(c.total) }}</strong>
+                  <small>{{ c.items }} producto(s)</small>
+                </div>
+              </button>
+
+              <div class="ca-carrito__detalle" *ngIf="abierto.has(c.id)">
+                <table class="ca-tabla">
+                  <thead>
+                    <tr>
+                      <th>Producto</th>
+                      <th class="num">Cantidad</th>
+                      <th class="num">Precio unit.</th>
+                      <th class="num">Subtotal</th>
+                      <th class="num">Entró al carrito</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let it of c.detalle">
+                      <td>{{ it.nombre }}</td>
+                      <td class="num">{{ it.cantidad }}</td>
+                      <td class="num">{{ formatCOP(it.cantidad ? it.subtotal / it.cantidad : it.precio) }}</td>
+                      <td class="num"><strong>{{ formatCOP(it.subtotal) }}</strong></td>
+                      <td class="num muted">{{ it.agregadoAt ? (it.agregadoAt | date: "h:mm a") : "—" }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+      </ng-container>
+    </ng-container>
+  </div>
+  </div>
+</div>

@@ -1,0 +1,61 @@
+<p-dialog
+  [(visible)]="visible"
+  (onHide)="cerrar()"
+  [header]="'Seriales que llegan · ' + productoNombre"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '520px', maxWidth: '96vw' }"
+  appendTo="body"
+>
+  <div class="se-cab">
+    <input
+      pInputText
+      class="se-input"
+      [(ngModel)]="nuevo"
+      (keydown.enter)="onEnter()"
+      placeholder="Escanea un serial y presiona Enter"
+      autocomplete="off"
+    />
+    <span class="se-contador" [class.se-contador--ok]="!faltan">
+      {{ lista.length }} de {{ unidades }}
+    </span>
+  </div>
+  <small class="se-aviso" *ngIf="aviso">{{ aviso }}</small>
+
+  <div class="se-acciones">
+    <button pButton type="button" class="p-button-text p-button-sm" icon="pi pi-clipboard"
+      label="Pegar una lista" (click)="mostrarPegar = !mostrarPegar"></button>
+  </div>
+
+  <div class="se-pegar" *ngIf="mostrarPegar">
+    <textarea
+      pInputText
+      rows="4"
+      [(ngModel)]="pegado"
+      placeholder="Un serial por línea (o separados por coma)"
+    ></textarea>
+    <button pButton type="button" label="Agregar" class="p-button-sm" (click)="pegarLista()"></button>
+  </div>
+
+  <div class="se-generar" *ngIf="faltan > 0">
+    <span>Generar consecutivo</span>
+    <input pInputText [(ngModel)]="prefijo" placeholder="Prefijo (ej: IMEI-)" />
+    <p-inputNumber [(ngModel)]="desde" [min]="0" placeholder="Desde" inputStyleClass="se-desde" />
+    <button pButton type="button" icon="pi pi-bolt" class="p-button-sm p-button-outlined"
+      [label]="'Generar ' + faltan" (click)="generar()"></button>
+  </div>
+
+  <div class="se-lista">
+    <div class="se-item" *ngFor="let s of lista; let i = index">
+      <span class="se-num">{{ i + 1 }}</span>
+      <span class="se-serial">{{ s }}</span>
+      <button type="button" class="se-quitar" (click)="quitar(i)"><i class="pi pi-times"></i></button>
+    </div>
+    <div class="se-vacio" *ngIf="!lista.length">Todavía no hay seriales</div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancelar" class="btn-amarillo" (click)="cerrar()"></button>
+    <button pButton type="button" label="Aceptar" icon="pi pi-check" class="btn-verde" (click)="aceptar()"></button>
+  </ng-template>
+</p-dialog>

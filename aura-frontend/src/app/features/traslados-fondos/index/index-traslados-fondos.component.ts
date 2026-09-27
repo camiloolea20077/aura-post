@@ -37,6 +37,7 @@ import {
   CreateTrasladoFondosDto,
   EXTREMOS_TRASLADO,
   ExtremoTraslado,
+  ReembolsoFondoModel,
   TrasladoFondosModel,
 } from '../../../core/models/traslado-fondos.model';
 
@@ -92,6 +93,16 @@ export class IndexTrasladosFondosComponent implements OnInit {
   bancosOpts: Opcion[] = [];
   cuentasOpts: Opcion[] = [];
 
+  /** Reposición sugerida de la caja menor elegida como destino. */
+  reembolso: ReembolsoFondoModel | null = null;
+  cargandoReembolso = false;
+  relacionVisible = false;
+
+  anularVisible = false;
+  anulando = false;
+  trasladoAAnular: TrasladoFondosModel | null = null;
+  motivoAnulacion = '';
+
   constructor(
     private readonly trasladoService: TrasladoFondosService,
     private readonly turnoService: TurnoCajaService,
@@ -145,6 +156,97 @@ export class IndexTrasladosFondosComponent implements OnInit {
 
       observacion: [''],
     });
+
+    // Al reembolsar, el sistema calcula cuánto reponer en vez de dejar que se
+    // digite de memoria: lo que devuelve el fondo a su valor fijo.
+    this.frm.get('concepto')?.valueChanges.subscribe(() => this.cargarReembolso());
+    this.frm.get('destinoCuentaId')?.valueChanges.subscribe(() => this.cargarReembolso());
+    this.frm.get('destinoTipo')?.valueChanges.subscribe(() => this.cargarReembolso());
+  }
+
+  // ── Reembolso de caja menor ─────────────────────────────────────────────
+
+  get esReembolso(): boolean {
+    return this.frm.get('concepto')?.value === 'REEMBOLSO_CAJA_MENOR';
+  }
+
+  private async cargarReembolso(): Promise<void> {
+    const v = this.frm.getRawValue();
+    if (
+      v.concepto !== 'REEMBOLSO_CAJA_MENOR' ||
+      v.destinoTipo !== 'CUENTA' ||
+      !v.destinoCuentaId
+    ) {
+      this.reembolso = null;
+      this.cdr.markForCheck();
+      return;
+    }
+    this.cargandoReembolso = true;
+    this.cdr.markForCheck();
+    try {
+      const res = await lastValueFrom(
+        this.trasladoService.reembolso(v.destinoCuentaId),
+      );
+      this.reembolso = res?.data ?? null;
+      // Solo se propone si el usuario no digitó otro monto.
+      if (this.reembolso && !this.frm.get('monto')?.value) {
+        this.usarMontoSugerido();
+      }
+    } catch {
+      this.reembolso = null;
+    } finally {
+      this.cargandoReembolso = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  usarMontoSugerido(): void {
+    if (!this.reembolso || this.reembolso.montoSugerido <= 0) return;
+    this.frm.patchValue({ monto: this.reembolso.montoSugerido });
+    this.cdr.markForCheck();
+  }
+
+  // ── Anulación ───────────────────────────────────────────────────────────
+
+  abrirAnular(t: TrasladoFondosModel): void {
+    this.trasladoAAnular = t;
+    this.motivoAnulacion = '';
+    this.anularVisible = true;
+    this.cdr.markForCheck();
+  }
+
+  async confirmarAnular(): Promise<void> {
+    const motivo = this.motivoAnulacion.trim();
+    if (!this.trasladoAAnular) return;
+    if (motivo.length < 10) {
+      this.alertService.showWarn(
+        'Falta el motivo',
+        'Explica por qué se anula (mínimo 10 caracteres).',
+      );
+      return;
+    }
+    this.anulando = true;
+    this.cdr.markForCheck();
+    try {
+      await lastValueFrom(
+        this.trasladoService.anular(this.trasladoAAnular.id, motivo),
+      );
+      this.alertService.showSuccess(
+        'Anulado',
+        'El traslado se anuló y su asiento se reversó.',
+      );
+      this.anularVisible = false;
+      await this.buscar();
+      await this.loadTurnos();
+    } catch (e: unknown) {
+      const msg =
+        (e as { error?: { message?: string } })?.error?.message ??
+        'No se pudo anular el traslado.';
+      this.alertService.showError('Error', msg);
+    } finally {
+      this.anulando = false;
+      this.cdr.markForCheck();
+    }
   }
 
   // ── Catálogos ───────────────────────────────────────────────────────────
@@ -246,6 +348,7 @@ export class IndexTrasladosFondosComponent implements OnInit {
       destinoTipo: 'CUENTA',
       observacion: '',
     });
+    this.reembolso = null;
     this.dialogVisible = true;
     this.cdr.markForCheck();
   }
