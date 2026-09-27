@@ -112,13 +112,13 @@
     <!-- Factor de conversión -->
     <div class="field">
       <label for="factorConversion">
-        Factor de conversión <span class="required">*</span>
+        Unidades base que contiene <span class="required">*</span>
       </label>
       <p-inputNumber
         inputId="factorConversion"
         formControlName="factorConversion"
         [min]="0.0001"
-        [maxFractionDigits]="4"
+        [maxFractionDigits]="8"
         placeholder="Ej: 12, 6, 1, 0.5..."
         styleClass="w-full"
         [class.ng-invalid]="isInvalid('factorConversion')"
@@ -148,9 +148,19 @@
         <strong>{{ frmPresentacion.get("nombre")?.value }}</strong>
         equivale a
         <strong>{{
-          frmPresentacion.get("factorConversion")?.value | number: "1.0-4"
+          frmPresentacion.get("factorConversion")?.value | number: "1.0-6"
         }}</strong>
         unidad(es) base
+        <ng-container
+          *ngIf="frmPresentacion.get('factorConversion')?.value < 1"
+        >
+          (1 unidad base =
+          {{
+            1 / frmPresentacion.get("factorConversion")?.value
+              | number: "1.0-2"
+          }}
+          {{ frmPresentacion.get("nombre")?.value }})
+        </ng-container>
       </span>
     </div>
 
@@ -185,7 +195,7 @@
           {{ frmPresentacion.get("activo")?.value ? "Activo" : "Inactivo" }}
         </span>
       </div>
-      <p-inputSwitch formControlName="activo" />
+      <p-toggleswitch formControlName="activo" />
     </div>
   </form>
 

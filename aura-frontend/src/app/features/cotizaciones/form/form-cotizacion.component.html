@@ -58,39 +58,14 @@
     <div class="form-grid">
       <div class="form-field">
         <label class="field-label">Cliente</label>
-        <p-autoComplete
-          [(ngModel)]="terceroQuery"
-          [suggestions]="tercerosSugeridos"
-          (completeMethod)="buscarTerceros($event.query)"
-          (onSelect)="seleccionarTercero($event)"
-          field="nombreCompleto"
-          [dropdown]="false"
+        <app-tercero-autocomplete
+          [terceroId]="terceroSeleccionado?.id ?? null"
+          [label]="terceroLabel"
           [disabled]="!puedeEditar"
+          rol="CLIENTE"
           placeholder="Buscar cliente..."
-          styleClass="w-full"
-        >
-          <ng-template let-tercero pTemplate="item">
-            <div class="suggestion-item">
-              <div class="suggestion-nombre">{{ tercero.nombreCompleto }}</div>
-              <div class="suggestion-doc">{{ tercero.numeroDocumento }}</div>
-            </div>
-          </ng-template>
-        </p-autoComplete>
-        <button
-          *ngIf="puedeEditar"
-          class="p-button-outlined p-button-sm btn-buscar-tercero"
-          pTooltip="Buscar tercero"
-          (click)="openTerceroDialog()"
-        >
-          <i class="pi pi-search"></i>
-        </button>
-        <button
-          *ngIf="terceroSeleccionado && puedeEditar"
-          class="p-button-text p-button-sm clear-tercero"
-          (click)="limpiarTercero()"
-        >
-          <i class="pi pi-times"></i>
-        </button>
+          (seleccionado)="onCliente($event)"
+        />
       </div>
 
       <div class="form-field">
@@ -357,78 +332,5 @@
   </p-table>
 </p-dialog>
 
-<!-- Modal selector terceros -->
-<p-dialog
-  header="Seleccionar cliente"
-  [(visible)]="showTerceroDialog"
-  [modal]="true"
-  [style]="{ width: '800px' }"
-  [draggable]="false"
->
-  <div class="dialog-search">
-    <span class="p-input-icon-left">
-      <p-iconfield>
-        <p-inputicon class="pi pi-search" />
-        <input
-          pInputText
-          [(ngModel)]="dialogSearch"
-          (keyup.enter)="onTercerosSearch()"
-        />
-      </p-iconfield>
-    </span>
-    <button pButton label="Buscar" (click)="onTercerosSearch()"></button>
-  </div>
-
-  <p-table
-    [value]="tercerosItems"
-    [lazy]="true"
-    (onLazyLoad)="loadTercerosTable($event)"
-    [paginator]="true"
-    [rows]="10"
-    [totalRecords]="tercerosTotal"
-    [loading]="tercerosLoading"
-    [rowsPerPageOptions]="[10, 20, 50]"
-    [showGridlines]="true"
-    selectionMode="single"
-  >
-    <ng-template pTemplate="header">
-      <tr>
-        <th style="width: 60px">ID</th>
-        <th>Nombre</th>
-        <th style="width: 130px">Documento</th>
-        <th style="width: 100px">Tipo</th>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="body" let-item>
-      <tr (click)="selectTerceroFromDialog(item)" style="cursor: pointer">
-        <td>
-          <span class="id-badge">#{{ item.id }}</span>
-        </td>
-        <td>{{ item.nombreCompleto }}</td>
-        <td>{{ item.numeroDocumento }}</td>
-        <td>{{ item.tipoDocumento }}</td>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="emptymessage">
-      <tr>
-        <td colspan="4">
-          <div class="empty-state">
-            <p-iconfield>
-              <p-inputicon class="pi pi-search" />
-              <input pInputText />
-            </p-iconfield>
-            <p>
-              {{
-                dialogSearch
-                  ? 'Sin resultados para "' + dialogSearch + '"'
-                  : "Escribe para buscar terceros"
-              }}
-            </p>
-          </div>
-        </td>
-      </tr>
-    </ng-template>
-  </p-table>
-</p-dialog>
 
 <p-toast />

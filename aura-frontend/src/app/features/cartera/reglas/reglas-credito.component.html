@@ -1,0 +1,251 @@
+<p-confirmDialog />
+
+<div class="page">
+  <div class="card rc">
+    <div class="card-head">
+      <div class="card-head__title">
+        <button type="button" class="rc-back" (click)="volver()" pTooltip="Volver a cartera" tooltipPosition="bottom">
+          <i class="pi pi-arrow-left"></i>
+        </button>
+        <span class="header-icon"><i class="pi pi-sliders-h"></i></span>
+        <div>
+          <h1 class="title">Reglas de crédito</h1>
+          <p class="subtitle">Suben o bajan cupos y suspenden clientes solos, según cómo pagan</p>
+        </div>
+      </div>
+      <div class="card-head__btns">
+        <button pButton type="button" icon="pi pi-plus" label="Nueva regla" class="p-button-sm" (click)="abrirNueva()"></button>
+      </div>
+    </div>
+
+    <!-- ══ Plantillas ════════════════════════════════════════════════ -->
+    <div class="rc-plantillas">
+      <span class="rc-sub">Empezar desde una plantilla</span>
+      <div class="rc-plantillas__lista">
+        <button type="button" class="rc-plantilla" *ngFor="let p of plantillas" (click)="abrirNueva(p.regla)">
+          <i class="pi" [ngClass]="p.icon"></i>
+          <div>
+            <strong>{{ p.titulo }}</strong>
+            <span>{{ p.texto }}</span>
+          </div>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ Lista ═════════════════════════════════════════════════════ -->
+    <ng-container *ngIf="!cargando; else skReglas">
+      <div class="rc-vacio" *ngIf="!reglas.length">
+        <i class="pi pi-sliders-h"></i>
+        <strong>Todavía no hay reglas</strong>
+        <span>Sin reglas, los cupos solo cambian a mano. El score y la suspensión por mora se recalculan igual cada noche.</span>
+      </div>
+
+      <div class="rc-regla" *ngFor="let r of reglas" [class.pausada]="!r.activo">
+        <div class="rc-regla__icono" [ngClass]="'rc-regla__icono--' + tipoInfo(r.tipo).clase">
+          <i class="pi" [ngClass]="tipoInfo(r.tipo).icon"></i>
+        </div>
+        <div class="rc-regla__cuerpo">
+          <div class="rc-regla__titulo">
+            <strong>{{ r.nombre }}</strong>
+            <span class="rc-chip" [ngClass]="'rc-chip--' + tipoInfo(r.tipo).clase">{{ tipoInfo(r.tipo).label }}</span>
+          </div>
+          <p class="rc-regla__frase">{{ describir(r) }}</p>
+          <span class="rc-sub">
+            <ng-container *ngIf="r.descripcion">{{ r.descripcion }} · </ng-container>
+            <ng-container *ngIf="r.vecesAplicada; else nunca">
+              Aplicada {{ r.vecesAplicada }} {{ r.vecesAplicada === 1 ? 'vez' : 'veces' }}, la última el {{ r.ultimaAplicacion | date: 'dd/MM/yyyy' }}
+            </ng-container>
+            <ng-template #nunca>Aún no ha actuado</ng-template>
+            · espera {{ r.diasEntreAplicaciones }} días antes de repetir con un cliente
+          </span>
+        </div>
+        <div class="rc-regla__acc">
+          <div class="rc-estado">
+            <button type="button" [class.activa]="r.activo" (click)="cambiarActivo(r, true)">Activa</button>
+            <button type="button" [class.activa]="!r.activo" (click)="cambiarActivo(r, false)">Pausada</button>
+          </div>
+          <button type="button" class="rc-icon" pTooltip="Editar" (click)="editar(r)"><i class="pi pi-pencil"></i></button>
+          <button type="button" class="rc-icon rc-icon--danger" pTooltip="Eliminar" (click)="eliminar(r)"><i class="pi pi-trash"></i></button>
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-template #skReglas>
+      <div class="rc-regla" *ngFor="let i of [1, 2]">
+        <p-skeleton width="40px" height="40px" borderRadius="12px" />
+        <div class="rc-regla__cuerpo">
+          <p-skeleton width="40%" height="1rem" />
+          <p-skeleton width="80%" height="0.8rem" styleClass="mt-2" />
+        </div>
+      </div>
+    </ng-template>
+  </div>
+</div>
+
+<!-- ══ Formulario ═════════════════════════════════════════════════════ -->
+<p-dialog
+  [(visible)]="formVisible"
+  [header]="regla.id ? 'Editar regla' : 'Nueva regla'"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '820px', maxWidth: '96vw' }"
+  styleClass="aura-dialog"
+>
+  <div class="rf">
+    <div class="rf-grid">
+      <div class="rf-field">
+        <label>Nombre <span class="req">*</span></label>
+        <input pInputText [(ngModel)]="regla.nombre" maxlength="100" placeholder="Ej: Premiar al buen pagador" />
+      </div>
+      <div class="rf-field">
+        <label>Descripción</label>
+        <input pInputText [(ngModel)]="regla.descripcion" maxlength="300" placeholder="Para qué sirve (opcional)" />
+      </div>
+    </div>
+
+    <div class="rf-field">
+      <label>¿Qué hace?</label>
+      <div class="rf-opciones">
+        <button type="button" *ngFor="let t of tipos" class="rf-opcion" [class.activa]="regla.tipo === t.value" (click)="setTipo(t.value)">
+          <i class="pi" [ngClass]="t.icon"></i> {{ t.label }}
+        </button>
+      </div>
+    </div>
+
+    <div class="rf-grid" *ngIf="regla.tipo === 'AUMENTO_CUPO'">
+      <div class="rf-field">
+        <label>Sube el cupo <span class="req">*</span></label>
+        <p-inputNumber [(ngModel)]="regla.accion.aumentarPct" suffix=" %" [min]="1" [max]="500" [maxFractionDigits]="2" styleClass="w-full" />
+      </div>
+      <div class="rf-field">
+        <label>Sin pasar de <small>(opcional)</small></label>
+        <p-inputNumber [(ngModel)]="regla.accion.cupoMaximo" mode="currency" currency="COP" locale="es-CO" [minFractionDigits]="0" styleClass="w-full" />
+      </div>
+    </div>
+    <div class="rf-grid" *ngIf="regla.tipo === 'REDUCCION_CUPO'">
+      <div class="rf-field">
+        <label>Baja el cupo <span class="req">*</span></label>
+        <p-inputNumber [(ngModel)]="regla.accion.reducirPct" suffix=" %" [min]="1" [max]="100" [maxFractionDigits]="2" styleClass="w-full" />
+      </div>
+      <div class="rf-field">
+        <label>Sin bajar de <small>(opcional)</small></label>
+        <p-inputNumber [(ngModel)]="regla.accion.cupoMinimo" mode="currency" currency="COP" locale="es-CO" [minFractionDigits]="0" styleClass="w-full" />
+      </div>
+    </div>
+    <div class="rf-field" *ngIf="regla.tipo === 'ALERTA'">
+      <label>Mensaje de la alerta</label>
+      <input pInputText [(ngModel)]="regla.accion.mensaje" maxlength="200" placeholder="Ej: revisar el cupo con el cliente" />
+    </div>
+
+    <div class="rf-field">
+      <label>¿Cuándo se revisa?</label>
+      <div class="rf-opciones">
+        <button type="button" *ngFor="let e of eventos" class="rf-opcion" [class.activa]="regla.evento === e.value" (click)="regla.evento = e.value; simulacion = null">
+          {{ e.label }}
+        </button>
+      </div>
+    </div>
+
+    <div class="rf-field">
+      <label>Si el cliente cumple <u>todas</u> estas condiciones</label>
+      <div class="rf-condiciones">
+        <div class="rf-condicion" *ngFor="let f of filas; let i = index">
+          <p-dropdown
+            [(ngModel)]="f.campo"
+            (onChange)="onCampo(f)"
+            [options]="opcionesCondicion(f)"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Elegir condición"
+            appendTo="body"
+            styleClass="rf-condicion__campo"
+          />
+          <ng-container [ngSwitch]="definicion(f.campo)?.tipo">
+            <p-dropdown
+              *ngSwitchCase="'estado'"
+              [(ngModel)]="f.valor"
+              [options]="estadosCredito"
+              optionLabel="label"
+              optionValue="value"
+              appendTo="body"
+              styleClass="rf-condicion__valor"
+            />
+            <p-inputNumber
+              *ngSwitchCase="'numero'"
+              [(ngModel)]="f.valor"
+              (ngModelChange)="simulacion = null"
+              [min]="0"
+              [suffix]="definicion(f.campo)?.sufijo ?? ''"
+              styleClass="rf-condicion__valor"
+            />
+            <span *ngSwitchDefault class="rf-condicion__valor rc-sub">Elige primero la condición</span>
+          </ng-container>
+          <button type="button" class="rc-icon rc-icon--danger" (click)="quitarCondicion(i)" pTooltip="Quitar">
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+        <button type="button" class="rf-agregar" (click)="agregarCondicion()" [disabled]="filas.length >= catalogo.length">
+          <i class="pi pi-plus"></i> Agregar condición
+        </button>
+      </div>
+    </div>
+
+    <div class="rf-grid">
+      <div class="rf-field">
+        <label>No repetir con el mismo cliente antes de</label>
+        <p-inputNumber [(ngModel)]="regla.diasEntreAplicaciones" suffix=" días" [min]="0" [max]="365" styleClass="w-full" />
+      </div>
+    </div>
+
+    <div class="rf-frase">
+      <i class="pi pi-info-circle"></i>
+      <span>{{ frase }}</span>
+    </div>
+
+    <!-- ══ Prueba ══ -->
+    <div class="rf-prueba">
+      <div class="rf-prueba__head">
+        <button pButton type="button" icon="pi pi-play" label="Probar con los clientes de hoy"
+          class="p-button-outlined p-button-sm" [loading]="simulando" (click)="simular()"></button>
+        <span class="rc-sub" *ngIf="simulacion">
+          {{ simulacion.length === 0 ? 'Hoy no le aplicaría a ningún cliente' : 'Hoy le aplicaría a ' + simulacion.length + (simulacion.length === 1 ? ' cliente' : ' clientes') }}
+        </span>
+      </div>
+      <table class="rf-tabla" *ngIf="simulacion?.length">
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th class="num">Score</th>
+            <th class="num">Mora</th>
+            <th class="num">Cupo</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let s of simulacion">
+            <td>
+              {{ s.terceroNombre }}
+              <span class="rc-chip rc-chip--muted" *ngIf="s.enEspera">en espera</span>
+            </td>
+            <td class="num">{{ s.score }}</td>
+            <td class="num">{{ s.diasMora > 0 ? s.diasMora + ' d' : '—' }}</td>
+            <td class="num">
+              {{ formatCOP(s.cupoActual) }}
+              <ng-container *ngIf="s.cupoResultante !== s.cupoActual"> → <strong>{{ formatCOP(s.cupoResultante) }}</strong></ng-container>
+            </td>
+            <td>
+              {{ s.estadoCredito }}
+              <ng-container *ngIf="s.estadoResultante !== s.estadoCredito"> → <strong>{{ s.estadoResultante }}</strong></ng-container>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="formVisible = false"></button>
+    <button pButton type="button" label="Guardar regla" icon="pi pi-check" [loading]="guardando" (click)="guardar()"></button>
+  </ng-template>
+</p-dialog>

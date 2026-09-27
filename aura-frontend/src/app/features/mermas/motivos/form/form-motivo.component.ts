@@ -14,7 +14,7 @@ import {
 } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
-import { InputSwitchModule } from 'primeng/inputswitch';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { DialogModule } from 'primeng/dialog';
 import { lastValueFrom } from 'rxjs';
 import { MotivoMermaModel } from '../../../../core/models/merma.model';
@@ -29,7 +29,7 @@ import { AlertService } from '../../../../shared/pipes/alert.service';
     ReactiveFormsModule,
     ButtonModule,
     InputTextModule,
-    InputSwitchModule,
+    ToggleSwitchModule,
     DialogModule,
   ],
   templateUrl: './form-motivo.component.html',

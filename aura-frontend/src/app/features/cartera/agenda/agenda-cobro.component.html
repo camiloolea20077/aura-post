@@ -1,0 +1,228 @@
+<div class="ag">
+  <!-- ══ Cabecera ════════════════════════════════════════════════════ -->
+  <div class="ag-head">
+    <div>
+      <h2>Cobrar hoy</h2>
+      <p *ngIf="agenda">
+        <ng-container *ngIf="pendientesTotal > 0; else nada">
+          {{ pendientesTotal }} {{ pendientesTotal === 1 ? 'cliente necesita' : 'clientes necesitan' }} atención
+        </ng-container>
+        <ng-template #nada>Nada urgente por hoy</ng-template>
+      </p>
+    </div>
+    <div class="ag-ventana">
+      <span>Ver próximos</span>
+      <button
+        type="button"
+        *ngFor="let d of ventanas"
+        [class.activa]="dias === d"
+        (click)="setDias(d)"
+      >
+        {{ d }} días
+      </button>
+      <button type="button" class="ag-icon" pTooltip="Actualizar" (click)="cargar()">
+        <i class="pi pi-refresh" [class.pi-spin]="cargando"></i>
+      </button>
+    </div>
+  </div>
+
+  <ng-container *ngIf="agenda; else skAgenda">
+    <!-- ══ Cifras ══════════════════════════════════════════════════ -->
+    <div class="ag-stats">
+      <div class="ag-stat ag-stat--danger">
+        <span class="ag-stat__label">Promesas incumplidas</span>
+        <span class="ag-stat__valor">{{ agenda.resumen.promesasIncumplidas }}</span>
+        <span class="ag-stat__meta">{{ formatCOP(agenda.resumen.montoPromesasIncumplidas) }} sin pagar</span>
+      </div>
+      <div class="ag-stat ag-stat--info">
+        <span class="ag-stat__label">Prometieron pagar hoy</span>
+        <span class="ag-stat__valor">{{ agenda.resumen.promesasHoy }}</span>
+        <span class="ag-stat__meta">{{ formatCOP(agenda.resumen.montoPromesasHoy) }} por recibir</span>
+      </div>
+      <div class="ag-stat ag-stat--warn">
+        <span class="ag-stat__label">Vencidos sin gestión</span>
+        <span class="ag-stat__valor">{{ agenda.resumen.clientesSinGestion }}</span>
+        <span class="ag-stat__meta">{{ formatCOP(agenda.resumen.saldoSinGestion) }} vencido</span>
+      </div>
+      <div class="ag-stat">
+        <span class="ag-stat__label">Vencen en {{ dias }} días</span>
+        <span class="ag-stat__valor">{{ agenda.resumen.facturasPorVencer }}</span>
+        <span class="ag-stat__meta">{{ formatCOP(agenda.resumen.saldoPorVencer) }}</span>
+      </div>
+      <div class="ag-stat">
+        <span class="ag-stat__label">Promesas cumplidas este mes</span>
+        <span class="ag-stat__valor">{{ cumplimientoPct != null ? cumplimientoPct + '%' : '—' }}</span>
+        <span class="ag-stat__meta">
+          {{ agenda.resumen.promesasCumplidasMes }} de {{ agenda.resumen.promesasResueltasMes }} resueltas
+        </span>
+      </div>
+    </div>
+
+    <!-- ══ Incumplidas ═════════════════════════════════════════════ -->
+    <section class="ag-seccion" *ngIf="agenda.promesasIncumplidas.length">
+      <header class="ag-seccion__head">
+        <span class="ag-dot ag-dot--danger"></span>
+        <h3>Promesas incumplidas</h3>
+        <span class="ag-sub">No pagaron y nadie los ha vuelto a contactar</span>
+      </header>
+      <div class="ag-fila" *ngFor="let p of agenda.promesasIncumplidas">
+        <div class="ag-fila__main">
+          <a class="ag-cliente" (click)="verFicha(p.terceroId)">{{ p.terceroNombre }}</a>
+          <span class="ag-sub">
+            Prometió {{ formatCOP(p.montoPrometido) }} para el {{ p.fechaPromesaPago | date: 'dd/MM' }}
+            · hace {{ p.dias }} {{ p.dias === 1 ? 'día' : 'días' }}
+            <ng-container *ngIf="p.numeroCuenta"> · {{ p.numeroCuenta }}</ng-container>
+          </span>
+          <span class="ag-nota" *ngIf="p.nota">“{{ p.nota }}”</span>
+        </div>
+        <div class="ag-fila__valor">
+          <strong>{{ formatCOP(p.montoPrometido - p.montoPagado) }}</strong>
+          <span class="ag-sub" *ngIf="p.montoPagado > 0">abonó {{ formatCOP(p.montoPagado) }}</span>
+        </div>
+        <div class="ag-fila__acc">
+          <a *ngIf="p.telefono" class="ag-icon" [href]="'tel:' + p.telefono" pTooltip="Llamar"><i class="pi pi-phone"></i></a>
+          <a
+            *ngIf="whatsapp(p.telefono, p.terceroNombre, 'le recordamos el pago de ' + formatCOP(p.montoPrometido - p.montoPagado) + ' que quedó pendiente.') as wa"
+            class="ag-icon ag-icon--wa" [href]="wa" target="_blank" rel="noopener" pTooltip="WhatsApp"
+          ><i class="pi pi-whatsapp"></i></a>
+          <button type="button" class="ag-btn" (click)="gestion(p.terceroId, p.cuentaCobrarId)">Registrar gestión</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ Hoy ═════════════════════════════════════════════════════ -->
+    <section class="ag-seccion" *ngIf="agenda.promesasHoy.length">
+      <header class="ag-seccion__head">
+        <span class="ag-dot ag-dot--info"></span>
+        <h3>Prometieron pagar hoy</h3>
+      </header>
+      <div class="ag-fila" *ngFor="let p of agenda.promesasHoy">
+        <div class="ag-fila__main">
+          <a class="ag-cliente" (click)="verFicha(p.terceroId)">{{ p.terceroNombre }}</a>
+          <span class="ag-sub">
+            Promesa del {{ p.createdAt | date: 'dd/MM' }}<ng-container *ngIf="p.usuarioNombre"> · {{ p.usuarioNombre }}</ng-container>
+            <ng-container *ngIf="p.numeroCuenta"> · {{ p.numeroCuenta }}</ng-container>
+          </span>
+          <div class="ag-progreso" *ngIf="p.montoPagado > 0">
+            <div class="ag-progreso__barra" [style.width.%]="pctPagado(p.montoPagado, p.montoPrometido)"></div>
+          </div>
+        </div>
+        <div class="ag-fila__valor">
+          <strong>{{ formatCOP(p.montoPrometido) }}</strong>
+          <span class="ag-sub" *ngIf="p.montoPagado > 0">lleva {{ formatCOP(p.montoPagado) }}</span>
+        </div>
+        <div class="ag-fila__acc">
+          <a *ngIf="p.telefono" class="ag-icon" [href]="'tel:' + p.telefono" pTooltip="Llamar"><i class="pi pi-phone"></i></a>
+          <a
+            *ngIf="whatsapp(p.telefono, p.terceroNombre, 'le recordamos que hoy quedamos en el pago de ' + formatCOP(p.montoPrometido) + '.') as wa"
+            class="ag-icon ag-icon--wa" [href]="wa" target="_blank" rel="noopener" pTooltip="WhatsApp"
+          ><i class="pi pi-whatsapp"></i></a>
+          <button type="button" class="ag-btn ag-btn--primary" (click)="verFicha(p.terceroId)">Registrar pago</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ Vencidos sin gestión ════════════════════════════════════ -->
+    <section class="ag-seccion" *ngIf="agenda.vencidosSinGestion.length">
+      <header class="ag-seccion__head">
+        <span class="ag-dot ag-dot--warn"></span>
+        <h3>Vencidos sin gestión</h3>
+        <span class="ag-sub">Sin contacto en 15 días y sin promesa pendiente</span>
+      </header>
+      <div class="ag-fila" *ngFor="let c of agenda.vencidosSinGestion">
+        <div class="ag-fila__main">
+          <a class="ag-cliente" (click)="verFicha(c.terceroId)">{{ c.terceroNombre }}</a>
+          <span class="ag-sub">
+            {{ c.facturasVencidas }} {{ c.facturasVencidas === 1 ? 'factura vencida' : 'facturas vencidas' }}
+            · hasta {{ c.diasMoraMaximo }} días
+            · <ng-container *ngIf="c.ultimaGestion; else nunca">última gestión {{ c.ultimaGestion | date: 'dd/MM/yyyy' }} ({{ etiquetaResultado(c.ultimoResultado) }})</ng-container>
+            <ng-template #nunca>nunca gestionado</ng-template>
+          </span>
+        </div>
+        <div class="ag-fila__valor">
+          <strong>{{ formatCOP(c.saldoVencido) }}</strong>
+        </div>
+        <div class="ag-fila__acc">
+          <a *ngIf="c.telefono" class="ag-icon" [href]="'tel:' + c.telefono" pTooltip="Llamar"><i class="pi pi-phone"></i></a>
+          <a
+            *ngIf="whatsapp(c.telefono, c.terceroNombre, 'tiene un saldo vencido de ' + formatCOP(c.saldoVencido) + '. ¿Cuándo podemos contar con el pago?') as wa"
+            class="ag-icon ag-icon--wa" [href]="wa" target="_blank" rel="noopener" pTooltip="WhatsApp"
+          ><i class="pi pi-whatsapp"></i></a>
+          <button type="button" class="ag-btn" (click)="gestion(c.terceroId)">Registrar gestión</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ Por vencer ══════════════════════════════════════════════ -->
+    <section class="ag-seccion" *ngIf="agenda.porVencer.length">
+      <header class="ag-seccion__head">
+        <span class="ag-dot"></span>
+        <h3>Vencen en los próximos {{ dias }} días</h3>
+        <span class="ag-sub">Un recordatorio a tiempo evita la mora</span>
+      </header>
+      <div class="ag-fila" *ngFor="let f of agenda.porVencer">
+        <div class="ag-fila__main">
+          <a class="ag-cliente" (click)="verFicha(f.terceroId)">{{ f.terceroNombre }}</a>
+          <span class="ag-sub">
+            {{ f.numeroCuenta }} · {{ f.fechaVencimiento | date: 'dd/MM/yyyy' }}
+          </span>
+        </div>
+        <div class="ag-fila__valor">
+          <strong>{{ formatCOP(f.saldoPendiente) }}</strong>
+          <span class="ag-chip" [class.ag-chip--warn]="f.diasParaVencer <= 1">
+            {{ f.diasParaVencer === 0 ? 'Vence hoy' : f.diasParaVencer === 1 ? 'Vence mañana' : 'En ' + f.diasParaVencer + ' días' }}
+          </span>
+        </div>
+        <div class="ag-fila__acc">
+          <a
+            *ngIf="whatsapp(f.telefono, f.terceroNombre, 'le recordamos que la cuenta ' + f.numeroCuenta + ' por ' + formatCOP(f.saldoPendiente) + ' vence pronto.') as wa"
+            class="ag-icon ag-icon--wa" [href]="wa" target="_blank" rel="noopener" pTooltip="Recordar por WhatsApp"
+          ><i class="pi pi-whatsapp"></i></a>
+          <button type="button" class="ag-btn" (click)="gestion(f.terceroId, f.cuentaCobrarId)">Registrar gestión</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ Próximas promesas ═══════════════════════════════════════ -->
+    <section class="ag-seccion" *ngIf="agenda.promesasProximas.length">
+      <header class="ag-seccion__head">
+        <span class="ag-dot ag-dot--ok"></span>
+        <h3>Próximas promesas</h3>
+      </header>
+      <div class="ag-fila" *ngFor="let p of agenda.promesasProximas">
+        <div class="ag-fila__main">
+          <a class="ag-cliente" (click)="verFicha(p.terceroId)">{{ p.terceroNombre }}</a>
+          <span class="ag-sub">
+            Para el {{ p.fechaPromesaPago | date: 'dd/MM/yyyy' }} · en {{ -p.dias }} {{ p.dias === -1 ? 'día' : 'días' }}
+            <ng-container *ngIf="p.numeroCuenta"> · {{ p.numeroCuenta }}</ng-container>
+          </span>
+        </div>
+        <div class="ag-fila__valor">
+          <strong>{{ formatCOP(p.montoPrometido) }}</strong>
+          <span class="ag-sub" *ngIf="p.montoPagado > 0">lleva {{ formatCOP(p.montoPagado) }}</span>
+        </div>
+        <div class="ag-fila__acc">
+          <button type="button" class="ag-btn" (click)="verFicha(p.terceroId)">Ver ficha</button>
+        </div>
+      </div>
+    </section>
+
+    <div
+      class="ag-vacio"
+      *ngIf="!agenda.promesasIncumplidas.length && !agenda.promesasHoy.length && !agenda.vencidosSinGestion.length && !agenda.porVencer.length && !agenda.promesasProximas.length"
+    >
+      <i class="pi pi-check-circle"></i>
+      <strong>Todo al día</strong>
+      <span>No hay promesas pendientes, clientes vencidos sin gestión ni facturas por vencer en {{ dias }} días.</span>
+    </div>
+  </ng-container>
+
+  <ng-template #skAgenda>
+    <div class="ag-stats">
+      <div class="ag-stat" *ngFor="let i of [1, 2, 3, 4, 5]">
+        <p-skeleton width="70%" height="0.8rem" />
+        <p-skeleton width="40%" height="1.5rem" styleClass="mt-2" />
+      </div>
+    </div>
+  </ng-template>
+</div>

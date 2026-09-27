@@ -1,6 +1,7 @@
 import {
   Component,
   OnInit,
+  OnDestroy,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
 } from '@angular/core';
@@ -12,15 +13,28 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { DividerModule } from 'primeng/divider';
+import { ChartModule } from 'primeng/chart';
+import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 import { Workbook } from 'exceljs';
 import { saveAs } from 'file-saver';
 
 import { CierreContableService } from '../../../core/services/cierre-contable.service';
-import { CierreContableDto } from '../../../core/models/cierre-contable.model';
+import {
+  CierreContableDto,
+  GraficasCierreDto,
+  ParteCierreModel,
+} from '../../../core/models/cierre-contable.model';
 
 import { aFechaLocal } from '../../../shared/utils/fecha.util';
+// Paletas validadas con el script de dataviz (bandas de luminosidad, piso de
+// croma, separación para daltonismo y contraste contra la superficie del tema).
+const CATEGORICAS_CLARO = ['#2563eb', '#0d9488', '#f59e0b', '#db2777', '#7c3aed', '#65a30d'];
+const CATEGORICAS_OSCURO = ['#3b82f6', '#0d9488', '#d97706', '#ec4899', '#8b5cf6', '#65a30d'];
+const FUENTE = "'Outfit', sans-serif";
+const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
 @Component({
   selector: 'app-cierre-contable',
   standalone: true,
@@ -34,14 +48,30 @@ import { aFechaLocal } from '../../../shared/utils/fecha.util';
     TagModule,
     ToastModule,
     DividerModule,
+    ChartModule,
+    TooltipModule,
   ],
   providers: [MessageService],
   templateUrl: './cierre-contable.component.html',
   styleUrls: ['./cierre-contable.component.scss'],
 })
-export class CierreContableComponent implements OnInit {
+export class CierreContableComponent implements OnInit, OnDestroy {
   data: CierreContableDto | null = null;
+  graficas: GraficasCierreDto | null = null;
   loading = false;
+
+  // ── Gráficas ──────────────────────────────────────────────────────
+  chartEvolucion: any = null;
+  opcionesEvolucion: any = {};
+  chartCascada: any = null;
+  opcionesCascada: any = {};
+  chartMedios: any = null;
+  opcionesMedios: any = {};
+  chartGastos: any = null;
+  opcionesGastos: any = {};
+  leyendaMedios: { etiqueta: string; valor: number; pct: number; color: string }[] = [];
+
+  private observadorTema?: MutationObserver;
 
   fechaDesde: Date = new Date(
     new Date().getFullYear(),
@@ -57,25 +87,298 @@ export class CierreContableComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargar();
+    // El tema se cambia sin recargar la página: las gráficas se repintan con la
+    // paleta del tema nuevo (los colores de serie no son variables CSS).
+    this.observadorTema = new MutationObserver(() => {
+      if (this.graficas) this.construirGraficas();
+      this.cdr.markForCheck();
+    });
+    this.observadorTema.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.observadorTema?.disconnect();
   }
 
   async cargar(): Promise<void> {
     this.loading = true;
     this.cdr.markForCheck();
     try {
-      const res = await lastValueFrom(
-        this.service.obtener(
-          this.fmt(this.fechaDesde),
-          this.fmt(this.fechaHasta),
+      const [res, graf] = await Promise.all([
+        lastValueFrom(
+          this.service.obtener(this.fmt(this.fechaDesde), this.fmt(this.fechaHasta)),
         ),
-      );
+        lastValueFrom(
+          this.service.graficas(this.fmt(this.fechaDesde), this.fmt(this.fechaHasta)),
+        ).catch(() => null),
+      ]);
       this.data = res?.data ?? null;
+      this.graficas = graf?.data ?? null;
+      this.construirGraficas();
     } catch {
       this.data = null;
+      this.graficas = null;
     } finally {
       this.loading = false;
       this.cdr.markForCheck();
     }
+  }
+
+  private get temaOscuro(): boolean {
+    return document.documentElement.classList.contains('dark-mode');
+  }
+
+  private get paleta(): string[] {
+    return this.temaOscuro ? CATEGORICAS_OSCURO : CATEGORICAS_CLARO;
+  }
+
+  /** Verde y rojo de estado: reservados para "quedó" y "se fue". */
+  private get colorOk(): string {
+    return this.temaOscuro ? '#34d399' : '#059669';
+  }
+
+  private get colorMal(): string {
+    return this.temaOscuro ? '#f87171' : '#dc2626';
+  }
+
+  private get tinta(): string {
+    return this.temaOscuro ? '#94a3b8' : '#64748b';
+  }
+
+  private get rejilla(): string {
+    return this.temaOscuro ? 'rgba(148,163,184,0.16)' : 'rgba(100,116,139,0.14)';
+  }
+
+  /** Eje de dinero en miles/millones: "$ 1,2 M" se lee, "1200000" no. */
+  private corto(v: number): string {
+    const abs = Math.abs(v);
+    if (abs >= 1_000_000) return '$' + (v / 1_000_000).toFixed(abs >= 10_000_000 ? 0 : 1) + ' M';
+    if (abs >= 1_000) return '$' + (v / 1_000).toFixed(0) + ' k';
+    return '$' + v.toFixed(0);
+  }
+
+  etiquetaPunto(iso: string): string {
+    const partes = iso.split('-');
+    if (partes.length === 2) return `${MESES_CORTOS[Number(partes[1]) - 1]} ${partes[0].slice(2)}`;
+    return `${partes[2]}/${partes[1]}`;
+  }
+
+  private construirGraficas(): void {
+    const g = this.graficas;
+    const d = this.data;
+    if (!g || !d) {
+      this.chartEvolucion = this.chartCascada = this.chartMedios = this.chartGastos = null;
+      return;
+    }
+    const tooltipDinero = {
+      backgroundColor: this.temaOscuro ? '#111827' : '#0f172a',
+      titleFont: { family: FUENTE, size: 12 },
+      bodyFont: { family: FUENTE, size: 12 },
+      padding: 10,
+      displayColors: true,
+      callbacks: {
+        label: (ctx: any) => {
+          const valor = Array.isArray(ctx.raw) ? ctx.raw[1] - ctx.raw[0] : ctx.raw;
+          return ` ${ctx.dataset.label ?? ctx.label}: ${this.formatCOP(valor)}`;
+        },
+      },
+    };
+    const ejeDinero = {
+      ticks: { color: this.tinta, font: { family: FUENTE, size: 11 },
+               callback: (v: any) => this.corto(Number(v)) },
+      grid: { color: this.rejilla, drawBorder: false },
+      border: { display: false },
+    };
+    const ejeTexto = {
+      ticks: { color: this.tinta, font: { family: FUENTE, size: 11 } },
+      grid: { display: false },
+      border: { display: false },
+    };
+
+    // ── Qué pasó día a día: la barra completa es la venta; abajo lo que costó,
+    //    arriba lo que quedó de margen.
+    const hayVentas = g.serie.some((p) => p.ventas > 0);
+    this.chartEvolucion = hayVentas
+      ? {
+          labels: g.serie.map((p) => this.etiquetaPunto(p.etiqueta)),
+          datasets: [
+            {
+              label: 'Costo de lo vendido',
+              data: g.serie.map((p) => p.costo),
+              backgroundColor: this.paleta[0],
+              borderRadius: 4,
+              maxBarThickness: 34,
+            },
+            {
+              label: 'Margen bruto',
+              data: g.serie.map((p) => Math.max(p.utilidadBruta, 0)),
+              backgroundColor: this.colorOk,
+              borderRadius: 4,
+              maxBarThickness: 34,
+            },
+          ],
+        }
+      : null;
+    this.opcionesEvolucion = {
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          position: 'top',
+          align: 'end',
+          labels: { color: this.tinta, font: { family: FUENTE, size: 12 },
+                    usePointStyle: true, pointStyle: 'circle', boxWidth: 8 },
+        },
+        tooltip: tooltipDinero,
+      },
+      scales: {
+        x: { ...ejeTexto, stacked: true },
+        y: { ...ejeDinero, stacked: true, beginAtZero: true },
+      },
+    };
+
+    // ── En qué se convirtió la venta: cascada de ventas a utilidad neta.
+    const pasos: { etiqueta: string; delta: number }[] = [
+      { etiqueta: 'Ventas', delta: d.totalVentasSinIva ?? 0 },
+      { etiqueta: 'Costo', delta: -(d.costoVentas ?? 0) },
+      { etiqueta: 'Mermas', delta: -(d.totalMermas ?? 0) },
+      { etiqueta: 'Comisiones', delta: -(d.totalComisionesTecnicos ?? 0) },
+      { etiqueta: 'Gastos ded.', delta: -(d.totalGastosDeducibles ?? 0) },
+      { etiqueta: 'Gastos no ded.', delta: -(d.totalGastosNoDeducibles ?? 0) },
+    ].filter((x, i) => i === 0 || x.delta !== 0);
+    let acumulado = 0;
+    const barras = pasos.map((paso) => {
+      const desde = acumulado;
+      acumulado += paso.delta;
+      return { etiqueta: paso.etiqueta, rango: [Math.min(desde, acumulado), Math.max(desde, acumulado)], baja: paso.delta < 0 };
+    });
+    const neta = d.utilidadNeta ?? 0;
+    this.chartCascada = pasos.length
+      ? {
+          labels: [...barras.map((b) => b.etiqueta), 'Utilidad neta'],
+          datasets: [
+            {
+              label: 'Valor',
+              data: [...barras.map((b) => b.rango), [Math.min(0, neta), Math.max(0, neta)]],
+              backgroundColor: [
+                ...barras.map((b) => (b.baja ? this.colorMal : this.paleta[0])),
+                neta >= 0 ? this.colorOk : this.colorMal,
+              ],
+              borderRadius: 4,
+              maxBarThickness: 30,
+            },
+          ],
+        }
+      : null;
+    this.opcionesCascada = {
+      indexAxis: 'y',
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          ...tooltipDinero,
+          callbacks: {
+            label: (ctx: any) => ` ${this.formatCOP(Math.abs(ctx.raw[1] - ctx.raw[0]))}`,
+          },
+        },
+      },
+      scales: { x: { ...ejeDinero, beginAtZero: true }, y: ejeTexto },
+    };
+
+    // ── Con qué pagaron: dona con leyenda propia (los valores van al lado).
+    const medios = this.agrupar(g.mediosPago, 5);
+    const totalMedios = medios.reduce((acc, m) => acc + m.valor, 0);
+    this.chartMedios = medios.length
+      ? {
+          labels: medios.map((m) => this.titulo(m.etiqueta)),
+          datasets: [
+            {
+              data: medios.map((m) => m.valor),
+              backgroundColor: medios.map((_, i) => this.paleta[i % this.paleta.length]),
+              borderWidth: 2,
+              borderColor: this.temaOscuro ? '#1a1d2e' : '#ffffff',
+            },
+          ],
+        }
+      : null;
+    this.leyendaMedios = medios.map((m, i) => ({
+      etiqueta: this.titulo(m.etiqueta),
+      valor: m.valor,
+      pct: totalMedios > 0 ? (m.valor / totalMedios) * 100 : 0,
+      color: this.paleta[i % this.paleta.length],
+    }));
+    this.opcionesMedios = {
+      maintainAspectRatio: false,
+      cutout: '62%',
+      plugins: { legend: { display: false }, tooltip: tooltipDinero },
+    };
+
+    // ── En qué se fue el gasto: magnitud, un solo color.
+    const gastos = this.agrupar(g.gastosCategoria, 6);
+    this.chartGastos = gastos.length
+      ? {
+          labels: gastos.map((x) => this.titulo(x.etiqueta)),
+          datasets: [
+            {
+              label: 'Gasto',
+              data: gastos.map((x) => x.valor),
+              backgroundColor: this.paleta[0],
+              borderRadius: 4,
+              maxBarThickness: 26,
+            },
+          ],
+        }
+      : null;
+    this.opcionesGastos = {
+      indexAxis: 'y',
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: tooltipDinero },
+      scales: { x: { ...ejeDinero, beginAtZero: true }, y: ejeTexto },
+    };
+  }
+
+  /** Deja los primeros n y junta la cola en "Otros": nunca se inventa un color más. */
+  private agrupar(partes: ParteCierreModel[], n: number): ParteCierreModel[] {
+    const limpias = (partes ?? []).filter((p) => p.valor > 0);
+    if (limpias.length <= n) return limpias;
+    const cabeza = limpias.slice(0, n);
+    const cola = limpias.slice(n);
+    return [
+      ...cabeza,
+      {
+        etiqueta: 'Otros',
+        valor: cola.reduce((acc, x) => acc + x.valor, 0),
+        cantidad: cola.reduce((acc, x) => acc + (x.cantidad ?? 0), 0),
+      },
+    ];
+  }
+
+  /** EFECTIVO → Efectivo; SERVICIOS_PUBLICOS → Servicios publicos. */
+  private titulo(v: string): string {
+    const limpio = (v ?? '').replace(/_/g, ' ').toLowerCase();
+    return limpio.charAt(0).toUpperCase() + limpio.slice(1);
+  }
+
+  /** El día (o mes) que más margen dejó, para contarlo debajo de la gráfica. */
+  get mejorPunto(): { etiqueta: string; utilidadBruta: number } | null {
+    const serie = this.graficas?.serie ?? [];
+    if (!serie.length) return null;
+    const mejor = serie.reduce((a, b) => (b.utilidadBruta > a.utilidadBruta ? b : a));
+    return mejor.ventas > 0
+      ? { etiqueta: this.etiquetaPunto(mejor.etiqueta), utilidadBruta: mejor.utilidadBruta }
+      : null;
+  }
+
+  get diasConVenta(): number {
+    return (this.graficas?.serie ?? []).filter((p) => p.ventas > 0).length;
+  }
+
+  get ticketPromedio(): number {
+    const ventas = this.data?.cantidadVentas ?? 0;
+    return ventas > 0 ? (this.data?.totalVentasSinIva ?? 0) / ventas : 0;
   }
 
   private fmt(d: Date): string {

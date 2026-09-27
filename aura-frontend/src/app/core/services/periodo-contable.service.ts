@@ -44,6 +44,16 @@ export class PeriodoContableService {
     );
   }
 
+  reabrir(
+    id: number,
+    dto: CerrarPeriodoDto,
+  ): Observable<ResponseModel<PeriodoContableModel>> {
+    return this.http.put<ResponseModel<PeriodoContableModel>>(
+      `${this.baseUrl}/${id}/reabrir`,
+      dto,
+    );
+  }
+
   balanceComprobacion(
     periodoId: number,
   ): Observable<ResponseModel<BalanceComprobacionModel>> {

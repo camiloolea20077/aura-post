@@ -26,15 +26,14 @@ import {
   EmpresaConfig,
   EmpresaService,
 } from '../../../../core/services/empresa.service';
-import { CuentaBancariaService } from '../../../../core/services/cuenta-bancaria.service';
-import { CuentaBancariaModel } from '../../../../core/models/cuenta-bancaria.model';
 import {
   EstadoNomina,
-  MedioPagoNomina,
+  PagoNominaDto,
   PeriodoResumenModel,
 } from '../../../../core/models/nomina.model';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 import { NominaElectronicaComponent } from '../electronica/nomina-electronica.component';
+import { PagoNominaDialogComponent } from '../pago/pago-nomina-dialog.component';
 
 type TagSeverity =
   | 'success'
@@ -61,6 +60,7 @@ type TagSeverity =
     TooltipModule,
     ConfirmDialogModule,
     NominaElectronicaComponent,
+    PagoNominaDialogComponent,
   ],
   providers: [ConfirmationService],
   templateUrl: './documento-periodo.component.html',
@@ -88,19 +88,11 @@ export class DocumentoPeriodoComponent implements OnChanges {
   // Pago del período
   public showPago = false;
   public pagando = false;
-  public medioPago: MedioPagoNomina = 'TRANSFERENCIA';
-  public cuentaBancariaId: number | null = null;
-  public cuentas: CuentaBancariaModel[] = [];
-  public mediosPago = [
-    { label: 'Transferencia', value: 'TRANSFERENCIA' },
-    { label: 'Efectivo', value: 'EFECTIVO' },
-  ];
 
   constructor(
     private readonly nominaService: NominaService,
     private readonly nominaPdf: NominaPdfService,
     private readonly empresaService: EmpresaService,
-    private readonly cuentaBancariaService: CuentaBancariaService,
     private readonly alertService: AlertService,
     private readonly confirmationService: ConfirmationService,
   ) {}
@@ -230,45 +222,16 @@ export class DocumentoPeriodoComponent implements OnChanges {
     return !!this.data?.empleados.some((e) => e.estado === 'APROBADO');
   }
 
-  get cuentasOpts() {
-    return this.cuentas.map((c) => ({
-      label: `${c.nombre}${c.banco ? ' · ' + c.banco : ''}${c.numeroCuenta ? ' · ' + c.numeroCuenta : ''}`,
-      value: c.id,
-    }));
-  }
-
-  async abrirPago(): Promise<void> {
-    this.medioPago = 'TRANSFERENCIA';
-    this.cuentaBancariaId = null;
+  abrirPago(): void {
     this.showPago = true;
-    if (this.cuentas.length === 0) {
-      try {
-        const res = await lastValueFrom(this.cuentaBancariaService.list());
-        this.cuentas = (res?.data ?? []).filter((c) => c.activa);
-      } catch {
-        this.cuentas = [];
-      }
-    }
   }
 
-  async confirmarPago(): Promise<void> {
+  /** El diálogo compartido ya validó de dónde sale la plata. */
+  async confirmarPago(dto: PagoNominaDto): Promise<void> {
     if (this.periodoId == null) return;
-    if (this.medioPago === 'TRANSFERENCIA' && this.cuentaBancariaId == null) {
-      this.alertService.showWarn(
-        'Requerido',
-        'Selecciona la cuenta bancaria de origen',
-      );
-      return;
-    }
     this.pagando = true;
     try {
-      await lastValueFrom(
-        this.nominaService.pagarPeriodo(this.periodoId, {
-          medioPago: this.medioPago,
-          cuentaBancariaId:
-            this.medioPago === 'TRANSFERENCIA' ? this.cuentaBancariaId : null,
-        }),
-      );
+      await lastValueFrom(this.nominaService.pagarPeriodo(this.periodoId, dto));
       this.alertService.showSuccess(
         'Pagado',
         'Nóminas aprobadas del período pagadas',

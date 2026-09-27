@@ -146,13 +146,13 @@
     <div class="form-row-2">
       <div class="form-field">
         <label>Proveedor *</label>
-        <p-dropdown
-          [options]="proveedores"
+        <!-- En el diálogo el panel va al body: si no, el diálogo lo recorta. -->
+        <app-tercero-autocomplete
           [(ngModel)]="formOC.proveedorId"
-          placeholder="Seleccionar proveedor"
-          [filter]="true"
-          filterPlaceholder="Buscar..."
-          [style]="{ width: '100%' }"
+          [label]="proveedorLabel"
+          rol="PROVEEDOR"
+          placeholder="Escriba nombre o NIT del proveedor…"
+          appendTo="body"
         />
       </div>
       <div class="form-field">

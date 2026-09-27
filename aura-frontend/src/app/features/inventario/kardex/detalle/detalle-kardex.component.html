@@ -41,9 +41,9 @@
         <span class="delta-unidad">unidades</span>
       </div>
       <div class="delta-saldos">
-        <span>{{ movimiento.saldoAnterior }}</span>
+        <span>{{ movimiento.saldoAnterior | number: "1.0-4" }}</span>
         <i class="pi pi-arrow-right"></i>
-        <span class="saldo-nuevo">{{ movimiento.saldoNuevo }}</span>
+        <span class="saldo-nuevo">{{ movimiento.saldoNuevo | number: "1.0-4" }}</span>
       </div>
     </div>
 
@@ -71,7 +71,7 @@
 
       <div class="info-item">
         <span class="info-label">Cantidad movida</span>
-        <span class="info-value mono fw-700">{{ movimiento.cantidad }}</span>
+        <span class="info-value mono fw-700">{{ movimiento.cantidad | number: "1.0-4" }}</span>
       </div>
 
       <div class="info-item">
@@ -83,12 +83,12 @@
 
       <div class="info-item">
         <span class="info-label">Saldo anterior</span>
-        <span class="info-value mono">{{ movimiento.saldoAnterior }}</span>
+        <span class="info-value mono">{{ movimiento.saldoAnterior | number: "1.0-4" }}</span>
       </div>
 
       <div class="info-item">
         <span class="info-label">Saldo nuevo</span>
-        <span class="info-value mono fw-700">{{ movimiento.saldoNuevo }}</span>
+        <span class="info-value mono fw-700">{{ movimiento.saldoNuevo | number: "1.0-4" }}</span>
       </div>
 
       <div class="info-item span-full">

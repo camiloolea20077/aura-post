@@ -159,6 +159,11 @@ export type MedioPagoNomina = 'EFECTIVO' | 'TRANSFERENCIA';
 export interface PagoNominaDto {
   medioPago: MedioPagoNomina;
   cuentaBancariaId?: number | null;
+  /** Caja menor u otro fondo: manda sobre la caja y no toca ningún arqueo. */
+  cuentaContableId?: number | null;
+  /** Caja abierta de la que sale el efectivo. */
+  turnoCajaId?: number | null;
+  sucursalId?: number | null;
 }
 
 // ─── Novedades ────────────────────────────────────────────────

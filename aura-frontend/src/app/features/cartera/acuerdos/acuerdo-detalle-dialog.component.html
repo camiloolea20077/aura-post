@@ -1,0 +1,164 @@
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="$event ? null : cerrar()"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '820px', maxWidth: '96vw' }"
+  [contentStyle]="{ padding: 0 }"
+  styleClass="aura-dialog"
+  [header]="acuerdo ? 'Acuerdo ' + acuerdo.numero : 'Acuerdo de pago'"
+>
+  <div class="ad" *ngIf="acuerdo && !cargando; else cargandoTpl">
+    <!-- Cabecera -->
+    <div class="ad-head">
+      <div class="ad-head__cliente">
+        <span class="ad-label">Cliente</span>
+        <strong>{{ acuerdo.terceroNombre }}</strong>
+        <span class="ad-sub">
+          {{ acuerdo.terceroDocumento }}
+          · creado {{ acuerdo.createdAt | date: 'dd/MM/yyyy' }}
+          <ng-container *ngIf="acuerdo.usuarioNombre"> por {{ acuerdo.usuarioNombre }}</ng-container>
+        </span>
+      </div>
+      <span class="ad-chip" [ngClass]="'ad-chip--' + estadoAcuerdo(acuerdo).clase">
+        {{ estadoAcuerdo(acuerdo).label }}
+      </span>
+    </div>
+
+    <div class="ad-aviso ad-aviso--danger" *ngIf="acuerdo.estado === 'INCUMPLIDO'">
+      <i class="pi pi-exclamation-triangle"></i>
+      Tiene cuotas vencidas hace {{ acuerdo.diasMora }} días. Si paga lo atrasado vuelve a quedar vigente.
+    </div>
+    <div class="ad-aviso ad-aviso--muted" *ngIf="acuerdo.estado === 'ANULADO'">
+      <i class="pi pi-ban"></i>
+      Anulado el {{ acuerdo.anuladoAt | date: 'dd/MM/yyyy' }}: {{ acuerdo.motivoAnulacion }}
+    </div>
+    <div class="ad-aviso ad-aviso--ok" *ngIf="acuerdo.estado === 'CUMPLIDO'">
+      <i class="pi pi-check-circle"></i>
+      Pagado completo el {{ acuerdo.cumplidoAt | date: 'dd/MM/yyyy' }}.
+    </div>
+
+    <!-- Cifras -->
+    <div class="ad-stats">
+      <div class="ad-stat">
+        <span class="ad-label">Acordado</span>
+        <strong class="mono">{{ formatCOP(acuerdo.valorTotal) }}</strong>
+        <span class="ad-sub">{{ acuerdo.numeroCuotas }} cuotas · {{ acuerdo.diasGracia }} días de gracia</span>
+      </div>
+      <div class="ad-stat">
+        <span class="ad-label">Pagado</span>
+        <strong class="mono">{{ formatCOP(acuerdo.valorPagado) }}</strong>
+        <div class="ad-barra"><div class="ad-barra__uso" [style.width.%]="avancePct"></div></div>
+        <span class="ad-sub">{{ acuerdo.cuotasPagadas }} de {{ acuerdo.numeroCuotas }} cuotas · {{ avancePct }}%</span>
+      </div>
+      <div class="ad-stat" *ngIf="vivo">
+        <span class="ad-label">Próxima cuota</span>
+        <strong class="mono">{{ formatCOP(acuerdo.proximaCuotaSaldo) }}</strong>
+        <span class="ad-sub">{{ acuerdo.proximaCuotaFecha | date: 'dd/MM/yyyy' }}</span>
+      </div>
+      <div class="ad-stat" *ngIf="!vivo">
+        <span class="ad-label">Saldo</span>
+        <strong class="mono">{{ formatCOP(acuerdo.saldo) }}</strong>
+      </div>
+    </div>
+
+    <!-- Cuotas -->
+    <div class="ad-seccion">
+      <h4>Cuotas</h4>
+      <div class="ad-tabla-wrap">
+        <table class="ad-tabla">
+          <thead>
+            <tr>
+              <th class="n">#</th>
+              <th>Fecha límite</th>
+              <th class="num">Valor</th>
+              <th class="num">Pagado</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let q of acuerdo.cuotas">
+              <td class="n">{{ q.numero }}</td>
+              <td>
+                {{ q.fechaVencimiento | date: 'dd/MM/yyyy' }}
+                <span class="ad-sub" *ngIf="vivo && etiquetaCuota(q)"> · {{ etiquetaCuota(q) }}</span>
+              </td>
+              <td class="num mono">{{ formatCOP(q.valor) }}</td>
+              <td class="num mono">{{ q.valorPagado > 0 ? formatCOP(q.valorPagado) : '—' }}</td>
+              <td>
+                <span class="ad-chip" [ngClass]="'ad-chip--' + estadoCuota(q).clase">{{ estadoCuota(q).label }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Facturas -->
+    <div class="ad-seccion">
+      <h4>Facturas incluidas</h4>
+      <div class="ad-tabla-wrap">
+        <table class="ad-tabla">
+          <thead>
+            <tr>
+              <th>Cuenta</th>
+              <th>Vencía</th>
+              <th class="num">Saldo al acordar</th>
+              <th class="num">Saldo hoy</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of acuerdo.cuentas">
+              <td>
+                <strong>{{ c.numeroCuenta }}</strong>
+                <span class="ad-sub" *ngIf="c.numeroVenta"> · Venta {{ c.numeroVenta }}</span>
+              </td>
+              <td>{{ c.fechaVencimientoOriginal ? (c.fechaVencimientoOriginal | date: 'dd/MM/yyyy') : '—' }}</td>
+              <td class="num mono">{{ formatCOP(c.saldoInicial) }}</td>
+              <td class="num mono">{{ formatCOP(c.saldoActual) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="ad-sub ad-nota" *ngIf="vivo">
+        Los pagos se registran a las facturas (Registrar pago) y se aplican a las cuotas en orden.
+      </p>
+    </div>
+
+    <p class="ad-obs" *ngIf="acuerdo.observaciones"><strong>Observaciones:</strong> {{ acuerdo.observaciones }}</p>
+
+    <!-- Anular -->
+    <div class="ad-anular" *ngIf="pidiendoMotivo">
+      <label>¿Por qué se anula? <span class="req">*</span></label>
+      <textarea pTextarea [(ngModel)]="motivo" rows="2" maxlength="300"
+        placeholder="El cliente renegoció, se registró por error…"></textarea>
+      <span class="ad-sub">Las facturas con saldo vuelven a su vencimiento original. Los pagos no se tocan.</span>
+    </div>
+  </div>
+
+  <ng-template #cargandoTpl>
+    <div class="ad">
+      <p-skeleton height="3rem" />
+      <p-skeleton height="5rem" />
+      <p-skeleton height="10rem" />
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <ng-container *ngIf="acuerdo">
+      <ng-container *ngIf="pidiendoMotivo; else accionesTpl">
+        <button pButton type="button" label="Volver" class="p-button-text" (click)="pidiendoMotivo = false"></button>
+        <button pButton type="button" label="Anular acuerdo" icon="pi pi-ban" class="p-button-danger"
+          [loading]="anulando" [disabled]="!motivo.trim()" (click)="anular()"></button>
+      </ng-container>
+      <ng-template #accionesTpl>
+        <button *ngIf="vivo" pButton type="button" label="Anular" icon="pi pi-ban"
+          class="p-button-text p-button-danger ad-izq" (click)="pidiendoMotivo = true"></button>
+        <button *ngIf="mostrarFicha" pButton type="button" label="Ver ficha" icon="pi pi-user"
+          class="p-button-outlined p-button-secondary" (click)="verFicha()"></button>
+        <button pButton type="button" label="Imprimir" icon="pi pi-print" (click)="imprimir()"></button>
+      </ng-template>
+    </ng-container>
+  </ng-template>
+</p-dialog>

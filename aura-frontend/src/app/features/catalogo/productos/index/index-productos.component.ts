@@ -11,13 +11,15 @@ import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
 import { DropdownModule } from 'primeng/dropdown';
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 
-import { FormProductosComponent } from '../form/form-productos.component';
 import {
   PageableDto,
   ProductoTableModel,
   TipoProducto,
+  UsoProducto,
+  USO_PRODUCTO_OPTIONS,
 } from '../../../../core/models/producto.model';
 import { ProductoService } from '../../../../core/services/producto.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
@@ -38,30 +40,27 @@ import { AlertService } from '../../../../shared/pipes/alert.service';
     TooltipModule,
     SkeletonModule,
     DropdownModule,
-    FormProductosComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './index-productos.component.html',
   styleUrls: ['./index-productos.component.scss'],
 })
 export class IndexProductosComponent implements OnInit {
-  // ─── Modal ───────────────────────────────────────────────
-  public showModal = false;
-  public selectedId: number | null = null;
-  public modalSlug = 'create';
-
   // ─── Tabla ───────────────────────────────────────────────
   public items: ProductoTableModel[] = [];
   public loadingTable = true;
   public totalRecords = 0;
   public rowSize = 10;
   public searchQuery = '';
+  public usoFiltro: UsoProducto | null = null;
+  public readonly usoOptions = USO_PRODUCTO_OPTIONS;
   public lastLazyEvent!: TableLazyLoadEvent;
 
   constructor(
     private readonly productoService: ProductoService,
     private readonly alertService: AlertService,
     private readonly confirmationService: ConfirmationService,
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {}
@@ -86,6 +85,7 @@ export class IndexProductosComponent implements OnInit {
       search: this.searchQuery || null,
       order_by: sortField ?? 'p.id',
       order: event.sortOrder === 1 ? 'ASC' : 'DESC',
+      params: this.usoFiltro ? { uso: this.usoFiltro } : null,
     };
 
     try {
@@ -115,27 +115,17 @@ export class IndexProductosComponent implements OnInit {
     this.onSearch();
   }
 
-  // ─── Modal ────────────────────────────────────────────────
+  onUsoChange(): void {
+    if (this.lastLazyEvent) this.loadTable({ ...this.lastLazyEvent, first: 0 });
+  }
+
+  // ─── Formulario (página plana) ────────────────────────────
   openCreate(): void {
-    this.selectedId = null;
-    this.modalSlug = 'create';
-    this.showModal = true;
+    this.router.navigate(['/catalogo/productos/nuevo']);
   }
 
   openEdit(item: ProductoTableModel): void {
-    this.selectedId = item.id;
-    this.modalSlug = 'edit';
-    this.showModal = true;
-  }
-
-  onModalClosed(): void {
-    this.showModal = false;
-    this.selectedId = null;
-  }
-
-  onItemSaved(): void {
-    this.showModal = false;
-    this.reloadTable();
+    this.router.navigate(['/catalogo/productos/editar', item.id]);
   }
 
   private reloadTable(): void {
@@ -190,5 +180,24 @@ export class IndexProductosComponent implements OnInit {
       SERVICIO: 'Servicio',
     };
     return map[tipo] ?? tipo;
+  }
+
+  getUsoSeverity(uso: UsoProducto): 'info' | 'success' | 'warn' | 'secondary' {
+    const map: Record<UsoProducto, 'info' | 'success' | 'warn' | 'secondary'> =
+      {
+        VENTA: 'success',
+        INSUMO: 'warn',
+        AMBOS: 'info',
+      };
+    return map[uso] ?? 'secondary';
+  }
+
+  getUsoLabel(uso: UsoProducto): string {
+    const map: Record<UsoProducto, string> = {
+      VENTA: 'Venta',
+      INSUMO: 'Insumo',
+      AMBOS: 'Venta e insumo',
+    };
+    return map[uso] ?? uso ?? 'Venta';
   }
 }

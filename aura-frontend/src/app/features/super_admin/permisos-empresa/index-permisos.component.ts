@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { AccordionModule } from 'primeng/accordion';
-import { InputSwitchModule } from 'primeng/inputswitch';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
@@ -30,7 +30,7 @@ import { AlertService } from '../../../shared/pipes/alert.service';
     ButtonModule,
     ToastModule,
     AccordionModule,
-    InputSwitchModule,
+    ToggleSwitchModule,
     CheckboxModule,
     SkeletonModule,
   ],

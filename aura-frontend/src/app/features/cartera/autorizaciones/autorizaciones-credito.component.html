@@ -1,0 +1,94 @@
+<div class="au">
+  <div class="au-head">
+    <div>
+      <h2>Autorizaciones de crédito</h2>
+      <p>Ventas que pasan el cupo del cliente y esperan que un administrador las apruebe</p>
+    </div>
+    <div class="au-filtro">
+      <button type="button" [class.activa]="soloPendientes" (click)="setFiltro(true)">Pendientes</button>
+      <button type="button" [class.activa]="!soloPendientes" (click)="setFiltro(false)">Todas</button>
+      <button type="button" class="au-icon" pTooltip="Actualizar" (click)="cargar()">
+        <i class="pi pi-refresh" [class.pi-spin]="cargando"></i>
+      </button>
+    </div>
+  </div>
+
+  <ng-container *ngIf="!cargando || solicitudes.length; else skAu">
+    <div class="au-vacio" *ngIf="!solicitudes.length">
+      <i class="pi pi-shield"></i>
+      <strong>{{ soloPendientes ? 'Nadie está esperando autorización' : 'Todavía no hay solicitudes' }}</strong>
+      <span>Cuando un cajero intente vender a crédito por encima del cupo, la solicitud aparece aquí y en la campana.</span>
+    </div>
+
+    <div class="au-fila" *ngFor="let s of solicitudes" [class.pendiente]="s.estado === 'PENDIENTE'">
+      <div class="au-fila__main">
+        <div class="au-titulo">
+          <a class="au-cliente" (click)="verFicha(s.terceroId)">{{ s.terceroNombre }}</a>
+          <span class="au-chip" [ngClass]="'au-chip--' + estado(s).clase">{{ estado(s).label }}</span>
+        </div>
+        <span class="au-sub">
+          Venta a crédito por <strong>{{ formatCOP(s.montoSolicitado) }}</strong>
+          · pasa el cupo por <strong class="rojo">{{ formatCOP(s.excedente) }}</strong>
+        </span>
+        <div class="au-datos">
+          <span>Cupo {{ formatCOP(s.cupoActual) }}</span>
+          <span>Debe {{ formatCOP(s.saldoActual) }}</span>
+          <span [class.rojo]="s.diasMora > 0">{{ s.diasMora > 0 ? s.diasMora + ' días de mora' : 'Al día' }}</span>
+          <span *ngIf="s.scoreCrediticio != null">Score {{ s.scoreCrediticio }}</span>
+        </div>
+        <span class="au-nota" *ngIf="s.observacion">“{{ s.observacion }}”</span>
+        <span class="au-sub">
+          Pidió {{ s.solicitadoPor || 'un usuario' }} {{ haceCuanto(s.createdAt) }}
+          <ng-container *ngIf="s.estado !== 'PENDIENTE' && s.aprobadoPor"> · respondió {{ s.aprobadoPor }}</ng-container>
+          <ng-container *ngIf="s.estado === 'APROBADA' && s.vigenteHasta"> · vale hasta {{ s.vigenteHasta | date: 'dd/MM hh:mm a' }}</ng-container>
+          <ng-container *ngIf="s.estado === 'USADA' && s.numeroVenta"> · venta {{ s.numeroVenta }}</ng-container>
+          <ng-container *ngIf="s.estado === 'RECHAZADA' && s.motivoRechazo"> · “{{ s.motivoRechazo }}”</ng-container>
+        </span>
+      </div>
+
+      <div class="au-fila__acc" *ngIf="s.estado === 'PENDIENTE'">
+        <div class="au-vigencia">
+          <span>Vale por</span>
+          <button type="button" *ngFor="let h of vigencias" [class.activa]="(vigencia[s.id] ?? 4) === h" (click)="vigencia[s.id] = h">{{ h }} h</button>
+        </div>
+        <div class="au-botones">
+          <button pButton type="button" label="Rechazar" class="p-button-outlined p-button-danger p-button-sm"
+            [disabled]="procesando === s.id" (click)="pedirRechazo(s)"></button>
+          <button pButton type="button" label="Aprobar" icon="pi pi-check" class="p-button-sm"
+            [loading]="procesando === s.id" (click)="aprobar(s)"></button>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-template #skAu>
+    <div class="au-fila" *ngFor="let i of [1, 2]">
+      <div class="au-fila__main">
+        <p-skeleton width="40%" height="1rem" />
+        <p-skeleton width="70%" height="0.8rem" styleClass="mt-2" />
+      </div>
+    </div>
+  </ng-template>
+</div>
+
+<p-dialog
+  [(visible)]="rechazoVisible"
+  header="Rechazar autorización"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '440px', maxWidth: '96vw' }"
+  styleClass="aura-dialog"
+>
+  <div class="au-form" *ngIf="rechazo">
+    <p class="au-sub">
+      {{ rechazo.terceroNombre }} · {{ formatCOP(rechazo.montoSolicitado) }}. El cajero verá el motivo en el POS.
+    </p>
+    <textarea pTextarea [(ngModel)]="motivo" rows="3" maxlength="300" placeholder="Ej: tiene facturas vencidas, que abone primero"></textarea>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="rechazoVisible = false"></button>
+    <button pButton type="button" label="Rechazar" class="p-button-danger" [disabled]="!motivo.trim()"
+      [loading]="procesando === rechazo?.id" (click)="rechazar()"></button>
+  </ng-template>
+</p-dialog>

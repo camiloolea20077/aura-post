@@ -15,6 +15,7 @@ import {
   FlujoCajaModel,
   LibroMayorLineaModel,
 } from '../models/contabilidad.model';
+import { CategoriaContableProductoModel } from '../models/producto.model';
 import { environment } from '../../../environments/environment';
 import { ResponseModel } from '../../shared/utils/responde.models';
 
@@ -28,6 +29,15 @@ export class ContabilidadService {
   listarPlan(): Observable<ResponseModel<PlanCuentaModel[]>> {
     return this.http.get<ResponseModel<PlanCuentaModel[]>>(
       `${this.api}/plan-cuentas`,
+    );
+  }
+
+  // ── Categorías contables de producto (E4) ────────────────────────
+  listarCategoriasProducto(): Observable<
+    ResponseModel<CategoriaContableProductoModel[]>
+  > {
+    return this.http.get<ResponseModel<CategoriaContableProductoModel[]>>(
+      `${this.api}/categorias-producto`,
     );
   }
 

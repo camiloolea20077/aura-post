@@ -3,40 +3,69 @@
     <div class="card">
       <!-- ── Header dentro de la card (oculto en modo embebido) ── -->
       @if (!embedded) {
-      <div class="card-head">
-        <div class="card-head__title">
-          <p-button
-            icon="pi pi-arrow-left"
-            [rounded]="true"
-            [text]="true"
-            (onClick)="cancelar()"
-          />
-          <span class="header-icon"><i class="pi pi-users"></i></span>
-          <div>
-            <h1 class="title">
-              {{ isEdit ? "Editar tercero" : "Nuevo tercero" }}
-            </h1>
-            <p class="subtitle">Clientes, proveedores, empleados y bancos</p>
+        <div class="card-head">
+          <div class="card-head__title">
+            <p-button
+              icon="pi pi-arrow-left"
+              [rounded]="true"
+              [text]="true"
+              (onClick)="cancelar()"
+              pTooltip="Volver a terceros"
+            />
+            <span class="header-icon"><i class="pi pi-users"></i></span>
+            <div>
+              <h1 class="title">
+                {{ isEdit ? "Editar tercero" : "Nuevo tercero" }}
+              </h1>
+              <p class="subtitle">Clientes, proveedores, empleados y bancos</p>
+            </div>
           </div>
         </div>
-      </div>
       }
 
       <div class="form-body">
         <!-- ── Clasificación ──────────────────────────────────── -->
         <h3 class="section">Clasificación</h3>
-        <div class="grid">
+        <div class="grid-3">
           <div class="field">
-            <label>Tipo de tercero</label>
+            <label for="roles">Tipo de tercero <span class="req">*</span></label>
             <p-multiSelect
+              inputId="roles"
               [options]="rolOpts"
               [(ngModel)]="roles"
               [ngModelOptions]="{ standalone: true }"
               (onChange)="onRolesChange()"
               optionLabel="label"
               optionValue="value"
-              placeholder="Cliente, Proveedor, Empleado, Banco, EPS…"
-              display="chip"
+              placeholder="Cliente, Proveedor, Empleado…"
+              [maxSelectedLabels]="2"
+              selectedItemsLabel="{0} tipos"
+              [showHeader]="false"
+              styleClass="w-full"
+            />
+          </div>
+
+          <div class="field">
+            <label for="tipoPersona">Tipo de persona</label>
+            <p-dropdown
+              inputId="tipoPersona"
+              formControlName="tipoPersona"
+              [options]="tipoPersonaOpts"
+              optionLabel="label"
+              optionValue="value"
+              (onChange)="onTipoPersonaChange()"
+              styleClass="w-full"
+            />
+          </div>
+
+          <div class="field">
+            <label for="tipoDocumento">Tipo de documento</label>
+            <p-dropdown
+              inputId="tipoDocumento"
+              formControlName="tipoDocumento"
+              [options]="tipoDocOpts"
+              optionLabel="label"
+              optionValue="value"
               styleClass="w-full"
             />
           </div>
@@ -44,8 +73,9 @@
           <!-- Código UGPP: solo si el tercero es EPS/AFP/CCF/ARL. Lo exige PILA. -->
           @if (esEntidadSeguridadSocial) {
             <div class="field">
-              <label>Código UGPP <span class="req">*</span></label>
+              <label for="ugpp">Código UGPP <span class="req">*</span></label>
               <input
+                id="ugpp"
                 pInputText
                 formControlName="codigoSeguridadSocial"
                 class="w-full"
@@ -53,58 +83,34 @@
               />
             </div>
           }
-
-          <div class="field">
-            <label>Tipo de persona</label>
-            <p-dropdown
-              formControlName="tipoPersona"
-              [options]="tipoPersonaOpts"
-              optionLabel="label"
-              optionValue="value"
-              (onChange)="onTipoPersonaChange()"
-              [disabled]="esBanco || esEntidadSeguridadSocial"
-              styleClass="w-full"
-            />
-          </div>
         </div>
 
         <!-- ── Identificación ─────────────────────────────────── -->
         <h3 class="section">Identificación</h3>
-        <div class="grid">
+        <div class="grid-3">
           <div class="field">
-            <label>Tipo de documento</label>
-            <p-dropdown
-              formControlName="tipoDocumento"
-              [options]="tipoDocOpts"
-              optionLabel="label"
-              optionValue="value"
-              [disabled]="esEntidadSeguridadSocial"
-              styleClass="w-full"
-            />
-          </div>
-          <div class="field">
-            <label>Número <span class="req">*</span></label>
+            <label for="numeroDocumento">Número <span class="req">*</span></label>
             <input
+              id="numeroDocumento"
               pInputText
               formControlName="numeroDocumento"
               class="w-full"
               placeholder="Ej: 900123456"
             />
+            @if (invalido("numeroDocumento")) {
+              <small class="field-error">El número de documento es obligatorio.</small>
+            }
           </div>
 
           @if (esJuridica) {
             <div class="field">
-              <label>Dígito verif. (DV)</label>
-              <input
-                pInputText
-                formControlName="dv"
-                class="w-full"
-                placeholder="DV"
-              />
+              <label for="dv">Dígito de verificación</label>
+              <input id="dv" pInputText formControlName="dv" class="w-full" placeholder="DV" maxlength="2" />
             </div>
             <div class="field">
-              <label>Razón social <span class="req">*</span></label>
+              <label for="razonSocial">Razón social <span class="req">*</span></label>
               <input
+                id="razonSocial"
                 pInputText
                 formControlName="razonSocial"
                 class="w-full"
@@ -112,8 +118,9 @@
               />
             </div>
             <div class="field">
-              <label>Nombre comercial</label>
+              <label for="nombreComercial">Nombre comercial</label>
               <input
+                id="nombreComercial"
                 pInputText
                 formControlName="nombreComercial"
                 class="w-full"
@@ -128,92 +135,79 @@
               heurística.
             -->
             <div class="field">
-              <label>Primer nombre <span class="req">*</span></label>
-              <input
-                pInputText
-                formControlName="nombre1"
-                class="w-full"
-                placeholder="Primer nombre"
-              />
+              <label for="nombre1">Primer nombre <span class="req">*</span></label>
+              <input id="nombre1" pInputText formControlName="nombre1" class="w-full" />
             </div>
             <div class="field">
-              <label>Segundo nombre</label>
-              <input
-                pInputText
-                formControlName="nombre2"
-                class="w-full"
-                placeholder="Segundo nombre"
-              />
+              <label for="nombre2">Segundo nombre</label>
+              <input id="nombre2" pInputText formControlName="nombre2" class="w-full" />
             </div>
             <div class="field">
-              <label>Primer apellido</label>
-              <input
-                pInputText
-                formControlName="apellido1"
-                class="w-full"
-                placeholder="Primer apellido"
-              />
+              <label for="apellido1">Primer apellido</label>
+              <input id="apellido1" pInputText formControlName="apellido1" class="w-full" />
             </div>
             <div class="field">
-              <label>Segundo apellido</label>
-              <input
-                pInputText
-                formControlName="apellido2"
-                class="w-full"
-                placeholder="Segundo apellido"
-              />
+              <label for="apellido2">Segundo apellido</label>
+              <input id="apellido2" pInputText formControlName="apellido2" class="w-full" />
+            </div>
+
+            @if (!esBanco) {
+              <div class="field">
+                <label for="fechaNacimiento">Fecha de nacimiento</label>
+                <p-calendar
+                  inputId="fechaNacimiento"
+                  formControlName="fechaNacimiento"
+                  dateFormat="yy-mm-dd"
+                  [showIcon]="true"
+                  [maxDate]="hoy"
+                  styleClass="w-full"
+                  placeholder="AAAA-MM-DD"
+                ></p-calendar>
+              </div>
+              <div class="field">
+                <label for="sexo">Sexo</label>
+                <p-dropdown
+                  inputId="sexo"
+                  formControlName="sexo"
+                  [options]="sexoOpts"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Seleccionar"
+                  styleClass="w-full"
+                  [showClear]="true"
+                ></p-dropdown>
+              </div>
+              <div class="field">
+                <label for="fechaExpedicion">Fecha de expedición</label>
+                <p-calendar
+                  inputId="fechaExpedicion"
+                  formControlName="fechaExpedicionDocumento"
+                  dateFormat="yy-mm-dd"
+                  [showIcon]="true"
+                  [maxDate]="hoy"
+                  styleClass="w-full"
+                  placeholder="AAAA-MM-DD"
+                ></p-calendar>
+              </div>
+            }
+          }
+
+          @if (!esBanco) {
+            <div class="field">
+              <label for="telefono">Teléfono</label>
+              <input id="telefono" pInputText formControlName="telefono" class="w-full" />
             </div>
           }
         </div>
 
-        <!-- ── Datos personales (solo natural) ─────────────────── -->
-        @if (!esJuridica && !esBanco) {
-          <h3 class="section">Datos personales</h3>
-          <div class="grid-3">
-            <div class="field">
-              <label>Fecha de nacimiento</label>
-              <p-calendar
-                formControlName="fechaNacimiento"
-                dateFormat="yy-mm-dd"
-                [showIcon]="true"
-                [maxDate]="hoy"
-                styleClass="w-full"
-                placeholder="AAAA-MM-DD"
-              ></p-calendar>
-            </div>
-            <div class="field">
-              <label>Sexo</label>
-              <p-dropdown
-                formControlName="sexo"
-                [options]="sexoOpts"
-                optionLabel="label"
-                optionValue="value"
-                placeholder="Seleccionar"
-                styleClass="w-full"
-                [showClear]="true"
-              ></p-dropdown>
-            </div>
-            <div class="field">
-              <label>Fecha expedición</label>
-              <p-calendar
-                formControlName="fechaExpedicionDocumento"
-                dateFormat="yy-mm-dd"
-                [showIcon]="true"
-                [maxDate]="hoy"
-                styleClass="w-full"
-                placeholder="AAAA-MM-DD"
-              ></p-calendar>
-            </div>
-          </div>
-        }
-
         <!-- ── Representante legal (jurídica, no entidad simple) ── -->
         @if (esJuridica && !esEntidadSimple) {
           <h3 class="section">Representante legal</h3>
-          <div class="grid-2">
-            <div class="field">
-              <label>Nombre completo</label>
+          <div class="grid-3">
+            <div class="field span-2">
+              <label for="repNombre">Nombre completo</label>
               <input
+                id="repNombre"
                 pInputText
                 formControlName="representanteLegalNombre"
                 class="w-full"
@@ -221,8 +215,9 @@
               />
             </div>
             <div class="field">
-              <label>Documento</label>
+              <label for="repDoc">Documento</label>
               <input
+                id="repDoc"
                 pInputText
                 formControlName="representanteLegalDocumento"
                 class="w-full"
@@ -235,62 +230,103 @@
         <!-- ── Contacto ───────────────────────────────────────── -->
         @if (!esBanco) {
           <h3 class="section">Contacto</h3>
-          <div class="grid">
+          <div class="grid-3">
             <div class="field">
-              <label>Teléfono</label>
-              <input pInputText formControlName="telefono" class="w-full" />
+              <label for="email">Correo</label>
+              <input id="email" pInputText formControlName="email" class="w-full" />
+              @if (invalido("email")) {
+                <small class="field-error">Correo no válido.</small>
+              }
             </div>
             <div class="field">
-              <label>Correo</label>
-              <input pInputText formControlName="email" class="w-full" />
+              <label for="direccion">Dirección</label>
+              <input id="direccion" pInputText formControlName="direccion" class="w-full" />
             </div>
             <div class="field">
-              <label>Dirección</label>
-              <input pInputText formControlName="direccion" class="w-full" />
-            </div>
-            <div class="field">
-              <label>País</label>
-              <input pInputText formControlName="pais" class="w-full" />
-            </div>
-            <div class="field full">
-              <label>Municipio</label>
+              <label for="pais">País</label>
               <p-dropdown
-                formControlName="municipioId"
-                [options]="municipioOpts"
+                inputId="pais"
+                formControlName="codigoPais"
+                [options]="paisOpts"
                 optionLabel="label"
                 optionValue="value"
-                placeholder="Buscar municipio..."
                 [filter]="true"
-                (onFilter)="onMunicipioFilter($event)"
-                [virtualScroll]="true"
-                [virtualScrollItemSize]="38"
-                [showClear]="true"
-                [loading]="municipioLoading"
-                filterPlaceholder="Escribe para buscar..."
-                emptyFilterMessage="Escribe para buscar municipios"
+                filterBy="label"
+                (onChange)="onPaisChange()"
                 styleClass="w-full"
               />
             </div>
+
+            @if (esColombia) {
+              <div class="field">
+                <label for="municipio">Municipio</label>
+                <p-dropdown
+                  inputId="municipio"
+                  formControlName="municipioId"
+                  [options]="municipioOpts"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Buscar municipio..."
+                  [filter]="true"
+                  (onFilter)="onMunicipioFilter($event)"
+                  [virtualScroll]="true"
+                  [virtualScrollItemSize]="38"
+                  [showClear]="true"
+                  [loading]="municipioLoading"
+                  filterPlaceholder="Escribe para buscar..."
+                  emptyFilterMessage="Escribe para buscar municipios"
+                  styleClass="w-full"
+                />
+              </div>
+            }
+
+            @if (!esEntidadSimple) {
+              <div class="field">
+                <label for="emailFe">Correo facturación</label>
+                <input
+                  id="emailFe"
+                  pInputText
+                  formControlName="emailFe"
+                  class="w-full"
+                  placeholder="Factura electrónica"
+                />
+                @if (invalido("emailFe")) {
+                  <small class="field-error">Correo no válido.</small>
+                }
+              </div>
+              <div class="field">
+                <label for="regimen">Régimen</label>
+                <p-dropdown
+                  inputId="regimen"
+                  formControlName="regimen"
+                  [options]="regimenOpts"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="w-full"
+                />
+              </div>
+            }
           </div>
         }
 
         <!-- ── Datos bancarios (empleado: ahí se le paga la nómina) ── -->
         @if (esEmpleado) {
           <h3 class="section">Datos bancarios</h3>
-          <div class="grid">
+          <div class="grid-3">
             <div class="field">
               <label>Banco</label>
-              <app-tercero-picker
-                [filtro]="'BANCO'"
-                [terceroId]="frm.get('bancoTerceroId')?.value"
-                [terceroNombre]="bancoNombre"
+              <app-tercero-autocomplete
+                formControlName="bancoTerceroId"
+                [label]="bancoNombre"
+                rol="BANCO"
                 placeholder="Buscar banco..."
                 (seleccionado)="onBancoSeleccionado($event)"
               />
             </div>
             <div class="field">
-              <label>Tipo de cuenta</label>
+              <label for="tipoCuenta">Tipo de cuenta</label>
               <p-dropdown
+                inputId="tipoCuenta"
                 formControlName="tipoCuenta"
                 [options]="tipoCuentaOpts"
                 optionLabel="label"
@@ -301,107 +337,91 @@
               />
             </div>
             <div class="field">
-              <label>Número de cuenta</label>
-              <input pInputText formControlName="numeroCuenta" class="w-full" placeholder="N° de cuenta" />
+              <label for="numeroCuenta">Número de cuenta</label>
+              <input
+                id="numeroCuenta"
+                pInputText
+                formControlName="numeroCuenta"
+                class="w-full"
+                placeholder="N° de cuenta"
+              />
             </div>
           </div>
         }
 
         <!-- ── Información fiscal (no aplica a banco/entidad SS) ── -->
         @if (!esEntidadSimple) {
-        <h3 class="section">Información fiscal</h3>
-        <div class="grid">
-          <div class="field">
-            <label>Correo facturación</label>
-            <input
-              pInputText
-              formControlName="emailFe"
-              class="w-full"
-              placeholder="Factura electrónica"
-            />
+          <h3 class="section">Información fiscal</h3>
+          <div class="grid-3">
+            <div class="field">
+              <label for="respFiscal">Responsabilidad fiscal</label>
+              <p-dropdown
+                inputId="respFiscal"
+                formControlName="responsabilidadFiscal"
+                [options]="respFiscalOpts"
+                optionLabel="label"
+                optionValue="value"
+                [showClear]="true"
+                placeholder="Opcional"
+                styleClass="w-full"
+              />
+            </div>
+            <div class="field">
+              <label for="ciiu">Código CIIU</label>
+              <input id="ciiu" pInputText formControlName="codigoCIIU" class="w-full" placeholder="Opcional" />
+            </div>
+            <div class="field">
+              <label for="actividad">Actividad económica</label>
+              <input
+                id="actividad"
+                pInputText
+                formControlName="actividadEconomica"
+                class="w-full"
+                placeholder="Opcional"
+              />
+            </div>
           </div>
-          <div class="field">
-            <label>Régimen</label>
-            <p-dropdown
-              formControlName="regimen"
-              [options]="regimenOpts"
-              optionLabel="label"
-              optionValue="value"
-              styleClass="w-full"
-            />
-          </div>
-          <div class="field">
-            <label>Responsabilidad fiscal</label>
-            <p-dropdown
-              formControlName="responsabilidadFiscal"
-              [options]="respFiscalOpts"
-              optionLabel="label"
-              optionValue="value"
-              [showClear]="true"
-              placeholder="Opcional"
-              styleClass="w-full"
-            />
-          </div>
-          <div class="field">
-            <label>Código CIIU</label>
-            <input
-              pInputText
-              formControlName="codigoCIIU"
-              class="w-full"
-              placeholder="Opcional"
-            />
-          </div>
-          <div class="field full">
-            <label>Actividad económica</label>
-            <input
-              pInputText
-              formControlName="actividadEconomica"
-              class="w-full"
-              placeholder="Opcional"
-            />
-          </div>
-          <div class="field switch">
-            <label>Gran contribuyente</label>
-            <p-toggleswitch formControlName="granContribuyente" />
-          </div>
-          <!--
-            `autoRetenedor` era uno solo, pero son autorretenciones DISTINTAS:
-            se puede ser autorretenedor de renta y no de ICA. Alimentan el
-            cálculo de retenciones sugeridas.
-          -->
-          <div class="field switch">
-            <label>Autorretenedor de renta</label>
-            <p-toggleswitch formControlName="esAutoretenedorFuente" />
-          </div>
-          <div class="field switch">
-            <label>Autorretenedor de ICA</label>
-            <p-toggleswitch formControlName="esAutoretenedorIca" />
-          </div>
-          <div class="field switch">
-            <label>Declarante de renta</label>
-            <p-toggleswitch formControlName="declarante" />
-          </div>
-        </div>
         }
 
-        <!-- Activo: siempre visible, también para banco/entidad SS. -->
-        <div class="grid">
-          <div class="field switch">
-            <label>Activo</label>
-            <p-toggleswitch formControlName="activo" />
-          </div>
+        <!-- ── Indicadores ─────────────────────────────────────── -->
+        <h3 class="section">Indicadores</h3>
+        <!--
+          Botones marcables en vez de switches. `autoRetenedor` era uno solo,
+          pero son autorretenciones DISTINTAS: se puede ser autorretenedor de
+          renta y no de ICA. Alimentan el cálculo de retenciones sugeridas.
+          Banco / entidad SS solo tiene "Activo".
+        -->
+        <div class="indicadores">
+          @for (ind of indicadores; track ind.control) {
+            <button
+              type="button"
+              class="indicador"
+              [class.indicador--activo]="frm.get(ind.control)?.value"
+              [attr.aria-pressed]="!!frm.get(ind.control)?.value"
+              (click)="alternar(ind.control)"
+            >
+              <i
+                class="pi"
+                [class.pi-check-circle]="frm.get(ind.control)?.value"
+                [class.pi-circle]="!frm.get(ind.control)?.value"
+              ></i>
+              <span>{{ ind.label }}</span>
+            </button>
+          }
         </div>
       </div>
       <!-- /form-body -->
 
-      <div class="card-footer">
+      <div class="card-footer tercero-footer">
+        @if (!embedded) {
+          <p-button
+            styleClass="btn-amarillo"
+            label="Cancelar"
+            (onClick)="cancelar()"
+          />
+        }
         <p-button
-          styleClass="btn-amarillo"
-          label="Cancelar"
-          (onClick)="cancelar()"
-        />
-        <p-button
-          [label]="isEdit ? 'Actualizar' : 'Crear tercero'"
+          [label]="isEdit ? 'Actualizar' : 'Guardar'"
           icon="pi pi-check"
           type="submit"
           styleClass="btn-verde"

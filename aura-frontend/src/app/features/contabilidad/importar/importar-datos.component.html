@@ -1,0 +1,118 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon">
+          <i class="pi pi-upload"></i>
+        </span>
+        <div>
+          <h1 class="title">Importar Datos</h1>
+          <p class="subtitle">
+            Migre una empresa desde otro software con Excel. Cargue los pasos en
+            orden: primero se valida y solo sin errores se importa.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <p-tabView>
+      <p-tabPanel *ngFor="let p of pasos" [header]="p.titulo">
+        <ng-container *ngIf="estado[p.paso] as est">
+          <p class="descripcion">{{ p.descripcion }}</p>
+
+          <!-- Opciones propias del paso -->
+          <div class="opciones" *ngIf="p.paso === 'saldos'">
+            <div class="campo">
+              <label>Fecha de apertura <span class="req">*</span></label>
+              <p-calendar [(ngModel)]="fechaApertura" dateFormat="dd/mm/yy" [showIcon]="true"
+                (ngModelChange)="invalidar('saldos')" />
+            </div>
+            <div class="campo">
+              <label>Cuenta de ajuste (opcional)</label>
+              <input pInputText [(ngModel)]="cuentaAjuste" placeholder="Por defecto 3705"
+                (ngModelChange)="invalidar('saldos')" />
+            </div>
+          </div>
+          <div class="opciones" *ngIf="p.paso === 'documentos'">
+            <div class="campo">
+              <label>¿Qué documentos carga?</label>
+              <div class="botones">
+                <button type="button" class="opcion" [class.opcion--activa]="tipoDocumentos === 'COBRAR'"
+                  (click)="tipoDocumentos = 'COBRAR'; invalidar('documentos')">
+                  Cartera de clientes
+                </button>
+                <button type="button" class="opcion" [class.opcion--activa]="tipoDocumentos === 'PAGAR'"
+                  (click)="tipoDocumentos = 'PAGAR'; invalidar('documentos')">
+                  Cuentas por pagar a proveedores
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="acciones">
+            <button pButton type="button" label="Descargar plantilla" icon="pi pi-download"
+              class="p-button-outlined" (click)="descargarPlantilla(p)"></button>
+            <label class="subir">
+              <i class="pi pi-file-excel"></i>
+              {{ est.archivo ? "Cambiar archivo" : "Elegir archivo .xlsx" }}
+              <input type="file" accept=".xlsx" (change)="onArchivo(p, $event)" hidden />
+            </label>
+            <span class="archivo" *ngIf="est.archivo">
+              {{ est.archivo }} · {{ est.filas.length }} fila(s)
+            </span>
+          </div>
+
+          <div class="faltan" *ngIf="est.columnasFaltantes.length">
+            <i class="pi pi-times-circle"></i>
+            Al archivo le faltan columnas obligatorias: {{ est.columnasFaltantes.join(", ") }}.
+            Use la plantilla.
+          </div>
+
+          <div class="acciones" *ngIf="est.archivo">
+            <button pButton type="button" label="Validar" icon="pi pi-check-square" class="btn-aura"
+              [disabled]="!puedeValidar(p)" [loading]="est.validando" (click)="validar(p)"></button>
+            <button pButton type="button" icon="pi pi-cloud-upload"
+              [label]="'Importar ' + (est.resultado?.nuevos ?? 0) + ' fila(s)'"
+              [disabled]="!puedeImportar(p)" [loading]="est.importando" (click)="importar(p)"></button>
+          </div>
+
+          <ng-container *ngIf="est.resultado as r">
+            <div class="resumen" [class.resumen--ok]="r.confirmado">
+              <span *ngIf="r.confirmado"><i class="pi pi-check-circle"></i> Importado</span>
+              <span>Nuevos <b>{{ r.nuevos }}</b></span>
+              <span>Ya existían <b>{{ r.existentes }}</b></span>
+              <span [class.rojo]="r.errores > 0">Errores <b>{{ r.errores }}</b></span>
+              <span *ngIf="r.totalDebito != null">Débitos <b>{{ formatCOP(r.totalDebito) }}</b></span>
+              <span *ngIf="r.totalCredito != null">Créditos <b>{{ formatCOP(r.totalCredito) }}</b></span>
+            </div>
+
+            <div class="avisos" *ngIf="r.avisos.length">
+              <div *ngFor="let a of r.avisos"><i class="pi pi-info-circle"></i> {{ a }}</div>
+            </div>
+
+            <div class="tabla-wrap">
+              <table class="tabla">
+                <thead>
+                  <tr>
+                    <th style="width: 4rem">Fila</th>
+                    <th style="width: 7rem">Estado</th>
+                    <th>Registro</th>
+                    <th>Detalle</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let f of r.filas" [class.fila-error]="f.estado === 'ERROR'">
+                    <td>{{ f.fila }}</td>
+                    <td><p-tag [value]="etiqueta(f.estado)" [severity]="severidad(f.estado)" /></td>
+                    <td>{{ f.detalle }}</td>
+                    <td>{{ f.mensaje }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </ng-container>
+        </ng-container>
+      </p-tabPanel>
+    </p-tabView>
+  </div>
+</div>

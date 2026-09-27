@@ -1,0 +1,14 @@
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.acciones {
+  white-space: nowrap;
+}

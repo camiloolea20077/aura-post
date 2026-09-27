@@ -201,7 +201,7 @@
 
           <td class="mono text-muted">{{ m.codigoLote || "—" }}</td>
 
-          <td class="mono text-center fw-700">{{ m.cantidad }}</td>
+          <td class="mono text-center fw-700">{{ m.cantidad | number: "1.0-4" }}</td>
 
           <td class="text-center">
             <span class="delta-chip" [ngClass]="getDeltaClass(m)">
@@ -209,9 +209,9 @@
             </span>
           </td>
 
-          <td class="mono text-right text-muted">{{ m.saldoAnterior }}</td>
+          <td class="mono text-right text-muted">{{ m.saldoAnterior | number: "1.0-4" }}</td>
 
-          <td class="mono text-right fw-700">{{ m.saldoNuevo }}</td>
+          <td class="mono text-right fw-700">{{ m.saldoNuevo | number: "1.0-4" }}</td>
 
           <td class="mono text-right">{{ formatCOP(m.costoHistorico) }}</td>
 

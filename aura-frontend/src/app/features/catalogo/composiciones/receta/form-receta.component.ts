@@ -28,6 +28,7 @@ import {
   TIPO_COMPOSICION_OPTIONS,
   TipoComposicion,
 } from '../../../../core/models/producto-composicion.model';
+import { UsoProducto } from '../../../../core/models/producto.model';
 import { ProductoComposicionService } from '../../../../core/services/producto-composicion.service';
 import { ProductoService } from '../../../../core/services/producto.service';
 import { ProductoPresentacionService } from '../../../../core/services/producto-presentacion.service';
@@ -204,8 +205,8 @@ export class FormRecetaComponent implements OnChanges {
 
   /**
    * Arma el selector de medida de una fila: la unidad base del componente más
-   * cada presentación suya. El factor de una presentación es el inverso de su
-   * `factorConversion`, igual que lo resuelve el backend.
+   * cada presentación suya. El factor de una presentación es su
+   * `factorConversion`: las unidades base que contiene (regla V159 del backend).
    */
   private async cargarMedidas(fila: FilaReceta): Promise<void> {
     if (!fila.productoHijoId) return;
@@ -236,9 +237,9 @@ export class FormRecetaComponent implements OnChanges {
       for (const p of pres?.data ?? []) {
         if (!p.factorConversion || p.factorConversion <= 0) continue;
         opts.push({
-          label: `${p.nombre} — 1 ${fila._unidadBaseAbrev} = ${p.factorConversion} ${p.nombre}`,
+          label: `${p.nombre} — 1 ${p.nombre} = ${+p.factorConversion.toFixed(6)} ${fila._unidadBaseAbrev}`,
           value: `pres:${p.id}`,
-          factor: 1 / p.factorConversion,
+          factor: p.factorConversion,
           presentacionId: p.id,
         });
       }
@@ -270,7 +271,11 @@ export class FormRecetaComponent implements OnChanges {
     fila: FilaReceta,
     event: { filter: string },
   ): Promise<void> {
-    const encontrados = await this.buscarProductos(event.filter);
+    // Una receta se arma con insumos; un kit, con productos que se venden.
+    const encontrados = await this.buscarProductos(
+      event.filter,
+      this.tipo === 'RECETA' ? ['INSUMO', 'AMBOS'] : ['VENTA', 'AMBOS'],
+    );
     // Se conserva el seleccionado en la lista para que no desaparezca del
     // dropdown mientras el usuario escribe otra búsqueda.
     const actual = fila._hijoOpts.find((o) => o.value === fila.productoHijoId);
@@ -286,11 +291,12 @@ export class FormRecetaComponent implements OnChanges {
 
   private async buscarProductos(
     filtro: string,
+    usos?: UsoProducto[],
   ): Promise<{ label: string; value: number }[]> {
     const q = filtro?.trim();
     if (!q || q.length < 2) return [];
     try {
-      const res = await lastValueFrom(this.productoService.search(q));
+      const res = await lastValueFrom(this.productoService.search(q, usos));
       return (res?.data ?? []).map((p: any) => ({
         label: p.nombre + (p.sku ? ` [${p.sku}]` : ''),
         value: p.id,

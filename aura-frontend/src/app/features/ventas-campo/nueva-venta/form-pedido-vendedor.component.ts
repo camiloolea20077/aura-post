@@ -31,6 +31,7 @@ import {
 } from '../../../core/models/pedido-vendedor.model';
 import { TerceroTableModel } from '../../../core/models/tercero.model';
 import { TerceroService } from '../../../core/services/tercero.service';
+import { TerceroAutocompleteComponent } from '../../../shared/components/tercero-autocomplete/tercero-autocomplete.component';
 import { PedidoVendedorService } from '../../../core/services/pedido-vendedor.service';
 import { ProductoService } from '../../../core/services/producto.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
@@ -40,6 +41,7 @@ import { AlertService } from '../../../shared/pipes/alert.service';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    TerceroAutocompleteComponent,
     CommonModule,
     FormsModule,
     DialogModule,
@@ -64,7 +66,6 @@ export class FormPedidoVendedorComponent implements OnChanges {
   // ── Cliente ─────────────────────────────────────────────────
   public clienteQuery = '';
   public clienteSeleccionado: TerceroTableModel | null = null;
-  public clienteSugerencias: TerceroTableModel[] = [];
 
   // ── Búsqueda producto ────────────────────────────────────────
   public productoQuery = '';
@@ -96,7 +97,6 @@ export class FormPedidoVendedorComponent implements OnChanges {
   private resetForm(): void {
     this.clienteQuery = '';
     this.clienteSeleccionado = null;
-    this.clienteSugerencias = [];
     this.productoQuery = '';
     this.productoSugerencias = [];
     this.carrito = [];
@@ -105,20 +105,9 @@ export class FormPedidoVendedorComponent implements OnChanges {
   }
 
   // ── Buscar cliente ──────────────────────────────────────────
-  async buscarCliente(event: { query: string }): Promise<void> {
-    try {
-      const res = await lastValueFrom(
-        this.terceroService.clientes(event.query),
-      );
-      this.clienteSugerencias = res?.data ?? [];
-      this.cdr.markForCheck();
-    } catch {
-      this.clienteSugerencias = [];
-    }
-  }
-
-  onClienteSeleccionado(event: AutoCompleteSelectEvent): void {
-    this.clienteSeleccionado = event.value as TerceroTableModel;
+  onCliente(t: TerceroTableModel | null): void {
+    this.clienteSeleccionado = t;
+    this.clienteQuery = t?.nombreCompleto ?? '';
     this.cdr.markForCheck();
   }
 

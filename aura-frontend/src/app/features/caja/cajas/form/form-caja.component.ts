@@ -17,7 +17,7 @@ import {
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
-import { InputSwitchModule } from 'primeng/inputswitch';
+import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { DropdownModule } from 'primeng/dropdown';
 import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
@@ -39,7 +39,7 @@ import { IndexDBService } from '../../../../core/services/index-db.service';
     ReactiveFormsModule,
     DialogModule,
     InputTextModule,
-    InputSwitchModule,
+    ToggleSwitchModule,
     DropdownModule,
     ButtonModule,
     ToastModule,

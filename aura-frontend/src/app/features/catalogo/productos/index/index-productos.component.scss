@@ -190,3 +190,16 @@
 .text-center {
   text-align: center !important;
 }
+
+// ─── Filtro de uso (junto al buscador) ────────────────────────
+::ng-deep .uso-filtro {
+  height: 38px;
+  min-width: 170px;
+  border-radius: 10px;
+
+  .p-select-label {
+    display: flex;
+    align-items: center;
+    font-size: 0.85rem;
+  }
+}

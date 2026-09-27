@@ -32,6 +32,8 @@ type TagSeverity =
   | 'danger'
   | 'contrast'
   | undefined;
+import { DocumentoSoporteDialogComponent } from '../../../shared/components/documento-soporte-dialog/documento-soporte-dialog.component';
+
 @Component({
   selector: 'app-index-compras',
   standalone: true,
@@ -47,12 +49,22 @@ type TagSeverity =
     SkeletonModule,
     DetalleCompraComponent,
     ComprobanteEgresoComponent,
+    DocumentoSoporteDialogComponent,
   ],
   providers: [MessageService],
   templateUrl: './index-compras.component.html',
   styleUrls: ['./index-compras.component.scss'],
 })
 export class IndexComprasComponent implements OnInit {
+  // Documento soporte electrónico
+  public showDocSoporte = false;
+  public compraDocSoporteId: number | null = null;
+
+  abrirDocumentoSoporte(item: CompraTableModel): void {
+    this.compraDocSoporteId = item.id;
+    this.showDocSoporte = true;
+  }
+
   // Comprobante de egreso
   public showComprobante = false;
   public compraComprobante: CompraModel | null = null;

@@ -23,6 +23,8 @@ import { AlertService } from '../../../shared/pipes/alert.service';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 
+import { DocumentoSoporteDialogComponent } from '../../../shared/components/documento-soporte-dialog/documento-soporte-dialog.component';
+
 @Component({
   selector: 'app-index-gastos',
   standalone: true,
@@ -40,12 +42,23 @@ import { InputIconModule } from 'primeng/inputicon';
     TooltipModule,
     IconFieldModule,
     InputIconModule,
+    DocumentoSoporteDialogComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './index-gastos.component.html',
   styleUrls: ['./index-gastos.component.scss'],
 })
 export class IndexGastosComponent implements OnInit {
+  // Documento soporte electrónico
+  showDocSoporte = false;
+  gastoDocSoporteId: number | null = null;
+
+  abrirDocumentoSoporte(item: GastoTableModel): void {
+    this.gastoDocSoporteId = item.id;
+    this.showDocSoporte = true;
+    this.cdr.markForCheck();
+  }
+
   items: GastoTableModel[] = [];
   totalRecords = 0;
   rowSize = 10;

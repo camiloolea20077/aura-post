@@ -270,7 +270,7 @@
 ::ng-deep {
   .notif-panel .p-overlaypanel-content {
     padding: 0;
-    width: 300px;
+    width: 340px;
   }
 
   .user-panel .p-overlaypanel-content {
@@ -391,5 +391,111 @@
   ::ng-deep .sucursal-dropdown.p-dropdown {
     min-width: 110px;
     max-width: 130px;
+  }
+}
+
+// ── Notificaciones ────────────────────────────────────────────────
+.notif-lista {
+  display: flex;
+  flex-direction: column;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.notif-item {
+  display: flex;
+  gap: 0.7rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &--danger .notif-icono {
+    background: #fef2f2;
+    color: #dc2626;
+  }
+
+  &--warn .notif-icono {
+    background: #fffbeb;
+    color: #d97706;
+  }
+
+  &--info .notif-icono {
+    background: #eff6ff;
+    color: #2563eb;
+  }
+}
+
+.notif-icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+
+  i {
+    font-size: 1rem;
+  }
+}
+
+.notif-cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.notif-titulo {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.notif-mensaje {
+  font-size: 0.76rem;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.notif-valor {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.notif-accion {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  border: none;
+  border-radius: 7px;
+  background: #2563eb;
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  i {
+    font-size: 0.65rem;
+  }
+
+  &:hover {
+    background: #1d4ed8;
+  }
+}
+
+.notif-item--danger .notif-accion {
+  background: #dc2626;
+
+  &:hover {
+    background: #b91c1c;
   }
 }

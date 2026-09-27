@@ -87,16 +87,12 @@
 
       <div class="field">
         <label>Tercero</label>
-        <p-autoComplete
-          [(ngModel)]="terceroSeleccionado"
-          [ngModelOptions]="{ standalone: true }"
-          [suggestions]="terceroSugerencias"
-          (completeMethod)="buscarTercero($event)"
-          field="nombreCompleto"
+        <app-tercero-autocomplete
+          [terceroId]="terceroSeleccionado?.id ?? null"
+          [label]="terceroSeleccionado?.nombreCompleto ?? null"
           placeholder="Todos"
-          [forceSelection]="true"
-          styleClass="w-full"
-        ></p-autoComplete>
+          (seleccionado)="onTercero($event)"
+        />
       </div>
 
       <div class="field">

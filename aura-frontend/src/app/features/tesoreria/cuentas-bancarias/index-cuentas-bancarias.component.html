@@ -18,7 +18,7 @@
           type="button"
           label="Nueva Cuenta"
           icon="pi pi-plus"
-          class="btn-verde"
+          class="btn-aura"
           (click)="abrirNueva()"
         ></button>
         <div class="card-head__search">
@@ -28,7 +28,7 @@
               type="text"
               pInputText
               class="search-input"
-              placeholder="Buscar cuenta, banco, número..."
+              placeholder="Buscar código, cuenta, banco, número..."
               [(ngModel)]="searchQuery"
               (input)="dt.filterGlobal($any($event.target).value, 'contains')"
             />
@@ -64,6 +64,7 @@
       [showCurrentPageReport]="true"
       currentPageReportTemplate="{first}-{last} de {totalRecords} registros"
       [globalFilterFields]="[
+        'codigo',
         'nombre',
         'banco',
         'numeroCuenta',
@@ -75,18 +76,22 @@
     >
       <ng-template pTemplate="header">
         <tr>
+          <th style="width: 100px">Código</th>
           <th>Nombre</th>
           <th style="width: 110px">Tipo</th>
           <th style="min-width: 140px">Banco</th>
           <th style="width: 130px">N° cuenta</th>
           <th style="min-width: 180px">Cuenta contable</th>
-          <th style="width: 150px" class="text-right">Saldo actual</th>
           <th style="width: 90px" class="text-center">Estado</th>
           <th style="width: 100px" class="text-center">Acciones</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-c>
         <tr [class.inactiva-row]="!c.activa">
+          <td>
+            <code class="cb-codigo" *ngIf="c.codigo">{{ c.codigo }}</code>
+            <span *ngIf="!c.codigo" class="sin-dato">—</span>
+          </td>
           <td>{{ c.nombre }}</td>
           <td>
             <p-tag
@@ -98,9 +103,6 @@
           <td>{{ c.banco || "—" }}</td>
           <td>{{ maskCuenta(c.numeroCuenta) }}</td>
           <td>{{ c.cuentaContableNombre || "—" }}</td>
-          <td class="text-right" [class.negativo]="c.saldoActual < 0">
-            {{ formatCOP(c.saldoActual) }}
-          </td>
           <td class="text-center">
             <p-tag
               [value]="c.activa ? 'Activa' : 'Inactiva'"
@@ -140,167 +142,3 @@
 </div>
 
 <p-toast />
-
-<!-- ── Modal crear / editar ───────────────────────────────────────── -->
-<p-dialog
-  [(visible)]="showModal"
-  [modal]="true"
-  [draggable]="false"
-  [style]="{ width: '480px' }"
-  [header]="editId ? 'Editar Cuenta' : 'Nueva Cuenta Bancaria'"
->
-  <div class="modal-body">
-    <!-- Nombre -->
-    <div class="field">
-      <label>Nombre de la cuenta <span class="req">*</span></label>
-      <input
-        pInputText
-        [(ngModel)]="form.nombre"
-        placeholder="Ej: Bancolombia Principal"
-        class="w-full"
-      />
-    </div>
-
-    <!-- Tipo -->
-    <div class="field">
-      <label>Tipo <span class="req">*</span></label>
-      <p-dropdown
-        [(ngModel)]="form.tipo"
-        [options]="tiposOpts"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="Selecciona tipo"
-        styleClass="w-full"
-      />
-    </div>
-
-    <!-- Banco (solo si tipo = BANCO) -->
-    @if (requiereBanco) {
-      <div class="field">
-        <label>Banco</label>
-        <input
-          pInputText
-          [(ngModel)]="form.banco"
-          placeholder="Ej: Bancolombia, Davivienda..."
-          class="w-full"
-        />
-      </div>
-    }
-
-    <!-- Número de cuenta -->
-    <div class="field">
-      <label>Número de cuenta / billetera</label>
-      <input
-        pInputText
-        [(ngModel)]="form.numeroCuenta"
-        placeholder="Ej: 300 123 4567"
-        class="w-full"
-      />
-    </div>
-
-    <!-- Titular -->
-    <div class="field">
-      <label>Titular</label>
-      <input
-        pInputText
-        [(ngModel)]="form.titular"
-        placeholder="Nombre del titular"
-        class="w-full"
-      />
-    </div>
-
-    <!-- Cuenta contable (PUC) -->
-    <div class="field">
-      <label
-        >Cuenta contable
-        <span style="color: #94a3b8">(para la contabilidad)</span></label
-      >
-      <p-dropdown
-        [(ngModel)]="form.cuentaContableId"
-        [options]="cuentasContablesOpts"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="Seleccionar cuenta del PUC..."
-        [filter]="true"
-        filterBy="label"
-        [showClear]="true"
-        styleClass="w-full"
-      />
-    </div>
-
-    <!-- Tercero (banco) -->
-    <div class="field">
-      <label
-        >Banco / Tercero <span style="color: #94a3b8">(opcional)</span></label
-      >
-      <app-tercero-picker
-        [terceroId]="form.terceroId ?? null"
-        [terceroNombre]="terceroNombreSel"
-        placeholder="Buscar el banco como tercero..."
-        filtro="BANCO"
-        (seleccionado)="onTerceroSel($event)"
-      />
-    </div>
-
-    <!-- Saldo inicial -->
-    <div class="field">
-      <label>Saldo inicial</label>
-      <p-inputNumber
-        [(ngModel)]="form.saldoInicial"
-        mode="currency"
-        currency="COP"
-        locale="es-CO"
-        [minFractionDigits]="0"
-        [maxFractionDigits]="0"
-        styleClass="w-full"
-      />
-    </div>
-
-    <!-- Sobregiro -->
-    <div class="field sobregiro-field">
-      <p-toggleswitch
-        [(ngModel)]="form.permiteSobregiro"
-        (ngModelChange)="onPermiteSobregiroChange()"
-        inputId="sw-sobregiro"
-      />
-      <label for="sw-sobregiro" class="sobregiro-label">
-        Permite sobregiro
-        <span>El saldo puede quedar negativo hasta el cupo definido.</span>
-      </label>
-    </div>
-
-    <div class="field" *ngIf="form.permiteSobregiro">
-      <label>Cupo de sobregiro <span style="color: #94a3b8">(vacío = sin límite)</span></label>
-      <p-inputNumber
-        [(ngModel)]="form.cupoSobregiro"
-        mode="currency"
-        currency="COP"
-        locale="es-CO"
-        [minFractionDigits]="0"
-        [maxFractionDigits]="0"
-        [min]="0"
-        placeholder="Sin límite"
-        styleClass="w-full"
-      />
-    </div>
-  </div>
-
-  <ng-template pTemplate="footer">
-    <button
-      pButton
-      label="Cancelar"
-      class="btn-amarillo"
-      (click)="showModal = false"
-      [disabled]="saving"
-    ></button>
-    <button
-      pButton
-      [label]="editId ? 'Actualizar' : 'Crear Cuenta'"
-      icon="pi pi-check"
-      class="btn-verde"
-      (click)="guardar()"
-      [loading]="saving"
-      [disabled]="!form.nombre.trim() || !form.tipo"
-    ></button>
-  </ng-template>
-</p-dialog>

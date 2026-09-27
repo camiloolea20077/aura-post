@@ -11,6 +11,7 @@ import Aura from '@primeuix/themes/aura';
 import { definePreset } from '@primeuix/themes';
 
 import { routes } from './app.routes';
+import { PRIMENG_ES } from './core/config/primeng-es';
 
 // ─── Tema AURA: color primario = azul de marca #2563eb ──────────────────────
 const AuraBlue = definePreset(Aura, {
@@ -81,6 +82,8 @@ export const appConfig: ApplicationConfig = {
           darkModeSelector: '.app-dark',
         },
       },
+      // Calendarios, filtros y mensajes de PrimeNG en español (meses y días).
+      translation: PRIMENG_ES,
     }),
     {
       provide: HTTP_INTERCEPTORS,

@@ -1,0 +1,53 @@
+<p-dialog
+  header="Usar una plantilla"
+  [visible]="visible"
+  (visibleChange)="$event ? null : cerrar()"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '560px' }"
+  [breakpoints]="{ '640px': '95vw' }"
+>
+  <span class="search-wrap ep-buscar">
+    <i class="pi pi-search"></i>
+    <input
+      type="text"
+      pInputText
+      class="search-input"
+      placeholder="Buscar plantilla..."
+      [(ngModel)]="busqueda"
+    />
+  </span>
+
+  <div class="ep-lista">
+    <div *ngIf="loading" class="ep-vacio">Cargando plantillas…</div>
+    <div *ngIf="!loading && filtradas.length === 0" class="ep-vacio">
+      {{
+        plantillas.length === 0
+          ? "Todavía no hay plantillas. Guarde una nota como plantilla para reutilizarla."
+          : "Ninguna plantilla coincide con la búsqueda."
+      }}
+    </div>
+    <button
+      *ngFor="let p of filtradas"
+      type="button"
+      class="ep-item"
+      (click)="elegir(p)"
+    >
+      <span class="ep-nombre">
+        {{ p.nombre }}
+        <span *ngIf="p.recurrente" class="ep-chip">
+          <i class="pi pi-sync"></i> día {{ p.diaMes }}
+        </span>
+      </span>
+      <span class="ep-meta">
+        {{ p.descripcion }}
+        · {{ p.cantidadLineas }}
+        {{ p.cantidadLineas === 1 ? "línea" : "líneas" }} ·
+        {{ formatCOP(p.totalDebito) }}
+        <ng-container *ngIf="p.clasificacion">
+          · {{ clasificacionLabel(p.clasificacion) }}</ng-container
+        >
+      </span>
+    </button>
+  </div>
+</p-dialog>

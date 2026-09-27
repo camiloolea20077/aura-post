@@ -1,0 +1,157 @@
+<p-dialog
+  [header]="titulo"
+  [visible]="visible"
+  (visibleChange)="$event ? null : cerrar()"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '520px' }"
+  [breakpoints]="{ '600px': '95vw' }"
+>
+  <form [formGroup]="frm" class="pl-form" (ngSubmit)="guardar()">
+    <!-- Desde una nota: plantilla nueva o reemplazar las líneas de una existente -->
+    <div class="pl-campo" *ngIf="desdeNota && existentes.length">
+      <label>¿Qué quiere hacer?</label>
+      <div class="opciones">
+        <button
+          type="button"
+          class="opcion"
+          [class.opcion--activa]="modo === 'nueva'"
+          (click)="setModo('nueva')"
+        >
+          <i
+            class="pi"
+            [class.pi-circle-fill]="modo === 'nueva'"
+            [class.pi-circle]="modo !== 'nueva'"
+          ></i>
+          Plantilla nueva
+        </button>
+        <button
+          type="button"
+          class="opcion"
+          [class.opcion--activa]="modo === 'reemplazar'"
+          (click)="setModo('reemplazar')"
+        >
+          <i
+            class="pi"
+            [class.pi-circle-fill]="modo === 'reemplazar'"
+            [class.pi-circle]="modo !== 'reemplazar'"
+          ></i>
+          Reemplazar una existente
+        </button>
+      </div>
+    </div>
+
+    <div class="pl-campo" *ngIf="desdeNota && modo === 'reemplazar'">
+      <label>Plantilla a reemplazar <span class="req">*</span></label>
+      <p-dropdown
+        formControlName="reemplazarId"
+        [options]="existentes"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Elija la plantilla"
+        [filter]="true"
+        filterBy="label"
+        (onChange)="onReemplazarElegida($event.value)"
+        styleClass="w-full"
+      ></p-dropdown>
+      <small>Sus líneas se cambian por las de esta nota.</small>
+    </div>
+
+    <div class="pl-campo">
+      <label for="plNombre">Nombre <span class="req">*</span></label>
+      <input
+        id="plNombre"
+        pInputText
+        formControlName="nombre"
+        placeholder="Ej.: Amortización seguro vehículos"
+      />
+    </div>
+
+    <div class="pl-campo">
+      <label for="plDesc"
+        >Concepto de las notas <span class="req">*</span></label
+      >
+      <input id="plDesc" pInputText formControlName="descripcion" />
+    </div>
+
+    <div class="pl-campo">
+      <label>Clasificación</label>
+      <p-dropdown
+        formControlName="clasificacion"
+        [options]="clasificacionOpts"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Sin clasificar"
+        [showClear]="true"
+        styleClass="w-full"
+      ></p-dropdown>
+    </div>
+
+    <div class="pl-campo">
+      <label>¿Se repite cada mes?</label>
+      <div class="opciones">
+        <button
+          type="button"
+          class="opcion"
+          [class.opcion--activa]="!recurrente"
+          (click)="setRecurrente(false)"
+        >
+          <i
+            class="pi"
+            [class.pi-circle-fill]="!recurrente"
+            [class.pi-circle]="recurrente"
+          ></i>
+          No, la uso cuando la necesite
+        </button>
+        <button
+          type="button"
+          class="opcion"
+          [class.opcion--activa]="recurrente"
+          (click)="setRecurrente(true)"
+        >
+          <i
+            class="pi"
+            [class.pi-circle-fill]="recurrente"
+            [class.pi-circle]="!recurrente"
+          ></i>
+          Sí, cada mes
+        </button>
+      </div>
+    </div>
+
+    <div class="pl-campo" *ngIf="recurrente">
+      <label for="plDia">Día del mes</label>
+      <p-inputNumber
+        inputId="plDia"
+        formControlName="diaMes"
+        [min]="1"
+        [max]="28"
+        [showButtons]="true"
+        styleClass="pl-dia"
+      ></p-inputNumber>
+      <small>
+        Ese día el sistema deja la nota en <b>borrador</b>; usted la revisa y la
+        contabiliza. Nunca se contabiliza sola.
+      </small>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cancelar"
+      class="btn-amarillo"
+      (click)="cerrar()"
+    ></button>
+    <button
+      pButton
+      type="button"
+      label="Guardar plantilla"
+      icon="pi pi-save"
+      class="btn-verde"
+      [loading]="saving"
+      (click)="guardar()"
+    ></button>
+  </ng-template>
+</p-dialog>

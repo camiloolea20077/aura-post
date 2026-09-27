@@ -1,0 +1,258 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon">
+          <i class="pi pi-book"></i>
+        </span>
+        <div>
+          <h1 class="title">Libros Contables</h1>
+          <p class="subtitle">
+            Auxiliar por tercero y libro diario, listos para revisar o exportar
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <p-tabView>
+      <!-- ── Auxiliar por tercero ───────────────────────────────────────── -->
+      <p-tabPanel header="Auxiliar por tercero" leftIcon="pi pi-users">
+        <div class="filtros">
+          <div class="filtro">
+            <label>Desde</label>
+            <p-calendar [(ngModel)]="auxDesde" dateFormat="dd/mm/yy" [showIcon]="true" />
+          </div>
+          <div class="filtro">
+            <label>Hasta</label>
+            <p-calendar [(ngModel)]="auxHasta" dateFormat="dd/mm/yy" [showIcon]="true" />
+          </div>
+          <div class="filtro filtro--corto">
+            <label>Cuenta desde</label>
+            <input pInputText [(ngModel)]="cuentaDesde" placeholder="Ej: 13" />
+          </div>
+          <div class="filtro filtro--corto">
+            <label>Cuenta hasta</label>
+            <input pInputText [(ngModel)]="cuentaHasta" placeholder="Igual a desde" />
+          </div>
+          <div class="filtro filtro--ancho">
+            <label>Tercero</label>
+            <app-tercero-autocomplete
+              [terceroId]="terceroId"
+              placeholder="Todos los terceros"
+              (seleccionado)="onTercero($any($event))"
+            />
+          </div>
+          <div class="filtro">
+            <label>Vista</label>
+            <div class="opciones">
+              <button
+                type="button"
+                class="opcion"
+                [class.opcion--activa]="!detallado"
+                (click)="detallado = false"
+              >
+                Resumido
+              </button>
+              <button
+                type="button"
+                class="opcion"
+                [class.opcion--activa]="detallado"
+                (click)="detallado = true"
+              >
+                Detallado
+              </button>
+            </div>
+          </div>
+          <div class="acciones">
+            <button
+              pButton
+              type="button"
+              label="Generar"
+              icon="pi pi-search"
+              class="btn-aura"
+              [loading]="cargandoAux"
+              (click)="generarAuxiliar()"
+            ></button>
+            <button
+              pButton
+              type="button"
+              label="Excel"
+              icon="pi pi-file-excel"
+              class="p-button-outlined"
+              [disabled]="!auxiliar || auxiliar.cuentas.length === 0"
+              (click)="exportarAuxiliar()"
+            ></button>
+          </div>
+        </div>
+
+        <ng-container *ngIf="auxiliar">
+          <p class="vacio" *ngIf="auxiliar.cuentas.length === 0">
+            No hay saldos ni movimientos con esos filtros.
+          </p>
+
+          <div class="tabla-wrap" *ngIf="auxiliar.cuentas.length > 0">
+            <table class="libro">
+              <thead>
+                <tr>
+                  <th style="width: 7rem">Fecha</th>
+                  <th style="width: 9rem">Comprobante</th>
+                  <th>Detalle</th>
+                  <th class="num">Saldo anterior</th>
+                  <th class="num">Débito</th>
+                  <th class="num">Crédito</th>
+                  <th class="num">Saldo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <ng-container *ngFor="let c of auxiliar.cuentas">
+                  <tr class="fila-cuenta">
+                    <td colspan="3">{{ c.codigo }} — {{ c.nombre }}</td>
+                    <td class="num">{{ formatCOP(c.saldoAnterior) }}</td>
+                    <td class="num">{{ formatCOP(c.debito) }}</td>
+                    <td class="num">{{ formatCOP(c.credito) }}</td>
+                    <td class="num">{{ formatCOP(c.saldoFinal) }}</td>
+                  </tr>
+                  <ng-container *ngFor="let t of c.terceros">
+                    <tr class="fila-tercero" [class.fila-tercero--detalle]="detallado">
+                      <td></td>
+                      <td>{{ t.documento }}</td>
+                      <td>{{ t.nombre }}</td>
+                      <td class="num">{{ formatCOP(t.saldoAnterior) }}</td>
+                      <td class="num">{{ formatCOP(t.debito) }}</td>
+                      <td class="num">{{ formatCOP(t.credito) }}</td>
+                      <td class="num" [class.negativo]="t.saldoFinal < 0">
+                        {{ formatCOP(t.saldoFinal) }}
+                      </td>
+                    </tr>
+                    <ng-container *ngIf="detallado">
+                      <tr *ngFor="let l of t.lineas" class="fila-linea">
+                        <td>{{ l.fecha | date: "dd/MM/yyyy" }}</td>
+                        <td><code>{{ l.numeroComprobante }}</code></td>
+                        <td>{{ l.descripcion }}</td>
+                        <td></td>
+                        <td class="num">{{ l.debito ? formatCOP(l.debito) : "" }}</td>
+                        <td class="num">{{ l.credito ? formatCOP(l.credito) : "" }}</td>
+                        <td class="num" [class.negativo]="l.saldo < 0">
+                          {{ formatCOP(l.saldo) }}
+                        </td>
+                      </tr>
+                    </ng-container>
+                  </ng-container>
+                </ng-container>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="4" class="num">Totales del período</td>
+                  <td class="num">{{ formatCOP(auxiliar.totalDebito) }}</td>
+                  <td class="num">{{ formatCOP(auxiliar.totalCredito) }}</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          <small class="hint">
+            Los saldos van según la naturaleza de la cuenta: en pasivos e
+            ingresos, positivo es lo que se debe o se ganó.
+          </small>
+        </ng-container>
+      </p-tabPanel>
+
+      <!-- ── Libro diario ───────────────────────────────────────────────── -->
+      <p-tabPanel header="Libro diario" leftIcon="pi pi-list">
+        <div class="filtros">
+          <div class="filtro">
+            <label>Desde</label>
+            <p-calendar [(ngModel)]="diaDesde" dateFormat="dd/mm/yy" [showIcon]="true" />
+          </div>
+          <div class="filtro">
+            <label>Hasta</label>
+            <p-calendar [(ngModel)]="diaHasta" dateFormat="dd/mm/yy" [showIcon]="true" />
+          </div>
+          <div class="acciones">
+            <button
+              pButton
+              type="button"
+              label="Generar"
+              icon="pi pi-search"
+              class="btn-aura"
+              [loading]="cargandoDiario"
+              (click)="generarDiario()"
+            ></button>
+            <button
+              pButton
+              type="button"
+              label="Excel"
+              icon="pi pi-file-excel"
+              class="p-button-outlined"
+              [disabled]="!diario || diario.comprobantes.length === 0"
+              (click)="exportarDiario()"
+            ></button>
+          </div>
+        </div>
+
+        <ng-container *ngIf="diario">
+          <div class="resumen">
+            <span>{{ diario.comprobantes.length }} comprobantes</span>
+            <span>Débitos <b>{{ formatCOP(diario.totalDebito) }}</b></span>
+            <span>Créditos <b>{{ formatCOP(diario.totalCredito) }}</b></span>
+            <p-tag
+              [value]="diario.cuadrado ? 'Cuadra' : 'Descuadrado'"
+              [severity]="diario.cuadrado ? 'success' : 'danger'"
+            />
+          </div>
+
+          <p class="vacio" *ngIf="diario.comprobantes.length === 0">
+            No hay comprobantes contabilizados en ese rango.
+          </p>
+
+          <div class="tabla-wrap" *ngIf="diario.comprobantes.length > 0">
+            <table class="libro">
+              <thead>
+                <tr>
+                  <th style="width: 7rem">Cuenta</th>
+                  <th>Nombre cuenta</th>
+                  <th>Tercero</th>
+                  <th>Detalle</th>
+                  <th class="num">Débito</th>
+                  <th class="num">Crédito</th>
+                </tr>
+              </thead>
+              <tbody>
+                <ng-container *ngFor="let c of diario.comprobantes">
+                  <tr class="fila-cuenta">
+                    <td colspan="4">
+                      {{ c.fecha | date: "dd/MM/yyyy" }} ·
+                      <code>{{ c.numeroComprobante ?? "#" + c.asientoId }}</code>
+                      · {{ c.descripcion }}
+                    </td>
+                    <td class="num">{{ formatCOP(c.debito) }}</td>
+                    <td class="num">{{ formatCOP(c.credito) }}</td>
+                  </tr>
+                  <tr *ngFor="let l of c.lineas" class="fila-linea">
+                    <td><code>{{ l.cuentaCodigo }}</code></td>
+                    <td>{{ l.cuentaNombre }}</td>
+                    <td>
+                      <span *ngIf="l.terceroNombre">
+                        {{ l.terceroDocumento }} — {{ l.terceroNombre }}
+                      </span>
+                    </td>
+                    <td>{{ l.descripcion }}</td>
+                    <td class="num">{{ l.debito ? formatCOP(l.debito) : "" }}</td>
+                    <td class="num">{{ l.credito ? formatCOP(l.credito) : "" }}</td>
+                  </tr>
+                </ng-container>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="4" class="num">Totales</td>
+                  <td class="num">{{ formatCOP(diario.totalDebito) }}</td>
+                  <td class="num">{{ formatCOP(diario.totalCredito) }}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </ng-container>
+      </p-tabPanel>
+    </p-tabView>
+  </div>
+</div>

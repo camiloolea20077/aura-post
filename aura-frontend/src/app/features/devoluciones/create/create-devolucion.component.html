@@ -172,7 +172,25 @@
                   [inputId]="'det-' + i"
                 />
               </td>
-              <td><span class="det-nombre">{{ det.productoNombre }}</span></td>
+              <td>
+                <span class="det-nombre">{{ det.productoNombre }}</span>
+                <button
+                  *ngIf="det.serialesVendidos && det.seleccionado"
+                  type="button"
+                  class="det-seriales"
+                  [class.det-seriales--falta]="faltanSeriales(det)"
+                  (click)="abrirSeriales(det)"
+                >
+                  <i class="pi pi-barcode"></i>
+                  {{
+                    det.serialIds?.length
+                      ? "Seriales " + det.serialIds!.length + "/" + det.cantidad
+                      : det.cantidad === det.serialesVendidos
+                        ? "Todos los seriales"
+                        : "Elegir " + det.cantidad + " seriales"
+                  }}
+                </button>
+              </td>
               <td class="text-right">
                 <span class="det-cant-orig">{{ det.cantidadOriginal }}</span>
               </td>
@@ -434,3 +452,12 @@
 />
 
 <p-toast />
+
+<app-serial-picker
+  [(visible)]="serialPickerVisible"
+  [productoNombre]="serialRow?.productoNombre || ''"
+  [ventaDetalleId]="serialRow?.ventaDetalleId ?? null"
+  [cantidad]="serialRow?.cantidad ?? 0"
+  [seleccionados]="serialRow?.serialIds || []"
+  (confirmar)="onSerialesElegidos($event)"
+/>

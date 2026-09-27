@@ -75,8 +75,56 @@ export class EtiquetasComponent implements OnInit {
     { label: '4 Col', value: 4 },
   ];
 
+  /** El código ya impreso sigue siendo válido: por defecto se ven todos. */
+  public filtroEstado: 'todos' | 'con' | 'sin' = 'todos';
+  public opcionesEstado = [
+    { label: 'Todos', value: 'todos' },
+    { label: 'Con código', value: 'con' },
+    { label: 'Sin código', value: 'sin' },
+  ];
+
+  private static readonly PAGINA = 50;
+  public limite = EtiquetasComponent.PAGINA;
+
+  /**
+   * Se recalcula sólo al cambiar búsqueda, filtro o catálogo: un getter volvería
+   * a filtrar la lista entera en cada ciclo de detección de cambios.
+   */
+  private visibles: ProductoSinCodigo[] = [];
+
+  public get totalFiltrados(): number {
+    return this.visibles.length;
+  }
+
   public get productosFiltrados(): ProductoSinCodigo[] {
-    return filterTable(this.productos, this.busqueda, 0, 20);
+    return this.visibles.slice(0, this.limite);
+  }
+
+  public get hayMas(): boolean {
+    return this.visibles.length > this.limite;
+  }
+
+  /** Reinicia el paginado: el filtro nuevo arranca desde la primera página. */
+  aplicarFiltros(): void {
+    const porEstado = this.productos.filter((p) =>
+      this.filtroEstado === 'con'
+        ? !!p.codigoBarras
+        : this.filtroEstado === 'sin'
+        ? !p.codigoBarras
+        : true,
+    );
+    this.visibles = filterTable(porEstado, this.busqueda, 0, porEstado.length);
+    this.limite = EtiquetasComponent.PAGINA;
+  }
+
+  limpiarBusqueda(): void {
+    if (!this.busqueda) return;
+    this.busqueda = '';
+    this.aplicarFiltros();
+  }
+
+  verMas(): void {
+    this.limite += EtiquetasComponent.PAGINA;
   }
 
   public get seleccionados(): ProductoSinCodigo[] {
@@ -130,22 +178,27 @@ export class EtiquetasComponent implements OnInit {
     try {
       const res = await lastValueFrom(this.productoService.list());
       if (res?.data) {
-        this.productos = (res.data as any[])
-          .filter((p) => !p.codigoBarras)
-          .map((p) => ({
+        // El código guardado viaja en la lista: sin él la pantalla no sabría
+        // que el producto ya tiene etiqueta y pediría generarla de nuevo.
+        this.productos = (res.data as any[]).map((p) => {
+          const codigo: string | null = p.codigoBarras ?? null;
+          return {
             id: p.id,
             nombre: p.nombre,
             sku: p.sku ?? null,
             precio: p.precio ?? 0,
             categoriaId: p.categoriaId ?? null,
             categoriaNombre: p.categoriaNombre ?? null,
-            codigoBarras: null,
+            codigoBarras: codigo,
             seleccionado: false,
             copias: 1,
-            codigoGenerado: null,
+            codigoGenerado: codigo,
             generando: false,
-            guardado: false,
-          }));
+            guardado: !!codigo,
+            recienGenerado: false,
+          };
+        });
+        this.aplicarFiltros();
       }
     } catch {
       this.alertService.showError(
@@ -173,24 +226,24 @@ export class EtiquetasComponent implements OnInit {
   }
 
   async generarCodigo(p: ProductoSinCodigo): Promise<void> {
+    if (p.codigoBarras) return; // ya tiene: reimprimir no lo cambia
+
     p.generando = true;
     try {
-      const codigo = this.generarCodigoEan13(p.id);
-      await lastValueFrom(
-        this.productoService.actualizarCodigoBarras(p.id, {
-          codigoBarras: codigo,
-        }),
+      // El back genera y guarda; si el producto ya tenía código devuelve ese.
+      const res = await lastValueFrom(
+        this.productoService.generarCodigoBarras(p.id),
       );
+      const codigo: string =
+        res?.data?.codigoBarras ?? this.generarCodigoEan13(p.id);
       p.codigoGenerado = codigo;
       p.codigoBarras = codigo;
       p.guardado = true;
+      p.recienGenerado = true;
       this.alertService.showSuccess(
         'Código generado',
         `${p.nombre} → ${codigo}`,
       );
-      // setTimeout(() => {
-      //   this.productos = this.productos.filter((x) => x.id !== p.id);
-      // }, 1500);
     } catch {
       this.alertService.showError('Error', 'No se pudo guardar el código.');
     } finally {
@@ -200,7 +253,7 @@ export class EtiquetasComponent implements OnInit {
   }
 
   async generarTodosSeleccionados(): Promise<void> {
-    const pendientes = this.seleccionados.filter((p) => !p.guardado);
+    const pendientes = this.seleccionados.filter((p) => !p.codigoBarras);
     if (!pendientes.length) return;
     for (const p of pendientes) {
       await this.generarCodigo(p);
@@ -208,9 +261,7 @@ export class EtiquetasComponent implements OnInit {
   }
 
   abrirConfiguracion(): void {
-    const paraPrint = this.seleccionados.filter(
-      (p) => p.guardado || p.codigoGenerado,
-    );
+    const paraPrint = this.seleccionados.filter((p) => !!p.codigoBarras);
     if (!paraPrint.length) {
       this.alertService.showWarn(
         'Sin etiquetas',
@@ -228,9 +279,7 @@ export class EtiquetasComponent implements OnInit {
   }
 
   async imprimirOpPersonalizada(): Promise<void> {
-    const paraPrint = this.seleccionados.filter(
-      (p) => p.guardado || p.codigoGenerado,
-    );
+    const paraPrint = this.seleccionados.filter((p) => !!p.codigoBarras);
 
     await this.cargarJsBarcodePromise();
     const settings = this.settings;
@@ -256,7 +305,7 @@ export class EtiquetasComponent implements OnInit {
             p.nombre,
             this.settings.maxCaracteresNombre,
           ),
-          codigo: p.codigoGenerado ?? p.codigoBarras ?? '',
+          codigo: p.codigoBarras ?? p.codigoGenerado ?? '',
           precio: p.precio,
         });
       }

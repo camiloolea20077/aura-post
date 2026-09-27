@@ -116,7 +116,7 @@ $mono: "JetBrains Mono", monospace;
 }
 
 // ── Tabla líneas ──────────────────────────────────────────────
-$grid-cols: 2fr 1.2fr 68px 76px 126px 100px 36px;
+$grid-cols: 2fr 90px 1.1fr 68px 170px 126px 96px 88px 36px;
 
 .lines-wrap {
   display: flex;
@@ -149,11 +149,45 @@ $grid-cols: 2fr 1.2fr 68px 76px 126px 100px 36px;
   z-index: 2;
   isolation: isolate;
 
-  // ← AGREGAR ESTO:
-  ::ng-deep .p-inputnumber,
   ::ng-deep .p-inputnumber-input {
     width: 100% !important;
-    max-width: 76px;
+  }
+}
+
+// Cantidad + presentación en la misma fila. Los hijos del flex son los
+// elementos p-inputnumber y p-dropdown, no el div interno de PrimeNG.
+.cant-pres {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+
+  > p-inputnumber {
+    flex: 0 0 56px;
+    min-width: 0;
+  }
+
+  // Sin presentaciones (se compra por kilo o por unidad) no hay selector al
+  // lado: la cantidad ocupa toda la celda.
+  > p-inputnumber:only-child {
+    flex: 1 1 auto;
+  }
+  > p-dropdown {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+::ng-deep .cant-pres__cantidad {
+  width: 100%;
+}
+::ng-deep .cant-pres__presentacion.p-dropdown {
+  width: 100%;
+  .p-dropdown-label {
+    padding-left: 0.6rem;
+    padding-right: 0.25rem;
+    font-size: 0.78rem;
+  }
+  .p-dropdown-trigger {
+    width: 1.75rem;
   }
 }
 .col-costo {
@@ -301,4 +335,143 @@ $grid-cols: 2fr 1.2fr 68px 76px 126px 100px 36px;
   background: linear-gradient(135deg, $indigo, #818cf8) !important;
   border: none !important;
   font-weight: 600 !important;
+}
+
+// ── SKU / escáner ─────────────────────────────────────────────
+.scan-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.75rem;
+  border: 1.5px dashed $border;
+  border-radius: 10px;
+  background: $bg;
+
+  i {
+    color: $muted;
+    font-size: 1.1rem;
+  }
+
+  .scan-input {
+    flex: 1;
+    min-width: 0;
+    font-family: $mono;
+    font-size: 0.85rem;
+  }
+}
+
+.col-sku {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.sku-chip {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0.1rem 0.4rem;
+  border-radius: 6px;
+  background: $bg;
+  border: 1px solid $border;
+  font-family: $mono;
+  font-size: 0.72rem;
+  color: $text;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// ── Producto con receta ───────────────────────────────────────
+.receta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.12rem 0.5rem;
+  border-radius: 20px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+  font-size: 0.72rem;
+  font-weight: 700;
+
+  i {
+    font-size: 0.7rem;
+  }
+}
+
+.costo-calculado {
+  display: block;
+  text-align: right;
+  font-family: $mono;
+  font-size: 0.82rem;
+  color: $text;
+}
+
+.line-componentes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.35rem 0.75rem 0.55rem 1.5rem;
+  border: 1.5px solid $border;
+  border-top: none;
+  background: #fbfcfe;
+
+  .comp-row {
+    display: grid;
+    grid-template-columns: 14px 1fr 130px 220px;
+    gap: 0.5rem;
+    align-items: center;
+    font-size: 0.76rem;
+    color: #475569;
+
+    i {
+      font-size: 0.7rem;
+      color: $muted;
+    }
+
+    .comp-cant {
+      font-family: $mono;
+      text-align: right;
+    }
+
+    .comp-stock {
+      font-family: $mono;
+      color: $muted;
+    }
+
+    &.falta {
+      color: $red;
+
+      .comp-stock {
+        color: $red;
+        font-weight: 700;
+      }
+    }
+  }
+
+  .comp-vacio {
+    font-size: 0.76rem;
+    color: $orange;
+  }
+}
+
+// ── Seriales de la línea ──────────────────────────────────────────
+.seriales-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.3rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px dashed #f59e0b;
+  border-radius: 6px;
+  background: #fffbeb;
+  color: #b45309;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &--ok {
+    border: 1px solid #bfdbfe;
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
 }

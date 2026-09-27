@@ -1,0 +1,169 @@
+.cargando {
+  padding: 2rem 0;
+  text-align: center;
+  color: var(--text-color-secondary, #6b7280);
+}
+
+.bloque {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.9rem;
+
+  .sub {
+    font-size: 0.8rem;
+    color: var(--text-color-secondary, #6b7280);
+  }
+}
+
+.etiqueta {
+  display: inline-block;
+  min-width: 5.5rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--text-color-secondary, #6b7280);
+}
+
+.sep {
+  color: var(--text-color-secondary, #9ca3af);
+}
+
+.error {
+  color: #dc2626;
+}
+
+.aceptado {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  margin-bottom: 0.9rem;
+  border-radius: 8px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+
+  > i {
+    color: #16a34a;
+    font-size: 1.3rem;
+  }
+
+  > div {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .cude {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--text-color-secondary, #6b7280);
+    overflow-wrap: anywhere;
+  }
+}
+
+.faltantes {
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  border-radius: 8px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  font-size: 0.85rem;
+
+  ul {
+    margin: 0.4rem 0;
+    padding-left: 1.2rem;
+  }
+}
+
+.advertencias {
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.75rem;
+  border-radius: 8px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  font-size: 0.85rem;
+}
+
+.tabla-wrap {
+  overflow-x: auto;
+}
+
+.items {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+
+  th,
+  td {
+    padding: 0.35rem 0.5rem;
+    border-bottom: 1px solid var(--surface-border, #e2e8f0);
+    text-align: left;
+  }
+
+  th {
+    background: var(--surface-ground, #f8fafc);
+  }
+
+  .num {
+    text-align: right;
+    white-space: nowrap;
+  }
+}
+
+.totales {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.4rem 1.1rem;
+  margin: 0.75rem 0;
+  font-size: 0.85rem;
+
+  .neto b {
+    color: #2563eb;
+  }
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.6rem;
+
+  label {
+    font-size: 0.8rem;
+  }
+}
+
+.link {
+  border: 0;
+  background: none;
+  padding: 0;
+  margin-top: 0.4rem;
+  color: #2563eb;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.intentos {
+  margin-top: 1rem;
+  font-size: 0.82rem;
+
+  .intento {
+    padding: 0.4rem 0;
+    border-bottom: 1px dashed var(--surface-border, #e2e8f0);
+  }
+
+  .fecha {
+    margin-left: 0.5rem;
+    color: var(--text-color-secondary, #6b7280);
+  }
+
+  .motivo {
+    margin-top: 0.25rem;
+    color: #991b1b;
+    overflow-wrap: anywhere;
+  }
+}

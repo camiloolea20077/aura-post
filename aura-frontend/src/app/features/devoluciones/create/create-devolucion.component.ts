@@ -41,9 +41,19 @@ import { ProductoService } from '../../../core/services/producto.service';
 import { EmpresaService } from '../../../core/services/empresa.service';
 import { IndexDBService } from '../../../core/services/index-db.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
+import {
+  SerialPickerComponent,
+  SerialesElegidos,
+} from '../../../shared/components/serial-picker/serial-picker.component';
+import { SerialProductoService } from '../../../core/services/serial-producto.service';
 import { ModalTirillaComponent } from '../../pos/components/modal-tirilla/modal-tirilla.component';
 
 interface DetalleRow {
+  /** Línea de la venta: de ahí salen los seriales que se pueden devolver. */
+  ventaDetalleId?: number;
+  /** Seriales vendidos en la línea que siguen VENDIDOS (0 = el producto no maneja serial). */
+  serialesVendidos?: number;
+  serialIds?: number[];
   productoId: number;
   productoNombre: string;
   cantidadOriginal: number;
@@ -82,6 +92,7 @@ interface AgregadoRow {
     ConfirmDialogModule,
     TextareaModule,
     ModalTirillaComponent,
+    SerialPickerComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './create-devolucion.component.html',
@@ -149,6 +160,7 @@ export class CreateDevolucionComponent implements OnChanges {
     private readonly indexDBService: IndexDBService,
     private readonly alertService: AlertService,
     private readonly confirmationService: ConfirmationService,
+    private readonly serialService: SerialProductoService,
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -217,6 +229,9 @@ export class CreateDevolucionComponent implements OnChanges {
 
   private buildDetalles(venta: VentaModel): void {
     this.detalles = venta.detalles.map((d) => ({
+      ventaDetalleId: d.id,
+      serialesVendidos: 0,
+      serialIds: [],
       productoId: d.productoId,
       productoNombre: d.productoNombre,
       cantidadOriginal: d.cantidad,
@@ -225,6 +240,50 @@ export class CreateDevolucionComponent implements OnChanges {
       seleccionado: false,
       cantidad: d.cantidad,
     }));
+    void this.cargarSeriales();
+  }
+
+  /** Cuántos seriales de cada línea se pueden devolver: marca las líneas con serial. */
+  private async cargarSeriales(): Promise<void> {
+    await Promise.all(
+      this.detalles.map(async (d) => {
+        if (!d.ventaDetalleId) return;
+        try {
+          const res = await lastValueFrom(this.serialService.vendidosEnLinea(d.ventaDetalleId));
+          d.serialesVendidos = res?.data?.length ?? 0;
+        } catch {
+          d.serialesVendidos = 0;
+        }
+      }),
+    );
+    this.cdr.markForCheck();
+  }
+
+  // ── Seriales que devuelve el cliente ──
+  serialRow: DetalleRow | null = null;
+
+  get serialPickerVisible(): boolean {
+    return this.serialRow !== null;
+  }
+  set serialPickerVisible(v: boolean) {
+    if (!v) this.serialRow = null;
+  }
+
+  abrirSeriales(d: DetalleRow): void {
+    this.serialRow = d;
+    this.cdr.markForCheck();
+  }
+
+  onSerialesElegidos(e: SerialesElegidos): void {
+    if (this.serialRow) this.serialRow.serialIds = e.ids;
+    this.cdr.markForCheck();
+  }
+
+  /** Devolver toda la línea no exige elegir: salen todos. Parcial, sí. */
+  faltanSeriales(d: DetalleRow): boolean {
+    if (!d.seleccionado || !d.serialesVendidos) return false;
+    if (d.cantidad === d.serialesVendidos && !(d.serialIds?.length)) return false;
+    return (d.serialIds?.length ?? 0) !== d.cantidad;
   }
 
   /** Precio con IVA incluido por unidad (para mostrar en la tabla). */
@@ -384,7 +443,7 @@ export class CreateDevolucionComponent implements OnChanges {
     const algunoSeleccionado = this.detalles.some(
       (d) => d.seleccionado && d.cantidad > 0,
     );
-    return algunoSeleccionado;
+    return algunoSeleccionado && !this.detalles.some((d) => this.faltanSeriales(d));
   }
 
   /** Compara la fecha de devolución con la de la venta (solo parte fecha). */
@@ -424,6 +483,7 @@ export class CreateDevolucionComponent implements OnChanges {
         productoId: d.productoId,
         cantidad: d.cantidad,
         loteId: d.loteId,
+        serialIds: d.serialIds?.length ? d.serialIds : undefined,
       }));
 
     const productosAgregados: CreateDevolucionAgregadoDto[] = this.agregados

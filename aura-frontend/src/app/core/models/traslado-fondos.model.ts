@@ -41,6 +41,36 @@ export interface TrasladoFondosModel {
   usuarioId: number | null;
   estado: 'CONFIRMADO' | 'ANULADO';
   createdAt: string | null;
+  motivoAnulacion: string | null;
+  anuladoPor: number | null;
+  anuladoAt: string | null;
+}
+
+/** Una línea de la relación de gastos de la caja menor. */
+export interface MovimientoFondoModel {
+  fecha: string;
+  numeroComprobante: string | null;
+  tipoOrigen: string;
+  descripcion: string | null;
+  tercero: string | null;
+  debito: number;
+  credito: number;
+}
+
+/**
+ * Cuánto reponer a la caja menor: lo que la devuelve a su valor de
+ * constitución (fondo fijo − saldo de hoy), con la relación de gastos que lo
+ * soporta desde la última reposición.
+ */
+export interface ReembolsoFondoModel {
+  cuentaId: number;
+  cuentaNombre: string;
+  fondoFijo: number;
+  saldoActual: number;
+  montoSugerido: number;
+  ultimaReposicion: string | null;
+  totalSalidas: number;
+  movimientos: MovimientoFondoModel[];
 }
 
 /**

@@ -95,3 +95,27 @@ export interface MovimientoCierreItem {
   cajaNombre: string;
   usuarioNombre: string;
 }
+
+// ─── Gráficas del informe de resultados ───────────────────────────
+export interface PuntoCierreModel {
+  /** yyyy-MM-dd con granularidad DIA; yyyy-MM con MES. */
+  etiqueta: string;
+  ventas: number;
+  costo: number;
+  utilidadBruta: number;
+}
+
+export interface ParteCierreModel {
+  etiqueta: string;
+  valor: number;
+  cantidad: number;
+}
+
+export interface GraficasCierreDto {
+  fechaDesde: string;
+  fechaHasta: string;
+  granularidad: 'DIA' | 'MES';
+  serie: PuntoCierreModel[];
+  mediosPago: ParteCierreModel[];
+  gastosCategoria: ParteCierreModel[];
+}

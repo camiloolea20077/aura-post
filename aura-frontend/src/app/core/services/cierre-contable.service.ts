@@ -3,7 +3,11 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ResponseModel } from '../../shared/utils/responde.models';
-import { CierreContableDto, ReporteIvaDto } from '../models/cierre-contable.model';
+import {
+  CierreContableDto,
+  GraficasCierreDto,
+  ReporteIvaDto,
+} from '../models/cierre-contable.model';
 
 @Injectable({ providedIn: 'root' })
 export class CierreContableService {
@@ -16,6 +20,14 @@ export class CierreContableService {
       .set('fechaDesde', fechaDesde)
       .set('fechaHasta', fechaHasta);
     return this.http.get<ResponseModel<CierreContableDto>>(this.apiUrl, { params });
+  }
+
+  /** Series para las gráficas: evolución, medios de pago y gastos por categoría. */
+  graficas(fechaDesde: string, fechaHasta: string): Observable<ResponseModel<GraficasCierreDto>> {
+    const params = new HttpParams()
+      .set('fechaDesde', fechaDesde)
+      .set('fechaHasta', fechaHasta);
+    return this.http.get<ResponseModel<GraficasCierreDto>>(`${this.apiUrl}/graficas`, { params });
   }
 
   reporteIva(fechaDesde: string, fechaHasta: string): Observable<ResponseModel<ReporteIvaDto>> {

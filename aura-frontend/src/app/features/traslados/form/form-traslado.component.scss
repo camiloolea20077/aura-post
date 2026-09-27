@@ -254,3 +254,26 @@ $mono: "JetBrains Mono", monospace;
   border: none !important;
   font-weight: 600 !important;
 }
+
+// ── Seriales de la línea ──────────────────────────────────────────
+.seriales-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.3rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px dashed #f59e0b;
+  border-radius: 6px;
+  background: #fffbeb;
+  color: #b45309;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &--ok {
+    border: 1px solid #bfdbfe;
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+}

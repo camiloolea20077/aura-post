@@ -1,24 +1,17 @@
-import {
-  Component,
-  EventEmitter,
-  Input,
-  OnChanges,
-  OnInit,
-  Output,
-  SimpleChanges,
-} from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
+  FormControl,
   FormGroup,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonModule } from 'primeng/button';
-import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { InputSwitchModule } from 'primeng/inputswitch';
 import { DropdownModule } from 'primeng/dropdown';
 import { TabViewModule } from 'primeng/tabview';
 import { TextareaModule } from 'primeng/textarea';
@@ -29,16 +22,21 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 import { StorageService } from '../../../../core/services/storage.service';
 import {
+  CambioUnidadPreviewModel,
+  CategoriaContableProductoModel,
   CreateProductoDto,
   ProductoModel,
   TIPO_PRODUCTO_OPTIONS,
   TipoProducto,
+  USO_PRODUCTO_OPTIONS,
   UpdateProductoDto,
+  UsoProducto,
 } from '../../../../core/models/producto.model';
 import { ProductoService } from '../../../../core/services/producto.service';
 import { CategoriaService } from '../../../../core/services/categoria.service';
 import { MarcaService } from '../../../../core/services/marca.service';
 import { UnidadMedidaService } from '../../../../core/services/unidad-medida.service';
+import { ContabilidadService } from '../../../../core/services/contabilidad.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 import { ProductoPresentacionService } from '../../../../core/services/producto-presentacion.service';
 import {
@@ -58,10 +56,26 @@ export interface PresentacionFormItem {
   costo: number;
   esDefaultCompra: boolean;
   esDefaultVenta: boolean;
+  /** false = solo para comprar: el POS no la ofrece. */
+  seVende: boolean;
   activo: boolean;
   _editando: boolean;
   _esNueva: boolean;
 }
+
+/** Nombres de empaque más comunes; el usuario puede escribir otro. */
+const EMPAQUES_COMUNES = [
+  'Caja',
+  'Paca',
+  'Bulto',
+  'Display',
+  'Sixpack',
+  'Docena',
+  'Cubeta',
+  'Blíster',
+  'Fardo',
+  'Bolsa',
+];
 
 @Component({
   selector: 'app-form-productos',
@@ -69,10 +83,9 @@ export interface PresentacionFormItem {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    DialogModule,
+    CheckboxModule,
     InputTextModule,
     InputNumberModule,
-    InputSwitchModule,
     DropdownModule,
     TabViewModule,
     TextareaModule,
@@ -86,19 +99,32 @@ export interface PresentacionFormItem {
   templateUrl: './form-productos.component.html',
   styleUrls: ['./form-productos.component.scss'],
 })
-export class FormProductosComponent implements OnInit, OnChanges {
-  @Input() displayModal = false;
-  @Input() productoId: number | null = null;
-  @Input() slug = 'create';
-
-  @Output() modalClosed = new EventEmitter<void>();
-  @Output() productoSaved = new EventEmitter<ProductoModel>();
+export class FormProductosComponent implements OnInit {
+  /** Sale de la ruta: /catalogo/productos/editar/:id. Null al crear. */
+  public productoId: number | null = null;
 
   // ─── Presentaciones ──────────────────────────────────────────────
   public presentaciones: PresentacionFormItem[] = [];
   public presentacionEnEdicion: PresentacionFormItem | null = null;
   public frmPresentacion!: FormGroup;
   public savingPresentacion = false;
+
+  // ─── Pasar a unidad ──────────────────────────────────────────────
+  public cambioUnidad: CambioUnidadPreviewModel | null = null;
+  public cargandoCambioUnidad = false;
+  public aplicandoCambioUnidad = false;
+  public frmCambioUnidad!: FormGroup;
+
+  // ─── Empaque de compra (la caja que trae N unidades) ─────────────
+  public frmEmpaque!: FormGroup;
+  /** Lo que tenía guardado el producto: si no se vende por unidad, el POS solo ofrece el empaque. */
+  private vendePorUnidadGuardado = true;
+  /** Presentación ya guardada que representa el empaque; null si aún no hay. */
+  public empaqueItem: PresentacionFormItem | null = null;
+  public readonly empaquesComunes = EMPAQUES_COMUNES.map((e) => ({
+    label: e,
+    value: e,
+  }));
 
   // ─── Producto ────────────────────────────────────────────────────
   public frmProducto!: FormGroup;
@@ -111,6 +137,7 @@ export class FormProductosComponent implements OnInit, OnChanges {
   public ivaValue = 0;
   // ─── Opciones de dropdowns ───────────────────────────────────────
   public tipoOptions = TIPO_PRODUCTO_OPTIONS;
+  public usoOptions = USO_PRODUCTO_OPTIONS;
   public categoriasOpts: { label: string; value: number | null }[] = [
     { label: 'Sin categoría', value: null },
   ];
@@ -118,6 +145,16 @@ export class FormProductosComponent implements OnInit, OnChanges {
     { label: 'Sin marca', value: null },
   ];
   public unidadesOpts: { label: string; value: number }[] = [];
+
+  // ─── Contabilidad ────────────────────────────────────────────────
+  public categoriasContables: CategoriaContableProductoModel[] = [];
+  public categoriasContablesOpts: { label: string; value: number | null }[] = [
+    { label: 'General (por defecto)', value: null },
+  ];
+  public cuentasIngresoOpts: { label: string; value: number }[] = [];
+  public cuentasCostoOpts: { label: string; value: number }[] = [];
+  public cuentasInventarioOpts: { label: string; value: number }[] = [];
+  public mostrarCuentasAvanzadas = false;
 
   constructor(
     private readonly fb: FormBuilder,
@@ -127,28 +164,30 @@ export class FormProductosComponent implements OnInit, OnChanges {
     private readonly categoriaService: CategoriaService,
     private readonly marcaService: MarcaService,
     private readonly unidadMedidaService: UnidadMedidaService,
+    private readonly contabilidadService: ContabilidadService,
     private readonly alertService: AlertService,
     private readonly storageService: StorageService,
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
     this.initForm();
     this.initFrmPresentacion();
+    this.initFrmEmpaque();
+    this.frmCambioUnidad = this.fb.group({
+      unidadMedidaId: [null, Validators.required],
+      nombrePresentacion: ['', [Validators.required, Validators.maxLength(100)]],
+    });
     this.loadDropdowns();
-  }
+    this.loadContabilidad();
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['displayModal'] && this.displayModal) {
-      this.activeTab = 0;
-      this.isEditMode = this.slug === 'edit' && !!this.productoId;
-      if (this.isEditMode) {
-        this.loadData(this.productoId!);
-        this.loadPresentaciones(this.productoId!);
-      } else {
-        this.resetForm();
-        this.presentaciones = [];
-        this.presentacionEnEdicion = null;
-      }
+    const id = Number(this.route.snapshot.params['id']);
+    this.productoId = id > 0 ? id : null;
+    this.isEditMode = !!this.productoId;
+    if (this.isEditMode) {
+      this.loadData(this.productoId!);
+      this.loadPresentaciones(this.productoId!);
     }
   }
 
@@ -170,6 +209,7 @@ export class FormProductosComponent implements OnInit, OnChanges {
       marcaId: [null],
       unidadMedidaBaseId: [null, Validators.required],
       tipoProducto: ['ESTANDAR', Validators.required],
+      usoProducto: ['VENTA', Validators.required],
       imagenUrl: [null, [Validators.maxLength(500)]],
       activo: [true, Validators.required],
       // precio y costo se derivan de la presentación de compra (Tab 4)
@@ -186,8 +226,14 @@ export class FormProductosComponent implements OnInit, OnChanges {
       manejaInventario: [true, Validators.required],
       manejaLotes: [false, Validators.required],
       manejaSerial: [false, Validators.required],
+      /** Meses de garantía al cliente; se anotan en el serial al vender. */
+      mesesGarantia: [null as number | null, [Validators.min(0), Validators.max(120)]],
       permitirStockNegativo: [false, Validators.required],
       visibleEnPos: [true, Validators.required],
+      categoriaContableId: [null],
+      cuentaIngresoId: [null],
+      cuentaCostoId: [null],
+      cuentaInventarioId: [null],
     });
 
     this.frmProducto.get('manejaInventario')?.valueChanges.subscribe((val) => {
@@ -219,6 +265,40 @@ export class FormProductosComponent implements OnInit, OnChanges {
         );
       }
     });
+    this.frmProducto
+      .get('usoProducto')
+      ?.valueChanges.subscribe((uso: UsoProducto) =>
+        this.sincronizarUso(uso, !this.isEditMode),
+      );
+  }
+
+  /**
+   * Un insumo nunca se vende en el POS: se apaga y bloquea "Visible en POS".
+   * Al crear, si no hay categoría contable elegida, se propone la de insumos.
+   */
+  private sincronizarUso(uso: UsoProducto, proponerCategoria: boolean): void {
+    const visible = this.frmProducto.get('visibleEnPos');
+    if (uso !== 'INSUMO') {
+      visible?.enable({ emitEvent: false });
+      return;
+    }
+
+    visible?.setValue(false, { emitEvent: false });
+    visible?.disable({ emitEvent: false });
+
+    if (
+      proponerCategoria &&
+      !this.frmProducto.get('categoriaContableId')?.value
+    ) {
+      const insumos = this.categoriasContables.find(
+        (c) => c.tipo === 'INSUMO' && c.activo,
+      );
+      if (insumos)
+        this.frmProducto.patchValue(
+          { categoriaContableId: insumos.id },
+          { emitEvent: false },
+        );
+    }
   }
 
   private resetForm(): void {
@@ -231,6 +311,7 @@ export class FormProductosComponent implements OnInit, OnChanges {
       marcaId: null,
       unidadMedidaBaseId: null,
       tipoProducto: 'ESTANDAR',
+      usoProducto: 'VENTA',
       imagenUrl: null,
       activo: true,
       precio: 0,
@@ -246,7 +327,12 @@ export class FormProductosComponent implements OnInit, OnChanges {
       manejaSerial: false,
       permitirStockNegativo: false,
       visibleEnPos: true,
+      categoriaContableId: null,
+      cuentaIngresoId: null,
+      cuentaCostoId: null,
+      cuentaInventarioId: null,
     });
+    this.frmProducto?.get('visibleEnPos')?.enable({ emitEvent: false });
   }
 
   isInvalid(field: string): boolean {
@@ -254,10 +340,57 @@ export class FormProductosComponent implements OnInit, OnChanges {
     return !!(ctrl?.invalid && ctrl?.touched);
   }
   get ivaActivo(): boolean {
-    return this.ivaValue > 0;
+    // Del form y no de ivaValue: al editar, el IVA llega por patchValue sin input.
+    return (this.frmProducto.get('ivaPorcentaje')?.value ?? 0) > 0;
+  }
+
+  /**
+   * Tarifas de IVA del selector. Es propiedad y no getter: un arreglo nuevo en
+   * cada ciclo de detección de cambios re-renderiza el dropdown sin parar.
+   */
+  public ivaOptions = this.tarifasIva();
+
+  private tarifasIva(extra?: number): { label: string; value: number }[] {
+    const tarifas = [0, 5, 19];
+    if (extra != null && !isNaN(extra) && !tarifas.includes(extra))
+      tarifas.push(extra);
+    return tarifas
+      .sort((a, b) => a - b)
+      .map((t) => ({ label: `${t} %`, value: t }));
+  }
+
+  /** Si el producto guardado tiene una tarifa distinta, se agrega a la lista. */
+  private actualizarTarifasIva(): void {
+    this.ivaOptions = this.tarifasIva(
+      Number(this.frmProducto.get('ivaPorcentaje')?.value ?? 0),
+    );
+  }
+
+  /** La unidad de inventario también se elige en la frase del empaque. */
+  get unidadControl(): FormControl {
+    return this.frmProducto.get('unidadMedidaBaseId') as FormControl;
   }
   onIvaInput(event: any): void {
     this.ivaValue = event.value ?? 0;
+  }
+
+  get esInsumo(): boolean {
+    return this.frmProducto.get('usoProducto')?.value === 'INSUMO';
+  }
+
+  get usoDescripcion(): string {
+    const uso = this.frmProducto.get('usoProducto')?.value;
+    return this.usoOptions.find((o) => o.value === uso)?.desc ?? '';
+  }
+
+  /** La categoría que realmente aplica: la elegida o, sin elegir, "General". */
+  get categoriaEfectiva(): CategoriaContableProductoModel | null {
+    const id = this.frmProducto.get('categoriaContableId')?.value;
+    return (
+      this.categoriasContables.find((c) =>
+        id ? c.id === id : c.nombre === 'General',
+      ) ?? null
+    );
   }
 
   // ─── Form presentaciones ─────────────────────────────────────────
@@ -268,7 +401,7 @@ export class FormProductosComponent implements OnInit, OnChanges {
       codigoBarras: [null, [Validators.maxLength(50)]],
       precio: [0, [Validators.required, Validators.min(0)]],
       costo: [0, [Validators.required, Validators.min(0)]],
-      esDefaultCompra: [true],
+      esDefaultCompra: [false],
       esDefaultVenta: [false],
     });
 
@@ -309,11 +442,13 @@ export class FormProductosComponent implements OnInit, OnChanges {
             costo: p.costo,
             esDefaultCompra: p.esDefaultCompra ?? false,
             esDefaultVenta: p.esDefaultVenta ?? false,
+            seVende: p.seVende ?? true,
             activo: p.activo,
             _editando: false,
             _esNueva: false,
           }),
         );
+        this.cargarEmpaque();
       }
     } catch {
       /* no bloquear */
@@ -336,6 +471,7 @@ export class FormProductosComponent implements OnInit, OnChanges {
       costo: costoBase,
       esDefaultCompra: false,
       esDefaultVenta: false,
+      seVende: true,
       activo: true,
       _editando: true,
       _esNueva: true,
@@ -410,19 +546,6 @@ export class FormProductosComponent implements OnInit, OnChanges {
       this.presentaciones.forEach((p) => {
         if (p !== item) p.esDefaultVenta = false;
       });
-    }
-
-    // Si es la presentación de compra por defecto → derivar precio y costo unitario base
-    // precio base = precio presentación ÷ factor  (ej: $4.500 ÷ 100 = $45)
-    if (v.esDefaultCompra && v.factorConversion > 0) {
-      const precioBase =
-        Math.round((v.precio / v.factorConversion) * 10000) / 10000;
-      const costoBase =
-        Math.round((v.costo / v.factorConversion) * 10000) / 10000;
-      this.frmProducto.patchValue(
-        { precio: precioBase, costo: costoBase },
-        { emitEvent: false },
-      );
     }
 
     // Modo crear — solo guardar en memoria hasta que se guarde el producto
@@ -536,6 +659,282 @@ export class FormProductosComponent implements OnInit, OnChanges {
     }
   }
 
+  // ─── Pasar a unidad ──────────────────────────────────────────────
+  /**
+   * Una presentación que contiene menos de 1 unidad base es más pequeña que la
+   * base (la UNIDAD de una paca): el inventario se puede pasar a contar en ella.
+   */
+  puedePasarAUnidad(item: PresentacionFormItem): boolean {
+    return (
+      this.isEditMode &&
+      !item._esNueva &&
+      !!item.id &&
+      item.activo &&
+      item.factorConversion > 0 &&
+      item.factorConversion < 1
+    );
+  }
+
+  get unidadCambioNombre(): string {
+    const id = this.frmCambioUnidad?.get('unidadMedidaId')?.value;
+    return this.unidadesOpts.find((u) => u.value === id)?.label ?? '';
+  }
+
+  async verCambioUnidad(item: PresentacionFormItem): Promise<void> {
+    if (!this.productoId || !item.id) return;
+    this.cargandoCambioUnidad = true;
+    try {
+      const res = await lastValueFrom(
+        this.productoService.previewCambioUnidad(this.productoId, item.id),
+      );
+      this.cambioUnidad = res?.data ?? null;
+      if (this.cambioUnidad) {
+        this.frmCambioUnidad.reset({
+          unidadMedidaId: this.cambioUnidad.unidadSugeridaId,
+          nombrePresentacion: this.cambioUnidad.nombrePresentacionSugerido,
+        });
+      }
+    } catch (e: any) {
+      this.alertService.showError(
+        'Error',
+        e?.error?.message ?? e?.message ?? 'No se pudo preparar el cambio.',
+      );
+    } finally {
+      this.cargandoCambioUnidad = false;
+    }
+  }
+
+  cancelarCambioUnidad(): void {
+    this.cambioUnidad = null;
+  }
+
+  confirmarCambioUnidad(): void {
+    const preview = this.cambioUnidad;
+    if (!preview?.puedeAplicar) return;
+    if (this.frmCambioUnidad.invalid) {
+      this.frmCambioUnidad.markAllAsTouched();
+      return;
+    }
+    this.confirmService.confirm({
+      message:
+        `El inventario de "${preview.productoNombre}" pasará a contarse en ` +
+        `${this.unidadCambioNombre || preview.presentacionNombre} (1 ${preview.unidadActualNombre} = ${preview.factor}). ` +
+        'No se deshace desde la pantalla. ¿Continuar?',
+      header: 'Pasar a unidad',
+      icon: 'pi pi-sync',
+      acceptLabel: 'Pasar a unidad',
+      rejectLabel: 'Cancelar',
+      accept: () => this.aplicarCambioUnidad(preview),
+    });
+  }
+
+  private async aplicarCambioUnidad(
+    preview: CambioUnidadPreviewModel,
+  ): Promise<void> {
+    this.aplicandoCambioUnidad = true;
+    try {
+      const v = this.frmCambioUnidad.value;
+      await lastValueFrom(
+        this.productoService.aplicarCambioUnidad(preview.productoId, {
+          presentacionId: preview.presentacionId,
+          unidadMedidaId: v.unidadMedidaId,
+          nombrePresentacion: (v.nombrePresentacion ?? '').trim(),
+        }),
+      );
+      this.cambioUnidad = null;
+      await Promise.all([
+        this.loadData(preview.productoId),
+        this.loadPresentaciones(preview.productoId),
+      ]);
+      this.alertService.showSuccess(
+        'Listo',
+        'El inventario ahora se cuenta en la unidad nueva.',
+      );
+    } catch (e: any) {
+      this.alertService.showError(
+        'No se pudo',
+        e?.error?.message ?? e?.message ?? 'No se pudo pasar a unidad.',
+      );
+    } finally {
+      this.aplicandoCambioUnidad = false;
+    }
+  }
+
+  // ─── Empaque de compra ───────────────────────────────────────────
+  private initFrmEmpaque(): void {
+    this.frmEmpaque = this.fb.group({
+      usaEmpaque: [false],
+      nombre: ['Caja', [Validators.maxLength(100)]],
+      trae: [null as number | null, [Validators.min(1)]],
+      costoEmpaque: [null as number | null, [Validators.min(0)]],
+      precioEmpaque: [null as number | null, [Validators.min(0)]],
+      codigoBarras: [null as string | null, [Validators.maxLength(50)]],
+      vendeSuelto: [true],
+      vendeEmpaque: [true],
+    });
+
+    // El costo por unidad sale del empaque: nadie tiene que dividir a mano.
+    const recalcularCosto = () => {
+      const costo = this.costoUnidadEmpaque;
+      if (this.usaEmpaque && costo != null)
+        this.frmProducto.patchValue({ costo }, { emitEvent: false });
+    };
+    this.frmEmpaque.get('trae')?.valueChanges.subscribe(recalcularCosto);
+    this.frmEmpaque.get('costoEmpaque')?.valueChanges.subscribe(recalcularCosto);
+    this.frmEmpaque.get('usaEmpaque')?.valueChanges.subscribe(recalcularCosto);
+  }
+
+  get usaEmpaque(): boolean {
+    return !!this.frmEmpaque?.get('usaEmpaque')?.value;
+  }
+
+  get vendeSuelto(): boolean {
+    return !!this.frmEmpaque?.get('vendeSuelto')?.value;
+  }
+
+  get vendeEmpaque(): boolean {
+    return !!this.frmEmpaque?.get('vendeEmpaque')?.value;
+  }
+
+  get costoEmpaqueValor(): number {
+    return Number(this.frmEmpaque?.get('costoEmpaque')?.value) || 0;
+  }
+
+  setUsaEmpaque(valor: boolean): void {
+    this.frmEmpaque.get('usaEmpaque')?.setValue(valor);
+    // Sin empaque solo se puede vender por unidad.
+    if (!valor) this.frmEmpaque.get('vendeSuelto')?.setValue(true);
+  }
+
+  setVendeSuelto(valor: boolean): void {
+    this.frmEmpaque.get('vendeSuelto')?.setValue(valor);
+  }
+
+  get traeEmpaque(): number {
+    return Number(this.frmEmpaque?.get('trae')?.value) || 0;
+  }
+
+  get nombreEmpaque(): string {
+    const nombre = `${this.frmEmpaque?.get('nombre')?.value ?? ''}`.trim();
+    return nombre || 'el empaque';
+  }
+
+  /** Abreviatura de la unidad de inventario para las frases ("trae 10 und"). */
+  get unidadBaseCorta(): string {
+    const label = this.unidadBaseNombre;
+    const abreviatura = /\(([^)]+)\)\s*$/.exec(label)?.[1];
+    return (abreviatura ?? label).toLowerCase();
+  }
+
+  /** Costo de una unidad de inventario: costo del empaque ÷ lo que trae. */
+  get costoUnidadEmpaque(): number | null {
+    const costo = Number(this.frmEmpaque?.get('costoEmpaque')?.value);
+    const trae = this.traeEmpaque;
+    if (!trae || isNaN(costo) || costo < 0) return null;
+    return Math.round((costo / trae) * 100) / 100;
+  }
+
+  /** Precio del empaque completo si se deja vacío: precio suelto × lo que trae. */
+  get precioEmpaqueSugerido(): number {
+    return Math.round(this.precioFinalTotal * this.traeEmpaque);
+  }
+
+  /** Las presentaciones que no son el empaque principal (sección avanzada). */
+  get presentacionesAdicionales(): PresentacionFormItem[] {
+    return this.presentaciones.filter((p) => p !== this.empaqueItem);
+  }
+
+  private get errorEmpaque(): string | null {
+    if (!this.usaEmpaque) return null;
+    const v = this.frmEmpaque.value;
+    if (!`${v.nombre ?? ''}`.trim())
+      return 'Escribe cómo se llama el empaque (caja, paca, bulto…).';
+    if (!v.trae || v.trae <= 1)
+      return 'Indica cuántas unidades trae el empaque (más de 1).';
+    if (v.costoEmpaque === null || v.costoEmpaque === undefined || v.costoEmpaque === '')
+      return 'Escribe el costo del empaque.';
+    if (!v.vendeSuelto && !v.vendeEmpaque)
+      return 'Elige al menos una forma de venta: por unidad o empaque completo.';
+    return null;
+  }
+
+  /** Toma como empaque la presentación de compra que contiene más de 1 unidad. */
+  private cargarEmpaque(): void {
+    const empaque =
+      this.presentaciones.find(
+        (p) => p.activo && p.esDefaultCompra && p.factorConversion > 1,
+      ) ??
+      this.presentaciones.find((p) => p.activo && p.factorConversion > 1) ??
+      null;
+    this.empaqueItem = empaque;
+    this.frmEmpaque.reset(
+      {
+        usaEmpaque: !!empaque,
+        nombre: empaque?.nombre ?? 'Caja',
+        trae: empaque?.factorConversion ?? null,
+        costoEmpaque: empaque?.costo ?? null,
+        precioEmpaque: empaque?.precio || null,
+        codigoBarras: empaque?.codigoBarras ?? null,
+        vendeSuelto: empaque ? this.vendePorUnidadGuardado : true,
+        vendeEmpaque: empaque ? empaque.seVende !== false : true,
+      },
+      { emitEvent: false },
+    );
+  }
+
+  /** Crea, actualiza o retira la presentación del empaque. Devuelve el error, si hubo. */
+  private async guardarEmpaque(productoId: number): Promise<string | null> {
+    const v = this.frmEmpaque.getRawValue();
+    try {
+      if (!v.usaEmpaque) {
+        if (this.empaqueItem?.id) {
+          const e = this.empaqueItem;
+          await lastValueFrom(
+            this.presentacionService.update(e.id!, {
+              nombre: e.nombre,
+              codigoBarras: e.codigoBarras,
+              factorConversion: e.factorConversion,
+              precio: e.precio,
+              costo: e.costo,
+              esDefaultCompra: false,
+              esDefaultVenta: false,
+              activo: false,
+            }),
+          );
+        }
+        return null;
+      }
+
+      const dto: UpdateProductoPresentacionDto = {
+        nombre: `${v.nombre}`.trim(),
+        codigoBarras: v.codigoBarras?.trim() || null,
+        factorConversion: Number(v.trae),
+        precio: v.vendeEmpaque
+          ? Number(v.precioEmpaque) || this.precioEmpaqueSugerido
+          : Number(v.precioEmpaque) || 0,
+        costo: Number(v.costoEmpaque) || 0,
+        esDefaultCompra: true,
+        esDefaultVenta: !!v.vendeEmpaque && !v.vendeSuelto,
+        seVende: !!v.vendeEmpaque,
+        activo: true,
+      };
+      if (this.empaqueItem?.id) {
+        await lastValueFrom(
+          this.presentacionService.update(this.empaqueItem.id, dto),
+        );
+      } else {
+        await lastValueFrom(
+          this.presentacionService.create({ productoId, ...dto }),
+        );
+      }
+      return null;
+    } catch (e: any) {
+      return (
+        e?.error?.message ?? e?.message ?? 'No se pudo guardar el empaque.'
+      );
+    }
+  }
+
   // ─── Guardar presentaciones pendientes al crear el producto ───────
   private async guardarPresentacionesPendientes(
     productoId: number,
@@ -593,6 +992,43 @@ export class FormProductosComponent implements OnInit, OnChanges {
     }
   }
 
+  /**
+   * Categorías contables y cuentas auxiliares para la pestaña Contabilidad.
+   * Va aparte de los demás dropdowns: un usuario sin acceso a contabilidad
+   * debe poder seguir creando productos (heredan la categoría General).
+   */
+  private async loadContabilidad(): Promise<void> {
+    try {
+      const [categorias, plan] = await Promise.all([
+        lastValueFrom(this.contabilidadService.listarCategoriasProducto()),
+        lastValueFrom(this.contabilidadService.listarPlan()),
+      ]);
+
+      this.categoriasContables = categorias?.data ?? [];
+      this.categoriasContablesOpts = [
+        { label: 'General (por defecto)', value: null },
+        ...this.categoriasContables
+          .filter((c) => c.activo && c.nombre !== 'General')
+          .map((c) => ({ label: c.nombre, value: c.id })),
+      ];
+
+      // Mismas reglas de clase que valida el backend.
+      const auxiliares = (plan?.data ?? []).filter(
+        (c) => c.auxiliar && c.activa,
+      );
+      const opciones = (...prefijos: string[]) =>
+        auxiliares
+          .filter((c) => prefijos.some((p) => c.codigo?.startsWith(p)))
+          .map((c) => ({ label: `${c.codigo} - ${c.nombre}`, value: c.id }));
+
+      this.cuentasIngresoOpts = opciones('4');
+      this.cuentasCostoOpts = opciones('5', '6', '7');
+      this.cuentasInventarioOpts = opciones('14');
+    } catch {
+      /* sin permisos de contabilidad: el producto hereda la categoría General */
+    }
+  }
+
   // ─── Cargar datos en modo edición ────────────────────────────────
   private async loadData(id: number): Promise<void> {
     this.isLoading = true;
@@ -603,7 +1039,7 @@ export class FormProductosComponent implements OnInit, OnChanges {
       }
     } catch {
       this.alertService.showError('Error', 'No se pudo cargar el producto.');
-      this.closeModal();
+      this.volver();
     } finally {
       this.isLoading = false;
     }
@@ -621,6 +1057,7 @@ export class FormProductosComponent implements OnInit, OnChanges {
           marcaId: d.marcaId,
           unidadMedidaBaseId: d.unidadMedidaBaseId,
           tipoProducto: d.tipoProducto,
+          usoProducto: d.usoProducto ?? 'VENTA',
           imagenUrl: d.imagenUrl,
           activo: d.activo,
           precio: d.precio,
@@ -633,10 +1070,29 @@ export class FormProductosComponent implements OnInit, OnChanges {
           manejaInventario: d.manejaInventario,
           manejaLotes: d.manejaLotes,
           manejaSerial: d.manejaSerial,
+          mesesGarantia: d.mesesGarantia ?? null,
           permitirStockNegativo: d.permitirStockNegativo,
           visibleEnPos: d.visibleEnPos,
+          categoriaContableId: d.categoriaContableId ?? null,
+          cuentaIngresoId: d.cuentaIngresoId ?? null,
+          cuentaCostoId: d.cuentaCostoId ?? null,
+          cuentaInventarioId: d.cuentaInventarioId ?? null,
         },
         { emitEvent: false },
+      );
+      this.actualizarTarifasIva();
+      this.vendePorUnidadGuardado = d.vendePorUnidad ?? true;
+      if (this.empaqueItem)
+        this.frmEmpaque.patchValue(
+          { vendeSuelto: this.vendePorUnidadGuardado },
+          { emitEvent: false },
+        );
+      this.sincronizarUso(d.usoProducto ?? 'VENTA', false);
+      // Si el producto ya tiene cuentas propias, se muestran de una vez.
+      this.mostrarCuentasAvanzadas = !!(
+        d.cuentaIngresoId ||
+        d.cuentaCostoId ||
+        d.cuentaInventarioId
       );
       // Sync enable/disable state for inventory sub-controls
       const subControls = [
@@ -658,17 +1114,18 @@ export class FormProductosComponent implements OnInit, OnChanges {
 
   // ─── Guardar producto ────────────────────────────────────────────
   async saveProducto(): Promise<void> {
-    if (this.frmProducto.invalid) {
+    const errorEmpaque = this.errorEmpaque;
+    if (this.frmProducto.invalid || errorEmpaque) {
       this.frmProducto.markAllAsTouched();
-      const tab1Fields = ['nombre', 'unidadMedidaBaseId', 'tipoProducto'];
-      const tab2Fields = ['ivaPorcentaje', 'impoconsumo'];
-      if (tab1Fields.some((f) => this.frmProducto.get(f)?.invalid))
-        this.activeTab = 0;
-      else if (tab2Fields.some((f) => this.frmProducto.get(f)?.invalid))
+      // Llevar a la pestaña donde está el error.
+      const basico = ['nombre', 'unidadMedidaBaseId', 'tipoProducto', 'usoProducto'];
+      const precios = ['ivaPorcentaje', 'impoconsumo', 'precio', 'costo'];
+      if (basico.some((f) => this.frmProducto.get(f)?.invalid)) this.activeTab = 0;
+      else if (errorEmpaque || precios.some((f) => this.frmProducto.get(f)?.invalid))
         this.activeTab = 1;
       this.alertService.showWarn(
         'Formulario incompleto',
-        'Revisa los campos marcados en rojo.',
+        errorEmpaque ?? 'Revisa los campos marcados en rojo.',
       );
       return;
     }
@@ -686,21 +1143,34 @@ export class FormProductosComponent implements OnInit, OnChanges {
       const response = await lastValueFrom(obs);
 
       if (response?.status === 200 || response?.status === 201) {
+        const productoId = this.isEditMode
+          ? this.productoId!
+          : (response?.data?.id ?? null);
+
         // Si es nuevo y hay presentaciones pendientes, guardarlas ahora
-        if (
-          !this.isEditMode &&
-          response?.data?.id &&
-          this.presentaciones.length > 0
-        ) {
-          await this.guardarPresentacionesPendientes(response.data.id);
+        if (!this.isEditMode && productoId && this.presentaciones.length > 0) {
+          await this.guardarPresentacionesPendientes(productoId);
+        }
+
+        const errorGuardandoEmpaque = productoId
+          ? await this.guardarEmpaque(productoId)
+          : null;
+        if (errorGuardandoEmpaque) {
+          this.alertService.showWarn(
+            'El producto se guardó, el empaque no',
+            errorGuardandoEmpaque,
+          );
+          // Queda en la edición del producto para corregir el empaque.
+          if (!this.isEditMode && productoId)
+            this.router.navigate(['/catalogo/productos/editar', productoId]);
+          return;
         }
 
         this.alertService.showSuccess(
           this.isEditMode ? 'Producto actualizado' : 'Producto creado',
           response.message,
         );
-        this.productoSaved.emit(response.data);
-        this.closeModal();
+        this.volver();
       }
     } catch (error: any) {
       this.alertService.showError(
@@ -712,17 +1182,14 @@ export class FormProductosComponent implements OnInit, OnChanges {
     }
   }
 
-  closeModal(): void {
-    this.resetForm();
-    this.activeTab = 0;
-    this.presentaciones = [];
-    this.presentacionEnEdicion = null;
-    this.modalClosed.emit();
+  volver(): void {
+    this.router.navigate(['/catalogo/productos']);
   }
 
   // ─── Helpers ─────────────────────────────────────────────────────
   private buildDto(): CreateProductoDto {
     const v = this.frmProducto.getRawValue();
+    const uso = (v.usoProducto ?? 'VENTA') as UsoProducto;
     return {
       nombre: v.nombre?.trim(),
       sku: v.sku?.trim() || null,
@@ -733,6 +1200,7 @@ export class FormProductosComponent implements OnInit, OnChanges {
       marcaId: v.marcaId ?? null,
       unidadMedidaBaseId: v.unidadMedidaBaseId,
       tipoProducto: v.tipoProducto as TipoProducto,
+      usoProducto: uso,
       activo: v.activo,
       precio: v.precio ?? 0,
       costo: v.costo ?? 0,
@@ -744,8 +1212,17 @@ export class FormProductosComponent implements OnInit, OnChanges {
       manejaInventario: v.manejaInventario,
       manejaLotes: v.manejaLotes,
       manejaSerial: v.manejaSerial,
+      // 0 = sin garantía (null lo dejaría como estaba en el back).
+      mesesGarantia: v.mesesGarantia ?? 0,
       permitirStockNegativo: v.permitirStockNegativo ?? false,
-      visibleEnPos: v.visibleEnPos ?? true,
+      visibleEnPos: uso === 'INSUMO' ? false : (v.visibleEnPos ?? true),
+      // Sin empaque siempre se vende por unidad; con empaque, lo que diga "Por unidad".
+      vendePorUnidad:
+        !this.usaEmpaque || !!this.frmEmpaque.getRawValue().vendeSuelto,
+      categoriaContableId: v.categoriaContableId ?? null,
+      cuentaIngresoId: v.cuentaIngresoId ?? null,
+      cuentaCostoId: v.cuentaCostoId ?? null,
+      cuentaInventarioId: v.cuentaInventarioId ?? null,
     };
   }
 

@@ -26,10 +26,9 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { MessageModule } from 'primeng/message';
 import { TooltipModule } from 'primeng/tooltip';
 
-import { BuscadorTerceroDialogComponent } from '../../../../shared/components/buscador-tercero-dialog/buscador-tercero-dialog.component';
+import { TerceroAutocompleteComponent } from '../../../../shared/components/tercero-autocomplete/tercero-autocomplete.component';
 
 import { ContabilidadService } from '../../../../core/services/contabilidad.service';
-import { TerceroService } from '../../../../core/services/tercero.service';
 import { CentroCostoService } from '../../../../core/services/centro-costo.service';
 import { CuentaBancariaService } from '../../../../core/services/cuenta-bancaria.service';
 import { IndexDBService } from '../../../../core/services/index-db.service';
@@ -61,7 +60,7 @@ import { aFechaLocal } from '../../../../shared/utils/fecha.util';
     RadioButtonModule,
     MessageModule,
     TooltipModule,
-    BuscadorTerceroDialogComponent,
+    TerceroAutocompleteComponent,
   ],
   templateUrl: './form-comprobante-contable.component.html',
   styleUrls: ['./form-comprobante-contable.component.scss'],
@@ -72,14 +71,11 @@ export class FormComprobanteContableComponent implements OnInit {
   consecutivoPreview = '';
 
   cuentas: PlanCuentaModel[] = [];
-  terceros: TerceroTableModel[] = [];
   cuentasAuxOpts: { label: string; value: number }[] = [];
-  terceroOpts: { label: string; value: number }[] = [];
 
   // ── Buscador avanzado de beneficiario ──
-  buscadorTerceroVisible = false;
-  /** Texto del tercero elegido. No sale de `terceroOpts`: el buscador trae
-   *  terceros que pueden no estar en esa lista (tope de 500 en el backend). */
+  /** Texto del beneficiario elegido: sale del autocomplete, no de una lista
+   *  precargada (la de /terceros/selector tiene tope de 500). */
   beneficiarioLabel = '';
   centroCostoOpts: { label: string; value: number }[] = [];
   sucursalesOpts: { label: string; value: number }[] = [];
@@ -108,7 +104,8 @@ export class FormComprobanteContableComponent implements OnInit {
   readonly tipoComprobanteOpts = [
     { label: 'Comprobante de Egreso (CE)', value: 'CE' },
     { label: 'Recibo de Caja / Ingreso (RC)', value: 'RC' },
-    { label: 'Nota de Diario (CD)', value: 'CD' },
+    // La nota de diario (CD) vive en Contabilidad → Notas contables, con
+    // borrador y validación de cuentas: aquí solo lo que mueve dinero.
   ];
 
   /**
@@ -158,7 +155,6 @@ export class FormComprobanteContableComponent implements OnInit {
   constructor(
     private readonly fb: FormBuilder,
     private readonly service: ContabilidadService,
-    private readonly terceroService: TerceroService,
     private readonly ccService: CentroCostoService,
     private readonly cuentaCobrarService: CuentaCobrarService,
     private readonly cuentaPagarService: CuentaPagarService,
@@ -206,6 +202,8 @@ export class FormComprobanteContableComponent implements OnInit {
       debito: [0],
       credito: [0],
       terceroId: [null],
+      // Solo pantalla: texto del tercero de la línea (no viaja al backend).
+      terceroLabel: [''],
       centroCostoId: [null],
       origen: ['MANUAL'], // MANUAL | CARTERA | BANCO
     });
@@ -258,8 +256,7 @@ export class FormComprobanteContableComponent implements OnInit {
   }
 
   private async cargarSelectores(): Promise<void> {
-    const [tercRes, ccRes, bancosRes, sucursales] = await Promise.all([
-      lastValueFrom(this.terceroService.tercerosSelector()).catch(() => null),
+    const [ccRes, bancosRes, sucursales] = await Promise.all([
       lastValueFrom(this.ccService.list()).catch(() => null),
       lastValueFrom(this.cuentaBancariaService.list()).catch(() => null),
       this.indexDB.getSucursales().catch(() => []),
@@ -274,11 +271,6 @@ export class FormComprobanteContableComponent implements OnInit {
     if (this.sucursalesOpts.length > 0 && !this.frm.get('sucursalId')!.value) {
       this.frm.patchValue({ sucursalId: this.sucursalesOpts[0].value });
     }
-    this.terceros = tercRes?.data ?? [];
-    this.terceroOpts = this.terceros.map((t: TerceroTableModel) => ({
-      label: `${t.numeroDocumento} — ${t.nombreCompleto}`,
-      value: t.id,
-    }));
     this.centroCostoOpts = (ccRes?.data ?? []).map((cc: CentroCostoDto) => ({
       label: `${cc.codigo} — ${cc.nombre}`,
       value: cc.id,
@@ -297,29 +289,18 @@ export class FormComprobanteContableComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  abrirBuscadorTercero(): void {
-    this.buscadorTerceroVisible = true;
-    this.cdr.markForCheck();
-  }
-
   /**
-   * Beneficiario elegido en el buscador avanzado.
-   *
-   * Antes esto era un `<p-dropdown>` alimentado por `/terceros/selector`, que
-   * trae máximo 500 filas de un solo golpe: con más terceros el que se buscaba
-   * podía no estar en la lista y el filtro del dropdown tampoco lo encontraba,
-   * porque solo mira lo ya descargado. El buscador pagina contra el servidor.
+   * Beneficiario elegido en el autocomplete (o en su buscador avanzado). El
+   * id lo pone el propio control; aquí se guarda el texto y se reacciona.
    */
-  onTerceroSeleccionado(t: TerceroTableModel): void {
-    this.frm.patchValue({ beneficiarioTerceroId: t.id });
-    this.beneficiarioLabel = `${t.numeroDocumento} — ${t.nombreCompleto}`;
+  onBeneficiarioSeleccionado(t: TerceroTableModel | null): void {
+    this.beneficiarioLabel = t ? `${t.numeroDocumento} — ${t.nombreCompleto}` : '';
     this.onBeneficiarioChange(t);
   }
 
-  limpiarBeneficiario(): void {
-    this.frm.patchValue({ beneficiarioTerceroId: null });
-    this.beneficiarioLabel = '';
-    this.onBeneficiarioChange(null);
+  onTerceroLinea(row: any, t: TerceroTableModel | null): void {
+    row.patchValue({ terceroLabel: t ? `${t.numeroDocumento} — ${t.nombreCompleto}` : '' });
+    this.cdr.markForCheck();
   }
 
   /** Al elegir el beneficiario, autollena nombre y teléfono; la dirección la completa el backend. */
@@ -579,6 +560,7 @@ export class FormComprobanteContableComponent implements OnInit {
         origen: 'CARTERA',
         cuentaId: cuentaCartera,
         terceroId: s.terceroId,
+        terceroLabel: s.nombre,
         descripcion: `${this.esCE ? 'Abono CxP' : 'Abono CxC'} ${s.numero} - ${s.nombre}`,
         debito: this.esCE ? s.aplicado : 0,
         credito: this.esCE ? 0 : s.aplicado,

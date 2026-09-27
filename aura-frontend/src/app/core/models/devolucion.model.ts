@@ -52,6 +52,8 @@ export interface CreateDevolucionDetalleDto {
   productoPresentacionId?: number;
   loteId?: number;
   cantidad: number;
+  /** Seriales que devuelve el cliente; sin elegir y devolviendo toda la línea, van todos. */
+  serialIds?: number[];
 }
 
 export interface CreateDevolucionAgregadoDto {
