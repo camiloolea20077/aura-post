@@ -100,6 +100,8 @@ interface CartTab {
 interface OpcionVenta {
   presentacionId: number | null;
   nombre: string;
+  /** Nombre corto para chips: "Individual" en vez de repetir el producto. */
+  etiqueta: string;
   /** Precio final al cliente (con IVA). */
   precio: number;
   /** Unidades de inventario que salen por cada una. */
@@ -850,9 +852,11 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       const opciones: OpcionVenta[] = [];
       if (p.vendePorUnidad !== false) {
         const base = p.precioFinal || p.precio || 0;
+        const nombreSuelta = this.nombreVentaSuelta(p);
         opciones.push({
           presentacionId: null,
-          nombre: this.nombreVentaSuelta(p),
+          nombre: nombreSuelta,
+          etiqueta: nombreSuelta,
           precio: p.ivaIncluido
             ? base
             : base * (1 + (p.ivaPorcentaje || 0) / 100),
@@ -866,6 +870,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         opciones.push({
           presentacionId: pr.id,
           nombre: pr.nombre,
+          etiqueta: this.etiquetaPresentacion(p.nombre, pr.nombre),
           precio: pr.precio,
           factor: pr.factorConversion || 1,
           stock: pr.stock,
@@ -889,6 +894,16 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   opcionDefault(p: ProductoPOS): OpcionVenta | null {
     const opciones = this.opcionesDe(p);
     return opciones.find((o) => o.esDefault) ?? opciones[0] ?? null;
+  }
+
+  /** Título de la línea: sin el " · presentación" cuando los chips ya la muestran. */
+  nombreLinea(item: CartItem): string {
+    const sufijo = item.presentacionNombre ? ` · ${item.presentacionNombre}` : '';
+    return sufijo &&
+      this.opcionesLinea(item).length > 1 &&
+      item.productoNombre.endsWith(sufijo)
+      ? item.productoNombre.slice(0, -sufijo.length)
+      : item.productoNombre;
   }
 
   esOpcionActiva(item: CartItem, op: OpcionVenta): boolean {
@@ -921,10 +936,45 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       : 'uds';
   }
 
-  /** Botón de la venta suelta: "kg" para el arroz a granel, "Und" para lo que se cuenta. */
+  /** Unidad completa para el badge de stock: "unidades", "caja"… (cae a la abreviatura). */
+  unidadStockNombre(p: ProductoPOS): string {
+    const nombre = (p.unidadMedidaNombre ?? '').trim().toLowerCase();
+    if (!nombre) return this.unidadStock(p);
+    // Plural simple en español para nombres de una sola palabra
+    if (p.stockActual === 1 || !/^[a-záéíóúñ]+$/.test(nombre)) return nombre;
+    if (nombre.endsWith('s')) return nombre;
+    return /[aeiouáéó]$/.test(nombre) ? `${nombre}s` : `${nombre}es`;
+  }
+
+  /** Botón de la venta suelta: nombre completo de la unidad ("Caja", "Kilogramo"…). */
   private nombreVentaSuelta(p: ProductoPOS): string {
+    const nombre = (p.unidadMedidaNombre ?? '').trim();
+    if (nombre) return this.capitalizar(nombre);
     const unidad = this.unidadStock(p);
-    return ['und', 'uds', 'un', 'u', 'unidad'].includes(unidad) ? 'Und' : unidad;
+    return ['und', 'uds', 'un', 'u', 'unidad'].includes(unidad) ? 'Unidad' : unidad;
+  }
+
+  /**
+   * Quita de la presentación las palabras que repiten el nombre del producto:
+   * "FRUTIÑO SABOR A CAMILO INDIVIDUAL" → "Individual".
+   */
+  private etiquetaPresentacion(producto: string, presentacion: string): string {
+    const base = (producto ?? '').trim().split(/\s+/);
+    const palabras = (presentacion ?? '').trim().split(/\s+/);
+    let i = 0;
+    while (
+      i < base.length &&
+      i < palabras.length - 1 &&
+      base[i].toLowerCase() === palabras[i].toLowerCase()
+    ) {
+      i++;
+    }
+    return this.capitalizar(palabras.slice(i).join(' ') || presentacion);
+  }
+
+  private capitalizar(texto: string): string {
+    const t = texto.toLowerCase();
+    return t.charAt(0).toUpperCase() + t.slice(1);
   }
 
   // ── Seriales ─────────────────────────────────────────────

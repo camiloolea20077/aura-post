@@ -708,39 +708,50 @@ $mono: "JetBrains Mono", monospace;
 // imagen / nombre / código / formas de venta / precio + stock
 @media (min-width: 769px) {
   .product-grid:not(.list-mode) {
-    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
-    gap: 0.75rem;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 0.9rem;
+    padding: 1rem;
   }
 
   .product-grid:not(.list-mode) .product-card {
-    gap: 0.45rem;
-    padding: 0.6rem;
+    gap: 0.55rem;
+    padding: 0.65rem 0.65rem 0.75rem;
     background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 14px;
+    border: 1px solid #e8edf3;
+    border-radius: 16px;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    transition:
+      border-color 0.18s ease,
+      box-shadow 0.18s ease,
+      transform 0.18s ease;
 
     &::before,
     .stock-badge,
     .promo-badge,
     .prod-stock-center,
-    .prod-presentacion,
-    .prod-overlay {
+    .prod-presentacion {
       display: none;
     }
 
     &:hover:not(.sin-stock) {
-      transform: none;
-      border-color: #cbd5e1;
-      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+      transform: translateY(-2px);
+      border-color: #bfdbfe;
+      box-shadow: 0 10px 24px -12px rgba(37, 99, 235, 0.35);
 
       .prod-avatar-letter,
       .prod-avatar-img {
         transform: none;
       }
+
+      .prod-overlay {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
 
     &:active:not(.sin-stock) {
-      transform: none;
+      transform: scale(0.98);
+      box-shadow: none;
     }
 
     &:focus-visible {
@@ -749,43 +760,73 @@ $mono: "JetBrains Mono", monospace;
     }
 
     &.low-stock {
-      border-color: #fed7aa;
+      border-color: #fde2c4;
     }
 
     // 1. Imagen
     .prod-avatar {
       order: 1;
-      aspect-ratio: 4 / 3;
+      aspect-ratio: 1;
+      padding: 0.6rem;
       background: #f8fafc;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
     }
 
     .prod-avatar-img {
       object-fit: contain;
+      border-radius: 8px;
+      mix-blend-mode: multiply; // funde el fondo blanco de la foto
+    }
+
+    // Placeholder: inicial sobre degradado suave
+    &:not(:has(.prod-avatar-img)) .prod-avatar {
+      background: linear-gradient(145deg, #eef2ff 0%, #f8fafc 70%);
     }
 
     .prod-avatar-letter {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #cbd5e1;
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: #c7d2fe;
       opacity: 1;
+    }
+
+    // Botón "+" discreto, aparece al pasar el mouse
+    .prod-overlay {
+      inset: auto 0.45rem 0.45rem auto;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #2563eb;
+      backdrop-filter: none;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
+      transform: scale(0.85);
+      transition:
+        opacity 0.18s ease,
+        transform 0.18s ease;
+
+      i {
+        font-size: 0.85rem;
+        filter: none;
+      }
     }
 
     // 2. Nombre + código
     .prod-body {
       order: 2;
       align-items: stretch;
-      gap: 0.15rem;
+      gap: 0.2rem;
       min-width: 0;
+      padding: 0 0.15rem;
     }
 
     .prod-nombre {
       text-align: left;
-      font-size: 0.8rem;
+      font-size: 0.82rem;
       font-weight: 700;
-      color: #1f2937;
+      color: #0f172a;
       line-height: 1.3;
+      letter-spacing: -0.005em;
       min-height: 2.6em; // 2 líneas: todas las tarjetas alinean
       display: -webkit-box;
       -webkit-line-clamp: 2;
@@ -806,7 +847,7 @@ $mono: "JetBrains Mono", monospace;
       margin: 0;
       padding: 0;
       background: none;
-      font-size: 0.66rem;
+      font-size: 0.68rem;
       font-weight: 500;
       color: #64748b;
       white-space: nowrap;
@@ -822,40 +863,46 @@ $mono: "JetBrains Mono", monospace;
       color: #b91c1c;
     }
 
-    // Formas de venta: chips compactos (nombre · precio)
+    // Formas de venta: chips suaves (nombre · precio)
     .prod-opciones {
-      gap: 0.25rem;
-      margin-top: 0.2rem;
+      gap: 0.3rem;
+      margin-top: 0.25rem;
     }
 
     .prod-opcion {
       flex-direction: row;
       align-items: center;
-      gap: 0.25rem;
+      gap: 0.3rem;
       max-width: 100%;
-      padding: 1px 7px;
-      border: 1px solid #e2e8f0;
-      border-radius: 999px;
-      background: #fff;
+      padding: 3px 8px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      background: #f1f5f9;
       white-space: nowrap;
+      transition:
+        background 0.15s,
+        border-color 0.15s;
 
       &:hover {
-        border-color: #2563eb;
+        border-color: #bfdbfe;
         background: #eff6ff;
       }
     }
 
     .prod-opcion-nombre {
-      font-size: 0.62rem;
-      color: #2563eb;
+      font-size: 0.64rem;
+      font-weight: 700;
+      color: #334155;
       min-width: 0;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
     .prod-opcion-precio {
-      font-size: 0.62rem;
-      color: #64748b;
+      font-size: 0.64rem;
+      font-weight: 600;
+      color: #2563eb;
+      font-variant-numeric: tabular-nums;
     }
 
     // 3. Precio + stock al pie
@@ -865,9 +912,10 @@ $mono: "JetBrains Mono", monospace;
       flex-direction: row;
       align-items: center;
       justify-content: space-between;
-      gap: 0.35rem;
-      padding: 0.45rem 0 0;
-      border-top: 1px solid #f1f5f9;
+      flex-wrap: wrap; // si no caben, el stock baja debajo del precio
+      gap: 0.4rem;
+      padding: 0.55rem 0.15rem 0;
+      border-top: 1px dashed #e2e8f0;
 
       .precio-wrap {
         align-items: flex-start;
@@ -879,15 +927,42 @@ $mono: "JetBrains Mono", monospace;
     }
 
     .prod-precio {
-      font-size: 0.95rem;
-      font-weight: 700;
+      font-family: $font;
+      font-size: 1.05rem;
+      font-weight: 800;
       color: #2563eb;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
     }
 
+    .precio-original {
+      font-family: $font;
+    }
+
+    // Stock: punto de color + cantidad
     .prod-stock-pill {
-      font-size: 0.66rem;
-      padding: 2px 7px;
+      align-items: center;
+      gap: 0.3rem;
+      font-family: $font;
+      font-size: 0.9rem;
+      font-weight: 800;
+      padding: 4px 10px 4px 9px;
       border: none;
+      font-variant-numeric: tabular-nums;
+
+      &::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      .stock-unit {
+        font-size: 0.8rem;
+        font-weight: 600;
+        opacity: 0.85;
+      }
 
       &.ok {
         background: #ecfdf5;
@@ -912,6 +987,10 @@ $mono: "JetBrains Mono", monospace;
       &.servicio {
         background: #eff6ff;
         color: #2563eb;
+
+        &::before {
+          display: none;
+        }
       }
     }
   }
@@ -1070,26 +1149,29 @@ $mono: "JetBrains Mono", monospace;
     align-items: center;
     gap: 0.3rem;
     flex-shrink: 0;
-    padding: 2px 8px;
-    border: 1px solid #e2e8f0;
-    border-radius: 999px;
-    background: #fff;
+    padding: 3px 9px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: #f1f5f9;
     white-space: nowrap;
 
     &:hover {
-      border-color: #2563eb;
+      border-color: #bfdbfe;
       background: #eff6ff;
     }
   }
 
   .prod-opcion-nombre {
     font-size: 0.68rem;
-    color: #2563eb;
+    font-weight: 700;
+    color: #334155;
   }
 
   .prod-opcion-precio {
     font-size: 0.68rem;
-    color: #64748b;
+    font-weight: 600;
+    color: #2563eb;
+    font-variant-numeric: tabular-nums;
   }
 
   // 3. Precio + stock (columna fija para que todos los precios alineen)
@@ -1100,7 +1182,8 @@ $mono: "JetBrains Mono", monospace;
     justify-content: center;
     align-self: center;
     gap: 0.45rem;
-    flex: 0 0 120px;
+    flex: 0 0 auto;
+    min-width: 130px;
     min-height: unset;
     padding: 0;
     border-top: none;
@@ -1112,20 +1195,45 @@ $mono: "JetBrains Mono", monospace;
   }
 
   .prod-precio {
-    font-size: 1.1rem;
-    font-weight: 700;
+    font-family: $font;
+    font-size: 1.15rem;
+    font-weight: 800;
     color: #2563eb;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
   }
 
   .precio-original {
+    font-family: $font;
     font-size: 0.72rem;
   }
 
+  // Stock: punto de color + cantidad
   .prod-stock-pill {
     display: flex;
-    font-size: 0.74rem;
-    padding: 3px 9px;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: $font;
+    font-size: 0.95rem;
+    font-weight: 800;
+    padding: 4px 11px 4px 10px;
     border: none;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+
+    &::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .stock-unit {
+      font-size: 0.84rem;
+      font-weight: 600;
+      opacity: 0.85;
+    }
 
     &.ok {
       background: #ecfdf5;
@@ -1150,6 +1258,10 @@ $mono: "JetBrains Mono", monospace;
     &.servicio {
       background: #eff6ff;
       color: #2563eb;
+
+      &::before {
+        display: none;
+      }
     }
   }
 }
@@ -1169,7 +1281,7 @@ $mono: "JetBrains Mono", monospace;
     }
 
     .prod-footer {
-      flex-basis: 96px;
+      min-width: 110px;
     }
 
     .prod-precio {
@@ -2678,24 +2790,45 @@ $mono: "JetBrains Mono", monospace;
 .line-presentaciones {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  margin: 2px 0 4px;
+  gap: 5px;
+  margin: 4px 0 6px;
 }
 
 .line-pres-btn {
-  padding: 2px 9px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 3px 11px;
   border: 1px solid #e2e8f0;
   border-radius: 999px;
   background: #fff;
-  color: #475569;
-  font-size: 0.7rem;
+  color: #64748b;
+  font-size: 0.74rem;
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+
+  i {
+    font-size: 0.62rem;
+  }
+
+  &:hover:not(.active) {
+    border-color: #bfdbfe;
+    color: #2563eb;
+  }
 
   &.active {
     border-color: #2563eb;
-    background: #eff6ff;
-    color: #1d4ed8;
+    background: #2563eb;
+    color: #fff;
+    font-weight: 700;
   }
 }
 
