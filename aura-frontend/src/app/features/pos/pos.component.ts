@@ -181,6 +181,8 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   private searchSubject$ = new Subject<string>();
   private destroy$ = new Subject<void>();
   private _barcodeTimer: ReturnType<typeof setTimeout> | null = null;
+  private _ultimaTecla = 0;
+  private _escritoEnRafaga = true;
   tempCantidad: number = 0;
   // ── Órdenes múltiples ─────────────────────────────────────
   readonly MAX_TABS = 5;
@@ -539,6 +541,12 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   onSearch(): void {
     const query = this.searchProduct.trim();
 
+    // Lector de barras = ráfaga (< 50 ms entre teclas); una persona escribe más lento.
+    const ahora = performance.now();
+    if (query.length <= 1) this._escritoEnRafaga = true;
+    else if (ahora - this._ultimaTecla > 50) this._escritoEnRafaga = false;
+    this._ultimaTecla = ahora;
+
     // Filtrado visual inmediato (sin espera)
     this.searchSubject$.next(query);
 
@@ -549,7 +557,38 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this._barcodeTimer = setTimeout(() => {
       this._barcodeTimer = null;
-      const q = this.searchProduct.trim();
+      this.procesarCodigo(this.searchProduct.trim(), this._escritoEnRafaga);
+    }, 150);
+  }
+
+  /** Enter en el buscador: confirma el código escrito aunque haya otros más largos (50 vs 506). */
+  onSearchEnter(): void {
+    if (this._barcodeTimer) {
+      clearTimeout(this._barcodeTimer);
+      this._barcodeTimer = null;
+    }
+    this.procesarCodigo(this.searchProduct.trim(), true);
+  }
+
+  /** Hay otro SKU o código que empieza igual: el usuario puede seguir escribiendo. */
+  private hayCodigoMasLargo(q: string): boolean {
+    const extiende = (c: string | null | undefined) =>
+      !!c && c !== q && c.startsWith(q);
+    return this.productos.some(
+      (p) =>
+        extiende(p.sku) ||
+        extiende(p.codigoBarras) ||
+        (p.presentaciones ?? []).some((pr) => extiende(pr.codigoBarras)),
+    );
+  }
+
+  /**
+   * Agrega por código de balanza, código de barras, SKU o serial.
+   * `confirmado`: vino del lector (ráfaga) o de Enter; si no, un código exacto
+   * que es prefijo de otro (50 → 506) espera a que termine de escribir.
+   */
+  private procesarCodigo(q: string, confirmado: boolean): void {
+    {
       if (!q) return;
 
       // Intento de lectura de código de balanza
@@ -597,6 +636,9 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       }
 
+      // Escribiendo a mano "50" cuando existe "506": no agregar todavía (Enter lo confirma).
+      if (encontrado && !confirmado && this.hayCodigoMasLargo(q)) return;
+
       if (encontrado) {
         this.addToCart(encontrado.p, encontrado.opcion);
         this.searchProduct = '';
@@ -607,7 +649,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         // No es un código de producto: puede ser el serial de una unidad.
         void this.agregarPorSerial(q);
       }
-    }, 150);
+    }
   }
 
   clearSearch(): void {
