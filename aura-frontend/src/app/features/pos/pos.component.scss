@@ -704,109 +704,476 @@ $mono: "JetBrains Mono", monospace;
   }
 }
 
-// ── Modo lista (cuando hay búsqueda activa) ──────────────────
-.product-grid.list-mode {
-  grid-template-columns: 1fr;
-  gap: 0.5rem;
-  padding: 0.85rem 1rem;
+// ── Modo grid en PC: tarjeta limpia ──────────────────────────
+// imagen / nombre / código / formas de venta / precio + stock
+@media (min-width: 769px) {
+  .product-grid:not(.list-mode) {
+    grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+    gap: 0.75rem;
+  }
 
-  .product-card {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.85rem 1.1rem;
+  .product-grid:not(.list-mode) .product-card {
+    gap: 0.45rem;
+    padding: 0.6rem;
+    background: #fff;
+    border: 1px solid #e5e7eb;
     border-radius: 14px;
-    min-height: 70px;
 
-    .prod-stock-center {
+    &::before,
+    .stock-badge,
+    .promo-badge,
+    .prod-stock-center,
+    .prod-presentacion,
+    .prod-overlay {
       display: none;
     }
 
-    .prod-avatar {
-      order: 1;
-    }
-    .prod-footer {
-      order: 3;
-    }
-    .prod-body {
-      order: 2;
+    &:hover:not(.sin-stock) {
+      transform: none;
+      border-color: #cbd5e1;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+
+      .prod-avatar-letter,
+      .prod-avatar-img {
+        transform: none;
+      }
     }
 
-    &:hover {
+    &:active:not(.sin-stock) {
       transform: none;
     }
 
-    .prod-avatar {
-      width: 52px;
-      height: 52px;
-      min-width: 52px;
-      border-radius: 12px;
-      font-size: 1.3rem;
+    &:focus-visible {
+      outline: 2px solid rgba(37, 99, 235, 0.45);
+      outline-offset: 2px;
     }
 
+    &.low-stock {
+      border-color: #fed7aa;
+    }
+
+    // 1. Imagen
+    .prod-avatar {
+      order: 1;
+      aspect-ratio: 4 / 3;
+      background: #f8fafc;
+      border: none;
+      border-radius: 10px;
+    }
+
+    .prod-avatar-img {
+      object-fit: contain;
+    }
+
+    .prod-avatar-letter {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #cbd5e1;
+      opacity: 1;
+    }
+
+    // 2. Nombre + código
     .prod-body {
-      flex: 1;
+      order: 2;
+      align-items: stretch;
+      gap: 0.15rem;
       min-width: 0;
-      gap: 0.25rem;
     }
 
     .prod-nombre {
-      font-size: 1rem;
+      text-align: left;
+      font-size: 0.8rem;
       font-weight: 700;
-      white-space: normal;
-      word-break: break-word;
-      line-height: 1.35;
+      color: #1f2937;
+      line-height: 1.3;
+      min-height: 2.6em; // 2 líneas: todas las tarjetas alinean
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
     .prod-sku {
-      font-size: 0.78rem;
+      text-align: left;
+      font-size: 0.66rem;
+      color: #94a3b8;
     }
 
-    .prod-unidad {
-      font-size: 0.78rem;
+    .prod-unidad,
+    .prod-vence {
+      display: block;
+      margin: 0;
+      padding: 0;
+      background: none;
+      font-size: 0.66rem;
+      font-weight: 500;
+      color: #64748b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
+    .prod-vence {
+      color: #b45309;
+    }
+
+    .prod-vence--vencido {
+      color: #b91c1c;
+    }
+
+    // Formas de venta: chips compactos (nombre · precio)
+    .prod-opciones {
+      gap: 0.25rem;
+      margin-top: 0.2rem;
+    }
+
+    .prod-opcion {
+      flex-direction: row;
+      align-items: center;
+      gap: 0.25rem;
+      max-width: 100%;
+      padding: 1px 7px;
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      background: #fff;
+      white-space: nowrap;
+
+      &:hover {
+        border-color: #2563eb;
+        background: #eff6ff;
+      }
+    }
+
+    .prod-opcion-nombre {
+      font-size: 0.62rem;
+      color: #2563eb;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .prod-opcion-precio {
+      font-size: 0.62rem;
+      color: #64748b;
+    }
+
+    // 3. Precio + stock al pie
     .prod-footer {
-      flex-direction: column;
-      align-items: flex-end;
-      justify-content: center;
-      padding-top: 0;
-      border-top: none;
-      gap: 0.4rem;
-      flex-shrink: 0;
-      min-width: 110px;
-      min-height: unset;
+      order: 3;
+      margin-top: auto;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.35rem;
+      padding: 0.45rem 0 0;
+      border-top: 1px solid #f1f5f9;
+
+      .precio-wrap {
+        align-items: flex-start;
+      }
 
       .prod-stock-pill {
         display: flex;
       }
     }
 
-    .precio-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 0.1rem;
-    }
-
     .prod-precio {
-      font-size: 1.05rem;
-      font-weight: 800;
-    }
-
-    .precio-original {
-      font-size: 0.75rem;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #2563eb;
     }
 
     .prod-stock-pill {
-      font-size: 0.78rem;
-      padding: 3px 10px;
+      font-size: 0.66rem;
+      padding: 2px 7px;
+      border: none;
+
+      &.ok {
+        background: #ecfdf5;
+        color: #059669;
+      }
+
+      &.low {
+        background: #fff7ed;
+        color: #c2410c;
+      }
+
+      &.empty {
+        background: #fef2f2;
+        color: #dc2626;
+      }
+
+      &.negativo {
+        background: #f5f3ff;
+        color: #7c3aed;
+      }
+
+      &.servicio {
+        background: #eff6ff;
+        color: #2563eb;
+      }
+    }
+  }
+}
+
+// ── Modo lista (cuando hay búsqueda activa) ──────────────────
+// Opción 1: [imagen] [nombre / código / unidad] [precio / stock]
+.product-grid.list-mode {
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+
+  .product-card {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.9rem;
+    min-height: 110px;
+    padding: 0.75rem 1rem;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+
+    // Sin barra superior de color ni saltos en hover
+    &::before {
+      display: none;
+    }
+
+    &:hover:not(.sin-stock) {
+      transform: none;
+      border-color: #cbd5e1;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+    }
+
+    &:active:not(.sin-stock) {
+      transform: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgba(37, 99, 235, 0.45);
+      outline-offset: 2px;
+    }
+
+    // Stock bajo: borde naranja muy suave (el badge ya indica el nivel)
+    &.low-stock {
+      border-color: #fed7aa;
     }
 
     .stock-badge,
-    .promo-badge {
+    .promo-badge,
+    .prod-stock-center {
       display: none;
+    }
+  }
+
+  // 1. Imagen
+  .prod-avatar {
+    order: 1;
+    width: 80px;
+    height: 80px;
+    min-width: 80px;
+    aspect-ratio: auto;
+    align-self: center;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #f1f5f9;
+  }
+
+  .prod-avatar-img {
+    object-fit: contain;
+  }
+
+  .product-card:hover .prod-avatar-img {
+    transform: none;
+  }
+
+  // 2. Información
+  .prod-body {
+    order: 2;
+    flex: 1;
+    min-width: 0;
+    gap: 0.2rem;
+    align-self: center;
+    overflow: hidden;
+  }
+
+  .prod-nombre {
+    font-size: 0.94rem;
+    font-weight: 700;
+    color: #1f2937;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .prod-sku {
+    font-size: 0.69rem;
+    color: #94a3b8;
+    line-height: 1.2;
+  }
+
+  // Información secundaria: texto plano, una sola línea
+  .prod-presentacion,
+  .prod-unidad,
+  .prod-vence {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    max-width: 100%;
+    margin: 0;
+    padding: 0;
+    background: none;
+    border-radius: 0;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    i {
+      font-size: 0.68rem;
+      color: #94a3b8;
+    }
+  }
+
+  .prod-vence {
+    color: #b45309;
+
+    i {
+      color: inherit;
+    }
+
+    &--vencido {
+      color: #b91c1c;
+    }
+  }
+
+  // Formas de venta: chips en una sola fila (nombre · precio), sin crecer en alto
+  .prod-opciones {
+    flex-wrap: nowrap;
+    gap: 0.3rem;
+    margin-top: 0.15rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .prod-opcion {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.3rem;
+    flex-shrink: 0;
+    padding: 2px 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 999px;
+    background: #fff;
+    white-space: nowrap;
+
+    &:hover {
+      border-color: #2563eb;
+      background: #eff6ff;
+    }
+  }
+
+  .prod-opcion-nombre {
+    font-size: 0.68rem;
+    color: #2563eb;
+  }
+
+  .prod-opcion-precio {
+    font-size: 0.68rem;
+    color: #64748b;
+  }
+
+  // 3. Precio + stock (columna fija para que todos los precios alineen)
+  .prod-footer {
+    order: 3;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    align-self: center;
+    gap: 0.45rem;
+    flex: 0 0 120px;
+    min-height: unset;
+    padding: 0;
+    border-top: none;
+  }
+
+  .precio-wrap {
+    align-items: flex-end;
+    gap: 0.1rem;
+  }
+
+  .prod-precio {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #2563eb;
+  }
+
+  .precio-original {
+    font-size: 0.72rem;
+  }
+
+  .prod-stock-pill {
+    display: flex;
+    font-size: 0.74rem;
+    padding: 3px 9px;
+    border: none;
+
+    &.ok {
+      background: #ecfdf5;
+      color: #059669;
+    }
+
+    &.low {
+      background: #fff7ed;
+      color: #c2410c;
+    }
+
+    &.empty {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+
+    &.negativo {
+      background: #f5f3ff;
+      color: #7c3aed;
+    }
+
+    &.servicio {
+      background: #eff6ff;
+      color: #2563eb;
+    }
+  }
+}
+
+// Tablet / panel angosto: la columna de precio se compacta
+@media (max-width: 1100px) {
+  .product-grid.list-mode {
+    .product-card {
+      gap: 0.7rem;
+      padding: 0.7rem 0.8rem;
+    }
+
+    .prod-avatar {
+      width: 64px;
+      height: 64px;
+      min-width: 64px;
+    }
+
+    .prod-footer {
+      flex-basis: 96px;
+    }
+
+    .prod-precio {
+      font-size: 1rem;
     }
   }
 }

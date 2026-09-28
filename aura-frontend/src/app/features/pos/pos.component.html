@@ -160,7 +160,11 @@
           !p.permitirStockNegativo
         "
         [class.low-stock]="p.stockActual > 0 && p.stockActual < 5"
+        role="button"
+        tabindex="0"
+        [attr.aria-label]="p.nombre"
         (click)="addToCart(p)"
+        (keydown.enter)="$event.target === $event.currentTarget && addToCart(p)"
       >
         <!-- Badges -->
         <!-- <span
