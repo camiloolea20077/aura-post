@@ -1,5 +1,5 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://back-v0.cloudtecnology.cloud/api/',
+  apiUrl: 'http://localhost:9001/api/',
   socketUrl: 'wss://socket.cloudtecnology.cloud',
 };
