@@ -56,6 +56,7 @@
           placeholder="Buscar producto o SKU..."
           [(ngModel)]="searchProduct"
           (input)="onSearch()"
+          (keydown.enter)="onSearchEnter()"
         />
         <button
           *ngIf="searchProduct"
@@ -160,7 +161,11 @@
           !p.permitirStockNegativo
         "
         [class.low-stock]="p.stockActual > 0 && p.stockActual < 5"
+        role="button"
+        tabindex="0"
+        [attr.aria-label]="p.nombre"
         (click)="addToCart(p)"
+        (keydown.enter)="$event.target === $event.currentTarget && addToCart(p)"
       >
         <!-- Badges -->
         <!-- <span
@@ -221,7 +226,7 @@
             [class.negativo]="p.stockActual <= 0 && p.permitirStockNegativo"
           >
             {{ p.stockActual | number: "1.0-4" }}
-            <span class="stock-unit">{{ unidadStock(p) }}</span>
+            <span class="stock-unit">{{ unidadStockNombre(p) }}</span>
           </span>
           <span
             class="prod-stock-pill servicio"
@@ -264,7 +269,9 @@
               *ngFor="let op of opcionesDe(p)"
               (click)="$event.stopPropagation(); addToCart(p, op)"
             >
-              <span class="prod-opcion-nombre">{{ op.nombre }}</span>
+              <span class="prod-opcion-nombre" [attr.title]="op.nombre">{{
+                op.etiqueta
+              }}</span>
               <span class="prod-opcion-precio">{{ formatCOP(op.precio) }}</span>
             </button>
           </div>
@@ -451,7 +458,7 @@
       <div class="cart-line" *ngFor="let item of cart; trackBy: trackById">
         <div class="line-header">
           <span class="line-nombre">
-            {{ item.productoNombre }}
+            {{ nombreLinea(item) }}
             <span
               class="badge-desc"
               *ngIf="item.descuento > 0 || item.descuentoAutomatico"
@@ -487,9 +494,11 @@
             class="line-pres-btn"
             *ngFor="let op of opcionesLinea(item)"
             [class.active]="esOpcionActiva(item, op)"
+            [attr.title]="op.nombre"
             (click)="cambiarPresentacionLinea(item, op)"
           >
-            {{ op.nombre }}
+            <i class="pi pi-check" *ngIf="esOpcionActiva(item, op)"></i>
+            {{ op.etiqueta }}
           </button>
         </div>
 
