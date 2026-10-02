@@ -1,4 +1,5 @@
-export type EstadoCotizacion = 'PENDIENTE' | 'VENCIDA' | 'ANULADA' | 'CONVERTIDA';
+/** PARCIAL: se vendió una parte; CONVERTIDA: se vendió todo (cadena documental D1). */
+export type EstadoCotizacion = 'PENDIENTE' | 'PARCIAL' | 'VENCIDA' | 'ANULADA' | 'CONVERTIDA';
 
 export interface CotizacionDetalleModel {
   id: number;
@@ -11,6 +12,10 @@ export interface CotizacionDetalleModel {
   ivaPorcentaje: number;
   descuentoValor: number;
   subtotal: number;
+  /** Cantidad ya vendida desde esta línea. */
+  cantidadAplicada?: number;
+  /** Lo que falta por vender. */
+  cantidadPendiente?: number;
 }
 
 export interface CotizacionModel {

@@ -164,6 +164,7 @@ export class IndexCotizacionesComponent implements OnInit {
   getEstadoSeverity(e: EstadoCotizacion): TagSeverity {
     const map: Record<EstadoCotizacion, TagSeverity> = {
       PENDIENTE: 'info',
+      PARCIAL: 'warn',
       VENCIDA: 'warn',
       ANULADA: 'danger',
       CONVERTIDA: 'success',
@@ -174,6 +175,7 @@ export class IndexCotizacionesComponent implements OnInit {
   getEstadoLabel(e: EstadoCotizacion): string {
     const labels: Record<EstadoCotizacion, string> = {
       PENDIENTE: 'Pendiente',
+      PARCIAL: 'Parcial',
       VENCIDA: 'Vencida',
       ANULADA: 'Anulada',
       CONVERTIDA: 'Convertida',

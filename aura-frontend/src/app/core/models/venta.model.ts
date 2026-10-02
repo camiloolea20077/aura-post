@@ -112,6 +112,8 @@ export interface CreateVentaDetalleDto {
   seriales?: number[];
   /** Seriales que salen, uno por unidad (el back espera serialIds). */
   serialIds?: number[];
+  /** Línea de la cotización de la que sale (cadena documental D1). */
+  cotizacionDetalleId?: number | null;
 }
 
 export interface CreateVentaPagoDto {
@@ -125,6 +127,8 @@ export interface CreateVentaDto {
   turnoCajaId: number | null;
   sucursalId?: number | null;  // requerido cuando turnoCajaId es null (vendedor)
   clienteId: number | null;
+  /** Cotización de la que sale la venta (D1). */
+  cotizacionId?: number | null;
   detalles: CreateVentaDetalleDto[];
   pagos: CreateVentaPagoDto[];
   pagoParcial?: boolean;
@@ -150,6 +154,9 @@ export interface PrecioDisponible {
 // ─── UI — carrito ─────────────────────────────────────────────
 export interface CartItem {
   _id: string; // UUID local
+  /** Cotización y línea de la que viene (D1): viajan con la línea entre pestañas. */
+  cotizacionId?: number | null;
+  cotizacionDetalleId?: number | null;
   /** Hora local en que entró al carrito: mide cuánto duró armado si se abandona. */
   agregadoAt?: string;
   productoId: number;

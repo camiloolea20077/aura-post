@@ -22,6 +22,7 @@ type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contr
 import { VentaService } from '../../../core/services/venta.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
 import { IndexDBService } from '../../../core/services/index-db.service';
+import { DocumentosRelacionadosComponent } from '../../../shared/components/documentos-relacionados/documentos-relacionados.component';
 
 @Component({
   selector: 'app-detalle-venta',
@@ -35,6 +36,7 @@ import { IndexDBService } from '../../../core/services/index-db.service';
     ToastModule,
     ConfirmDialogModule,
     SkeletonModule,
+    DocumentosRelacionadosComponent,
   ],
   templateUrl: './detalle-venta.component.html',
   styleUrls: ['./detalle-venta.component.scss'],
