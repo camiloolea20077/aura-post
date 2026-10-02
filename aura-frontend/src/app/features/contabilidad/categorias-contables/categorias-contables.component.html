@@ -1,0 +1,321 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-sitemap"></i></span>
+        <div>
+          <h1 class="title">Categorías Contables</h1>
+          <p class="subtitle">
+            Plantilla de cuentas por clase de ítem: mercancía, activos, gastos y
+            diferidos
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button
+            pButton
+            type="button"
+            label="Nueva categoría"
+            icon="pi pi-plus"
+            class="btn-aura"
+            (click)="abrirNueva()"
+          ></button>
+        </div>
+        <div class="card-head__search">
+          <p-dropdown
+            [options]="tipos"
+            [(ngModel)]="tipoFiltro"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todos los tipos"
+            [showClear]="true"
+            (onChange)="filtrar()"
+            (onClear)="filtrar()"
+          />
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              class="search-input"
+              [(ngModel)]="search"
+              (input)="filtrar()"
+              placeholder="Buscar categoría..."
+            />
+            <button *ngIf="search" class="clear-btn" (click)="search = ''; filtrar()">
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <p-table
+      [value]="rows"
+      [loading]="loading"
+      [paginator]="rows.length > 15"
+      [rows]="15"
+      styleClass="p-datatable-sm"
+      [rowHover]="true"
+      showGridlines
+      [tableStyle]="{ 'min-width': '720px' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Nombre</th>
+          <th style="width: 130px">Tipo</th>
+          <th>Cuenta de la compra</th>
+          <th>Otras cuentas</th>
+          <th style="width: 90px">Estado</th>
+          <th style="width: 90px"></th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-c>
+        <tr>
+          <td class="nombre">{{ c.nombre }}</td>
+          <td><p-tag [value]="tipoLabel(c.tipo)" severity="info" /></td>
+          <td>
+            <span *ngIf="c.cuentaInventario; else porDefecto">{{ c.cuentaInventario }}</span>
+          </td>
+          <td class="otras">
+            <div *ngIf="c.cuentaIngreso">Ingreso: {{ c.cuentaIngreso }}</div>
+            <div *ngIf="c.cuentaCosto">
+              {{ c.tipo === "DIFERIDO" ? "Gasto del mes" : "Costo" }}: {{ c.cuentaCosto }}
+            </div>
+            <div *ngIf="c.cuentaDepreciacion">Dep. acumulada: {{ c.cuentaDepreciacion }}</div>
+            <div *ngIf="c.cuentaGastoDepreciacion">Gasto dep.: {{ c.cuentaGastoDepreciacion }}</div>
+            <div *ngIf="c.vidaUtilMeses">Vida útil: {{ c.vidaUtilMeses }} meses</div>
+            <div *ngIf="c.mesesDiferido">Diferir en: {{ c.mesesDiferido }} meses</div>
+          </td>
+          <td>
+            <p-tag
+              [severity]="c.activo ? 'success' : 'danger'"
+              [value]="c.activo ? 'Activa' : 'Inactiva'"
+            />
+          </td>
+          <td>
+            <button
+              pButton
+              icon="pi pi-pencil"
+              class="p-button-text p-button-sm p-button-rounded"
+              pTooltip="Editar"
+              (click)="abrirEditar(c)"
+            ></button>
+            <button
+              pButton
+              icon="pi pi-copy"
+              class="p-button-text p-button-sm p-button-rounded"
+              pTooltip="Copiar como categoría nueva"
+              (click)="abrirCopiar(c)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="empty-row">
+            <i class="pi pi-sitemap"></i> No hay categorías contables con ese filtro.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<p-dialog
+  [(visible)]="showCopiar"
+  header="Copiar categoría contable"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '420px' }"
+  [breakpoints]="{ '480px': '95vw' }"
+>
+  <div class="form-group">
+    <label>Nombre de la categoría nueva</label>
+    <input pInputText [(ngModel)]="copiarNombre" maxlength="80" />
+    <small class="hint">Queda con las mismas cuentas de {{ copiarOrigen?.nombre }}; después ajusta lo que cambie.</small>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancelar" class="p-button-text" (click)="showCopiar = false"></button>
+    <button pButton label="Copiar" icon="pi pi-copy" class="btn-aura" [disabled]="!copiarNombre.trim()" (click)="confirmarCopiar()"></button>
+  </ng-template>
+</p-dialog>
+
+<ng-template #porDefecto>
+  <span class="text-muted">Cuenta por defecto de la empresa</span>
+</ng-template>
+
+<p-dialog
+  [(visible)]="showDialog"
+  [modal]="true"
+  [header]="editId ? 'Editar categoría contable' : 'Nueva categoría contable'"
+  [style]="{ width: '640px' }"
+  [breakpoints]="{ '700px': '95vw' }"
+  [draggable]="false"
+>
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Nombre <span class="req">*</span></label>
+      <input pInputText [(ngModel)]="form.nombre" placeholder="Ej: Equipo de cómputo" />
+    </div>
+
+    <div class="form-group">
+      <label>Tipo <span class="req">*</span></label>
+      <p-dropdown
+        [(ngModel)]="form.tipo"
+        [options]="tipos"
+        optionLabel="label"
+        optionValue="value"
+        appendTo="body"
+        styleClass="w-full"
+        (onChange)="onTipoChange()"
+      />
+    </div>
+
+    <div class="form-group full-width">
+      <label>{{ tipoActual.cuentaCompra }} ({{ tipoActual.prefijosCompra.join(", ") }}xx)</label>
+      <p-dropdown
+        [(ngModel)]="form.cuentaInventarioId"
+        [options]="cuentasCompra"
+        optionLabel="label"
+        optionValue="value"
+        [filter]="true"
+        filterPlaceholder="Código o nombre..."
+        [showClear]="true"
+        appendTo="body"
+        placeholder="La de la configuración de la empresa"
+        styleClass="w-full"
+      />
+      <small class="hint">A esta cuenta va el débito cuando se compra un ítem de esta categoría.</small>
+    </div>
+
+    <ng-container *ngIf="tipoActual.seVende">
+      <div class="form-group">
+        <label>Ingreso (4xx)</label>
+        <p-dropdown
+          [(ngModel)]="form.cuentaIngresoId"
+          [options]="cuentasIngreso"
+          optionLabel="label"
+          optionValue="value"
+          [filter]="true"
+          [showClear]="true"
+          appendTo="body"
+          placeholder="La de la empresa"
+          styleClass="w-full"
+        />
+      </div>
+      <div class="form-group">
+        <label>Costo de venta (5, 6, 7)</label>
+        <p-dropdown
+          [(ngModel)]="form.cuentaCostoId"
+          [options]="cuentasCosto"
+          optionLabel="label"
+          optionValue="value"
+          [filter]="true"
+          [showClear]="true"
+          appendTo="body"
+          placeholder="La de la empresa"
+          styleClass="w-full"
+        />
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="tipoActual.deprecia">
+      <div class="form-group">
+        <label>Depreciación acumulada</label>
+        <p-dropdown
+          [(ngModel)]="form.cuentaDepreciacionId"
+          [options]="cuentasDepreciacion"
+          optionLabel="label"
+          optionValue="value"
+          [filter]="true"
+          [showClear]="true"
+          appendTo="body"
+          placeholder="1592 / 1698 por defecto"
+          styleClass="w-full"
+        />
+      </div>
+      <div class="form-group">
+        <label>Gasto por depreciación</label>
+        <p-dropdown
+          [(ngModel)]="form.cuentaGastoDepreciacionId"
+          [options]="cuentasGastoDepreciacion"
+          optionLabel="label"
+          optionValue="value"
+          [filter]="true"
+          [showClear]="true"
+          appendTo="body"
+          placeholder="5160 por defecto"
+          styleClass="w-full"
+        />
+      </div>
+      <div class="form-group">
+        <label>Vida útil (meses)</label>
+        <p-inputNumber
+          [(ngModel)]="form.vidaUtilMeses"
+          [min]="1"
+          [max]="600"
+          placeholder="60"
+          styleClass="w-full"
+        />
+        <small class="hint">Computadores 36–60, muebles 120, vehículos 60, edificios 540.</small>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="tipoActual.difiere">
+      <div class="form-group">
+        <label>Gasto de cada mes (5xx)</label>
+        <p-dropdown
+          [(ngModel)]="form.cuentaCostoId"
+          [options]="cuentasCosto"
+          optionLabel="label"
+          optionValue="value"
+          [filter]="true"
+          [showClear]="true"
+          appendTo="body"
+          placeholder="5195 por defecto"
+          styleClass="w-full"
+        />
+      </div>
+      <div class="form-group">
+        <label>Meses a diferir</label>
+        <p-inputNumber
+          [(ngModel)]="form.mesesDiferido"
+          [min]="1"
+          [max]="120"
+          placeholder="12"
+          styleClass="w-full"
+        />
+      </div>
+    </ng-container>
+
+    <div class="form-group activo">
+      <label class="check">
+        <p-checkbox [(ngModel)]="form.activo" [binary]="true" />
+        Categoría activa
+      </label>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="showDialog = false"
+    ></button>
+    <button
+      pButton
+      [label]="editId ? 'Actualizar' : 'Guardar'"
+      icon="pi pi-check"
+      class="btn-aura"
+      [loading]="saving"
+      [disabled]="!form.nombre?.trim()"
+      (click)="guardar()"
+    ></button>
+  </ng-template>
+</p-dialog>

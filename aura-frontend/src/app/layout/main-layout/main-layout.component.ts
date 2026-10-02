@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { ToastModule } from 'primeng/toast';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { TopbarComponent } from '../topbar/topbar.component';
+import { HubBackComponent } from '../hub-back/hub-back.component';
 import { IndexDBService } from '../../core/services/index-db.service';
 import { StateStore } from '../../core/store/state';
 
@@ -16,6 +17,7 @@ import { StateStore } from '../../core/store/state';
     ToastModule,
     SidebarComponent,
     TopbarComponent,
+    HubBackComponent,
   ],
   templateUrl: './main-layout.component.html',
   styleUrls: ['./main-layout.component.scss'],

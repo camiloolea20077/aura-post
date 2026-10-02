@@ -35,6 +35,29 @@ export class ProductoPresentacionService {
   }
 
   // Lista por producto (para dropdown en precios/composición)
+  /** Guarda todas las conversiones del producto de una vez (sección "Unidades y conversiones"). */
+  guardarConversiones(
+    productoId: number,
+    dto: {
+      vendePorUnidad: boolean;
+      conversiones: {
+        id: number | null;
+        nombre: string;
+        factor: number;
+        codigoBarras: string | null;
+        precio: number;
+        costo: number;
+        seVende: boolean;
+        esDefaultCompra: boolean;
+      }[];
+    },
+  ): Observable<ResponseModel<ProductoPresentacionTableModel[]>> {
+    return this.http.put<ResponseModel<ProductoPresentacionTableModel[]>>(
+      `${this.apiUrl}/producto/${productoId}/conversiones`,
+      dto,
+    );
+  }
+
   listByProducto(
     productoId: number,
   ): Observable<ResponseModel<ProductoPresentacionTableModel[]>> {

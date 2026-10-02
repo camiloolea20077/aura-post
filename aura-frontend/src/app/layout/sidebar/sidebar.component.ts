@@ -149,6 +149,17 @@ export class SidebarComponent implements OnInit {
     return this.collapsed || this.openSubgroups.has(this.subKey(group, sg));
   }
 
+  /**
+   * Un grupo con centro queda activo en su propia pantalla y en cualquiera de
+   * sus ítems (p. ej. /gastos, que no cuelga de /contabilidad).
+   */
+  isHubActive(group: SidebarMenuGroup): boolean {
+    if (!group.hubRoute) return false;
+    const url = this.router.url.split('?')[0].split('#')[0];
+    if (url === group.hubRoute || url.startsWith(group.hubRoute + '/')) return true;
+    return (group.items ?? []).some((i) => i.route === this.activeRoute);
+  }
+
   toggleGroup(group: SidebarMenuGroup): void {
     if (this.collapsed || group.alwaysOpen) return;
     if (this.openGroups.has(group.label)) {

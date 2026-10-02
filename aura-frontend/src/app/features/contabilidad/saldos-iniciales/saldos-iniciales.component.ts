@@ -9,6 +9,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { TagModule } from 'primeng/tag';
+import { CalendarModule } from 'primeng/calendar';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
@@ -20,10 +21,27 @@ import {
 } from '../../../core/models/contabilidad.model';
 
 import { aFechaLocal } from '../../../shared/utils/fecha.util';
+import { FuenteSaldoInicial } from '../../../core/models/contador.model';
+
 interface LineaSaldo {
   cuentaId: number | null;
+  /** Saldo en la naturaleza de la cuenta; negativo = al lado contrario. */
   saldo: number;
+  terceroId?: number | null;
+  terceroNombre?: string | null;
+  /** De qué auxiliar vino la línea (inventario, activos…); vacío = digitada. */
+  fuente?: FuenteSaldoInicial | null;
+  descripcion?: string | null;
 }
+
+const FUENTES: { value: FuenteSaldoInicial; label: string; icon: string }[] = [
+  { value: 'BANCOS', label: 'Bancos', icon: 'pi pi-building-columns' },
+  { value: 'INVENTARIO', label: 'Inventario', icon: 'pi pi-box' },
+  { value: 'ACTIVOS', label: 'Activos fijos', icon: 'pi pi-desktop' },
+  { value: 'DIFERIDOS', label: 'Diferidos', icon: 'pi pi-calendar-clock' },
+  { value: 'CARTERA', label: 'Cartera (clientes)', icon: 'pi pi-users' },
+  { value: 'PROVEEDORES', label: 'Proveedores', icon: 'pi pi-truck' },
+];
 
 @Component({
   selector: 'app-saldos-iniciales',
@@ -32,7 +50,7 @@ interface LineaSaldo {
   imports: [
     CommonModule, FormsModule,
     ButtonModule, TableModule, DropdownModule, InputTextModule, InputNumberModule, TagModule,
-    ConfirmDialogModule,
+    ConfirmDialogModule, CalendarModule,
   ],
   providers: [ConfirmationService],
   templateUrl: './saldos-iniciales.component.html',
@@ -47,9 +65,14 @@ export class SaldosInicialesComponent implements OnInit {
   cuentasOpts: { label: string; value: number }[] = [];
   patrimonioOpts: { label: string; value: number }[] = [];
 
-  fechaApertura = aFechaLocal(new Date());
+  fechaApertura: Date = new Date();
   cuentaAjusteId: number | null = null;
   lineas: LineaSaldo[] = [{ cuentaId: null, saldo: 0 }];
+
+  readonly fuentes = FUENTES;
+  /** Fuentes ya traídas: no se duplican. */
+  cargadas = new Set<FuenteSaldoInicial>();
+  trayendo: FuenteSaldoInicial | null = null;
 
   constructor(
     private readonly service: ContabilidadService,
@@ -95,12 +118,66 @@ export class SaldosInicialesComponent implements OnInit {
     return this.cuenta(line.cuentaId)?.naturaleza === 'DEBITO';
   }
 
+  // Un saldo negativo va al lado contrario de la naturaleza (depreciación
+  // acumulada en una cuenta de activo, sobregiro en un banco).
   lineDebito(line: LineaSaldo): number {
-    return this.esDebito(line) ? (line.saldo || 0) : 0;
+    if (!this.cuenta(line.cuentaId)) return 0;
+    const s = line.saldo || 0;
+    return this.esDebito(line) ? Math.max(s, 0) : Math.max(-s, 0);
   }
 
   lineCredito(line: LineaSaldo): number {
-    return !this.esDebito(line) && this.cuenta(line.cuentaId) ? (line.saldo || 0) : 0;
+    if (!this.cuenta(line.cuentaId)) return 0;
+    const s = line.saldo || 0;
+    return this.esDebito(line) ? Math.max(-s, 0) : Math.max(s, 0);
+  }
+
+  /** Trae las líneas que propone un auxiliar (inventario, activos, cartera…). */
+  async traer(fuente: FuenteSaldoInicial): Promise<void> {
+    if (this.cargadas.has(fuente)) {
+      this.alert.showWarn('Ya está', 'Esa fuente ya se trajo; quita sus líneas si quieres volver a traerla.');
+      return;
+    }
+    this.trayendo = fuente;
+    this.cdr.markForCheck();
+    try {
+      const res = await lastValueFrom(this.service.sugerenciasSaldoInicial(fuente));
+      const nuevas: LineaSaldo[] = (res?.data ?? []).map((s) => {
+        const c = this.cuenta(s.cuentaId);
+        const neto = (s.debito || 0) - (s.credito || 0);
+        return {
+          cuentaId: s.cuentaId,
+          saldo: c?.naturaleza === 'CREDITO' ? -neto : neto,
+          terceroId: s.terceroId,
+          terceroNombre: s.terceroNombre,
+          fuente,
+          descripcion: s.descripcion,
+        };
+      });
+      if (!nuevas.length) {
+        this.alert.showWarn('Sin saldos', 'Ese auxiliar no tiene saldos para traer.');
+        return;
+      }
+      // Reemplaza la línea vacía inicial.
+      this.lineas = [...this.lineas.filter((l) => l.cuentaId || l.saldo), ...nuevas];
+      this.cargadas.add(fuente);
+    } catch (e: any) {
+      this.alert.showError('Error', e?.error?.message ?? 'No se pudieron traer los saldos');
+    } finally {
+      this.trayendo = null;
+      this.cdr.markForCheck();
+    }
+  }
+
+  quitarFuente(fuente: FuenteSaldoInicial): void {
+    this.lineas = this.lineas.filter((l) => l.fuente !== fuente);
+    if (!this.lineas.length) this.lineas = [{ cuentaId: null, saldo: 0 }];
+    this.cargadas.delete(fuente);
+    this.cdr.markForCheck();
+  }
+
+  fuenteLabel(f?: FuenteSaldoInicial | null): string {
+    return FUENTES.find((x) => x.value === f)?.label ?? '';
   }
 
   get totalDebito(): number {
@@ -127,19 +204,40 @@ export class SaldosInicialesComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  async guardar(): Promise<void> {
+  guardar(): void {
     const validas = this.lineas.filter((l) => l.cuentaId && l.saldo);
     if (validas.length === 0) {
       this.alert.showError('Validación', 'Ingresa al menos un saldo inicial.');
       return;
     }
+    const dif = Math.round(this.diferencia * 100) / 100;
+    if (dif === 0) {
+      this.enviar(validas, false);
+      return;
+    }
+    // La diferencia es patrimonio solo si el usuario lo confirma: un saldo
+    // mal digitado no puede esconderse en la 3705.
+    const ajuste = this.patrimonioOpts.find((o) => o.value === this.cuentaAjusteId)?.label
+      ?? 'Resultados de ejercicios anteriores (3705)';
+    this.confirmationService.confirm({
+      header: 'Los saldos no cuadran',
+      message: `La diferencia de ${this.formatCOP(Math.abs(dif))} se registrará en ${ajuste}. ¿Es patrimonio de la empresa?`,
+      acceptLabel: 'Sí, es patrimonio',
+      rejectLabel: 'Revisar saldos',
+      accept: () => this.enviar(validas, true),
+    });
+  }
+
+  private async enviar(validas: LineaSaldo[], aceptarDiferencia: boolean): Promise<void> {
     const dto: CreateSaldosInicialesDto = {
-      fechaApertura: this.fechaApertura,
+      fechaApertura: aFechaLocal(this.fechaApertura),
       cuentaAjusteId: this.cuentaAjusteId ?? null,
+      aceptarDiferencia,
       lineas: validas.map((l) => ({
         cuentaId: l.cuentaId!,
         debito: this.lineDebito(l),
         credito: this.lineCredito(l),
+        terceroId: l.terceroId ?? null,
       })),
     };
     this.saving = true;
@@ -148,6 +246,7 @@ export class SaldosInicialesComponent implements OnInit {
       await lastValueFrom(this.service.guardarApertura(dto));
       this.alert.showSuccess('Saldos iniciales cargados', 'Se creó el asiento de apertura.');
       this.lineas = [{ cuentaId: null, saldo: 0 }];
+      this.cargadas.clear();
       await this.cargar();
     } catch (e: any) {
       this.alert.showError('Error', e?.error?.message ?? 'No se pudieron cargar los saldos iniciales');

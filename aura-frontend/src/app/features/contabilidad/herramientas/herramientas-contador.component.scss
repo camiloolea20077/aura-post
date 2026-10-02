@@ -1,0 +1,74 @@
+.ayuda {
+  margin: 0 0 0.75rem;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.form-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1 1 150px;
+  min-width: 0;
+  label { font-size: 0.75rem; font-weight: 600; color: #374151; }
+  &--ancho { flex: 2 1 260px; }
+}
+
+:host ::ng-deep .campo p-dropdown,
+:host ::ng-deep .campo p-calendar { min-width: 0; width: 100%; }
+
+.resumen {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0.9rem 0;
+  padding: 0.9rem;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  p { margin: 0; font-size: 0.85rem; color: #1e293b; }
+  button { align-self: flex-start; }
+}
+
+.alerta {
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 0.82rem;
+}
+
+.lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  li {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.25rem 0;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.83rem;
+    text-transform: capitalize;
+  }
+}
+
+.section {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.tabla-scroll { overflow-x: auto; min-width: 0; }
+.sub { font-size: 0.72rem; color: #94a3b8; }
+.req { color: #ef4444; }
+.text-right { text-align: right; }
+.vacio { text-align: center; color: #94a3b8; padding: 1.25rem; }
+
+.fila-bloqueada td { color: #94a3b8; background: #f8fafc; }

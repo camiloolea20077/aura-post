@@ -1,0 +1,198 @@
+<p-confirmDialog />
+
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-wrench"></i></span>
+        <div>
+          <h1 class="title">Herramientas del Contador</h1>
+          <p class="subtitle">Trasladar movimientos entre cuentas y fusionar terceros duplicados</p>
+        </div>
+      </div>
+    </div>
+
+    <p-tabView [(activeIndex)]="activeTab" styleClass="aura-tabs">
+      <!-- Traslado de cuentas -->
+      <p-tabPanel>
+        <ng-template pTemplate="header">
+          <span class="tab-label"><i class="pi pi-arrow-right-arrow-left"></i> Traslado de cuentas</span>
+        </ng-template>
+        <p class="ayuda">
+          Mueve los movimientos de una cuenta a otra en un rango de fechas (p. ej.
+          se registró en 5195 lo que era 5135). Solo toca meses abiertos. Cambia el
+          mayor, no la configuración: si la cuenta vieja sigue asignada a un
+          concepto, corrígela también en Parametrización.
+        </p>
+        <div class="form-grid">
+          <div class="campo campo--ancho">
+            <label>Cuenta de origen</label>
+            <p-dropdown [(ngModel)]="origenId" (ngModelChange)="limpiarResumen()" [options]="cuentas" optionLabel="label"
+              optionValue="value" [filter]="true" filterBy="label" placeholder="De dónde sale" appendTo="body" />
+          </div>
+          <div class="campo campo--ancho">
+            <label>Cuenta de destino</label>
+            <p-dropdown [(ngModel)]="destinoId" (ngModelChange)="limpiarResumen()" [options]="cuentas" optionLabel="label"
+              optionValue="value" [filter]="true" filterBy="label" placeholder="A dónde va (auxiliar)" appendTo="body" />
+          </div>
+          <div class="campo">
+            <label>Desde</label>
+            <p-calendar [(ngModel)]="desde" (ngModelChange)="limpiarResumen()" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" />
+          </div>
+          <div class="campo">
+            <label>Hasta</label>
+            <p-calendar [(ngModel)]="hasta" (ngModelChange)="limpiarResumen()" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" />
+          </div>
+          <div class="campo campo--ancho">
+            <label>Solo de un tercero (opcional)</label>
+            <app-tercero-autocomplete [(ngModel)]="terceroTraslado" (ngModelChange)="limpiarResumen()" appendTo="body" />
+          </div>
+        </div>
+        <button pButton type="button" label="Ver qué se mueve" icon="pi pi-eye" class="p-button-outlined" (click)="verTraslado()"></button>
+
+        <div class="resumen" *ngIf="resumen">
+          <div *ngIf="resumen.periodosCerrados.length" class="alerta">
+            <i class="pi pi-lock"></i> Hay movimientos en meses cerrados ({{ resumen.periodosCerrados.join(", ") }}):
+            no se pueden elegir. Reábrelos si también hay que moverlos.
+          </div>
+          <p>
+            <strong>{{ resumen.lineas }}</strong> movimiento(s) en el rango. Elegidos
+            <strong>{{ seleccion.length }}</strong>: débitos
+            {{ totalSeleccion.debitos | currency: "COP" : "symbol-narrow" : "1.0-2" }}, créditos
+            {{ totalSeleccion.creditos | currency: "COP" : "symbol-narrow" : "1.0-2" }}.
+          </p>
+          <div class="tabla-scroll">
+            <p-table
+              [value]="resumen.movimientos"
+              [selection]="seleccion"
+              (selectionChange)="onSeleccion($event)"
+              dataKey="id"
+              styleClass="p-datatable-sm"
+              showGridlines
+              [scrollable]="true"
+              scrollHeight="340px"
+              [tableStyle]="{ 'min-width': '860px' }"
+            >
+              <ng-template pTemplate="header">
+                <tr>
+                  <th style="width: 3rem"><p-tableHeaderCheckbox /></th>
+                  <th style="width: 100px">Fecha</th>
+                  <th style="width: 120px">Comprobante</th>
+                  <th>Detalle</th>
+                  <th>Tercero</th>
+                  <th class="text-right" style="width: 130px">Débito</th>
+                  <th class="text-right" style="width: 130px">Crédito</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-m>
+                <tr [class.fila-bloqueada]="bloqueado(m)">
+                  <td>
+                    <p-tableCheckbox *ngIf="!bloqueado(m)" [value]="m" />
+                    <i *ngIf="bloqueado(m)" class="pi pi-lock" title="Mes cerrado"></i>
+                  </td>
+                  <td>{{ m.fecha | date: "dd/MM/yyyy" }}</td>
+                  <td>{{ m.numero_comprobante }}</td>
+                  <td>
+                    {{ m.descripcion }}
+                    <div class="sub" *ngIf="m.tipo_origen">{{ m.tipo_origen }} #{{ m.origen_id }}</div>
+                  </td>
+                  <td>{{ m.tercero_nombre }}</td>
+                  <td class="text-right">{{ m.debito ? (m.debito | currency: "COP" : "symbol-narrow" : "1.0-2") : "" }}</td>
+                  <td class="text-right">{{ m.credito ? (m.credito | currency: "COP" : "symbol-narrow" : "1.0-2") : "" }}</td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+          <small class="sub" *ngIf="resumen.lineas > resumen.movimientos.length">
+            Se muestran los primeros {{ resumen.movimientos.length }}; acorta el rango para verlos todos.
+          </small>
+          <div class="campo campo--ancho">
+            <label>Motivo <span class="req">*</span></label>
+            <input pInputText [(ngModel)]="motivoTraslado" maxlength="300" placeholder="Queda en la bitácora" />
+          </div>
+          <button pButton type="button" label="Trasladar" icon="pi pi-check" class="btn-aura"
+            [disabled]="trasladando || !seleccion.length" (click)="trasladar()"></button>
+        </div>
+
+        <h3 class="section">Bitácora</h3>
+        <div class="tabla-scroll">
+          <p-table [value]="historialTraslados" styleClass="p-datatable-sm" showGridlines [tableStyle]="{ 'min-width': '720px' }">
+            <ng-template pTemplate="header">
+              <tr><th>Fecha</th><th>De</th><th>A</th><th>Rango</th><th class="text-right">Movidos</th><th>Motivo</th></tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-h>
+              <tr>
+                <td>{{ h.created_at | date: "dd/MM/yyyy HH:mm" }}</td>
+                <td>{{ h.origen }}</td>
+                <td>{{ h.destino }}</td>
+                <td>{{ h.desde | date: "dd/MM/yy" }} – {{ h.hasta | date: "dd/MM/yy" }}</td>
+                <td class="text-right">{{ h.lineas_movidas }}</td>
+                <td>{{ h.motivo }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr><td colspan="6" class="vacio">Sin traslados.</td></tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </p-tabPanel>
+
+      <!-- Fusión de terceros -->
+      <p-tabPanel>
+        <ng-template pTemplate="header">
+          <span class="tab-label"><i class="pi pi-users"></i> Fusión de terceros</span>
+        </ng-template>
+        <p class="ayuda">
+          Cuando un cliente o proveedor quedó creado dos veces: todo lo del
+          duplicado (ventas, compras, cartera, asientos, roles) pasa al que se
+          conserva y el duplicado queda inactivo.
+        </p>
+        <div class="form-grid">
+          <div class="campo campo--ancho">
+            <label>Tercero duplicado (desaparece)</label>
+            <app-tercero-autocomplete [(ngModel)]="terceroOrigen" (ngModelChange)="previaFusion = null" appendTo="body" />
+          </div>
+          <div class="campo campo--ancho">
+            <label>Tercero que se conserva</label>
+            <app-tercero-autocomplete [(ngModel)]="terceroDestino" (ngModelChange)="previaFusion = null" appendTo="body" />
+          </div>
+        </div>
+        <button pButton type="button" label="Ver qué se mueve" icon="pi pi-eye" class="p-button-outlined" (click)="verFusion()"></button>
+
+        <div class="resumen" *ngIf="previaFusion">
+          <p *ngIf="!previaFusion.length">El duplicado no tiene registros: solo quedará inactivo.</p>
+          <ul *ngIf="previaFusion.length" class="lista">
+            <li *ngFor="let p of previaFusion"><span>{{ etiquetaTabla(p.tabla) }}</span><strong>{{ p.registros }}</strong></li>
+          </ul>
+          <div class="campo campo--ancho">
+            <label>Motivo <span class="req">*</span></label>
+            <input pInputText [(ngModel)]="motivoFusion" maxlength="300" placeholder="Ej: cliente creado dos veces con el mismo NIT" />
+          </div>
+          <button pButton type="button" label="Fusionar" icon="pi pi-check" class="p-button-danger"
+            [disabled]="fusionando" (click)="fusionar()"></button>
+        </div>
+
+        <h3 class="section">Bitácora</h3>
+        <div class="tabla-scroll">
+          <p-table [value]="historialFusiones" styleClass="p-datatable-sm" showGridlines [tableStyle]="{ 'min-width': '640px' }">
+            <ng-template pTemplate="header">
+              <tr><th>Fecha</th><th>Duplicado</th><th>Se conservó</th><th class="text-right">Registros</th><th>Motivo</th></tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-h>
+              <tr>
+                <td>{{ h.created_at | date: "dd/MM/yyyy HH:mm" }}</td>
+                <td>{{ h.origen_nombre }} <span class="sub">{{ h.origen_documento }}</span></td>
+                <td>{{ h.destino_nombre }}</td>
+                <td class="text-right">{{ h.registros_movidos }}</td>
+                <td>{{ h.motivo }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr><td colspan="5" class="vacio">Sin fusiones.</td></tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </p-tabPanel>
+    </p-tabView>
+  </div>
+</div>

@@ -1,0 +1,66 @@
+<div class="pac" [class.pac--disabled]="disabled" [class.pac--elegido]="hayElegido">
+  <!-- Elegido: el nombre completo, bajando en varias líneas si es largo -->
+  <div
+    *ngIf="mostrarTexto"
+    class="pac-texto"
+    tabindex="0"
+    role="button"
+    (click)="editar()"
+    (keydown.enter)="editar()"
+    (keydown.space)="editar(); $event.preventDefault()"
+    pTooltip="Cambiar producto"
+    tooltipPosition="top"
+    [showDelay]="600"
+  >
+    {{ textoElegido }}
+  </div>
+
+  <p-autoComplete
+    [style.display]="mostrarTexto ? 'none' : null"
+    [(ngModel)]="valor"
+    [suggestions]="sugerencias"
+    optionLabel="label"
+    [placeholder]="placeholder"
+    [minLength]="1"
+    [delay]="300"
+    [forceSelection]="false"
+    [disabled]="disabled"
+    [appendTo]="appendTo"
+    [showEmptyMessage]="true"
+    emptyMessage="Sin coincidencias. Use la lupa para buscar con más criterios."
+    (completeMethod)="buscar($event)"
+    (onSelect)="onSelect($event)"
+    (onBlur)="onBlur()"
+    (keydown.enter)="onEnter()"
+    styleClass="pac-ac"
+    inputStyleClass="pac-input"
+    panelStyleClass="pac-panel"
+  >
+    <ng-template let-p pTemplate="item">
+      <div class="pac-item">
+        <span class="pac-item__fila">
+          <span class="pac-item__nombre">{{ p.nombre }}</span>
+          <span class="pac-item__precio">{{ p.costo | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span>
+        </span>
+        <span class="pac-item__meta" *ngIf="meta(p) as m">{{ m }}</span>
+      </div>
+    </ng-template>
+  </p-autoComplete>
+
+  <button *ngIf="hayElegido && !disabled" type="button" class="pac-clear" (click)="limpiar()"
+    pTooltip="Quitar" tooltipPosition="top" aria-label="Quitar producto">
+    <i class="pi pi-times"></i>
+  </button>
+
+  <button type="button" class="pac-lupa" [disabled]="disabled" (click)="abrirBuscador()"
+    pTooltip="Buscador avanzado" tooltipPosition="top" aria-label="Buscador avanzado de productos">
+    <i class="pi pi-search"></i>
+  </button>
+</div>
+
+<app-buscador-producto-dialog
+  [(visible)]="buscadorVisible"
+  [header]="header"
+  [busquedaInicial]="textoBuscador"
+  (productoSelected)="elegir($event)"
+></app-buscador-producto-dialog>

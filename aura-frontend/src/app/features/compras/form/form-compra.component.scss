@@ -273,64 +273,32 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   margin: 1.4rem 0 0.75rem;
 }
 
-// ─── Selector de producto por línea ──────────────────────────────
-.prod-selector {
+.detalle-acciones {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  min-height: 32px;
-  border: 1.5px solid #e0e3eb;
-  border-radius: 6px;
-  padding: 0.25rem 0.4rem 0.25rem 0.6rem;
-  background: #fff;
-  transition: border-color 0.15s;
-
-  &.sin-seleccion {
-    border-color: #e0e3eb;
-    .prod-sel-nombre {
-      color: #9ca3af;
-      font-style: italic;
-    }
-  }
-
-  &:hover {
-    border-color: #c7d0e0;
-  }
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
-.prod-sel-nombre {
-  flex: 1;
-  font-size: 0.8rem;
-  color: #1e293b;
-  white-space: normal;
-  word-break: break-word;
-  line-height: 1.25;
-  min-width: 0;
-}
-
-.prod-sel-btn {
-  flex-shrink: 0;
-  align-self: center;
-  width: 24px;
-  height: 24px;
-  border-radius: 5px;
-  border: none;
-  background: #f1f5f9;
-  color: #475569;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s;
-  i {
-    font-size: 0.72rem;
+// Selector de columnas: un botón compacto que dice "Columnas"
+::ng-deep .cols-select.p-multiselect {
+  height: 32px;
+  border-radius: 8px;
+  .p-multiselect-label {
+    padding: 0 0.3rem 0 0.7rem;
+    line-height: 30px;
+    font-size: 0.78rem;
+    color: #475569;
   }
-  &:hover {
-    background: #2563eb;
-    color: #fff;
+  .p-multiselect-trigger,
+  .p-multiselect-dropdown {
+    width: 2rem;
+    color: #2563eb;
   }
 }
 
@@ -559,29 +527,29 @@
   text-align: center !important;
 }
 
-// El producto absorbe el ancho restante; las numéricas tienen ancho fijo.
+// El producto ya no se come la fila: un ancho moderado (el nombre largo baja
+// en varias líneas, nunca se corta hacia los lados) y la cantidad, que lleva hasta tres
+// campos (4 [Caja ▾] + 2 und sueltas), gana espacio.
 .th-producto,
 .td-producto {
-  min-width: 180px;
+  vertical-align: top;
+  width: 22%;
+  min-width: 200px;
+  max-width: 300px;
 }
 
 ::ng-deep .lineas-table {
-  // Anchos por columna (cant | vlrunit | desc | costo | iva% | iva$ | neto | acc).
-  // Suman ~980px con el producto: caben en 1366×768 con el menú abierto; el
-  // producto se queda con lo que sobre en pantallas grandes. Si no alcanza,
-  // la tabla hace scroll horizontal en vez de recortar los valores.
-  th:nth-child(2), td:nth-child(2) { width: 168px; }
-  th:nth-child(3), td:nth-child(3) { width: 112px; }
-  th:nth-child(4), td:nth-child(4) { width: 92px; }
-  th:nth-child(5), td:nth-child(5) { width: 96px; }
-  th:nth-child(6), td:nth-child(6) { width: 64px; }
-  th:nth-child(7), td:nth-child(7) { width: 92px; }
-  th:nth-child(8), td:nth-child(8) { width: 104px; }
-  th:nth-child(9), td:nth-child(9) { width: 72px; }
-
-  .p-datatable-table {
-    min-width: 980px;
-  }
+  // Anchos por clase (no por posición): el usuario puede ocultar columnas.
+  // El ancho mínimo de la tabla lo calcula el componente con las visibles; si
+  // la pantalla no alcanza, la tabla hace scroll horizontal en vez de recortar.
+  .col-cant { width: 200px; min-width: 200px; }
+  .col-vu { width: 112px; }
+  .col-desc { width: 92px; }
+  .col-costo { width: 96px; }
+  .col-ivapct { width: 64px; }
+  .col-ivaval { width: 92px; }
+  .col-neto { width: 104px; }
+  .col-acc { width: 72px; }
 
   .p-datatable-thead > tr > th {
     background: #f8fafc;
@@ -1101,5 +1069,51 @@
 
   &--ok {
     color: #15803d;
+  }
+}
+
+// 4 Pacas + 2 und sueltas, debajo de la cantidad
+.cant-suelta {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.3rem;
+  margin-top: 0.3rem;
+  font-size: 0.72rem;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+::ng-deep .cant-suelta__input .p-inputnumber-input {
+  width: 3.5rem;
+  padding: 0.2rem 0.4rem;
+  font-size: 0.78rem;
+  text-align: right;
+}
+
+// Línea que no es mercancía: qué hace al guardar (crea activo, va al gasto…)
+.efecto-clasif {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-top: 0.3rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+// Vista previa del asiento
+.vp-cargando { padding: 2rem; text-align: center; color: #64748b; }
+.tabla-vp { overflow-x: auto; min-width: 0; }
+.vp-nota { display: block; margin-top: 0.6rem; font-size: 0.74rem; color: #64748b; }
+
+// Pantallas chicas: la columna del producto se encoge un poco más.
+@media (max-width: 900px) {
+  .th-producto,
+  .td-producto {
+    min-width: 170px;
   }
 }

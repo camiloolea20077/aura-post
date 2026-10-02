@@ -350,3 +350,11 @@
 .text-center {
   text-align: center !important;
 }
+
+// 3 Cajas + 4 und: el stock como se cuenta, debajo del número
+.stock-como-se-cuenta {
+  display: block;
+  font-size: 0.7rem;
+  color: #64748b;
+  white-space: nowrap;
+}

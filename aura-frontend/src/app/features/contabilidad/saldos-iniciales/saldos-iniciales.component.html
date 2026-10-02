@@ -61,7 +61,7 @@
       <div class="si-grid">
         <div class="field">
           <label>Fecha de apertura <span class="req">*</span></label>
-          <input pInputText type="date" [(ngModel)]="fechaApertura" />
+          <p-calendar [(ngModel)]="fechaApertura" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" />
         </div>
         <div class="field span-2">
           <label>Cuenta para la diferencia (patrimonio)</label>
@@ -79,6 +79,32 @@
         </div>
       </div>
 
+      <!-- Traer desde los auxiliares: la apertura tiene que decir lo mismo que ellos -->
+      <div class="si-fuentes">
+        <span class="si-fuentes__titulo">Traer saldos desde:</span>
+        <div class="si-fuentes__lista">
+          <ng-container *ngFor="let f of fuentes">
+            <button
+              *ngIf="!cargadas.has(f.value)"
+              type="button"
+              class="fuente"
+              [disabled]="trayendo !== null"
+              (click)="traer(f.value)"
+            >
+              <i [class]="trayendo === f.value ? 'pi pi-spin pi-spinner' : f.icon"></i> {{ f.label }}
+            </button>
+            <button *ngIf="cargadas.has(f.value)" type="button" class="fuente fuente--cargada" (click)="quitarFuente(f.value)">
+              <i class="pi pi-check"></i> {{ f.label }} <i class="pi pi-times quitar"></i>
+            </button>
+          </ng-container>
+        </div>
+        <small class="si-hint">
+          Cada fuente propone las líneas con la cuenta y el valor que dicen sus registros
+          (inventario al costo promedio, fichas de activos con su depreciación, cartera por
+          cliente…). Revísalas y completa el resto a mano.
+        </small>
+      </div>
+
       <div class="si-lineas-head">
         <span>Saldos por cuenta</span>
         <button pButton type="button" label="Agregar cuenta" icon="pi pi-plus"
@@ -89,6 +115,7 @@
         <ng-template pTemplate="header">
           <tr>
             <th style="min-width: 280px">Cuenta</th>
+            <th style="min-width: 160px">Tercero / origen</th>
             <th class="text-right" style="width: 180px">Saldo</th>
             <th class="text-right" style="width: 140px">Débito</th>
             <th class="text-right" style="width: 140px">Crédito</th>
@@ -102,6 +129,10 @@
                 optionLabel="label" optionValue="value" appendTo="body"
                 panelStyleClass="cmp-dd-panel"
                 placeholder="Seleccionar cuenta" [filter]="true" styleClass="w-full"></p-dropdown>
+            </td>
+            <td class="si-tercero">
+              <span *ngIf="l.terceroNombre">{{ l.terceroNombre }}</span>
+              <span class="si-origen" *ngIf="l.fuente">{{ fuenteLabel(l.fuente) }}<ng-container *ngIf="l.descripcion"> · {{ l.descripcion }}</ng-container></span>
             </td>
             <td>
               <p-inputNumber [(ngModel)]="l.saldo" mode="currency" currency="COP"
@@ -123,12 +154,12 @@
         <span>Débitos (activos): <strong>{{ formatCOP(totalDebito) }}</strong></span>
         <span>Créditos (pasivos): <strong>{{ formatCOP(totalCredito) }}</strong></span>
         <span class="si-dif">
-          Diferencia → patrimonio: <strong>{{ formatCOP(diferencia) }}</strong>
+          Diferencia: <strong>{{ formatCOP(diferencia) }}</strong>
         </span>
       </div>
       <p class="si-hint">
-        La diferencia entre activos y pasivos es el patrimonio; se lleva automáticamente a la
-        cuenta de ajuste seleccionada. No necesitas cuadrar manualmente.
+        Si no cuadra, al guardar se pregunta si la diferencia es patrimonio antes de llevarla
+        a la cuenta de ajuste: así un saldo mal digitado no queda escondido.
       </p>
 
       <div class="card-footer">

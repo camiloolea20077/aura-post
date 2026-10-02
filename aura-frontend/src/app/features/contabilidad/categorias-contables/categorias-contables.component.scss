@@ -1,0 +1,51 @@
+.nombre {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.otras {
+  font-size: 0.78rem;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.empty-row {
+  text-align: center;
+  color: #94a3b8;
+  padding: 2.5rem;
+  i { margin-right: 0.5rem; }
+}
+
+.text-muted { color: #94a3b8; font-size: 0.82rem; }
+.req { color: #ef4444; }
+
+// ── Dialog ───────────────────────────────────────────────────────────
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+
+  label { font-size: 0.82rem; font-weight: 600; color: #374151; }
+  &.full-width { grid-column: 1 / -1; }
+  &.activo { justify-content: flex-end; }
+}
+
+.hint { font-size: 0.74rem; color: #64748b; }
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+:host ::ng-deep .form-group p-inputnumber,
+:host ::ng-deep .form-group p-dropdown { min-width: 0; }

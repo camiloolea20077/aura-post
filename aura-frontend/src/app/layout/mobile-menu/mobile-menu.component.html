@@ -30,6 +30,19 @@
 
   <div class="mobile-menu-content">
     @for (group of stateStore.menuGroups(); track group.label) {
+      @if (group.hubRoute) {
+        <!-- Grupo con centro propio: un solo enlace (los ítems viven en el centro) -->
+        <div class="menu-group">
+          <a
+            class="group-header group-header--link"
+            [routerLink]="group.hubRoute"
+            (click)="onNavigate()"
+          >
+            <span class="group-label">{{ group.label }}</span>
+            <i class="pi pi-chevron-right"></i>
+          </a>
+        </div>
+      } @else {
       <div class="menu-group">
         <div class="group-header" (click)="toggleGroup(group.label)">
           <span class="group-label">{{ group.label }}</span>
@@ -56,6 +69,7 @@
           </div>
         }
       </div>
+      }
     }
   </div>
 

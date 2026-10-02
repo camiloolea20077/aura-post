@@ -16,7 +16,9 @@ export const COMPRAS_VENTAS: ManualModulo[] = [
           'Compras → Nueva compra.',
           'Busque el proveedor por nombre o NIT (debe existir como tercero con rol Proveedor).',
           'Tipo de documento: Factura de Compra, Nota Débito, Nota Crédito o Recibo. Número del documento del proveedor, fecha y sucursal.',
-          'Agregue los productos: buscándolos o por código de barras. En cada línea: cantidad (puede elegir la presentación de compra), valor unitario, descuento, IVA %. Use Duplicar para repetir una línea.',
+          'Agregue los productos: en la celda Producto escriba el nombre, SKU o código de barras y elija de la lista (con el lector de barras basta escanear y Enter). La lupa abre el buscador avanzado, donde puede filtrar por categoría, marca, clase (mercancía, activo, gasto…) y estado.',
+          'En cada línea: cantidad (puede elegir la presentación de compra y sumar unidades sueltas), valor unitario, descuento, IVA %. Use Duplicar para repetir una línea.',
+          'Columnas: con el botón "Columnas" junto a "Agregar producto" oculte las que no usa (Descuento, Costo, IVA %, IVA $). El equipo lo recuerda. Aunque estén ocultas, el IVA del producto se sigue calculando.',
           'Productos con lote: escriba cada lote que llegó con su vencimiento; las cantidades deben sumar la de la línea ("Agregar otro lote").',
           'Productos con serial: escriba un serial por unidad.',
           'Retenciones (si aplica): Retefuente, ReteIVA y ReteICA con su concepto y tarifa. Fletes si los hay.',
@@ -46,6 +48,29 @@ export const COMPRAS_VENTAS: ManualModulo[] = [
         ],
       },
       {
+        titulo: 'Activos, gastos y diferidos en la misma factura',
+        texto: [
+          'Cada línea hace lo que dice la clasificación de su ítem: la mercancía entra al inventario; un activo fijo crea sus fichas; un diferido crea el diferido; un gasto, un servicio o una dotación van directo a su cuenta. La línea lo avisa con una etiqueta azul.',
+          'Los fletes se reparten entre todas las líneas según su valor: la parte de un activo sube el costo de su ficha y la de la mercancía, el costo promedio.',
+        ],
+        notas: [
+          'Una nota crédito no acepta líneas de activo, intangible ni diferido: si el activo no se ha movido, anule la compra; si ya se depreció, dé de baja el activo.',
+        ],
+      },
+      {
+        titulo: 'Presentaciones y unidades sueltas',
+        texto: [
+          'Con una presentación elegida (Paca ×28) aparece "+ N und sueltas": llegaron 4 pacas y 2 cervezas se escribe en una sola línea. Las sueltas se cobran al costo de la presentación dividido por lo que contiene.',
+          'En productos con lotes no se ofrecen sueltas: los lotes se escriben en presentaciones completas.',
+        ],
+      },
+      {
+        titulo: 'Ver asiento antes de guardar',
+        texto: [
+          '"Ver asiento" muestra el comprobante contable que va a quedar (cuentas, débitos y créditos) sin guardar nada. Sale del mismo cálculo que el asiento real.',
+        ],
+      },
+      {
         titulo: 'Consultar, editar y anular',
         texto: [
           'La lista tiene: Ver detalle (con PDF), Editar compra, Comprobante de egreso (tirilla para firmar) y Documento soporte (para proveedores no obligados a facturar).',
@@ -55,6 +80,41 @@ export const COMPRAS_VENTAS: ManualModulo[] = [
       },
     ],
     errores: [
+      {
+        mensaje: 'No se puede anular la compra: un activo fijo que creó esta compra ya se depreció, se dio de baja o se vendió',
+        causa: 'La ficha del activo ya tiene historia propia.',
+        solucion: 'No se anula la compra: dé de baja o venda el activo desde Activos Fijos, o reverse primero su depreciación si el mes está abierto.',
+      },
+      {
+        mensaje: 'No se puede editar la compra: un diferido que creó esta compra ya tiene cuotas amortizadas',
+        causa: 'El diferido ya reconoció gasto en meses anteriores.',
+        solucion: 'Corrija con una nota contable o una nota crédito del proveedor.',
+      },
+      {
+        mensaje: '… es activo fijo: no se acredita con nota crédito',
+        causa: 'La nota crédito incluye un activo, intangible o diferido.',
+        solucion: 'Anule la compra (si el activo no se ha movido) o dé de baja el activo.',
+      },
+      {
+        mensaje: 'La línea de … crearía N fichas de activo (máximo 200 por línea). Revise la cantidad.',
+        causa: 'Cantidad muy alta en una línea de activo fijo.',
+        solucion: 'Revise la cantidad o compre ese ítem como Gasto o Dotación.',
+      },
+      {
+        mensaje: 'La compra tiene notas crédito vigentes: anúlelas primero',
+        causa: 'Hay devoluciones al proveedor (notas crédito) sobre esa compra.',
+        solucion: 'Anule primero las notas crédito y luego la compra.',
+      },
+      {
+        mensaje: 'La compra tiene un documento soporte aceptado por la DIAN',
+        causa: 'El documento soporte electrónico ya fue aceptado.',
+        solucion: 'No se anula: corríjalo con una nota de ajuste.',
+      },
+      {
+        mensaje: 'La cuenta por pagar de esta compra ya tiene abonos: anule los abonos antes de anular la compra',
+        causa: 'Parte de la compra a crédito ya se pagó.',
+        solucion: 'Anule los abonos en Cuentas por Pagar y luego anule la compra. Al anular, lo pagado de contado vuelve a la caja (turno de hoy) o al banco.',
+      },
       {
         mensaje: 'No se puede anular, stock insuficiente en: …',
         causa: 'Parte de lo comprado ya se vendió o salió.',
@@ -109,6 +169,32 @@ export const COMPRAS_VENTAS: ManualModulo[] = [
         mensaje: 'La cuenta destino de una compra debe ser de activo (1xxx), gasto (5xxx) o costo',
         causa: 'Se eligió una cuenta contable destino inválida.',
         solucion: 'Elija una cuenta auxiliar de activo, gasto o costo.',
+      },
+    ],
+  },
+  {
+    id: 'sugerido-compra',
+    grupo: 'Compras',
+    titulo: 'Sugerido de compra',
+    icono: 'pi pi-shopping-cart',
+    rutas: ['/compras/sugerido'],
+    resumen: 'Qué pedir y cuánto: los productos en su punto de reorden, agrupados por el último proveedor.',
+    secciones: [
+      {
+        titulo: 'Cómo funciona',
+        texto: [
+          'Por cada bodega sale lo que tiene un saldo igual o menor a su punto de reorden (o a su stock mínimo si no tiene punto). Sugiere pedir lo que falta para llegar al máximo.',
+          'Sin máximo, el sugerido solo lo devuelve al punto de reorden: la pantalla avisa cuántos productos están así.',
+          'El punto de reorden y el máximo se definen en Inventario › Stock, en cada registro de producto por bodega.',
+          '"Exportar CSV" deja el pedido listo para Excel o para enviar al proveedor.',
+        ],
+      },
+    ],
+    errores: [
+      {
+        mensaje: 'Nada por pedir',
+        causa: 'Ningún producto está en su punto de reorden, o no tienen mínimo ni punto definidos.',
+        solucion: 'Defina el stock mínimo o el punto de reorden en Inventario › Stock.',
       },
     ],
   },
@@ -232,6 +318,31 @@ export const COMPRAS_VENTAS: ManualModulo[] = [
       },
     ],
     errores: [
+      {
+        mensaje: 'La venta tiene devoluciones vigentes: anúlelas primero o registre la devolución total',
+        causa: 'Anular la venta reversaría dos veces lo que la devolución ya devolvió.',
+        solucion: 'Anule las devoluciones o use una devolución total en lugar de anular.',
+      },
+      {
+        mensaje: 'Las comisiones de esta venta ya se liquidaron',
+        causa: 'La comisión ya se le pagó al técnico o vendedor.',
+        solucion: 'Ajuste la liquidación de comisiones antes de anular la venta.',
+      },
+      {
+        mensaje: 'La factura de esta venta ya fue emitida o se está enviando en este momento',
+        causa: 'Otro usuario (o un doble clic) ya la está enviando a la DIAN.',
+        solucion: 'Espere unos segundos y recargue la venta.',
+      },
+      {
+        mensaje: 'Factus no respondió a tiempo y pudo haber recibido la factura',
+        causa: 'Se envió la factura y no llegó respuesta. La venta queda en estado DESCONOCIDO.',
+        solucion: 'Revise en Factus si la factura existe antes de reenviarla. Si se reenvía y ya existía, Factus la rechaza como duplicada.',
+      },
+      {
+        mensaje: 'Factus rechazó la factura: …',
+        causa: 'Factus o la DIAN encontraron un dato inválido (cliente, resolución, valores).',
+        solucion: 'Corrija lo que indica el mensaje y vuelva a enviarla.',
+      },
       {
         mensaje: 'No se puede anular la venta porque su cuenta por cobrar ya tiene abonos',
         causa: 'La venta a crédito ya recibió pagos.',

@@ -1,4 +1,5 @@
 import {
+  ChangeDetectorRef,
   Component,
   EventEmitter,
   Input,
@@ -9,6 +10,7 @@ import {
 } from '@angular/core';
 import { lastValueFrom } from 'rxjs';
 import { CarteraService } from '../../../../core/services/cartera.service';
+import { ContabilidadService } from '../../../../core/services/contabilidad.service';
 import { SolicitudCreditoModel } from '../../../../core/models/cartera.model';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -64,7 +66,77 @@ export class ModalPagoComponent implements OnChanges, OnDestroy {
   observacionSolicitud = '';
   private sondeo: ReturnType<typeof setInterval> | null = null;
 
-  constructor(private readonly carteraService: CarteraService) {}
+  constructor(
+    private readonly carteraService: CarteraService,
+    private readonly contabilidadService: ContabilidadService,
+    private readonly cdr: ChangeDetectorRef,
+  ) {
+    // Se cargan al crear el POS, no al abrir el cobro: así ya están cuando el
+    // cajero abre el modal.
+    this.cargarFormasEmpresa();
+  }
+
+  /** Códigos de formas de pago de la empresa que piden cuenta bancaria. */
+  private formasConBanco = new Set<string>();
+  private formasCargadas = false;
+
+  /**
+   * Formas con recargo que paga el cliente (Sistecrédito 5 %…). El monto que
+   * se escribe es la parte de la venta; el servidor le suma el recargo y lo
+   * agrega como línea de la venta. Aquí solo se muestra, con el mismo redondeo.
+   */
+  private recargos = new Map<string, { pct: number; nombre: string }>();
+
+  recargoPct(metodo: string): number {
+    return this.recargos.get(metodo)?.pct ?? 0;
+  }
+
+  recargoDe(p: { metodoPago: string; monto: number | null }): number {
+    const pct = this.recargoPct(p.metodoPago);
+    return pct > 0 && (p.monto ?? 0) > 0 ? Math.round(((p.monto ?? 0) * pct) / 100) : 0;
+  }
+
+  get pagosConRecargo(): { nombre: string; pct: number; valor: number }[] {
+    return this.pagos
+      .map((p) => ({ nombre: this.recargos.get(p.metodoPago)?.nombre ?? '', pct: this.recargoPct(p.metodoPago), valor: this.recargoDe(p) }))
+      .filter((r) => r.valor > 0);
+  }
+
+  get totalRecargos(): number {
+    return this.pagos.reduce((s, p) => s + this.recargoDe(p), 0);
+  }
+
+  /**
+   * Suma a los métodos de siempre las formas de pago que la empresa creó en
+   * Contabilidad › Parametrización (ADDI, Sistecrédito…). Su cuenta la
+   * resuelve el backend al contabilizar la venta.
+   */
+  private async cargarFormasEmpresa(): Promise<void> {
+    if (this.formasCargadas) return;
+    try {
+      const res = await lastValueFrom(this.contabilidadService.listarFormasPago());
+      const base = new Set(METODOS_PAGO.map((m) => m.value as string));
+      const extras = (res?.data ?? [])
+        .filter((f) => f.activo !== false && !base.has(f.codigo) && f.codigo !== 'CREDITO')
+        .map((f) => ({ label: f.nombre, value: f.codigo as MetodoPago, icon: 'pi pi-wallet', color: '#0EA5E9' }));
+      (res?.data ?? []).filter((f) => f.requiereCuentaBancaria).forEach((f) => this.formasConBanco.add(f.codigo));
+      (res?.data ?? [])
+        .filter((f) => f.activo !== false && Number(f.recargoPorcentaje) > 0)
+        .forEach((f) => this.recargos.set(f.codigo, { pct: Number(f.recargoPorcentaje), nombre: f.nombre }));
+      if (extras.length) {
+        // CREDITO queda de último, como siempre.
+        const sinCredito = METODOS_PAGO.filter((m) => m.value !== 'CREDITO');
+        const credito = METODOS_PAGO.filter((m) => m.value === 'CREDITO');
+        this.metodos = [...sinCredito, ...extras, ...credito];
+      }
+      this.formasCargadas = true;
+      // El POS es OnPush: sin esto los botones nuevos no se pintan hasta el
+      // siguiente clic dentro del modal.
+      this.cdr.markForCheck();
+    } catch {
+      /* sin conexión: quedan los métodos de siempre y se reintenta al abrir */
+    }
+  }
 
   @Output() modalClosed = new EventEmitter<void>();
   @Output() ventaConfirmada = new EventEmitter<{
@@ -76,7 +148,7 @@ export class ModalPagoComponent implements OnChanges, OnDestroy {
   public isSubmitting = false;
   public descuentoGeneral = 0;
 
-  readonly metodos = METODOS_PAGO;
+  metodos: { label: string; value: MetodoPago; icon: string; color: string }[] = [...METODOS_PAGO];
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['displayModal'] && !this.displayModal) this.detenerSondeo();
@@ -87,6 +159,7 @@ export class ModalPagoComponent implements OnChanges, OnDestroy {
       if (this.creditoInfo?.solicitudPendienteId) this.esperar(this.creditoInfo.solicitudPendienteId);
     }
     if (changes['displayModal'] && this.displayModal) {
+      this.cargarFormasEmpresa();
       this.pagos = this.pagosPrev.length
         ? [...this.pagosPrev.map((p) => ({ ...p }))]
         : [{ metodoPago: 'EFECTIVO', monto: this.total, referencia: null, cuentaBancariaId: null }];
@@ -134,7 +207,7 @@ export class ModalPagoComponent implements OnChanges, OnDestroy {
   }
 
   requiereCuenta(m: MetodoPago): boolean {
-    return m === 'TRANSFERENCIA' || m === 'NEQUI' || m === 'DAVIPLATA';
+    return m === 'TRANSFERENCIA' || m === 'NEQUI' || m === 'DAVIPLATA' || this.formasConBanco.has(m);
   }
 
   // ¿Hay una línea a crédito distinta a la indicada? (evita dos créditos)

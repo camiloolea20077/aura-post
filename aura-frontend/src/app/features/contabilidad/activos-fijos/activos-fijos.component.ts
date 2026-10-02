@@ -42,6 +42,9 @@ import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 
 import { aFechaLocal } from '../../../shared/utils/fecha.util';
+import { Router } from '@angular/router';
+import { TerceroAutocompleteComponent } from '../../../shared/components/tercero-autocomplete/tercero-autocomplete.component';
+import { RetiroActivoDto } from '../../../core/models/activo-fijo.model';
 @Component({
   selector: 'app-activos-fijos',
   standalone: true,
@@ -64,6 +67,7 @@ import { aFechaLocal } from '../../../shared/utils/fecha.util';
     IconFieldModule,
     InputIconModule,
     ToastModule,
+    TerceroAutocompleteComponent,
   ],
   providers: [MessageService],
   templateUrl: './activos-fijos.component.html',
@@ -93,6 +97,29 @@ export class ActivosFijosComponent implements OnInit {
   showBajaModal = false;
   bajaId: number | null = null;
   bajaObservaciones = '';
+  bajaFecha: Date = new Date();
+  retirando = false;
+
+  // ── Modal venta ────────────────────────────────────────────────
+  showVentaModal = false;
+  ventaActivo: ActivoFijoTableModel | null = null;
+  ventaFecha: Date = new Date();
+  ventaMotivo = '';
+  ventaValor: number | null = null;
+  ventaIva = 0;
+  ventaCuentaId: number | null = null;
+  ventaCompradorId: number | null = null;
+  cuentasCobroOpts: { label: string; value: number }[] = [];
+  readonly ivaOpts = [0, 5, 19].map((t) => ({ label: `${t} %`, value: t }));
+
+  // ── Ficha: fechas y componentes ────────────────────────────────
+  fechaInicioDep: Date | null = null;
+  polizaVence: Date | null = null;
+  padreOpts: { label: string; value: number }[] = [];
+
+  // ── Depreciación por unidades de producción ────────────────────
+  activosUnidades: { id: number; codigo: string; descripcion: string; unidades: number | null }[] = [];
+  reversando = false;
 
   // ── Modal depreciar ────────────────────────────────────────────
   showDepreciarModal = false;
@@ -111,6 +138,7 @@ export class ActivosFijosComponent implements OnInit {
   readonly estadoBadge = ESTADO_ACTIVO_BADGE;
 
   constructor(
+    private readonly router: Router,
     private readonly activoService: ActivoFijoService,
     private readonly contabilidadService: ContabilidadService,
     private readonly periodoService: PeriodoContableService,
@@ -133,6 +161,10 @@ export class ActivosFijosComponent implements OnInit {
         label: `${c.codigo} - ${c.nombre}`,
         value: c.id,
       }));
+      // La venta se cobra en caja, banco o cartera (clientes).
+      this.cuentasCobroOpts = (cuentasRes?.data ?? [])
+        .filter((c: PlanCuentaModel) => c.auxiliar && c.activa && /^(11|13)/.test(c.codigo ?? ''))
+        .map((c: PlanCuentaModel) => ({ label: `${c.codigo} - ${c.nombre}`, value: c.id }));
       this.periodosOpts = (periodosRes?.data ?? []).map((p: any) => ({
         label: `${p.anio}/${String(p.mes).padStart(2, '0')} — ${p.estado}`,
         value: p.id,
@@ -184,8 +216,32 @@ export class ActivosFijosComponent implements OnInit {
     this.editId = null;
     this.form = this.emptyForm();
     this.fechaAdquisicion = new Date();
+    this.fechaInicioDep = null;
+    this.polizaVence = null;
+    this.cargarPadres(null);
     this.showModal = true;
     this.cdr.markForCheck();
+  }
+
+  /** Activos que pueden ser padre (el activo del que este es componente). */
+  private async cargarPadres(excluirId: number | null): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.activoService.listar({ page: 0, rows: 500, search: '' }));
+      this.padreOpts = (res?.data?.content ?? [])
+        .filter((a) => a.id !== excluirId && (a.estado === 'ACTIVO' || a.estado === 'DEPRECIADO'))
+        .map((a) => ({ label: `${a.codigo} — ${a.descripcion}`, value: a.id }));
+    } catch {
+      this.padreOpts = [];
+    }
+    this.cdr.markForCheck();
+  }
+
+  verFicha(row: ActivoFijoTableModel): void {
+    this.router.navigate(['/contabilidad/activos-fijos', row.id]);
+  }
+
+  verInforme(): void {
+    this.router.navigate(['/contabilidad/activos-fijos/informe']);
   }
 
   async openEdit(row: ActivoFijoTableModel): Promise<void> {
@@ -211,8 +267,22 @@ export class ActivosFijosComponent implements OnInit {
           periodoContableId: d.periodoContableId,
           terceroId: d.terceroId,
           observaciones: d.observaciones,
+          placa: d.placa ?? null,
+          serial: d.serial ?? null,
+          marca: d.marca ?? null,
+          modelo: d.modelo ?? null,
+          responsableTerceroId: d.responsableTerceroId ?? null,
+          activoPadreId: d.activoPadreId ?? null,
+          aseguradora: d.aseguradora ?? null,
+          polizaNumero: d.polizaNumero ?? null,
+          polizaVence: d.polizaVence ?? null,
+          fechaInicioDepreciacion: d.fechaInicioDepreciacion ?? null,
+          unidadesEstimadas: d.unidadesEstimadas ?? null,
         };
         this.fechaAdquisicion = new Date(d.fechaAdquisicion + 'T00:00:00');
+        this.fechaInicioDep = d.fechaInicioDepreciacion ? new Date(d.fechaInicioDepreciacion + 'T00:00:00') : null;
+        this.polizaVence = d.polizaVence ? new Date(d.polizaVence + 'T00:00:00') : null;
+        this.cargarPadres(d.id);
         this.isEdit = true;
         this.editId = d.id;
         this.showModal = true;
@@ -237,6 +307,9 @@ export class ActivosFijosComponent implements OnInit {
       return;
     }
     this.form.fechaAdquisicion = aFechaLocal(this.fechaAdquisicion);
+    this.form.fechaInicioDepreciacion = this.fechaInicioDep ? aFechaLocal(this.fechaInicioDep) : null;
+    this.form.polizaVence = this.polizaVence ? aFechaLocal(this.polizaVence) : null;
+    if (this.form.metodoDepreciacion !== 'UNIDADES_PRODUCCION') this.form.unidadesEstimadas = null;
     this.saving = true;
     this.cdr.markForCheck();
     try {
@@ -251,8 +324,8 @@ export class ActivosFijosComponent implements OnInit {
       );
       this.showModal = false;
       this.loadActivos();
-    } catch {
-      this.alertService.showError('Error', 'No se pudo guardar el activo.');
+    } catch (e: any) {
+      this.alertService.showError('Error', e?.error?.message ?? e?.message ?? 'No se pudo guardar el activo.');
     } finally {
       this.saving = false;
       this.cdr.markForCheck();
@@ -263,36 +336,116 @@ export class ActivosFijosComponent implements OnInit {
   openBaja(row: ActivoFijoTableModel): void {
     this.bajaId = row.id;
     this.bajaObservaciones = '';
+    this.bajaFecha = new Date();
     this.showBajaModal = true;
     this.cdr.markForCheck();
   }
 
   async confirmarBaja(): Promise<void> {
     if (!this.bajaId) return;
+    if (!this.bajaObservaciones.trim()) {
+      this.alertService.showWarn('Falta el motivo', 'Escribe por qué se da de baja el activo.');
+      return;
+    }
+    this.retirando = true;
+    this.cdr.markForCheck();
     try {
-      await lastValueFrom(
-        this.activoService.darDeBaja(
-          this.bajaId,
-          this.bajaObservaciones || undefined,
-        ),
-      );
-      this.alertService.showSuccess(
-        'Dado de baja',
-        'Activo dado de baja correctamente.',
-      );
+      const dto: RetiroActivoDto = { fecha: aFechaLocal(this.bajaFecha), motivo: this.bajaObservaciones.trim() };
+      await lastValueFrom(this.activoService.darDeBaja(this.bajaId, dto));
+      this.alertService.showSuccess('Dado de baja', 'Activo dado de baja y contabilizado.');
       this.showBajaModal = false;
       this.loadActivos();
+    } catch (e: any) {
+      this.alertService.showError('Error', e?.error?.message ?? 'No se pudo dar de baja el activo.');
+    } finally {
+      this.retirando = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  // ── Venta ───────────────────────────────────────────────────────
+  openVenta(row: ActivoFijoTableModel): void {
+    this.ventaActivo = row;
+    this.ventaFecha = new Date();
+    this.ventaMotivo = '';
+    this.ventaValor = null;
+    this.ventaIva = 0;
+    this.ventaCuentaId = null;
+    this.ventaCompradorId = null;
+    this.showVentaModal = true;
+    this.cdr.markForCheck();
+  }
+
+  get ventaResultado(): number | null {
+    if (this.ventaActivo == null || this.ventaValor == null) return null;
+    return this.ventaValor - (this.ventaActivo.valorEnLibros ?? 0);
+  }
+
+  async confirmarVenta(): Promise<void> {
+    if (!this.ventaActivo) return;
+    if (!this.ventaMotivo.trim() || this.ventaValor == null || !this.ventaCuentaId) {
+      this.alertService.showWarn('Datos incompletos', 'Escribe el motivo, el precio y la cuenta que recibe el pago.');
+      return;
+    }
+    this.retirando = true;
+    this.cdr.markForCheck();
+    try {
+      const dto: RetiroActivoDto = {
+        fecha: aFechaLocal(this.ventaFecha),
+        motivo: this.ventaMotivo.trim(),
+        valorVenta: this.ventaValor,
+        ivaPorcentaje: this.ventaIva,
+        cuentaCobroId: this.ventaCuentaId,
+        compradorTerceroId: this.ventaCompradorId,
+      };
+      await lastValueFrom(this.activoService.vender(this.ventaActivo.id, dto));
+      this.alertService.showSuccess('Venta registrada', 'El activo salió de los libros con su utilidad o pérdida.');
+      this.showVentaModal = false;
+      this.loadActivos();
+    } catch (e: any) {
+      this.alertService.showError('Error', e?.error?.message ?? 'No se pudo registrar la venta.');
+    } finally {
+      this.retirando = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  // ── Depreciación ────────────────────────────────────────────────
+  async openDepreciar(): Promise<void> {
+    this.periodoIdDepreciar = null;
+    this.activosUnidades = [];
+    this.showDepreciarModal = true;
+    this.cdr.markForCheck();
+    // Los activos por unidades de producción necesitan el uso del mes.
+    try {
+      const res = await lastValueFrom(this.activoService.listar({ page: 0, rows: 500, search: '' }));
+      this.activosUnidades = (res?.data?.content ?? [])
+        .filter((a) => a.metodoDepreciacion === 'UNIDADES_PRODUCCION' && a.estado === 'ACTIVO')
+        .map((a) => ({ id: a.id, codigo: a.codigo, descripcion: a.descripcion, unidades: null }));
     } catch {
-      this.alertService.showError('Error', 'No se pudo dar de baja el activo.');
+      this.activosUnidades = [];
     }
     this.cdr.markForCheck();
   }
 
-  // ── Depreciación ────────────────────────────────────────────────
-  openDepreciar(): void {
-    this.periodoIdDepreciar = null;
-    this.showDepreciarModal = true;
+  async reversarDepreciacion(): Promise<void> {
+    if (!this.periodoIdDepreciar) {
+      this.alertService.showWarn('Selecciona un período', 'Elige el período cuya depreciación quieres reversar.');
+      return;
+    }
+    this.reversando = true;
     this.cdr.markForCheck();
+    try {
+      const res = await lastValueFrom(this.activoService.reversarDepreciacion(this.periodoIdDepreciar));
+      this.alertService.showSuccess('Depreciación reversada', res?.message ?? 'Listo.');
+      this.showDepreciarModal = false;
+      this.loadActivos();
+    } catch (e: any) {
+      this.alertService.showError('Error', e?.error?.message ?? 'No se pudo reversar la depreciación.');
+    } finally {
+      this.reversando = false;
+      this.cdr.markForCheck();
+    }
   }
 
   async ejecutarDepreciacion(): Promise<void> {
@@ -306,8 +459,15 @@ export class ActivosFijosComponent implements OnInit {
     this.depreciando = true;
     this.cdr.markForCheck();
     try {
+      const unidades: Record<number, number> = {};
+      this.activosUnidades
+        .filter((a) => (a.unidades ?? 0) > 0)
+        .forEach((a) => (unidades[a.id] = a.unidades!));
       const res = await lastValueFrom(
-        this.activoService.calcularDepreciacion(this.periodoIdDepreciar),
+        this.activoService.calcularDepreciacion(
+          this.periodoIdDepreciar,
+          Object.keys(unidades).length ? unidades : undefined,
+        ),
       );
       const procesados = res?.data?.length ?? 0;
       this.alertService.showSuccess(
@@ -316,10 +476,10 @@ export class ActivosFijosComponent implements OnInit {
       );
       this.showDepreciarModal = false;
       this.loadActivos();
-    } catch {
+    } catch (e: any) {
       this.alertService.showError(
         'Error',
-        'No se pudo calcular la depreciación.',
+        e?.error?.message ?? 'No se pudo calcular la depreciación.',
       );
     } finally {
       this.depreciando = false;
@@ -385,6 +545,17 @@ export class ActivosFijosComponent implements OnInit {
       periodoContableId: null,
       terceroId: null,
       observaciones: null,
+      placa: null,
+      serial: null,
+      marca: null,
+      modelo: null,
+      responsableTerceroId: null,
+      activoPadreId: null,
+      aseguradora: null,
+      polizaNumero: null,
+      polizaVence: null,
+      fechaInicioDepreciacion: null,
+      unidadesEstimadas: null,
     };
   }
 }

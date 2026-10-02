@@ -28,6 +28,17 @@
         <!-- Filtro por uso + búsqueda (debajo) -->
         <div class="card-head__search">
           <p-dropdown
+            [options]="clasificacionOptions"
+            [(ngModel)]="clasificacionFiltro"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todo el catálogo"
+            [showClear]="true"
+            styleClass="uso-filtro"
+            (onChange)="onUsoChange()"
+            (onClear)="onUsoChange()"
+          />
+          <p-dropdown
             [options]="usoOptions"
             [(ngModel)]="usoFiltro"
             optionLabel="label"
@@ -91,7 +102,7 @@
             Marca <p-sortIcon field="m.nombre" />
           </th>
           <th style="width: 110px">Tipo</th>
-          <th style="width: 120px">Uso</th>
+          <th style="width: 120px">Uso / clase</th>
           <th
             pSortableColumn="p.precio"
             style="width: 130px"
@@ -101,6 +112,10 @@
           </th>
           <th pSortableColumn="p.costo" style="width: 120px" class="text-right">
             Costo <p-sortIcon field="p.costo" />
+          </th>
+          <th style="width: 100px" class="text-right"
+            pTooltip="De cada $100 que vendes (sin IVA), cuánto te queda después del costo" tooltipPosition="top">
+            Utilidad
           </th>
           <th
             pSortableColumn="p.activo"
@@ -159,11 +174,20 @@
 
           <!-- Uso -->
           <td>
+            <!-- Lo que no es mercancía muestra su clasificación (activo, gasto…) -->
             <p-tag
-              [value]="getUsoLabel(item.usoProducto)"
-              [severity]="getUsoSeverity(item.usoProducto)"
+              *ngIf="item.clasificacion && item.clasificacion !== 'PRODUCTO'; else tagUso"
+              [value]="getClasificacionLabel(item.clasificacion)"
+              severity="contrast"
               [rounded]="true"
             />
+            <ng-template #tagUso>
+              <p-tag
+                [value]="getUsoLabel(item.usoProducto)"
+                [severity]="getUsoSeverity(item.usoProducto)"
+                [rounded]="true"
+              />
+            </ng-template>
           </td>
 
           <!-- Precio -->
@@ -178,6 +202,13 @@
             <span class="cost-value">
               {{ item.costo | currency: "COP" : "symbol-narrow" : "1.0-0" }}
             </span>
+          </td>
+
+          <!-- Utilidad -->
+          <td class="text-right">
+            <span *ngIf="utilidad(item) as u; else sinUtil" class="util" [ngClass]="'util--' + u.nivel"
+              [pTooltip]="u.tooltip" tooltipPosition="top">{{ u.pct | number: "1.0-1" }} %</span>
+            <ng-template #sinUtil><span class="util-vacia">—</span></ng-template>
           </td>
 
           <!-- Estado -->
@@ -218,7 +249,7 @@
       <!-- Empty -->
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="10">
+          <td colspan="11">
             <div class="empty-state">
               <i class="pi pi-shopping-bag"></i>
               <p>
@@ -257,6 +288,9 @@
           </td>
           <td class="text-right">
             <p-skeleton width="80px" styleClass="ml-auto" />
+          </td>
+          <td class="text-right">
+            <p-skeleton width="50px" styleClass="ml-auto" />
           </td>
           <td class="text-center">
             <p-skeleton width="70px" styleClass="mx-auto" />

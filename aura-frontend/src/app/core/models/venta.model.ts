@@ -8,7 +8,9 @@ export type MetodoPago =
   | 'TRANSFERENCIA'
   | 'NEQUI'
   | 'DAVIPLATA'
-  | 'CREDITO';
+  | 'CREDITO'
+  // Formas de pago que crea la empresa en Parametrización (ADDI, SISTECREDITO…)
+  | (string & {});
 
 // ─── Detalle ──────────────────────────────────────────────────
 export interface VentaDetalleModel {

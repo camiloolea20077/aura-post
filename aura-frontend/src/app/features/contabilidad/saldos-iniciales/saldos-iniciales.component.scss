@@ -83,3 +83,44 @@
 .card-footer {
   margin-top: 1rem;
 }
+
+// ── Traer desde auxiliares ────────────────────────────────────────
+.si-fuentes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0.75rem 0 1rem;
+  &__titulo { font-size: 0.82rem; font-weight: 600; color: #374151; }
+  &__lista { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+}
+
+.fuente {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.8rem;
+  border: 1.5px solid #e0e3eb;
+  border-radius: 10px;
+  background: #fff;
+  color: #475569;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  &:hover:not(:disabled) { border-color: #93c5fd; }
+  &:disabled { opacity: 0.6; cursor: default; }
+  &--cargada {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #1d4ed8;
+    .quitar { font-size: 0.7rem; margin-left: 0.2rem; }
+  }
+}
+
+.si-tercero {
+  font-size: 0.78rem;
+  color: #334155;
+  span { display: block; }
+}
+
+.si-origen { font-size: 0.7rem; color: #94a3b8; }

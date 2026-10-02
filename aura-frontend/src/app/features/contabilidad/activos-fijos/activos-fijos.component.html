@@ -15,6 +15,14 @@
           <button
             pButton
             type="button"
+            icon="pi pi-chart-bar"
+            label="Informe"
+            class="p-button-outlined p-button-secondary"
+            (click)="verInforme()"
+          ></button>
+          <button
+            pButton
+            type="button"
             icon="pi pi-calculator"
             label="Calcular Depreciación"
             class="p-button-outlined p-button-secondary"
@@ -82,8 +90,12 @@
         <tr class="clickable-row">
           <td>
             <strong>{{ row.codigo }}</strong>
+            <div class="sub" *ngIf="row.placa">Placa {{ row.placa }}</div>
           </td>
-          <td>{{ row.descripcion }}</td>
+          <td>
+            {{ row.descripcion }}
+            <div class="sub" *ngIf="row.compraId">Compra #{{ row.compraId }}</div>
+          </td>
           <td>{{ row.categoria }}</td>
           <td>
             {{
@@ -111,9 +123,17 @@
           <td class="text-center flex" (click)="$event.stopPropagation()">
             <button
               pButton
+              icon="pi pi-id-card"
+              class="p-button-text p-button-sm"
+              pTooltip="Ficha: depreciación, adiciones y mantenimientos"
+              (click)="verFicha(row)"
+            ></button>
+            <button
+              pButton
               icon="pi pi-pencil"
               class="p-button-text p-button-sm"
               pTooltip="Editar"
+              [disabled]="row.estado === 'DADO_DE_BAJA' || row.estado === 'VENDIDO'"
               (click)="openEdit(row)"
             ></button>
             <button
@@ -128,8 +148,16 @@
               icon="pi pi-ban"
               class="p-button-text p-button-sm p-button-warning"
               pTooltip="Dar de baja"
-              [disabled]="row.estado === 'DADO_DE_BAJA'"
+              [disabled]="row.estado === 'DADO_DE_BAJA' || row.estado === 'VENDIDO'"
               (click)="openBaja(row)"
+            ></button>
+            <button
+              pButton
+              icon="pi pi-dollar"
+              class="p-button-text p-button-sm p-button-success"
+              pTooltip="Vender"
+              [disabled]="row.estado === 'DADO_DE_BAJA' || row.estado === 'VENDIDO'"
+              (click)="openVenta(row)"
             ></button>
           </td>
         </tr>
@@ -219,6 +247,31 @@
 
         <div class="field-row">
           <div class="field flex-1">
+            <label>Inicio de la depreciación</label>
+            <p-calendar
+              [(ngModel)]="fechaInicioDep"
+              dateFormat="yy-mm-dd"
+              [showIcon]="true"
+              [showClear]="true"
+              placeholder="La de adquisición"
+              styleClass="w-full"
+              appendTo="body"
+            />
+            <span class="hint">Se deprecia desde el mes de esta fecha</span>
+          </div>
+          <div class="field flex-1" *ngIf="form.metodoDepreciacion === 'UNIDADES_PRODUCCION'">
+            <label>Unidades en su vida <span class="req">*</span></label>
+            <p-inputNumber
+              [(ngModel)]="form.unidadesEstimadas"
+              [min]="1"
+              placeholder="Horas, km, piezas…"
+              styleClass="w-full"
+            />
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field flex-1">
             <label>Vida útil (meses) <span class="req">*</span></label>
             <p-inputNumber
               [(ngModel)]="form.vidaUtilMeses"
@@ -283,6 +336,76 @@
             class="w-full"
             placeholder="Notas adicionales..."
           ></textarea>
+        </div>
+      </div>
+    </p-tabPanel>
+
+    <!-- Tab Ficha -->
+    <p-tabPanel header="Ficha">
+      <div class="form-body">
+        <div class="field-row">
+          <div class="field flex-1">
+            <label>Placa / etiqueta</label>
+            <input pInputText [(ngModel)]="form.placa" maxlength="40" class="w-full" placeholder="Ej: INV-0042" />
+          </div>
+          <div class="field flex-1">
+            <label>Serial</label>
+            <input pInputText [(ngModel)]="form.serial" maxlength="80" class="w-full" />
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field flex-1">
+            <label>Marca</label>
+            <input pInputText [(ngModel)]="form.marca" maxlength="80" class="w-full" />
+          </div>
+          <div class="field flex-1">
+            <label>Modelo</label>
+            <input pInputText [(ngModel)]="form.modelo" maxlength="80" class="w-full" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Responsable (empleado o tercero)</label>
+          <app-tercero-autocomplete
+            [(ngModel)]="form.responsableTerceroId"
+            placeholder="Quién tiene el activo a cargo…"
+            appendTo="body"
+          />
+        </div>
+        <div class="field">
+          <label>Es componente de</label>
+          <p-dropdown
+            [(ngModel)]="form.activoPadreId"
+            [options]="padreOpts"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Ninguno (activo independiente)"
+            [showClear]="true"
+            [filter]="true"
+            filterBy="label"
+            styleClass="w-full"
+            appendTo="body"
+          />
+        </div>
+        <div class="field-row">
+          <div class="field flex-1">
+            <label>Aseguradora</label>
+            <input pInputText [(ngModel)]="form.aseguradora" maxlength="120" class="w-full" />
+          </div>
+          <div class="field flex-1">
+            <label>N.º de póliza</label>
+            <input pInputText [(ngModel)]="form.polizaNumero" maxlength="60" class="w-full" />
+          </div>
+          <div class="field flex-1">
+            <label>Póliza vence</label>
+            <p-calendar
+              [(ngModel)]="polizaVence"
+              dateFormat="yy-mm-dd"
+              [showIcon]="true"
+              [showClear]="true"
+              styleClass="w-full"
+              appendTo="body"
+            />
+          </div>
         </div>
       </div>
     </p-tabPanel>
@@ -388,7 +511,7 @@
     </ng-template>
     <ng-template pTemplate="body" let-dep>
       <tr>
-        <td>{{ dep.periodoId }}</td>
+        <td>{{ dep.periodo ?? dep.periodoId }}</td>
         <td>
           {{ dep.valor | currency: "COP" : "symbol" : "1.0-0" : "es-CO" }}
         </td>
@@ -424,11 +547,22 @@
 >
   <div class="form-body">
     <p style="color: var(--text-color-secondary); margin-bottom: 1rem">
-      Esta acción marcará el activo como <strong>DADO_DE_BAJA</strong> y no
-      podrá ser depreciado nuevamente.
+      El activo sale de los libros: se cancela su depreciación acumulada y lo
+      que falte por depreciar va a <strong>pérdida (5310)</strong>. Deprecia el
+      mes antes de darlo de baja.
     </p>
     <div class="field">
-      <label>Motivo de baja</label>
+      <label>Fecha de la baja</label>
+      <p-calendar
+        [(ngModel)]="bajaFecha"
+        dateFormat="yy-mm-dd"
+        [showIcon]="true"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+    <div class="field">
+      <label>Motivo de baja <span class="req">*</span></label>
       <textarea
         pTextarea
         [(ngModel)]="bajaObservaciones"
@@ -451,7 +585,94 @@
       label="Confirmar Baja"
       icon="pi pi-ban"
       class="btn-rojo"
+      [disabled]="retirando"
       (click)="confirmarBaja()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ══ MODAL VENTA ═════════════════════════════════════════════════ -->
+<p-dialog
+  [(visible)]="showVentaModal"
+  [header]="'Vender activo — ' + (ventaActivo?.codigo ?? '')"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '520px' }"
+  [breakpoints]="{ '600px': '95vw' }"
+  styleClass="aura-dialog"
+>
+  <div class="form-body">
+    <p style="color: var(--text-color-secondary); margin-bottom: 1rem">
+      Valor en libros:
+      <strong>{{ ventaActivo?.valorEnLibros | currency: "COP" : "symbol" : "1.0-0" : "es-CO" }}</strong>.
+      La diferencia con el precio va a utilidad (4245) o pérdida (5310).
+    </p>
+    <div class="field-row">
+      <div class="field flex-1">
+        <label>Fecha</label>
+        <p-calendar [(ngModel)]="ventaFecha" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full" appendTo="body" />
+      </div>
+      <div class="field flex-1">
+        <label>Precio sin IVA <span class="req">*</span></label>
+        <p-inputNumber
+          [(ngModel)]="ventaValor"
+          mode="currency"
+          currency="COP"
+          locale="es-CO"
+          [maxFractionDigits]="0"
+          styleClass="w-full"
+        />
+      </div>
+      <div class="field" style="min-width: 110px">
+        <label>IVA</label>
+        <p-dropdown
+          [(ngModel)]="ventaIva"
+          [options]="ivaOpts"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+          appendTo="body"
+        />
+      </div>
+    </div>
+    <div class="resultado-venta" *ngIf="ventaResultado !== null">
+      {{ ventaResultado >= 0 ? "Utilidad" : "Pérdida" }}:
+      <strong [class.neg]="ventaResultado < 0">{{
+        (ventaResultado < 0 ? -ventaResultado : ventaResultado) | currency: "COP" : "symbol" : "1.0-0" : "es-CO"
+      }}</strong>
+    </div>
+    <div class="field">
+      <label>¿Dónde entra el pago? <span class="req">*</span></label>
+      <p-dropdown
+        [(ngModel)]="ventaCuentaId"
+        [options]="cuentasCobroOpts"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Caja, banco o clientes (a crédito)"
+        [filter]="true"
+        filterBy="label"
+        styleClass="w-full"
+        appendTo="body"
+      />
+    </div>
+    <div class="field">
+      <label>Comprador</label>
+      <app-tercero-autocomplete [(ngModel)]="ventaCompradorId" rol="CLIENTE" appendTo="body" />
+    </div>
+    <div class="field">
+      <label>Motivo / observación <span class="req">*</span></label>
+      <textarea pTextarea [(ngModel)]="ventaMotivo" rows="2" class="w-full" placeholder="Ej: renovación del equipo"></textarea>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancelar" icon="pi pi-times" class="btn-amarillo" (click)="showVentaModal = false"></button>
+    <button
+      pButton
+      label="Registrar venta"
+      icon="pi pi-dollar"
+      class="btn-aura"
+      [disabled]="retirando"
+      (click)="confirmarVenta()"
     ></button>
   </ng-template>
 </p-dialog>
@@ -482,6 +703,14 @@
         appendTo="body"
       />
     </div>
+    <div class="unidades" *ngIf="activosUnidades.length">
+      <label>Uso del mes (activos por unidades de producción)</label>
+      <div class="unidades__fila" *ngFor="let a of activosUnidades">
+        <span>{{ a.codigo }} — {{ a.descripcion }}</span>
+        <p-inputNumber [(ngModel)]="a.unidades" [min]="0" placeholder="0" styleClass="unidades__input" />
+      </div>
+      <span class="hint">Sin lectura, ese activo no se deprecia este mes.</span>
+    </div>
   </div>
   <ng-template pTemplate="footer">
     <button
@@ -490,6 +719,15 @@
       icon="pi pi-times"
       class="btn-amarillo"
       (click)="showDepreciarModal = false"
+    ></button>
+    <button
+      pButton
+      label="Reversar"
+      icon="pi pi-undo"
+      class="p-button-outlined p-button-danger"
+      pTooltip="Deshace la depreciación del período elegido (debe estar abierto)"
+      [disabled]="reversando || depreciando"
+      (click)="reversarDepreciacion()"
     ></button>
     <button
       pButton

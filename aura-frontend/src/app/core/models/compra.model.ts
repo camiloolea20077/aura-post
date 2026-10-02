@@ -65,7 +65,10 @@ export interface CompraDetalleModel {
   presentacionNombre?: string | null;
   presentacionFactor?: number | null;
   cantidadPresentacion?: number | null;
+  /** Unidades sueltas que llegaron además de las presentaciones (4 Pacas + 2 und). */
+  cantidadSuelta?: number | null;
   costoPresentacion?: number | null;
+  clasificacion?: string | null;
   manejaLotes?: boolean;
   manejaSerial?: boolean;
   /** Seriales que entraron (compra) o salieron (nota crédito) con la línea. */
@@ -159,6 +162,8 @@ export interface CreateCompraDetalleDto {
   /** Si viene, cantidad y costoUnitario están en esa presentación. */
   productoPresentacionId?: number | null;
   cantidad: number;
+  /** Con presentación: unidades base sueltas además de las presentaciones completas. */
+  cantidadSuelta?: number | null;
   costoUnitario: number;
   descuentoPct: number;
   impuestoValor: number;
@@ -256,6 +261,10 @@ export interface CompraLineaUI {
   precioVenta3: number | null;
   /** 0 = unidad de inventario; si no, la presentación en que se escriben cantidad y costo. */
   presentacionId?: number;
+  /** Con presentación: unidades sueltas además de las presentaciones (4 Pacas + 2 und). */
+  cantidadSuelta?: number | null;
+  /** PRODUCTO | SERVICIO | GASTO | DOTACION | ACTIVO_FIJO | INTANGIBLE | DIFERIDO. */
+  clasificacion?: string | null;
   /** Abreviatura de la unidad de inventario (kg, und) para rotular la conversión. */
   unidadAbreviatura?: string | null;
   /** El producto maneja lotes: la compra exige código, vencimiento y cantidad. */
@@ -302,4 +311,6 @@ export interface ProductoOpcion {
   unidadAbreviatura?: string | null;
   manejaLotes?: boolean;
   manejaSerial?: boolean;
+  /** Qué es el ítem (catálogo unificado): decide qué hace la compra con la línea. */
+  clasificacion?: string | null;
 }

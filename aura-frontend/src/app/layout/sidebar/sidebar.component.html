@@ -33,6 +33,24 @@
   <!-- ─── Navigation ────────────────────────────── -->
   <nav class="sidebar-nav">
     <ng-container *ngFor="let group of menuGroups">
+      <!-- Grupo con centro propio (p. ej. Contabilidad): un solo enlace, sin desplegar ítems -->
+      <div class="nav-group" *ngIf="group.hubRoute; else grupoDesplegable">
+        <a
+          class="nav-group-header nav-group-hub"
+          [routerLink]="group.hubRoute"
+          [class.active]="isHubActive(group)"
+          [attr.aria-current]="isHubActive(group) ? 'page' : null"
+          [attr.aria-label]="'Ir al centro de ' + group.label"
+          [pTooltip]="collapsed ? group.label : ''"
+          tooltipPosition="right"
+        >
+          <i [class]="group.icon + ' group-icon'"></i>
+          <span class="nav-group-label" *ngIf="!collapsed">{{ group.label }}</span>
+          <i class="pi pi-chevron-right group-chevron" *ngIf="!collapsed"></i>
+        </a>
+      </div>
+
+      <ng-template #grupoDesplegable>
       <div class="nav-group" [class.group-open]="isOpen(group)">
         <!-- Header del grupo (colapsable) -->
         <button
@@ -107,6 +125,7 @@
           </ng-container>
         </div>
       </div>
+      </ng-template>
     </ng-container>
   </nav>
 

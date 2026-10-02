@@ -99,6 +99,7 @@ export class TopbarComponent implements OnInit {
     cajas: 'Cajas',
     turnos: 'Turnos',
     reportes: 'Reportes',
+    contabilidad: 'Contabilidad',
     new: 'Nuevo',
   };
 

@@ -20,6 +20,43 @@ const CUENTA_ERRORES: ManualError[] = [
 
 export const CONTABILIDAD: ManualModulo[] = [
   {
+    id: 'centro-contabilidad',
+    grupo: 'Contabilidad',
+    titulo: 'Centro de Contabilidad',
+    icono: 'pi pi-th-large',
+    rutas: ['/contabilidad'],
+    resumen:
+      'La entrada al módulo: el resumen del mes desde el mayor y el acceso a todas las pantallas contables.',
+    secciones: [
+      {
+        titulo: 'Cómo se llega',
+        texto: [
+          'En el menú lateral, "Contabilidad" ya no despliega sus pantallas: abre este centro. Desde cualquier pantalla contable, el botón "Volver a Contabilidad" (arriba a la izquierda) regresa aquí.',
+        ],
+      },
+      {
+        titulo: 'Qué muestra',
+        texto: [
+          'Arriba, los indicadores del mes elegido: ingresos, costos y gastos, utilidad (o pérdida) y comprobantes, con la variación frente al mes anterior. Salen del mayor: solo cuentan los asientos contabilizados, sin los de cierre.',
+          'Debajo, los módulos agrupados (Operación contable, Cierre y resultados, Tributario, Tesorería y activos) con un buscador. Solo aparecen las pantallas que el usuario tiene habilitadas.',
+          'Al final, el resultado mes a mes del año, el estado contable (período, comprobantes en borrador, conciliaciones abiertas, cierre anual) y la distribución de los gastos del mes.',
+        ],
+      },
+    ],
+    errores: [
+      {
+        mensaje: 'No hay información contable disponible para el período seleccionado',
+        causa: 'El mes no tiene asientos contabilizados (o están en borrador).',
+        solucion: 'Elija otro mes o apruebe los borradores en Revisión de Comprobantes.',
+      },
+      {
+        mensaje: 'No fue posible cargar el resumen contable',
+        causa: 'Fallo de conexión con el servidor.',
+        solucion: 'Use "Reintentar". Los módulos siguen disponibles abajo.',
+      },
+    ],
+  },
+  {
     id: 'contabilidad-como-funciona',
     grupo: 'Contabilidad',
     titulo: 'Cómo funciona la contabilidad en Aura',
@@ -59,6 +96,11 @@ export const CONTABILIDAD: ManualModulo[] = [
         mensaje: 'Un documento no aparece en los informes contables',
         causa: 'Su asiento está en BORRADOR (modo revisión) o se anuló.',
         solucion: 'Apruébelo en Contabilidad → Revisión de Comprobantes.',
+      },
+      {
+        mensaje: 'El período contable … está cerrado: no admite documentos nuevos',
+        causa: 'La fecha del documento (compra, gasto, devolución, abono, recibo, egreso, recaudo o traslado de fondos) cae en un mes que el contador ya cerró.',
+        solucion: 'Corrija la fecha del documento o reabra el período en Contabilidad → Períodos contables.',
       },
       {
         mensaje: 'El comprobante … está en un período cerrado. Anularlo cambiaría saldos ya reportados',
@@ -233,8 +275,30 @@ export const CONTABILIDAD: ManualModulo[] = [
           'Red de seguridad: lista comprobantes con débito distinto de crédito. Debería estar vacía; si aparece alguno, revíselo antes de cerrar el mes.',
         ],
       },
+      {
+        titulo: 'Sin asiento',
+        texto: [
+          'Lista las ventas, compras, gastos, devoluciones, mermas, obsequios y consumos internos del rango que no quedaron en el mayor (su asiento falló después de guardarlos, por ejemplo por una cuenta sin configurar) o que quedaron contados dos veces.',
+        ],
+        pasos: [
+          'Elija el rango y pulse "Revisar".',
+          '"Sin asiento": corrija la causa (cuenta, categoría contable, período) y pulse "Reprocesar". Si vuelve a fallar, el mensaje dice por qué.',
+          '"N asientos (duplicado)": abra el documento en Asientos Contables y reverse el asiento que sobra.',
+        ],
+        notas: ['Revise esta pestaña antes de cerrar cada mes.'],
+      },
     ],
     errores: [
+      {
+        mensaje: 'No hay reproceso automático para documentos de tipo …',
+        causa: 'Ese tipo de documento no se puede recontabilizar desde aquí.',
+        solucion: 'Registre el asiento con una nota contable o anule y registre de nuevo el documento.',
+      },
+      {
+        mensaje: 'El documento ya tenía asiento',
+        causa: 'Otro proceso lo contabilizó mientras tanto.',
+        solucion: 'No hay nada que hacer: vuelva a pulsar "Revisar".',
+      },
       {
         mensaje: 'El período del comprobante … está cerrado: no se puede contabilizar el borrador',
         causa: 'El borrador es de un mes cerrado.',
@@ -280,16 +344,27 @@ export const CONTABILIDAD: ManualModulo[] = [
         titulo: 'Cargar la apertura',
         pasos: [
           'Fecha de apertura y cuenta para la diferencia (por defecto resultados de ejercicios anteriores).',
-          '"Agregar cuenta" por cada saldo: cuenta y valor débito o crédito.',
-          'La diferencia entre activos y pasivos se lleva sola al patrimonio: no hay que cuadrar a mano.',
-          '"Guardar apertura". Para corregir use "Rehacer".',
+          '"Traer saldos desde": Bancos, Inventario (valorizado al costo promedio), Activos fijos (costo y depreciación acumulada de las fichas), Diferidos, Cartera (por cliente) y Proveedores (por proveedor). Cada botón agrega sus líneas; al tocarlo de nuevo se quitan.',
+          '"Agregar cuenta" para lo demás: cuenta y saldo en su naturaleza (un valor negativo va al lado contrario).',
+          '"Guardar apertura". Si no cuadra, pregunta si la diferencia es patrimonio antes de llevarla a la cuenta de ajuste. Para corregir use "Rehacer".',
         ],
         notas: [
-          'Para cargar muchas cuentas, la cartera por cliente o las cuentas por pagar por proveedor use Importar Datos.',
+          'Traer los saldos de los auxiliares asegura que la contabilidad abra con lo mismo que dicen el inventario, las fichas de activos y la cartera.',
+          'Para cargar muchas cuentas use Importar Datos.',
         ],
       },
     ],
     errores: [
+      {
+        mensaje: 'Los saldos no cuadran: débitos …, créditos …, diferencia … Revise los saldos o confirme que la diferencia es patrimonio.',
+        causa: 'Se guardó sin confirmar que la diferencia es patrimonio.',
+        solucion: 'Revise los saldos o confirme la pregunta al guardar.',
+      },
+      {
+        mensaje: 'Ya existe un asiento de apertura. Elimínalo para volver a cargar los saldos iniciales.',
+        causa: 'La empresa ya tiene apertura.',
+        solucion: 'Use "Rehacer" (solo si no hay otros asientos).',
+      },
       {
         mensaje: 'El período contable … está cerrado',
         causa: 'La fecha de apertura cae en un mes cerrado.',
@@ -442,6 +517,32 @@ export const CONTABILIDAD: ManualModulo[] = [
         mensaje: 'Descuadre de $X entre Activo y Pasivo + Patrimonio',
         causa: 'Comprobantes en borrador o asientos descuadrados.',
         solucion: 'Revise Revisión de Comprobantes (pendientes y descuadrados).',
+      },
+    ],
+  },
+  {
+    id: 'balance-prueba',
+    grupo: 'Contabilidad',
+    titulo: 'Balance de prueba',
+    icono: 'pi pi-list-check',
+    rutas: ['/contabilidad/balance-prueba'],
+    resumen: 'Saldo anterior, débitos, créditos y saldo final por cuenta, con comparativo mes o año.',
+    secciones: [
+      {
+        titulo: 'Cómo leerlo',
+        texto: [
+          'Elija el rango, el nivel (clase, grupo, cuenta, subcuenta o auxiliar), un rango de cuentas y, si quiere, un tercero.',
+          'Los saldos van en la naturaleza de cada cuenta: un activo con saldo débito y un pasivo con saldo crédito se ven positivos.',
+          'Arriba avisa si los débitos y créditos del período cuadran. Si no, hay asientos descuadrados que revisar.',
+          '"Comparar con" agrega el saldo del mes anterior o del mismo período del año anterior, la variación y el porcentaje.',
+        ],
+      },
+    ],
+    errores: [
+      {
+        mensaje: 'El rango de fechas no es válido',
+        causa: 'La fecha inicial es posterior a la final.',
+        solucion: 'Corrija las fechas.',
       },
     ],
   },
@@ -623,6 +724,14 @@ export const CONTABILIDAD: ManualModulo[] = [
           'Para proveedores no obligados a facturar, emita el documento soporte desde la lista de gastos.',
         ],
       },
+      {
+        titulo: 'Editar y anular',
+        texto: [
+          'Editar sirve para corregir datos contables: cuenta del gasto, centro de costo, IVA, retenciones, categoría o descripción. El asiento se rehace solo.',
+          'El valor, la fecha y la forma de pago no se editan, porque ya movieron dinero: anule el gasto y regístrelo de nuevo.',
+          'Anular devuelve el dinero a la caja (en el turno abierto de hoy) o al banco, anula la cuenta por pagar si era a crédito y reversa el asiento.',
+        ],
+      },
     ],
     errores: [
       {
@@ -641,6 +750,16 @@ export const CONTABILIDAD: ManualModulo[] = [
         solucion: 'Marque la caja menor en el plan de cuentas.',
       },
       {
+        mensaje: 'El valor, la fecha y la forma de pago de un gasto no se editan: anúlelo y regístrelo de nuevo',
+        causa: 'Se intentó cambiar un dato que ya movió dinero.',
+        solucion: 'Anule el gasto y regístrelo de nuevo con los datos correctos.',
+      },
+      {
+        mensaje: 'La cuenta por pagar de este gasto ya tiene abonos: anule los abonos antes de anular el gasto',
+        causa: 'Parte del gasto a crédito ya se pagó.',
+        solucion: 'Anule los abonos en Cuentas por Pagar y luego anule el gasto.',
+      },
+      {
         mensaje: 'El gasto no aparece en el mayor',
         causa: 'Su asiento quedó en borrador (modo revisión).',
         solucion: 'Apruébelo en Revisión de Comprobantes.',
@@ -653,41 +772,212 @@ export const CONTABILIDAD: ManualModulo[] = [
     titulo: 'Activos fijos',
     icono: 'pi pi-car',
     rutas: ['/contabilidad/activos-fijos'],
-    resumen: 'Registro de activos (vehículos, equipos, muebles), su depreciación mensual y su baja.',
+    resumen: 'Fichas de activos (equipos, vehículos, muebles, licencias), su depreciación, adiciones, mantenimientos, baja y venta.',
     secciones: [
       {
-        titulo: 'Crear un activo',
-        pasos: [
-          'Nuevo Activo → código (AF-001), descripción, categoría, fecha de adquisición, valor de compra, vida útil en meses, valor residual y método de depreciación.',
-          'Ubicación, responsable y observaciones.',
-          'Cuentas contables: cuenta del activo (15xx), depreciación acumulada (1592) y gasto de depreciación (5160).',
-          'Guarde.',
+        titulo: 'De dónde salen las fichas',
+        texto: [
+          'Al comprar un ítem clasificado como Activo fijo o Intangible la compra crea una ficha por unidad (AF-000123), con el valor de la línea más su parte de los fletes, las cuentas y la vida útil de su categoría contable. La compra ya debitó la cuenta del activo: la ficha no genera otro asiento.',
+          'También se pueden crear a mano con "Nuevo Activo" (su costo entra por saldos iniciales o por un comprobante).',
+          'La pestaña Ficha guarda placa, serial, marca, modelo, responsable, póliza y si es componente de otro activo.',
         ],
       },
       {
-        titulo: 'Depreciar y dar de baja',
+        titulo: 'Depreciación',
         texto: [
-          '"Calcular Depreciación": elija el período y registra la depreciación de todos los activos activos, con asiento fechado el último día del mes.',
-          '"Historial depreciación" muestra lo calculado por período.',
-          '"Dar de baja" con motivo: el activo queda DADO_DE_BAJA y no se deprecia más.',
+          '"Calcular Depreciación" deprecia el mes elegido para todos los activos vigentes, en un solo asiento fechado el último día del mes. Cada activo empieza el mes de su "Inicio de la depreciación" (por defecto, la fecha de adquisición).',
+          'Línea recta: cuota fija; la última absorbe el redondeo. Saldo decreciente: doble sobre el valor en libros, pasando a línea recta al final. Unidades de producción: en la misma ventana se escribe el uso del mes de cada activo.',
+          '"Reversar" deshace la depreciación del mes elegido (debe estar abierto y ser el último depreciado), con un contraasiento de la misma fecha.',
+        ],
+      },
+      {
+        titulo: 'Ficha del activo',
+        texto: [
+          'El botón de la ficha abre el resumen (costo, depreciación, valor en libros), la depreciación registrada y la proyección mes a mes, las adiciones y los mantenimientos.',
+          'Adición: mejora que sube el costo y, si se indica, la vida útil (DB cuenta del activo · CR caja, banco o proveedor). Las cuotas siguientes se recalculan solas.',
+          'Mantenimiento: historial con costo y próxima fecha. No genera asiento: el pago se registra como gasto o compra.',
+        ],
+      },
+      {
+        titulo: 'Baja y venta',
+        texto: [
+          'Dar de baja: fecha y motivo. Cancela la depreciación acumulada y lo que falta por depreciar va a pérdida (5310).',
+          'Vender: precio sin IVA, IVA, cuenta que recibe el pago y comprador. La diferencia contra el valor en libros va a utilidad (4245) o pérdida (5310).',
+          'Desde la ficha, "Anular retiro" reversa la baja o la venta y el activo vuelve a estar vigente.',
+          '"Informe" agrupa costo, depreciación y valor en libros por categoría, centro de costo o responsable, con la depreciación de un mes y exportación a CSV.',
         ],
       },
     ],
     errores: [
+      {
+        mensaje: 'El costo de este activo viene de la compra #…: corríjalo editando la compra',
+        causa: 'Se quiso cambiar el valor de una ficha creada por una compra.',
+        solucion: 'Edite la compra (si el activo no se ha depreciado).',
+      },
+      {
+        mensaje: 'El activo ya tiene depreciaciones: su costo no se cambia. Registre una adición',
+        causa: 'El costo ya se usó en asientos.',
+        solucion: 'Registre una adición o reverse la depreciación del mes si está abierto.',
+      },
+      {
+        mensaje: 'Hay meses posteriores depreciados: reverse primero el más reciente',
+        causa: 'Se quiso reversar un mes intermedio.',
+        solucion: 'Reverse desde el último mes depreciado hacia atrás.',
+      },
+      {
+        mensaje: 'El activo tiene componentes vigentes: retírelos o desvincúlelos primero',
+        causa: 'Otros activos dicen ser parte de este.',
+        solucion: 'Dé de baja los componentes o quite el vínculo en su ficha.',
+      },
+      {
+        mensaje: 'Por unidades de producción hay que decir cuántas unidades (horas, km…) dará el activo en su vida',
+        causa: 'Falta la vida en unidades.',
+        solucion: 'Escriba "Unidades en su vida".',
+      },
+      {
+        mensaje: 'Este activo lo creó la compra #…: anule la compra o dé de baja el activo',
+        causa: 'Se quiso eliminar una ficha que viene de una compra.',
+        solucion: 'Anule la compra o dé de baja el activo.',
+      },
       {
         mensaje: 'La cuenta … no sirve como … Use una cuenta que empiece por …',
         causa: 'Cuenta de la clase equivocada (por ejemplo una de caja como cuenta del activo).',
         solucion: 'Elija la cuenta de la clase indicada.',
       },
       {
-        mensaje: 'La cuenta … está inactiva o es de agrupación',
-        causa: 'No es auxiliar.',
-        solucion: 'Elija una subcuenta auxiliar.',
-      },
-      {
         mensaje: 'Ya existe un activo con el código …',
         causa: 'Código repetido.',
         solucion: 'Use otro código.',
+      },
+    ],
+  },
+  {
+    id: 'categorias-contables',
+    grupo: 'Contabilidad',
+    titulo: 'Categorías contables',
+    icono: 'pi pi-sitemap',
+    rutas: ['/contabilidad/categorias-contables'],
+    resumen: 'La plantilla de cuentas de cada clase de ítem: mercancía, servicio, gasto, dotación, activo, intangible y diferido.',
+    secciones: [
+      {
+        titulo: 'Cómo se usa',
+        texto: [
+          'Cada categoría tiene un tipo. La "cuenta de la compra" es a dónde va el débito al comprar: inventario (14) en mercancía, la 15 en un activo fijo, la 16 en un intangible, la 17 en un diferido, la 5 en un gasto.',
+          'Activos e intangibles guardan además la depreciación acumulada, el gasto por depreciación y la vida útil que heredan las fichas. Los diferidos, el gasto de cada mes y en cuántos meses se amortizan.',
+          'El producto elige su categoría en su pestaña Contabilidad; solo se ofrecen las del mismo tipo que su clasificación.',
+          '"Copiar" crea una categoría nueva con las mismas cuentas, para ajustar solo lo que cambia.',
+        ],
+      },
+    ],
+    errores: [
+      {
+        mensaje: 'La cuenta de la compra debe empezar por …; la cuenta … no aplica.',
+        causa: 'La cuenta no es de la clase del tipo de la categoría.',
+        solucion: 'Elija una cuenta auxiliar de la clase indicada.',
+      },
+      {
+        mensaje: 'Ya existe una categoría contable llamada …',
+        causa: 'Nombre repetido.',
+        solucion: 'Use otro nombre.',
+      },
+    ],
+  },
+  {
+    id: 'parametrizacion-contable',
+    grupo: 'Contabilidad',
+    titulo: 'Parametrización contable',
+    icono: 'pi pi-sliders-h',
+    rutas: ['/contabilidad/parametrizacion'],
+    resumen: 'A qué cuenta va cada concepto automático, cada forma de pago y cada impuesto, sin tocar la base de datos.',
+    secciones: [
+      {
+        titulo: 'Pestañas',
+        texto: [
+          'Conceptos: cada operación automática (clientes, inventario, IVA, depreciación, nómina…) con su cuenta. Solo se ofrecen cuentas auxiliares de la clase que el concepto admite. "Por defecto" = usa la del PUC.',
+          'Formas de pago: la cuenta de cada una. "Nueva forma de pago" crea otra (p. ej. ADDI): nombre, código y cuenta. Aparece de inmediato en el POS al cobrar. Si la plata entra ya, cuenta de caja o banco (11); si la paga después un financiador como ADDI o Sistecrédito, una cuenta de cartera (13), p. ej. 130510 Por cobrar ADDI creada antes en el Plan de Cuentas. "Copiar a…" aplica la cuenta de una forma a otras.',
+          'Recargo: si el cliente paga un recargo al usar la forma (p. ej. Sistecrédito 5 %), escríbalo al crearla o en la columna Recargo y guarde con ✓. En el POS, al pagar $100.000 con esa forma el cliente paga $105.000: el recargo se ve en el cobro y queda en la venta y en la factura como la línea "Recargo por forma de pago" (servicio sin IVA que el sistema crea solo, SKU RECARGO-FP; su IVA o su cuenta de ingreso se cambian en Productos).',
+          'Impuestos: cuenta del generado (ventas) y del descontable (compras) por tarifa.',
+          'Modo: automático (se contabiliza al guardar) o revisión (queda en borrador hasta que el contador lo aprueba).',
+          'Historial: quién cambió qué cuenta y cuándo.',
+        ],
+      },
+    ],
+    errores: [
+      {
+        mensaje: 'El concepto … solo admite cuentas …; la cuenta … no pertenece a esa clase.',
+        causa: 'La cuenta no es de la clase que el concepto admite.',
+        solucion: 'Elija una cuenta de las que ofrece la lista.',
+      },
+      {
+        mensaje: 'La cuenta de una forma de pago debe ser del disponible (11xx) o de cartera (13xx)…',
+        causa: 'Se eligió una cuenta de otra clase.',
+        solucion: 'Use caja/banco (11) o una cuenta por cobrar al financiador (13).',
+      },
+      {
+        mensaje: 'Escriba un código para la forma de pago (CREDITO está reservado para las ventas a crédito)',
+        causa: 'Código vacío o CREDITO.',
+        solucion: 'Use otro código, p. ej. ADDI.',
+      },
+      {
+        mensaje: 'Ya existe una forma de pago con el código …',
+        causa: 'Código repetido.',
+        solucion: 'Use otro código o edite la existente.',
+      },
+      {
+        mensaje: 'La forma de pago … no tiene cuenta: no hay nada que copiar',
+        causa: 'Se quiso copiar una forma sin cuenta.',
+        solucion: 'Asígnele cuenta primero.',
+      },
+    ],
+  },
+  {
+    id: 'herramientas-contador',
+    grupo: 'Contabilidad',
+    titulo: 'Herramientas del contador',
+    icono: 'pi pi-wrench',
+    rutas: ['/contabilidad/herramientas'],
+    resumen: 'Trasladar movimientos de una cuenta a otra y fusionar terceros duplicados, con bitácora.',
+    secciones: [
+      {
+        titulo: 'Traslado de cuentas',
+        pasos: [
+          'Cuenta de origen, cuenta de destino (auxiliar), rango de fechas y, si se quiere, solo un tercero.',
+          '"Ver qué se mueve": la lista de movimientos (fecha, comprobante, detalle, tercero, débito y crédito), todos marcados. Desmarca los que no deben moverse. Los de meses cerrados salen con candado y no se pueden elegir.',
+          'Motivo y "Trasladar": se mueven solo los marcados. Queda en la bitácora.',
+        ],
+        notas: [
+          'Solo cambia el mayor. Si la cuenta vieja sigue asignada a un concepto o categoría, corríjala también en Parametrización o los documentos nuevos seguirán yendo allá.',
+        ],
+      },
+      {
+        titulo: 'Fusión de terceros',
+        pasos: [
+          'El tercero duplicado (desaparece) y el que se conserva.',
+          '"Ver qué se mueve": ventas, compras, cartera, asientos, roles… del duplicado.',
+          'Motivo y "Fusionar". Todo pasa al que se conserva y el duplicado queda inactivo. Queda en la bitácora.',
+        ],
+      },
+    ],
+    errores: [
+      {
+        mensaje: 'El traslado toca meses cerrados (…). Reábralos o acorte el rango',
+        causa: 'Hay movimientos de la cuenta en meses cerrados dentro del rango.',
+        solucion: 'Reabra esos meses o acorte el rango.',
+      },
+      {
+        mensaje: 'La cuenta no tiene movimientos en ese rango',
+        causa: 'Nada que trasladar.',
+        solucion: 'Revise la cuenta y las fechas.',
+      },
+      {
+        mensaje: 'Los dos terceros tienen ficha de empleado: una persona no puede ser dos empleados. Retire la ficha duplicada antes de fusionar',
+        causa: 'Ambos terceros son empleados.',
+        solucion: 'Retire la ficha de empleado duplicada y vuelva a fusionar.',
+      },
+      {
+        mensaje: 'Escriba el motivo … queda en la bitácora',
+        causa: 'Falta el motivo.',
+        solucion: 'Escriba por qué se hace el cambio.',
       },
     ],
   },
