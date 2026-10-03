@@ -545,32 +545,56 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  onSearch(): void {
-    const query = this.searchProduct.trim();
+onSearch(): void {
+  const query = this.searchProduct.trim();
 
-    // Lector de barras = ráfaga; una persona escribe más lento.
-    // Se usa el promedio por tecla de toda la lectura: un evento demorado
-    // (Angular repintando) no la marca como escrita a mano.
-    const ahora = performance.now();
-    if (query.length <= 1) this._inicioLectura = ahora;
-    this._escritoEnRafaga =
-      query.length <= 1 ||
-      (ahora - this._inicioLectura) / (query.length - 1) < 50;
-    this._ultimaTecla = ahora;
+  // Siempre permitir búsqueda normal por:
+  // nombre, SKU, código de barras, presentación, etc.
+  this.searchSubject$.next(query);
 
-    // Filtrado visual inmediato (sin espera)
-    this.searchSubject$.next(query);
-
-    // Detección de barcode/balanza con debounce para evitar
-    // que los estados intermedios del scanner disparen addToCart
-    if (this._barcodeTimer) clearTimeout(this._barcodeTimer);
-    if (!query) return;
-
-    this._barcodeTimer = setTimeout(() => {
-      this._barcodeTimer = null;
-      this.procesarCodigo(this.searchProduct.trim(), this._escritoEnRafaga);
-    }, 150);
+  if (this._barcodeTimer) {
+    clearTimeout(this._barcodeTimer);
+    this._barcodeTimer = null;
   }
+
+  if (!query) {
+    this._inicioLectura = 0;
+    this._escritoEnRafaga = false;
+    return;
+  }
+
+  const ahora = performance.now();
+
+  // Primera tecla: todavía NO sabemos si es scanner o persona
+  if (query.length === 1) {
+    this._inicioLectura = ahora;
+    this._ultimaTecla = ahora;
+    this._escritoEnRafaga = false;
+    return;
+  }
+
+  // A partir de la segunda tecla podemos medir velocidad
+  const promedioPorTecla =
+    (ahora - this._inicioLectura) / (query.length - 1);
+
+  this._escritoEnRafaga = promedioPorTecla < 50;
+  this._ultimaTecla = ahora;
+
+  // Solo intentar auto-agregar cuando parece lector
+  if (!this._escritoEnRafaga) {
+    return;
+  }
+
+  this._barcodeTimer = setTimeout(() => {
+    this._barcodeTimer = null;
+
+    const codigo = this.searchProduct.trim();
+
+    if (!codigo) return;
+
+    this.procesarCodigo(codigo, true);
+  }, 150);
+}
 
   /** Enter en el buscador: confirma el código escrito aunque haya otros más largos (50 vs 506). */
   onSearchEnter(): void {
