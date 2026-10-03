@@ -197,6 +197,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private _barcodeTimer: ReturnType<typeof setTimeout> | null = null;
   private _ultimaTecla = 0;
+  private _inicioLectura = 0;
   private _escritoEnRafaga = true;
   tempCantidad: number = 0;
   // ── Órdenes múltiples ─────────────────────────────────────
@@ -470,26 +471,30 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       });
   }
 
+  /**
+   * Código de balanza: [PPPPPP][WWWWW][C] (12 dígitos) o con un 0 adelante (13).
+   * PPPPPP = SKU numérico, WWWWW = peso en gramos, C = último dígito (se descarta).
+   */
   private parsearCodigoBalanza(
     codigo: string,
   ): { skuNumerico: number; pesoKg: number } | null {
     if (!/^\d+$/.test(codigo)) return null;
-    let skuRaw: string, pesoRaw: string;
+
+    // Normaliza a 12 dígitos quitando el 0 inicial del formato de 13.
+    let cuerpo: string;
     if (codigo.length === 12) {
-      // Formato real balanza: [PPPPPP][WWWWWW]
-      skuRaw = codigo.substring(0, 6);
-      pesoRaw = codigo.substring(6, 12);
+      cuerpo = codigo;
     } else if (codigo.length === 13 && codigo[0] === '0') {
-      // Formato alternativo con prefijo: [0][PPPPPP][WWWWWW]
-      skuRaw = codigo.substring(1, 7);
-      pesoRaw = codigo.substring(7, 13);
+      cuerpo = codigo.substring(1);
     } else {
       return null;
     }
-    const skuNumerico = parseInt(skuRaw, 10);
-    const pesoKg = Math.floor(parseInt(pesoRaw, 10) / 10) / 1000;
-    if (isNaN(skuNumerico) || isNaN(pesoKg) || pesoKg <= 0) return null;
-    return { skuNumerico, pesoKg };
+
+    const skuNumerico = parseInt(cuerpo.substring(0, 6), 10);
+    const gramos = parseInt(cuerpo.substring(6, 11), 10);
+    if (skuNumerico <= 0 || gramos <= 0) return null;
+
+    return { skuNumerico, pesoKg: gramos / 1000 };
   }
 
   addToCartConPeso(p: ProductoPOS, pesoKg: number): void {
@@ -555,28 +560,56 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  onSearch(): void {
-    const query = this.searchProduct.trim();
+onSearch(): void {
+  const query = this.searchProduct.trim();
 
-    // Lector de barras = ráfaga (< 50 ms entre teclas); una persona escribe más lento.
-    const ahora = performance.now();
-    if (query.length <= 1) this._escritoEnRafaga = true;
-    else if (ahora - this._ultimaTecla > 50) this._escritoEnRafaga = false;
-    this._ultimaTecla = ahora;
+  // Siempre permitir búsqueda normal por:
+  // nombre, SKU, código de barras, presentación, etc.
+  this.searchSubject$.next(query);
 
-    // Filtrado visual inmediato (sin espera)
-    this.searchSubject$.next(query);
-
-    // Detección de barcode/balanza con debounce para evitar
-    // que los estados intermedios del scanner disparen addToCart
-    if (this._barcodeTimer) clearTimeout(this._barcodeTimer);
-    if (!query) return;
-
-    this._barcodeTimer = setTimeout(() => {
-      this._barcodeTimer = null;
-      this.procesarCodigo(this.searchProduct.trim(), this._escritoEnRafaga);
-    }, 150);
+  if (this._barcodeTimer) {
+    clearTimeout(this._barcodeTimer);
+    this._barcodeTimer = null;
   }
+
+  if (!query) {
+    this._inicioLectura = 0;
+    this._escritoEnRafaga = false;
+    return;
+  }
+
+  const ahora = performance.now();
+
+  // Primera tecla: todavía NO sabemos si es scanner o persona
+  if (query.length === 1) {
+    this._inicioLectura = ahora;
+    this._ultimaTecla = ahora;
+    this._escritoEnRafaga = false;
+    return;
+  }
+
+  // A partir de la segunda tecla podemos medir velocidad
+  const promedioPorTecla =
+    (ahora - this._inicioLectura) / (query.length - 1);
+
+  this._escritoEnRafaga = promedioPorTecla < 50;
+  this._ultimaTecla = ahora;
+
+  // Solo intentar auto-agregar cuando parece lector
+  if (!this._escritoEnRafaga) {
+    return;
+  }
+
+  this._barcodeTimer = setTimeout(() => {
+    this._barcodeTimer = null;
+
+    const codigo = this.searchProduct.trim();
+
+    if (!codigo) return;
+
+    this.procesarCodigo(codigo, true);
+  }, 150);
+}
 
   /** Enter en el buscador: confirma el código escrito aunque haya otros más largos (50 vs 506). */
   onSearchEnter(): void {
@@ -604,68 +637,74 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
    * `confirmado`: vino del lector (ráfaga) o de Enter; si no, un código exacto
    * que es prefijo de otro (50 → 506) espera a que termine de escribir.
    */
+  /**
+   * Agrega por código de balanza, código de barras, SKU o serial.
+   * `confirmado`: vino del lector (ráfaga) o de Enter; si no, un código exacto
+   * que es prefijo de otro (50 → 506) espera a que termine de escribir.
+   */
   private procesarCodigo(q: string, confirmado: boolean): void {
-    {
-      if (!q) return;
+    if (!q) return;
 
-      // Intento de lectura de código de balanza
-      const balanza = this.parsearCodigoBalanza(q);
-      if (balanza) {
-        const prod = this.productos.find(
-          (p) =>
-            p.tipoProducto === 'PESABLE' &&
-            p.sku != null &&
-            parseInt(p.sku, 10) === balanza.skuNumerico,
-        );
-        if (prod) {
-          this.addToCartConPeso(prod, balanza.pesoKg);
-          this.searchProduct = '';
-          this.filtrar();
-          this.focusSearch();
-          this.cdr.markForCheck();
-          return;
-        }
-        // Si no se encuentra producto PESABLE, cae al flujo normal de barcode
-      }
-
-      // Código del producto o SKU → su forma de venta por defecto;
-      // código de una presentación (la paca) → esa presentación.
-      let encontrado: { p: ProductoPOS; opcion: OpcionVenta | null } | null =
-        null;
-      const porProducto = this.productos.find(
+    // Intento de lectura de código de balanza
+    const balanza = this.parsearCodigoBalanza(q);
+    if (balanza) {
+      const prod = this.productos.find(
         (p) =>
-          (p.codigoBarras && p.codigoBarras === q) || (p.sku && p.sku === q),
+          p.tipoProducto === 'PESABLE' &&
+          p.sku != null &&
+          /^\d+$/.test(p.sku) &&
+          parseInt(p.sku, 10) === balanza.skuNumerico,
       );
-      if (porProducto) {
-        const unidad = this.opcionesDe(porProducto).find(
-          (o) => o.presentacionId == null,
-        );
-        encontrado = { p: porProducto, opcion: unidad ?? null };
-      } else {
-        for (const p of this.productos) {
-          const opcion = this.opcionesDe(p).find(
-            (o) => o.presentacionId != null && o.codigoBarras === q,
-          );
-          if (opcion) {
-            encontrado = { p, opcion };
-            break;
-          }
-        }
-      }
-
-      // Escribiendo a mano "50" cuando existe "506": no agregar todavía (Enter lo confirma).
-      if (encontrado && !confirmado && this.hayCodigoMasLargo(q)) return;
-
-      if (encontrado) {
-        this.addToCart(encontrado.p, encontrado.opcion);
+      if (prod) {
+        this.addToCartConPeso(prod, balanza.pesoKg);
         this.searchProduct = '';
         this.filtrar();
         this.focusSearch();
         this.cdr.markForCheck();
-      } else {
-        // No es un código de producto: puede ser el serial de una unidad.
-        void this.agregarPorSerial(q);
+        return;
       }
+      // Si no se encuentra producto PESABLE, cae al flujo normal de barcode
+    }
+
+    // Código del producto o SKU → su forma de venta por defecto;
+    // código de una presentación (la paca) → esa presentación.
+    let encontrado: { p: ProductoPOS; opcion: OpcionVenta | null } | null =
+      null;
+    const porProducto = this.productos.find(
+      (p) =>
+        (p.codigoBarras && p.codigoBarras === q) || (p.sku && p.sku === q),
+    );
+    if (porProducto) {
+      const unidad = this.opcionesDe(porProducto).find(
+        (o) => o.presentacionId == null,
+      );
+      encontrado = { p: porProducto, opcion: unidad ?? null };
+    } else {
+      for (const p of this.productos) {
+        const opcion = this.opcionesDe(p).find(
+          (o) => o.presentacionId != null && o.codigoBarras === q,
+        );
+        if (opcion) {
+          encontrado = { p, opcion };
+          break;
+        }
+      }
+    }
+
+    // Escribiendo a mano "50" cuando existe "506": no agregar todavía (Enter lo confirma).
+    if (encontrado && !confirmado && this.hayCodigoMasLargo(q)) return;
+
+    if (encontrado) {
+      this.addToCart(encontrado.p, encontrado.opcion);
+      this.searchProduct = '';
+      this.filtrar();
+      this.focusSearch();
+      this.cdr.markForCheck();
+    } else {
+      // No es un código de producto: puede ser el serial de una unidad.
+      void this.agregarPorSerial(q);
+      // Si no era nada, deja el texto seleccionado: la próxima lectura lo reemplaza.
+      if (confirmado) this.searchInputRef?.nativeElement?.select();
     }
   }
 
