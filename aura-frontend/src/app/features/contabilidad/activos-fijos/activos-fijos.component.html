@@ -28,7 +28,7 @@
             class="p-button-outlined p-button-secondary"
             (click)="openDepreciar()"
           ></button>
-          <button
+          <button *appPuede="'contabilidad.activos-fijos:CREAR'"
             pButton
             type="button"
             icon="pi pi-plus"
@@ -128,7 +128,7 @@
               pTooltip="Ficha: depreciación, adiciones y mantenimientos"
               (click)="verFicha(row)"
             ></button>
-            <button
+            <button *appPuede="'contabilidad.activos-fijos:EDITAR'"
               pButton
               icon="pi pi-pencil"
               class="p-button-text p-button-sm"
@@ -418,16 +418,11 @@
             >Cuenta del activo
             <span class="hint">(ej: 1520 — Maquinaria)</span></label
           >
-          <p-dropdown
+          <app-cuenta-autocomplete
+            [opciones]="cuentasOpts"
             [(ngModel)]="form.cuentaActivoId"
-            [options]="cuentasOpts"
-            optionLabel="label"
-            optionValue="value"
             placeholder="Seleccionar cuenta..."
             [showClear]="true"
-            [filter]="true"
-            filterBy="label"
-            styleClass="w-full"
             appendTo="body"
           />
         </div>
@@ -436,16 +431,11 @@
             >Cuenta depreciación acumulada
             <span class="hint">(ej: 1592 — Dep. acum.)</span></label
           >
-          <p-dropdown
+          <app-cuenta-autocomplete
+            [opciones]="cuentasOpts"
             [(ngModel)]="form.cuentaDepreciacionId"
-            [options]="cuentasOpts"
-            optionLabel="label"
-            optionValue="value"
             placeholder="Seleccionar cuenta..."
             [showClear]="true"
-            [filter]="true"
-            filterBy="label"
-            styleClass="w-full"
             appendTo="body"
           />
         </div>
@@ -454,16 +444,11 @@
             >Cuenta gasto depreciación
             <span class="hint">(ej: 5160 — Gasto dep.)</span></label
           >
-          <p-dropdown
+          <app-cuenta-autocomplete
+            [opciones]="cuentasOpts"
             [(ngModel)]="form.cuentaGastoDepId"
-            [options]="cuentasOpts"
-            optionLabel="label"
-            optionValue="value"
             placeholder="Seleccionar cuenta..."
             [showClear]="true"
-            [filter]="true"
-            filterBy="label"
-            styleClass="w-full"
             appendTo="body"
           />
         </div>
@@ -643,16 +628,12 @@
     </div>
     <div class="field">
       <label>¿Dónde entra el pago? <span class="req">*</span></label>
-      <p-dropdown
+      <app-cuenta-autocomplete
+        [opciones]="cuentasCobroOpts"
         [(ngModel)]="ventaCuentaId"
-        [options]="cuentasCobroOpts"
-        optionLabel="label"
-        optionValue="value"
         placeholder="Caja, banco o clientes (a crédito)"
-        [filter]="true"
-        filterBy="label"
-        styleClass="w-full"
         appendTo="body"
+        [showClear]="false"
       />
     </div>
     <div class="field">
@@ -666,7 +647,7 @@
   </div>
   <ng-template pTemplate="footer">
     <button pButton label="Cancelar" icon="pi pi-times" class="btn-amarillo" (click)="showVentaModal = false"></button>
-    <button
+    <button *appPuede="'contabilidad.activos-fijos:CREAR'"
       pButton
       label="Registrar venta"
       icon="pi pi-dollar"

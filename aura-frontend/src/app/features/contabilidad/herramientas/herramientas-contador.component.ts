@@ -6,6 +6,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { SelectButtonModule } from 'primeng/selectbutton';
 import { lastValueFrom } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
@@ -28,11 +29,15 @@ import { CheckboxModule } from 'primeng/checkbox';
  * Herramientas del contador (Fase 4): traslado de cuentas y fusión de
  * terceros. Las dos muestran primero qué van a mover y dejan bitácora.
  */
+import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-autocomplete/cuenta-autocomplete.component';
+
 @Component({
   selector: 'app-herramientas-contador',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, ButtonModule, TableModule, TabViewModule, DropdownModule, CalendarModule,
+  imports: [
+    SelectButtonModule,
+    CuentaAutocompleteComponent,CommonModule, FormsModule, ButtonModule, TableModule, TabViewModule, DropdownModule, CalendarModule,
     InputTextModule, ConfirmDialogModule, TerceroAutocompleteComponent, CheckboxModule],
   providers: [ConfirmationService],
   templateUrl: './herramientas-contador.component.html',
@@ -53,6 +58,14 @@ export class HerramientasContadorComponent implements OnInit {
   /** Movimientos elegidos para trasladar (por defecto, todos los de meses abiertos). */
   seleccion: MovimientoTrasladoModel[] = [];
   trasladando = false;
+  /** Pasar también la configuración que usa la cuenta de origen. */
+  conConfiguracion = true;
+  /** Dejar el origen como agrupadora si queda vacío. */
+  origenAgrupadora = true;
+  readonly siNo = [
+    { label: 'Sí', value: true },
+    { label: 'No', value: false },
+  ];
   historialTraslados: any[] = [];
 
   // Fusión
@@ -114,6 +127,20 @@ export class HerramientasContadorComponent implements OnInit {
     );
   }
 
+  /** Pantallas con configuración que apunta a la cuenta de origen. */
+  get configuracion(): { nombre: string; cantidad: number }[] {
+    return Object.entries(this.resumen?.configuracion ?? {}).map(([nombre, cantidad]) => ({ nombre, cantidad }));
+  }
+
+  get totalConfiguracion(): number {
+    return this.configuracion.reduce((t, c) => t + c.cantidad, 0);
+  }
+
+  /** Hay algo que mover: movimientos elegidos o configuración. */
+  get puedeTrasladar(): boolean {
+    return this.seleccion.length > 0 || (this.conConfiguracion && this.totalConfiguracion > 0);
+  }
+
   get todosElegidos(): boolean {
     return !!this.resumen && this.seleccion.length === this.resumen.movimientos.filter((m) => !this.bloqueado(m)).length;
   }
@@ -146,7 +173,7 @@ export class HerramientasContadorComponent implements OnInit {
       this.alert.showWarn('Falta el motivo', 'Escribe por qué trasladas: queda en la bitácora.');
       return;
     }
-    if (!this.seleccion.length) {
+    if (!this.puedeTrasladar) {
       this.alert.showWarn('Nada elegido', 'Marca los movimientos que quieres trasladar.');
       return;
     }
@@ -154,7 +181,12 @@ export class HerramientasContadorComponent implements OnInit {
     const ids = this.todosElegidos && !this.resumen.periodosCerrados.length ? null : this.seleccion.map((m) => m.id);
     this.confirm.confirm({
       header: 'Trasladar movimientos',
-      message: `Se moverán ${this.seleccion.length} movimiento(s) a la cuenta destino. ¿Continuar?`,
+      message:
+        `Se moverán ${this.seleccion.length} movimiento(s)` +
+        (this.conConfiguracion && this.totalConfiguracion
+          ? ` y ${this.totalConfiguracion} registro(s) de configuración`
+          : '') +
+        ' a la cuenta destino. ¿Continuar?',
       acceptLabel: 'Trasladar',
       rejectLabel: 'Cancelar',
       accept: async () => {
@@ -170,6 +202,10 @@ export class HerramientasContadorComponent implements OnInit {
               terceroId: this.terceroTraslado,
               detalleIds: ids,
               motivo: this.motivoTraslado.trim(),
+              conConfiguracion: this.conConfiguracion,
+              origenAgrupadora: this.origenAgrupadora,
+              // Sin movimientos elegidos solo se pasa la configuración.
+              soloConfiguracion: this.seleccion.length === 0,
             }),
           );
           this.alert.showSuccess('Traslado hecho', res?.message ?? '');

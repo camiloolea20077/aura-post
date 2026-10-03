@@ -1,0 +1,276 @@
+<p-toast />
+<p-confirmDialog />
+
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-lock"></i></span>
+        <div>
+          <h1 class="title">Perfiles y Permisos</h1>
+          <p class="subtitle">
+            Qué ve y qué puede hacer cada usuario de la empresa
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button
+            *appPuede="'caja.perfiles:CREAR'"
+            pButton
+            type="button"
+            icon="pi pi-plus"
+            label="Nuevo perfil"
+            class="btn-aura"
+            (click)="nuevo()"
+          ></button>
+        </div>
+        <div class="card-head__search" *ngIf="activeTab === 0">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              pInputText
+              [(ngModel)]="search"
+              placeholder="Buscar perfil…"
+              class="search-input"
+            />
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="aviso-modo" *ngIf="modo === 'OBSERVAR'">
+      <i class="pi pi-eye"></i>
+      <div>
+        <strong>El control del servidor está observando.</strong>
+        El menú ya respeta los perfiles, pero el servidor todavía no bloquea:
+        anota en
+        <a (click)="onTab(2)">Registro del control</a> lo que habría bloqueado.
+        Revíselo, ajuste los perfiles y luego pida pasarlo a BLOQUEAR.
+      </div>
+    </div>
+    <div class="aviso-modo aviso-modo--apagado" *ngIf="modo === 'APAGADO'">
+      <i class="pi pi-power-off"></i>
+      <div>
+        <strong>El control del servidor está apagado.</strong> Solo el menú
+        respeta los perfiles.
+      </div>
+    </div>
+
+    <p-tabView
+      [activeIndex]="activeTab"
+      (activeIndexChange)="onTab($event)"
+      styleClass="aura-tabs"
+    >
+      <!-- ── Perfiles ─────────────────────────────────────── -->
+      <p-tabPanel header="Perfiles">
+        <p-table
+          [value]="filtrados"
+          [loading]="cargando"
+          [rowHover]="true"
+          dataKey="id"
+          styleClass="p-datatable-sm"
+          showGridlines
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Perfil</th>
+              <th style="width: 140px; text-align: center">Alcance</th>
+              <th style="width: 110px; text-align: center">Usuarios</th>
+              <th style="width: 110px; text-align: center">Estado</th>
+              <th style="width: 110px; text-align: center">Acciones</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-p>
+            <tr class="clickable-row" (click)="abrir(p)">
+              <td>
+                <div class="perfil-cell">
+                  <span class="fw-600">{{ p.nombre }}</span>
+                  <p-tag
+                    *ngIf="p.esSistema"
+                    value="Sistema"
+                    severity="secondary"
+                  />
+                </div>
+                <small class="text-muted" *ngIf="p.descripcion">{{
+                  p.descripcion
+                }}</small>
+              </td>
+              <td style="text-align: center">
+                <p-tag
+                  [value]="p.accesoTotal ? 'Acceso total' : 'Personalizado'"
+                  [severity]="p.accesoTotal ? 'info' : 'contrast'"
+                />
+              </td>
+              <td style="text-align: center" class="fw-600">
+                {{ p.usuarios }}
+              </td>
+              <td style="text-align: center">
+                <p-tag
+                  [value]="p.activo ? 'Activo' : 'Inactivo'"
+                  [severity]="p.activo ? 'success' : 'danger'"
+                />
+              </td>
+              <td style="text-align: center" (click)="$event.stopPropagation()">
+                <button
+                  *appPuede="'caja.perfiles:CREAR'"
+                  pButton
+                  icon="pi pi-copy"
+                  class="p-button-text p-button-sm"
+                  pTooltip="Duplicar para ajustarlo"
+                  tooltipPosition="left"
+                  (click)="duplicar(p, $event)"
+                ></button>
+                <ng-container *ngIf="!p.esSistema">
+                  <button
+                    *appPuede="'caja.perfiles:ANULAR'"
+                    pButton
+                    icon="pi pi-trash"
+                    class="p-button-text p-button-sm p-button-danger"
+                    pTooltip="Eliminar"
+                    tooltipPosition="left"
+                    (click)="confirmarEliminar(p, $event)"
+                  ></button>
+                </ng-container>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="5" class="empty-row">
+                No hay perfiles que coincidan.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+        <p class="nota">
+          Los perfiles <strong>Sistema</strong> salen de los tipos de usuario y
+          no se borran. El Administrador da todo lo que la empresa tiene: para
+          uno con menos acceso, duplíquelo y quite lo que no quiera.
+        </p>
+      </p-tabPanel>
+
+      <!-- ── Historial ────────────────────────────────────── -->
+      <p-tabPanel header="Historial de cambios">
+        <p-table
+          [value]="historial"
+          [loading]="cargandoHistorial"
+          [paginator]="true"
+          [rows]="20"
+          styleClass="p-datatable-sm"
+          showGridlines
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 150px">Fecha</th>
+              <th style="width: 150px">Quién</th>
+              <th style="width: 180px">Sobre</th>
+              <th>Cambio</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-c>
+            <tr>
+              <td class="mono">{{ c.fecha | date: "dd/MM/yyyy HH:mm" }}</td>
+              <td>{{ c.usuario ?? "—" }}</td>
+              <td>
+                <span *ngIf="c.tipo === 'USUARIO'"
+                  ><i class="pi pi-user"></i>
+                  {{ c.usuarioAfectado ?? "—" }}</span
+                >
+                <span *ngIf="c.tipo === 'PERFIL'"
+                  ><i class="pi pi-lock"></i>
+                  {{ c.perfil ?? "(eliminado)" }}</span
+                >
+              </td>
+              <td class="detalle">{{ c.detalle }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="4" class="empty-row">
+                Todavía no hay cambios de permisos.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-tabPanel>
+
+      <!-- ── Registro del control ─────────────────────────── -->
+      <p-tabPanel header="Registro del control">
+        <div class="registro-barra">
+          <span>Últimos</span>
+          <div class="opciones">
+            <button
+              type="button"
+              *ngFor="let d of [1, 7, 30]"
+              class="opcion"
+              [class.opcion--activa]="dias === d"
+              (click)="dias = d; cargarBloqueos()"
+            >
+              {{ d === 1 ? "Hoy" : d + " días" }}
+            </button>
+          </div>
+        </div>
+        <p-table
+          [value]="bloqueos"
+          [loading]="cargandoBloqueos"
+          [paginator]="true"
+          [rows]="20"
+          styleClass="p-datatable-sm"
+          showGridlines
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 140px">Última vez</th>
+              <th style="width: 160px">Usuario</th>
+              <th>Petición</th>
+              <th style="width: 230px">Le faltó</th>
+              <th style="width: 80px; text-align: center">Veces</th>
+              <th style="width: 110px; text-align: center">Resultado</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-b>
+            <tr>
+              <td class="mono">{{ b.ultimaVez | date: "dd/MM HH:mm" }}</td>
+              <td>
+                <div class="fw-600">{{ b.usuario ?? "—" }}</div>
+                <small class="text-muted">{{ b.perfil ?? b.rol }}</small>
+              </td>
+              <td class="mono small">{{ b.metodo }} {{ b.ruta }}</td>
+              <td>
+                <span [class.text-warn]="!b.clave">{{
+                  descripcionBloqueo(b)
+                }}</span>
+                <small class="text-muted" *ngIf="b.clave">
+                  · {{ verbo(b.accion) }}</small
+                >
+              </td>
+              <td style="text-align: center" class="fw-600">{{ b.veces }}</td>
+              <td style="text-align: center">
+                <p-tag
+                  [value]="
+                    b.modo === 'BLOQUEAR' ? 'Bloqueado' : 'Habría bloqueado'
+                  "
+                  [severity]="b.modo === 'BLOQUEAR' ? 'danger' : 'warn'"
+                />
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6" class="empty-row">
+                Nada que reportar en este período.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+        <p class="nota">
+          Si un usuario necesita algo que aparece aquí, agréguelo a su perfil (o
+          como excepción del usuario). "Ruta sin submódulo asignado" es un
+          pendiente técnico: avise para completarlo; mientras tanto esa ruta no
+          se bloquea.
+        </p>
+      </p-tabPanel>
+    </p-tabView>
+  </div>
+</div>

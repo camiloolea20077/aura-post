@@ -26,12 +26,14 @@ import { EmpleadoTableModel } from '../../../core/models/nomina.model';
 import { AlertService } from '../../../shared/pipes/alert.service';
 
 import { aFechaLocal } from '../../../shared/utils/fecha.util';
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' | undefined;
 
 @Component({
   selector: 'app-revision-asistencia',
   standalone: true,
   imports: [
+    PuedeDirective,
     CommonModule, FormsModule, TableModule, ButtonModule, DialogModule,
     DropdownModule, CalendarModule, InputTextModule, TabViewModule, TagModule,
     ToastModule, TooltipModule, ConfirmDialogModule,

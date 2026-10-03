@@ -348,23 +348,13 @@
         <div class="campo-row" *ngIf="esCuenta">
           <label>Cuenta de origen <span class="required">*</span></label>
           <div class="campo-control">
-            <p-dropdown
-              [(ngModel)]="cuentaContableId"
-              [options]="cuentasContables"
+            <app-cuenta-autocomplete
+              [opciones]="cuentasContables"
               optionValue="id"
-              [filter]="true"
-              filterBy="codigo,nombre"
+              [(ngModel)]="cuentaContableId"
               [showClear]="true"
               placeholder="Caja menor, anticipos a empleados..."
-              styleClass="w-full"
-            >
-              <ng-template pTemplate="selectedItem" let-cuenta>
-                <span *ngIf="cuenta">{{ cuenta.codigo }} — {{ cuenta.nombre }}</span>
-              </ng-template>
-              <ng-template pTemplate="item" let-cuenta>
-                <span>{{ cuenta.codigo }} — {{ cuenta.nombre }}</span>
-              </ng-template>
-            </p-dropdown>
+            />
             <small class="campo-hint" *ngIf="cuentasContables.length === 0">
               No hay cuentas habilitadas como medio de pago. Marca la caja menor
               desde el plan de cuentas.
@@ -440,7 +430,7 @@
             pTooltip="Mostrar u ocultar columnas"
             tooltipPosition="top"
           />
-          <button
+          <button *appPuede="'compras.compras:CREAR'"
             pButton
             type="button"
             label="Agregar producto"
@@ -546,20 +536,11 @@
                   styleClass="input-num cant-pres__cantidad"
                   placeholder="0"
                 />
-                <p-dropdown
-                  *ngIf="(l.presentaciones?.length ?? 0) > 1"
-                  appendTo="body"
-                  [options]="l.presentaciones"
-                  optionLabel="nombre"
-                  optionValue="id"
-                  [ngModel]="l.presentacionId ?? 0"
-                  (ngModelChange)="onPresentacionChange(i, $event)"
-                  styleClass="cant-pres__presentacion"
-                />
+                <!-- Se compra solo en la presentación de compra (o la unidad base): sin elegir. -->
+                <span class="cant-pres__nombre" *ngIf="l.productoId">{{ nombrePresentacion(l) }}</span>
               </div>
-              <!-- 4 Pacas + 2 und sueltas en la misma línea -->
-              <!-- Con lotes no: los lotes se escriben en presentaciones completas. -->
-              <div class="cant-suelta" *ngIf="l.presentacionId && !l.manejaLotes">
+              <!-- Sueltas: ya no se ofrecen; solo se muestran en compras viejas que las traían. -->
+              <div class="cant-suelta" *ngIf="l.presentacionId && l.cantidadSuelta && !l.manejaLotes">
                 <span>+</span>
                 <p-inputNumber
                   [ngModel]="l.cantidadSuelta"
@@ -664,7 +645,7 @@
                 tooltipPosition="top"
                 (click)="duplicarLinea(i)"
               ></button>
-              <button
+              <button *appPuede="'compras.compras:ANULAR'"
                 pButton
                 type="button"
                 icon="pi pi-trash"
@@ -682,7 +663,7 @@
       <div class="lineas-empty" *ngIf="lineasArray.length === 0">
         <i class="pi pi-inbox"></i>
         <p>Agrega productos haciendo click en "Agregar producto".</p>
-        <button
+        <button *appPuede="'compras.compras:CREAR'"
           pButton
           type="button"
           label="Agregar primer producto"
@@ -1004,7 +985,7 @@
     </div>
   </div>
 
-  <button
+  <button *appPuede="'compras.compras:CREAR'"
     pButton
     type="button"
     label="Agregar otro lote"

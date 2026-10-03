@@ -13,7 +13,7 @@
         </div>
       </div>
       <div class="card-head__actions">
-        <button
+        <button *appPuede="'catalogo.unidades:CREAR'"
           pButton
           type="button"
           label="Nueva unidad"
@@ -118,7 +118,7 @@
           </td>
           <td class="text-center">
             <div class="action-buttons">
-              <button
+              <button *appPuede="'catalogo.unidades:EDITAR'"
                 pButton
                 type="button"
                 icon="pi pi-pencil"
@@ -127,7 +127,7 @@
                 tooltipPosition="top"
                 (click)="openEdit(item)"
               ></button>
-              <button
+              <button *appPuede="'catalogo.unidades:ANULAR'"
                 pButton
                 type="button"
                 icon="pi pi-trash"
@@ -153,7 +153,8 @@
                     : "No hay unidades de medida registradas"
                 }}
               </p>
-              <button
+              <ng-container *appPuede="'catalogo.unidades:CREAR'">
+            <button
                 *ngIf="!searchQuery"
                 pButton
                 type="button"
@@ -162,6 +163,7 @@
                 class="btn-verde p-button-sm"
                 (click)="openCreate()"
               ></button>
+            </ng-container>
             </div>
           </td>
         </tr>

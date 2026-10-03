@@ -31,6 +31,7 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { SelectModule } from 'primeng/select';
 
 import { aFechaLocal } from '../../../shared/utils/fecha.util';
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 type TagSeverity =
   | 'success'
   | 'secondary'
@@ -45,6 +46,7 @@ type TagSeverity =
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     IconFieldModule,

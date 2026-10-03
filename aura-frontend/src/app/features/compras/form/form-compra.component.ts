@@ -84,11 +84,16 @@ import {
 } from '../../../core/models/producto.model';
 
 import { aFechaHoraLocal } from '../../../shared/utils/fecha.util';
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
+import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-autocomplete/cuenta-autocomplete.component';
+
 @Component({
   selector: 'app-form-compra',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CuentaAutocompleteComponent,
+    PuedeDirective,
     TerceroAutocompleteComponent,
     ProductoAutocompleteComponent,
     MultiSelectModule,
@@ -1460,11 +1465,14 @@ export class FormCompraComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  // ─── Presentaciones de compra (4 Pacas) ──────────────────────────
+  // ─── Presentación de compra (4 Pacas) ────────────────────────────
   /**
-   * Opciones de la línea: la unidad y las presentaciones del producto. Con
-   * `aplicarDefault` preselecciona la de compra por defecto y lleva el costo a
-   * esa presentación. El back convierte cantidad y costo a unidad base.
+   * Se compra en UNA sola presentación: la de compra por defecto del producto
+   * (o la unidad base si no tiene). Las presentaciones de venta (unidad, paca,
+   * display…) no aparecen al comprar, ni las unidades sueltas. Con
+   * `aplicarDefault` la deja elegida y lleva el costo a esa presentación; sin
+   * él (compra ya guardada) la línea conserva lo que tenía. El back convierte
+   * cantidad y costo a unidad base.
    */
   private async cargarPresentacionesLinea(
     idx: number,
@@ -1484,36 +1492,15 @@ export class FormCompraComponent implements OnInit {
     const linea = this.lineas()[idx];
     if (!linea || linea.productoId !== productoId) return;
 
-    const presentaciones = lista.length
-      ? [
-          {
-            id: 0,
-            nombre: linea.unidadAbreviatura || 'Unidad',
-            factor: 1,
-            precio: null,
-            costo: costoBase,
-          },
-          ...lista.map((x) => ({
-            id: x.id,
-            nombre: x.nombre,
-            factor: x.factorConversion,
-            precio: x.precio ?? null,
-            costo: x.costo ?? null,
-          })),
-        ]
-      : [];
-
-    if (!aplicarDefault) {
-      // Solo las opciones: la línea cargada conserva sus valores e impuestos.
-      this.actualizarLinea(idx, { presentaciones }, false);
-      return;
-    }
+    // Compra ya guardada: conserva su presentación, valores e impuestos.
+    if (!aplicarDefault) return;
 
     const porDefecto = lista.find(
       (x) => x.esDefaultCompra && x.factorConversion > 1,
     );
     if (!porDefecto) {
-      this.actualizarLinea(idx, { presentaciones }, false);
+      // Sin presentación de compra: se compra en la unidad base.
+      this.actualizarLinea(idx, { presentaciones: [], presentacionId: 0, cantidadSuelta: null }, false);
       return;
     }
     const costoPresentacion =
@@ -1521,8 +1508,17 @@ export class FormCompraComponent implements OnInit {
         ? porDefecto.costo
         : (costoBase ?? 0) * porDefecto.factorConversion;
     this.actualizarLinea(idx, {
-      presentaciones,
+      presentaciones: [
+        {
+          id: porDefecto.id,
+          nombre: porDefecto.nombre,
+          factor: porDefecto.factorConversion,
+          precio: porDefecto.precio ?? null,
+          costo: porDefecto.costo ?? null,
+        },
+      ],
       presentacionId: porDefecto.id,
+      cantidadSuelta: null,
       costoUnitario: Math.round(costoPresentacion * 100) / 100,
     });
   }

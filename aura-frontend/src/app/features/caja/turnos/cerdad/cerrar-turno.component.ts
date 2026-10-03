@@ -36,6 +36,7 @@ import {
 } from '../../../../core/models/caja.model';
 import { TurnoCajaService } from '../../../../core/services/caja.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
+import { ContadorEfectivoComponent, olvidarConteo } from '../contador/contador-efectivo.component';
 
 @Component({
   selector: 'app-cerrar-turno',
@@ -51,6 +52,7 @@ import { AlertService } from '../../../../shared/pipes/alert.service';
     ToastModule,
     SkeletonModule,
     TagModule,
+    ContadorEfectivoComponent,
   ],
   providers: [MessageService],
   templateUrl: './cerrar-turno.component.html',
@@ -67,6 +69,11 @@ export class CerrarTurnoComponent implements OnChanges {
   loadingResumen = false;
   resumen: ResumenTurnoDto | null = null;
   mostrarDetalleEfectivo = false;
+  /**
+   * Calculadora de billetes en una ventana aparte, que se arrastra y no bloquea:
+   * el cajero la corre a un lado y sigue viendo el detalle del turno al contar.
+   */
+  calculadoraVisible = false;
   readonly Math = Math;
 
   constructor(
@@ -84,6 +91,7 @@ export class CerrarTurnoComponent implements OnChanges {
     if (changes['displayModal'] && this.displayModal) {
       this.frmCerrar.reset({ totalEfectivoReal: null });
       this.resumen = null;
+      this.calculadoraVisible = false;
       if (this.turno) this.cargarResumen();
     }
   }
@@ -103,6 +111,41 @@ export class CerrarTurnoComponent implements OnChanges {
       this.loadingResumen = false;
       this.cdr.markForCheck();
     }
+  }
+
+  // ── Conteo ────────────────────────────────────────────────
+  /** La calculadora va llenando "Efectivo contado" mientras se cuenta. En cero queda vacío. */
+  onTotalContado(total: number): void {
+    this.frmCerrar.patchValue({ totalEfectivoReal: total > 0 ? total : null });
+    this.frmCerrar.get('totalEfectivoReal')?.markAsTouched();
+    this.cdr.markForCheck();
+  }
+
+  abrirCalculadora(): void {
+    this.calculadoraVisible = true;
+  }
+
+  get esperado(): number {
+    return this.resumen?.totalEsperado ?? this.turno?.baseInicial ?? 0;
+  }
+
+  get contado(): number | null {
+    const v = this.frmCerrar.get('totalEfectivoReal')?.value;
+    return v === null || v === undefined ? null : v;
+  }
+
+  /** Cuánto lleva abierto el turno, p. ej. "8 h 25 min". */
+  get duracion(): string {
+    if (!this.turno?.fechaApertura) return '';
+    const min = Math.max(0, Math.floor((Date.now() - new Date(this.turno.fechaApertura).getTime()) / 60000));
+    const h = Math.floor(min / 60);
+    return h > 0 ? `${h} h ${min % 60} min` : `${min} min`;
+  }
+
+  get textoBotonCerrar(): string {
+    const d = this.diferencia;
+    if (d === null || d === 0) return 'Cerrar turno';
+    return `Cerrar con ${d < 0 ? 'faltante' : 'sobrante'} de ${this.formatCOP(Math.abs(d))}`;
   }
 
   // ── Diferencia calculada en tiempo real ───────────────────
@@ -271,6 +314,8 @@ export class CerrarTurnoComponent implements OnChanges {
           'Turno cerrado',
           `Caja "${res.data.cajaNombre}" cerrada correctamente.`,
         );
+        // El conteo guardado en el navegador ya no sirve.
+        olvidarConteo(this.turno.id);
         this.turnoCerrado.emit(res.data as unknown as ResumenTurnoDto);
         this.closeModal();
       }
@@ -289,6 +334,7 @@ export class CerrarTurnoComponent implements OnChanges {
     this.frmCerrar.reset({ totalEfectivoReal: null });
     this.resumen = null;
     this.mostrarDetalleEfectivo = false;
+    this.calculadoraVisible = false;
     this.modalClosed.emit();
   }
 }

@@ -906,49 +906,31 @@
 
             <div class="field">
               <label for="cuentaIngresoId">Cuenta de ingreso</label>
-              <p-dropdown
-                inputId="cuentaIngresoId"
+              <app-cuenta-autocomplete
+                [opciones]="cuentasIngresoOpts"
                 formControlName="cuentaIngresoId"
-                [options]="cuentasIngresoOpts"
-                optionLabel="label"
-                optionValue="value"
                 placeholder="La de la categoría"
-                [filter]="true"
-                filterPlaceholder="Código o nombre..."
                 [showClear]="true"
-                styleClass="w-full"
               />
             </div>
 
             <div class="field-row">
               <div class="field">
                 <label for="cuentaCostoId">Cuenta de costo</label>
-                <p-dropdown
-                  inputId="cuentaCostoId"
+                <app-cuenta-autocomplete
+                  [opciones]="cuentasCostoOpts"
                   formControlName="cuentaCostoId"
-                  [options]="cuentasCostoOpts"
-                  optionLabel="label"
-                  optionValue="value"
                   placeholder="La de la categoría"
-                  [filter]="true"
-                  filterPlaceholder="Código o nombre..."
                   [showClear]="true"
-                  styleClass="w-full"
                 />
               </div>
               <div class="field">
                 <label for="cuentaInventarioId">{{ clasificacion.cuentaCompra }}</label>
-                <p-dropdown
-                  inputId="cuentaInventarioId"
+                <app-cuenta-autocomplete
+                  [opciones]="cuentasInventarioOpts"
                   formControlName="cuentaInventarioId"
-                  [options]="cuentasInventarioOpts"
-                  optionLabel="label"
-                  optionValue="value"
                   placeholder="La de la categoría"
-                  [filter]="true"
-                  filterPlaceholder="Código o nombre..."
                   [showClear]="true"
-                  styleClass="w-full"
                 />
               </div>
             </div>

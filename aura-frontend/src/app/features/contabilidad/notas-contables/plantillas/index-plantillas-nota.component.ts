@@ -28,6 +28,7 @@ import {
 import { PlantillaDialogComponent } from '../plantilla-dialog/plantilla-dialog.component';
 import { NotaContableService } from '../services/nota-contable.service';
 
+import { PuedeDirective } from '../../../../shared/directives/puede.directive';
 /**
  * Plantillas de notas contables. Se crean desde una nota ("Guardar como
  * plantilla"); aquí se usan, se ajusta su recurrencia o se eliminan.
@@ -37,6 +38,7 @@ import { NotaContableService } from '../services/nota-contable.service';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     ButtonModule,

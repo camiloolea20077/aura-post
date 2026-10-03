@@ -13,7 +13,7 @@
         </div>
       </div>
       <div class="card-head__actions">
-        <button
+        <button *appPuede="'compras.ordenes-de-compra:CREAR'"
           pButton
           label="Nueva Orden"
           icon="pi pi-plus"
@@ -99,6 +99,7 @@
                 *ngIf="puedeConfirmar(o.estado)"
                 (click)="confirmar(o.id)"
               ></button>
+              <ng-container *appPuede="'compras.ordenes-de-compra:EDITAR'">
               <button
                 pButton
                 icon="pi pi-pencil"
@@ -107,6 +108,8 @@
                 *ngIf="puedeEditar(o.estado)"
                 (click)="abrirEditar(o.id)"
               ></button>
+              </ng-container>
+              <ng-container *appPuede="'compras.ordenes-de-compra:ANULAR'">
               <button
                 pButton
                 icon="pi pi-ban"
@@ -115,6 +118,7 @@
                 *ngIf="puedeAnular(o.estado)"
                 (click)="anular(o.id)"
               ></button>
+              </ng-container>
             </div>
           </td>
         </tr>
@@ -278,7 +282,7 @@
 
       <!-- Total + botón agregar -->
       <div class="lineas-footer">
-        <button
+        <button *appPuede="'compras.ordenes-de-compra:CREAR'"
           pButton
           label="Agregar línea"
           icon="pi pi-plus"

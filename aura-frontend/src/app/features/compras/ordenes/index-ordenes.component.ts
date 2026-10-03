@@ -36,6 +36,7 @@ import {
 import { ProductoOpcion } from '../../../core/models/compra.model';
 
 import { aFechaLocal } from '../../../shared/utils/fecha.util';
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' | undefined;
 
 @Component({
@@ -43,6 +44,7 @@ type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contr
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     TerceroAutocompleteComponent,
     CommonModule, FormsModule,
     ButtonModule, InputTextModule, InputNumberModule,

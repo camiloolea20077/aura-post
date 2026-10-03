@@ -573,7 +573,7 @@
 
           <div class="line-tools">
             <!-- Botón eliminar -->
-            <button
+            <button *appPuede="'principal.punto-de-venta:ANULAR'"
               class="tool-btn btn-delete"
               (click)="removeItem(item._id)"
               pTooltip="Eliminar"
@@ -871,6 +871,12 @@
   [clienteId]="clienteId"
   (modalClosed)="showPago = false"
   (ventaConfirmada)="onVentaConfirmada($event)"
+/>
+<app-autorizacion-supervisor
+  [visible]="showAutorizacion"
+  [exceso]="excesoPendiente"
+  (autorizado)="onAutorizado($event)"
+  (cancelado)="onAutorizacionCancelada()"
 />
 <app-factura-electronica-modal
   [(visible)]="mostrarModalFE"

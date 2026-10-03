@@ -35,6 +35,7 @@ import {
   TipoAjusteBancario,
 } from '../../../core/models/conciliacion.model';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 /**
  * E9 · Conciliación bancaria: extracto importado (CSV) a la izquierda, libro
  * de la cuenta contable del banco a la derecha; matching sugerido por valor
@@ -46,6 +47,7 @@ import {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     ButtonModule,

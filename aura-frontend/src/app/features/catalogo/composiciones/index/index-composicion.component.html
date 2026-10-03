@@ -13,7 +13,7 @@
         </div>
       </div>
       <div class="card-head__actions">
-        <button
+        <button *appPuede="'catalogo.composiciones:CREAR'"
           pButton
           type="button"
           label="Nueva receta"
@@ -133,7 +133,7 @@
 
           <td class="text-center">
             <div class="action-buttons">
-              <button
+              <button *appPuede="'catalogo.composiciones:EDITAR'"
                 pButton
                 type="button"
                 icon="pi pi-pencil"
@@ -142,7 +142,7 @@
                 tooltipPosition="top"
                 (click)="openEdit(item)"
               ></button>
-              <button
+              <button *appPuede="'catalogo.composiciones:ANULAR'"
                 pButton
                 type="button"
                 icon="pi pi-trash"
@@ -168,7 +168,8 @@
                     : "No hay recetas registradas"
                 }}
               </p>
-              <button
+              <ng-container *appPuede="'catalogo.composiciones:CREAR'">
+            <button
                 *ngIf="!searchQuery"
                 pButton
                 type="button"
@@ -177,6 +178,7 @@
                 class="btn-verde p-button-sm"
                 (click)="openCreate()"
               ></button>
+            </ng-container>
             </div>
           </td>
         </tr>

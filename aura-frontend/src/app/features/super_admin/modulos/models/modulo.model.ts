@@ -35,6 +35,11 @@ export interface SubmoduloModel {
   descripcion?: string;
   orden: number;
   activo: boolean;
+  /** Grupo del que cuelga (null = directo del módulo). */
+  padreId?: number | null;
+  padreNombre?: string | null;
+  /** Tiene pantallas colgando: es un grupo. */
+  esGrupo?: boolean;
   totalRows: number;
 }
 
@@ -47,11 +52,17 @@ export interface CreateSubmoduloDto {
   descripcion?: string;
   orden?: number;
   activo?: boolean;
+  padreId?: number | null;
 }
 
 export interface UpdateSubmoduloDto {
   nombre?: string;
+  codigo?: string;
   descripcion?: string;
   orden?: number;
   activo?: boolean;
+  /** Mover a este grupo (mismo módulo). */
+  padreId?: number | null;
+  /** true = sacarlo de su grupo. */
+  sinPadre?: boolean;
 }

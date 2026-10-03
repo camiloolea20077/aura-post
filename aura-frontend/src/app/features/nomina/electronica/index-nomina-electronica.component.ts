@@ -15,6 +15,7 @@ import { NominaElectronicaService } from '../../../core/services/nomina-electron
 import { NominaElectronicaEstado } from '../../../core/models/nomina-electronica.model';
 import { AlertService } from '../../../shared/pipes/alert.service';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 type TagSeverity =
   | 'success'
   | 'secondary'
@@ -33,6 +34,7 @@ type TagSeverity =
   selector: 'app-index-nomina-electronica',
   standalone: true,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     TableModule,

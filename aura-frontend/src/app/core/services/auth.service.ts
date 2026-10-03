@@ -25,6 +25,14 @@ export class AuthService {
     );
   }
 
+  // ─── Cambiar de sede (token nuevo con la sede elegida) ──────
+  cambiarSede(sucursalId: number): Observable<ResponseModel<AuthResponse>> {
+    return this.http.post<ResponseModel<AuthResponse>>(
+      `${this.apiUrl}/cambiar-sede`,
+      { sucursalId },
+    );
+  }
+
   // ─── Obtener sesión guardada como Observable ─────────────────
   // Usado por el AuthGuard para verificar token
   getAuthResponse(): Observable<AuthResponse | null> {

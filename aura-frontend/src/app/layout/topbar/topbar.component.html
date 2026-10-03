@@ -79,6 +79,18 @@
       <i class="pi pi-question-circle"></i>
     </button>
 
+    <!-- Autorizaciones de descuento: solo quien puede autorizar (PLAN_PERMISOS P8) -->
+    <button
+      *ngIf="state.puede('ventas.ventas', 'AUTORIZAR_DESCUENTO')"
+      class="topbar-btn"
+      routerLink="/autorizaciones"
+      pTooltip="Autorizaciones de descuento"
+      tooltipPosition="bottom"
+      aria-label="Autorizaciones de descuento"
+    >
+      <i class="pi pi-shield"></i>
+    </button>
+
     <!-- Notificaciones -->
     <button
       class="topbar-btn notif-btn"

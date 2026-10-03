@@ -3,6 +3,10 @@ export interface SubmoduloPermiso {
   submoduloCodigo: string;
   submoduloNombre: string;
   activo: boolean;
+  /** Grupo del que cuelga (tercer nivel, p. ej. RRHH → Gestión → Empleados). */
+  padreId?: number | null;
+  /** Es un grupo (Gestión, Asistencia…), no una pantalla. */
+  esGrupo?: boolean;
 }
 
 export interface ModuloPermiso {

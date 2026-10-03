@@ -149,7 +149,7 @@
                   (click)="abrirDialogCerrar(p)"
                 ></button>
                 <button
-                  *ngIf="esUltimoCerrado(p)"
+                  *ngIf="puedeReabrir(p)"
                   pButton
                   icon="pi pi-lock-open"
                   class="p-button-text p-button-sm p-button-rounded"

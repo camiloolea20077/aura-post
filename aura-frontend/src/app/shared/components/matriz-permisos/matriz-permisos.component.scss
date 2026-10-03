@@ -1,0 +1,241 @@
+// Matriz de permisos: nombre + 4 columnas de acción. Con container queries para
+// pantallas pequeñas (muchos usuarios trabajan en equipos chicos).
+:host {
+  display: block;
+  container-type: inline-size;
+}
+
+.matriz-barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+
+  &__acciones {
+    display: flex;
+    gap: 0.75rem;
+  }
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #2563eb;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 1.1rem;
+  font-size: 0.78rem;
+  color: #475569;
+  margin-bottom: 0.75rem;
+
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  &__nota {
+    color: #94a3b8;
+  }
+}
+
+.tabla {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.fila {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(4, 72px);
+  align-items: center;
+  border-top: 1px solid #f1f5f9;
+  min-height: 40px;
+
+  &--cabecera {
+    border-top: none;
+    background: #f8fafc;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #64748b;
+  }
+
+  &--modulo {
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    cursor: pointer;
+    font-weight: 700;
+    color: #1e293b;
+
+    &:hover {
+      background: #f1f5f9;
+    }
+  }
+
+  &--grupo {
+    background: #fbfdff;
+    font-weight: 600;
+    color: #334155;
+  }
+
+  &--hija .col-nombre {
+    padding-left: 3.1rem;
+  }
+}
+
+.col-nombre {
+  padding: 0.45rem 0.9rem 0.45rem 1.6rem;
+  font-size: 0.84rem;
+  color: #334155;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+
+  .fila--cabecera &,
+  .fila--modulo & {
+    padding-left: 0.9rem;
+  }
+
+  .pi-chevron-down,
+  .pi-chevron-right {
+    font-size: 0.72rem;
+    color: #94a3b8;
+  }
+}
+
+.nombre-modulo {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contador {
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.icono-grupo {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.col-accion {
+  display: flex;
+  justify-content: center;
+  padding: 0.3rem 0;
+}
+
+// Casilla
+.celda {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  border: 1.5px solid #cbd5e1;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.12s;
+
+  i {
+    font-size: 0.72rem;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: #2563eb;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.75;
+  }
+
+  &--on,
+  &--todo,
+  &--da {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #fff;
+  }
+
+  &--parcial {
+    background: #dbeafe;
+    border-color: #93c5fd;
+    color: #1d4ed8;
+  }
+
+  &--hereda-on {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #60a5fa;
+  }
+
+  &--quita {
+    background: #fef2f2;
+    border-color: #f87171;
+    color: #dc2626;
+  }
+
+  &--grupo {
+    border-radius: 50%;
+  }
+
+  &.mini {
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    cursor: default;
+
+    i {
+      font-size: 0.6rem;
+    }
+  }
+}
+
+.vacio {
+  padding: 1.5rem;
+  text-align: center;
+  font-size: 0.84rem;
+  color: #94a3b8;
+}
+
+@container (max-width: 560px) {
+  .fila {
+    grid-template-columns: minmax(0, 1fr) repeat(4, 44px);
+  }
+
+  .col-nombre {
+    padding-left: 0.9rem;
+    font-size: 0.8rem;
+  }
+
+  .fila--hija .col-nombre {
+    padding-left: 1.8rem;
+  }
+
+  .fila--cabecera {
+    font-size: 0.62rem;
+  }
+}

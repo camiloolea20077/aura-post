@@ -33,6 +33,7 @@ import {
   ExogenaMapeo,
 } from '../../../core/models/exogena.model';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 /**
  * E11 · Información exógena DIAN: wizard validar → generar → revisar →
  * aprobar → exportar Excel del prevalidador, más la parametrización de
@@ -43,6 +44,7 @@ import {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     ButtonModule,

@@ -136,7 +136,7 @@
                 tooltipPosition="top"
                 (click)="imprimirTirilla(item, $event)"
               ></button>
-              <button
+              <button *appPuede="'ventas.ventas-de-campo:ANULAR'"
                 pButton
                 icon="pi pi-times-circle"
                 class="p-button-text p-button-sm action-anular"
@@ -165,7 +165,7 @@
                 tooltipPosition="top"
                 (click)="imprimirTirilla(item, $event)"
               ></button>
-              <button
+              <button *appPuede="'ventas.ventas-de-campo:ANULAR'"
                 pButton
                 icon="pi pi-times-circle"
                 class="p-button-text p-button-sm action-anular"
@@ -194,7 +194,7 @@
                 tooltipPosition="top"
                 (click)="imprimirTirilla(item, $event)"
               ></button>
-              <button
+              <button *appPuede="'ventas.ventas-de-campo:ANULAR'"
                 pButton
                 icon="pi pi-times-circle"
                 class="p-button-text p-button-sm action-anular"

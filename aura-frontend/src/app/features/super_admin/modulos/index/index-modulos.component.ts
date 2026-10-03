@@ -1,28 +1,31 @@
 import {
-  Component,
-  OnInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  OnInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
+import { DialogModule } from 'primeng/dialog';
+import { PaginatorModule, PaginatorState } from 'primeng/paginator';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { TableLazyLoadEvent, TableModule } from 'primeng/table';
-import { MessageService, ConfirmationService } from 'primeng/api';
-import { RouterModule, Router } from '@angular/router';
-import { lastValueFrom } from 'rxjs';
-import { ModuloTableModel, ModuloModel } from '../models/modulo.model';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { Subject, Subscription, debounceTime, lastValueFrom } from 'rxjs';
+
+import { ModuloModel, ModuloTableModel } from '../models/modulo.model';
 import { ModuloService } from '../services/modulo.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 import { FormModuloComponent } from '../form/form-modulo.component';
-import { DialogModule } from 'primeng/dialog';
 
+/** Catálogo de módulos del sistema (lo que se le puede dar a una empresa). */
 @Component({
   selector: 'app-index-modulos',
   standalone: true,
@@ -30,147 +33,150 @@ import { DialogModule } from 'primeng/dialog';
   imports: [
     CommonModule,
     FormsModule,
-    TableModule,
+    RouterModule,
     ButtonModule,
     InputTextModule,
     TagModule,
     ToastModule,
     TooltipModule,
     SkeletonModule,
+    DialogModule,
+    PaginatorModule,
     ConfirmDialogModule,
     FormModuloComponent,
-    DialogModule,
-    RouterModule,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './index-modulos.component.html',
   styleUrls: ['./index-modulos.component.scss'],
 })
-export class IndexModulosComponent implements OnInit {
+export class IndexModulosComponent implements OnInit, OnDestroy {
   rows: ModuloTableModel[] = [];
-  totalRows = 0;
-  loadingTable = true;
+  total = 0;
+  cargando = true;
   search = '';
-  rowSize = 15;
-  lastEvent!: TableLazyLoadEvent;
+  first = 0;
+  filas = 15;
 
   showForm = false;
   editTarget: ModuloModel | null = null;
 
+  private buscar$ = new Subject<void>();
+  private sub?: Subscription;
+
   constructor(
     private readonly service: ModuloService,
-    private readonly alertService: AlertService,
-    private readonly confirmService: ConfirmationService,
-    private readonly cdr: ChangeDetectorRef,
+    private readonly alert: AlertService,
+    private readonly confirm: ConfirmationService,
     private readonly router: Router,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.sub = this.buscar$.pipe(debounceTime(350)).subscribe(() => {
+      this.first = 0;
+      this.cargar();
+    });
+    this.cargar();
+  }
 
-  async loadTable(event: TableLazyLoadEvent): Promise<void> {
-    this.lastEvent = event;
-    this.loadingTable = true;
-    const page =
-      event.first != null && event.rows
-        ? Math.floor(event.first / event.rows)
-        : 0;
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
+  }
 
+  onSearch(): void {
+    this.buscar$.next();
+  }
+
+  limpiar(): void {
+    this.search = '';
+    this.first = 0;
+    this.cargar();
+  }
+
+  onPagina(e: PaginatorState): void {
+    this.first = e.first ?? 0;
+    this.filas = e.rows ?? this.filas;
+    this.cargar();
+  }
+
+  async cargar(): Promise<void> {
+    this.cargando = true;
+    this.cdr.markForCheck();
     try {
       const res = await lastValueFrom(
         this.service.pageModulos({
-          page,
-          rows: event.rows ?? this.rowSize,
-          search: this.search || null,
+          page: Math.floor(this.first / this.filas),
+          rows: this.filas,
+          search: this.search.trim() || null,
         }),
       );
       this.rows = res?.data?.content ?? [];
-      this.totalRows = res?.data?.totalElements ?? 0;
+      this.total = res?.data?.totalElements ?? 0;
     } catch {
       this.rows = [];
-      this.totalRows = 0;
+      this.total = 0;
     } finally {
-      this.loadingTable = false;
+      this.cargando = false;
       this.cdr.markForCheck();
     }
   }
 
-  onSearch(): void {
-    if (this.lastEvent) this.loadTable({ ...this.lastEvent, first: 0 });
-  }
-
-  clearSearch(): void {
-    this.search = '';
-    this.onSearch();
-  }
-
-  private reload(): void {
-    if (this.lastEvent) this.loadTable(this.lastEvent);
-  }
-
-  nueva(): void {
+  nuevo(): void {
     this.editTarget = null;
     this.showForm = true;
   }
 
-  async editar(id: number): Promise<void> {
+  async editar(m: ModuloTableModel, ev?: Event): Promise<void> {
+    ev?.stopPropagation();
     try {
-      const res = await lastValueFrom(this.service.getModuloById(id));
+      const res = await lastValueFrom(this.service.getModuloById(m.id));
       this.editTarget = res?.data ?? null;
       this.showForm = true;
       this.cdr.markForCheck();
     } catch {
-      this.alertService.showError('Error', 'No se pudo cargar el módulo');
+      /* el interceptor muestra el error */
     }
   }
 
-  confirmarEliminar(item: ModuloTableModel, event: Event): void {
-    event.stopPropagation();
-    this.confirmService.confirm({
-      target: event.target as EventTarget,
-      message: `¿Eliminar <strong>${item.nombre}</strong>? Se eliminarán todos sus submódulos.`,
+  submodulos(m: ModuloTableModel): void {
+    this.router.navigate(['/platform/modulos', m.id, 'submodulos']);
+  }
+
+  async toggleActivo(m: ModuloTableModel, ev: Event): Promise<void> {
+    ev.stopPropagation();
+    try {
+      await lastValueFrom(this.service.updateModulo(m.id, { activo: !m.activo }));
+      this.alert.showSuccess(m.activo ? 'Desactivado' : 'Activado', m.nombre);
+      this.cargar();
+    } catch {
+      /* el interceptor muestra el error */
+    }
+  }
+
+  confirmarEliminar(m: ModuloTableModel, ev: Event): void {
+    ev.stopPropagation();
+    this.confirm.confirm({
+      message: `¿Eliminar <strong>${m.nombre}</strong>? Se eliminan también sus submódulos.`,
       header: 'Eliminar módulo',
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Sí, eliminar',
       rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-danger',
-      accept: () => this.eliminar(item.id),
+      accept: async () => {
+        try {
+          await lastValueFrom(this.service.deleteModulo(m.id));
+          this.alert.showSuccess('Eliminado', m.nombre);
+          this.cargar();
+        } catch {
+          /* el interceptor muestra el error */
+        }
+      },
     });
-  }
-
-  private async eliminar(id: number): Promise<void> {
-    try {
-      await lastValueFrom(this.service.deleteModulo(id));
-      this.alertService.showSuccess('Eliminado', 'Módulo eliminado');
-      this.reload();
-    } catch {
-      this.alertService.showError('Error', 'No se pudo eliminar');
-    }
-  }
-
-  async toggleActivo(item: ModuloTableModel, event: Event): Promise<void> {
-    event.stopPropagation();
-    try {
-      await lastValueFrom(
-        this.service.updateModulo(item.id, { activo: !item.activo }),
-      );
-      this.alertService.showSuccess(
-        item.activo ? 'Desactivado' : 'Activado',
-        `Módulo ${item.activo ? 'desactivado' : 'activado'}`,
-      );
-      this.reload();
-    } catch {
-      this.alertService.showError('Error', 'No se pudo cambiar el estado');
-    }
   }
 
   onSaved(): void {
     this.showForm = false;
     this.editTarget = null;
-    this.reload();
-  }
-
-  verSubmodulos(item: ModuloTableModel, event: Event): void {
-    event.stopPropagation();
-    this.router.navigate(['/platform/modulos', item.id, 'submodulos']);
+    this.cargar();
   }
 }

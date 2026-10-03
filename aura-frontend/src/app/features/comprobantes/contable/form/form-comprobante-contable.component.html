@@ -167,17 +167,13 @@
 
             <div class="field span-2" *ngIf="esCuenta">
               <label>Cuenta contable <span class="req">*</span></label>
-              <p-dropdown
+              <app-cuenta-autocomplete
+                [opciones]="cuentasAuxOpts"
                 formControlName="cuentaContableId"
-                [options]="cuentasAuxOpts"
-                optionLabel="label"
-                optionValue="value"
                 appendTo="body"
                 placeholder="Caja menor, fondos por legalizar..."
-                [filter]="true"
-                filterBy="label"
-                styleClass="w-full"
-              ></p-dropdown>
+                [showClear]="false"
+              />
             </div>
           </div>
 
@@ -204,7 +200,7 @@
             <div class="cmp-lineas">
               <div class="cmp-lineas-head">
                 <span>Movimientos contables</span>
-                <button
+                <button *appPuede="'caja.comprobantes:CREAR'"
                   pButton
                   type="button"
                   label="Agregar línea"
@@ -233,17 +229,13 @@
                 <ng-template pTemplate="body" let-row let-i="rowIndex">
                   <tr [formGroup]="row">
                     <td>
-                      <p-dropdown
+                      <app-cuenta-autocomplete
+                        [opciones]="cuentasAuxOpts"
                         formControlName="cuentaId"
-                        [options]="cuentasAuxOpts"
-                        optionLabel="label"
-                        optionValue="value"
                         appendTo="body"
-                        panelStyleClass="cmp-dd-panel"
                         placeholder="Seleccionar"
-                        [filter]="true"
-                        styleClass="w-full"
-                      ></p-dropdown>
+                        [showClear]="false"
+                      />
                     </td>
                     <td>
                       <app-tercero-autocomplete

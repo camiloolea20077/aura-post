@@ -9,7 +9,7 @@
         </div>
       </div>
       <div class="card-head__actions">
-        <button
+        <button *appPuede="'inventario.reconteos:CREAR'"
           pButton
           label="Nuevo reconteo"
           icon="pi pi-plus"
@@ -91,7 +91,7 @@
                 pTooltip="Ver / contar"
                 (click)="verDetalle(r)"
               ></button>
-              <button
+              <button *appPuede="'inventario.reconteos:ANULAR'"
                 pButton
                 icon="pi pi-ban"
                 class="p-button-text p-button-danger p-button-sm"

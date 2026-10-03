@@ -16,7 +16,7 @@
       </div>
       <div class="card-head__actions">
         <!-- Crear (arriba) -->
-        <button
+        <button *appPuede="'catalogo.productos:CREAR'"
           pButton
           type="button"
           label="Nuevo producto"
@@ -72,6 +72,43 @@
       </div>
     </div>
 
+    <!-- Sede: un catálogo para toda la empresa, la existencia es de cada sede -->
+    <div class="filtros-sede">
+      <div class="filtro">
+        <label>Existencias de la sede</label>
+        <p-dropdown
+          [options]="sedesOpts"
+          [(ngModel)]="sedeId"
+          optionLabel="nombre"
+          optionValue="id"
+          (onChange)="onSedeChange()"
+        />
+      </div>
+      <div class="filtro">
+        <label>¿Solo con existencias aquí?</label>
+        <div class="opciones">
+          <button
+            type="button"
+            class="opcion"
+            [class.opcion--activa]="!soloConExistencias"
+            (click)="setSoloConExistencias(false)"
+          >
+            <i class="pi" [class.pi-circle-fill]="!soloConExistencias" [class.pi-circle]="soloConExistencias"></i>
+            Todo el catálogo
+          </button>
+          <button
+            type="button"
+            class="opcion"
+            [class.opcion--activa]="soloConExistencias"
+            (click)="setSoloConExistencias(true)"
+          >
+            <i class="pi" [class.pi-circle-fill]="soloConExistencias" [class.pi-circle]="!soloConExistencias"></i>
+            Solo con existencias
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Tabla -->
     <p-table
       [value]="items"
@@ -112,6 +149,9 @@
           </th>
           <th pSortableColumn="p.costo" style="width: 120px" class="text-right">
             Costo <p-sortIcon field="p.costo" />
+          </th>
+          <th style="width: 120px" class="text-right" [pTooltip]="'Existencias en ' + sedeNombre" tooltipPosition="top">
+            Stock sede
           </th>
           <th style="width: 100px" class="text-right"
             pTooltip="De cada $100 que vendes (sin IVA), cuánto te queda después del costo" tooltipPosition="top">
@@ -204,6 +244,15 @@
             </span>
           </td>
 
+          <!-- Stock en la sede elegida -->
+          <td class="text-right">
+            <span *ngIf="item.stockSede !== null && item.stockSede !== undefined; else sinStock"
+              class="stock-sede" [class.stock-sede--cero]="item.stockSede <= 0">
+              {{ item.stockSede | number: "1.0-2" }} {{ item.unidadAbreviatura || "" }}
+            </span>
+            <ng-template #sinStock><span class="util-vacia">—</span></ng-template>
+          </td>
+
           <!-- Utilidad -->
           <td class="text-right">
             <span *ngIf="utilidad(item) as u; else sinUtil" class="util" [ngClass]="'util--' + u.nivel"
@@ -223,7 +272,7 @@
           <!-- Acciones -->
           <td class="text-center">
             <div class="action-buttons">
-              <button
+              <button *appPuede="'catalogo.productos:EDITAR'"
                 pButton
                 type="button"
                 icon="pi pi-pencil"
@@ -232,7 +281,7 @@
                 tooltipPosition="top"
                 (click)="openEdit(item)"
               ></button>
-              <button
+              <button *appPuede="'catalogo.productos:ANULAR'"
                 pButton
                 type="button"
                 icon="pi pi-trash"
@@ -249,7 +298,7 @@
       <!-- Empty -->
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="11">
+          <td colspan="12">
             <div class="empty-state">
               <i class="pi pi-shopping-bag"></i>
               <p>
@@ -259,7 +308,8 @@
                     : "No hay productos registrados"
                 }}
               </p>
-              <button
+              <ng-container *appPuede="'catalogo.productos:CREAR'">
+            <button
                 *ngIf="!searchQuery"
                 pButton
                 type="button"
@@ -268,6 +318,7 @@
                 class="btn-verde p-button-sm"
                 (click)="openCreate()"
               ></button>
+            </ng-container>
             </div>
           </td>
         </tr>

@@ -32,11 +32,13 @@ import { CuentaBancariaModel } from '../../../../core/models/cuenta-bancaria.mod
 import { DetalleLiquidacionComponent } from '../detalle/detalle-liquidacion.component';
 import { FormLiquidacionComponent } from '../form/form-liquidacion.component';
 import { aFechaLocal } from '../../../../shared/utils/fecha.util';
+import { PuedeDirective } from '../../../../shared/directives/puede.directive';
 @Component({
   selector: 'app-index-liquidaciones',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     TableModule,

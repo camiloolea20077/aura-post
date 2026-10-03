@@ -51,11 +51,13 @@ import {
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 @Component({
   selector: 'app-form-cotizacion',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     TerceroAutocompleteComponent,
     CommonModule,
     FormsModule,

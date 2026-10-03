@@ -26,6 +26,7 @@ import {
 import { SerialProductoService } from '../../../../core/services/serial-producto.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 import { IFilterTable } from '../../../../shared/utils/filter-table';
+import { PuedeDirective } from '../../../../shared/directives/puede.directive';
 type TagSeverity =
   | 'success'
   | 'secondary'
@@ -38,6 +39,7 @@ type TagSeverity =
   selector: 'app-index-seriales',
   standalone: true,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     TableModule,

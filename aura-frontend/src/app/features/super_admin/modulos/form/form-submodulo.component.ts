@@ -54,6 +54,8 @@ export class FormSubmoduloComponent implements OnChanges {
   frmSubmodulo: FormGroup;
   loading = false;
   modulos: ModuloModel[] = [];
+  /** Grupos del módulo elegido (submódulos que no cuelgan de otro). */
+  grupos: { id: number; nombre: string }[] = [];
 
   get isEdit(): boolean {
     return !!this.submodulo;
@@ -72,7 +74,31 @@ export class FormSubmoduloComponent implements OnChanges {
       descripcion: ['', Validators.maxLength(500)],
       orden: [0],
       activo: [true],
+      padreId: [null as number | null],
     });
+    // Al cambiar de módulo, los grupos son otros.
+    this.frmSubmodulo.get('moduloId')!.valueChanges.subscribe((id) => {
+      this.frmSubmodulo.patchValue({ padreId: null }, { emitEvent: false });
+      this.cargarGrupos(id);
+    });
+  }
+
+  /** Grupos posibles: submódulos del módulo sin padre (ni el propio). */
+  private async cargarGrupos(moduloId: number | null): Promise<void> {
+    this.grupos = [];
+    if (!moduloId) return;
+    try {
+      const res = await lastValueFrom(
+        this.service.pageSubmodulos({ page: 0, rows: 500, search: null, params: { moduloId } }),
+      );
+      const lista: SubmoduloModel[] = res?.data?.content ?? [];
+      this.grupos = lista
+        .filter((s) => !s.padreId && s.id !== this.submodulo?.id)
+        .map((s) => ({ id: s.id, nombre: s.nombre + (s.esGrupo ? ' (grupo)' : '') }));
+    } catch {
+      this.grupos = [];
+    }
+    this.cdr.markForCheck();
   }
 
   async ngOnChanges(): Promise<void> {
@@ -86,7 +112,9 @@ export class FormSubmoduloComponent implements OnChanges {
         descripcion: this.submodulo.descripcion,
         orden: this.submodulo.orden,
         activo: this.submodulo.activo,
-      });
+      }, { emitEvent: false });
+      await this.cargarGrupos(this.submodulo.moduloId);
+      this.frmSubmodulo.patchValue({ padreId: this.submodulo.padreId ?? null }, { emitEvent: false });
     } else {
       this.frmSubmodulo.patchValue({
         moduloId: this.moduloId,
@@ -95,7 +123,9 @@ export class FormSubmoduloComponent implements OnChanges {
         descripcion: '',
         orden: 0,
         activo: true,
-      });
+        padreId: null,
+      }, { emitEvent: false });
+      await this.cargarGrupos(this.moduloId);
     }
   }
 
@@ -116,7 +146,12 @@ export class FormSubmoduloComponent implements OnChanges {
     this.loading = true;
     try {
       if (this.isEdit) {
-        const dto: UpdateSubmoduloDto = this.frmSubmodulo.value;
+        const v = this.frmSubmodulo.value;
+        const dto: UpdateSubmoduloDto = {
+          ...v,
+          padreId: v.padreId ?? null,
+          sinPadre: v.padreId == null,
+        };
         await lastValueFrom(
           this.service.updateSubmodulo(this.submodulo!.id, dto),
         );

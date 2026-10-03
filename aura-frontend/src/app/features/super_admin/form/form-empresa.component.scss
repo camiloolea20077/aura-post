@@ -342,3 +342,31 @@ $green: #10b981;
   border: none !important;
   font-weight: 600 !important;
 }
+
+// ── Módulos al crear ─────────────────────────────────────
+.aviso-modulos {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 10px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+// En el teléfono los botones del pie ocupan todo el ancho.
+@media (max-width: 640px) {
+  .fe-footer {
+    flex-direction: column-reverse;
+    align-items: stretch;
+
+    ::ng-deep .p-button {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}

@@ -119,6 +119,7 @@
               tooltipPosition="left"
               (click)="openDetalle(item)"
             ></button>
+            <ng-container *appPuede="'ventas.cotizaciones:EDITAR'">
             <button
               pButton
               icon="pi pi-pencil"
@@ -129,6 +130,7 @@
               *ngIf="item.estado === 'PENDIENTE'"
               (click)="editar(item, $event)"
             ></button>
+            </ng-container>
             <button
               pButton
               icon="pi pi-shopping-cart"

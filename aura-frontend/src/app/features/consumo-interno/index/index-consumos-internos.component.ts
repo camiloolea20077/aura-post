@@ -40,11 +40,14 @@ interface CuentaOpcion {
   label: string;
 }
 
+import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-autocomplete/cuenta-autocomplete.component';
+
 @Component({
   selector: 'app-index-consumos-internos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CuentaAutocompleteComponent,
     CommonModule,
     FormsModule,
     ButtonModule,

@@ -34,10 +34,12 @@ type TagSeverity =
   | undefined;
 import { DocumentoSoporteDialogComponent } from '../../../shared/components/documento-soporte-dialog/documento-soporte-dialog.component';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 @Component({
   selector: 'app-index-compras',
   standalone: true,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     TableModule,

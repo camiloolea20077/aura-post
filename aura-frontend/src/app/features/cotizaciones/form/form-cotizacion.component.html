@@ -102,7 +102,7 @@
     <div class="section-header">
       <h4 class="section-title">Productos</h4>
       <div class="section-actions">
-        <button
+        <button *appPuede="'ventas.cotizaciones:CREAR'"
           pButton
           icon="pi pi-plus"
           label="Agregar producto"
@@ -211,7 +211,7 @@
     <div class="empty-lines" *ngIf="lineas.length === 0">
       <i class="pi pi-shopping-cart"></i>
       <p>Agrega productos haciendo click en "Agregar producto".</p>
-      <button
+      <button *appPuede="'ventas.cotizaciones:CREAR'"
         pButton
         label="Agregar primer producto"
         class="btn-verde"

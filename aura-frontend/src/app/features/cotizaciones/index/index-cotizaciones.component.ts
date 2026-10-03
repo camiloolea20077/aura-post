@@ -21,12 +21,14 @@ import { CotizacionService } from '../../../core/services/cotizacion.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
 import { DetalleCotizacionComponent } from '../detalle/detalle-cotizacion.component';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' | undefined;
 
 @Component({
   selector: 'app-index-cotizaciones',
   standalone: true,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     TableModule,

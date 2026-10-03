@@ -11,7 +11,7 @@
         </div>
       </div>
       <div class="card-head__btns">
-        <button
+        <button *appPuede="'recursos-humanos.prestaciones:CREAR'"
           pButton
           type="button"
           label="Nueva liquidación"
@@ -111,6 +111,7 @@
               *ngIf="l.estado === 'PROGRAMADA'"
               (click)="confirmarProgramado(l)"
             ></button>
+            <ng-container *appPuede="'recursos-humanos.prestaciones:ANULAR'">
             <button
               pButton
               icon="pi pi-times"
@@ -119,6 +120,7 @@
               *ngIf="l.estado !== 'PAGADA' && l.estado !== 'ANULADA'"
               (click)="anular(l)"
             ></button>
+            </ng-container>
           </td>
         </tr>
       </ng-template>

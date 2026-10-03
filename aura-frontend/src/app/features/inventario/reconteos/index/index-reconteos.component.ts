@@ -25,6 +25,7 @@ import {
 import { ReconteoService } from '../../../../core/services/reconteo.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 import { DetalleReconteoComponent } from '../detalle/detalle-reconteo.component';
+import { PuedeDirective } from '../../../../shared/directives/puede.directive';
 type TagSeverity =
   | 'success'
   | 'secondary'
@@ -39,6 +40,7 @@ type TagSeverity =
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     ButtonModule,

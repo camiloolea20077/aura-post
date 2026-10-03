@@ -45,11 +45,14 @@ import { TerceroTableModel } from '../../../core/models/tercero.model';
 import { PlanCuentaModel } from '../../../core/models/contabilidad.model';
 
 import { aFechaLocal } from '../../../shared/utils/fecha.util';
+import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-autocomplete/cuenta-autocomplete.component';
+
 @Component({
   selector: 'app-form-gasto',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CuentaAutocompleteComponent,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,

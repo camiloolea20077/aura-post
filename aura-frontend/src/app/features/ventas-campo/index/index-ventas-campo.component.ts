@@ -33,6 +33,7 @@ import { AlertService } from '../../../shared/pipes/alert.service';
 import { ModalTirillaComponent } from '../../pos/components/modal-tirilla/modal-tirilla.component';
 import { VentaModel } from '../../../core/models/venta.model';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 type TagSeverity =
   | 'success'
   | 'secondary'
@@ -47,6 +48,7 @@ type TagSeverity =
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     TableModule,

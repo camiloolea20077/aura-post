@@ -26,6 +26,7 @@ import {
 } from '../../../core/models/nota-electronica.model';
 import { AlertService } from '../../../shared/pipes/alert.service';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 /** Factura del buscador (mapeo defensivo del JSON de Factus get-bills). */
 interface FacturaBusqueda {
   id: number;
@@ -40,6 +41,7 @@ interface FacturaBusqueda {
   selector: 'app-form-nota-credito',
   standalone: true,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     ButtonModule,

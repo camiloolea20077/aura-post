@@ -21,10 +21,12 @@ import {
 import { ReglaDescuentoService } from '../../../../core/services/regla-descuento.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 
+import { PuedeDirective } from '../../../../shared/directives/puede.directive';
 @Component({
   selector: 'app-index-descuentos',
   standalone: true,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     TableModule,

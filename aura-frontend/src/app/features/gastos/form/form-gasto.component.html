@@ -222,16 +222,11 @@
             >Cuenta contable <span class="optional">(opcional)</span></label
           >
           <div class="field mt-1">
-            <p-dropdown
+            <app-cuenta-autocomplete
+              [opciones]="cuentasOpts"
               formControlName="cuentaContableId"
-              [options]="cuentasOpts"
-              optionLabel="label"
-              optionValue="value"
               placeholder="Seleccionar cuenta..."
               [showClear]="true"
-              [filter]="true"
-              filterBy="label"
-              styleClass="w-full"
             />
           </div>
         </div>
@@ -338,16 +333,11 @@
         <div class="col-12 sm:col-12 md:col-8 lg:col-6 py-0 px-1 mt-2" *ngIf="esCuenta">
           <label>Cuenta de origen <span class="req">*</span></label>
           <div class="field mt-1">
-            <p-dropdown
+            <app-cuenta-autocomplete
+              [opciones]="cuentasPagoOpts"
               formControlName="cuentaPagoId"
-              [options]="cuentasPagoOpts"
-              optionLabel="label"
-              optionValue="value"
               placeholder="Caja menor, anticipos a empleados..."
               [showClear]="true"
-              [filter]="true"
-              filterBy="label"
-              styleClass="w-full"
             />
             <small class="hint" *ngIf="cuentasPagoOpts.length === 0">
               No hay cuentas habilitadas como medio de pago. Marca la caja menor

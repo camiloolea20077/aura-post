@@ -1,141 +1,234 @@
-$sidebar-bg: #0f172a;
-$sidebar-w: 220px;
-$accent: #6366f1;
-$text-dim: #94a3b8;
-$text-light: #e2e8f0;
+$lateral-bg: #0f172a;
+$lateral-w: 232px;
+$azul: #2563eb;
+$texto-tenue: #94a3b8;
+$texto-claro: #e2e8f0;
+$barra-h: 56px;
 
-.platform-shell {
+.shell {
   display: flex;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
   background: #f4f6fa;
 }
 
-.platform-sidebar {
-  width: $sidebar-w;
-  background: $sidebar-bg;
+// ── Menú lateral ─────────────────────────────────────────
+.lateral {
+  width: $lateral-w;
+  flex-shrink: 0;
+  background: $lateral-bg;
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
+  z-index: 30;
 }
 
-.ps-logo {
+.logo {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  padding: 1.25rem 1rem;
+  gap: 0.7rem;
+  padding: 1.2rem 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
 }
 
-.ps-logo-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #6366f1, #818cf8);
-  display: flex;
+.logo-icono {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: linear-gradient(135deg, $azul, #60a5fa);
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 900;
-  color: white;
+  color: #fff;
   letter-spacing: 1px;
+  flex-shrink: 0;
+
+  &--chico {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    font-size: 0.66rem;
+  }
 }
 
-.ps-logo-title {
+.logo-titulo {
   display: block;
-  font-size: 0.88rem;
+  font-size: 0.92rem;
   font-weight: 800;
-  color: $text-light;
+  color: $texto-claro;
 }
 
-.ps-logo-sub {
+.logo-sub {
   display: block;
-  font-size: 0.66rem;
-  color: $text-dim;
+  font-size: 0.68rem;
+  color: $texto-tenue;
 }
 
-.ps-nav {
+.nav {
   flex: 1;
-  padding: 1rem 0.65rem;
+  overflow-y: auto;
+  padding: 0.75rem 0.65rem;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.15rem;
 }
 
-.ps-nav-item {
+.nav-seccion {
+  margin: 0.75rem 0.6rem 0.35rem;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+}
+
+.nav-item {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  padding: 0.6rem 0.85rem;
+  gap: 0.7rem;
+  min-height: 42px;
+  padding: 0.55rem 0.75rem;
   border-radius: 10px;
-  color: $text-dim;
+  color: $texto-tenue;
   text-decoration: none;
-  font-size: 0.82rem;
-  font-weight: 500;
-  transition: all 0.15s;
+  font-size: 0.86rem;
+  font-weight: 600;
+  transition: background 0.15s, color 0.15s;
 
   i {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    width: 1.1rem;
+    text-align: center;
   }
 
   &:hover {
     background: rgba(255, 255, 255, 0.06);
-    color: $text-light;
+    color: $texto-claro;
   }
 
-  &.active {
-    background: rgba(99, 102, 241, 0.18);
-    color: #a5b4fc;
-  }
-}
+  &.activo {
+    background: rgba(37, 99, 235, 0.18);
+    color: #fff;
 
-.ps-nav-divider {
-  height: 1px;
-  background: rgba(255, 255, 255, 0.07);
-  margin: 0.35rem 0;
-}
-
-.ps-nav-item--danger {
-  &:hover {
-    background: rgba(239, 68, 68, 0.08) !important;
-    color: #fca5a5 !important;
+    i {
+      color: #60a5fa;
+    }
   }
 
-  &.active {
-    background: rgba(239, 68, 68, 0.18) !important;
-    color: #fca5a5 !important;
-  }
-}
-
-.ps-footer {
-  padding: 0.85rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-}
-
-.ps-logout-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: $text-dim;
-  font-size: 0.78rem;
-  padding: 0.5rem 0.85rem;
-  border-radius: 8px;
-  width: 100%;
-
-  &:hover {
-    background: rgba(239, 68, 68, 0.1);
+  &--peligro.activo i,
+  &--peligro:hover i {
     color: #f87171;
   }
+}
 
-  i {
-    font-size: 0.85rem;
+.salir {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0.65rem;
+  min-height: 42px;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: transparent;
+  color: $texto-tenue;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    color: #fca5a5;
+    border-color: rgba(248, 113, 113, 0.4);
   }
 }
 
-.platform-content {
+// ── Contenido ────────────────────────────────────────────
+.contenido {
   flex: 1;
+  min-width: 0;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+// ── Barra superior y cajón (pantallas chicas) ────────────
+.barra,
+.velo {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .shell {
+    flex-direction: column;
+  }
+
+  .barra {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    height: $barra-h;
+    flex-shrink: 0;
+    padding: 0 0.75rem;
+    background: $lateral-bg;
+    color: $texto-claro;
+    z-index: 20;
+  }
+
+  .barra-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    cursor: pointer;
+
+    i {
+      font-size: 1.05rem;
+    }
+  }
+
+  .barra-titulo {
+    flex: 1;
+    min-width: 0;
+    font-weight: 700;
+    font-size: 0.95rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .lateral {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(82vw, 290px);
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.35);
+  }
+
+  .shell--menu-abierto .lateral {
+    transform: translateX(0);
+  }
+
+  .velo {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    z-index: 25;
+  }
+
+  .contenido {
+    flex: 1;
+  }
+
+  // Las páginas del panel usan el estándar global (.page): menos margen en el teléfono.
+  :host ::ng-deep .contenido .page {
+    padding: 0.75rem 0.75rem 2rem;
+  }
 }

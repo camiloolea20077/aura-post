@@ -10,12 +10,13 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
     items: [
       {
         label: 'Dashboard',
+        codigo: 'principal.dashboard',
         icon: 'pi pi-home',
         route: '/dashboard',
-        roles: ['SUPER_ADMIN', 'ADMIN'],
       },
       {
         label: 'Punto de Venta',
+        codigo: 'principal.punto-de-venta',
         icon: 'pi pi-shopping-cart',
         route: '/pos',
         badge: 'POS',
@@ -28,32 +29,46 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
   {
     label: 'Catálogo',
     icon: 'pi pi-box',
-    roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [
-      { label: 'Productos', icon: 'pi pi-box', route: '/catalogo/productos' },
+      {
+        label: 'Productos',
+        codigo: 'catalogo.productos',
+        icon: 'pi pi-box',
+        route: '/catalogo/productos',
+      },
       {
         label: 'Categorías',
+        codigo: 'catalogo.categorias',
         icon: 'pi pi-th-large',
         route: '/catalogo/categorias',
       },
-      { label: 'Marcas', icon: 'pi pi-tag', route: '/catalogo/marcas' },
+      {
+        label: 'Marcas',
+        codigo: 'catalogo.marcas',
+        icon: 'pi pi-tag',
+        route: '/catalogo/marcas',
+      },
       {
         label: 'Unidades',
+        codigo: 'catalogo.unidades',
         icon: 'pi pi-chart-bar',
         route: '/catalogo/unidades',
       },
       {
         label: 'Presentaciones',
+        codigo: 'catalogo.presentaciones',
         icon: 'pi pi-sitemap',
         route: '/catalogo/presentaciones',
       },
       {
         label: 'Composiciones',
+        codigo: 'catalogo.composiciones',
         icon: 'pi pi-cog',
         route: '/catalogo/composiciones',
       },
       {
         label: 'Etiquetas',
+        codigo: 'catalogo.etiquetas',
         icon: 'pi pi-bookmark',
         route: '/catalogo/etiquetas',
       },
@@ -64,20 +79,22 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
   {
     label: 'Precios',
     icon: 'pi pi-tags',
-    roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [
       {
         label: 'Listas de Precio',
+        codigo: 'precios.listas-de-precio',
         icon: 'pi pi-list',
         route: '/precios/listas',
       },
       {
         label: 'Precio Productos',
+        codigo: 'precios.precio-productos',
         icon: 'pi pi-tags',
         route: '/precios/productos',
       },
       {
         label: 'Descuentos',
+        codigo: 'precios.descuentos',
         icon: 'pi pi-percentage',
         route: '/precios/descuentos',
       },
@@ -89,34 +106,67 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
   {
     label: 'Inventario',
     icon: 'pi pi-database',
-    roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [
-      { label: 'Stock', icon: 'pi pi-database', route: '/inventario/stock' },
+      {
+        label: 'Stock',
+        codigo: 'inventario.stock',
+        icon: 'pi pi-database',
+        route: '/inventario/stock',
+      },
       {
         label: 'Bodegas',
+        codigo: 'inventario.bodegas',
         icon: 'pi pi-building',
         route: '/inventario/bodegas',
       },
-      { label: 'Lotes', icon: 'pi pi-calendar', route: '/inventario/lotes' },
+      {
+        label: 'Lotes',
+        codigo: 'inventario.lotes',
+        icon: 'pi pi-calendar',
+        route: '/inventario/lotes',
+      },
       {
         label: 'Seriales',
+        codigo: 'inventario.seriales',
         icon: 'pi pi-barcode',
         route: '/inventario/seriales',
       },
-      { label: 'Kardex', icon: 'pi pi-history', route: '/inventario/kardex' },
+      {
+        label: 'Kardex',
+        codigo: 'inventario.kardex',
+        icon: 'pi pi-history',
+        route: '/inventario/kardex',
+      },
       {
         label: 'Reconteos',
+        codigo: 'inventario.reconteos',
         icon: 'pi pi-warehouse',
         route: '/inventario/reconteos',
       },
-      { label: 'Mermas', icon: 'pi pi-trash', route: '/mermas' },
-      { label: 'Obsequios', icon: 'pi pi-gift', route: '/obsequios' },
+      {
+        label: 'Mermas',
+        codigo: 'inventario.mermas',
+        icon: 'pi pi-trash',
+        route: '/mermas',
+      },
+      {
+        label: 'Obsequios',
+        codigo: 'inventario.obsequios',
+        icon: 'pi pi-gift',
+        route: '/obsequios',
+      },
       {
         label: 'Consumo interno',
+        codigo: 'inventario.consumo-interno',
         icon: 'pi pi-building',
         route: '/consumo-interno',
       },
-      { label: 'Traslados', icon: 'pi pi-arrows-h', route: '/traslados' },
+      {
+        label: 'Traslados',
+        codigo: 'inventario.traslados',
+        icon: 'pi pi-arrows-h',
+        route: '/traslados',
+      },
     ],
   },
 
@@ -124,11 +174,16 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
   {
     label: 'Compras',
     icon: 'pi pi-truck',
-    roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [
-      { label: 'Compras', icon: 'pi pi-truck', route: '/compras' },
+      {
+        label: 'Compras',
+        codigo: 'compras.compras',
+        icon: 'pi pi-truck',
+        route: '/compras',
+      },
       {
         label: 'Órdenes de Compra',
+        codigo: 'compras.ordenes-de-compra',
         icon: 'pi pi-file-edit',
         route: '/compras/ordenes',
       },
@@ -136,6 +191,7 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         // normalize('Sugerido de Compra') = 'sugerido-de-compra'
         // (docs/sql/menu_submodulos_f2_f4.sql en el backend).
         label: 'Sugerido de Compra',
+        codigo: 'compras.sugerido-de-compra',
         icon: 'pi pi-shopping-cart',
         route: '/compras/sugerido',
       },
@@ -143,6 +199,7 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         // normalize('Documentos Soporte') = 'documentos-soporte'
         // (docs/sql/menu_submodulo_documentos_soporte.sql en el backend).
         label: 'Documentos Soporte',
+        codigo: 'compras.documentos-soporte',
         icon: 'pi pi-verified',
         route: '/compras/documentos-soporte',
       },
@@ -156,33 +213,33 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
     items: [
       {
         label: 'Ventas',
+        codigo: 'ventas.ventas',
         icon: 'pi pi-receipt',
         route: '/ventas',
-        roles: ['SUPER_ADMIN', 'ADMIN', 'CAJERO'],
       },
       {
         label: 'Ventas de Campo',
+        codigo: 'ventas.ventas-de-campo',
         icon: 'pi pi-car',
         route: '/ventas-campo',
-        roles: ['SUPER_ADMIN', 'ADMIN'],
       },
       {
         label: 'Notas Crédito/Débito',
+        codigo: 'ventas.notas-credito/debito',
         icon: 'pi pi-file-edit',
         route: '/ventas/notas',
-        roles: ['SUPER_ADMIN', 'ADMIN'],
       },
       {
         label: 'Cotizaciones',
+        codigo: 'ventas.cotizaciones',
         icon: 'pi pi-file',
         route: '/cotizaciones',
-        roles: ['SUPER_ADMIN', 'ADMIN', 'CAJERO'],
       },
       {
         label: 'Devoluciones',
+        codigo: 'ventas.devoluciones',
         icon: 'pi pi-replay',
         route: '/devoluciones',
-        roles: ['SUPER_ADMIN', 'ADMIN', 'CAJERO'],
       },
     ],
   },
@@ -191,15 +248,16 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
   {
     label: 'Cuentas',
     icon: 'pi pi-money-bill',
-    roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [
       {
         label: 'Cuentas por Cobrar',
+        codigo: 'cuentas.cuentas-por-cobrar',
         icon: 'pi pi-arrow-circle-down',
         route: '/cuentas/cuentas-por-cobrar',
       },
       {
         label: 'Cuentas por Pagar',
+        codigo: 'cuentas.cuentas-por-pagar',
         icon: 'pi pi-arrow-circle-up',
         route: '/cuentas/cuentas-por-pagar',
       },
@@ -210,43 +268,44 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
   {
     label: 'Vendedores',
     icon: 'pi pi-user-plus',
-    roles: ['SUPER_ADMIN', 'ADMIN', 'VENDEDOR'],
     items: [
       {
         label: 'Vendedores',
+        codigo: 'vendedores.vendedores',
         icon: 'pi pi-users',
         route: '/vendedores/vendedores',
-        roles: ['SUPER_ADMIN', 'ADMIN'],
       },
       {
         label: 'Locales',
+        codigo: 'vendedores.locales',
         icon: 'pi pi-map-marker',
         route: '/vendedores/locales',
-        roles: ['SUPER_ADMIN', 'ADMIN'],
       },
       {
         label: 'Rutas',
+        codigo: 'vendedores.rutas',
         icon: 'pi pi-map',
         route: '/vendedores/rutas',
-        roles: ['SUPER_ADMIN', 'ADMIN'],
       },
       {
         label: 'Visitas',
+        codigo: 'vendedores.visitas',
         icon: 'pi pi-calendar',
         route: '/vendedores/visitas',
-        roles: ['SUPER_ADMIN', 'ADMIN'],
       },
       {
         label: 'Mi Perfil',
+        codigo: 'vendedores.mi-perfil',
         icon: 'pi pi-user',
         route: '/vendedores/personal',
-        roles: ['VENDEDOR'],
+        tipos: ['VENDEDOR'],
       },
       {
         label: 'Escanear QR',
+        codigo: 'vendedores.escanear-qr',
         icon: 'pi pi-qrcode',
         route: '/vendedores/escanear',
-        roles: ['VENDEDOR'],
+        tipos: ['VENDEDOR'],
       },
     ],
   },
@@ -255,10 +314,10 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
   {
     label: 'Cartera',
     icon: 'pi pi-chart-line',
-    roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [
       {
         label: 'Cartera',
+        codigo: 'cartera.cartera',
         icon: 'pi pi-chart-line',
         route: '/cartera',
         highlight: true,
@@ -270,25 +329,28 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
   {
     label: 'Tesorería',
     icon: 'pi pi-wallet',
-    roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [
       {
         label: 'Cuentas Bancarias',
+        codigo: 'tesoreria.cuentas-bancarias',
         icon: 'pi pi-credit-card',
         route: '/tesoreria/cuentas-bancarias',
       },
       {
         label: 'Egresos',
+        codigo: 'tesoreria.egresos',
         icon: 'pi pi-arrow-up-right',
         route: '/tesoreria/egresos',
       },
       {
         label: 'Recaudos',
+        codigo: 'tesoreria.recaudos',
         icon: 'pi pi-arrow-down-left',
         route: '/tesoreria/recaudos',
       },
       {
         label: 'Conciliación',
+        codigo: 'tesoreria.conciliacion',
         icon: 'pi pi-check-square',
         route: '/tesoreria/conciliacion',
       },
@@ -296,11 +358,14 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
       // confundir con "Traslados" de inventario, que está en otro módulo.
       {
         label: 'Traslados de Fondos',
+        codigo: 'tesoreria.traslados-de-fondos',
         icon: 'pi pi-sync',
         route: '/tesoreria/traslados-fondos',
       },
       {
         label: 'Obligaciones',
+        // Submódulo propio desde V192 (antes no lo tenía y quedaba oculta).
+        codigo: 'tesoreria.obligaciones',
         icon: 'pi pi-money-bill',
         route: '/obligaciones',
       },
@@ -314,31 +379,49 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
     items: [
       {
         label: 'Comprobantes',
+        codigo: 'caja.comprobantes',
         icon: 'pi pi-file-check',
         route: '/comprobantes',
-        roles: ['SUPER_ADMIN', 'ADMIN', 'CAJERO'],
       },
       {
         label: 'Usuarios',
+        codigo: 'caja.usuarios',
         icon: 'pi pi-user',
         route: '/admin/usuarios',
-        roles: ['SUPER_ADMIN', 'ADMIN'],
+      },
+      {
+        label: 'Perfiles y Permisos',
+        codigo: 'caja.perfiles',
+        icon: 'pi pi-lock',
+        route: '/admin/perfiles',
+      },
+      // Quién anuló, editó, autorizó o cambió qué (V192).
+      {
+        label: 'Bitácora',
+        codigo: 'caja.bitacora',
+        icon: 'pi pi-history',
+        route: '/admin/bitacora',
       },
       // Que entro a las cajas sin ser del turno. No es una bandeja de
       // pendientes: es donde el administrador revisa el rastro.
       {
         label: 'Supervision de Caja',
+        codigo: 'caja.supervision-de-caja',
         icon: 'pi pi-shield',
         route: '/caja/supervision',
-        roles: ['SUPER_ADMIN', 'ADMIN'],
       },
       {
         label: 'Cajas',
+        codigo: 'caja.cajas',
         icon: 'pi pi-desktop',
         route: '/caja/cajas',
-        roles: ['SUPER_ADMIN', 'ADMIN'],
       },
-      { label: 'Turnos', icon: 'pi pi-clock', route: '/caja/turnos' },
+      {
+        label: 'Turnos',
+        codigo: 'caja.turnos',
+        icon: 'pi pi-clock',
+        route: '/caja/turnos',
+      },
     ],
   },
 
@@ -350,16 +433,17 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
   {
     label: 'Contabilidad',
     icon: 'pi pi-book',
-    roles: ['SUPER_ADMIN', 'ADMIN'],
     hubRoute: '/contabilidad',
     items: [
       {
         label: 'Plan de Cuentas',
+        codigo: 'contabilidad.plan-de-cuentas',
         icon: 'pi pi-list',
         route: '/contabilidad/plan-cuentas',
       },
       {
         label: 'Asientos Contables',
+        codigo: 'contabilidad.asientos-contables',
         icon: 'pi pi-book',
         route: '/contabilidad/asientos',
       },
@@ -367,41 +451,49 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         // El label define el submódulo: normalize('Notas Contables') = 'notas-contables'
         // (docs/sql/menu_submodulo_notas_contables.sql en el backend).
         label: 'Notas Contables',
+        codigo: 'contabilidad.notas-contables',
         icon: 'pi pi-file-edit',
         route: '/contabilidad/notas',
       },
       {
         label: 'Revisión de Comprobantes',
+        codigo: 'contabilidad.revision-de-comprobantes',
         icon: 'pi pi-check-square',
         route: '/contabilidad/revision',
       },
       {
         label: 'Conceptos de Caja',
+        codigo: 'contabilidad.conceptos-de-caja',
         icon: 'pi pi-tags',
         route: '/contabilidad/conceptos-caja',
       },
       {
         label: 'Saldos Iniciales',
+        codigo: 'contabilidad.saldos-iniciales',
         icon: 'pi pi-database',
         route: '/contabilidad/saldos-iniciales',
       },
       {
         label: 'Centros de Costo',
+        codigo: 'contabilidad.centros-de-costo',
         icon: 'pi pi-sitemap',
         route: '/contabilidad/centros-costo',
       },
       {
         label: 'Períodos Contables',
+        codigo: 'contabilidad.periodos-contables',
         icon: 'pi pi-lock',
         route: '/contabilidad/periodos',
       },
       {
         label: 'Resultados del Período',
+        codigo: 'contabilidad.resultados-del-periodo',
         icon: 'pi pi-chart-line',
         route: '/contabilidad/cierre',
       },
       {
         label: 'Balance General',
+        codigo: 'contabilidad.balance-general',
         icon: 'pi pi-chart-bar',
         route: '/contabilidad/balance-general',
       },
@@ -409,6 +501,7 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         // normalize('Libros Contables') = 'libros-contables'
         // (docs/sql/menu_submodulo_libros_contables.sql en el backend).
         label: 'Libros Contables',
+        codigo: 'contabilidad.libros-contables',
         icon: 'pi pi-book',
         route: '/contabilidad/libros',
       },
@@ -416,6 +509,7 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         // normalize('Declaraciones') = 'declaraciones'
         // (docs/sql/menu_submodulo_declaraciones.sql en el backend).
         label: 'Declaraciones',
+        codigo: 'contabilidad.declaraciones',
         icon: 'pi pi-file-edit',
         route: '/contabilidad/declaraciones',
       },
@@ -423,68 +517,86 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         // normalize('Importar Datos') = 'importar-datos'
         // (docs/sql/menu_submodulo_importar_datos.sql en el backend).
         label: 'Importar Datos',
+        codigo: 'contabilidad.importar-datos',
         icon: 'pi pi-upload',
         route: '/contabilidad/importar',
       },
       {
         label: 'Estado de Cuenta',
+        codigo: 'contabilidad.estado-de-cuenta',
         icon: 'pi pi-file-edit',
         route: '/contabilidad/estado-cuenta',
       },
       {
         label: 'Reporte IVA',
+        codigo: 'contabilidad.reporte-iva',
         icon: 'pi pi-percentage',
         route: '/contabilidad/reporte-iva',
       },
-      { label: 'Gastos', icon: 'pi pi-wallet', route: '/gastos' },
+      {
+        label: 'Gastos',
+        codigo: 'contabilidad.gastos',
+        icon: 'pi pi-wallet',
+        route: '/gastos',
+      },
       {
         label: 'Activos Fijos',
+        codigo: 'contabilidad.activos-fijos',
         icon: 'pi pi-building',
         route: '/contabilidad/activos-fijos',
       },
       {
         label: 'Categorías Contables',
+        codigo: 'contabilidad.categorias-contables',
         icon: 'pi pi-sitemap',
         route: '/contabilidad/categorias-contables',
       },
       {
         // Fase 4: submódulos en docs/sql/menu_submodulos_f2_f4.sql (backend).
         label: 'Parametrización Contable',
+        codigo: 'contabilidad.parametrizacion-contable',
         icon: 'pi pi-sliders-h',
         route: '/contabilidad/parametrizacion',
       },
       {
         label: 'Balance de Prueba',
+        codigo: 'contabilidad.balance-de-prueba',
         icon: 'pi pi-list-check',
         route: '/contabilidad/balance-prueba',
       },
       {
         label: 'Herramientas del Contador',
+        codigo: 'contabilidad.herramientas-del-contador',
         icon: 'pi pi-wrench',
         route: '/contabilidad/herramientas',
       },
       {
         label: 'Tarifas Retención',
+        codigo: 'contabilidad.tarifas-retencion',
         icon: 'pi pi-percentage',
         route: '/contabilidad/tarifas-retencion',
       },
       {
         label: 'Conciliación Bancaria',
+        codigo: 'contabilidad.conciliacion-bancaria',
         icon: 'pi pi-sync',
         route: '/contabilidad/conciliacion',
       },
       {
         label: 'Cierre Anual',
+        codigo: 'contabilidad.cierre-anual',
         icon: 'pi pi-calendar',
         route: '/contabilidad/cierre-anual',
       },
       {
         label: 'Estados Financieros',
+        codigo: 'contabilidad.estados-financieros',
         icon: 'pi pi-chart-pie',
         route: '/contabilidad/eeff',
       },
       {
         label: 'Exógena DIAN',
+        codigo: 'contabilidad.exogena-dian',
         icon: 'pi pi-file-excel',
         route: '/contabilidad/exogena',
       },
@@ -495,7 +607,6 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
   {
     label: 'Recursos Humanos',
     icon: 'pi pi-id-card',
-    roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [],
     subgroups: [
       {
@@ -504,57 +615,73 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         items: [
           {
             label: 'Empleados',
+            codigo: 'recursos-humanos.empleados',
             icon: 'pi pi-users',
             route: '/nomina/empleados',
           },
           {
             label: 'Saldos iniciales',
+            codigo: 'recursos-humanos.saldos-iniciales',
             icon: 'pi pi-database',
             route: '/nomina/saldos-iniciales',
           },
           {
             label: 'Proyectos y Frentes',
+            codigo: 'recursos-humanos.proyectos-y-frentes',
             icon: 'pi pi-building',
             route: '/proyectos',
           },
           {
             label: 'Conceptos',
+            codigo: 'recursos-humanos.conceptos',
             icon: 'pi pi-sliders-h',
             route: '/nomina/conceptos',
           },
           {
             label: 'Períodos',
+            codigo: 'recursos-humanos.periodos',
             icon: 'pi pi-calendar',
             route: '/nomina/periodos',
           },
           {
             label: 'Liquidación Nómina',
+            codigo: 'recursos-humanos.liquidacion-nomina',
             icon: 'pi pi-calculator',
             route: '/nomina/liquidacion',
           },
           {
             label: 'Preliquidación / Auditoría',
+            codigo: 'recursos-humanos.preliquidacion-auditoria',
             icon: 'pi pi-verified',
             route: '/nomina/preliquidacion',
           },
           {
             label: 'Nómina Electrónica',
+            codigo: 'recursos-humanos.nomina-electronica',
             icon: 'pi pi-file-o',
             route: '/nomina/electronica',
           },
-          { label: 'PILA', icon: 'pi pi-shield', route: '/nomina/pila' },
+          {
+            label: 'PILA',
+            codigo: 'recursos-humanos.pila',
+            icon: 'pi pi-shield',
+            route: '/nomina/pila',
+          },
           {
             label: 'Prestaciones',
+            codigo: 'recursos-humanos.prestaciones',
             icon: 'pi pi-gift',
             route: '/nomina/prestaciones',
           },
           {
             label: 'Comisiones',
+            codigo: 'recursos-humanos.comisiones',
             icon: 'pi pi-percentage',
             route: '/comisiones/configuracion',
           },
           {
             label: 'Liquidar Comisiones',
+            codigo: 'recursos-humanos.liquidar-comisiones',
             icon: 'pi pi-wallet',
             route: '/comisiones/liquidaciones',
           },
@@ -566,41 +693,49 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         items: [
           {
             label: 'Digitación Asistencia',
+            codigo: 'recursos-humanos.digitacion-asistencia',
             icon: 'pi pi-pencil',
             route: '/asistencia-frente/digitacion',
           },
           {
             label: 'Revisión Asistencia (Frente)',
+            codigo: 'recursos-humanos.revision-asistencia-frente',
             icon: 'pi pi-check-square',
             route: '/asistencia-frente/revision',
           },
           {
             label: 'Preliquidación (Frente)',
+            codigo: 'recursos-humanos.preliquidacion-frente',
             icon: 'pi pi-calculator',
             route: '/asistencia-frente/preliquidacion',
           },
           {
             label: 'Turnos Empleado',
+            codigo: 'recursos-humanos.turnos-empleado',
             icon: 'pi pi-clock',
             route: '/asistencia/turnos',
           },
           {
             label: 'Marcaje',
+            codigo: 'recursos-humanos.marcaje',
             icon: 'pi pi-stopwatch',
             route: '/asistencia/marcaje',
           },
           {
             label: 'Revisión asistencia',
+            codigo: 'recursos-humanos.revision-asistencia',
             icon: 'pi pi-check-square',
             route: '/asistencia/revision',
           },
           {
             label: 'Novedades asistencia',
+            codigo: 'recursos-humanos.novedades-asistencia',
             icon: 'pi pi-bolt',
             route: '/asistencia/novedades',
           },
           {
             label: 'Autorizaciones',
+            codigo: 'recursos-humanos.autorizaciones',
             icon: 'pi pi-shield',
             route: '/asistencia/autorizaciones',
           },
@@ -612,16 +747,19 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         items: [
           {
             label: 'Configuración laboral',
+            codigo: 'recursos-humanos.configuracion-laboral',
             icon: 'pi pi-sliders-h',
             route: '/laboral/configuracion',
           },
           {
             label: 'Calendario laboral',
+            codigo: 'recursos-humanos.calendario-laboral',
             icon: 'pi pi-calendar',
             route: '/laboral/calendario',
           },
           {
             label: 'Config. Nómina',
+            codigo: 'recursos-humanos.config-nomina',
             icon: 'pi pi-cog',
             route: '/nomina/config',
           },
@@ -634,36 +772,46 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
   {
     label: 'Reportes',
     icon: 'pi pi-chart-bar',
-    roles: ['SUPER_ADMIN', 'ADMIN'],
     items: [
       {
         label: 'Reporte gerencial',
+        codigo: 'reportes.reporte-gerencial',
         icon: 'pi pi-shield',
         route: '/reportes/gerencial',
       },
-      { label: 'Ventas', icon: 'pi pi-chart-line', route: '/reportes/ventas' },
+      {
+        label: 'Ventas',
+        codigo: 'reportes.ventas',
+        icon: 'pi pi-chart-line',
+        route: '/reportes/ventas',
+      },
       {
         label: 'Inventario',
+        codigo: 'reportes.inventario',
         icon: 'pi pi-chart-pie',
         route: '/reportes/inventario',
       },
       {
         label: 'Estado de cuenta Reporte',
+        codigo: 'reportes.estado-de-cuenta-reporte',
         icon: 'pi pi-users',
         route: '/reportes/cartera',
       },
       {
         label: 'Gastos Reporte',
+        codigo: 'reportes.gastos-reporte',
         icon: 'pi pi-wallet',
         route: '/reportes/gastos',
       },
       {
         label: 'Movimiento de inventario',
+        codigo: 'reportes.movimiento-de-inventario',
         icon: 'pi pi-box',
         route: '/reportes/kardex',
       },
       {
         label: 'Facturación Electrónica',
+        codigo: 'reportes.facturacion-electronica',
         icon: 'pi pi-file-export',
         route: '/reportes/facturacion-electronica',
       },
@@ -671,14 +819,15 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         // normalize('Carritos Abandonados') = 'carritos-abandonados'
         // (docs/sql/menu_submodulo_carritos_abandonados.sql en el backend).
         label: 'Carritos Abandonados',
+        codigo: 'reportes.carritos-abandonados',
         icon: 'pi pi-shopping-cart',
         route: '/reportes/carritos-abandonados',
       },
       {
         label: 'Reportes Avanzados',
+        codigo: 'reportes.reportes-avanzados',
         icon: 'pi pi-chart-bar',
         route: '/reportes/avanzados',
-        roles: ['SUPER_ADMIN', 'ADMIN'],
       },
     ],
   },
@@ -691,15 +840,15 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
     items: [
       {
         label: 'Terceros',
+        codigo: 'terceros-y-sucursales.terceros',
         icon: 'pi pi-users',
         route: '/terceros',
-        roles: ['SUPER_ADMIN', 'ADMIN'],
       },
       {
         label: 'Sucursales',
+        codigo: 'terceros-y-sucursales.sucursales',
         icon: 'pi pi-building',
         route: '/admin/sucursales',
-        roles: ['SUPER_ADMIN', 'ADMIN'],
       },
     ],
   },

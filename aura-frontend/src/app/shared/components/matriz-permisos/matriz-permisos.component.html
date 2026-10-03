@@ -1,0 +1,109 @@
+<div class="matriz">
+  <div class="matriz-barra">
+    <span class="search-wrap">
+      <i class="pi pi-search"></i>
+      <input
+        pInputText
+        class="search-input"
+        [(ngModel)]="filtro"
+        placeholder="Buscar módulo o pantalla…"
+      />
+    </span>
+    <div class="matriz-barra__acciones">
+      <button type="button" class="link-btn" (click)="expandirTodo(true)">
+        Expandir todo
+      </button>
+      <button type="button" class="link-btn" (click)="expandirTodo(false)">
+        Contraer todo
+      </button>
+    </div>
+  </div>
+
+  <div class="leyenda" *ngIf="modo === 'excepciones'">
+    <span
+      ><span class="celda celda--hereda-on mini"
+        ><i class="pi pi-check"></i
+      ></span>
+      Lo da su perfil</span
+    >
+    <span
+      ><span class="celda celda--da mini"><i class="pi pi-check"></i></span> Se
+      le da a este usuario</span
+    >
+    <span
+      ><span class="celda celda--quita mini"><i class="pi pi-times"></i></span>
+      Se le quita a este usuario</span
+    >
+    <span class="leyenda__nota"
+      >Clic en una casilla: alterna entre lo del perfil y el ajuste.</span
+    >
+  </div>
+
+  <div class="tabla">
+    <div class="fila fila--cabecera">
+      <div class="col-nombre">Módulo / pantalla</div>
+      <div class="col-accion" *ngFor="let a of acciones">{{ titulos[a] }}</div>
+    </div>
+
+    <ng-container *ngFor="let m of modulosVisibles; trackBy: trackModulo">
+      <div class="fila fila--modulo" (click)="toggleModulo(m)">
+        <div class="col-nombre">
+          <i
+            class="pi"
+            [class.pi-chevron-down]="!cerrados.has(m.codigo) || filtro"
+            [class.pi-chevron-right]="cerrados.has(m.codigo) && !filtro"
+          ></i>
+          <span class="nombre-modulo">{{ m.nombre }}</span>
+          <span class="contador">{{ contarModulo(m) }}/{{ m.ids.length }}</span>
+        </div>
+        <div class="col-accion" *ngFor="let a of acciones">
+          <button
+            type="button"
+            class="celda celda--grupo"
+            [ngClass]="'celda--' + estadoGrupo(m.ids, a)"
+            [disabled]="soloLectura"
+            [pTooltip]="'Todo ' + m.nombre + ': ' + titulos[a].toLowerCase()"
+            tooltipPosition="top"
+            (click)="clicModulo(m, a, $event)"
+          >
+            <i
+              class="pi"
+              [class.pi-check]="estadoGrupo(m.ids, a) === 'todo'"
+              [class.pi-minus]="estadoGrupo(m.ids, a) === 'parcial'"
+            ></i>
+          </button>
+        </div>
+      </div>
+
+      <ng-container *ngIf="!cerrados.has(m.codigo) || filtro">
+        <div
+          class="fila"
+          *ngFor="let f of m.filas; trackBy: trackFila"
+          [class.fila--grupo]="f.nodo.esGrupo"
+          [class.fila--hija]="f.nivel === 1"
+        >
+          <div class="col-nombre">
+            <i *ngIf="f.nodo.esGrupo" class="pi pi-folder-open icono-grupo"></i>
+            {{ f.nodo.nombre }}
+          </div>
+          <div class="col-accion" *ngFor="let a of acciones">
+            <button
+              type="button"
+              [class]="claseCelda(f, a)"
+              [disabled]="soloLectura"
+              [pTooltip]="tooltipCelda(f, a)"
+              tooltipPosition="top"
+              (click)="clicCelda(f, a)"
+            >
+              <i [class]="iconoCelda(f, a)"></i>
+            </button>
+          </div>
+        </div>
+      </ng-container>
+    </ng-container>
+
+    <div class="vacio" *ngIf="modulosVisibles.length === 0">
+      No hay pantallas que coincidan con la búsqueda.
+    </div>
+  </div>
+</div>

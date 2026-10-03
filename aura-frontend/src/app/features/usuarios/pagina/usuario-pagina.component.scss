@@ -1,0 +1,238 @@
+:host {
+  display: block;
+}
+
+.cuerpo {
+  padding: 1rem 1.5rem 1.5rem;
+  container-type: inline-size;
+}
+
+.seccion {
+  & + & {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  &__titulo {
+    margin: 0 0 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1e293b;
+  }
+}
+
+.ayuda {
+  margin: 0 0 1rem;
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.aviso {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  font-size: 0.82rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 1.25rem;
+}
+
+@container (max-width: 640px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+
+  input {
+    width: 100%;
+  }
+
+  // PrimeNG no pasa styleClass al host: se estiran aquí.
+  ::ng-deep p-password,
+  ::ng-deep .p-password,
+  ::ng-deep .p-password input,
+  ::ng-deep p-dropdown,
+  ::ng-deep .p-dropdown,
+  ::ng-deep p-inputnumber,
+  ::ng-deep .p-inputnumber {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+.field-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.field-hint {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: #94a3b8;
+}
+
+.field-error {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.76rem;
+  color: #dc2626;
+}
+
+.req {
+  color: #dc2626;
+}
+
+.tercero {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+
+  &__buscar {
+    flex: 1;
+  }
+
+  &__nuevo {
+    flex-shrink: 0;
+  }
+}
+
+@container (max-width: 640px) {
+  .tercero {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.ficha {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0.9rem 0 0.4rem;
+}
+
+@container (max-width: 640px) {
+  .ficha {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.dato {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  min-width: 0;
+
+  &__label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #94a3b8;
+  }
+
+  &__valor {
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: #1e293b;
+    overflow-wrap: anywhere;
+  }
+}
+
+.opciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.95rem;
+  border: 1.5px solid #e0e3eb;
+  border-radius: 10px;
+  background: #fff;
+  color: #475569;
+  font-family: inherit;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  i {
+    font-size: 0.8rem;
+  }
+
+  &:hover {
+    border-color: #93c5fd;
+  }
+
+  &--activa {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+}
+
+.sedes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.6rem;
+}
+
+.sede {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  min-width: 0;
+
+  &--marcada {
+    border-color: #93c5fd;
+    background: #f8fbff;
+  }
+
+  &__nombre {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #334155;
+    cursor: pointer;
+  }
+
+  &__estrella {
+    border: none;
+    background: transparent;
+    color: #cbd5e1;
+    cursor: pointer;
+    font-size: 1rem;
+
+    &--activa {
+      color: #f59e0b;
+    }
+  }
+}

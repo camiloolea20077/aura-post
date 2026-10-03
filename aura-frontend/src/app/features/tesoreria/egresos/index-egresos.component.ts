@@ -32,11 +32,13 @@ import {
 import { CuentaBancariaModel } from '../../../core/models/cuenta-bancaria.model';
 
 import { aFechaLocal } from '../../../shared/utils/fecha.util';
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 @Component({
   selector: 'app-index-egresos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     ButtonModule,

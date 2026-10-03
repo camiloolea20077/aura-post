@@ -1,0 +1,63 @@
+<div class="cac" [class.cac--disabled]="disabled" [class.cac--elegido]="hayElegido">
+  <p-autoComplete
+    [(ngModel)]="valorInput"
+    [suggestions]="sugerencias"
+    optionLabel="label"
+    [placeholder]="placeholder"
+    [minLength]="1"
+    [delay]="150"
+    [forceSelection]="false"
+    [disabled]="disabled"
+    [appendTo]="appendTo"
+    [showEmptyMessage]="true"
+    emptyMessage="Sin coincidencias. Use la lupa para buscar con más criterios."
+    (completeMethod)="buscar($event)"
+    (onSelect)="onSelect($event)"
+    (onBlur)="onBlur()"
+    styleClass="cac-ac"
+    inputStyleClass="cac-input"
+    panelStyleClass="cac-panel"
+  >
+    <ng-template let-c pTemplate="item">
+      <div class="cac-item" [class.cac-item--inactivo]="c.activa === false" [class.cac-item--grupo]="!c.auxiliar">
+        <span class="cac-item__codigo">{{ c.codigo }}</span>
+        <span class="cac-item__nombre">{{ c.nombre }}</span>
+        <span class="cac-item__meta" *ngIf="!c.auxiliar">agrupa</span>
+      </div>
+    </ng-template>
+  </p-autoComplete>
+
+  <button
+    *ngIf="showClear && hayElegido && !disabled"
+    type="button"
+    class="cac-clear"
+    (click)="limpiar()"
+    pTooltip="Quitar"
+    tooltipPosition="top"
+    aria-label="Quitar cuenta"
+  >
+    <i class="pi pi-times"></i>
+  </button>
+
+  <button
+    type="button"
+    class="cac-lupa"
+    [disabled]="disabled"
+    (click)="abrirBuscador()"
+    pTooltip="Buscador avanzado de cuentas"
+    tooltipPosition="top"
+    aria-label="Buscador avanzado de cuentas"
+  >
+    <i class="pi pi-search"></i>
+  </button>
+</div>
+
+<app-buscador-cuenta-dialog
+  [(visible)]="buscadorVisible"
+  [header]="header"
+  [cuentas]="admitidas"
+  [plan]="plan"
+  [soloMovimiento]="exigeMovimiento"
+  [textoInicial]="textoBuscador"
+  (cuentaSelected)="elegir($event)"
+></app-buscador-cuenta-dialog>

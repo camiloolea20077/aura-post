@@ -68,10 +68,13 @@ export interface PresentacionFormItem {
   _esNueva: boolean;
 }
 
+import { CuentaAutocompleteComponent } from '../../../../shared/components/cuenta-autocomplete/cuenta-autocomplete.component';
+
 @Component({
   selector: 'app-form-productos',
   standalone: true,
   imports: [
+    CuentaAutocompleteComponent,
     CommonModule,
     ReactiveFormsModule,
     CheckboxModule,

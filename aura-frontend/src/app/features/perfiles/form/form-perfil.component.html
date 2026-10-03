@@ -1,0 +1,291 @@
+<p-toast />
+
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-lock"></i></span>
+        <div>
+          <h1 class="title">{{ id ? nombre || "Perfil" : "Nuevo perfil" }}</h1>
+          <p class="subtitle">
+            <ng-container *ngIf="perfil?.esSistema"
+              >Perfil del sistema ·
+            </ng-container>
+            <ng-container *ngIf="perfil"
+              >{{ perfil.usuarios }} usuario(s) con este perfil</ng-container
+            >
+            <ng-container *ngIf="!perfil"
+              >Elija qué pantallas ve y qué puede hacer en cada
+              una</ng-container
+            >
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button
+            pButton
+            type="button"
+            icon="pi pi-arrow-left"
+            label="Volver"
+            class="p-button-outlined p-button-secondary"
+            (click)="volver()"
+          ></button>
+          <button
+            *ngIf="id && store.puede('caja.perfiles', 'CREAR')"
+            pButton
+            type="button"
+            icon="pi pi-copy"
+            label="Duplicar"
+            class="p-button-outlined"
+            (click)="duplicar()"
+          ></button>
+          <button
+            *ngIf="!soloLectura"
+            pButton
+            type="button"
+            icon="pi pi-save"
+            label="Guardar"
+            class="btn-aura"
+            [loading]="guardando"
+            (click)="guardar()"
+          ></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cuerpo" *ngIf="cargando">
+      <p-skeleton height="2.5rem" styleClass="mb-2" />
+      <p-skeleton height="18rem" />
+    </div>
+
+    <div class="cuerpo" *ngIf="!cargando">
+      <div class="aviso" *ngIf="esAdministrador">
+        <i class="pi pi-info-circle"></i>
+        <span>
+          El perfil <strong>Administrador</strong> da todo lo que la empresa
+          tiene activo, incluidos los módulos que se agreguen después, y no se
+          edita. Para un administrador con menos acceso (por ejemplo, sin
+          Contabilidad), use <strong>Duplicar</strong> y quite lo que no quiera.
+        </span>
+      </div>
+
+      <section class="seccion">
+        <h3 class="seccion__titulo">Datos del perfil</h3>
+        <div class="grid">
+          <div class="field">
+            <label class="field-label">Nombre <span class="req">*</span></label>
+            <input
+              pInputText
+              [(ngModel)]="nombre"
+              [disabled]="soloLectura || !!perfil?.esSistema"
+              maxlength="80"
+              placeholder="Ej. Auxiliar contable"
+            />
+          </div>
+          <div class="field">
+            <label class="field-label">Descripción</label>
+            <input
+              pInputText
+              [(ngModel)]="descripcion"
+              [disabled]="soloLectura"
+              maxlength="300"
+              placeholder="Para qué es este perfil"
+            />
+          </div>
+          <div class="field">
+            <label class="field-label">¿Acceso total?</label>
+            <div class="opciones">
+              <button
+                type="button"
+                class="opcion"
+                [class.opcion--activa]="accesoTotal"
+                [disabled]="soloLectura || !puedeAccesoTotal"
+                (click)="setAccesoTotal(true)"
+              >
+                <i
+                  class="pi"
+                  [class.pi-circle-fill]="accesoTotal"
+                  [class.pi-circle]="!accesoTotal"
+                ></i>
+                Sí
+              </button>
+              <button
+                type="button"
+                class="opcion"
+                [class.opcion--activa]="!accesoTotal"
+                [disabled]="soloLectura || !puedeAccesoTotal"
+                (click)="setAccesoTotal(false)"
+              >
+                <i
+                  class="pi"
+                  [class.pi-circle-fill]="!accesoTotal"
+                  [class.pi-circle]="accesoTotal"
+                ></i>
+                No
+              </button>
+            </div>
+            <small class="field-hint"
+              >Sí = todo lo que la empresa tenga activo, sin elegir pantalla por
+              pantalla.</small
+            >
+          </div>
+          <div class="field">
+            <label class="field-label">¿Activo?</label>
+            <div class="opciones">
+              <button
+                type="button"
+                class="opcion"
+                [class.opcion--activa]="activo"
+                [disabled]="soloLectura || !!perfil?.esSistema"
+                (click)="setActivo(true)"
+              >
+                <i
+                  class="pi"
+                  [class.pi-circle-fill]="activo"
+                  [class.pi-circle]="!activo"
+                ></i>
+                Sí
+              </button>
+              <button
+                type="button"
+                class="opcion"
+                [class.opcion--activa]="!activo"
+                [disabled]="soloLectura || !!perfil?.esSistema"
+                (click)="setActivo(false)"
+              >
+                <i
+                  class="pi"
+                  [class.pi-circle-fill]="!activo"
+                  [class.pi-circle]="activo"
+                ></i>
+                No
+              </button>
+            </div>
+            <small class="field-hint"
+              >Un perfil inactivo deja sin acceso a los usuarios que lo
+              tengan.</small
+            >
+          </div>
+        </div>
+      </section>
+
+      <section class="seccion" *ngIf="!accesoTotal">
+        <h3 class="seccion__titulo">
+          Permisos
+          <span class="seccion__extra"
+            >{{ contadorPantallas }} pantalla(s) visibles</span
+          >
+        </h3>
+        <p class="seccion__ayuda">
+          Marque qué puede hacer en cada pantalla. Crear, editar o anular
+          incluyen ver. Clic en el círculo de un módulo o grupo para marcar o
+          quitar todo de una vez.
+        </p>
+        <app-matriz-permisos
+          [arbol]="arbol"
+          modo="perfil"
+          [valores]="permisos"
+          [soloLectura]="soloLectura"
+          (valoresChange)="onPermisos($event)"
+        />
+      </section>
+
+      <section class="seccion" *ngIf="!accesoTotal">
+        <h3 class="seccion__titulo">Límites y sedes</h3>
+        <p class="seccion__ayuda">
+          Por encima del límite, la venta pide la autorización de un supervisor
+          (usuario y PIN) en el mismo equipo. Vacío = sin límite.
+        </p>
+        <div class="grid">
+          <div class="field">
+            <label class="field-label">Descuento máximo</label>
+            <p-inputNumber
+              [(ngModel)]="descuentoMaxPct"
+              [disabled]="soloLectura"
+              [min]="0"
+              [max]="100"
+              [maxFractionDigits]="2"
+              suffix=" %"
+              placeholder="Sin límite"
+            />
+            <small class="field-hint"
+              >Por línea o general (se suman: 10% + 10% = 19%). Las reglas de
+              descuento automáticas no cuentan.</small
+            >
+          </div>
+          <div class="field">
+            <label class="field-label">Rebaja máxima de precio</label>
+            <p-inputNumber
+              [(ngModel)]="rebajaPrecioMaxPct"
+              [disabled]="soloLectura"
+              [min]="0"
+              [max]="100"
+              [maxFractionDigits]="2"
+              suffix=" %"
+              placeholder="Sin límite"
+            />
+            <small class="field-hint"
+              >Bajar el precio en el POS, contra el menor precio del producto
+              (precios, listas y precios especiales).</small
+            >
+          </div>
+          <div class="field">
+            <label class="field-label">¿Todas las sedes?</label>
+            <div class="opciones">
+              <button
+                type="button"
+                class="opcion"
+                [class.opcion--activa]="todasSedes"
+                [disabled]="soloLectura"
+                (click)="setTodasSedes(true)"
+              >
+                <i
+                  class="pi"
+                  [class.pi-circle-fill]="todasSedes"
+                  [class.pi-circle]="!todasSedes"
+                ></i>
+                Sí
+              </button>
+              <button
+                type="button"
+                class="opcion"
+                [class.opcion--activa]="!todasSedes"
+                [disabled]="soloLectura"
+                (click)="setTodasSedes(false)"
+              >
+                <i
+                  class="pi"
+                  [class.pi-circle-fill]="!todasSedes"
+                  [class.pi-circle]="todasSedes"
+                ></i>
+                Solo las suyas
+              </button>
+            </div>
+            <small class="field-hint"
+              >Solo las suyas = ve y trabaja únicamente en las sedes asignadas
+              al usuario.</small
+            >
+          </div>
+        </div>
+      </section>
+
+      <section class="seccion" *ngIf="!accesoTotal">
+        <h3 class="seccion__titulo">Acciones especiales</h3>
+        <p class="seccion__ayuda">
+          Acciones delicadas que van aparte de crear, editar o anular. "Igual
+          que editar" = la tiene quien puede editar esa pantalla.
+        </p>
+        <app-acciones-especiales
+          [catalogo]="catalogo"
+          [arbol]="arbol"
+          [valores]="especiales"
+          [base]="baseEspeciales"
+          [visibles]="visibles"
+          [soloLectura]="soloLectura"
+          (valoresChange)="onEspeciales($event)"
+        />
+      </section>
+    </div>
+  </div>
+</div>

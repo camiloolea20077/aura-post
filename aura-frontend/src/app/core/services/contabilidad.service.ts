@@ -469,8 +469,17 @@ export class ContabilidadService {
     /** Solo estos movimientos; vacío = todos los del rango. */
     detalleIds?: number[] | null;
     motivo: string;
-  }): Observable<ResponseModel<number>> {
-    return this.http.post<ResponseModel<number>>(`${this.api}/herramientas/traslado-cuentas`, dto);
+    /** También la configuración que apunta al origen (conceptos, formas de pago…). */
+    conConfiguracion?: boolean;
+    /** Dejar el origen como agrupadora si queda sin movimientos ni configuración. */
+    origenAgrupadora?: boolean;
+    /** No mover movimientos: solo la configuración. */
+    soloConfiguracion?: boolean;
+  }): Observable<ResponseModel<{ lineas: number; configuracion: number; origenAgrupadora: boolean }>> {
+    return this.http.post<ResponseModel<{ lineas: number; configuracion: number; origenAgrupadora: boolean }>>(
+      `${this.api}/herramientas/traslado-cuentas`,
+      dto,
+    );
   }
 
   historialTraslados(): Observable<ResponseModel<any[]>> {

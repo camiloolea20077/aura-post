@@ -20,20 +20,34 @@
         </ng-template>
         <p class="ayuda">
           Mueve los movimientos de una cuenta a otra en un rango de fechas (p. ej.
-          se registró en 5195 lo que era 5135). Solo toca meses abiertos. Cambia el
-          mayor, no la configuración: si la cuenta vieja sigue asignada a un
-          concepto, corrígela también en Parametrización.
+          se registró en 5195 lo que era 5135). Solo toca meses abiertos. También
+          puede pasar la configuración que usa la cuenta vieja (conceptos, formas
+          de pago, categorías, productos, impuestos…) para que lo nuevo se
+          registre en la nueva: así se pasa, por ejemplo, de 110505 a su auxiliar
+          11050501.
         </p>
         <div class="form-grid">
           <div class="campo campo--ancho">
             <label>Cuenta de origen</label>
-            <p-dropdown [(ngModel)]="origenId" (ngModelChange)="limpiarResumen()" [options]="cuentas" optionLabel="label"
-              optionValue="value" [filter]="true" filterBy="label" placeholder="De dónde sale" appendTo="body" />
+            <app-cuenta-autocomplete
+              [opciones]="cuentas"
+              [(ngModel)]="origenId"
+              (ngModelChange)="limpiarResumen()"
+              placeholder="De dónde sale"
+              appendTo="body"
+              [showClear]="false"
+            />
           </div>
           <div class="campo campo--ancho">
             <label>Cuenta de destino</label>
-            <p-dropdown [(ngModel)]="destinoId" (ngModelChange)="limpiarResumen()" [options]="cuentas" optionLabel="label"
-              optionValue="value" [filter]="true" filterBy="label" placeholder="A dónde va (auxiliar)" appendTo="body" />
+            <app-cuenta-autocomplete
+              [opciones]="cuentas"
+              [(ngModel)]="destinoId"
+              (ngModelChange)="limpiarResumen()"
+              placeholder="A dónde va (auxiliar)"
+              appendTo="body"
+              [showClear]="false"
+            />
           </div>
           <div class="campo">
             <label>Desde</label>
@@ -61,7 +75,7 @@
             {{ totalSeleccion.debitos | currency: "COP" : "symbol-narrow" : "1.0-2" }}, créditos
             {{ totalSeleccion.creditos | currency: "COP" : "symbol-narrow" : "1.0-2" }}.
           </p>
-          <div class="tabla-scroll">
+          <div class="tabla-scroll" *ngIf="resumen.lineas > 0">
             <p-table
               [value]="resumen.movimientos"
               [selection]="seleccion"
@@ -106,12 +120,35 @@
           <small class="sub" *ngIf="resumen.lineas > resumen.movimientos.length">
             Se muestran los primeros {{ resumen.movimientos.length }}; acorta el rango para verlos todos.
           </small>
+
+          <!-- Configuración que apunta a la cuenta de origen -->
+          <div class="config-origen" *ngIf="configuracion.length; else sinConfig">
+            <p>
+              <i class="pi pi-sliders-h"></i>
+              La cuenta de origen está configurada en:
+              <span *ngFor="let c of configuracion; let ultimo = last">
+                <strong>{{ c.nombre }}</strong> ({{ c.cantidad }}){{ ultimo ? "." : ", " }}
+              </span>
+            </p>
+            <div class="pregunta">
+              <label>¿Pasar también esa configuración a la cuenta destino?</label>
+              <p-selectButton [options]="siNo" [(ngModel)]="conConfiguracion" optionLabel="label" optionValue="value" />
+            </div>
+          </div>
+          <ng-template #sinConfig>
+            <p class="sub">Ninguna configuración usa la cuenta de origen.</p>
+          </ng-template>
+          <div class="pregunta">
+            <label>¿Dejar la cuenta de origen como agrupadora si queda vacía?</label>
+            <p-selectButton [options]="siNo" [(ngModel)]="origenAgrupadora" optionLabel="label" optionValue="value" />
+          </div>
+
           <div class="campo campo--ancho">
             <label>Motivo <span class="req">*</span></label>
             <input pInputText [(ngModel)]="motivoTraslado" maxlength="300" placeholder="Queda en la bitácora" />
           </div>
           <button pButton type="button" label="Trasladar" icon="pi pi-check" class="btn-aura"
-            [disabled]="trasladando || !seleccion.length" (click)="trasladar()"></button>
+            [disabled]="trasladando || !puedeTrasladar" (click)="trasladar()"></button>
         </div>
 
         <h3 class="section">Bitácora</h3>

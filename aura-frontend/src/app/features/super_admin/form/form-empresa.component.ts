@@ -34,6 +34,9 @@ import { PlatformService } from '../../../core/services/platform.service';
 import { TerceroService } from '../../../core/services/tercero.service';
 import { StorageService } from '../../../core/services/storage.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
+import { ModuloService } from '../modulos/services/modulo.service';
+import { ModuloPermiso } from '../permisos-empresa/models/permiso.model';
+import { ArbolModulosComponent } from '../shared/arbol-modulos/arbol-modulos.component';
 
 @Component({
   selector: 'app-form-empresa',
@@ -49,6 +52,7 @@ import { AlertService } from '../../../shared/pipes/alert.service';
     DropdownModule,
     SkeletonModule,
     TooltipModule,
+    ArbolModulosComponent,
   ],
   templateUrl: './form-empresa.component.html',
   styleUrls: ['./form-empresa.component.scss'],
@@ -96,6 +100,7 @@ export class FormEmpresaComponent implements OnInit {
     private readonly terceroService: TerceroService,
     private readonly storageService: StorageService,
     private readonly alert: AlertService,
+    private readonly moduloService: ModuloService,
     private readonly cdr: ChangeDetectorRef,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
@@ -161,7 +166,37 @@ export class FormEmpresaComponent implements OnInit {
       this.cargarEmpresa(this.empresaId);
     } else {
       this.aplicarValidadoresCreacion();
+      this.cargarCatalogoModulos();
     }
+  }
+
+  // ── Módulos que tendrá la empresa (solo al crear) ─────────
+  catalogoModulos: ModuloPermiso[] = [];
+  submodulosElegidos: number[] = [];
+
+  /** Todo marcado por defecto: una empresa nueva no debe nacer sin nada que ver. */
+  private async cargarCatalogoModulos(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.moduloService.arbol());
+      const lista: ModuloPermiso[] = res?.data ?? [];
+      this.catalogoModulos = lista.map((m) => ({
+        ...m,
+        activo: true,
+        submodulos: m.submodulos.map((s) => ({ ...s, activo: true })),
+      }));
+      this.submodulosElegidos = this.catalogoModulos.flatMap((m) => m.submodulos.map((s) => s.submoduloId));
+    } catch {
+      this.catalogoModulos = [];
+    }
+    this.cdr.markForCheck();
+  }
+
+  onModulos(ids: number[]): void {
+    this.submodulosElegidos = ids;
+  }
+
+  verModulos(): void {
+    if (this.empresaId) this.router.navigate(['/platform/permisos', this.empresaId]);
   }
 
   private aplicarValidadoresCreacion(): void {
@@ -290,6 +325,7 @@ export class FormEmpresaComponent implements OnInit {
             paisAdmin: v.paisAdmin,
             codigoPaisAdmin: v.codigoPaisAdmin,
             nombreSucursal: v.nombreSucursal,
+            submodulos: this.submodulosElegidos,
             facturaElectronica: v.facturaElectronica,
             factusClientId: v.factusClientId,
             factusClientSecret: v.factusClientSecret,

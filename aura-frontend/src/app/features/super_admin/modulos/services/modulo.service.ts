@@ -23,6 +23,11 @@ export class ModuloService {
     return this.http.post<any>(`${this.baseUrl}/modulos/page`, pageable);
   }
 
+  /** Catálogo de módulos y submódulos en árbol (para elegir módulos al crear una empresa). */
+  arbol(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/modulos/arbol`);
+  }
+
   getAllModulos(): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/modulos`);
   }

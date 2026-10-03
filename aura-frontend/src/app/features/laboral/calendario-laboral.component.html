@@ -24,7 +24,7 @@
           pTooltip="Carga los festivos nacionales de Colombia del año"
           (click)="cargarFestivos()"
         ></button>
-        <button
+        <button *appPuede="'recursos-humanos.calendario-laboral:CREAR'"
           pButton
           type="button"
           label="Agregar día"
@@ -97,7 +97,7 @@
             <span class="muted">{{ d.origen }}</span>
           </td>
           <td class="text-center">
-            <button
+            <button *appPuede="'recursos-humanos.calendario-laboral:ANULAR'"
               pButton
               icon="pi pi-trash"
               class="p-button-text p-button-danger p-button-sm p-button-rounded"

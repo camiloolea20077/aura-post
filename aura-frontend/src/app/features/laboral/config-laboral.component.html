@@ -13,7 +13,7 @@
         </div>
       </div>
       <div class="card-head__actions">
-        <button pButton type="button" label="Nueva vigencia" icon="pi pi-plus" class="btn-verde" (click)="nuevo()"></button>
+        <button *appPuede="'recursos-humanos.configuracion-laboral:CREAR'" pButton type="button" label="Nueva vigencia" icon="pi pi-plus" class="btn-verde" (click)="nuevo()"></button>
       </div>
     </div>
 
@@ -43,8 +43,8 @@
           <td class="text-center">{{ c.recargoExtraNocturna }}%</td>
           <td class="text-center">{{ c.recargoDominicalFestivo }}%</td>
           <td class="text-center">
-            <button pButton icon="pi pi-pencil" class="p-button-text p-button-sm p-button-rounded" pTooltip="Editar" (click)="editar(c)"></button>
-            <button pButton icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm p-button-rounded" pTooltip="Eliminar" (click)="eliminar(c)"></button>
+            <button *appPuede="'recursos-humanos.configuracion-laboral:EDITAR'" pButton icon="pi pi-pencil" class="p-button-text p-button-sm p-button-rounded" pTooltip="Editar" (click)="editar(c)"></button>
+            <button *appPuede="'recursos-humanos.configuracion-laboral:ANULAR'" pButton icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm p-button-rounded" pTooltip="Eliminar" (click)="eliminar(c)"></button>
           </td>
         </tr>
       </ng-template>

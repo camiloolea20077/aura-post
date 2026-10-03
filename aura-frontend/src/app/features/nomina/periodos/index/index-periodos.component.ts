@@ -20,6 +20,7 @@ import {
 import { AlertService } from '../../../../shared/pipes/alert.service';
 
 import { aFechaLocal } from '../../../../shared/utils/fecha.util';
+import { PuedeDirective } from '../../../../shared/directives/puede.directive';
 type TagSeverity =
   | 'success'
   | 'secondary'
@@ -33,6 +34,7 @@ type TagSeverity =
   selector: 'app-index-periodos',
   standalone: true,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     ButtonModule,

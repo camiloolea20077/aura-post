@@ -6,7 +6,9 @@ import {
   OnDestroy,
   OnInit,
   Output,
+  inject,
 } from '@angular/core';
+import { StateStore } from '../../../core/store/state';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -34,6 +36,9 @@ import { ESTADOS_SOLICITUD, SolicitudCreditoModel } from '../../../core/models/c
   styleUrls: ['./autorizaciones-credito.component.scss'],
 })
 export class AutorizacionesCreditoComponent implements OnInit, OnDestroy {
+  /** Acciones especiales del perfil (PLAN_PERMISOS P6). */
+  private readonly permisosStore = inject(StateStore);
+
   @Output() pendientesChange = new EventEmitter<number>();
 
   solicitudes: SolicitudCreditoModel[] = [];
@@ -42,6 +47,10 @@ export class AutorizacionesCreditoComponent implements OnInit, OnDestroy {
   readonly vigencias = [1, 4, 8, 24];
   vigencia: Record<number, number | undefined> = {};
   procesando: number | null = null;
+
+  get puedeAprobarCredito(): boolean {
+    return this.permisosStore.puede('cartera.cartera', 'APROBAR_CREDITO');
+  }
 
   rechazoVisible = false;
   rechazo: SolicitudCreditoModel | null = null;

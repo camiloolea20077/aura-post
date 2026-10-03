@@ -22,7 +22,7 @@
         <span></span>
       }
       <div class="card-head__actions">
-        <button
+        <button *appPuede="'recursos-humanos.empleados:CREAR'"
           pButton
           type="button"
           label="Nuevo contrato"
@@ -86,7 +86,7 @@
           <td class="text-right flex">
             <!-- El salario no se edita en línea: cambiarlo preserva el
                  histórico y pasa por su propia pantalla. -->
-            <button
+            <button *appPuede="'recursos-humanos.empleados:EDITAR'"
               pButton
               type="button"
               icon="pi pi-pencil"

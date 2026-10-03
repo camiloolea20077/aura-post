@@ -241,20 +241,16 @@
                 Cuenta contable
                 <span class="opcional" *ngIf="!sinCajaAbierta">(opcional)</span>
               </label>
-              <p-dropdown
+              <app-cuenta-autocomplete
+                [opciones]="cuentasPagoOpts"
                 formControlName="cuentaContableId"
-                [options]="cuentasPagoOpts"
-                optionLabel="label"
-                optionValue="value"
                 [placeholder]="
                   sinCajaAbierta
                     ? 'Elija dónde entra el dinero...'
                     : 'Entra a la caja abierta'
                 "
-                [filter]="true"
                 [showClear]="true"
-                styleClass="w-full"
-              ></p-dropdown>
+              />
               <small class="max-hint" *ngIf="sinCajaAbierta">
                 No tiene una caja abierta: elija la cuenta donde entra el
                 dinero, o abra caja para recibirlo allí.

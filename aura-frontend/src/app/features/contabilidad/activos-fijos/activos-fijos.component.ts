@@ -45,11 +45,16 @@ import { aFechaLocal } from '../../../shared/utils/fecha.util';
 import { Router } from '@angular/router';
 import { TerceroAutocompleteComponent } from '../../../shared/components/tercero-autocomplete/tercero-autocomplete.component';
 import { RetiroActivoDto } from '../../../core/models/activo-fijo.model';
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
+import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-autocomplete/cuenta-autocomplete.component';
+
 @Component({
   selector: 'app-activos-fijos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CuentaAutocompleteComponent,
+    PuedeDirective,
     CommonModule,
     FormsModule,
     TableModule,

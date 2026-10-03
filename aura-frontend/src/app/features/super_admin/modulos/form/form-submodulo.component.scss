@@ -1,4 +1,4 @@
-$indigo: #6366f1;
+$indigo: #2563eb;
 $border: #e2e8f0;
 $text: #1e293b;
 $muted: #94a3b8;
@@ -70,7 +70,7 @@ $green: #10b981;
 }
 
 ::ng-deep .btn-primary.p-button {
-  background: linear-gradient(135deg, $indigo, #818cf8) !important;
+  background: linear-gradient(135deg, $indigo, #60a5fa) !important;
   border: none !important;
   font-weight: 600 !important;
 }

@@ -7,7 +7,7 @@
         menor, consignar el efectivo del día, pasar dinero entre bancos.
       </p>
     </div>
-    <button
+    <button *appPuede="'tesoreria.traslados-de-fondos:CREAR'"
       pButton
       type="button"
       label="Nuevo traslado"
@@ -112,6 +112,7 @@
           </ng-template>
         </td>
         <td class="text-center">
+          <ng-container *appPuede="'tesoreria.traslados-de-fondos:ANULAR'">
           <button
             *ngIf="t.estado !== 'ANULADO'"
             pButton
@@ -122,6 +123,7 @@
             tooltipPosition="left"
             (click)="abrirAnular(t)"
           ></button>
+          </ng-container>
         </td>
       </tr>
     </ng-template>
@@ -273,17 +275,12 @@
 
         <ng-container *ngSwitchDefault>
           <label>Cuenta contable <span class="req">*</span></label>
-          <p-dropdown
+          <app-cuenta-autocomplete
+            [opciones]="cuentasOpts"
             formControlName="origenCuentaId"
-            [options]="cuentasOpts"
-            optionLabel="label"
-            optionValue="value"
             placeholder="Caja menor, otras cuentas de fondos..."
             [showClear]="true"
-            [filter]="true"
             appendTo="body"
-            filterBy="label"
-            styleClass="w-full mt-1"
           />
         </ng-container>
       </div>
@@ -334,16 +331,11 @@
 
         <ng-container *ngSwitchDefault>
           <label>Cuenta contable <span class="req">*</span></label>
-          <p-dropdown
+          <app-cuenta-autocomplete
+            [opciones]="cuentasOpts"
             formControlName="destinoCuentaId"
-            [options]="cuentasOpts"
-            optionLabel="label"
-            optionValue="value"
             placeholder="Caja menor, otras cuentas de fondos..."
             [showClear]="true"
-            [filter]="true"
-            filterBy="label"
-            styleClass="w-full mt-1"
           />
           <small class="hint" *ngIf="cuentasOpts.length === 0">
             No hay cuentas habilitadas como medio de pago. Marca la caja menor
@@ -387,7 +379,7 @@
       class="p-button-text"
       (click)="dialogVisible = false"
     ></button>
-    <button
+    <button *appPuede="'tesoreria.traslados-de-fondos:CREAR'"
       pButton
       type="button"
       label="Registrar"

@@ -11,7 +11,7 @@
         </div>
       </div>
       <div class="card-head__actions">
-        <button
+        <button *appPuede="'inventario.obsequios:CREAR'"
           pButton
           label="Registrar obsequio"
           icon="pi pi-plus"
@@ -84,7 +84,7 @@
                 pTooltip="Ver detalle"
                 (click)="verDetalle(o)"
               ></button>
-              <button
+              <button *appPuede="'inventario.obsequios:ANULAR'"
                 pButton
                 icon="pi pi-ban"
                 class="p-button-text p-button-danger p-button-sm"

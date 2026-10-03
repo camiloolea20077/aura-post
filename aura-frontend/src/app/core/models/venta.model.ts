@@ -134,6 +134,8 @@ export interface CreateVentaDto {
   pagoParcial?: boolean;
   saldoPendiente?: number;
   descuentoGeneral?: number;
+  /** Autorización del supervisor si la venta pasa el límite del usuario (V192). */
+  autorizacionId?: number | null;
 }
 
 export interface VentaPageableDto {

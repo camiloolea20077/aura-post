@@ -27,11 +27,13 @@ import {
 } from '../../../core/models/obsequio.model';
 import { ObsequioService } from '../../../core/services/obsequio.service';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 @Component({
   selector: 'app-index-obsequios',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     ButtonModule,

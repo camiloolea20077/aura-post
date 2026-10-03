@@ -17,7 +17,13 @@ export interface SidebarMenuItem {
   route?: string;
   badge?: string;
   highlight?: boolean;
-  roles?: string[];
+  /**
+   * Submódulo que protege la pantalla: "modulo.submodulo" (códigos de las
+   * tablas modulos/submodulos). El ítem se ve si el perfil del usuario tiene VER.
+   */
+  codigo?: string;
+  /** Solo para estos tipos de usuario (pantallas personales, p. ej. del vendedor). */
+  tipos?: string[];
 }
 
 export interface SidebarSubgroup {

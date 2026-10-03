@@ -84,7 +84,14 @@ import { TicketComprobanteCajaComponent } from '../comprobantes/ticket/ticket-co
 import { ComprobanteCajaModel } from '../../core/models/comprobante-caja.model';
 import { MovimientoCajaDto } from '../../core/models/caja.model';
 import { StateStore } from '../../core/store/state';
+import { PermisosService } from '../../core/services/permisos.service';
+import {
+  AutorizacionDada,
+  ExcesoVenta,
+} from '../../core/models/permisos.model';
+import { AutorizacionSupervisorComponent } from '../../shared/components/autorizacion-supervisor/autorizacion-supervisor.component';
 
+import { PuedeDirective } from '../../shared/directives/puede.directive';
 interface CartTab {
   id: string;
   label: string;
@@ -116,6 +123,7 @@ interface OpcionVenta {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     TerceroAutocompleteComponent,
     CommonModule,
     FormsModule,
@@ -140,6 +148,7 @@ interface OpcionVenta {
     FormTerceroComponent,
     TicketComprobanteCajaComponent,
     SerialPickerComponent,
+    AutorizacionSupervisorComponent,
   ],
   providers: [MessageService],
   templateUrl: './pos.component.html',
@@ -148,6 +157,12 @@ interface OpcionVenta {
 export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   // ── Responsive: store para saber si estamos en móvil (<768px) ──
   public readonly state = inject(StateStore);
+  private readonly permisosService = inject(PermisosService);
+
+  // Autorización del supervisor cuando la venta pasa el límite (PLAN_PERMISOS P8).
+  showAutorizacion = false;
+  excesoPendiente: ExcesoVenta | null = null;
+  private resolverAutorizacion: ((id: number | false) => void) | null = null;
 
   // ── Móvil: carrito como bottom sheet ──────────────────────
   public mobileCartOpen = false;
@@ -1744,6 +1759,11 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         : 0,
     };
 
+    // Descuento o rebaja de precio por encima del límite: pide autorización.
+    const autorizacion = await this.autorizacionSiHaceFalta(dto);
+    if (autorizacion === false) return;
+    if (autorizacion) dto.autorizacionId = autorizacion;
+
     try {
       const res = await lastValueFrom(this.ventaService.create(dto));
 
@@ -1818,6 +1838,51 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
   }
+  /**
+   * Si el usuario tiene límites y la venta los pasa, abre la autorización del
+   * supervisor. Devuelve el id de la autorización, null si no hace falta o
+   * false si la cancelaron. El back vuelve a revisar todo al guardar.
+   */
+  private async autorizacionSiHaceFalta(
+    dto: CreateVentaDto,
+  ): Promise<number | null | false> {
+    const p = this.state.permisos();
+    if (!p || (p.descuentoMaxPct == null && p.rebajaPrecioMaxPct == null)) {
+      return null;
+    }
+    let exceso: ExcesoVenta | null = null;
+    try {
+      exceso =
+        (await lastValueFrom(this.permisosService.evaluarVenta(dto)))?.data ??
+        null;
+    } catch {
+      return null; // el back decide al guardar
+    }
+    if (!exceso?.requiereAutorizacion) return null;
+    this.excesoPendiente = exceso;
+    this.showAutorizacion = true;
+    this.cdr.markForCheck();
+    return new Promise((resolve) => (this.resolverAutorizacion = resolve));
+  }
+
+  onAutorizado(a: AutorizacionDada): void {
+    this.showAutorizacion = false;
+    this.alertService.showSuccess(
+      'Autorizado',
+      `${a.autorizador} autorizó la venta`,
+    );
+    this.resolverAutorizacion?.(a.autorizacionId);
+    this.resolverAutorizacion = null;
+    this.cdr.markForCheck();
+  }
+
+  onAutorizacionCancelada(): void {
+    this.showAutorizacion = false;
+    this.resolverAutorizacion?.(false);
+    this.resolverAutorizacion = null;
+    this.cdr.markForCheck();
+  }
+
   onTirillaCotizacionClose(): void {
     this.showTirillaCotizacion = false;
     this.cotizacionCreada = null;

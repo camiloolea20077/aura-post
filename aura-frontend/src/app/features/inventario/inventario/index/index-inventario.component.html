@@ -5,7 +5,7 @@
         <span class="header-icon"><i class="pi pi-warehouse"></i></span>
         <div>
           <h1 class="title">Inventario</h1>
-          <p class="subtitle">Stock actual por producto y sucursal</p>
+          <p class="subtitle">Stock por producto en la sede y bodega elegidas</p>
         </div>
       </div>
       <div class="card-head__actions">
@@ -19,7 +19,7 @@
             pTooltip="Ver productos con stock bajo el mínimo"
             (click)="verStockBajo()"
           ></button>
-          <button
+          <button *appPuede="'inventario.stock:CREAR'"
             pButton
             type="button"
             label="Registrar producto"
@@ -49,6 +49,30 @@
             </button>
           </span>
         </div>
+      </div>
+    </div>
+
+    <!-- Sede y bodega: por defecto la sede en la que se trabaja -->
+    <div class="filtros-sede">
+      <div class="filtro">
+        <label>Sede</label>
+        <p-dropdown
+          [options]="sedesOpts"
+          [(ngModel)]="sedeId"
+          optionLabel="nombre"
+          optionValue="id"
+          (onChange)="onSede()"
+        />
+      </div>
+      <div class="filtro" *ngIf="sedeId">
+        <label>Bodega</label>
+        <p-dropdown
+          [options]="bodegasOpts"
+          [(ngModel)]="bodegaId"
+          optionLabel="nombre"
+          optionValue="id"
+          (onChange)="onBodega()"
+        />
       </div>
     </div>
 
@@ -101,6 +125,7 @@
             <span class="sucursal-chip">
               <i class="pi pi-building"></i> {{ item.sucursalNombre }}
             </span>
+            <span class="bodega-nombre" *ngIf="item.bodegaNombre">{{ item.bodegaNombre }}</span>
           </td>
 
           <!-- Stock actual -->
@@ -155,7 +180,7 @@
               tooltipPosition="top"
               (click)="openHistorial(item)"
             ></button>
-            <button
+            <button *appPuede="'inventario.stock:EDITAR'"
               pButton
               type="button"
               icon="pi pi-pencil"
@@ -180,7 +205,8 @@
                     : "No hay productos registrados en inventario"
                 }}
               </p>
-              <button
+              <ng-container *appPuede="'inventario.stock:CREAR'">
+          <button
                 *ngIf="!searchQuery"
                 pButton
                 type="button"
@@ -189,6 +215,7 @@
                 class="btn-verde p-button-sm"
                 (click)="openCreate()"
               ></button>
+          </ng-container>
             </div>
           </td>
         </tr>
