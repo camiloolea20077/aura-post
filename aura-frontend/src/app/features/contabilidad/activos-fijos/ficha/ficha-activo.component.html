@@ -1,0 +1,345 @@
+<p-confirmDialog />
+
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-arrow-left"
+          class="p-button-text p-button-rounded"
+          (click)="volver()"
+        ></button>
+        <div>
+          <h1 class="title">
+            {{ activo?.codigo }} <span class="titulo-desc">{{ activo?.descripcion }}</span>
+          </h1>
+          <p class="subtitle">
+            {{ categoriaLabel(activo?.categoria) }} · {{ metodoLabel(activo?.metodoDepreciacion) }}
+            <ng-container *ngIf="activo?.compraId"> · creado por la compra #{{ activo?.compraId }}</ng-container>
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <p-tag *ngIf="activo" [value]="activo.estado.replace('_', ' ')" [severity]="estadoSeverity(activo.estado)" />
+          <button
+            *ngIf="activo && !vigente"
+            pButton
+            type="button"
+            icon="pi pi-undo"
+            label="Anular retiro"
+            class="p-button-outlined p-button-danger"
+            (click)="anularRetiro()"
+          ></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-loading" *ngIf="loading">
+      <i class="pi pi-spin pi-spinner"></i> Cargando activo...
+    </div>
+
+    <ng-container *ngIf="!loading && activo">
+      <!-- Resumen -->
+      <section class="resumen">
+        <div class="kpi">
+          <span>Costo</span>
+          <strong>{{ activo.costoTotal | currency: "COP" : "symbol-narrow" : "1.0-0" }}</strong>
+          <small *ngIf="(activo.valorAdiciones ?? 0) > 0">
+            incluye {{ activo.valorAdiciones | currency: "COP" : "symbol-narrow" : "1.0-0" }} de adiciones
+          </small>
+        </div>
+        <div class="kpi">
+          <span>Depreciación acumulada</span>
+          <strong>{{ activo.depreciacionAcumulada | currency: "COP" : "symbol-narrow" : "1.0-0" }}</strong>
+          <div class="barra"><div [style.width.%]="porcentajeDepreciado"></div></div>
+          <small>{{ porcentajeDepreciado }} % · {{ activo.mesesDepreciados }} de {{ activo.vidaUtilMeses }} meses</small>
+        </div>
+        <div class="kpi">
+          <span>Valor en libros</span>
+          <strong>{{ activo.valorEnLibros | currency: "COP" : "symbol-narrow" : "1.0-0" }}</strong>
+          <small *ngIf="activo.valorResidual">residual {{ activo.valorResidual | currency: "COP" : "symbol-narrow" : "1.0-0" }}</small>
+        </div>
+        <div class="kpi">
+          <span>Adquisición</span>
+          <strong>{{ activo.fechaAdquisicion | date: "dd/MM/yyyy" }}</strong>
+          <small>deprecia desde {{ (activo.fechaInicioDepreciacion ?? activo.fechaAdquisicion) | date: "MM/yyyy" }}</small>
+        </div>
+      </section>
+
+      <!-- Retiro -->
+      <section class="retiro" *ngIf="!vigente">
+        <i class="pi pi-info-circle"></i>
+        {{ activo.estado === "VENDIDO" ? "Vendido" : "Dado de baja" }} el
+        {{ activo.fechaRetiro | date: "dd/MM/yyyy" }} — {{ activo.motivoRetiro }}
+        <ng-container *ngIf="activo.valorVenta != null">
+          · precio {{ activo.valorVenta | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+        </ng-container>
+      </section>
+
+      <p-tabView [(activeIndex)]="activeTab" styleClass="aura-tabs">
+        <!-- Depreciación -->
+        <p-tabPanel>
+          <ng-template pTemplate="header">
+            <span class="tab-label"><i class="pi pi-chart-line"></i> Depreciación</span>
+          </ng-template>
+          <div class="dos-columnas">
+            <div>
+              <h3 class="section">Registrada</h3>
+              <p-table [value]="historial" styleClass="p-datatable-sm" showGridlines>
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th>Mes</th>
+                    <th class="text-right">Cuota</th>
+                    <th *ngIf="activo.metodoDepreciacion === 'UNIDADES_PRODUCCION'" class="text-right">Unidades</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-d>
+                  <tr>
+                    <td>{{ d.periodo }}</td>
+                    <td class="text-right">{{ d.valor | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+                    <td *ngIf="activo.metodoDepreciacion === 'UNIDADES_PRODUCCION'" class="text-right">
+                      {{ d.unidades | number: "1.0-2" }}
+                    </td>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                  <tr><td colspan="3" class="vacio">Aún no se ha depreciado.</td></tr>
+                </ng-template>
+              </p-table>
+            </div>
+            <div>
+              <h3 class="section">Proyección</h3>
+              <p-table
+                [value]="proyeccion"
+                styleClass="p-datatable-sm"
+                showGridlines
+                [paginator]="proyeccion.length > 12"
+                [rows]="12"
+              >
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th>Mes</th>
+                    <th class="text-right">Cuota</th>
+                    <th class="text-right">En libros</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-p>
+                  <tr>
+                    <td>{{ p.periodo }}</td>
+                    <td class="text-right">{{ p.cuota | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+                    <td class="text-right">{{ p.valorEnLibros | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="emptymessage">
+                  <tr>
+                    <td colspan="3" class="vacio">
+                      {{
+                        activo.metodoDepreciacion === "UNIDADES_PRODUCCION"
+                          ? "Depende del uso de cada mes: no se proyecta."
+                          : "Ya está totalmente depreciado."
+                      }}
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+          </div>
+        </p-tabPanel>
+
+        <!-- Adiciones -->
+        <p-tabPanel>
+          <ng-template pTemplate="header">
+            <span class="tab-label">
+              <i class="pi pi-plus-circle"></i> Adiciones
+              <span class="tab-badge" *ngIf="adiciones.length">{{ adiciones.length }}</span>
+            </span>
+          </ng-template>
+          <p class="ayuda">
+            Una mejora que aumenta el valor o la vida del activo (cambio de motor,
+            ampliación de memoria). Sube su costo y las cuotas siguientes se
+            recalculan solas. Una reparación normal es un mantenimiento, no una
+            adición.
+          </p>
+          <div class="form-linea" *ngIf="vigente">
+            <div class="campo">
+              <label>Fecha</label>
+              <p-calendar [(ngModel)]="adicionFecha" dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body" />
+            </div>
+            <div class="campo campo--ancho">
+              <label>Descripción</label>
+              <input pInputText [(ngModel)]="adicion.descripcion" maxlength="300" placeholder="Ej: ampliación a 32 GB" />
+            </div>
+            <div class="campo">
+              <label>Valor</label>
+              <p-inputNumber [(ngModel)]="adicion.valor" mode="currency" currency="COP" locale="es-CO" [maxFractionDigits]="0" />
+            </div>
+            <div class="campo campo--corto">
+              <label>+ meses de vida</label>
+              <p-inputNumber [(ngModel)]="adicion.mesesAdicionales" [min]="0" [max]="600" />
+            </div>
+            <div class="campo campo--ancho">
+              <label>Se pagó con / se le debe a</label>
+              <p-dropdown
+                [(ngModel)]="adicion.cuentaContrapartidaId"
+                [options]="cuentasContrapartida"
+                optionLabel="label"
+                optionValue="value"
+                [filter]="true"
+                filterBy="label"
+                placeholder="Caja, banco o proveedores"
+                appendTo="body"
+              />
+            </div>
+            <div class="campo campo--ancho">
+              <label>Proveedor</label>
+              <app-tercero-autocomplete [(ngModel)]="adicion.terceroId" rol="PROVEEDOR" appendTo="body" />
+            </div>
+            <button
+              pButton
+              type="button"
+              label="Registrar adición"
+              icon="pi pi-check"
+              class="btn-aura"
+              [disabled]="guardandoAdicion"
+              (click)="guardarAdicion()"
+            ></button>
+          </div>
+          <p-table [value]="adiciones" styleClass="p-datatable-sm" showGridlines>
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Fecha</th>
+                <th>Descripción</th>
+                <th class="text-right">Valor</th>
+                <th class="text-right">+ meses</th>
+                <th>Contrapartida</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-a>
+              <tr>
+                <td>{{ a.fecha | date: "dd/MM/yyyy" }}</td>
+                <td>{{ a.descripcion }}</td>
+                <td class="text-right">{{ a.valor | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+                <td class="text-right">{{ a.mesesAdicionales }}</td>
+                <td>{{ a.cuentaContrapartida }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr><td colspan="5" class="vacio">Sin adiciones.</td></tr>
+            </ng-template>
+          </p-table>
+        </p-tabPanel>
+
+        <!-- Mantenimientos -->
+        <p-tabPanel>
+          <ng-template pTemplate="header">
+            <span class="tab-label">
+              <i class="pi pi-wrench"></i> Mantenimientos
+              <span class="tab-badge" *ngIf="mantenimientos.length">{{ mantenimientos.length }}</span>
+            </span>
+          </ng-template>
+          <p class="ayuda">
+            Historial de mantenimientos. No genera asiento: el pago se registra
+            como gasto o compra.
+          </p>
+          <div class="form-linea">
+            <div class="campo">
+              <label>Fecha</label>
+              <p-calendar [(ngModel)]="mantFecha" dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body" />
+            </div>
+            <div class="campo campo--corto">
+              <label>Tipo</label>
+              <p-dropdown [(ngModel)]="mant.tipo" [options]="tiposMant" optionLabel="label" optionValue="value" appendTo="body" />
+            </div>
+            <div class="campo campo--ancho">
+              <label>Descripción</label>
+              <input pInputText [(ngModel)]="mant.descripcion" maxlength="300" placeholder="Ej: cambio de aceite y filtros" />
+            </div>
+            <div class="campo">
+              <label>Costo</label>
+              <p-inputNumber [(ngModel)]="mant.costo" mode="currency" currency="COP" locale="es-CO" [maxFractionDigits]="0" />
+            </div>
+            <div class="campo campo--ancho">
+              <label>Taller / proveedor</label>
+              <app-tercero-autocomplete [(ngModel)]="mant.terceroId" rol="PROVEEDOR" appendTo="body" />
+            </div>
+            <div class="campo">
+              <label>Próximo</label>
+              <p-calendar [(ngModel)]="mantProximo" dateFormat="yy-mm-dd" [showIcon]="true" [showClear]="true" appendTo="body" />
+            </div>
+            <button
+              pButton
+              type="button"
+              label="Registrar"
+              icon="pi pi-check"
+              class="btn-aura"
+              [disabled]="guardandoMant"
+              (click)="guardarMantenimiento()"
+            ></button>
+          </div>
+          <p-table [value]="mantenimientos" styleClass="p-datatable-sm" showGridlines>
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Descripción</th>
+                <th>Proveedor</th>
+                <th class="text-right">Costo</th>
+                <th>Próximo</th>
+                <th style="width: 50px"></th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-m>
+              <tr>
+                <td>{{ m.fecha | date: "dd/MM/yyyy" }}</td>
+                <td><p-tag [value]="m.tipo === 'CORRECTIVO' ? 'Correctivo' : 'Preventivo'" [severity]="m.tipo === 'CORRECTIVO' ? 'warn' : 'info'" /></td>
+                <td>{{ m.descripcion }}</td>
+                <td>{{ m.terceroNombre }}</td>
+                <td class="text-right">{{ m.costo | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+                <td>{{ m.proximo | date: "dd/MM/yyyy" }}</td>
+                <td>
+                  <button
+                    pButton
+                    icon="pi pi-trash"
+                    class="p-button-text p-button-sm p-button-danger"
+                    pTooltip="Eliminar"
+                    (click)="eliminarMantenimiento(m)"
+                  ></button>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr><td colspan="7" class="vacio">Sin mantenimientos registrados.</td></tr>
+            </ng-template>
+          </p-table>
+        </p-tabPanel>
+
+        <!-- Ficha -->
+        <p-tabPanel>
+          <ng-template pTemplate="header">
+            <span class="tab-label"><i class="pi pi-id-card"></i> Datos</span>
+          </ng-template>
+          <div class="datos">
+            <div><span>Placa</span>{{ activo.placa || "—" }}</div>
+            <div><span>Serial</span>{{ activo.serial || "—" }}</div>
+            <div><span>Marca / modelo</span>{{ activo.marca || "—" }} {{ activo.modelo || "" }}</div>
+            <div><span>Responsable</span>{{ activo.responsableTerceroNombre || activo.responsable || "—" }}</div>
+            <div><span>Ubicación</span>{{ activo.ubicacion || "—" }}</div>
+            <div><span>Componente de</span>{{ activo.activoPadreCodigo || "—" }}</div>
+            <div><span>Aseguradora</span>{{ activo.aseguradora || "—" }}</div>
+            <div>
+              <span>Póliza</span>{{ activo.polizaNumero || "—" }}
+              <ng-container *ngIf="activo.polizaVence"> · vence {{ activo.polizaVence | date: "dd/MM/yyyy" }}</ng-container>
+            </div>
+            <div *ngIf="activo.metodoDepreciacion === 'UNIDADES_PRODUCCION'">
+              <span>Unidades en su vida</span>{{ activo.unidadesEstimadas | number: "1.0-2" }}
+            </div>
+            <div class="completo"><span>Observaciones</span>{{ activo.observaciones || "—" }}</div>
+          </div>
+        </p-tabPanel>
+      </p-tabView>
+    </ng-container>
+  </div>
+</div>

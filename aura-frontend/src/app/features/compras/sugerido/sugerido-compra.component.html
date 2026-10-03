@@ -1,0 +1,131 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-shopping-cart"></i></span>
+        <div>
+          <h1 class="title">Sugerido de Compra</h1>
+          <p class="subtitle">
+            Lo que está en o bajo su punto de reorden y cuánto pedir para llegar
+            al máximo
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button
+            pButton
+            type="button"
+            label="Exportar CSV"
+            icon="pi pi-file-excel"
+            class="p-button-outlined"
+            [disabled]="!filas.length"
+            (click)="exportarCsv()"
+          ></button>
+        </div>
+        <div class="card-head__search">
+          <p-dropdown
+            [options]="sucursales"
+            [(ngModel)]="sucursalId"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todas las sedes"
+            [showClear]="true"
+            (onChange)="onSucursalChange()"
+            (onClear)="onSucursalChange()"
+          />
+          <p-dropdown
+            *ngIf="bodegas.length > 1"
+            [options]="bodegas"
+            [(ngModel)]="bodegaId"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todas las bodegas"
+            [showClear]="true"
+            (onChange)="cargar()"
+            (onClear)="cargar()"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="resumen" *ngIf="filas.length">
+      <div class="resumen__item">
+        <span>Productos por pedir</span>
+        <strong>{{ filas.length }}</strong>
+      </div>
+      <div class="resumen__item">
+        <span>Proveedores</span>
+        <strong>{{ grupos.length }}</strong>
+      </div>
+      <div class="resumen__item">
+        <span>Valor estimado (al costo)</span>
+        <strong>{{ totalGeneral | currency: "COP" : "symbol-narrow" : "1.0-0" }}</strong>
+      </div>
+    </div>
+
+    <div class="aviso" *ngIf="sinMaximo > 0">
+      <i class="pi pi-info-circle"></i>
+      {{ sinMaximo }} producto(s) no tienen stock máximo: el sugerido solo los
+      devuelve a su punto de reorden. Defínelo en Inventario › Stock.
+    </div>
+
+    <div class="vacio" *ngIf="!loading && !filas.length">
+      <i class="pi pi-check-circle"></i>
+      <p>Nada por pedir: ningún producto está en su punto de reorden ni bajo su mínimo.</p>
+      <small>
+        Solo aparecen productos con stock mínimo o punto de reorden definido en
+        Inventario › Stock.
+      </small>
+    </div>
+
+    <div class="grupo" *ngFor="let g of grupos">
+      <div class="grupo__head">
+        <span><i class="pi pi-truck"></i> {{ g.proveedor }}</span>
+        <span class="grupo__total">{{ g.total | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span>
+      </div>
+      <p-table
+        [value]="g.filas"
+        [loading]="loading"
+        styleClass="p-datatable-sm"
+        showGridlines
+        [tableStyle]="{ 'min-width': '760px' }"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Producto</th>
+            <th style="width: 150px">Sede / bodega</th>
+            <th class="text-right" style="width: 90px">Stock</th>
+            <th class="text-right" style="width: 90px">Reorden</th>
+            <th class="text-right" style="width: 90px">Máximo</th>
+            <th class="text-right" style="width: 100px">Pedir</th>
+            <th class="text-right" style="width: 120px">Valor</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-f>
+          <tr>
+            <td>
+              <div class="prod">{{ f.productoNombre }}</div>
+              <small class="sku" *ngIf="f.productoSku">{{ f.productoSku }}</small>
+            </td>
+            <td class="sede">
+              {{ f.sucursalNombre }}<span *ngIf="f.bodegaNombre"> · {{ f.bodegaNombre }}</span>
+            </td>
+            <td class="text-right" [class.negativo]="f.stockActual <= 0">
+              {{ f.stockActual | number: "1.0-2" }}
+            </td>
+            <td class="text-right">{{ (f.puntoReorden || f.stockMinimo) | number: "1.0-2" }}</td>
+            <td class="text-right">
+              <span *ngIf="!f.sinMaximo">{{ f.stockMaximo | number: "1.0-2" }}</span>
+              <span *ngIf="f.sinMaximo" class="muted">—</span>
+            </td>
+            <td class="text-right pedir">
+              {{ f.cantidadSugerida | number: "1.0-2" }} {{ f.unidadAbreviatura }}
+            </td>
+            <td class="text-right">{{ f.valorEstimado | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+</div>

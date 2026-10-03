@@ -1,0 +1,153 @@
+<div class="conv">
+  <div class="conv__head">
+    <div>
+      <h3 class="section">Unidades y conversiones</h3>
+      <p class="panel-sub">
+        El inventario se cuenta en <strong>{{ unidad }}</strong>. Agrega a qué equivale cada
+        empaque o medida y úsala al comprar{{ seVendeItem ? " y al vender" : "" }}.
+      </p>
+    </div>
+  </div>
+
+  <!-- El inventario está en un empaque: para vender suelto hay que contar en unidades -->
+  <div class="asistente" *ngIf="baseEsEmpaque && seVendeItem">
+    <i class="pi pi-lightbulb"></i>
+    <div class="asistente__cuerpo">
+      <strong>¿Vendes también por unidad (suelto o por six pack)?</strong>
+      <span>
+        El inventario se debe contar en unidades y la {{ unidadNombre | titlecase }} queda como conversión que se compra y se vende.
+      </span>
+      <div class="asistente__fila">
+        <span>1 {{ unidadNombre | titlecase }} trae</span>
+        <p-inputNumber [(ngModel)]="cuantasTrae" [min]="2" placeholder="24" styleClass="eq-num" />
+        <span>unidades</span>
+        <button pButton type="button" label="Contar en unidades" icon="pi pi-check" class="p-button-sm"
+          [disabled]="!cuantasTrae || cuantasTrae <= 1" (click)="confirmarUnidades()"></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="conv__tabla">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-unidad">Unidad</th>
+          <th class="col-eq">Equivale a</th>
+          <th class="col-check" pTooltip="La que se propone al registrar una compra">Se compra</th>
+          <th class="col-check" *ngIf="seVendeItem">Se vende</th>
+          <th class="col-num" *ngIf="seVendeItem">Precio de venta</th>
+          <th class="col-num">Costo</th>
+          <th class="col-util" *ngIf="seVendeItem"
+            pTooltip="De cada $100 que vendes (sin IVA), cuánto te queda después del costo">Utilidad</th>
+          <th class="col-cod">Código de barras</th>
+          <th class="col-acc"></th>
+        </tr>
+      </thead>
+      <tbody [formGroup]="form">
+        <!-- Unidad base -->
+        <tr class="base">
+          <td><strong>1 {{ unidad }}</strong> <span class="tag">base</span></td>
+          <td class="muted">—</td>
+          <td class="col-check">
+            <p-radioButton name="compraEn" [value]="-1" [ngModel]="compraEn" [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="setCompraEn(-1)" />
+          </td>
+          <td class="col-check" *ngIf="seVendeItem">
+            <p-checkbox [binary]="true" [ngModel]="vendeSuelto" [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="setVendeSuelto($event)" pTooltip="Se vende suelto, por {{ unidad }}" />
+          </td>
+          <td class="col-num" *ngIf="seVendeItem">
+            <p-inputNumber formControlName="precio" mode="currency" currency="COP" locale="es-CO"
+              [minFractionDigits]="0" [min]="0" placeholder="$ 0" styleClass="w-full" />
+          </td>
+          <td class="col-num">
+            <p-inputNumber formControlName="costo" mode="currency" currency="COP" locale="es-CO"
+              [minFractionDigits]="0" [maxFractionDigits]="2" [min]="0" placeholder="$ 0" styleClass="w-full"
+              [readonly]="compraEn !== -1" (onBlur)="onCostoBase()"
+              [pTooltip]="compraEn !== -1 ? 'Sale del costo de la conversión en que compras' : ''" />
+          </td>
+          <td class="col-util" *ngIf="seVendeItem">
+            <ng-container *ngTemplateOutlet="utilTpl; context: { $implicit: utilidadBase }" />
+          </td>
+          <td class="muted col-cod">El del producto</td>
+          <td></td>
+        </tr>
+
+        <!-- Conversiones -->
+        <tr *ngFor="let f of filas; let i = index" [class.sin-factor]="!f.factor">
+          <td>
+            <div class="unidad-edit">
+              <span>1</span>
+              <input pInputText [(ngModel)]="f.nombre" [ngModelOptions]="{ standalone: true }" (change)="cambio()"
+                maxlength="100" placeholder="Paca, Caja, Libra…" />
+            </div>
+          </td>
+          <td>
+            <div class="eq-edit">
+              <span>=</span>
+              <p-inputNumber [(ngModel)]="f.factor" [ngModelOptions]="{ standalone: true }" (onBlur)="onFactorFila(i)"
+                [min]="0" [maxFractionDigits]="6" placeholder="24" styleClass="eq-num" />
+              <span class="u">{{ unidad }}</span>
+            </div>
+          </td>
+          <td class="col-check">
+            <p-radioButton name="compraEn" [value]="i" [ngModel]="compraEn" [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="setCompraEn(i)" />
+          </td>
+          <td class="col-check" *ngIf="seVendeItem">
+            <p-checkbox [binary]="true" [(ngModel)]="f.seVende" [ngModelOptions]="{ standalone: true }" (onChange)="cambio()" />
+          </td>
+          <td class="col-num" *ngIf="seVendeItem">
+            <p-inputNumber [(ngModel)]="f.precio" [ngModelOptions]="{ standalone: true }" (onBlur)="cambio()"
+              mode="currency" currency="COP" locale="es-CO" [minFractionDigits]="0" [min]="0"
+              [placeholder]="precioSugerido(f) ? '$ ' + (precioSugerido(f) | number: '1.0-0') : '$ 0'"
+              [disabled]="!f.seVende" styleClass="w-full" />
+          </td>
+          <td class="col-num">
+            <p-inputNumber [(ngModel)]="f.costo" [ngModelOptions]="{ standalone: true }" (onBlur)="onCostoFila(i)"
+              mode="currency" currency="COP" locale="es-CO" [minFractionDigits]="0" [maxFractionDigits]="2" [min]="0"
+              placeholder="$ 0" styleClass="w-full" />
+          </td>
+          <td class="col-util" *ngIf="seVendeItem">
+            <ng-container *ngTemplateOutlet="utilTpl; context: { $implicit: utilidadFila(f) }" />
+          </td>
+          <td class="col-cod">
+            <input pInputText [(ngModel)]="f.codigoBarras" [ngModelOptions]="{ standalone: true }" (change)="cambio()"
+              maxlength="50" placeholder="Opcional" class="codigo" />
+          </td>
+          <td class="col-acc">
+            <button *ngIf="puedePasarAUnidad && f.id && f.factor && f.factor < 1" pButton type="button"
+              icon="pi pi-sync" class="p-button-text p-button-sm" pTooltip="Pasar a unidad: contar el inventario en esta"
+              (click)="pasarAUnidad.emit(f)"></button>
+            <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-sm p-button-danger"
+              pTooltip="Quitar" (click)="quitar(i)"></button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <ng-template #utilTpl let-u>
+    <span *ngIf="u; else sinUtil" class="util" [ngClass]="'util--' + nivelUtilidad(u)"
+      [pTooltip]="tooltipUtilidad(u)" tooltipPosition="top">
+      {{ u.pct | number: "1.0-1" }} %
+    </span>
+    <ng-template #sinUtil><span class="muted" pTooltip="Escribe precio y costo para verla">—</span></ng-template>
+  </ng-template>
+
+  <div class="conv__agregar">
+    <button pButton type="button" icon="pi pi-plus" label="Agregar conversión" class="p-button-outlined p-button-sm"
+      (click)="agregar()"></button>
+    <span class="sug-titulo" *ngIf="sugeridas.length">Comunes para {{ unidad }}:</span>
+    <button *ngFor="let s of sugeridas" type="button" class="sug" (click)="agregar(s)">
+      + {{ s.nombre }}<ng-container *ngIf="s.factor"> = {{ s.factor | number: "1.0-4" }} {{ unidad }}</ng-container>
+    </button>
+  </div>
+
+  <p class="conv__ejemplo" *ngIf="ejemplo">
+    <i class="pi pi-lightbulb"></i> {{ ejemplo }}
+  </p>
+  <p class="conv__nota" *ngIf="seVendeItem">
+    Precio vacío = el de la unidad × lo que equivale. El costo de la unidad base sale del de la conversión en que compras.
+  </p>
+</div>

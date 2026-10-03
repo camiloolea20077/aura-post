@@ -120,6 +120,9 @@
       </div>
     </div>
 
+    <!-- Cadena documental: de qué cotización salió -->
+    <app-documentos-relacionados tipo="VENTA" [id]="venta.id" />
+
     <!-- Zona anular -->
     <div class="anular-zone" *ngIf="(venta.estadoVenta === 'COMPLETADA' || venta.estadoVenta === 'PAGO_PARCIAL') && puedeAnular">
       <div class="anular-warn">

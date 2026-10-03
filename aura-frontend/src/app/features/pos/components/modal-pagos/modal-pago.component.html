@@ -180,6 +180,18 @@
               </div>
             </div>
 
+            <!-- Recargo de la forma de pago (lo paga el cliente) -->
+            <div class="recargo-aviso" *ngIf="recargoPct(pago.metodoPago) > 0">
+              <i class="pi pi-info-circle"></i>
+              <span *ngIf="recargoDe(pago) > 0; else sinMonto">
+                + {{ formatCOP(recargoDe(pago)) }} de recargo ({{ recargoPct(pago.metodoPago) }} %):
+                el cliente paga <strong>{{ formatCOP((pago.monto ?? 0) + recargoDe(pago)) }}</strong> con esta forma.
+              </span>
+              <ng-template #sinMonto>
+                <span>Esta forma cobra {{ recargoPct(pago.metodoPago) }} % de recargo al cliente.</span>
+              </ng-template>
+            </div>
+
             <!-- Referencia (no efectivo) -->
             <div class="ref-field" *ngIf="pago.metodoPago !== 'EFECTIVO'">
               <label>{{ pago.metodoPago === 'CREDITO' ? 'Contrato/Referencia' : 'Referencia / aprobación' }}</label>
@@ -213,7 +225,8 @@
       <!-- Total grande -->
       <div class="total-block">
         <span class="total-label">Total a cobrar</span>
-        <span class="total-monto">{{ formatCOP(totalConDescuento) }}</span>
+        <span class="total-monto">{{ formatCOP(totalConDescuento + totalRecargos) }}</span>
+        <span class="total-recargo" *ngIf="totalRecargos > 0">incluye {{ formatCOP(totalRecargos) }} de recargo</span>
       </div>
 
       <!-- Descuento general -->
@@ -246,10 +259,14 @@
           <span>IVA</span>
           <span>{{ formatCOP(impuestosTotal) }}</span>
         </div>
+        <div class="res-row" *ngFor="let r of pagosConRecargo">
+          <span>Recargo {{ r.nombre }} ({{ r.pct }} %)</span>
+          <span class="orange">+ {{ formatCOP(r.valor) }}</span>
+        </div>
         <div class="res-divider"></div>
         <div class="res-row res-total-row">
           <span>Total</span>
-          <span>{{ formatCOP(totalConDescuento) }}</span>
+          <span>{{ formatCOP(totalConDescuento + totalRecargos) }}</span>
         </div>
         <div class="res-row">
           <span>Recibido</span>

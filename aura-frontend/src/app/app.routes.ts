@@ -174,6 +174,16 @@ export const routes: Routes = [
 
       // Contabilidad
       {
+        // Centro de Contabilidad: el sidebar abre aquí en vez de desplegar
+        // las ~22 pantallas; cada una conserva su ruta de siempre.
+        path: 'contabilidad',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/centro/centro-contabilidad.component').then(
+            (m) => m.CentroContabilidadComponent,
+          ),
+      },
+      {
         path: 'contabilidad/cierre',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
@@ -316,6 +326,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/compras/index/index-compras.component').then(
             (m) => m.IndexComprasComponent,
+          ),
+      },
+      {
+        path: 'compras/sugerido',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/compras/sugerido/sugerido-compra.component').then(
+            (m) => m.SugeridoCompraComponent,
           ),
       },
       {
@@ -987,11 +1005,59 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'contabilidad/activos-fijos/informe',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/activos-fijos/informe/informe-activos.component').then(
+            (m) => m.InformeActivosComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/activos-fijos/:id',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/activos-fijos/ficha/ficha-activo.component').then(
+            (m) => m.FichaActivoComponent,
+          ),
+      },
+      {
         path: 'contabilidad/activos-fijos',
         canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/activos-fijos/activos-fijos.component').then(
             (m) => m.ActivosFijosComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/parametrizacion',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/parametrizacion/parametrizacion-contable.component').then(
+            (m) => m.ParametrizacionContableComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/balance-prueba',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/balance-prueba/balance-prueba.component').then(
+            (m) => m.BalancePruebaComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/herramientas',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/herramientas/herramientas-contador.component').then(
+            (m) => m.HerramientasContadorComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/categorias-contables',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/contabilidad/categorias-contables/categorias-contables.component').then(
+            (m) => m.CategoriasContablesComponent,
           ),
       },
       {

@@ -105,6 +105,36 @@
         Al llegar a este nivel el sistema alertará stock bajo
       </small>
     </div>
+    <div class="field-row-2">
+      <div class="field">
+        <label>Punto de reorden</label>
+        <p-inputNumber
+          formControlName="puntoReorden"
+          [min]="0"
+          [maxFractionDigits]="4"
+          styleClass="w-full"
+          placeholder="Igual al mínimo"
+        />
+        <small class="field-hint">
+          <i class="pi pi-info-circle"></i>
+          Con este saldo o menos sale en el sugerido de compra
+        </small>
+      </div>
+      <div class="field">
+        <label>Stock máximo</label>
+        <p-inputNumber
+          formControlName="stockMaximo"
+          [min]="0"
+          [maxFractionDigits]="4"
+          styleClass="w-full"
+          placeholder="Sin máximo"
+        />
+        <small class="field-hint">
+          <i class="pi pi-info-circle"></i>
+          El sugerido pide hasta llegar aquí
+        </small>
+      </div>
+    </div>
     <div class="field">
       <label>Stock Actual <span class="required">*</span></label>
       <p-inputNumber
@@ -119,6 +149,22 @@
         Al llegar a este nivel el sistema alertará stock bajo
       </small>
     </div>
+    @if (cambiaStock) {
+      <div class="field">
+        <label>Motivo del ajuste <span class="required">*</span></label>
+        <input
+          pInputText
+          formControlName="motivoAjuste"
+          class="w-full"
+          maxlength="200"
+          placeholder="Ej.: conteo físico, producto dañado, error de digitación"
+        />
+        <small class="field-hint">
+          <i class="pi pi-info-circle"></i>
+          Pasas de {{ stockOriginal }} a {{ frmInv.get('stockActual')?.value }}: queda en el kardex como ajuste manual.
+        </small>
+      </div>
+    }
     <div class="field">
       <label>Ubicación física <span class="optional">(opcional)</span></label>
       <input

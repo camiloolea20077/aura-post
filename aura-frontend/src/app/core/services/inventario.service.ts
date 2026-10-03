@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -9,6 +9,7 @@ import {
   UpdateInventarioDto,
   InventarioPageableDto,
   HistorialProductoResponse,
+  SugeridoCompraModel,
 } from '../models/inventario.model';
 import { environment } from '../../../environments/environment';
 import { ResponseTableModel } from '../../shared/utils/response-table.model';
@@ -32,6 +33,20 @@ export class InventarioService {
       `${this.apiUrl}/${id}`,
     );
   }
+  /** Saldos en o bajo su punto de reorden, con lo que conviene pedir. */
+  sugeridoCompra(
+    sucursalId?: number | null,
+    bodegaId?: number | null,
+  ): Observable<ResponseModel<SugeridoCompraModel[]>> {
+    let params = new HttpParams();
+    if (sucursalId != null) params = params.set('sucursalId', String(sucursalId));
+    if (bodegaId != null) params = params.set('bodegaId', String(bodegaId));
+    return this.http.get<ResponseModel<SugeridoCompraModel[]>>(
+      `${this.apiUrl}/sugerido-compra`,
+      { params },
+    );
+  }
+
   stockBajo(): Observable<ResponseModel<InventarioTableModel[]>> {
     return this.http.get<ResponseModel<InventarioTableModel[]>>(
       `${this.apiUrl}/stock-bajo`,

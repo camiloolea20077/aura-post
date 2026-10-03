@@ -422,14 +422,33 @@
       <!-- ── Productos ─────────────────────────────────────────────── -->
       <div class="detalle-header">
         <div class="seccion-title"><i class="pi pi-list"></i> Productos</div>
-        <button
-          pButton
-          type="button"
-          label="Agregar producto"
-          icon="pi pi-plus"
-          class="btn-verde p-button-sm"
-          (click)="agregarLinea()"
-        ></button>
+        <div class="detalle-acciones">
+          <!-- El usuario oculta las columnas que no usa (se recuerda en este equipo) -->
+          <p-multiSelect
+            [options]="columnasOpcionales"
+            optionLabel="label"
+            optionValue="key"
+            [ngModel]="columnasVisibles"
+            (ngModelChange)="onColumnasChange($event)"
+            [showHeader]="false"
+            selectedItemsLabel="Columnas"
+            [maxSelectedLabels]="0"
+            placeholder="Columnas"
+            appendTo="body"
+            styleClass="cols-select"
+            dropdownIcon="pi pi-sliders-h"
+            pTooltip="Mostrar u ocultar columnas"
+            tooltipPosition="top"
+          />
+          <button
+            pButton
+            type="button"
+            label="Agregar producto"
+            icon="pi pi-plus"
+            class="btn-verde p-button-sm"
+            (click)="agregarLinea()"
+          ></button>
+        </div>
       </div>
 
       <p-table
@@ -441,18 +460,19 @@
         [rowTrackBy]="trackByLinea"
         [scrollable]="true"
         scrollHeight="55vh"
+        [tableStyle]="{ 'min-width': anchoMinTabla + 'px' }"
       >
         <ng-template pTemplate="header">
           <tr>
             <th class="th-producto">Producto</th>
-            <th class="text-right">Cant.</th>
-            <th class="text-right">Vlr. Unitario</th>
-            <th class="text-right">Desc. $</th>
-            <th class="text-right">Costo</th>
-            <th class="text-right">IVA %</th>
-            <th class="text-right">IVA $</th>
-            <th class="text-right">Vlr. Neto</th>
-            <th class="text-center th-acc">Acciones</th>
+            <th class="text-right col-cant">Cant.</th>
+            <th class="text-right col-vu">Vlr. Unitario</th>
+            <th class="text-right col-desc" *ngIf="col('desc')">Desc. $</th>
+            <th class="text-right col-costo" *ngIf="col('costo')">Costo</th>
+            <th class="text-right col-ivapct" *ngIf="col('ivaPct')">IVA %</th>
+            <th class="text-right col-ivaval" *ngIf="col('ivaVal')">IVA $</th>
+            <th class="text-right col-neto">Vlr. Neto</th>
+            <th class="text-center col-acc">Acciones</th>
           </tr>
         </ng-template>
 
@@ -460,20 +480,16 @@
           <tr>
             <!-- Producto -->
             <td class="td-producto">
-              <div class="prod-selector" [class.sin-seleccion]="!l.productoId">
-                <span class="prod-sel-nombre">
-                  {{ l.productoNombre || "Seleccionar producto..." }}
-                </span>
-                <button
-                  type="button"
-                  class="prod-sel-btn"
-                  (click)="openProductDialog(i)"
-                  pTooltip="Buscar producto"
-                  tooltipPosition="top"
-                >
-                  <i class="pi pi-search"></i>
-                </button>
-              </div>
+              <app-producto-autocomplete
+                [productoId]="l.productoId"
+                [label]="l.productoNombre"
+                appendTo="body"
+                (seleccionado)="onProductoElegido(i, $event)"
+              />
+              <!-- Activo, gasto, diferido…: qué hará la línea al guardar -->
+              <span class="efecto-clasif" *ngIf="efectoClasificacion(l) as efecto">
+                <i class="pi pi-info-circle"></i> {{ efecto }}
+              </span>
               <!-- Producto con lotes: código, vencimiento y cantidad -->
               <button
                 *ngIf="l.manejaLotes && !esNotaCredito"
@@ -541,6 +557,20 @@
                   styleClass="cant-pres__presentacion"
                 />
               </div>
+              <!-- 4 Pacas + 2 und sueltas en la misma línea -->
+              <!-- Con lotes no: los lotes se escriben en presentaciones completas. -->
+              <div class="cant-suelta" *ngIf="l.presentacionId && !l.manejaLotes">
+                <span>+</span>
+                <p-inputNumber
+                  [ngModel]="l.cantidadSuelta"
+                  (ngModelChange)="onSueltaChange(i, $event)"
+                  [min]="0"
+                  [maxFractionDigits]="4"
+                  placeholder="0"
+                  styleClass="cant-suelta__input"
+                />
+                <span>{{ l.unidadAbreviatura || "und" }} sueltas</span>
+              </div>
             </td>
 
             <!-- Vlr. Unitario -->
@@ -559,7 +589,7 @@
             </td>
 
             <!-- Descuento $ -->
-            <td class="td-num">
+            <td class="td-num" *ngIf="col('desc')">
               <p-inputNumber
                 [ngModel]="l.descuentoValor"
                 (ngModelChange)="onDescuentoValorChange(i, $event)"
@@ -574,14 +604,14 @@
             </td>
 
             <!-- Costo (calculado) -->
-            <td class="text-right">
+            <td class="text-right" *ngIf="col('costo')">
               <span class="val-calc" [class.cero]="!l.subtotal">
                 {{ l.subtotal | currency: "COP" : "symbol-narrow" : "1.0-0" }}
               </span>
             </td>
 
             <!-- IVA % (editable) -->
-            <td class="td-num">
+            <td class="td-num" *ngIf="col('ivaPct')">
               <p-inputNumber
                 [ngModel]="l.ivaPorcentaje"
                 (ngModelChange)="onIvaPctChange(i, $event)"
@@ -595,7 +625,7 @@
             </td>
 
             <!-- IVA $ (editable) -->
-            <td class="td-num">
+            <td class="td-num" *ngIf="col('ivaVal')">
               <p-inputNumber
                 [ngModel]="l.impuestoValor"
                 (ngModelChange)="onImpuestoChange(i, $event)"
@@ -835,6 +865,16 @@
       <button
         pButton
         type="button"
+        label="Ver asiento"
+        icon="pi pi-book"
+        class="p-button-outlined"
+        pTooltip="Cómo quedará en la contabilidad, antes de guardar"
+        [disabled]="lineasArray.length === 0 || cargandoVistaPrevia"
+        (click)="verAsiento()"
+      ></button>
+      <button
+        pButton
+        type="button"
         [label]="modoEdicion ? 'Actualizar compra' : 'Registrar compra'"
         [icon]="isSubmitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
         class="btn-verde"
@@ -844,6 +884,51 @@
     </div>
   </div>
 </div>
+
+<!-- ═══════ VISTA PREVIA DEL ASIENTO ═════════════════════════════ -->
+<p-dialog
+  [(visible)]="vistaPreviaVisible"
+  header="Asiento que se registrará"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '760px' }"
+  [breakpoints]="{ '800px': '96vw' }"
+>
+  <div *ngIf="cargandoVistaPrevia" class="vp-cargando"><i class="pi pi-spin pi-spinner"></i> Armando el asiento…</div>
+  <ng-container *ngIf="vistaPrevia as vp">
+    <div class="tabla-vp">
+      <p-table [value]="vp.lineas" styleClass="p-datatable-sm" showGridlines [tableStyle]="{ 'min-width': '560px' }">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Cuenta</th>
+            <th>Detalle</th>
+            <th class="text-right">Débito</th>
+            <th class="text-right">Crédito</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-l>
+          <tr>
+            <td><strong>{{ l.cuentaCodigo }}</strong> {{ l.cuentaNombre }}</td>
+            <td>{{ l.descripcion }}</td>
+            <td class="text-right">{{ l.debito ? (l.debito | currency: "COP" : "symbol-narrow" : "1.0-2") : "" }}</td>
+            <td class="text-right">{{ l.credito ? (l.credito | currency: "COP" : "symbol-narrow" : "1.0-2") : "" }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="footer">
+          <tr>
+            <td colspan="2" class="text-right"><strong>Totales</strong></td>
+            <td class="text-right"><strong>{{ vp.totalDebito | currency: "COP" : "symbol-narrow" : "1.0-2" }}</strong></td>
+            <td class="text-right"><strong>{{ vp.totalCredito | currency: "COP" : "symbol-narrow" : "1.0-2" }}</strong></td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+    <small class="vp-nota">
+      Vista previa: nada se ha guardado. Si algo cae en una cuenta que no es, ajústalo en
+      Contabilidad › Parametrización o en la categoría contable del producto.
+    </small>
+  </ng-container>
+</p-dialog>
 
 <!-- ═══════ SERIALES DE LA LÍNEA ═════════════════════════════════ -->
 <app-serial-entrada
@@ -961,155 +1046,6 @@
       </div>
     </div>
   </ng-template>
-</p-dialog>
-
-<!-- ═══════ MODAL SELECTOR DE PRODUCTO ═══════════════════════════ -->
-<p-dialog
-  [(visible)]="showProductDialog"
-  header="Seleccionar producto"
-  [modal]="true"
-  [draggable]="false"
-  [resizable]="false"
-  [style]="{ width: '720px' }"
-  [contentStyle]="{ padding: '0' }"
-  styleClass="aura-dialog prod-dialog"
-  (onHide)="showProductDialog = false"
->
-  <!-- Buscadores -->
-  <div class="prod-dialog-search">
-    <!-- Texto / nombre / SKU -->
-    <span class="p-input-icon-left search-wrap-dialog">
-      <i class="pi pi-search"></i>
-      <input
-        type="text"
-        pInputText
-        placeholder="Buscar por nombre, SKU..."
-        [(ngModel)]="dialogSearch"
-        (input)="onDialogSearch()"
-        (keydown.escape)="dialogSearch = ''; onDialogSearch()"
-        class="search-input-dialog"
-        autocomplete="off"
-      />
-      <button
-        *ngIf="dialogSearch"
-        class="clear-btn-dialog"
-        (click)="dialogSearch = ''; onDialogSearch()"
-      >
-        <i class="pi pi-times"></i>
-      </button>
-    </span>
-    <!-- Código de barras -->
-    <div class="barcode-wrap">
-      <i class="pi pi-barcode barcode-icon"></i>
-      <input
-        type="text"
-        class="barcode-inp"
-        placeholder="Código de barras..."
-        [(ngModel)]="barcodeQuery"
-        (keydown.enter)="buscarPorBarcode()"
-        autocomplete="off"
-      />
-      <button
-        type="button"
-        class="barcode-btn"
-        [disabled]="!barcodeQuery || barcodeSearching"
-        (click)="buscarPorBarcode()"
-        pTooltip="Buscar por código de barras"
-        tooltipPosition="top"
-      >
-        <i
-          [class]="
-            barcodeSearching ? 'pi pi-spin pi-spinner' : 'pi pi-arrow-right'
-          "
-        ></i>
-      </button>
-    </div>
-  </div>
-
-  <!-- Tabla -->
-  <p-table
-    [value]="dialogItems"
-    [lazy]="true"
-    (onLazyLoad)="loadDialogTable($event)"
-    [paginator]="true"
-    [rows]="10"
-    [totalRecords]="dialogTotal"
-    [loading]="dialogLoading"
-    [rowsPerPageOptions]="[10, 25]"
-    [showCurrentPageReport]="true"
-    currentPageReportTemplate="{first}-{last} de {totalRecords}"
-    [tableStyle]="{ 'min-width': '100%' }"
-    styleClass="prod-select-table"
-    selectionMode="single"
-  >
-    <ng-template pTemplate="header">
-      <tr>
-        <th style="min-width: 200px">Producto</th>
-        <th style="width: 90px">SKU</th>
-        <th style="width: 110px">Categoría</th>
-        <th style="width: 110px" class="text-right">Precio</th>
-        <th style="width: 90px" class="text-right">Costo</th>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="body" let-item>
-      <tr class="prod-dialog-row" (click)="selectProductFromDialog(item)">
-        <td>
-          <div class="prod-info-cell">
-            <span class="prod-info-nombre">{{ item.nombre }}</span>
-            <span class="prod-info-barras" *ngIf="item.codigoBarras">
-              <i class="pi pi-barcode"></i> {{ item.codigoBarras }}
-            </span>
-          </div>
-        </td>
-        <td>
-          <span class="sku-chip" *ngIf="item.sku">{{ item.sku }}</span>
-          <span class="text-muted" *ngIf="!item.sku">—</span>
-        </td>
-        <td>
-          <span *ngIf="item.categoriaNombre">{{ item.categoriaNombre }}</span>
-          <span class="text-muted" *ngIf="!item.categoriaNombre">—</span>
-        </td>
-        <td class="text-right">
-          <span class="price-cell">{{
-            item.precio | currency: "COP" : "symbol-narrow" : "1.0-0"
-          }}</span>
-        </td>
-        <td class="text-right">
-          <span class="cost-cell">{{
-            item.costo | currency: "COP" : "symbol-narrow" : "1.0-0"
-          }}</span>
-        </td>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="emptymessage">
-      <tr>
-        <td colspan="5">
-          <div class="dialog-empty">
-            <i class="pi pi-search"></i>
-            <p>
-              {{
-                dialogSearch
-                  ? 'Sin resultados para "' + dialogSearch + '"'
-                  : "Escribe para buscar productos"
-              }}
-            </p>
-          </div>
-        </td>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="loadingbody">
-      <tr *ngFor="let s of [1, 2, 3, 4, 5]">
-        <td><p-skeleton /></td>
-        <td><p-skeleton width="70px" /></td>
-        <td><p-skeleton /></td>
-        <td><p-skeleton width="90px" styleClass="ml-auto" /></td>
-        <td><p-skeleton width="80px" styleClass="ml-auto" /></td>
-      </tr>
-    </ng-template>
-  </p-table>
 </p-dialog>
 
 <!-- ═══════ MODAL SELECTOR DE FACTURA A ACREDITAR ════════════════ -->

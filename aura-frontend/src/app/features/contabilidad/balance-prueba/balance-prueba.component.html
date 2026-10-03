@@ -1,0 +1,103 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-list-check"></i></span>
+        <div>
+          <h1 class="title">Balance de Prueba</h1>
+          <p class="subtitle">Saldo anterior, débitos, créditos y saldo final por cuenta</p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button pButton type="button" label="Generar" icon="pi pi-refresh" class="btn-aura" [disabled]="loading" (click)="cargar()"></button>
+          <button pButton type="button" label="Exportar CSV" icon="pi pi-file-excel" class="p-button-outlined"
+            [disabled]="!data?.filas?.length" (click)="exportarCsv()"></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="filtros">
+      <div class="campo">
+        <label>Desde</label>
+        <p-calendar [(ngModel)]="desde" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" />
+      </div>
+      <div class="campo">
+        <label>Hasta</label>
+        <p-calendar [(ngModel)]="hasta" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" />
+      </div>
+      <div class="campo">
+        <label>Nivel</label>
+        <p-dropdown [(ngModel)]="nivel" [options]="niveles" optionLabel="label" optionValue="value" appendTo="body" />
+      </div>
+      <div class="campo campo--corto">
+        <label>Cuenta desde</label>
+        <input pInputText [(ngModel)]="cuentaDesde" placeholder="Ej: 1" />
+      </div>
+      <div class="campo campo--corto">
+        <label>Cuenta hasta</label>
+        <input pInputText [(ngModel)]="cuentaHasta" placeholder="Ej: 3" />
+      </div>
+      <div class="campo campo--ancho">
+        <label>Tercero</label>
+        <app-tercero-autocomplete [(ngModel)]="terceroId" appendTo="body" />
+      </div>
+      <div class="campo">
+        <label>Comparar con</label>
+        <p-dropdown [(ngModel)]="comparar" [options]="comparaciones" optionLabel="label" optionValue="value"
+          [showClear]="true" placeholder="Sin comparar" appendTo="body" />
+      </div>
+    </div>
+
+    <ng-container *ngIf="data">
+      <div class="aviso" [class.aviso--mal]="!data.cuadra">
+        <i class="pi" [class.pi-check-circle]="data.cuadra" [class.pi-exclamation-triangle]="!data.cuadra"></i>
+        Débitos {{ data.totalDebitos | currency: "COP" : "symbol-narrow" : "1.0-2" }} ·
+        Créditos {{ data.totalCreditos | currency: "COP" : "symbol-narrow" : "1.0-2" }}
+        {{ data.cuadra ? "— el libro cuadra" : "— no cuadra: revise asientos descuadrados" }}
+        <span *ngIf="data.comparadoDesde" class="comp">
+          · comparado con {{ data.comparadoDesde | date: "dd/MM/yyyy" }} – {{ data.comparadoHasta | date: "dd/MM/yyyy" }}
+        </span>
+      </div>
+
+      <div class="tabla-scroll">
+        <p-table [value]="data.filas" [loading]="loading" styleClass="p-datatable-sm" showGridlines
+          [scrollable]="true" scrollHeight="65vh" [tableStyle]="{ 'min-width': data.comparadoDesde ? '1150px' : '820px' }">
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="min-width: 260px">Cuenta</th>
+              <th class="text-right">Saldo anterior</th>
+              <th class="text-right">Débitos</th>
+              <th class="text-right">Créditos</th>
+              <th class="text-right">Saldo final</th>
+              <ng-container *ngIf="data.comparadoDesde">
+                <th class="text-right">Comparado</th>
+                <th class="text-right">Variación</th>
+                <th class="text-right">%</th>
+              </ng-container>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-f>
+            <tr [class]="'nivel-' + (f.codigo.length > 6 ? 5 : f.codigo.length)">
+              <td>
+                <span class="codigo">{{ f.codigo }}</span> {{ f.nombre }}
+              </td>
+              <td class="text-right">{{ f.saldoAnterior | number: "1.0-2" }}</td>
+              <td class="text-right">{{ f.debitos | number: "1.0-2" }}</td>
+              <td class="text-right">{{ f.creditos | number: "1.0-2" }}</td>
+              <td class="text-right" [class.neg]="f.saldoFinal < 0">{{ f.saldoFinal | number: "1.0-2" }}</td>
+              <ng-container *ngIf="data.comparadoDesde">
+                <td class="text-right">{{ f.saldoComparado | number: "1.0-2" }}</td>
+                <td class="text-right" [class.neg]="(f.variacion ?? 0) < 0">{{ f.variacion | number: "1.0-2" }}</td>
+                <td class="text-right">{{ f.variacionPct != null ? (f.variacionPct | number: "1.0-1") + " %" : "—" }}</td>
+              </ng-container>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr><td colspan="8" class="vacio">Sin movimientos en el rango.</td></tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </ng-container>
+  </div>
+</div>

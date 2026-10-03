@@ -35,4 +35,11 @@ export interface SidebarMenuGroup {
   roles?: string[];
   defaultOpen?: boolean;
   alwaysOpen?: boolean;
+  /**
+   * Si existe, el grupo se muestra como un enlace a esta pantalla (un "centro"
+   * del módulo) en vez de desplegar sus ítems. Los ítems se quedan en la
+   * configuración porque son los que pasan el filtro de permisos; el centro
+   * los lee ya filtrados de `StateStore.menuGroups()`.
+   */
+  hubRoute?: string;
 }

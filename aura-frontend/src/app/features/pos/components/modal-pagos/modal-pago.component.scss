@@ -763,3 +763,27 @@
   color: #dc2626 !important;
   font-weight: 600;
 }
+
+// Recargo de la forma de pago (Sistecrédito…): lo paga el cliente
+.recargo-aviso {
+  flex: 1 1 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 8px;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  i { margin-top: 0.1rem; }
+}
+
+.total-recargo {
+  display: block;
+  font-size: 0.72rem;
+  color: #c2410c;
+  font-weight: 600;
+}
+
+.res-row .orange { color: #c2410c; font-weight: 600; }

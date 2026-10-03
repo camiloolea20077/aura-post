@@ -202,3 +202,94 @@
     margin: 0;
   }
 }
+
+// ── Criterios de búsqueda (igual al buscador de terceros) ─────────
+.prod-panel { background: #fff; border-bottom: 1px solid #e2e8f0; }
+
+.prod-panel-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  background: #fafbfe;
+  border: none;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  font-family: inherit;
+  i { color: #2563eb; font-size: 0.8rem; }
+}
+
+.prod-panel-titulo {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #475569;
+}
+
+.prod-panel-badge {
+  background: #2563eb;
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 0.3rem;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.prod-panel-chevron { margin-left: auto; color: #94a3b8 !important; font-size: 0.72rem; }
+
+.prod-panel-body { padding: 0.8rem 1rem 0.7rem; }
+
+.prod-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem 0.75rem;
+  @media (max-width: 860px) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (max-width: 480px) { grid-template-columns: minmax(0, 1fr); }
+}
+
+.prod-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  label { font-size: 0.72rem; font-weight: 600; color: #64748b; }
+}
+
+.prod-panel-acciones { display: flex; justify-content: flex-end; margin-top: 0.6rem; }
+
+.link-btn {
+  border: none;
+  background: none;
+  color: #2563eb;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tabla-scroll { overflow-x: auto; min-width: 0; }
+
+.clase-chip {
+  margin-left: 0.35rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 6px;
+  background: #eef2ff;
+  color: #1d4ed8;
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+
+.prod-dialog-row.inactivo td { color: #94a3b8; }
+
+@media (max-width: 640px) {
+  .prod-dialog-search { flex-wrap: wrap; }
+  .barcode-inp { width: 100%; }
+  .barcode-wrap { flex: 1 1 100%; }
+}

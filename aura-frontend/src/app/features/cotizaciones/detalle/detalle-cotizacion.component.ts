@@ -26,6 +26,7 @@ import { AlertService } from '../../../shared/pipes/alert.service';
 import { EmpresaService } from '../../../core/services/empresa.service';
 import { CotizacionPdfService } from '../../../core/services/cotizacion-pdf.service';
 import { ModalTirillaCotizacionComponent } from '../../pos/components/modal-tirilla-cotizacion/modal-tirilla-cotizacion.component';
+import { DocumentosRelacionadosComponent } from '../../../shared/components/documentos-relacionados/documentos-relacionados.component';
 
 @Component({
   selector: 'app-detalle-cotizacion',
@@ -40,6 +41,7 @@ import { ModalTirillaCotizacionComponent } from '../../pos/components/modal-tiri
     ConfirmDialogModule,
     SkeletonModule,
     ModalTirillaCotizacionComponent,
+    DocumentosRelacionadosComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './detalle-cotizacion.component.html',
@@ -195,6 +197,7 @@ export class DetalleCotizacionComponent implements OnChanges {
     | undefined {
     const map = {
       PENDIENTE: 'info',
+      PARCIAL: 'warn',
       VENCIDA: 'warn',
       ANULADA: 'danger',
       CONVERTIDA: 'success',
@@ -204,6 +207,7 @@ export class DetalleCotizacionComponent implements OnChanges {
   getEstadoLabel(e: EstadoCotizacion): string {
     const labels: Record<EstadoCotizacion, string> = {
       PENDIENTE: 'Pendiente',
+      PARCIAL: 'Parcial',
       VENCIDA: 'Vencida',
       ANULADA: 'Anulada',
       CONVERTIDA: 'Convertida',

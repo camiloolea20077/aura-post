@@ -181,3 +181,11 @@
   font-size: 0.85rem !important;
   justify-content: center;
 }
+
+// Punto de reorden y máximo lado a lado; en pantallas chicas, uno bajo otro.
+.field-row-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  min-width: 0;
+}

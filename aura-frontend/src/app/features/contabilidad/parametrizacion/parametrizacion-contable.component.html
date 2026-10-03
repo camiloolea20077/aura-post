@@ -1,0 +1,362 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-sliders-h"></i></span>
+        <div>
+          <h1 class="title">Parametrización Contable</h1>
+          <p class="subtitle">A qué cuenta va cada operación, forma de pago e impuesto</p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button
+            pButton
+            type="button"
+            label="Categorías contables"
+            icon="pi pi-sitemap"
+            class="p-button-outlined"
+            pTooltip="Cuentas por clase de ítem: mercancía, activos, gastos, diferidos"
+            (click)="irCategorias()"
+          ></button>
+        </div>
+      </div>
+    </div>
+
+    <p-tabView [(activeIndex)]="activeTab" styleClass="aura-tabs">
+      <!-- Conceptos -->
+      <p-tabPanel>
+        <ng-template pTemplate="header">
+          <span class="tab-label"><i class="pi pi-book"></i> Conceptos</span>
+        </ng-template>
+        <p class="ayuda">
+          Cada operación automática (venta, compra, nómina, depreciación…) usa la
+          cuenta de su concepto. Si no la cambias usa la del PUC por defecto. Solo
+          se ofrecen cuentas auxiliares de la clase que el concepto admite.
+        </p>
+        <span class="search-wrap buscador">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            class="search-input"
+            [(ngModel)]="busqueda"
+            (input)="agrupar()"
+            placeholder="Buscar concepto o cuenta..."
+          />
+        </span>
+        <div class="grupo" *ngFor="let g of grupos">
+          <h3 class="grupo__titulo">{{ g.nombre }}</h3>
+          <div class="tabla-scroll">
+            <p-table [value]="g.conceptos" styleClass="p-datatable-sm" showGridlines [tableStyle]="{ 'min-width': '640px' }">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>Concepto</th>
+                  <th style="width: 55%">Cuenta</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-c>
+                <tr>
+                  <td>
+                    {{ c.descripcionConcepto }}
+                    <div class="sub">
+                      <p-tag *ngIf="c.porDefecto" value="Por defecto" severity="secondary" />
+                      <span *ngIf="c.prefijosPermitidos?.length"> admite {{ c.prefijosPermitidos.join(", ") }}xx</span>
+                    </div>
+                  </td>
+                  <td>
+                    <p-dropdown
+                      [ngModel]="c.cuentaId"
+                      (ngModelChange)="cambiarConcepto(c, $event)"
+                      [options]="opcionesConcepto(c)"
+                      optionLabel="label"
+                      optionValue="value"
+                      [filter]="true"
+                      filterBy="label"
+                      [placeholder]="c.codigoDefault ? 'Crear o elegir (' + c.codigoDefault + ')' : 'Elegir cuenta'"
+                      [disabled]="guardando === c.concepto"
+                      appendTo="body"
+                      styleClass="w-full"
+                    />
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </div>
+      </p-tabPanel>
+
+      <!-- Formas de pago -->
+      <p-tabPanel>
+        <ng-template pTemplate="header">
+          <span class="tab-label"><i class="pi pi-credit-card"></i> Formas de pago</span>
+        </ng-template>
+        <div class="barra-accion">
+          <p class="ayuda">
+            Cada forma de pago activa aparece en el POS al cobrar y en las ventas.
+            Lo cobrado con ella se debita a su cuenta: caja o banco (11) si la plata
+            entra ya; <strong>cartera (13)</strong> si la paga después un financiador
+            como ADDI o Sistecrédito (queda por cobrarle a él). Con
+            <strong>Copiar a…</strong> una forma configurada se aplica a otras.
+          </p>
+          <button pButton type="button" label="Nueva forma de pago" icon="pi pi-plus" class="btn-aura" (click)="abrirNuevaForma()"></button>
+        </div>
+        <div class="tabla-scroll">
+          <p-table [value]="formasPago" styleClass="p-datatable-sm" showGridlines [tableStyle]="{ 'min-width': '720px' }">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Forma de pago</th>
+                <th style="width: 50%">Cuenta</th>
+                <th style="width: 110px" pTooltip="Lo paga el cliente al usar esta forma">Recargo</th>
+                <th style="width: 90px">Banco</th>
+                <th style="width: 150px"></th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-f>
+              <tr>
+                <td>{{ f.nombre }} <div class="sub">{{ f.codigo }}</div></td>
+                <td>
+                  <p-dropdown
+                    [(ngModel)]="f.cuentaContableId"
+                    [options]="cuentasFormaPago"
+                    optionLabel="label"
+                    optionValue="value"
+                    [filter]="true"
+                    filterBy="label"
+                    placeholder="Sin cuenta"
+                    appendTo="body"
+                    styleClass="w-full"
+                  />
+                </td>
+                <td>
+                  <p-inputNumber
+                    [(ngModel)]="f.recargoPorcentaje"
+                    suffix=" %"
+                    [min]="0"
+                    [max]="50"
+                    [maxFractionDigits]="2"
+                    placeholder="0 %"
+                    styleClass="w-full recargo-input"
+                  />
+                </td>
+                <td>
+                  <p-tag [value]="f.requiereCuentaBancaria ? 'Pide banco' : '—'" [severity]="f.requiereCuentaBancaria ? 'info' : 'secondary'" />
+                </td>
+                <td class="acciones">
+                  <button
+                    pButton
+                    icon="pi pi-check"
+                    class="p-button-text p-button-sm"
+                    pTooltip="Guardar"
+                    [disabled]="guardando === 'FP' + f.id"
+                    (click)="guardarFormaPago(f)"
+                  ></button>
+                  <button
+                    pButton
+                    icon="pi pi-copy"
+                    label="Copiar a…"
+                    class="p-button-text p-button-sm"
+                    [disabled]="!f.cuentaContableId"
+                    (click)="abrirCopiar(f)"
+                  ></button>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr><td colspan="5" class="vacio">No hay formas de pago configuradas.</td></tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </p-tabPanel>
+
+      <!-- Impuestos -->
+      <p-tabPanel>
+        <ng-template pTemplate="header">
+          <span class="tab-label"><i class="pi pi-percentage"></i> Impuestos</span>
+        </ng-template>
+        <p class="ayuda">
+          Cuenta del impuesto generado (ventas) y del descontable (compras) por tarifa.
+        </p>
+        <div class="tabla-scroll">
+          <p-table [value]="impuestos" styleClass="p-datatable-sm" showGridlines [tableStyle]="{ 'min-width': '760px' }">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Impuesto</th>
+                <th style="width: 34%">Generado (ventas)</th>
+                <th style="width: 34%">Descontable (compras)</th>
+                <th style="width: 60px"></th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-i>
+              <tr>
+                <td>{{ i.nombre }} <div class="sub">{{ i.tipo }} · {{ i.porcentaje }} %</div></td>
+                <td>
+                  <p-dropdown [(ngModel)]="i.cuentaGeneradoId" [options]="cuentasAux" optionLabel="label" optionValue="value"
+                    [filter]="true" filterBy="label" [showClear]="true" placeholder="La de la empresa" appendTo="body" styleClass="w-full" />
+                </td>
+                <td>
+                  <p-dropdown [(ngModel)]="i.cuentaDescontableId" [options]="cuentasAux" optionLabel="label" optionValue="value"
+                    [filter]="true" filterBy="label" [showClear]="true" placeholder="La de la empresa" appendTo="body" styleClass="w-full" />
+                </td>
+                <td>
+                  <button pButton icon="pi pi-check" class="p-button-text p-button-sm" pTooltip="Guardar"
+                    [disabled]="guardando === 'IMP' + i.id" (click)="guardarImpuesto(i)"></button>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr><td colspan="4" class="vacio">No hay impuestos configurados.</td></tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </p-tabPanel>
+
+      <!-- Modo -->
+      <p-tabPanel>
+        <ng-template pTemplate="header">
+          <span class="tab-label"><i class="pi pi-shield"></i> Modo</span>
+        </ng-template>
+        <div class="pregunta">
+          <span class="pregunta__texto">¿Cómo se registran los asientos automáticos?</span>
+          <div class="opciones">
+            <button type="button" class="opcion" [class.opcion--activa]="modo === 'AUTOMATICO'" (click)="setModo('AUTOMATICO')">
+              <i class="pi" [class.pi-circle-fill]="modo === 'AUTOMATICO'" [class.pi-circle]="modo !== 'AUTOMATICO'"></i>
+              Automático: se contabilizan al guardar el documento
+            </button>
+            <button type="button" class="opcion" [class.opcion--activa]="modo === 'REVISION'" (click)="setModo('REVISION')">
+              <i class="pi" [class.pi-circle-fill]="modo === 'REVISION'" [class.pi-circle]="modo !== 'REVISION'"></i>
+              Revisión: quedan en borrador hasta que el contador los apruebe
+            </button>
+          </div>
+        </div>
+      </p-tabPanel>
+
+      <!-- Historial -->
+      <p-tabPanel>
+        <ng-template pTemplate="header">
+          <span class="tab-label"><i class="pi pi-history"></i> Historial</span>
+        </ng-template>
+        <div class="tabla-scroll">
+          <p-table [value]="log" styleClass="p-datatable-sm" showGridlines [paginator]="log.length > 20" [rows]="20"
+            [tableStyle]="{ 'min-width': '640px' }">
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="width: 150px">Fecha</th>
+                <th>Concepto</th>
+                <th>Antes</th>
+                <th>Ahora</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-l>
+              <tr>
+                <td>{{ l.fecha | date: "dd/MM/yyyy HH:mm" }}</td>
+                <td>{{ l.descripcionConcepto }}</td>
+                <td>{{ l.cuentaAnterior || "Por defecto" }}</td>
+                <td>{{ l.cuentaNueva }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr><td colspan="4" class="vacio">Sin cambios registrados.</td></tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </p-tabPanel>
+    </p-tabView>
+  </div>
+</div>
+
+<p-dialog
+  [(visible)]="showNuevaForma"
+  header="Nueva forma de pago"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '520px' }"
+  [breakpoints]="{ '560px': '95vw' }"
+>
+  <div class="form-forma">
+    <div class="campo">
+      <label>Nombre <span class="req">*</span></label>
+      <input pInputText [(ngModel)]="nuevaForma.nombre" (blur)="sugerirCodigo()" maxlength="60" placeholder="Ej: ADDI" />
+    </div>
+    <div class="campo">
+      <label>Código <span class="req">*</span></label>
+      <input pInputText [(ngModel)]="nuevaForma.codigo" maxlength="30" placeholder="Ej: ADDI" class="codigo" />
+      <small class="ayuda">Es el que queda guardado en cada venta; no se puede cambiar después.</small>
+    </div>
+    <div class="campo">
+      <label>Cuenta <span class="req">*</span></label>
+      <p-dropdown
+        [(ngModel)]="nuevaForma.cuentaContableId"
+        [options]="cuentasFormaPago"
+        optionLabel="label"
+        optionValue="value"
+        [filter]="true"
+        filterBy="label"
+        placeholder="11xx caja/banco o 13xx por cobrar al financiador"
+        appendTo="body"
+        styleClass="w-full"
+      />
+      <small class="ayuda">
+        Para ADDI crea antes en el Plan de Cuentas una auxiliar como 130510 "Por cobrar ADDI" y elígela aquí.
+      </small>
+    </div>
+    <div class="campo">
+      <label>Recargo que paga el cliente</label>
+      <p-inputNumber
+        [(ngModel)]="nuevaForma.recargoPorcentaje"
+        suffix=" %"
+        [min]="0"
+        [max]="50"
+        [maxFractionDigits]="2"
+        placeholder="0 %"
+        styleClass="w-full"
+      />
+      <small class="ayuda">
+        Ej: Sistecrédito cobra 5 %. Al pagar $100.000 con esta forma el cliente paga $105.000; el recargo
+        sale como una línea "Recargo por forma de pago" en la venta y en la factura. Déjalo en 0 si no aplica.
+      </small>
+    </div>
+    <div class="pregunta">
+      <span class="pregunta__texto">¿Al cobrar hay que elegir la cuenta bancaria?</span>
+      <div class="opciones">
+        <button type="button" class="opcion" [class.opcion--activa]="!nuevaForma.requiereCuentaBancaria" (click)="nuevaForma.requiereCuentaBancaria = false">
+          <i class="pi" [class.pi-circle-fill]="!nuevaForma.requiereCuentaBancaria" [class.pi-circle]="nuevaForma.requiereCuentaBancaria"></i> No
+        </button>
+        <button type="button" class="opcion" [class.opcion--activa]="nuevaForma.requiereCuentaBancaria" (click)="nuevaForma.requiereCuentaBancaria = true">
+          <i class="pi" [class.pi-circle-fill]="nuevaForma.requiereCuentaBancaria" [class.pi-circle]="!nuevaForma.requiereCuentaBancaria"></i> Sí (transferencias)
+        </button>
+      </div>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancelar" class="p-button-text" (click)="showNuevaForma = false"></button>
+    <button pButton label="Crear" icon="pi pi-check" class="btn-aura" [disabled]="guardandoForma" (click)="crearForma()"></button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  [(visible)]="showCopiar"
+  [header]="'Copiar la cuenta de ' + (copiarOrigen?.nombre ?? '')"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '480px' }"
+  [breakpoints]="{ '560px': '95vw' }"
+>
+  <p class="ayuda">
+    Las formas de pago que elijas quedan con la misma cuenta
+    <strong>{{ copiarOrigen?.cuentaContable }}</strong>.
+  </p>
+  <p-multiSelect
+    [(ngModel)]="copiarDestinos"
+    [options]="destinosCopia"
+    optionLabel="label"
+    optionValue="value"
+    placeholder="Elegir formas de pago"
+    display="chip"
+    appendTo="body"
+    styleClass="w-full"
+  />
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancelar" class="p-button-text" (click)="showCopiar = false"></button>
+    <button pButton label="Copiar" icon="pi pi-copy" class="btn-aura" [disabled]="!copiarDestinos.length" (click)="confirmarCopiar()"></button>
+  </ng-template>
+</p-dialog>

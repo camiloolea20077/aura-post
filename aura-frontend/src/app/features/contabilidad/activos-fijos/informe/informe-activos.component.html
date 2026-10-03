@@ -1,0 +1,131 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-arrow-left"
+          class="p-button-text p-button-rounded"
+          (click)="volver()"
+        ></button>
+        <div>
+          <h1 class="title">Informe de Activos Fijos</h1>
+          <p class="subtitle">Costo, depreciación y valor en libros</p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button
+            pButton
+            type="button"
+            label="Exportar CSV"
+            icon="pi pi-file-excel"
+            class="p-button-outlined"
+            [disabled]="!data?.filas?.length"
+            (click)="exportarCsv()"
+          ></button>
+        </div>
+        <div class="card-head__search">
+          <p-dropdown [options]="estados" [(ngModel)]="estado" optionLabel="label" optionValue="value" (onChange)="cargar()" />
+          <p-dropdown
+            [options]="categorias"
+            [(ngModel)]="categoria"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Todas las categorías"
+            [showClear]="true"
+            (onChange)="cargar()"
+            (onClear)="cargar()"
+          />
+          <p-dropdown
+            [options]="periodos"
+            [(ngModel)]="periodoId"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Depreciación del mes…"
+            [showClear]="true"
+            [filter]="true"
+            (onChange)="cargar()"
+            (onClear)="cargar()"
+          />
+          <p-dropdown [options]="agrupaciones" [(ngModel)]="agrupar" optionLabel="label" optionValue="value" (onChange)="cargar()" />
+        </div>
+      </div>
+    </div>
+
+    <ng-container *ngIf="data">
+      <section class="totales">
+        <div><span>Costo</span><strong>{{ data.totalCosto | currency: "COP" : "symbol-narrow" : "1.0-0" }}</strong></div>
+        <div><span>Depreciación acumulada</span><strong>{{ data.totalDepreciacion | currency: "COP" : "symbol-narrow" : "1.0-0" }}</strong></div>
+        <div><span>Valor en libros</span><strong>{{ data.totalEnLibros | currency: "COP" : "symbol-narrow" : "1.0-0" }}</strong></div>
+        <div><span>Activos</span><strong>{{ data.filas.length }}</strong></div>
+      </section>
+
+      <h3 class="section">Resumen</h3>
+      <div class="tabla-scroll">
+        <p-table [value]="data.grupos" styleClass="p-datatable-sm" showGridlines [tableStyle]="{ 'min-width': '560px' }">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Grupo</th>
+              <th class="text-right">Activos</th>
+              <th class="text-right">Costo</th>
+              <th class="text-right">Depreciación</th>
+              <th class="text-right">En libros</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-g>
+            <tr>
+              <td class="grupo">{{ g.nombre }}</td>
+              <td class="text-right">{{ g.cantidad }}</td>
+              <td class="text-right">{{ g.costo | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+              <td class="text-right">{{ g.depreciacion | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+              <td class="text-right">{{ g.enLibros | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <h3 class="section">Detalle</h3>
+      <div class="tabla-scroll">
+        <p-table
+          [value]="data.filas"
+          [loading]="loading"
+          styleClass="p-datatable-sm"
+          showGridlines
+          [paginator]="data.filas.length > 25"
+          [rows]="25"
+          [tableStyle]="{ 'min-width': '900px' }"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Código</th>
+              <th>Descripción</th>
+              <th>Centro de costo</th>
+              <th>Responsable</th>
+              <th class="text-right">Costo</th>
+              <th class="text-right">Dep. acumulada</th>
+              <th class="text-right">En libros</th>
+              <th class="text-right" *ngIf="periodoId">Dep. del mes</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-f>
+            <tr>
+              <td><strong>{{ f.codigo }}</strong><div class="sub" *ngIf="f.placa">{{ f.placa }}</div></td>
+              <td>{{ f.descripcion }}</td>
+              <td>{{ f.centroCosto }}</td>
+              <td>{{ f.responsable }}</td>
+              <td class="text-right">{{ f.costo | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+              <td class="text-right">{{ f.depreciacionAcumulada | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+              <td class="text-right">{{ f.valorEnLibros | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+              <td class="text-right" *ngIf="periodoId">{{ f.depreciacionMes | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr><td colspan="8" class="vacio">No hay activos con esos filtros.</td></tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </ng-container>
+  </div>
+</div>

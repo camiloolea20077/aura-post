@@ -41,8 +41,9 @@ export const INVENTARIO: ManualModulo[] = [
       {
         titulo: 'Cómo se mueve el stock',
         texto: [
-          'El stock nunca se escribe a mano: entra con compras, traslados y devoluciones, y sale con ventas, mermas, obsequios, consumo interno y traslados. Cada movimiento queda en el kardex con el saldo anterior y el nuevo.',
-          'Para corregir diferencias con lo que hay físicamente se usa un Reconteo.',
+          'El stock entra con compras, traslados y devoluciones, y sale con ventas, mermas, obsequios, consumo interno y traslados. Cada movimiento queda en el kardex con el saldo anterior y el nuevo.',
+          'Para corregir diferencias con lo que hay físicamente lo formal es un Reconteo. También se puede cambiar la cantidad desde el lápiz de esta pantalla: pide un motivo y queda en el kardex como "Ajuste manual — sobrante" o "— faltante", al costo promedio.',
+          'Dos cajas vendiendo el mismo producto al mismo tiempo ya no se pisan el saldo: la segunda espera un instante y descuenta sobre lo que dejó la primera.',
         ],
       },
       {
@@ -54,12 +55,34 @@ export const INVENTARIO: ManualModulo[] = [
           'El botón "Stock bajo" lista los productos que necesitan reabastecimiento.',
         ],
       },
+      {
+        titulo: 'Punto de reorden, máximo y stock como se cuenta',
+        texto: [
+          'Punto de reorden: con este saldo o menos el producto sale en Compras › Sugerido de Compra. Máximo: hasta dónde pedir. Los dos son por bodega y opcionales.',
+          'Si el producto tiene una presentación (Caja ×10), debajo del número aparece el stock como se cuenta: "2 Cajas + 8 und". Es solo visual; el saldo sigue en la unidad base.',
+        ],
+      },
     ],
     errores: [
+      {
+        mensaje: 'El punto de reorden no puede ser menor que el stock mínimo: se pide antes de llegar al mínimo',
+        causa: 'Se escribió un punto de reorden por debajo del mínimo.',
+        solucion: 'Suba el punto de reorden o baje el mínimo.',
+      },
+      {
+        mensaje: 'El máximo debe ser mayor que el punto de reorden (o que el mínimo)',
+        causa: 'El máximo quedó igual o por debajo del punto de pedido.',
+        solucion: 'Suba el máximo o déjelo vacío.',
+      },
       {
         mensaje: 'Este producto ya tiene inventario en la bodega …',
         causa: 'El registro de inventario ya existe.',
         solucion: 'Edítelo en la lista en lugar de crearlo de nuevo.',
+      },
+      {
+        mensaje: 'Escribe el motivo del ajuste de stock: queda registrado en el kardex',
+        causa: 'Se cambió la cantidad sin decir por qué.',
+        solucion: 'Escriba el motivo (conteo físico, producto dañado, error de digitación) y guarde.',
       },
       {
         mensaje: 'El stock no coincide con lo que hay en la estantería',

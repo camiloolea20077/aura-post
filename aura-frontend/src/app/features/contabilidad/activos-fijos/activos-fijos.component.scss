@@ -9,3 +9,36 @@
 .flex-1 { flex: 1; }
 .req { color: var(--red-500); }
 .hint { font-size: .75rem; color: var(--text-color-secondary); font-weight: 400; margin-left:.25rem; }
+
+.sub { font-size: 0.72rem; color: #94a3b8; }
+.hint { font-size: 0.72rem; color: #64748b; }
+
+.resultado-venta {
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: #f8fafc;
+  font-size: 0.85rem;
+  strong { color: #15803d; }
+  strong.neg { color: #dc2626; }
+}
+
+.unidades {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+  label { font-size: 0.82rem; font-weight: 600; color: #374151; }
+
+  &__fila {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    min-width: 0;
+    span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  }
+}
+
+:host ::ng-deep .unidades__input .p-inputnumber-input { width: 7rem; text-align: right; }

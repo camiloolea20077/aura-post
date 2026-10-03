@@ -69,6 +69,9 @@
         <div class="det-info">
           <span class="det-nombre">{{ d.productoNombre }}</span>
           <span class="det-sku" *ngIf="d.productoSku">{{ d.productoSku }}</span>
+          <span class="det-avance" *ngIf="(d.cantidadAplicada ?? 0) > 0">
+            Vendido {{ d.cantidadAplicada | number: '1.0-3' }} · Pendiente {{ d.cantidadPendiente | number: '1.0-3' }}
+          </span>
         </div>
         <div class="det-calc">
           <span class="det-expr">{{ d.cantidad }} × {{ formatCOP(d.precioUnitario) }}</span>
@@ -97,6 +100,9 @@
       </div>
     </div>
 
+    <!-- Cadena documental (de dónde viene / a dónde fue) -->
+    <app-documentos-relacionados tipo="COTIZACION" [id]="cotizacion.id" />
+
     <!-- Imprimir / PDF -->
     <div class="print-zone">
       <button
@@ -117,14 +123,18 @@
     </div>
 
     <!-- Acciones -->
-    <div class="acciones-zone" *ngIf="cotizacion.estado === 'PENDIENTE'">
+    <div class="acciones-zone" *ngIf="cotizacion.estado === 'PENDIENTE' || cotizacion.estado === 'PARCIAL'">
       <!-- Convertir a venta -->
       <div class="accion-item accion-convertir">
         <div class="accion-info">
           <i class="pi pi-shopping-cart"></i>
           <div>
-            <p class="accion-title">Convertir a venta</p>
-            <p class="accion-sub">Cargará los productos en el carrito del POS.</p>
+            <p class="accion-title">{{ cotizacion.estado === 'PARCIAL' ? 'Vender lo pendiente' : 'Convertir a venta' }}</p>
+            <p class="accion-sub">
+              {{ cotizacion.estado === 'PARCIAL'
+                ? 'Cargará en el POS solo lo que falta por vender.'
+                : 'Cargará los productos en el carrito del POS.' }}
+            </p>
           </div>
         </div>
         <button
@@ -143,7 +153,11 @@
           <i class="pi pi-exclamation-triangle"></i>
           <div>
             <p class="accion-title">Anular cotización</p>
-            <p class="accion-sub">La cotización quedará marcada como anulada.</p>
+            <p class="accion-sub">
+              {{ cotizacion.estado === 'PARCIAL'
+                ? 'Lo ya vendido se conserva; lo pendiente deja de poder venderse.'
+                : 'La cotización quedará marcada como anulada.' }}
+            </p>
           </div>
         </div>
         <button

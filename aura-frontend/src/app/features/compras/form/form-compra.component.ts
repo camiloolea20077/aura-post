@@ -28,6 +28,8 @@ import {
 } from 'primeng/autocomplete';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
+import { MultiSelectModule } from 'primeng/multiselect';
+import { ProductoAutocompleteComponent } from '../../../shared/components/producto-autocomplete/producto-autocomplete.component';
 import { TextareaModule } from 'primeng/textarea';
 import { DividerModule } from 'primeng/divider';
 import { TooltipModule } from 'primeng/tooltip';
@@ -78,6 +80,7 @@ interface RetencionOpcion {
 import {
   PageableDto,
   ProductoTableModel,
+  clasificacionOpcion,
 } from '../../../core/models/producto.model';
 
 import { aFechaHoraLocal } from '../../../shared/utils/fecha.util';
@@ -87,6 +90,8 @@ import { aFechaHoraLocal } from '../../../shared/utils/fecha.util';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     TerceroAutocompleteComponent,
+    ProductoAutocompleteComponent,
+    MultiSelectModule,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
@@ -115,6 +120,64 @@ import { aFechaHoraLocal } from '../../../shared/utils/fecha.util';
 })
 export class FormCompraComponent implements OnInit {
   private editId: number | null = null;
+
+  // ── Vista previa del asiento (Fase 4) ─────────────────────────
+  vistaPreviaVisible = false;
+  vistaPrevia: import('../../../core/models/contador.model').VistaPreviaAsientoModel | null = null;
+  cargandoVistaPrevia = false;
+
+  /**
+   * El asiento que se registraría con lo escrito, sin guardar nada. Sale del
+   * mismo código que el asiento real, así que el contador ve lo que va a quedar.
+   */
+  async verAsiento(): Promise<void> {
+    const lineas = this.lineas().filter((l) => l.productoId);
+    if (!lineas.length) {
+      this.alertService.showWarn('Sin líneas', 'Agrega al menos un producto para ver el asiento.');
+      return;
+    }
+    this.cargandoVistaPrevia = true;
+    this.vistaPrevia = null;
+    this.vistaPreviaVisible = true;
+    this.cdr.markForCheck();
+    try {
+      const signo = this.esNotaCredito ? -1 : 1;
+      const res = await lastValueFrom(
+        this.contabilidadService.vistaPreviaCompra({
+          tipoDocumento: this.tipoDocumento,
+          proveedorId: this.proveedorSeleccionado?.id ?? null,
+          fletes: (this.fletes || 0) * signo,
+          retefuentePct: this.retefuentePct || null,
+          reteivaPct: this.reteivaPct || null,
+          reteicaPct: this.reteicaPct || null,
+          formaPago: this.esCredito || (this.esNotaCredito && !this.notaCreditoMuevePlata) ? 'CREDITO' : 'CONTADO',
+          lineas: lineas.map((l) => ({
+            productoId: l.productoId!,
+            neto: (l.subtotal || 0) * signo,
+            iva: (l.impuestoValor || 0) * signo,
+          })),
+          pagos:
+            this.esCredito || (this.esNotaCredito && !this.notaCreditoMuevePlata)
+              ? []
+              : [
+                  {
+                    metodoPago: this.esBanco ? this.metodoPago : 'EFECTIVO',
+                    cuentaBancariaId: this.esBanco ? this.cuentaBancariaId : null,
+                    cuentaContableId: this.esCuenta ? this.cuentaContableId : null,
+                    monto: (this.totalRetencionesValue > 0 ? this.netaAPagarValue : this.totalValue) * signo,
+                  },
+                ],
+        }),
+      );
+      this.vistaPrevia = res?.data ?? null;
+    } catch (e: any) {
+      this.vistaPreviaVisible = false;
+      this.alertService.showError('No se pudo armar el asiento', e?.error?.message ?? e?.message ?? '');
+    } finally {
+      this.cargandoVistaPrevia = false;
+      this.cdr.markForCheck();
+    }
+  }
 
   get modoEdicion(): boolean {
     return this.editId != null;
@@ -160,18 +223,46 @@ export class FormCompraComponent implements OnInit {
     this.lineas().reduce((a, l) => a + (l.cantidad ?? 0), 0),
   );
 
-  // ─── Modal selector de producto ───────────────────────────────────
-  public showProductDialog = false;
-  public dialogLineIdx = -1;
-  public dialogSearch = '';
-  public dialogItems: ProductoTableModel[] = [];
-  public dialogTotal = 0;
-  public dialogLoading = false;
-  private dialogLastEvent!: TableLazyLoadEvent;
+  // ─── Columnas que el usuario puede ocultar ───────────────────────
+  // Producto, cantidad, valor unitario, neto y acciones siempre se ven.
+  private static readonly COLS_KEY = 'aura.compra.columnas';
+  readonly columnasOpcionales = [
+    { key: 'desc', label: 'Descuento $', ancho: 92 },
+    { key: 'costo', label: 'Costo (subtotal)', ancho: 96 },
+    { key: 'ivaPct', label: 'IVA %', ancho: 64 },
+    { key: 'ivaVal', label: 'IVA $', ancho: 92 },
+  ];
+  columnasVisibles: string[] = this.leerColumnas();
 
-  // ─── Barcode ──────────────────────────────────────────────────────
-  public barcodeQuery = '';
-  public barcodeSearching = false;
+  col(key: string): boolean {
+    return this.columnasVisibles.includes(key);
+  }
+
+  /** Producto 200 + cantidad 200 + unitario 112 + neto 104 + acciones 72, más las opcionales. */
+  get anchoMinTabla(): number {
+    return 688 + this.columnasOpcionales.filter((c) => this.col(c.key)).reduce((a, c) => a + c.ancho, 0);
+  }
+
+  onColumnasChange(keys: string[]): void {
+    this.columnasVisibles = keys ?? [];
+    try {
+      localStorage.setItem(FormCompraComponent.COLS_KEY, JSON.stringify(this.columnasVisibles));
+    } catch {
+      /* sin almacenamiento se usa solo en esta sesión */
+    }
+    this.cdr.markForCheck();
+  }
+
+  private leerColumnas(): string[] {
+    const todas = ['desc', 'costo', 'ivaPct', 'ivaVal'];
+    try {
+      const raw = localStorage.getItem(FormCompraComponent.COLS_KEY);
+      const v = raw ? JSON.parse(raw) : null;
+      return Array.isArray(v) ? v.filter((k) => todas.includes(k)) : todas;
+    } catch {
+      return todas;
+    }
+  }
 
   // ─── Forma de pago ───────────────────────────────────────────────
   public formaPago: FormaPago = 'CONTADO';
@@ -1049,6 +1140,7 @@ export class FormCompraComponent implements OnInit {
           productoNombre: d.productoNombre,
           // Lo escrito en la presentación (4 Pacas a $52.500), si la hubo.
           cantidad: d.cantidadPresentacion ?? d.cantidad,
+          cantidadSuelta: d.productoPresentacionId ? (d.cantidadSuelta ?? null) : null,
           costoUnitario: d.costoPresentacion ?? d.costoUnitario,
           presentacionId: d.productoPresentacionId ?? 0,
           presentaciones: d.productoPresentacionId
@@ -1065,6 +1157,7 @@ export class FormCompraComponent implements OnInit {
             : [],
           manejaLotes: !!d.manejaLotes,
           manejaSerial: !!d.manejaSerial,
+          clasificacion: d.clasificacion ?? 'PRODUCTO',
           seriales: d.seriales ?? [],
           serialIds: d.serialIds ?? [],
           unidadAbreviatura: d.unidadAbreviatura ?? null,
@@ -1173,53 +1266,9 @@ export class FormCompraComponent implements OnInit {
     }
   }
 
-  // ─── Modal selector de producto ───────────────────────────────────
-  openProductDialog(lineIdx: number): void {
-    this.dialogLineIdx = lineIdx;
-    this.dialogSearch = '';
-    this.dialogItems = [];
-    this.dialogTotal = 0;
-    this.showProductDialog = true;
-  }
-
-  async loadDialogTable(event: TableLazyLoadEvent): Promise<void> {
-    this.dialogLastEvent = event;
-    this.dialogLoading = true;
-    this.cdr.markForCheck();
-
-    const page =
-      event.first != null && event.rows
-        ? Math.floor(event.first / event.rows)
-        : 0;
-
-    const dto: PageableDto = {
-      page,
-      rows: event.rows ?? 10,
-      search: this.dialogSearch || null,
-      order_by: 'p.nombre',
-      order: 'ASC',
-    };
-
-    try {
-      const res = await lastValueFrom(this.productoService.page(dto));
-      this.dialogItems = res?.data?.content ?? [];
-      this.dialogTotal = res?.data?.totalElements ?? 0;
-    } catch {
-      this.dialogItems = [];
-      this.dialogTotal = 0;
-    } finally {
-      this.dialogLoading = false;
-      this.cdr.markForCheck();
-    }
-  }
-
-  onDialogSearch(): void {
-    if (this.dialogLastEvent) {
-      this.loadDialogTable({ ...this.dialogLastEvent, first: 0 });
-    }
-  }
-
-  async selectProductFromDialog(item: ProductoTableModel): Promise<void> {
+  // ─── Producto de la línea (autocompletar + buscador avanzado) ─────
+  async onProductoElegido(idx: number, item: ProductoTableModel | null): Promise<void> {
+    if (!item) return;
     const opcion: ProductoOpcion = {
       label: item.nombre + (item.sku ? ` [${item.sku}]` : ''),
       value: item.id,
@@ -1232,36 +1281,9 @@ export class FormCompraComponent implements OnInit {
       unidadAbreviatura: item.unidadAbreviatura ?? null,
       manejaLotes: !!item.manejaLotes,
       manejaSerial: !!item.manejaSerial,
+      clasificacion: item.clasificacion ?? 'PRODUCTO',
     };
-    await this.onProductoChange(this.dialogLineIdx, opcion.value, opcion);
-    this.showProductDialog = false;
-  }
-
-  // ─── Búsqueda por código de barras (desde el modal) ─────────────
-  async buscarPorBarcode(): Promise<void> {
-    const q = this.barcodeQuery.trim();
-    if (!q) return;
-    this.barcodeSearching = true;
-    this.cdr.markForCheck();
-    try {
-      const res = await lastValueFrom(this.productoService.search(q));
-      const productos = res?.data ?? [];
-      if (productos.length === 0) {
-        this.alertService.showWarn(
-          'Sin resultados',
-          `No se encontró producto con código "${q}".`,
-        );
-        return;
-      }
-      // Selecciona el producto para la línea actual y cierra el modal
-      await this.selectProductFromDialog(productos[0]);
-      this.barcodeQuery = '';
-    } catch {
-      this.alertService.showError('Error', 'No se pudo buscar el producto.');
-    } finally {
-      this.barcodeSearching = false;
-      this.cdr.markForCheck();
-    }
+    await this.onProductoChange(idx, opcion.value, opcion);
   }
 
   // ─── Autocomplete proveedor ───────────────────────────────────────
@@ -1379,6 +1401,7 @@ export class FormCompraComponent implements OnInit {
             precio3: p.precio3 ?? null,
             manejaLotes: !!p.manejaLotes,
             manejaSerial: !!p.manejaSerial,
+            clasificacion: p.clasificacion ?? 'PRODUCTO',
           };
         }
       } catch {
@@ -1427,6 +1450,7 @@ export class FormCompraComponent implements OnInit {
                 manejaLotes: !!prod!.manejaLotes,
                 lotes: [],
                 manejaSerial: !!prod!.manejaSerial,
+                clasificacion: prod!.clasificacion ?? 'PRODUCTO',
                 seriales: [],
                 serialIds: [],
               },
@@ -1536,7 +1560,25 @@ export class FormCompraComponent implements OnInit {
         ? Math.round((l.costoUnitario / factorAnterior) * factorNuevo * 100) /
           100
         : null;
-    this.actualizarLinea(idx, { presentacionId: nuevoId, costoUnitario });
+    // Las sueltas solo existen junto a una presentación.
+    this.actualizarLinea(idx, {
+      presentacionId: nuevoId,
+      costoUnitario,
+      cantidadSuelta: nuevoId ? l.cantidadSuelta : null,
+    });
+  }
+
+  /** Qué hará la línea al guardar, si no es mercancía (activo, gasto…). */
+  efectoClasificacion(l: CompraLineaUI): string | null {
+    const c = l.clasificacion ?? 'PRODUCTO';
+    if (c === 'PRODUCTO') return null;
+    const op = clasificacionOpcion(c);
+    return `${op.label}: ${op.alComprar.charAt(0).toLowerCase()}${op.alComprar.slice(1)}`;
+  }
+
+  /** "4 Pacas + 2 und": las sueltas se cobran al costo de la presentación ÷ lo que contiene. */
+  onSueltaChange(idx: number, val: number | null): void {
+    this.actualizarLinea(idx, { cantidadSuelta: val && val > 0 ? val : null });
   }
 
   private calcLinea(l: CompraLineaUI): {
@@ -1546,7 +1588,10 @@ export class FormCompraComponent implements OnInit {
   } {
     const cantidad = l.cantidad ?? 0;
     const costo = l.costoUnitario ?? 0;
-    const bruto = cantidad * costo;
+    const suelta = l.presentacionId ? (l.cantidadSuelta ?? 0) : 0;
+    // Igual que el back (CompraServiceImpl.LineaPresentacion.bruto).
+    const bruto =
+      cantidad * costo + (suelta > 0 ? Math.round(suelta * (costo / this.factorDe(l)) * 100) / 100 : 0);
     const descuentoValor =
       Math.round(bruto * ((l.descuentoPct ?? 0) / 100) * 100) / 100;
     const neto = bruto - descuentoValor;
@@ -1717,7 +1762,8 @@ export class FormCompraComponent implements OnInit {
 
   /** Unidades en unidad base: un serial por cada una. */
   unidadesSerial(l: CompraLineaUI): number {
-    return Math.round((l.cantidad || 0) * this.factorDe(l) * 10000) / 10000;
+    const suelta = l.presentacionId ? (l.cantidadSuelta ?? 0) : 0;
+    return Math.round(((l.cantidad || 0) * this.factorDe(l) + suelta) * 10000) / 10000;
   }
 
   serialesDeLinea(l: CompraLineaUI): number {
@@ -1912,6 +1958,7 @@ export class FormCompraComponent implements OnInit {
         productoId: l.productoId!,
         productoPresentacionId: l.presentacionId || null,
         cantidad: l.cantidad!,
+        cantidadSuelta: l.presentacionId ? (l.cantidadSuelta ?? null) : null,
         costoUnitario: l.costoUnitario!,
         descuentoPct: l.descuentoPct ?? 0,
         impuestoValor: l.impuestoValor || 0,
@@ -2035,9 +2082,6 @@ export class FormCompraComponent implements OnInit {
     this.fechaCompra = new Date();
     this.observaciones = '';
     this.lineas.set([]);
-    this.barcodeQuery = '';
-    this.barcodeSearching = false;
-    this.showProductDialog = false;
     this.retefuentePct = 0;
     this.reteivaPct = 0;
     this.reteicaPct = 0;

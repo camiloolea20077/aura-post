@@ -143,6 +143,8 @@ export interface SaldoInicialLineaDto {
 export interface CreateSaldosInicialesDto {
   fechaApertura: string;
   cuentaAjusteId?: number | null;
+  /** Si no cuadra, la diferencia va a patrimonio solo si el usuario lo confirma. */
+  aceptarDiferencia?: boolean;
   lineas: SaldoInicialLineaDto[];
 }
 
@@ -256,4 +258,53 @@ export interface BalanceGeneralDetalladoModel {
   resultadoEjercicio: number;
   cuadra: boolean;
   diferencia: number;
+}
+
+// ─── Centro de Contabilidad (/contabilidad) ─────────────────────────
+// GET contabilidad/dashboard?anio&mes — sale del mayor (CONTABILIZADO, sin CIERRE).
+export interface ResultadoMesModel {
+  anio: number;
+  mes: number;
+  ingresos: number;
+  costos: number;
+  gastos: number;
+  /** Ingresos − costos − gastos. */
+  utilidad: number;
+}
+
+export interface GrupoGastoModel {
+  /** Cuenta de dos dígitos: 51, 52, 53, 54… */
+  codigo: string;
+  nombre: string;
+  valor: number;
+}
+
+export interface EstadoContableModel {
+  periodoEstado: 'ABIERTO' | 'CERRADO' | 'SIN_PERIODO';
+  comprobantesMes: number;
+  /** Borradores de todos los meses: bloquean el cierre. */
+  comprobantesBorrador: number;
+  conciliacionesAbiertas: number;
+  cierreAnualAnio: number;
+  cierreAnualEstado: 'NO_INICIADO' | 'PROVISIONADO' | 'CERRADO';
+}
+
+export interface DashboardContableModel {
+  anio: number;
+  mes: number;
+  mesActual: ResultadoMesModel;
+  mesAnterior: ResultadoMesModel;
+  serie: ResultadoMesModel[];
+  distribucionGastos: GrupoGastoModel[];
+  estado: EstadoContableModel;
+}
+
+// ─── Documentos sin asiento (red del posting) ──────────────────────
+// GET contabilidad/asientos/sin-asiento — vigentes 0 = falta en el mayor; >1 = duplicado.
+export interface DocumentoSinAsientoModel {
+  tipoOrigen: string;
+  origenId: number;
+  fecha: string;
+  numero: string;
+  vigentes: number;
 }
