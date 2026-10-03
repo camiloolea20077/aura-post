@@ -620,6 +620,63 @@
   }
 }
 
+// ── Clasificación del ítem: tarjetas de opción (no switches) ────────
+.clasificaciones {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.clasif {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  padding: 0.7rem 0.8rem;
+  border: 1.5px solid #e0e3eb;
+  border-radius: 10px;
+  background: #fff;
+  color: #475569;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s;
+  min-width: 0;
+
+  i {
+    font-size: 1rem;
+    color: #94a3b8;
+    margin-bottom: 0.15rem;
+  }
+
+  &__label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #1e293b;
+  }
+
+  &__desc {
+    font-size: 0.72rem;
+    line-height: 1.3;
+    color: #64748b;
+  }
+
+  &:hover {
+    border-color: #93c5fd;
+  }
+
+  &--activa {
+    border-color: #2563eb;
+    background: #eff6ff;
+
+    i,
+    .clasif__label {
+      color: #1d4ed8;
+    }
+  }
+}
+
 .page-loading {
   display: flex;
   align-items: center;
@@ -1276,3 +1333,30 @@
     gap: 6px;
   }
 }
+
+// ── Al comprarlo (activo, gasto, diferido) ──────────────────────
+.resumen-compra {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.6rem;
+  margin: 0.5rem 0;
+
+  div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+    min-width: 0;
+  }
+  span { font-size: 0.72rem; color: #64748b; }
+  strong { font-size: 0.85rem; color: #1e293b; overflow-wrap: anywhere; }
+}
+
+// Utilidad junto a Precio 2 / Precio 3
+.util-txt { font-weight: 700; }
+.util-txt--perdida { color: #b91c1c; }
+.util-txt--baja { color: #c2410c; }
+.util-txt--buena { color: #15803d; }

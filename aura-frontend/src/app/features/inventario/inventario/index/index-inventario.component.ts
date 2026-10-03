@@ -1,3 +1,4 @@
+import { StockPresentacionPipe } from '../../../../shared/pipes/stock-presentacion.pipe';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -26,6 +27,7 @@ import { AlertService } from '../../../../shared/pipes/alert.service';
   selector: 'app-index-inventario',
   standalone: true,
   imports: [
+    StockPresentacionPipe,
     CommonModule,
     FormsModule,
     TableModule,

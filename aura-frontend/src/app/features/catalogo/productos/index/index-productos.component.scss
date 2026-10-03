@@ -203,3 +203,19 @@
     font-size: 0.85rem;
   }
 }
+
+// % de utilidad: rojo pérdida, naranja baja (< 15 %), verde buena
+.util {
+  display: inline-block;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  font-family: "JetBrains Mono", monospace;
+  cursor: help;
+
+  &--perdida { background: #fef2f2; color: #b91c1c; }
+  &--baja { background: #fff7ed; color: #c2410c; }
+  &--buena { background: #f0fdf4; color: #15803d; }
+}
+.util-vacia { color: #cbd5e1; }

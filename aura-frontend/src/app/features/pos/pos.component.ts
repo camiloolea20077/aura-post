@@ -307,6 +307,8 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     for (const d of cotizacion.detalles) {
       const item: CartItem = {
         _id: uuid(),
+        cotizacionId: cotizacion.id,
+        cotizacionDetalleId: d.id,
         productoId: d.productoId,
         presentacionId: null,
         productoNombre: d.productoNombre,
@@ -1722,6 +1724,8 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       turnoCajaId: this.turnoActivo?.id ?? null,
       sucursalId: this.esVendedor ? this.vendedorSucursalId : null,
       clienteId: this.clienteId,
+      // Cadena documental (D1): la venta sale de la cotización cargada, si quedó alguna línea suya.
+      cotizacionId: this.cart.find((c) => c.cotizacionId)?.cotizacionId ?? null,
       detalles: this.cart.map((c) => ({
         productoId: c.productoId,
         productoPresentacionId: c.presentacionId ?? null,
@@ -1730,6 +1734,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         descuentoValor: c.descuento,
         impuestoValor: c.impuestoValor,
         serialIds: c.manejaSerial ? (c.serialIds ?? []) : undefined,
+        cotizacionDetalleId: c.cotizacionDetalleId ?? null,
       })),
       pagos,
       descuentoGeneral,

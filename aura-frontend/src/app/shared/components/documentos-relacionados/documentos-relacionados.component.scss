@@ -1,0 +1,82 @@
+.docrel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.docrel-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.docrel-loading {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.docrel-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.docrel-group-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #64748b;
+}
+
+.docrel-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.docrel-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #334155;
+
+  &.anulada .docrel-doc {
+    text-decoration: line-through;
+    color: #94a3b8;
+  }
+}
+
+.docrel-doc {
+  font-weight: 600;
+  color: #1e293b;
+
+  &.link {
+    color: #2563eb;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.docrel-meta {
+  color: #64748b;
+}
+
+.docrel-badge.anulada {
+  margin-left: 0.25rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  background: #fee2e2;
+  color: #b91c1c;
+}

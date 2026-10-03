@@ -1,0 +1,86 @@
+.ayuda {
+  margin: 0 0 0.75rem;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.buscador { margin-bottom: 0.75rem; max-width: 420px; }
+
+.grupo {
+  margin-bottom: 1.25rem;
+  &__titulo {
+    margin: 0 0 0.4rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #1e293b;
+  }
+}
+
+.tabla-scroll { overflow-x: auto; min-width: 0; }
+.sub { font-size: 0.72rem; color: #94a3b8; margin-top: 0.15rem; }
+.acciones { white-space: nowrap; }
+.vacio { text-align: center; color: #94a3b8; padding: 1.25rem; }
+
+// Pregunta con botones de opción (no switch)
+.pregunta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  &__texto { font-weight: 600; color: #1e293b; }
+}
+
+.opciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.95rem;
+  border: 1.5px solid #e0e3eb;
+  border-radius: 10px;
+  background: #fff;
+  color: #475569;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+
+  &:hover { border-color: #93c5fd; }
+  &--activa {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+}
+
+.barra-accion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  .ayuda { flex: 1 1 360px; }
+}
+
+.form-forma {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+  label { font-size: 0.8rem; font-weight: 600; color: #374151; }
+  .ayuda { margin: 0; font-size: 0.74rem; }
+}
+
+.codigo { font-family: "JetBrains Mono", monospace; text-transform: uppercase; }
+.req { color: #ef4444; }

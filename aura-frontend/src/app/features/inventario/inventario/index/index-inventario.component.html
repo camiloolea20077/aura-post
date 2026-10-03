@@ -113,6 +113,10 @@
               >
                 {{ item.stockActual | number: "1.0-4" }}
               </span>
+              <small
+                class="stock-como-se-cuenta"
+                *ngIf="item.stockActual | stockPresentacion: item.presentacionNombre : item.presentacionFactor : item.unidadAbreviatura as enPresentacion"
+              >{{ enPresentacion }}</small>
               <i
                 class="pi pi-exclamation-triangle stock-warn-icon"
                 *ngIf="

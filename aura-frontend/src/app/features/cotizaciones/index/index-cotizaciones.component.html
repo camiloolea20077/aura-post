@@ -136,7 +136,7 @@
               style="color: #10b981"
               pTooltip="Convertir a venta"
               tooltipPosition="left"
-              *ngIf="item.estado === 'PENDIENTE'"
+              *ngIf="item.estado === 'PENDIENTE' || item.estado === 'PARCIAL'"
               (click)="convertirAVenta(item, $event)"
             ></button>
             <!-- Solo en vencidas: revive la cotización con sus mismos precios

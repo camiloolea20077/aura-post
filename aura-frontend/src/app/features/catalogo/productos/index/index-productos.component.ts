@@ -15,6 +15,9 @@ import { Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 
 import {
+  CLASIFICACION_OPTIONS,
+  ClasificacionItem,
+  clasificacionOpcion,
   PageableDto,
   ProductoTableModel,
   TipoProducto,
@@ -53,6 +56,8 @@ export class IndexProductosComponent implements OnInit {
   public rowSize = 10;
   public searchQuery = '';
   public usoFiltro: UsoProducto | null = null;
+  public clasificacionFiltro: ClasificacionItem | null = null;
+  public readonly clasificacionOptions = CLASIFICACION_OPTIONS;
   public readonly usoOptions = USO_PRODUCTO_OPTIONS;
   public lastLazyEvent!: TableLazyLoadEvent;
 
@@ -85,7 +90,10 @@ export class IndexProductosComponent implements OnInit {
       search: this.searchQuery || null,
       order_by: sortField ?? 'p.id',
       order: event.sortOrder === 1 ? 'ASC' : 'DESC',
-      params: this.usoFiltro ? { uso: this.usoFiltro } : null,
+      params:
+        this.usoFiltro || this.clasificacionFiltro
+          ? { uso: this.usoFiltro, clasificacion: this.clasificacionFiltro }
+          : null,
     };
 
     try {
@@ -192,6 +200,10 @@ export class IndexProductosComponent implements OnInit {
     return map[uso] ?? 'secondary';
   }
 
+  getClasificacionLabel(c: ClasificacionItem): string {
+    return clasificacionOpcion(c).label;
+  }
+
   getUsoLabel(uso: UsoProducto): string {
     const map: Record<UsoProducto, string> = {
       VENTA: 'Venta',
@@ -199,5 +211,23 @@ export class IndexProductosComponent implements OnInit {
       AMBOS: 'Venta e insumo',
     };
     return map[uso] ?? uso ?? 'Venta';
+  }
+
+  /** % de utilidad sobre el precio sin IVA (margen), igual que en el formulario. */
+  utilidad(item: ProductoTableModel): { pct: number; nivel: string; tooltip: string } | null {
+    const p = Number(item.precio) || 0;
+    const c = Number(item.costo) || 0;
+    if (p <= 0 || c <= 0) return null;
+    const iva = Number(item.ivaPorcentaje) || 0;
+    const neto = item.ivaIncluido && iva > 0 ? p / (1 + iva / 100) : p;
+    const valor = neto - c;
+    const pct = Math.round((valor / neto) * 1000) / 10;
+    return {
+      pct,
+      nivel: pct < 0 ? 'perdida' : pct < 15 ? 'baja' : 'buena',
+      tooltip: valor < 0
+        ? `Se pierden $${Math.round(-valor).toLocaleString('es-CO')} por unidad (sin IVA)`
+        : `Ganas $${Math.round(valor).toLocaleString('es-CO')} por unidad (sin IVA)`,
+    };
   }
 }

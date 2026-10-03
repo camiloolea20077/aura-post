@@ -24,7 +24,12 @@ import { StorageService } from '../../../../core/services/storage.service';
 import {
   CambioUnidadPreviewModel,
   CategoriaContableProductoModel,
+  CLASIFICACION_OPTIONS,
+  ClasificacionItem,
+  ClasificacionOpcion,
+  clasificacionOpcion,
   CreateProductoDto,
+  tiposCategoriaDe,
   ProductoModel,
   TIPO_PRODUCTO_OPTIONS,
   TipoProducto,
@@ -39,11 +44,11 @@ import { UnidadMedidaService } from '../../../../core/services/unidad-medida.ser
 import { ContabilidadService } from '../../../../core/services/contabilidad.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 import { ProductoPresentacionService } from '../../../../core/services/producto-presentacion.service';
+import { ProductoPresentacionModel } from '../../../../core/models/producto-presentacion.model';
 import {
-  CreateProductoPresentacionDto,
-  ProductoPresentacionModel,
-  UpdateProductoPresentacionDto,
-} from '../../../../core/models/producto-presentacion.model';
+  ConversionesProductoComponent,
+  FilaConversion,
+} from './conversiones/conversiones-producto.component';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 
 // ─── Interfaz local para manejar presentaciones en el form ────────
@@ -63,20 +68,6 @@ export interface PresentacionFormItem {
   _esNueva: boolean;
 }
 
-/** Nombres de empaque más comunes; el usuario puede escribir otro. */
-const EMPAQUES_COMUNES = [
-  'Caja',
-  'Paca',
-  'Bulto',
-  'Display',
-  'Sixpack',
-  'Docena',
-  'Cubeta',
-  'Blíster',
-  'Fardo',
-  'Bolsa',
-];
-
 @Component({
   selector: 'app-form-productos',
   standalone: true,
@@ -94,6 +85,7 @@ const EMPAQUES_COMUNES = [
     ToastModule,
     ToggleSwitchModule,
     ConfirmDialogModule,
+    ConversionesProductoComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './form-productos.component.html',
@@ -103,28 +95,23 @@ export class FormProductosComponent implements OnInit {
   /** Sale de la ruta: /catalogo/productos/editar/:id. Null al crear. */
   public productoId: number | null = null;
 
-  // ─── Presentaciones ──────────────────────────────────────────────
+  // ─── Unidades y conversiones ─────────────────────────────────────
+  /** Presentaciones guardadas (para "Pasar a unidad"). */
   public presentaciones: PresentacionFormItem[] = [];
-  public presentacionEnEdicion: PresentacionFormItem | null = null;
-  public frmPresentacion!: FormGroup;
-  public savingPresentacion = false;
+  /** Lo que se edita en la sección "Unidades y conversiones". */
+  public conversiones: FilaConversion[] = [];
+  /** Se vende suelto, en la unidad base. */
+  public vendeSuelto = true;
+  /** Índice de la conversión en que se compra; -1 = en la unidad base. */
+  public compraEn = -1;
+  /** Al editar: si no se cargaron, guardar la lista vacía desactivaría las existentes. */
+  private conversionesCargadas = false;
 
   // ─── Pasar a unidad ──────────────────────────────────────────────
   public cambioUnidad: CambioUnidadPreviewModel | null = null;
   public cargandoCambioUnidad = false;
   public aplicandoCambioUnidad = false;
   public frmCambioUnidad!: FormGroup;
-
-  // ─── Empaque de compra (la caja que trae N unidades) ─────────────
-  public frmEmpaque!: FormGroup;
-  /** Lo que tenía guardado el producto: si no se vende por unidad, el POS solo ofrece el empaque. */
-  private vendePorUnidadGuardado = true;
-  /** Presentación ya guardada que representa el empaque; null si aún no hay. */
-  public empaqueItem: PresentacionFormItem | null = null;
-  public readonly empaquesComunes = EMPAQUES_COMUNES.map((e) => ({
-    label: e,
-    value: e,
-  }));
 
   // ─── Producto ────────────────────────────────────────────────────
   public frmProducto!: FormGroup;
@@ -138,6 +125,9 @@ export class FormProductosComponent implements OnInit {
   // ─── Opciones de dropdowns ───────────────────────────────────────
   public tipoOptions = TIPO_PRODUCTO_OPTIONS;
   public usoOptions = USO_PRODUCTO_OPTIONS;
+  public clasificacionOptions = CLASIFICACION_OPTIONS;
+  /** Auxiliares del plan de cuentas, para filtrar la cuenta de la compra por clasificación. */
+  private auxiliares: { id: number; codigo: string; nombre: string }[] = [];
   public categoriasOpts: { label: string; value: number | null }[] = [
     { label: 'Sin categoría', value: null },
   ];
@@ -173,8 +163,6 @@ export class FormProductosComponent implements OnInit {
 
   ngOnInit(): void {
     this.initForm();
-    this.initFrmPresentacion();
-    this.initFrmEmpaque();
     this.frmCambioUnidad = this.fb.group({
       unidadMedidaId: [null, Validators.required],
       nombrePresentacion: ['', [Validators.required, Validators.maxLength(100)]],
@@ -210,6 +198,7 @@ export class FormProductosComponent implements OnInit {
       unidadMedidaBaseId: [null, Validators.required],
       tipoProducto: ['ESTANDAR', Validators.required],
       usoProducto: ['VENTA', Validators.required],
+      clasificacion: ['PRODUCTO' as ClasificacionItem, Validators.required],
       imagenUrl: [null, [Validators.maxLength(500)]],
       activo: [true, Validators.required],
       // precio y costo se derivan de la presentación de compra (Tab 4)
@@ -272,6 +261,100 @@ export class FormProductosComponent implements OnInit {
       );
   }
 
+  // ─── Clasificación (catálogo unificado) ──────────────────────────
+  get clasificacion(): ClasificacionOpcion {
+    return clasificacionOpcion(this.frmProducto?.get('clasificacion')?.value);
+  }
+
+  get esMercancia(): boolean {
+    return this.clasificacion.mueveInventario;
+  }
+
+  setClasificacion(valor: ClasificacionItem): void {
+    const control = this.frmProducto.get('clasificacion');
+    if (control?.value === valor) return;
+    control?.setValue(valor);
+    this.sincronizarClasificacion(valor, !this.isEditMode);
+  }
+
+  /**
+   * Solo la mercancía maneja inventario y solo lo que se vende sale en el POS:
+   * lo demás se apaga y bloquea, igual que lo hace el backend. Al crear, se
+   * propone la categoría contable del mismo tipo si hay una sola.
+   */
+  private sincronizarClasificacion(valor: ClasificacionItem, proponerCategoria: boolean): void {
+    const op = clasificacionOpcion(valor);
+    const inventario = this.frmProducto.get('manejaInventario');
+    if (!op.mueveInventario) {
+      inventario?.setValue(false);
+      inventario?.disable({ emitEvent: false });
+    } else if (inventario?.disabled) {
+      // Vuelve a ser mercancía: por defecto controla stock.
+      inventario.enable({ emitEvent: false });
+      inventario.setValue(true);
+    }
+    // El tipo sigue a la clasificación: un servicio es SERVICIO (comisiones,
+    // factura electrónica) y la mercancía no puede quedar marcada como servicio.
+    const tipo = this.frmProducto.get('tipoProducto');
+    if (valor === 'SERVICIO') tipo?.setValue('SERVICIO', { emitEvent: false });
+    else if (tipo?.value === 'SERVICIO') tipo?.setValue('ESTANDAR', { emitEvent: false });
+    // Lo que no se vende no lleva precio ni forma de venta.
+    if (!op.seVende) {
+      this.frmProducto.patchValue(
+        { precio: 0, precio2: null, precio3: null, impoconsumo: 0, ivaIncluido: false, usoProducto: 'VENTA' },
+        { emitEvent: false },
+      );
+      this.activeTab = Math.min(this.activeTab, 1);
+    }
+
+    const visible = this.frmProducto.get('visibleEnPos');
+    if (!op.seVende) {
+      visible?.setValue(false, { emitEvent: false });
+      visible?.disable({ emitEvent: false });
+    } else if (!this.esInsumo) {
+      visible?.enable({ emitEvent: false });
+    }
+
+    // La categoría elegida tiene que ser plantilla de esta clasificación.
+    const tipos = tiposCategoriaDe(valor);
+    const categoriaId = this.frmProducto.get('categoriaContableId')?.value;
+    const actual = this.categoriasContables.find((c) => c.id === categoriaId);
+    if (actual && !tipos.includes(actual.tipo)) {
+      this.frmProducto.patchValue({ categoriaContableId: null }, { emitEvent: false });
+    }
+    if (proponerCategoria && valor !== 'PRODUCTO' && !this.frmProducto.get('categoriaContableId')?.value) {
+      const candidatas = this.categoriasContables.filter((c) => c.activo && tipos.includes(c.tipo));
+      if (candidatas.length === 1)
+        this.frmProducto.patchValue({ categoriaContableId: candidatas[0].id }, { emitEvent: false });
+    }
+    // Un override de la cuenta de la compra de otra clase ya no aplica.
+    const cuentaCompra = this.frmProducto.get('cuentaInventarioId')?.value;
+    if (cuentaCompra) {
+      const cuenta = this.auxiliares.find((c) => c.id === cuentaCompra);
+      if (cuenta && !op.prefijosCompra.some((p) => cuenta.codigo.startsWith(p)))
+        this.frmProducto.patchValue({ cuentaInventarioId: null }, { emitEvent: false });
+    }
+    this.actualizarOpcionesContables();
+  }
+
+  /** Categorías y cuentas de la compra que aplican a la clasificación elegida. */
+  private actualizarOpcionesContables(): void {
+    const op = this.clasificacion;
+    const tipos = tiposCategoriaDe(op.value);
+    this.categoriasContablesOpts = [
+      {
+        label: op.value === 'PRODUCTO' ? 'General (por defecto)' : 'Cuentas por defecto de la empresa',
+        value: null,
+      },
+      ...this.categoriasContables
+        .filter((c) => c.activo && c.nombre !== 'General' && tipos.includes(c.tipo))
+        .map((c) => ({ label: c.nombre, value: c.id })),
+    ];
+    this.cuentasInventarioOpts = this.auxiliares
+      .filter((c) => op.prefijosCompra.some((p) => c.codigo?.startsWith(p)))
+      .map((c) => ({ label: `${c.codigo} - ${c.nombre}`, value: c.id }));
+  }
+
   /**
    * Un insumo nunca se vende en el POS: se apaga y bloquea "Visible en POS".
    * Al crear, si no hay categoría contable elegida, se propone la de insumos.
@@ -279,7 +362,8 @@ export class FormProductosComponent implements OnInit {
   private sincronizarUso(uso: UsoProducto, proponerCategoria: boolean): void {
     const visible = this.frmProducto.get('visibleEnPos');
     if (uso !== 'INSUMO') {
-      visible?.enable({ emitEvent: false });
+      // Un gasto o un activo no se venden aunque no sean insumo.
+      if (this.clasificacion.seVende) visible?.enable({ emitEvent: false });
       return;
     }
 
@@ -312,6 +396,7 @@ export class FormProductosComponent implements OnInit {
       unidadMedidaBaseId: null,
       tipoProducto: 'ESTANDAR',
       usoProducto: 'VENTA',
+      clasificacion: 'PRODUCTO',
       imagenUrl: null,
       activo: true,
       precio: 0,
@@ -383,46 +468,19 @@ export class FormProductosComponent implements OnInit {
     return this.usoOptions.find((o) => o.value === uso)?.desc ?? '';
   }
 
-  /** La categoría que realmente aplica: la elegida o, sin elegir, "General". */
+  /**
+   * La categoría que realmente aplica: la elegida o, sin elegir, "General"
+   * (solo para mercancía: un activo sin categoría usa las cuentas por
+   * defecto de la empresa, no las de la General).
+   */
   get categoriaEfectiva(): CategoriaContableProductoModel | null {
     const id = this.frmProducto.get('categoriaContableId')?.value;
+    if (!id && !this.esMercancia) return null;
     return (
       this.categoriasContables.find((c) =>
         id ? c.id === id : c.nombre === 'General',
       ) ?? null
     );
-  }
-
-  // ─── Form presentaciones ─────────────────────────────────────────
-  private initFrmPresentacion(): void {
-    this.frmPresentacion = this.fb.group({
-      nombre: [null, [Validators.required, Validators.maxLength(100)]],
-      factorConversion: [1, [Validators.required, Validators.min(0.0001)]],
-      codigoBarras: [null, [Validators.maxLength(50)]],
-      precio: [0, [Validators.required, Validators.min(0)]],
-      costo: [0, [Validators.required, Validators.min(0)]],
-      esDefaultCompra: [false],
-      esDefaultVenta: [false],
-    });
-
-    // Cuando cambia el factor → recalcular precio y costo sugeridos
-    this.frmPresentacion
-      .get('factorConversion')
-      ?.valueChanges.subscribe((factor) => {
-        if (!factor || factor <= 0) return;
-        const precioBase = this.frmProducto.get('precio')?.value ?? 0;
-        const costoBase = this.frmProducto.get('costo')?.value ?? 0;
-        // Solo sugerir si ya hay un precio base calculado (de una presentación de compra previa)
-        if (precioBase > 0 || costoBase > 0) {
-          this.frmPresentacion.patchValue(
-            {
-              precio: Math.round(precioBase * factor),
-              costo: Math.round(costoBase * factor),
-            },
-            { emitEvent: false },
-          );
-        }
-      });
   }
 
   // ─── Cargar presentaciones existentes ────────────────────────────
@@ -448,231 +506,95 @@ export class FormProductosComponent implements OnInit {
             _esNueva: false,
           }),
         );
-        this.cargarEmpaque();
+        const activas = this.presentaciones.filter((p) => p.activo);
+        this.conversiones = activas.map((p) => ({
+          id: p.id ?? null,
+          nombre: p.nombre,
+          factor: p.factorConversion,
+          codigoBarras: p.codigoBarras,
+          precio: p.precio || null,
+          costo: p.costo ?? null,
+          seVende: p.seVende !== false,
+        }));
+        this.compraEn = activas.findIndex((p) => p.esDefaultCompra);
+        this.conversionesCargadas = true;
       }
     } catch {
       /* no bloquear */
     }
   }
 
-  // ─── Agregar nueva presentación (fila en edición) ─────────────────
-  agregarPresentacion(): void {
-    this.presentaciones.forEach((p) => (p._editando = false));
-
-    // Precargar precio/costo base si ya están calculados de una presentación de compra previa
-    const precioBase = this.frmProducto.get('precio')?.value ?? 0;
-    const costoBase = this.frmProducto.get('costo')?.value ?? 0;
-
-    const nueva: PresentacionFormItem = {
-      nombre: '',
-      factorConversion: 1,
-      codigoBarras: null,
-      precio: precioBase,
-      costo: costoBase,
-      esDefaultCompra: false,
-      esDefaultVenta: false,
-      seVende: true,
-      activo: true,
-      _editando: true,
-      _esNueva: true,
-    };
-    this.presentaciones = [...this.presentaciones, nueva];
-    this.presentacionEnEdicion = nueva;
-    this.frmPresentacion.reset({
-      nombre: null,
-      factorConversion: 1,
-      codigoBarras: null,
-      precio: precioBase,
-      costo: costoBase,
-      esDefaultCompra: false,
-      esDefaultVenta: false,
-    });
-  }
-
-  // ─── Abrir edición de una presentación existente ──────────────────
-  editarPresentacion(item: PresentacionFormItem): void {
-    this.presentaciones.forEach((p) => (p._editando = false));
-    item._editando = true;
-    this.presentacionEnEdicion = item;
-    this.frmPresentacion.patchValue({
-      nombre: item.nombre,
-      factorConversion: item.factorConversion,
-      codigoBarras: item.codigoBarras,
-      precio: item.precio,
-      costo: item.costo,
-      esDefaultCompra: item.esDefaultCompra,
-      esDefaultVenta: item.esDefaultVenta,
-    });
-  }
-
-  // ─── Cancelar edición ────────────────────────────────────────────
-  cancelarEdicion(item: PresentacionFormItem): void {
-    if (item._esNueva) {
-      this.presentaciones = this.presentaciones.filter((p) => p !== item);
-    } else {
-      item._editando = false;
-    }
-    this.presentacionEnEdicion = null;
-  }
-
-  // ─── Guardar presentación (en memoria o en API) ───────────────────
-  async guardarPresentacion(item: PresentacionFormItem): Promise<void> {
-    if (this.frmPresentacion.invalid) {
-      this.frmPresentacion.markAllAsTouched();
-      return;
-    }
-
-    const v = this.frmPresentacion.value;
-
-    // Validar factor duplicado en memoria
-    const factorDuplicado = this.presentaciones.some(
-      (p) => p !== item && p.factorConversion === v.factorConversion,
-    );
-    if (factorDuplicado) {
-      this.alertService.showWarn(
-        'Factor duplicado',
-        'Ya existe una presentación con ese factor de conversión.',
-      );
-      return;
-    }
-
-    // Si se marca como default → desmarcar las demás en memoria
-    if (v.esDefaultCompra) {
-      this.presentaciones.forEach((p) => {
-        if (p !== item) p.esDefaultCompra = false;
-      });
-    }
-    if (v.esDefaultVenta) {
-      this.presentaciones.forEach((p) => {
-        if (p !== item) p.esDefaultVenta = false;
-      });
-    }
-
-    // Modo crear — solo guardar en memoria hasta que se guarde el producto
-    if (!this.isEditMode || !this.productoId) {
-      item.nombre = v.nombre;
-      item.factorConversion = v.factorConversion;
-      item.codigoBarras = v.codigoBarras || null;
-      item.precio = v.precio;
-      item.costo = v.costo;
-      item.esDefaultCompra = v.esDefaultCompra;
-      item.esDefaultVenta = v.esDefaultVenta;
-      item._editando = false;
-      item._esNueva = true;
-      this.presentacionEnEdicion = null;
-      return;
-    }
-
-    // Modo edición — persistir en API
-    this.savingPresentacion = true;
-    try {
-      let res: any;
-
-      if (item._esNueva) {
-        const dto: CreateProductoPresentacionDto = {
-          productoId: this.productoId!,
-          nombre: v.nombre,
-          factorConversion: v.factorConversion,
-          codigoBarras: v.codigoBarras || null,
-          precio: v.precio,
-          costo: v.costo,
-          esDefaultCompra: v.esDefaultCompra,
-          esDefaultVenta: v.esDefaultVenta,
-          activo: true,
-        };
-        res = await lastValueFrom(this.presentacionService.create(dto));
-        if (res?.data) item.id = res.data.id;
-      } else {
-        const dto: UpdateProductoPresentacionDto = {
-          nombre: v.nombre,
-          factorConversion: v.factorConversion,
-          codigoBarras: v.codigoBarras || null,
-          precio: v.precio,
-          costo: v.costo,
-          esDefaultCompra: v.esDefaultCompra,
-          esDefaultVenta: v.esDefaultVenta,
-          activo: item.activo,
-        };
-        res = await lastValueFrom(
-          this.presentacionService.update(item.id!, dto),
-        );
-      }
-
-      // Sincronizar item local con valores guardados
-      item.nombre = v.nombre;
-      item.factorConversion = v.factorConversion;
-      item.codigoBarras = v.codigoBarras || null;
-      item.precio = v.precio;
-      item.costo = v.costo;
-      item.esDefaultCompra = v.esDefaultCompra;
-      item.esDefaultVenta = v.esDefaultVenta;
-      item._editando = false;
-      item._esNueva = false;
-      this.presentacionEnEdicion = null;
-
-      this.alertService.showSuccess(
-        'Presentación guardada',
-        res?.message ?? 'OK',
-      );
-    } catch (e: any) {
-      this.alertService.showError(
-        'Error',
-        e?.message ?? 'No se pudo guardar la presentación.',
-      );
-    } finally {
-      this.savingPresentacion = false;
-    }
-  }
-
-  // ─── Confirmar eliminación ────────────────────────────────────────
-  confirmarEliminarPresentacion(item: PresentacionFormItem): void {
-    if (item._esNueva) {
-      this.presentaciones = this.presentaciones.filter((p) => p !== item);
-      return;
-    }
-    this.confirmService.confirm({
-      message: `¿Eliminar la presentación "${item.nombre}"?`,
-      header: 'Confirmar eliminación',
-      icon: 'pi pi-trash',
-      acceptLabel: 'Eliminar',
-      rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: 'p-button-danger',
-      accept: () => this.eliminarPresentacion(item),
-    });
-  }
-
-  private async eliminarPresentacion(
-    item: PresentacionFormItem,
-  ): Promise<void> {
-    try {
-      await lastValueFrom(this.presentacionService.delete(item.id!));
-      this.presentaciones = this.presentaciones.filter((p) => p !== item);
-      this.alertService.showSuccess(
-        'Eliminada',
-        'Presentación eliminada correctamente.',
-      );
-    } catch (e: any) {
-      this.alertService.showError(
-        'Error',
-        e?.message ?? 'No se pudo eliminar.',
-      );
-    }
-  }
-
   // ─── Pasar a unidad ──────────────────────────────────────────────
   /**
-   * Una presentación que contiene menos de 1 unidad base es más pequeña que la
+   * Una conversión que equivale a menos de 1 unidad base es más pequeña que la
    * base (la UNIDAD de una paca): el inventario se puede pasar a contar en ella.
    */
-  puedePasarAUnidad(item: PresentacionFormItem): boolean {
-    return (
-      this.isEditMode &&
-      !item._esNueva &&
-      !!item.id &&
-      item.activo &&
-      item.factorConversion > 0 &&
-      item.factorConversion < 1
+  /** Nombre de la unidad de inventario sin la abreviatura: "PACA (PC)" → "PACA". */
+  get unidadBaseNombreSolo(): string {
+    return this.unidadBaseNombre.replace(/\s*\([^)]*\)\s*$/, '');
+  }
+
+  /**
+   * El inventario estaba en un empaque (Caja, Paca) y el usuario vende
+   * también suelto: 1 empaque trae N unidades.
+   *
+   * Producto nuevo: la unidad pasa a ser Unidad, el empaque queda como
+   * conversión (se compra y se vende) con el precio y el costo que tenía, y
+   * las demás conversiones se multiplican por N. Producto guardado: su
+   * inventario ya está en empaques, así que se agrega "Unidad" y se usa
+   * "Pasar a unidad", que convierte stock, kardex y precios.
+   */
+  contarEnUnidades(n: number): void {
+    const empaque = this.unidadBaseNombreSolo.toLowerCase().replace(/^./, (c) => c.toUpperCase()) || 'Empaque';
+    if (this.isEditMode) {
+      if (!this.conversiones.some((f) => f.factor && Math.abs(f.factor * n - 1) < 1e-9)) {
+        this.conversiones = [...this.conversiones, {
+          id: null, nombre: 'Unidad', factor: Math.round((1 / n) * 1_000_000) / 1_000_000,
+          codigoBarras: null, precio: null, costo: null, seVende: true,
+        }];
+      }
+      this.alertService.showWarn(
+        'Falta un paso',
+        `Guarda el producto y luego toca el botón ⟳ "Pasar a unidad" en la fila Unidad: el inventario que ya tiene en ${empaque.toLowerCase()} se convierte a unidades.`,
+      );
+      return;
+    }
+
+    const und = this.unidadesOpts.find((u) => /\((und|u|un)\)$/i.test(u.label))
+      ?? this.unidadesOpts.find((u) => /^unidad/i.test(u.label));
+    if (!und) {
+      this.alertService.showWarn('Falta la unidad', 'Crea la unidad de medida "Unidad (und)" y vuelve a intentarlo.');
+      return;
+    }
+    const precioEmpaque = Number(this.frmProducto.get('precio')?.value) || 0;
+    const costoEmpaque = Number(this.frmProducto.get('costo')?.value) || 0;
+    const filaEmpaque: FilaConversion = {
+      id: null, nombre: empaque, factor: n, codigoBarras: null,
+      precio: precioEmpaque || null, costo: costoEmpaque || null, seVende: true,
+    };
+    // Lo escrito en empaques pasa a unidades: un six pack de 0,25 caja = 6 und.
+    const otras = this.conversiones.map((f) => ({
+      ...f,
+      factor: f.factor ? Math.round(f.factor * n * 1_000_000) / 1_000_000 : f.factor,
+    }));
+    this.conversiones = [filaEmpaque, ...otras.filter((f) => f.factor !== 1)];
+    this.compraEn = 0;
+    this.vendeSuelto = true;
+    this.frmProducto.patchValue({
+      unidadMedidaBaseId: und.value,
+      // Precio suelto de partida: el del empaque repartido; el usuario lo ajusta.
+      precio: precioEmpaque ? Math.ceil(precioEmpaque / n) : 0,
+      costo: costoEmpaque ? Math.round((costoEmpaque / n) * 1_000_000) / 1_000_000 : 0,
+    });
+    this.alertService.showSuccess(
+      'Listo',
+      `El inventario se cuenta en unidades y ${empaque} = ${n} und se compra y se vende. Revisa el precio por unidad.`,
     );
+  }
+
+  pasarConversionAUnidad(f: FilaConversion): void {
+    const item = this.presentaciones.find((p) => p.id === f.id);
+    if (item) this.verCambioUnidad(item);
   }
 
   get unidadCambioNombre(): string {
@@ -760,65 +682,6 @@ export class FormProductosComponent implements OnInit {
     }
   }
 
-  // ─── Empaque de compra ───────────────────────────────────────────
-  private initFrmEmpaque(): void {
-    this.frmEmpaque = this.fb.group({
-      usaEmpaque: [false],
-      nombre: ['Caja', [Validators.maxLength(100)]],
-      trae: [null as number | null, [Validators.min(1)]],
-      costoEmpaque: [null as number | null, [Validators.min(0)]],
-      precioEmpaque: [null as number | null, [Validators.min(0)]],
-      codigoBarras: [null as string | null, [Validators.maxLength(50)]],
-      vendeSuelto: [true],
-      vendeEmpaque: [true],
-    });
-
-    // El costo por unidad sale del empaque: nadie tiene que dividir a mano.
-    const recalcularCosto = () => {
-      const costo = this.costoUnidadEmpaque;
-      if (this.usaEmpaque && costo != null)
-        this.frmProducto.patchValue({ costo }, { emitEvent: false });
-    };
-    this.frmEmpaque.get('trae')?.valueChanges.subscribe(recalcularCosto);
-    this.frmEmpaque.get('costoEmpaque')?.valueChanges.subscribe(recalcularCosto);
-    this.frmEmpaque.get('usaEmpaque')?.valueChanges.subscribe(recalcularCosto);
-  }
-
-  get usaEmpaque(): boolean {
-    return !!this.frmEmpaque?.get('usaEmpaque')?.value;
-  }
-
-  get vendeSuelto(): boolean {
-    return !!this.frmEmpaque?.get('vendeSuelto')?.value;
-  }
-
-  get vendeEmpaque(): boolean {
-    return !!this.frmEmpaque?.get('vendeEmpaque')?.value;
-  }
-
-  get costoEmpaqueValor(): number {
-    return Number(this.frmEmpaque?.get('costoEmpaque')?.value) || 0;
-  }
-
-  setUsaEmpaque(valor: boolean): void {
-    this.frmEmpaque.get('usaEmpaque')?.setValue(valor);
-    // Sin empaque solo se puede vender por unidad.
-    if (!valor) this.frmEmpaque.get('vendeSuelto')?.setValue(true);
-  }
-
-  setVendeSuelto(valor: boolean): void {
-    this.frmEmpaque.get('vendeSuelto')?.setValue(valor);
-  }
-
-  get traeEmpaque(): number {
-    return Number(this.frmEmpaque?.get('trae')?.value) || 0;
-  }
-
-  get nombreEmpaque(): string {
-    const nombre = `${this.frmEmpaque?.get('nombre')?.value ?? ''}`.trim();
-    return nombre || 'el empaque';
-  }
-
   /** Abreviatura de la unidad de inventario para las frases ("trae 10 und"). */
   get unidadBaseCorta(): string {
     const label = this.unidadBaseNombre;
@@ -826,138 +689,45 @@ export class FormProductosComponent implements OnInit {
     return (abreviatura ?? label).toLowerCase();
   }
 
-  /** Costo de una unidad de inventario: costo del empaque ÷ lo que trae. */
-  get costoUnidadEmpaque(): number | null {
-    const costo = Number(this.frmEmpaque?.get('costoEmpaque')?.value);
-    const trae = this.traeEmpaque;
-    if (!trae || isNaN(costo) || costo < 0) return null;
-    return Math.round((costo / trae) * 100) / 100;
-  }
-
-  /** Precio del empaque completo si se deja vacío: precio suelto × lo que trae. */
-  get precioEmpaqueSugerido(): number {
-    return Math.round(this.precioFinalTotal * this.traeEmpaque);
-  }
-
-  /** Las presentaciones que no son el empaque principal (sección avanzada). */
-  get presentacionesAdicionales(): PresentacionFormItem[] {
-    return this.presentaciones.filter((p) => p !== this.empaqueItem);
-  }
-
-  private get errorEmpaque(): string | null {
-    if (!this.usaEmpaque) return null;
-    const v = this.frmEmpaque.value;
-    if (!`${v.nombre ?? ''}`.trim())
-      return 'Escribe cómo se llama el empaque (caja, paca, bulto…).';
-    if (!v.trae || v.trae <= 1)
-      return 'Indica cuántas unidades trae el empaque (más de 1).';
-    if (v.costoEmpaque === null || v.costoEmpaque === undefined || v.costoEmpaque === '')
-      return 'Escribe el costo del empaque.';
-    if (!v.vendeSuelto && !v.vendeEmpaque)
-      return 'Elige al menos una forma de venta: por unidad o empaque completo.';
+  /** Lo que impide guardar las conversiones; null si están bien. */
+  private get errorConversiones(): string | null {
+    const factores = new Set<number>();
+    for (const f of this.conversiones) {
+      if (!f.nombre?.trim()) return 'Cada conversión necesita un nombre (Paca, Caja, Libra…).';
+      if (!f.factor || f.factor <= 0) return `Escribe a cuántas ${this.unidadBaseCorta} equivale 1 ${f.nombre}.`;
+      if (f.factor === 1) return `${f.nombre}: equivaler a 1 ${this.unidadBaseCorta} es la misma unidad base.`;
+      if (factores.has(f.factor)) return `Dos conversiones equivalen a ${f.factor} ${this.unidadBaseCorta}: deja solo una.`;
+      factores.add(f.factor);
+    }
+    if (this.esMercancia && !this.vendeSuelto && !this.conversiones.some((f) => f.seVende))
+      return 'Marca al menos una forma de venta: suelto o en alguna conversión.';
     return null;
   }
 
-  /** Toma como empaque la presentación de compra que contiene más de 1 unidad. */
-  private cargarEmpaque(): void {
-    const empaque =
-      this.presentaciones.find(
-        (p) => p.activo && p.esDefaultCompra && p.factorConversion > 1,
-      ) ??
-      this.presentaciones.find((p) => p.activo && p.factorConversion > 1) ??
-      null;
-    this.empaqueItem = empaque;
-    this.frmEmpaque.reset(
-      {
-        usaEmpaque: !!empaque,
-        nombre: empaque?.nombre ?? 'Caja',
-        trae: empaque?.factorConversion ?? null,
-        costoEmpaque: empaque?.costo ?? null,
-        precioEmpaque: empaque?.precio || null,
-        codigoBarras: empaque?.codigoBarras ?? null,
-        vendeSuelto: empaque ? this.vendePorUnidadGuardado : true,
-        vendeEmpaque: empaque ? empaque.seVende !== false : true,
-      },
-      { emitEvent: false },
-    );
-  }
-
-  /** Crea, actualiza o retira la presentación del empaque. Devuelve el error, si hubo. */
-  private async guardarEmpaque(productoId: number): Promise<string | null> {
-    const v = this.frmEmpaque.getRawValue();
+  /** Guarda todas las conversiones de una vez; devuelve el error, si hubo. */
+  private async guardarConversiones(productoId: number): Promise<string | null> {
+    if (this.isEditMode && !this.conversionesCargadas)
+      return 'No se pudieron cargar las conversiones del producto; recarga la página antes de cambiarlas.';
     try {
-      if (!v.usaEmpaque) {
-        if (this.empaqueItem?.id) {
-          const e = this.empaqueItem;
-          await lastValueFrom(
-            this.presentacionService.update(e.id!, {
-              nombre: e.nombre,
-              codigoBarras: e.codigoBarras,
-              factorConversion: e.factorConversion,
-              precio: e.precio,
-              costo: e.costo,
-              esDefaultCompra: false,
-              esDefaultVenta: false,
-              activo: false,
-            }),
-          );
-        }
-        return null;
-      }
-
-      const dto: UpdateProductoPresentacionDto = {
-        nombre: `${v.nombre}`.trim(),
-        codigoBarras: v.codigoBarras?.trim() || null,
-        factorConversion: Number(v.trae),
-        precio: v.vendeEmpaque
-          ? Number(v.precioEmpaque) || this.precioEmpaqueSugerido
-          : Number(v.precioEmpaque) || 0,
-        costo: Number(v.costoEmpaque) || 0,
-        esDefaultCompra: true,
-        esDefaultVenta: !!v.vendeEmpaque && !v.vendeSuelto,
-        seVende: !!v.vendeEmpaque,
-        activo: true,
-      };
-      if (this.empaqueItem?.id) {
-        await lastValueFrom(
-          this.presentacionService.update(this.empaqueItem.id, dto),
-        );
-      } else {
-        await lastValueFrom(
-          this.presentacionService.create({ productoId, ...dto }),
-        );
-      }
+      await lastValueFrom(
+        this.presentacionService.guardarConversiones(productoId, {
+          vendePorUnidad: this.clasificacion.seVende ? this.vendeSuelto : true,
+          conversiones: this.conversiones.map((f, i) => ({
+            id: f.id ?? null,
+            nombre: f.nombre.trim(),
+            factor: f.factor!,
+            codigoBarras: f.codigoBarras?.trim() || null,
+            // Precio vacío: el de la unidad × lo que equivale.
+            precio: f.precio || Math.round((Number(this.frmProducto.get('precio')?.value) || 0) * (f.factor ?? 0)),
+            costo: f.costo ?? 0,
+            seVende: this.clasificacion.seVende ? f.seVende : false,
+            esDefaultCompra: i === this.compraEn,
+          })),
+        }),
+      );
       return null;
     } catch (e: any) {
-      return (
-        e?.error?.message ?? e?.message ?? 'No se pudo guardar el empaque.'
-      );
-    }
-  }
-
-  // ─── Guardar presentaciones pendientes al crear el producto ───────
-  private async guardarPresentacionesPendientes(
-    productoId: number,
-  ): Promise<void> {
-    const pendientes = this.presentaciones.filter((p) => p._esNueva);
-    for (const p of pendientes) {
-      try {
-        await lastValueFrom(
-          this.presentacionService.create({
-            productoId,
-            nombre: p.nombre,
-            factorConversion: p.factorConversion,
-            codigoBarras: p.codigoBarras,
-            precio: p.precio,
-            costo: p.costo,
-            esDefaultCompra: p.esDefaultCompra,
-            esDefaultVenta: p.esDefaultVenta,
-            activo: true,
-          }),
-        );
-      } catch {
-        /* no bloquear flujo principal */
-      }
+      return e?.error?.message ?? e?.message ?? 'No se pudieron guardar las conversiones.';
     }
   }
 
@@ -1005,17 +775,12 @@ export class FormProductosComponent implements OnInit {
       ]);
 
       this.categoriasContables = categorias?.data ?? [];
-      this.categoriasContablesOpts = [
-        { label: 'General (por defecto)', value: null },
-        ...this.categoriasContables
-          .filter((c) => c.activo && c.nombre !== 'General')
-          .map((c) => ({ label: c.nombre, value: c.id })),
-      ];
 
       // Mismas reglas de clase que valida el backend.
       const auxiliares = (plan?.data ?? []).filter(
         (c) => c.auxiliar && c.activa,
       );
+      this.auxiliares = auxiliares.map((c) => ({ id: c.id, codigo: c.codigo ?? '', nombre: c.nombre }));
       const opciones = (...prefijos: string[]) =>
         auxiliares
           .filter((c) => prefijos.some((p) => c.codigo?.startsWith(p)))
@@ -1023,7 +788,8 @@ export class FormProductosComponent implements OnInit {
 
       this.cuentasIngresoOpts = opciones('4');
       this.cuentasCostoOpts = opciones('5', '6', '7');
-      this.cuentasInventarioOpts = opciones('14');
+      // Categorías y cuenta de la compra dependen de la clasificación.
+      this.actualizarOpcionesContables();
     } catch {
       /* sin permisos de contabilidad: el producto hereda la categoría General */
     }
@@ -1058,6 +824,7 @@ export class FormProductosComponent implements OnInit {
           unidadMedidaBaseId: d.unidadMedidaBaseId,
           tipoProducto: d.tipoProducto,
           usoProducto: d.usoProducto ?? 'VENTA',
+          clasificacion: d.clasificacion ?? 'PRODUCTO',
           imagenUrl: d.imagenUrl,
           activo: d.activo,
           precio: d.precio,
@@ -1081,13 +848,9 @@ export class FormProductosComponent implements OnInit {
         { emitEvent: false },
       );
       this.actualizarTarifasIva();
-      this.vendePorUnidadGuardado = d.vendePorUnidad ?? true;
-      if (this.empaqueItem)
-        this.frmEmpaque.patchValue(
-          { vendeSuelto: this.vendePorUnidadGuardado },
-          { emitEvent: false },
-        );
+      this.vendeSuelto = d.vendePorUnidad ?? true;
       this.sincronizarUso(d.usoProducto ?? 'VENTA', false);
+      this.sincronizarClasificacion(d.clasificacion ?? 'PRODUCTO', false);
       // Si el producto ya tiene cuentas propias, se muestran de una vez.
       this.mostrarCuentasAvanzadas = !!(
         d.cuentaIngresoId ||
@@ -1114,18 +877,18 @@ export class FormProductosComponent implements OnInit {
 
   // ─── Guardar producto ────────────────────────────────────────────
   async saveProducto(): Promise<void> {
-    const errorEmpaque = this.errorEmpaque;
-    if (this.frmProducto.invalid || errorEmpaque) {
+    const errorConversion = this.errorConversiones;
+    if (this.frmProducto.invalid || errorConversion) {
       this.frmProducto.markAllAsTouched();
       // Llevar a la pestaña donde está el error.
       const basico = ['nombre', 'unidadMedidaBaseId', 'tipoProducto', 'usoProducto'];
       const precios = ['ivaPorcentaje', 'impoconsumo', 'precio', 'costo'];
       if (basico.some((f) => this.frmProducto.get(f)?.invalid)) this.activeTab = 0;
-      else if (errorEmpaque || precios.some((f) => this.frmProducto.get(f)?.invalid))
+      else if (errorConversion || precios.some((f) => this.frmProducto.get(f)?.invalid))
         this.activeTab = 1;
       this.alertService.showWarn(
         'Formulario incompleto',
-        errorEmpaque ?? 'Revisa los campos marcados en rojo.',
+        errorConversion ?? 'Revisa los campos marcados en rojo.',
       );
       return;
     }
@@ -1147,17 +910,12 @@ export class FormProductosComponent implements OnInit {
           ? this.productoId!
           : (response?.data?.id ?? null);
 
-        // Si es nuevo y hay presentaciones pendientes, guardarlas ahora
-        if (!this.isEditMode && productoId && this.presentaciones.length > 0) {
-          await this.guardarPresentacionesPendientes(productoId);
-        }
-
         const errorGuardandoEmpaque = productoId
-          ? await this.guardarEmpaque(productoId)
+          ? await this.guardarConversiones(productoId)
           : null;
         if (errorGuardandoEmpaque) {
           this.alertService.showWarn(
-            'El producto se guardó, el empaque no',
+            'El producto se guardó, las conversiones no',
             errorGuardandoEmpaque,
           );
           // Queda en la edición del producto para corregir el empaque.
@@ -1201,6 +959,7 @@ export class FormProductosComponent implements OnInit {
       unidadMedidaBaseId: v.unidadMedidaBaseId,
       tipoProducto: v.tipoProducto as TipoProducto,
       usoProducto: uso,
+      clasificacion: (v.clasificacion ?? 'PRODUCTO') as ClasificacionItem,
       activo: v.activo,
       precio: v.precio ?? 0,
       costo: v.costo ?? 0,
@@ -1215,10 +974,12 @@ export class FormProductosComponent implements OnInit {
       // 0 = sin garantía (null lo dejaría como estaba en el back).
       mesesGarantia: v.mesesGarantia ?? 0,
       permitirStockNegativo: v.permitirStockNegativo ?? false,
-      visibleEnPos: uso === 'INSUMO' ? false : (v.visibleEnPos ?? true),
-      // Sin empaque siempre se vende por unidad; con empaque, lo que diga "Por unidad".
-      vendePorUnidad:
-        !this.usaEmpaque || !!this.frmEmpaque.getRawValue().vendeSuelto,
+      visibleEnPos:
+        uso === 'INSUMO' || !clasificacionOpcion(v.clasificacion).seVende
+          ? false
+          : (v.visibleEnPos ?? true),
+      // Lo que no se vende queda "por unidad" (no aplica); el resto, lo de la sección de conversiones.
+      vendePorUnidad: this.clasificacion.seVende ? this.vendeSuelto : true,
       categoriaContableId: v.categoriaContableId ?? null,
       cuentaIngresoId: v.cuentaIngresoId ?? null,
       cuentaCostoId: v.cuentaCostoId ?? null,
@@ -1227,10 +988,21 @@ export class FormProductosComponent implements OnInit {
   }
 
   get margenUtilidad(): number {
-    const precio = this.frmProducto.get('precio')?.value ?? 0;
-    const costo = this.frmProducto.get('costo')?.value ?? 0;
-    if (!costo || !precio) return 0;
-    return Math.round(((precio - costo) / precio) * 100 * 10) / 10;
+    return this.margenDe(this.frmProducto.get('precio')?.value) ?? 0;
+  }
+
+  /**
+   * % de utilidad de un precio sobre el costo base, sin IVA (margen). null si
+   * falta precio o costo. Mismo cálculo que la columna Utilidad de conversiones.
+   * Ojo: 0 % devuelve 0, que en *ngIf se lee como "no mostrar".
+   */
+  margenDe(precio: number | null | undefined): number | null {
+    const p = Number(precio) || 0;
+    const c = Number(this.frmProducto.get('costo')?.value) || 0;
+    if (p <= 0 || c <= 0) return null;
+    const iva = Number(this.frmProducto.get('ivaPorcentaje')?.value) || 0;
+    const neto = this.ivaIncluidoValue && iva > 0 ? p / (1 + iva / 100) : p;
+    return Math.round(((neto - c) / neto) * 1000) / 10;
   }
 
   get ivaIncluidoValue(): boolean {

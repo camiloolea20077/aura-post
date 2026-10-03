@@ -449,6 +449,7 @@ export class FormCotizacionComponent implements OnInit {
     | undefined {
     const map: Record<EstadoCotizacion, string> = {
       PENDIENTE: 'info',
+      PARCIAL: 'warn',
       VENCIDA: 'warn',
       ANULADA: 'danger',
       CONVERTIDA: 'success',
@@ -459,6 +460,7 @@ export class FormCotizacionComponent implements OnInit {
   getEstadoLabel(e: EstadoCotizacion): string {
     const labels: Record<EstadoCotizacion, string> = {
       PENDIENTE: 'Pendiente',
+      PARCIAL: 'Parcial',
       VENCIDA: 'Vencida',
       ANULADA: 'Anulada',
       CONVERTIDA: 'Convertida',

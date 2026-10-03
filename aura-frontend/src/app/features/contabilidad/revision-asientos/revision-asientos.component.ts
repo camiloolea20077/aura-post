@@ -23,7 +23,10 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 
 import { ContabilidadService } from '../../../core/services/contabilidad.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
-import { AsientoContableModel } from '../../../core/models/contabilidad.model';
+import {
+  AsientoContableModel,
+  DocumentoSinAsientoModel,
+} from '../../../core/models/contabilidad.model';
 
 import { aFechaLocal } from '../../../shared/utils/fecha.util';
 @Component({
@@ -59,6 +62,12 @@ export class RevisionAsientosComponent implements OnInit {
   // ── Descuadrados (red de seguridad) ──────────────────────────────
   descuadrados: AsientoContableModel[] = [];
   loadingDescuadrados = false;
+
+  // ── Sin asiento / duplicados (red del posting) ──────────────────
+  sinAsiento: DocumentoSinAsientoModel[] = [];
+  loadingSinAsiento = false;
+  reprocesandoKey: string | null = null;
+  rangoSinAsiento: Date[] = [new Date(new Date().getFullYear(), 0, 1), new Date()];
 
   // ── Detalle ──────────────────────────────────────────────────────
   asientoDetalle: AsientoContableModel | null = null;
@@ -122,6 +131,43 @@ export class RevisionAsientosComponent implements OnInit {
       this.alertService.showError('Error', 'No se pudieron cargar los comprobantes descuadrados');
     } finally {
       this.loadingDescuadrados = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  async cargarSinAsiento(): Promise<void> {
+    this.loadingSinAsiento = true;
+    this.cdr.markForCheck();
+    try {
+      const desde = this.rangoSinAsiento?.[0] ? this.toISO(this.rangoSinAsiento[0]) : undefined;
+      const hasta = this.rangoSinAsiento?.[1] ? this.toISO(this.rangoSinAsiento[1]) : undefined;
+      const res = await lastValueFrom(this.service.documentosSinAsiento(desde, hasta));
+      this.sinAsiento = res?.data ?? [];
+    } catch {
+      this.alertService.showError('Error', 'No se pudieron revisar los documentos');
+    } finally {
+      this.loadingSinAsiento = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  keyDoc(d: DocumentoSinAsientoModel): string {
+    return d.tipoOrigen + ':' + d.origenId;
+  }
+
+  async reprocesar(d: DocumentoSinAsientoModel): Promise<void> {
+    this.reprocesandoKey = this.keyDoc(d);
+    this.cdr.markForCheck();
+    try {
+      const res = await lastValueFrom(this.service.reprocesarDocumento(d.tipoOrigen, d.origenId));
+      this.sinAsiento = this.sinAsiento.filter((x) => this.keyDoc(x) !== this.keyDoc(d));
+      this.alertService.showSuccess('Listo', res?.message ?? 'Asiento generado');
+    } catch (e: any) {
+      // El motivo del fallo (cuenta sin configurar, mes cerrado…) es lo que el
+      // contador necesita para corregir y volver a intentar.
+      this.alertService.showError('No se pudo contabilizar', e?.error?.message ?? e?.message ?? 'Error al reprocesar');
+    } finally {
+      this.reprocesandoKey = null;
       this.cdr.markForCheck();
     }
   }

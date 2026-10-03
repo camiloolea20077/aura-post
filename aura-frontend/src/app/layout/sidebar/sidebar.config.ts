@@ -133,6 +133,13 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         route: '/compras/ordenes',
       },
       {
+        // normalize('Sugerido de Compra') = 'sugerido-de-compra'
+        // (docs/sql/menu_submodulos_f2_f4.sql en el backend).
+        label: 'Sugerido de Compra',
+        icon: 'pi pi-shopping-cart',
+        route: '/compras/sugerido',
+      },
+      {
         // normalize('Documentos Soporte') = 'documentos-soporte'
         // (docs/sql/menu_submodulo_documentos_soporte.sql en el backend).
         label: 'Documentos Soporte',
@@ -336,11 +343,15 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
   },
 
   // ── Contabilidad ────────────────────────────────────────────────────────────
-  // Reportes financieros y control de gastos
+  // En el sidebar es un solo enlace al Centro de Contabilidad (/contabilidad).
+  // Los ítems NO se borran: siguen pasando por filtrarMenuPorPermisos (su label
+  // es el código del submódulo) y el centro los muestra agrupados. Para agregar
+  // una pantalla: ítem aquí + descripción/grupo en centro-contabilidad.config.ts.
   {
     label: 'Contabilidad',
     icon: 'pi pi-book',
     roles: ['SUPER_ADMIN', 'ADMIN'],
+    hubRoute: '/contabilidad',
     items: [
       {
         label: 'Plan de Cuentas',
@@ -430,6 +441,27 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         label: 'Activos Fijos',
         icon: 'pi pi-building',
         route: '/contabilidad/activos-fijos',
+      },
+      {
+        label: 'Categorías Contables',
+        icon: 'pi pi-sitemap',
+        route: '/contabilidad/categorias-contables',
+      },
+      {
+        // Fase 4: submódulos en docs/sql/menu_submodulos_f2_f4.sql (backend).
+        label: 'Parametrización Contable',
+        icon: 'pi pi-sliders-h',
+        route: '/contabilidad/parametrizacion',
+      },
+      {
+        label: 'Balance de Prueba',
+        icon: 'pi pi-list-check',
+        route: '/contabilidad/balance-prueba',
+      },
+      {
+        label: 'Herramientas del Contador',
+        icon: 'pi pi-wrench',
+        route: '/contabilidad/herramientas',
       },
       {
         label: 'Tarifas Retención',

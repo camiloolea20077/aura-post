@@ -1,0 +1,49 @@
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1 1 150px;
+  min-width: 0;
+  label { font-size: 0.75rem; font-weight: 600; color: #374151; }
+  &--corto { flex: 0 1 110px; }
+  &--ancho { flex: 2 1 220px; }
+}
+
+:host ::ng-deep .campo p-dropdown,
+:host ::ng-deep .campo p-calendar { min-width: 0; width: 100%; }
+
+.aviso {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 8px;
+  background: #f0fdf4;
+  color: #15803d;
+  font-size: 0.83rem;
+  &--mal { background: #fef2f2; color: #b91c1c; }
+  .comp { color: #475569; }
+}
+
+.tabla-scroll { overflow-x: auto; min-width: 0; }
+.codigo { font-family: "JetBrains Mono", monospace; color: #475569; margin-right: 0.35rem; }
+.text-right { text-align: right; white-space: nowrap; }
+.neg { color: #dc2626; }
+.vacio { text-align: center; color: #94a3b8; padding: 1.25rem; }
+
+// Jerarquía: las cuentas de mayor nivel más marcadas.
+.nivel-1 td { font-weight: 800; background: #f1f5f9; }
+.nivel-2 td { font-weight: 700; background: #f8fafc; }
+.nivel-4 td:first-child { padding-left: 1.25rem; }
+.nivel-5 td:first-child,
+.nivel-6 td:first-child { padding-left: 2rem; color: #334155; }

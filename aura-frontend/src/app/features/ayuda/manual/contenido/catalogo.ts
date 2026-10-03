@@ -23,14 +23,19 @@ export const CATALOGO: ManualModulo[] = [
         ],
       },
       {
-        titulo: 'Empaque de compra y forma de venta',
+        titulo: 'Unidades y conversiones',
         texto: [
-          '"¿Cómo lo compras?" define lo que le llega del proveedor. "Por unidad", o "En empaque": cuántas unidades trae cada empaque, el costo del empaque y su código de barras. El sistema calcula el costo por unidad.',
-          '"¿Cómo puedes vender este producto?" permite vender por unidad, por empaque completo o ambos, cada uno con su precio. Al lado del precio se ve el margen sobre el costo.',
+          'En la pestaña "Empaque y precios", la tabla "Unidades y conversiones" muestra la unidad en que se cuenta el inventario (la de la pestaña Básico) y a qué equivale cada empaque o medida: "1 Paca = 24 und", "1 Libra = 0,5 kg", "1 Año = 12 mes".',
+          '"Agregar conversión" o los botones de conversiones comunes ("+ Libra = 0,5 kg", "+ Docena = 12 und"…), que cambian según la unidad del producto.',
+          'Por cada fila: "Se compra" (la que se propone al registrar compras; solo una), "Se vende" (sale en el POS), precio de venta (vacío = precio de la unidad × lo que equivale), costo y código de barras propio.',
+          'Si se compra en una conversión (p. ej. la paca), su costo se escribe ahí y el de la unidad base se calcula solo.',
+          'Con las conversiones se compra "4 Pacas + 2 und" en una sola línea y se vende suelto o por empaque.',
+          'Columna Utilidad: de cada $100 que vende (sin IVA), cuánto le queda después del costo. Verde 15 % o más, naranja menos de 15 %, rojo pérdida. Pasando el mouse ve cuánto gana en pesos por unidad y el % sobre el costo. Si el precio incluye IVA, se calcula sobre la base sin IVA. También aparece junto a Precio 2 y Precio 3, y en la lista de productos.',
           'Precio 2 (mayorista) y Precio 3 (distribuidor) quedan disponibles en el POS desde el menú de la línea.',
         ],
         notas: [
-          'Presentaciones adicionales (display y caja, por ejemplo) casi nunca hacen falta: el empaque cubre la caja o la paca. Úselas solo si maneja más de un empaque.',
+          'Quitar una conversión no borra los documentos que la usaron. Si se vuelve a crear con la misma cantidad, se recupera la anterior.',
+          'Una conversión más pequeña que la unidad base (la unidad de una paca) muestra el botón "Pasar a unidad" para contar el inventario en ella.',
         ],
       },
       {
@@ -53,6 +58,19 @@ export const CATALOGO: ManualModulo[] = [
         ],
       },
       {
+        titulo: '¿Qué es este ítem? (clasificación)',
+        texto: [
+          'Todo lo que la empresa compra vive en el catálogo y se clasifica: Producto (mercancía), Servicio, Gasto, Dotación, Activo fijo, Intangible o Diferido. La clasificación decide qué hace la compra con la línea.',
+          'Solo un Producto maneja inventario, lotes y seriales. Un Servicio se vende pero no tiene existencias. Gasto, Dotación, Activo fijo, Intangible y Diferido se compran y no salen en el POS.',
+          'Al comprar un Activo fijo o un Intangible se crea una ficha de activo por unidad (3 computadores = 3 fichas) en Contabilidad › Activos Fijos. Al comprar un Diferido (seguro, suscripción) se crea el diferido y se amortiza mes a mes.',
+          'La cuenta a la que va la compra la da la categoría contable del mismo tipo; sin categoría, la cuenta por defecto de la empresa (1524 activo, 1635 intangible, 1705 diferido, 5195 gasto, 510551 dotación).',
+          'Lo que no se vende (gasto, dotación, activo, intangible, diferido) no pide precio, forma de venta, tipo, uso ni inventario: la pestaña se llama "Costo e impuestos" y el panel "Al comprarlo" resume la cuenta, la vida útil o los meses que vienen de su categoría contable.',
+        ],
+        notas: [
+          'Un producto con existencias no puede dejar de ser Producto: saque primero el stock con un ajuste, una merma o un consumo interno.',
+        ],
+      },
+      {
         titulo: 'Contabilidad del producto',
         texto: [
           'La categoría contable decide a qué cuentas van el ingreso, el costo y el inventario. Si no elige ninguna usa "General".',
@@ -68,6 +86,36 @@ export const CATALOGO: ManualModulo[] = [
       },
     ],
     errores: [
+      {
+        mensaje: 'El producto tiene existencias: no puede dejar de ser mercancía',
+        causa: 'Se quiso cambiar a Gasto, Activo u otra clasificación un producto con stock.',
+        solucion: 'Saque el stock (ajuste manual, merma o consumo interno) y vuelva a cambiar la clasificación.',
+      },
+      {
+        mensaje: 'Clasificación inválida: use PRODUCTO, SERVICIO, GASTO, DOTACION, ACTIVO_FIJO, INTANGIBLE o DIFERIDO',
+        causa: 'Llegó una clasificación que no existe.',
+        solucion: 'Elija una de las opciones de "¿Qué es este ítem?".',
+      },
+      {
+        mensaje: 'La cuenta de la compra debe empezar por …; la cuenta … no aplica',
+        causa: 'La cuenta específica del producto no es de la clase de su clasificación (por ejemplo una 14 para un activo fijo).',
+        solucion: 'Elija una cuenta de la clase indicada o deje el campo vacío para usar la de la categoría.',
+      },
+      {
+        mensaje: 'Escribe a cuántas … equivale 1 …',
+        causa: 'Una conversión sin cantidad.',
+        solucion: 'Escriba la equivalencia (p. ej. 24 und por paca) o quite la fila.',
+      },
+      {
+        mensaje: 'Dos conversiones equivalen a …: deja solo una',
+        causa: 'Dos filas con la misma cantidad.',
+        solucion: 'Quite una.',
+      },
+      {
+        mensaje: 'Marca al menos una forma de venta: suelto o en alguna conversión.',
+        causa: 'No se vende ni suelto ni en ninguna conversión.',
+        solucion: 'Marque "Se vende" en la unidad base o en alguna conversión.',
+      },
       {
         mensaje: 'El código de barras ya está en uso / ya lo usa una presentación de la empresa',
         causa: 'Otro producto o presentación tiene ese código.',
@@ -163,7 +211,7 @@ export const CATALOGO: ManualModulo[] = [
         ],
         notas: [
           'Al vender una Caja x 12 el inventario baja 12 unidades base. El stock siempre se guarda en la unidad pequeña.',
-          'También puede crearlas desde la ficha del producto, sección Presentaciones, donde además se marca la presentación de compra y de venta por defecto.',
+          'Lo más fácil es crearlas desde el producto, en "Unidades y conversiones", donde además se marca en cuál se compra y cuáles se venden.',
         ],
       },
     ],

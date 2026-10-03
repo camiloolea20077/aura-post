@@ -59,6 +59,7 @@ export const POS_CAJA: ManualModulo[] = [
           'Elija el método: Efectivo, Tarjeta, Transferencia, Nequi, Daviplata o Crédito. En transferencias y billeteras elija "¿A qué cuenta llega el pago?".',
           'Escriba el monto recibido. "Exacto" completa el faltante. En efectivo el sistema calcula el vuelto.',
           'Para pagar con dos medios (parte efectivo, parte tarjeta) use "Agregar otro método".',
+          'Formas con recargo (p. ej. Sistecrédito 5 %): escriba la parte de la venta que se paga con ella; el aviso naranja muestra el recargo y cuánto paga el cliente en total. El recargo sale en el resumen, en el total y en la factura. Se configura en Contabilidad › Parametrización › Formas de pago.',
           'Si aplica, escriba un "Descuento adicional" sobre el total.',
           'Presione "Confirmar venta" cuando diga "Listo" o "Pago exacto".',
         ],

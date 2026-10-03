@@ -128,6 +128,11 @@ $red: #ef4444;
   }
 }
 
+.group-header--link {
+  color: inherit;
+  text-decoration: none;
+}
+
 .group-header {
   display: flex;
   align-items: center;

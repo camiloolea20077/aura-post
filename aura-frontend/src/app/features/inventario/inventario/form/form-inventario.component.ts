@@ -68,6 +68,9 @@ export class FormInventarioComponent implements OnInit, OnChanges {
   public isLoading = false;
 
   public sucursalesOpts: { label: string; value: number }[] = [];
+
+  /** Stock al abrir la edición: si cambia, el ajuste pide motivo y va al kardex. */
+  public stockOriginal: number | null = null;
   private defaultSucursalId: number | null = null;
 
   // Buscador avanzado de producto
@@ -104,9 +107,19 @@ export class FormInventarioComponent implements OnInit, OnChanges {
       productoId: [null, Validators.required],
       sucursalId: [null, Validators.required],
       stockMinimo: [0, [Validators.required, Validators.min(0)]],
+      puntoReorden: [null as number | null, [Validators.min(0)]],
+      stockMaximo: [null as number | null, [Validators.min(0)]],
       stockActual: [0, [Validators.required, Validators.min(0)]],
       ubicacion: [null, Validators.maxLength(100)],
+      motivoAjuste: [null, Validators.maxLength(200)],
     });
+  }
+
+  /** En edición, la cantidad escrita es distinta de la que había. */
+  get cambiaStock(): boolean {
+    if (!this.isEditMode || this.stockOriginal == null) return false;
+    const v = this.frmInv?.get('stockActual')?.value;
+    return v != null && Number(v) !== Number(this.stockOriginal);
   }
 
   private resetForm(): void {
@@ -117,7 +130,9 @@ export class FormInventarioComponent implements OnInit, OnChanges {
       stockMinimo: 0,
       stockActual: 0,
       ubicacion: null,
+      motivoAjuste: null,
     });
+    this.stockOriginal = null;
     if (this.isEditMode) {
       this.frmInv.get('productoId')?.disable();
       this.frmInv.get('sucursalId')?.disable();
@@ -188,9 +203,12 @@ export class FormInventarioComponent implements OnInit, OnChanges {
           productoId: d.productoId,
           sucursalId: d.sucursalId,
           stockMinimo: d.stockMinimo,
+          puntoReorden: d.puntoReorden ?? null,
+          stockMaximo: d.stockMaximo ?? null,
           stockActual: d.stockActual,
           ubicacion: d.ubicacion,
         });
+        this.stockOriginal = d.stockActual;
         this.frmInv.get('productoId')?.disable();
         this.frmInv.get('sucursalId')?.disable();
       }
@@ -207,19 +225,33 @@ export class FormInventarioComponent implements OnInit, OnChanges {
       this.frmInv.markAllAsTouched();
       return;
     }
+    if (this.cambiaStock && !this.frmInv.get('motivoAjuste')?.value?.trim()) {
+      this.frmInv.get('motivoAjuste')?.markAsTouched();
+      this.alertService.showError(
+        'Falta el motivo',
+        'Escribe por qué cambias el stock: el ajuste queda registrado en el kardex.',
+      );
+      return;
+    }
     this.isSubmitting = true;
     try {
       const v = this.frmInv.getRawValue();
       const obs = this.isEditMode
         ? this.inventarioService.update(this.inventarioId!, {
             stockMinimo: v.stockMinimo,
+            // 0 = sin definir (el back lo trata igual que vacío).
+            puntoReorden: v.puntoReorden ?? 0,
+            stockMaximo: v.stockMaximo ?? 0,
             stockActual: v.stockActual,
             ubicacion: v.ubicacion?.trim() || null,
+            motivoAjuste: this.cambiaStock ? v.motivoAjuste?.trim() : null,
           } as UpdateInventarioDto)
         : this.inventarioService.create({
             productoId: v.productoId,
             sucursalId: v.sucursalId,
             stockMinimo: v.stockMinimo,
+            puntoReorden: v.puntoReorden ?? null,
+            stockMaximo: v.stockMaximo ?? null,
             stockActual: v.stockActual,
             ubicacion: v.ubicacion?.trim() || null,
           } as CreateInventarioDto);

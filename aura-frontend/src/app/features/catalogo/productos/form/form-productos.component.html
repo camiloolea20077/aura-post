@@ -222,14 +222,43 @@
             </div>
           </div>
 
+          <!-- ── Clasificación (catálogo unificado) ────────────── -->
+          <div class="panel">
+            <div>
+              <h3 class="section">¿Qué es este ítem?</h3>
+              <p class="panel-sub">
+                Decide qué pasa cuando lo compras: si entra al inventario, va al
+                gasto o crea un activo
+              </p>
+            </div>
+            <div class="clasificaciones">
+              <button
+                *ngFor="let op of clasificacionOptions"
+                type="button"
+                class="clasif"
+                [class.clasif--activa]="frmProducto.get('clasificacion')?.value === op.value"
+                (click)="setClasificacion(op.value)"
+              >
+                <i [class]="op.icon"></i>
+                <span class="clasif__label">{{ op.label }}</span>
+                <span class="clasif__desc">{{ op.desc }}</span>
+              </button>
+            </div>
+            <small class="field-hint">
+              <i class="pi pi-info-circle"></i>
+              Al comprarlo: {{ clasificacion.alComprar }}.
+            </small>
+          </div>
+
           <!-- ── Información comercial ──────────────────────────── -->
           <div class="panel">
-            <h3 class="section">Información comercial</h3>
+            <h3 class="section">{{ esMercancia ? "Información comercial" : "Unidad y uso" }}</h3>
 
-          <div class="field-row field-row--3">
+          <div class="field-row" [class.field-row--3]="esMercancia">
             <div class="field">
               <label for="unidadMedidaBaseId"
-                >Unidad de inventario <span class="required">*</span></label
+                >{{ esMercancia ? "Unidad de inventario" : "Unidad en que se compra" }}
+                <span class="required">*</span></label
               >
               <p-dropdown
                 inputId="unidadMedidaBaseId"
@@ -248,10 +277,11 @@
               >
               <small class="field-hint">
                 <i class="pi pi-info-circle"></i>
-                La más pequeña en que vendes: unidad, kg, litro…
+                {{ esMercancia ? "La más pequeña en que vendes: unidad, kg, litro…" : "Unidad, mes, año, servicio…" }}
               </small>
             </div>
-            <div class="field">
+            <!-- Tipo y uso solo aplican a la mercancía: cómo se vende y si es insumo de recetas -->
+            <div class="field" *ngIf="esMercancia">
               <label for="tipoProducto"
                 >Tipo de producto <span class="required">*</span></label
               >
@@ -264,7 +294,7 @@
                 styleClass="w-full"
               />
             </div>
-            <div class="field">
+            <div class="field" *ngIf="esMercancia">
               <label for="usoProducto"
                 >Uso del producto <span class="required">*</span></label
               >
@@ -282,18 +312,51 @@
             </div>
           </div>
 
-            <div class="field-inline">
+            <div class="field-inline" *ngIf="clasificacion.seVende">
               <div class="switch-label">
                 <span class="label-text">Visible en POS</span>
-                <span class="label-sub" *ngIf="!esInsumo">
+                <span class="label-sub" *ngIf="!esInsumo && clasificacion.seVende">
                   Desactívalo para ocultar temporalmente el producto del POS
                 </span>
                 <span class="label-sub" *ngIf="esInsumo">
                   <i class="pi pi-lock"></i> Un insumo nunca se muestra en el POS
                 </span>
+                <span class="label-sub" *ngIf="!esInsumo && !clasificacion.seVende">
+                  <i class="pi pi-lock"></i> Un {{ clasificacion.label | lowercase }} se compra, no se vende en el POS
+                </span>
               </div>
               <p-toggleswitch formControlName="visibleEnPos"></p-toggleswitch>
             </div>
+          </div>
+
+          <!-- ── Qué pasa al comprarlo (activo, gasto, diferido…) ── -->
+          <div class="panel" *ngIf="!clasificacion.seVende">
+            <h3 class="section">Al comprarlo</h3>
+            <p class="panel-sub">{{ clasificacion.alComprar }}.</p>
+            <div class="resumen-compra">
+              <div>
+                <span>Cuenta de la compra</span>
+                <strong>{{ categoriaEfectiva?.cuentaInventario || "La de la empresa para " + (clasificacion.label | lowercase) }}</strong>
+              </div>
+              <ng-container *ngIf="clasificacion.value === 'ACTIVO_FIJO' || clasificacion.value === 'INTANGIBLE'">
+                <div>
+                  <span>Vida útil de las fichas</span>
+                  <strong>{{ categoriaEfectiva?.vidaUtilMeses ? categoriaEfectiva?.vidaUtilMeses + " meses" : "60 meses (por defecto)" }}</strong>
+                </div>
+                <div>
+                  <span>Depreciación</span>
+                  <strong>{{ categoriaEfectiva?.cuentaDepreciacion || "1592 / 1698 por defecto" }}</strong>
+                </div>
+              </ng-container>
+              <div *ngIf="clasificacion.value === 'DIFERIDO'">
+                <span>Se amortiza en</span>
+                <strong>{{ categoriaEfectiva?.mesesDiferido ? categoriaEfectiva?.mesesDiferido + " meses" : "12 meses (por defecto)" }}</strong>
+              </div>
+            </div>
+            <small class="field-hint">
+              <i class="pi pi-info-circle"></i>
+              Esto sale de la categoría contable (pestaña Contabilidad). No tiene precio de venta ni se muestra en el POS.
+            </small>
           </div>
 
           <!-- ── Descripción ───────────────────────────────────── -->
@@ -320,249 +383,143 @@
       <p-tabPanel>
         <ng-template pTemplate="header">
           <span class="tab-label">
-            <i class="pi pi-dollar"></i> Empaque y precios
+            <i class="pi pi-dollar"></i> {{ clasificacion.seVende ? "Empaque y precios" : "Costo e impuestos" }}
           </span>
         </ng-template>
 
         <div class="basico">
-          <!-- ── Empaque de compra ─────────────────────────────── -->
-          <div class="panel" [formGroup]="frmEmpaque">
-            <div>
-              <h3 class="section">Empaque de compra</h3>
-              <p class="panel-sub">
-                Define cómo recibes este producto de tu proveedor
+          <!-- ── Unidades y conversiones (como World Office) ───── -->
+          <div class="panel">
+            <app-conversiones-producto
+              [form]="frmProducto"
+              [unidad]="unidadBaseCorta"
+              [unidadNombre]="unidadBaseNombreSolo"
+              [seVendeItem]="clasificacion.seVende"
+              [puedePasarAUnidad]="isEditMode"
+              [(filas)]="conversiones"
+              [(vendeSuelto)]="vendeSuelto"
+              [(compraEn)]="compraEn"
+              (pasarAUnidad)="pasarConversionAUnidad($event)"
+              (contarEnUnidades)="contarEnUnidades($event)"
+            />
+          <!-- Pasar a unidad: vista previa antes de aplicar -->
+            <div class="cambio-unidad" *ngIf="cambioUnidad as cu">
+              <div class="cambio-unidad__header">
+                <i class="pi pi-sync"></i>
+                <div>
+                  <strong>Pasar a {{ cu.presentacionNombre }}</strong>
+                  <span>
+                    1 {{ cu.unidadActualNombre }} =
+                    {{ cu.factor | number: "1.0-2" }}
+                    {{ cu.presentacionNombre }}. El inventario se contará en la
+                    unidad pequeña y {{ cu.unidadActualNombre }} quedará como
+                    presentación.
+                  </span>
+                </div>
+              </div>
+
+              <ul class="cambio-unidad__lista cambio-unidad__lista--bloqueo" *ngIf="cu.bloqueos.length">
+                <li *ngFor="let b of cu.bloqueos">
+                  <i class="pi pi-ban"></i> {{ b }}
+                </li>
+              </ul>
+              <ul class="cambio-unidad__lista cambio-unidad__lista--aviso" *ngIf="cu.avisos.length">
+                <li *ngFor="let a of cu.avisos">
+                  <i class="pi pi-exclamation-triangle"></i> {{ a }}
+                </li>
+              </ul>
+
+              <div class="cambio-unidad__tabla">
+                <table>
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th>Antes</th>
+                      <th>Después</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let s of cu.stock">
+                      <td>Stock · {{ s.sucursalNombre }}</td>
+                      <td>
+                        {{ s.antes | number: "1.0-6" }} {{ cu.unidadActualNombre }}
+                      </td>
+                      <td>
+                        {{ s.despues | number: "1.0-6" }} {{ unidadCambioNombre }}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Precio de venta base</td>
+                      <td>{{ cu.precioAntes | currency: "COP" : "symbol-narrow" : "1.0-2" }}</td>
+                      <td>{{ cu.precioDespues | currency: "COP" : "symbol-narrow" : "1.0-2" }}</td>
+                    </tr>
+                    <tr>
+                      <td>Costo base</td>
+                      <td>{{ cu.costoAntes | currency: "COP" : "symbol-narrow" : "1.0-2" }}</td>
+                      <td>{{ cu.costoDespues | currency: "COP" : "symbol-narrow" : "1.0-2" }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <p class="cambio-unidad__conteos">
+                También se convierten {{ cu.movimientosKardex }} movimiento(s) de
+                kardex, {{ cu.lotes }} lote(s), {{ cu.lineasVenta }} línea(s) de
+                venta, {{ cu.recetas }} receta(s) y {{ cu.preciosLista }} precio(s)
+                de lista.
               </p>
-            </div>
 
-            <div class="pregunta">
-              <span class="pregunta__texto">¿Cómo lo compras?</span>
-              <div class="opciones">
-                <button
-                  type="button"
-                  class="opcion"
-                  [class.opcion--activa]="!usaEmpaque"
-                  (click)="setUsaEmpaque(false)"
-                >
-                  <i
-                    class="pi"
-                    [class.pi-circle-fill]="!usaEmpaque"
-                    [class.pi-circle]="usaEmpaque"
-                  ></i>
-                  Por unidad
-                </button>
-                <button
-                  type="button"
-                  class="opcion"
-                  [class.opcion--activa]="usaEmpaque"
-                  (click)="setUsaEmpaque(true)"
-                >
-                  <i
-                    class="pi"
-                    [class.pi-circle-fill]="usaEmpaque"
-                    [class.pi-circle]="!usaEmpaque"
-                  ></i>
-                  En empaque
-                </button>
-              </div>
-            </div>
-
-            <ng-container *ngIf="usaEmpaque">
-              <div class="empaque-frase">
-                <span>Cada</span>
-                <p-dropdown
-                  formControlName="nombre"
-                  [options]="empaquesComunes"
-                  optionLabel="label"
-                  optionValue="value"
-                  [editable]="true"
-                  placeholder="Caja"
-                  styleClass="empaque-nombre"
-                ></p-dropdown>
-                <span>contiene</span>
-                <p-inputNumber
-                  formControlName="trae"
-                  [min]="1"
-                  [maxFractionDigits]="3"
-                  placeholder="10"
-                  styleClass="empaque-trae"
-                ></p-inputNumber>
-                <p-dropdown
-                  [formControl]="unidadControl"
-                  [options]="unidadesOpts"
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="Unidad"
-                  [filter]="true"
-                  filterPlaceholder="Buscar..."
-                  styleClass="empaque-unidad"
-                ></p-dropdown>
-              </div>
-
-              <div class="field-row">
+              <div
+                class="cambio-unidad__form"
+                [formGroup]="frmCambioUnidad"
+                *ngIf="cu.puedeAplicar"
+              >
                 <div class="field">
-                  <label>Costo del empaque</label>
-                  <p-inputNumber
-                    formControlName="costoEmpaque"
-                    mode="currency"
-                    currency="COP"
-                    locale="es-CO"
-                    [minFractionDigits]="0"
-                    [min]="0"
+                  <label>Unidad de medida nueva <span class="required">*</span></label>
+                  <p-dropdown
+                    formControlName="unidadMedidaId"
+                    [options]="unidadesOpts"
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Seleccionar..."
+                    [filter]="true"
+                    filterPlaceholder="Buscar..."
                     styleClass="w-full"
-                    placeholder="$ 0"
-                  ></p-inputNumber>
+                  ></p-dropdown>
                 </div>
                 <div class="field">
-                  <label>Código de barras del empaque</label>
+                  <label>Nombre de la presentación grande <span class="required">*</span></label>
                   <input
                     pInputText
-                    formControlName="codigoBarras"
-                    maxlength="50"
+                    formControlName="nombrePresentacion"
+                    maxlength="100"
                     autocomplete="off"
-                    placeholder="Ej: 7701234560012"
-                    style="font-family: &quot;JetBrains Mono&quot;, monospace"
+                    placeholder="Ej: Paca x 25"
                   />
                 </div>
               </div>
 
-              <div class="costo-calculado" *ngIf="traeEmpaque > 0">
-                <span class="costo-calculado__titulo"
-                  >Costo calculado por {{ unidadBaseCorta }}</span
-                >
-                <span class="costo-calculado__valor">{{
-                  costoUnidadEmpaque ?? 0
-                    | currency: "COP" : "symbol-narrow" : "1.0-2"
-                }}</span>
-                <span class="costo-calculado__formula">
-                  {{
-                    costoEmpaqueValor
-                      | currency: "COP" : "symbol-narrow" : "1.0-0"
-                  }}
-                  ÷ {{ traeEmpaque }} {{ unidadBaseCorta }}
-                </span>
-              </div>
-            </ng-container>
-
-            <!-- Por unidad: el costo se escribe directo -->
-            <div
-              class="field-row"
-              *ngIf="!usaEmpaque"
-              [formGroup]="frmProducto"
-            >
-              <div class="field">
-                <label for="costo"
-                  >Costo por unidad <span class="required">*</span></label
-                >
-                <p-inputNumber
-                  inputId="costo"
-                  formControlName="costo"
-                  mode="currency"
-                  currency="COP"
-                  locale="es-CO"
-                  [minFractionDigits]="0"
-                  [maxFractionDigits]="2"
-                  [min]="0"
-                  styleClass="w-full"
-                  placeholder="$ 0"
-                />
-              </div>
-            </div>
-          </div>
-
-          <!-- ── Forma de venta ────────────────────────────────── -->
-          <div class="panel">
-            <h3 class="section">Forma de venta</h3>
-
-            <div class="pregunta">
-              <span class="pregunta__texto"
-                >¿Cómo puedes vender este producto?</span
-              >
-              <div class="checks" [formGroup]="frmEmpaque">
-                <div class="check">
-                  <p-checkbox
-                    inputId="vendeSuelto"
-                    formControlName="vendeSuelto"
-                    [binary]="true"
-                    [readonly]="!usaEmpaque"
-                  ></p-checkbox>
-                  <label for="vendeSuelto">Por {{ unidadBaseCorta }}</label>
-                </div>
-                <div class="check" *ngIf="usaEmpaque">
-                  <p-checkbox
-                    inputId="vendeEmpaque"
-                    formControlName="vendeEmpaque"
-                    [binary]="true"
-                  ></p-checkbox>
-                  <label for="vendeEmpaque">Empaque completo</label>
-                </div>
+              <div class="cambio-unidad__acciones">
+                <button
+                  pButton
+                  type="button"
+                  label="Cancelar"
+                  class="p-button-text p-button-sm"
+                  (click)="cancelarCambioUnidad()"
+                ></button>
+                <button
+                  pButton
+                  type="button"
+                  label="Pasar a unidad"
+                  icon="pi pi-sync"
+                  class="p-button-sm"
+                  [disabled]="!cu.puedeAplicar || frmCambioUnidad.invalid"
+                  [loading]="aplicandoCambioUnidad"
+                  (click)="confirmarCambioUnidad()"
+                ></button>
               </div>
             </div>
 
-            <div class="field-row">
-              <div class="field" *ngIf="vendeSuelto || !usaEmpaque">
-                <label for="precio">
-                  Precio por {{ unidadBaseCorta }}
-                  {{ ivaIncluidoValue ? "(IVA incluido)" : "" }}
-                  <span class="required">*</span>
-                </label>
-                <p-inputNumber
-                  inputId="precio"
-                  formControlName="precio"
-                  mode="currency"
-                  currency="COP"
-                  locale="es-CO"
-                  [minFractionDigits]="0"
-                  [min]="0"
-                  styleClass="w-full"
-                  placeholder="$ 0"
-                />
-                <small
-                  class="field-hint"
-                  *ngIf="frmProducto.get('precio')?.value > 0"
-                >
-                  <i class="pi pi-calculator"></i>
-                  Final al cliente
-                  <strong>{{
-                    precioFinalTotal
-                      | currency: "COP" : "symbol-narrow" : "1.0-0"
-                  }}</strong>
-                  · margen <strong>{{ margenUtilidad }}%</strong>
-                </small>
-              </div>
-
-              <div
-                class="field"
-                *ngIf="usaEmpaque && vendeEmpaque"
-                [formGroup]="frmEmpaque"
-              >
-                <label>Precio del empaque</label>
-                <p-inputNumber
-                  formControlName="precioEmpaque"
-                  mode="currency"
-                  currency="COP"
-                  locale="es-CO"
-                  [minFractionDigits]="0"
-                  [min]="0"
-                  styleClass="w-full"
-                  placeholder="$ 0"
-                ></p-inputNumber>
-                <small
-                  class="field-hint"
-                  *ngIf="
-                    !frmEmpaque.get('precioEmpaque')?.value &&
-                    precioEmpaqueSugerido > 0
-                  "
-                >
-                  <i class="pi pi-info-circle"></i>
-                  Si lo dejas vacío:
-                  {{
-                    precioEmpaqueSugerido
-                      | currency: "COP" : "symbol-narrow" : "1.0-0"
-                  }}
-                  ({{ traeEmpaque }} × precio por {{ unidadBaseCorta }})
-                </small>
-              </div>
-            </div>
           </div>
 
           <!-- ── Impuestos ─────────────────────────────────────── -->
@@ -582,7 +539,7 @@
                 styleClass="w-full"
               ></p-dropdown>
             </div>
-            <div class="field">
+            <div class="field" *ngIf="clasificacion.seVende">
               <label for="impoconsumo">Impoconsumo</label>
               <p-inputNumber
                 inputId="impoconsumo"
@@ -602,10 +559,14 @@
           </div>
 
           <!-- Toggle IVA incluido — solo cuando IVA > 0 -->
+          <small class="field-hint" *ngIf="!clasificacion.seVende">
+            <i class="pi pi-info-circle"></i>
+            El IVA que te cobra el proveedor; en la compra va a IVA descontable.
+          </small>
           <div
             class="field-inline iva-incluido-switch"
             [class.iva-incluido-switch--on]="ivaIncluidoValue"
-            *ngIf="ivaActivo"
+            *ngIf="ivaActivo && clasificacion.seVende"
           >
             <div class="switch-label">
               <span class="label-text">
@@ -626,7 +587,7 @@
           </div>
 
           <!-- ── Precios adicionales ───────────────────────────── -->
-          <div class="panel">
+          <div class="panel" *ngIf="clasificacion.seVende">
             <h3 class="section">Precios adicionales</h3>
             <div class="field-row">
               <div class="field">
@@ -641,7 +602,10 @@
                   styleClass="w-full"
                   placeholder="$ 0"
                 />
-                <small class="field-hint">Mayorista</small>
+                <small class="field-hint">
+                  Mayorista<ng-container *ngIf="margenDe(frmProducto.get('precio2')?.value) as m">
+                    · <span [class]="'util-txt util-txt--' + (m < 0 ? 'perdida' : m < 15 ? 'baja' : 'buena')">utilidad {{ m | number: "1.0-1" }} %</span></ng-container>
+                </small>
               </div>
               <div class="field">
                 <label>Precio 3</label>
@@ -655,20 +619,31 @@
                   styleClass="w-full"
                   placeholder="$ 0"
                 />
-                <small class="field-hint">Distribuidor</small>
+                <small class="field-hint">
+                  Distribuidor<ng-container *ngIf="margenDe(frmProducto.get('precio3')?.value) as m">
+                    · <span [class]="'util-txt util-txt--' + (m < 0 ? 'perdida' : m < 15 ? 'baja' : 'buena')">utilidad {{ m | number: "1.0-1" }} %</span></ng-container>
+                </small>
               </div>
             </div>
           </div>
         </div>
       </p-tabPanel>
 
-      <!-- ─── Tab 3: Inventario ────────────────────────────── -->
-      <p-tabPanel>
+      <!-- ─── Tab 3: Inventario (solo mercancía) ──────────── -->
+      <p-tabPanel *ngIf="esMercancia">
         <ng-template pTemplate="header">
           <span class="tab-label"> <i class="pi pi-box"></i> Inventario </span>
         </ng-template>
 
         <div class="form-container">
+          <div class="inv-info-card" *ngIf="!esMercancia">
+            <i class="pi pi-lock"></i>
+            <p>
+              <strong>{{ clasificacion.label }}:</strong> no maneja existencias.
+              {{ clasificacion.alComprar }}. Para controlar stock, clasifícalo
+              como <strong>Producto</strong>.
+            </p>
+          </div>
           <div class="inv-info-card">
             <i class="pi pi-info-circle"></i>
             <p>
@@ -839,10 +814,17 @@
         <div class="form-container">
           <div class="inv-info-card">
             <i class="pi pi-info-circle"></i>
-            <p>
+            <p *ngIf="esMercancia">
               La <strong>categoría contable</strong> decide a qué cuentas van el
               ingreso, el costo y el inventario de este producto. Si no eliges
               ninguna, usa la categoría <strong>General</strong>.
+            </p>
+            <p *ngIf="!esMercancia">
+              La <strong>categoría contable</strong> ({{ clasificacion.label | lowercase }})
+              decide a qué cuenta va la compra<ng-container *ngIf="clasificacion.value === 'ACTIVO_FIJO' || clasificacion.value === 'INTANGIBLE'">,
+              la depreciación y la vida útil de las fichas que crea</ng-container><ng-container *ngIf="clasificacion.value === 'DIFERIDO'">
+              y en cuántos meses se amortiza</ng-container>. Sin categoría se usan
+              las cuentas por defecto de la empresa.
             </p>
           </div>
 
@@ -854,7 +836,7 @@
               [options]="categoriasContablesOpts"
               optionLabel="label"
               optionValue="value"
-              placeholder="General (por defecto)"
+              [placeholder]="esMercancia ? 'General (por defecto)' : 'Cuentas por defecto de la empresa'"
               styleClass="w-full"
             />
           </div>
@@ -874,12 +856,35 @@
               }}</span>
             </div>
             <div class="pr-row">
-              <span>Inventario</span>
+              <span>{{ esMercancia ? "Inventario" : "Compra" }}</span>
               <span class="numeric">{{
                 cat.cuentaInventario || "Configuración de la empresa"
               }}</span>
             </div>
+            <ng-container *ngIf="clasificacion.value === 'ACTIVO_FIJO' || clasificacion.value === 'INTANGIBLE'">
+              <div class="pr-row">
+                <span>Depreciación acumulada</span>
+                <span class="numeric">{{ cat.cuentaDepreciacion || "Configuración de la empresa" }}</span>
+              </div>
+              <div class="pr-row">
+                <span>Gasto depreciación</span>
+                <span class="numeric">{{ cat.cuentaGastoDepreciacion || "Configuración de la empresa" }}</span>
+              </div>
+              <div class="pr-row">
+                <span>Vida útil</span>
+                <span class="numeric">{{ cat.vidaUtilMeses ? cat.vidaUtilMeses + " meses" : "60 meses (por defecto)" }}</span>
+              </div>
+            </ng-container>
+            <div class="pr-row" *ngIf="clasificacion.value === 'DIFERIDO'">
+              <span>Meses a diferir</span>
+              <span class="numeric">{{ cat.mesesDiferido ? cat.mesesDiferido + " meses" : "12 meses (por defecto)" }}</span>
+            </div>
           </div>
+          <small class="field-hint" *ngIf="!categoriaEfectiva && !esMercancia">
+            <i class="pi pi-info-circle"></i>
+            Sin categoría, la compra va a la cuenta por defecto de
+            {{ clasificacion.label | lowercase }} de la configuración contable.
+          </small>
 
           <button
             pButton
@@ -932,7 +937,7 @@
                 />
               </div>
               <div class="field">
-                <label for="cuentaInventarioId">Cuenta de inventario</label>
+                <label for="cuentaInventarioId">{{ clasificacion.cuentaCompra }}</label>
                 <p-dropdown
                   inputId="cuentaInventarioId"
                   formControlName="cuentaInventarioId"
@@ -951,449 +956,6 @@
         </div>
       </p-tabPanel>
 
-      <!-- ─── Tab 5: Presentaciones (avanzado) ─────────────── -->
-      <p-tabPanel>
-        <ng-template pTemplate="header">
-          <span class="tab-label">
-            <i class="pi pi-th-large"></i> Presentaciones
-            <span class="tab-badge" *ngIf="presentacionesAdicionales.length > 0">
-              {{ presentacionesAdicionales.length }}
-            </span>
-          </span>
-        </ng-template>
-
-        <div class="form-container pres-container">
-          <!-- Info card -->
-          <div class="inv-info-card">
-            <i class="pi pi-info-circle"></i>
-            <p>
-              Para casos especiales: más de un empaque, o presentaciones más
-              pequeñas que la unidad de inventario.
-              <strong>Contiene</strong> es cuántas
-              <strong>{{ unidadBaseNombre }}</strong> hay en cada una.
-            </p>
-          </div>
-
-          <!-- Lista de presentaciones -->
-          <div class="pres-list" *ngIf="presentacionesAdicionales.length > 0">
-            <div
-              class="pres-row"
-              *ngFor="let item of presentacionesAdicionales"
-              [class.pres-row--editing]="item._editando"
-            >
-              <!-- ── Vista normal ─────────────────────────────────── -->
-              <ng-container *ngIf="!item._editando">
-                <div class="pres-cell pres-cell--nombre">
-                  <div class="pres-nombre-row">
-                    <span class="pres-nombre">{{ item.nombre }}</span>
-                    <span
-                      class="pres-badge pres-badge--compra"
-                      *ngIf="item.esDefaultCompra"
-                    >
-                      <i class="pi pi-shopping-cart"></i> Compra
-                    </span>
-                    <span
-                      class="pres-badge pres-badge--venta"
-                      *ngIf="item.esDefaultVenta"
-                    >
-                      <i class="pi pi-star-fill"></i> Venta
-                    </span>
-                  </div>
-                  <span class="pres-factor-badge">
-                    × {{ item.factorConversion | number: "1.0-6" }}
-                    {{ unidadBaseNombre }}
-                  </span>
-                </div>
-
-                <div class="pres-cell pres-cell--codigo">
-                  <span class="pres-codigo" *ngIf="item.codigoBarras">
-                    <i class="pi pi-barcode"></i> {{ item.codigoBarras }}
-                  </span>
-                  <span class="pres-sin-codigo" *ngIf="!item.codigoBarras"
-                    >—</span
-                  >
-                </div>
-
-                <div class="pres-cell pres-cell--precios">
-                  <span class="pres-precio-venta">
-                    {{
-                      item.precio | currency: "COP" : "symbol-narrow" : "1.0-0"
-                    }}
-                  </span>
-                  <span class="pres-precio-costo">
-                    Costo:
-                    {{
-                      item.costo | currency: "COP" : "symbol-narrow" : "1.0-0"
-                    }}
-                  </span>
-                </div>
-
-                <div class="pres-cell pres-cell--acciones">
-                  <button
-                    *ngIf="puedePasarAUnidad(item)"
-                    pButton
-                    type="button"
-                    icon="pi pi-sync"
-                    label="Pasar a unidad"
-                    class="p-button-text p-button-sm"
-                    [loading]="cargandoCambioUnidad"
-                    (click)="verCambioUnidad(item)"
-                  ></button>
-                  <button
-                    pButton
-                    type="button"
-                    icon="pi pi-pencil"
-                    class="p-button-text p-button-sm p-button-rounded"
-                    pTooltip="Editar"
-                    (click)="editarPresentacion(item)"
-                  ></button>
-                  <button
-                    pButton
-                    type="button"
-                    icon="pi pi-trash"
-                    class="p-button-text p-button-sm p-button-rounded p-button-danger"
-                    pTooltip="Eliminar"
-                    (click)="confirmarEliminarPresentacion(item)"
-                  ></button>
-                </div>
-              </ng-container>
-
-              <!-- ── Modo edición inline ───────────────────────────── -->
-              <ng-container *ngIf="item._editando">
-                <div class="pres-edit-form" [formGroup]="frmPresentacion">
-                  <!-- Fila 1: Nombre + Factor + Código -->
-                  <div class="pres-edit-row">
-                    <div class="field pres-field-nombre">
-                      <label>Nombre <span class="required">*</span></label>
-                      <input
-                        pInputText
-                        formControlName="nombre"
-                        placeholder="Ej: Unidad, Caja x 100, Bulto 50kg..."
-                        maxlength="100"
-                        autocomplete="off"
-                        [class.ng-invalid]="
-                          frmPresentacion.get('nombre')?.invalid &&
-                          frmPresentacion.get('nombre')?.touched
-                        "
-                      />
-                      <small
-                        class="p-error"
-                        *ngIf="
-                          frmPresentacion.get('nombre')?.invalid &&
-                          frmPresentacion.get('nombre')?.touched
-                        "
-                      >
-                        Obligatorio
-                      </small>
-                    </div>
-
-                    <div class="field pres-field-factor">
-                      <label>Contiene <span class="required">*</span></label>
-                      <p-inputNumber
-                        formControlName="factorConversion"
-                        [min]="0.0001"
-                        [maxFractionDigits]="8"
-                        placeholder="1"
-                        styleClass="w-full"
-                        [class.ng-invalid]="
-                          frmPresentacion.get('factorConversion')?.invalid &&
-                          frmPresentacion.get('factorConversion')?.touched
-                        "
-                      />
-                      <small class="field-hint"
-                        >Unidades base que contiene</small
-                      >
-                    </div>
-
-                    <div class="field pres-field-codigo">
-                      <label
-                        >Código de barras
-                        <span class="optional">(opcional)</span></label
-                      >
-                      <input
-                        pInputText
-                        formControlName="codigoBarras"
-                        placeholder="Ej: 7701234560012"
-                        maxlength="50"
-                        autocomplete="off"
-                        style="
-                          font-family: &quot;JetBrains Mono&quot;, monospace;
-                        "
-                      />
-                    </div>
-                  </div>
-
-                  <!-- Fila 2: Precio + Costo -->
-                  <div class="pres-edit-row pres-edit-row--2col">
-                    <div class="field">
-                      <label
-                        >Precio de venta <span class="required">*</span></label
-                      >
-                      <p-inputNumber
-                        formControlName="precio"
-                        mode="currency"
-                        currency="COP"
-                        locale="es-CO"
-                        [minFractionDigits]="0"
-                        [min]="0"
-                        styleClass="w-full"
-                      />
-                      <small class="field-hint">
-                        <i class="pi pi-info-circle"></i>
-                        Lo que paga el cliente por esta presentación
-                      </small>
-                    </div>
-
-                    <div class="field">
-                      <label>Costo <span class="required">*</span></label>
-                      <p-inputNumber
-                        formControlName="costo"
-                        mode="currency"
-                        currency="COP"
-                        locale="es-CO"
-                        [minFractionDigits]="0"
-                        [min]="0"
-                        styleClass="w-full"
-                      />
-                      <small class="field-hint">
-                        <i class="pi pi-info-circle"></i>
-                        Lo que pagaste al proveedor por esta presentación
-                      </small>
-                    </div>
-                  </div>
-
-                  <!-- Fila 3: Toggles de default -->
-                  <div class="pres-defaults-row">
-                    <div class="pres-default-item">
-                      <p-toggleswitch formControlName="esDefaultCompra" />
-                      <div class="pres-default-label">
-                        <span class="pres-default-title">
-                          <i class="pi pi-shopping-cart"></i>
-                          Presentación de compra por defecto
-                        </span>
-                        <span class="pres-default-sub">
-                          Se preselecciona en el módulo de compras
-                        </span>
-                      </div>
-                    </div>
-
-                    <div class="pres-default-item">
-                      <p-toggleswitch formControlName="esDefaultVenta" />
-                      <div class="pres-default-label">
-                        <span class="pres-default-title">
-                          <i class="pi pi-star"></i>
-                          Presentación de venta por defecto
-                        </span>
-                        <span class="pres-default-sub">
-                          Aparece seleccionada primero en el POS
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Preview del factor -->
-                  <div
-                    class="pres-factor-preview"
-                    *ngIf="
-                      frmPresentacion.get('nombre')?.value &&
-                      frmPresentacion.get('factorConversion')?.value
-                    "
-                  >
-                    <i class="pi pi-arrow-right"></i>
-                    Al comprar/vender
-                    <strong
-                      >1 {{ frmPresentacion.get("nombre")?.value }}</strong
-                    >
-                    se moverán
-                    <strong>{{
-                      frmPresentacion.get("factorConversion")?.value
-                        | number: "1.0-6"
-                    }}</strong>
-                    {{ unidadBaseNombre }} del inventario.
-                    <ng-container
-                      *ngIf="frmPresentacion.get('factorConversion')?.value < 1"
-                    >
-                      (1 {{ unidadBaseNombre }} =
-                      {{
-                        1 / frmPresentacion.get("factorConversion")?.value
-                          | number: "1.0-2"
-                      }}
-                      {{ frmPresentacion.get("nombre")?.value }})
-                    </ng-container>
-                  </div>
-
-                  <!-- Botones -->
-                  <div class="pres-edit-actions">
-                    <button
-                      pButton
-                      type="button"
-                      label="Cancelar"
-                      icon="pi pi-times"
-                      class="btn-amarillo p-button-sm"
-                      (click)="cancelarEdicion(item)"
-                    ></button>
-                    <button
-                      pButton
-                      type="button"
-                      label="Guardar presentación"
-                      [icon]="
-                        savingPresentacion
-                          ? 'pi pi-spin pi-spinner'
-                          : 'pi pi-check'
-                      "
-                      class="btn-verde p-button-sm"
-                      [disabled]="savingPresentacion"
-                      (click)="guardarPresentacion(item)"
-                    ></button>
-                  </div>
-                </div>
-              </ng-container>
-            </div>
-          </div>
-
-          <!-- Estado vacío -->
-          <!-- Pasar a unidad: vista previa antes de aplicar -->
-          <div class="cambio-unidad" *ngIf="cambioUnidad as cu">
-            <div class="cambio-unidad__header">
-              <i class="pi pi-sync"></i>
-              <div>
-                <strong>Pasar a {{ cu.presentacionNombre }}</strong>
-                <span>
-                  1 {{ cu.unidadActualNombre }} =
-                  {{ cu.factor | number: "1.0-2" }}
-                  {{ cu.presentacionNombre }}. El inventario se contará en la
-                  unidad pequeña y {{ cu.unidadActualNombre }} quedará como
-                  presentación.
-                </span>
-              </div>
-            </div>
-
-            <ul class="cambio-unidad__lista cambio-unidad__lista--bloqueo" *ngIf="cu.bloqueos.length">
-              <li *ngFor="let b of cu.bloqueos">
-                <i class="pi pi-ban"></i> {{ b }}
-              </li>
-            </ul>
-            <ul class="cambio-unidad__lista cambio-unidad__lista--aviso" *ngIf="cu.avisos.length">
-              <li *ngFor="let a of cu.avisos">
-                <i class="pi pi-exclamation-triangle"></i> {{ a }}
-              </li>
-            </ul>
-
-            <div class="cambio-unidad__tabla">
-              <table>
-                <thead>
-                  <tr>
-                    <th></th>
-                    <th>Antes</th>
-                    <th>Después</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr *ngFor="let s of cu.stock">
-                    <td>Stock · {{ s.sucursalNombre }}</td>
-                    <td>
-                      {{ s.antes | number: "1.0-6" }} {{ cu.unidadActualNombre }}
-                    </td>
-                    <td>
-                      {{ s.despues | number: "1.0-6" }} {{ unidadCambioNombre }}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Precio de venta base</td>
-                    <td>{{ cu.precioAntes | currency: "COP" : "symbol-narrow" : "1.0-2" }}</td>
-                    <td>{{ cu.precioDespues | currency: "COP" : "symbol-narrow" : "1.0-2" }}</td>
-                  </tr>
-                  <tr>
-                    <td>Costo base</td>
-                    <td>{{ cu.costoAntes | currency: "COP" : "symbol-narrow" : "1.0-2" }}</td>
-                    <td>{{ cu.costoDespues | currency: "COP" : "symbol-narrow" : "1.0-2" }}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <p class="cambio-unidad__conteos">
-              También se convierten {{ cu.movimientosKardex }} movimiento(s) de
-              kardex, {{ cu.lotes }} lote(s), {{ cu.lineasVenta }} línea(s) de
-              venta, {{ cu.recetas }} receta(s) y {{ cu.preciosLista }} precio(s)
-              de lista.
-            </p>
-
-            <div
-              class="cambio-unidad__form"
-              [formGroup]="frmCambioUnidad"
-              *ngIf="cu.puedeAplicar"
-            >
-              <div class="field">
-                <label>Unidad de medida nueva <span class="required">*</span></label>
-                <p-dropdown
-                  formControlName="unidadMedidaId"
-                  [options]="unidadesOpts"
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="Seleccionar..."
-                  [filter]="true"
-                  filterPlaceholder="Buscar..."
-                  styleClass="w-full"
-                ></p-dropdown>
-              </div>
-              <div class="field">
-                <label>Nombre de la presentación grande <span class="required">*</span></label>
-                <input
-                  pInputText
-                  formControlName="nombrePresentacion"
-                  maxlength="100"
-                  autocomplete="off"
-                  placeholder="Ej: Paca x 25"
-                />
-              </div>
-            </div>
-
-            <div class="cambio-unidad__acciones">
-              <button
-                pButton
-                type="button"
-                label="Cancelar"
-                class="p-button-text p-button-sm"
-                (click)="cancelarCambioUnidad()"
-              ></button>
-              <button
-                pButton
-                type="button"
-                label="Pasar a unidad"
-                icon="pi pi-sync"
-                class="p-button-sm"
-                [disabled]="!cu.puedeAplicar || frmCambioUnidad.invalid"
-                [loading]="aplicandoCambioUnidad"
-                (click)="confirmarCambioUnidad()"
-              ></button>
-            </div>
-          </div>
-
-          <div class="pres-empty" *ngIf="presentacionesAdicionales.length === 0">
-            <i class="pi pi-th-large pres-empty-icon"></i>
-            <p class="pres-empty-title">Sin otras presentaciones</p>
-            <p class="pres-empty-sub">
-              Casi nunca hacen falta: el empaque de arriba cubre la caja o la
-              paca.<br />
-              Úsalas si manejas más de un empaque (display y caja, por ejemplo).
-            </p>
-          </div>
-
-          <!-- Botón agregar -->
-          <div class="pres-add-wrapper">
-            <button
-              pButton
-              type="button"
-              label="Agregar presentación"
-              icon="pi pi-plus"
-              class="btn-verde"
-              [disabled]="presentacionEnEdicion !== null"
-              (click)="agregarPresentacion()"
-            ></button>
-          </div>
-        </div>
-      </p-tabPanel>
       </p-tabView>
     </form>
 

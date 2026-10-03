@@ -1,0 +1,39 @@
+<div class="docrel" *ngIf="cargando || hayDatos">
+  <h3 class="docrel-title" *ngIf="mostrarTitulo">Documentos relacionados</h3>
+
+  <div class="docrel-loading" *ngIf="cargando">Cargando…</div>
+
+  <ng-container *ngIf="!cargando">
+    <!-- Hacia atrás -->
+    <div class="docrel-group" *ngIf="origenes.length">
+      <span class="docrel-group-label">Viene de</span>
+      <ul class="docrel-list">
+        <li *ngFor="let r of origenes" class="docrel-item" [class.anulada]="r.estado === 'ANULADA'">
+          <ng-container *ngTemplateOutlet="fila; context: { $implicit: r }"></ng-container>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Hacia adelante -->
+    <div class="docrel-group" *ngIf="destinos.length">
+      <span class="docrel-group-label">Va a</span>
+      <ul class="docrel-list">
+        <li *ngFor="let r of destinos" class="docrel-item" [class.anulada]="r.estado === 'ANULADA'">
+          <ng-container *ngTemplateOutlet="fila; context: { $implicit: r }"></ng-container>
+        </li>
+      </ul>
+    </div>
+  </ng-container>
+</div>
+
+<ng-template #fila let-r>
+  <a *ngIf="ruta(r) as link; else soloTexto" class="docrel-doc link" [routerLink]="link">{{ titulo(r) }}</a>
+  <ng-template #soloTexto><span class="docrel-doc">{{ titulo(r) }}</span></ng-template>
+
+  <span class="docrel-meta" *ngIf="r.lineas > 1">· {{ r.lineas }} líneas</span>
+  <span class="docrel-meta" *ngIf="r.cantidad != null">· {{ r.cantidad | number: '1.0-2' }} und</span>
+  <span class="docrel-meta" *ngIf="r.valor != null">· $ {{ r.valor | number: '1.0-2' }}</span>
+
+  <span class="docrel-badge anulada" *ngIf="r.estado === 'ANULADA'"
+        pTooltip="Esta relación fue anulada al anular el documento destino">Anulada</span>
+</ng-template>

@@ -1,23 +1,22 @@
 <p-dialog
   [(visible)]="visible"
-  header="Seleccionar producto"
+  [header]="header"
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
-  [style]="{ width: '720px' }"
+  [style]="{ width: '1000px', maxWidth: '96vw' }"
   [contentStyle]="{ padding: '0' }"
   styleClass="aura-dialog prod-dialog"
   (onHide)="close()"
 >
-  <!-- Buscadores -->
+  <!-- Texto y código de barras -->
   <div class="prod-dialog-search">
-    <!-- Texto / nombre / SKU -->
     <span class="p-input-icon-left search-wrap-dialog">
       <i class="pi pi-search"></i>
       <input
         type="text"
         pInputText
-        placeholder="Buscar por nombre, SKU..."
+        placeholder="Nombre, SKU o código de barras..."
         [(ngModel)]="dialogSearch"
         (input)="onDialogSearch()"
         (keydown.escape)="dialogSearch = ''; onDialogSearch()"
@@ -29,13 +28,12 @@
       </button>
     </span>
 
-    <!-- Código de barras -->
     <div class="barcode-wrap">
       <i class="pi pi-barcode barcode-icon"></i>
       <input
         type="text"
         class="barcode-inp"
-        placeholder="Código de barras..."
+        placeholder="Escanear código..."
         [(ngModel)]="barcodeQuery"
         (keydown.enter)="buscarPorBarcode()"
         autocomplete="off"
@@ -53,78 +51,130 @@
     </div>
   </div>
 
-  <!-- Tabla -->
-  <p-table
-    [value]="dialogItems"
-    [lazy]="true"
-    (onLazyLoad)="loadDialogTable($event)"
-    [paginator]="true"
-    [rows]="10"
-    [totalRecords]="dialogTotal"
-    [loading]="dialogLoading"
-    [rowsPerPageOptions]="[10, 25]"
-    [showCurrentPageReport]="true"
-    currentPageReportTemplate="{first}-{last} de {totalRecords}"
-    [tableStyle]="{ 'min-width': '100%' }"
-    styleClass="prod-select-table"
-    selectionMode="single"
-  >
-    <ng-template pTemplate="header">
-      <tr>
-        <th style="min-width: 200px">Producto</th>
-        <th style="width: 90px">SKU</th>
-        <th style="width: 110px">Categoría</th>
-        <th style="width: 110px" class="text-right">Precio</th>
-        <th style="width: 90px" class="text-right">Costo</th>
-      </tr>
-    </ng-template>
+  <!-- Criterios de búsqueda -->
+  <section class="prod-panel">
+    <button type="button" class="prod-panel-head" (click)="togglePanel()">
+      <i class="pi pi-filter"></i>
+      <span class="prod-panel-titulo">Criterios de búsqueda</span>
+      <span class="prod-panel-badge" *ngIf="criteriosActivos">{{ criteriosActivos }}</span>
+      <i class="pi prod-panel-chevron" [class.pi-chevron-up]="panelAbierto" [class.pi-chevron-down]="!panelAbierto"></i>
+    </button>
+    <div class="prod-panel-body" *ngIf="panelAbierto">
+      <div class="prod-grid">
+        <div class="prod-field">
+          <label>Categoría</label>
+          <p-dropdown [(ngModel)]="criterios.categoriaId" [options]="categoriasOpts" optionLabel="label"
+            optionValue="value" placeholder="Todas" [showClear]="true" [filter]="true" appendTo="body"
+            styleClass="w-full" (onChange)="buscar()" (onClear)="buscar()" />
+        </div>
+        <div class="prod-field">
+          <label>Marca</label>
+          <p-dropdown [(ngModel)]="criterios.marcaId" [options]="marcasOpts" optionLabel="label" optionValue="value"
+            placeholder="Todas" [showClear]="true" [filter]="true" appendTo="body" styleClass="w-full"
+            (onChange)="buscar()" (onClear)="buscar()" />
+        </div>
+        <div class="prod-field">
+          <label>Clase</label>
+          <p-dropdown [(ngModel)]="criterios.clasificacion" [options]="clasificacionOpts" optionLabel="label"
+            optionValue="value" placeholder="Todas" [showClear]="true" appendTo="body" styleClass="w-full"
+            (onChange)="buscar()" (onClear)="buscar()" />
+        </div>
+        <div class="prod-field">
+          <label>Estado</label>
+          <p-dropdown [(ngModel)]="criterios.activo" [options]="estadoOpts" optionLabel="label" optionValue="value"
+            placeholder="Todos" [showClear]="true" appendTo="body" styleClass="w-full"
+            (onChange)="buscar()" (onClear)="buscar()" />
+        </div>
+      </div>
+      <div class="prod-panel-acciones" *ngIf="criteriosActivos">
+        <button type="button" class="link-btn" (click)="limpiarCriterios()">
+          <i class="pi pi-filter-slash"></i> Limpiar criterios
+        </button>
+      </div>
+    </div>
+  </section>
 
-    <ng-template pTemplate="body" let-item>
-      <tr class="prod-dialog-row" (click)="selectProduct(item)">
-        <td>
-          <div class="prod-info-cell">
-            <span class="prod-info-nombre">{{ item.nombre }}</span>
-            <span class="prod-info-barras" *ngIf="item.codigoBarras">
-              <i class="pi pi-barcode"></i> {{ item.codigoBarras }}
-            </span>
-          </div>
-        </td>
-        <td>
-          <span class="sku-chip" *ngIf="item.sku">{{ item.sku }}</span>
-          <span class="text-muted" *ngIf="!item.sku">—</span>
-        </td>
-        <td>
-          <span *ngIf="item.categoriaNombre">{{ item.categoriaNombre }}</span>
-          <span class="text-muted" *ngIf="!item.categoriaNombre">—</span>
-        </td>
-        <td class="text-right">
-          <span class="price-cell">{{ item.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
-        </td>
-        <td class="text-right">
-          <span class="cost-cell">{{ item.costo | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
-        </td>
-      </tr>
-    </ng-template>
+  <!-- Resultados -->
+  <div class="tabla-scroll">
+    <p-table
+      [value]="dialogItems"
+      [lazy]="true"
+      (onLazyLoad)="loadDialogTable($event)"
+      [paginator]="true"
+      [rows]="10"
+      [totalRecords]="dialogTotal"
+      [loading]="dialogLoading"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords}"
+      [tableStyle]="{ 'min-width': '720px' }"
+      styleClass="prod-select-table"
+      selectionMode="single"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="min-width: 220px">Producto</th>
+          <th style="width: 100px">SKU</th>
+          <th style="width: 130px">Categoría</th>
+          <th style="width: 70px">Unidad</th>
+          <th style="width: 110px" class="text-right">Precio</th>
+          <th style="width: 100px" class="text-right">Costo</th>
+        </tr>
+      </ng-template>
 
-    <ng-template pTemplate="emptymessage">
-      <tr>
-        <td colspan="5">
-          <div class="dialog-empty">
-            <i class="pi pi-search"></i>
-            <p>{{ dialogSearch ? 'Sin resultados para "' + dialogSearch + '"' : 'Escribe para buscar productos' }}</p>
-          </div>
-        </td>
-      </tr>
-    </ng-template>
+      <ng-template pTemplate="body" let-item>
+        <tr class="prod-dialog-row" [class.inactivo]="item.activo === false" (click)="selectProduct(item)">
+          <td>
+            <div class="prod-info-cell">
+              <span class="prod-info-nombre">
+                {{ item.nombre }}
+                <span class="clase-chip" *ngIf="clasificacionLabel(item.clasificacion) as cl">{{ cl }}</span>
+              </span>
+              <span class="prod-info-barras" *ngIf="item.codigoBarras || item.marcaNombre">
+                <ng-container *ngIf="item.codigoBarras"><i class="pi pi-barcode"></i> {{ item.codigoBarras }}</ng-container>
+                <ng-container *ngIf="item.marcaNombre"> · {{ item.marcaNombre }}</ng-container>
+              </span>
+            </div>
+          </td>
+          <td>
+            <span class="sku-chip" *ngIf="item.sku">{{ item.sku }}</span>
+            <span class="text-muted" *ngIf="!item.sku">—</span>
+          </td>
+          <td>
+            <span *ngIf="item.categoriaNombre">{{ item.categoriaNombre }}</span>
+            <span class="text-muted" *ngIf="!item.categoriaNombre">—</span>
+          </td>
+          <td>{{ item.unidadAbreviatura || "—" }}</td>
+          <td class="text-right">
+            <span class="price-cell">{{ item.precio | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span>
+          </td>
+          <td class="text-right">
+            <span class="cost-cell">{{ item.costo | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span>
+          </td>
+        </tr>
+      </ng-template>
 
-    <ng-template pTemplate="loadingbody">
-      <tr *ngFor="let s of [1,2,3,4,5]">
-        <td><p-skeleton /></td>
-        <td><p-skeleton width="70px" /></td>
-        <td><p-skeleton /></td>
-        <td><p-skeleton width="90px" styleClass="ml-auto" /></td>
-        <td><p-skeleton width="80px" styleClass="ml-auto" /></td>
-      </tr>
-    </ng-template>
-  </p-table>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6">
+            <div class="dialog-empty">
+              <i class="pi pi-search"></i>
+              <p>{{ dialogSearch || criteriosActivos ? "Sin resultados con esos criterios" : "Escribe para buscar productos" }}</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr *ngFor="let s of [1, 2, 3, 4, 5]">
+          <td><p-skeleton /></td>
+          <td><p-skeleton width="70px" /></td>
+          <td><p-skeleton /></td>
+          <td><p-skeleton width="40px" /></td>
+          <td><p-skeleton width="90px" styleClass="ml-auto" /></td>
+          <td><p-skeleton width="80px" styleClass="ml-auto" /></td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
 </p-dialog>

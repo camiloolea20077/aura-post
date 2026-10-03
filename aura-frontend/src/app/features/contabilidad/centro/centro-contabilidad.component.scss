@@ -1,0 +1,535 @@
+:host {
+  --cc-surface: var(--aura-surface, #ffffff);
+  --cc-soft: var(--aura-bg, #f8fafc);
+  --cc-border: var(--aura-border, #e5e7eb);
+  --cc-text: var(--aura-text, #0f172a);
+  --cc-muted: var(--aura-text-muted, #64748b);
+  --cc-primary: #2563eb;
+  --cc-primary-soft: #eff6ff;
+  --cc-green: #059669;
+  --cc-green-soft: #ecfdf5;
+  --cc-amber: #b45309;
+  --cc-amber-soft: #fffbeb;
+  --cc-red: #dc2626;
+  --cc-red-soft: #fef2f2;
+  display: block;
+}
+
+:host-context(.dark-mode) {
+  --cc-primary-soft: rgba(37, 99, 235, 0.16);
+  --cc-green-soft: rgba(5, 150, 105, 0.16);
+  --cc-amber-soft: rgba(180, 83, 9, 0.18);
+  --cc-red-soft: rgba(220, 38, 38, 0.16);
+}
+
+// Las grillas se adaptan al ancho real del contenido (con o sin sidebar),
+// no al de la ventana: muchos usuarios trabajan en pantallas pequeñas.
+.cc {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  container-type: inline-size;
+  color: var(--cc-text);
+}
+
+.cc-sub {
+  font-size: 0.75rem;
+  color: var(--cc-muted);
+}
+
+// ── Período ─────────────────────────────────────────────────────────
+.cc-periodo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--cc-muted);
+
+  label {
+    font-weight: 600;
+  }
+
+  ::ng-deep .cc-cal {
+    width: 190px;
+    min-width: 0;
+
+    input {
+      height: 38px;
+      text-transform: capitalize;
+    }
+  }
+}
+
+.cc-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--cc-muted);
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--cc-primary-soft);
+    color: var(--cc-primary);
+  }
+}
+
+// ── KPIs ────────────────────────────────────────────────────────────
+.cc-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-bottom: 1px solid var(--cc-border);
+
+  // Si es lo último de la card, el borde de la card ya cierra
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.cc-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 0.8rem 1.5rem;
+  border-left: 1px solid var(--cc-border);
+
+  &:first-child {
+    border-left: none;
+  }
+
+  &__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--cc-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+
+    i {
+      font-size: 0.7rem;
+      cursor: help;
+    }
+  }
+
+  &__valor {
+    overflow: hidden;
+    font-size: 1.25rem;
+    font-weight: 700;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    color: var(--cc-muted);
+  }
+
+  &--danger .cc-stat__valor {
+    color: var(--cc-red);
+  }
+}
+
+.cc-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 6px;
+  font-weight: 600;
+
+  i {
+    font-size: 0.6rem;
+  }
+
+  &.bien {
+    background: var(--cc-green-soft);
+    color: var(--cc-green);
+  }
+
+  &.mal {
+    background: var(--cc-amber-soft);
+    color: var(--cc-amber);
+  }
+
+  &.neutro {
+    background: var(--cc-soft);
+    color: var(--cc-muted);
+  }
+}
+
+// Recarga con datos en pantalla: se atenúan en vez de volver a skeleton
+.cc-cargando {
+  opacity: 0.55;
+  transition: opacity 0.15s;
+}
+
+// ── Paneles ─────────────────────────────────────────────────────────
+.cc-paneles {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.cc-panel {
+  min-width: 0;
+  padding: 1rem 1.5rem 1.25rem;
+  border-left: 1px solid var(--cc-border);
+
+  &:first-child {
+    border-left: none;
+  }
+
+  &__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    h3 {
+      margin: 0;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+  }
+}
+
+.cc-chart {
+  position: relative;
+  min-height: 250px;
+}
+
+.cc-vacio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 160px;
+  font-size: 0.8rem;
+  color: var(--cc-muted);
+  text-align: center;
+}
+
+.cc-estado-vacio {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--cc-border);
+  font-size: 0.85rem;
+  color: var(--cc-muted);
+
+  > i {
+    font-size: 1rem;
+  }
+
+  &--error {
+    color: var(--cc-red);
+  }
+}
+
+// ── Estado contable ─────────────────────────────────────────────────
+.cc-checklist {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.7rem 0;
+    border-bottom: 1px dashed var(--cc-border);
+    font-size: 0.82rem;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  a {
+    color: var(--cc-text);
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--cc-primary);
+      text-decoration: underline;
+    }
+  }
+}
+
+.cc-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-shrink: 0;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+
+  i {
+    font-size: 0.65rem;
+  }
+
+  &--ok {
+    background: var(--cc-green-soft);
+    color: var(--cc-green);
+  }
+
+  &--warn {
+    background: var(--cc-amber-soft);
+    color: var(--cc-amber);
+  }
+
+  &--neutro {
+    background: var(--cc-soft);
+    color: var(--cc-muted);
+  }
+}
+
+// ── Dona de gastos ──────────────────────────────────────────────────
+.cc-dona {
+  position: relative;
+  height: 150px;
+
+  &__centro {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+
+    span {
+      font-size: 0.68rem;
+      color: var(--cc-muted);
+    }
+
+    strong {
+      font-size: 0.95rem;
+    }
+  }
+}
+
+.cc-leyenda {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.76rem;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+  }
+
+  &__nombre {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__pct {
+    font-weight: 600;
+    color: var(--cc-muted);
+  }
+}
+
+.cc-punto {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+// ── Módulos ─────────────────────────────────────────────────────────
+.cc-grupos {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+.cc-grupo {
+  min-width: 0;
+  padding: 0.75rem 0.6rem 0.5rem;
+  border: 1px solid var(--cc-border);
+  border-radius: 12px;
+  background: var(--cc-surface);
+
+  &__titulo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.5rem;
+    padding: 0 0.5rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--cc-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+
+    i {
+      color: var(--cc-primary);
+      font-size: 0.85rem;
+    }
+  }
+
+  nav {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.cc-modulo {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+  padding: 0.4rem 0.5rem;
+  border-radius: 8px;
+  color: var(--cc-text);
+  text-decoration: none;
+  transition: background 0.15s;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--cc-primary-soft);
+    outline: none;
+
+    .cc-modulo__titulo,
+    .cc-modulo__flecha {
+      color: var(--cc-primary);
+    }
+  }
+
+  &:focus-visible {
+    box-shadow: 0 0 0 2px var(--cc-primary);
+  }
+
+  &__icono {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    background: var(--cc-primary-soft);
+    color: var(--cc-primary);
+    font-size: 0.85rem;
+  }
+
+  &__texto {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__titulo {
+    font-size: 0.84rem;
+    font-weight: 600;
+  }
+
+  &__desc {
+    overflow: hidden;
+    font-size: 0.72rem;
+    color: var(--cc-muted);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__flecha {
+    flex-shrink: 0;
+    font-size: 0.65rem;
+    color: var(--cc-muted);
+  }
+}
+
+// ── Responsive (por ancho del contenedor) ───────────────────────────
+@container (max-width: 1100px) {
+  .cc-paneles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cc-panel--ancho {
+    grid-column: 1 / -1;
+    border-bottom: 1px solid var(--cc-border);
+  }
+
+  .cc-panel--ancho + .cc-panel {
+    border-left: none;
+  }
+
+  .cc-grupos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 820px) {
+  .cc-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cc-stat:nth-child(3) {
+    border-left: none;
+  }
+
+  .cc-stat:nth-child(n + 3) {
+    border-top: 1px solid var(--cc-border);
+  }
+}
+
+@container (max-width: 640px) {
+  .cc-stats,
+  .cc-paneles,
+  .cc-grupos {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cc-stat,
+  .cc-panel {
+    border-left: none;
+  }
+
+  .cc-stat + .cc-stat,
+  .cc-panel + .cc-panel {
+    border-top: 1px solid var(--cc-border);
+  }
+
+  .cc-periodo {
+    width: 100%;
+
+    ::ng-deep .cc-cal {
+      flex: 1;
+      width: auto;
+    }
+  }
+}
