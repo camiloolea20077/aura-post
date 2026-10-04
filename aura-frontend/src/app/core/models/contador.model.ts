@@ -144,4 +144,6 @@ export interface ResumenTrasladoModel {
   periodosCerrados: string[];
   /** Los movimientos que se moverían (hasta 2000). */
   movimientos: MovimientoTrasladoModel[];
+  /** Configuración que apunta a la cuenta de origen: pantalla → registros. */
+  configuracion?: Record<string, number>;
 }

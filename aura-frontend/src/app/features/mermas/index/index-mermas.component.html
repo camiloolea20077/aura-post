@@ -11,7 +11,7 @@
         </div>
       </div>
       <div class="card-head__actions">
-        <button
+        <button *appPuede="'inventario.mermas:CREAR'"
           pButton
           label="Registrar merma"
           icon="pi pi-plus"
@@ -82,7 +82,7 @@
                 pTooltip="Ver detalle"
                 (click)="verDetalle(m)"
               ></button>
-              <button
+              <button *appPuede="'inventario.mermas:ANULAR'"
                 pButton
                 icon="pi pi-ban"
                 class="p-button-text p-button-danger p-button-sm"

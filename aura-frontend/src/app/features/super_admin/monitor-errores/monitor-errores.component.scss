@@ -1,5 +1,5 @@
 // ─── monitor-errores.component.scss ──────────────────────────
-$indigo: #6366f1;
+$indigo: #2563eb;
 $border: #e2e8f0;
 $text: #1e293b;
 $muted: #94a3b8;
@@ -13,9 +13,9 @@ $danger-border: #fecaca;
 $warn: #f59e0b;
 $warn-bg: #fffbeb;
 $warn-border: #fde68a;
-$info: #6366f1;
-$info-bg: #eef2ff;
-$info-border: #c7d2fe;
+$info: #2563eb;
+$info-bg: #eff6ff;
+$info-border: #bfdbfe;
 
 .me-wrapper {
   padding: 1.75rem;
@@ -440,7 +440,60 @@ $info-border: #c7d2fe;
 }
 
 ::ng-deep .btn-primary.p-button {
-  background: linear-gradient(135deg, $indigo, #818cf8) !important;
+  background: linear-gradient(135deg, $indigo, #60a5fa) !important;
   border: none !important;
   font-weight: 600 !important;
+}
+
+// ── Pantallas chicas ─────────────────────────────────────
+@media (max-width: 720px) {
+  .me-wrapper {
+    padding: 0.75rem !important;
+  }
+
+  .me-header {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .cat-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .filters-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-group {
+    min-width: 0;
+    max-width: none !important;
+    width: 100%;
+  }
+
+  // Las tablas de errores tienen muchas columnas: se desplazan de lado.
+  .table-card {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+
+    ::ng-deep .p-datatable-table {
+      min-width: 760px;
+    }
+  }
+
+  .table-toolbar {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .item-row {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .item-label {
+    min-width: 0;
+  }
 }

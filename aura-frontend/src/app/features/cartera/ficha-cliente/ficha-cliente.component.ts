@@ -41,6 +41,7 @@ import { ReciboCajaDialogComponent } from '../recibo-caja/recibo-caja-dialog.com
 import { AcuerdoPagoDialogComponent } from '../acuerdos/acuerdo-pago-dialog.component';
 import { AcuerdoDetalleDialogComponent } from '../acuerdos/acuerdo-detalle-dialog.component';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 type TabFicha = 'facturas' | 'pagos' | 'recibos' | 'gestiones' | 'anticipos' | 'credito' | 'acuerdos';
 
 /** Ficha del cliente: lo que debe, cómo paga y qué se ha hecho para cobrarle. */
@@ -49,6 +50,7 @@ type TabFicha = 'facturas' | 'pagos' | 'recibos' | 'gestiones' | 'anticipos' | '
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     RouterModule,

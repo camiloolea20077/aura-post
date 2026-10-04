@@ -106,7 +106,8 @@
               />
             </td>
             <td class="text-center">
-              <button
+              <ng-container *appPuede="'recursos-humanos.autorizaciones:ANULAR'">
+          <button
                 pButton
                 icon="pi pi-times"
                 class="p-button-text p-button-sm p-button-danger"
@@ -114,6 +115,7 @@
                 *ngIf="a.estado === 'ACTIVA'"
                 (click)="anular(a)"
               ></button>
+          </ng-container>
             </td>
           </tr>
         </ng-template>

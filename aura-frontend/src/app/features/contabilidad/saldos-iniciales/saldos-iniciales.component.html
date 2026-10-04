@@ -107,7 +107,7 @@
 
       <div class="si-lineas-head">
         <span>Saldos por cuenta</span>
-        <button pButton type="button" label="Agregar cuenta" icon="pi pi-plus"
+        <button *appPuede="'contabilidad.saldos-iniciales:CREAR'" pButton type="button" label="Agregar cuenta" icon="pi pi-plus"
           class="btn-verde" (click)="agregarLinea()"></button>
       </div>
 
@@ -125,10 +125,13 @@
         <ng-template pTemplate="body" let-l let-i="rowIndex">
           <tr>
             <td>
-              <p-dropdown [(ngModel)]="l.cuentaId" [options]="cuentasOpts"
-                optionLabel="label" optionValue="value" appendTo="body"
-                panelStyleClass="cmp-dd-panel"
-                placeholder="Seleccionar cuenta" [filter]="true" styleClass="w-full"></p-dropdown>
+              <app-cuenta-autocomplete
+                [opciones]="cuentasOpts"
+                [(ngModel)]="l.cuentaId"
+                appendTo="body"
+                placeholder="Seleccionar cuenta"
+                [showClear]="false"
+              />
             </td>
             <td class="si-tercero">
               <span *ngIf="l.terceroNombre">{{ l.terceroNombre }}</span>

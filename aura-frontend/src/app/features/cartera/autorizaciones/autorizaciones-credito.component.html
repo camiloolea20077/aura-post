@@ -51,7 +51,7 @@
           <span>Vale por</span>
           <button type="button" *ngFor="let h of vigencias" [class.activa]="(vigencia[s.id] ?? 4) === h" (click)="vigencia[s.id] = h">{{ h }} h</button>
         </div>
-        <div class="au-botones">
+        <div class="au-botones" *ngIf="puedeAprobarCredito">
           <button pButton type="button" label="Rechazar" class="p-button-outlined p-button-danger p-button-sm"
             [disabled]="procesando === s.id" (click)="pedirRechazo(s)"></button>
           <button pButton type="button" label="Aprobar" icon="pi pi-check" class="p-button-sm"

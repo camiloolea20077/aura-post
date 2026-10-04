@@ -1,0 +1,162 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-history"></i></span>
+        <div>
+          <h1 class="title">Bitácora</h1>
+          <p class="subtitle">
+            Quién anuló, editó, autorizó o cambió qué y cuándo
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button
+            pButton
+            type="button"
+            icon="pi pi-search"
+            label="Buscar"
+            class="btn-aura"
+            (click)="buscar()"
+          ></button>
+        </div>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              pInputText
+              [(ngModel)]="texto"
+              (keyup.enter)="buscar()"
+              placeholder="Buscar en la descripción o la ruta…"
+              class="search-input"
+            />
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="filtros">
+      <div class="field">
+        <label>Desde</label>
+        <p-calendar
+          [(ngModel)]="desde"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          placeholder="Desde"
+        />
+      </div>
+      <div class="field">
+        <label>Hasta</label>
+        <p-calendar
+          [(ngModel)]="hasta"
+          dateFormat="dd/mm/yy"
+          [showIcon]="true"
+          placeholder="Hasta"
+        />
+      </div>
+      <div class="field">
+        <label>Módulo</label>
+        <p-dropdown
+          [options]="modulos"
+          [(ngModel)]="modulo"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Todos"
+        />
+      </div>
+      <div class="field">
+        <label>Acción</label>
+        <p-dropdown
+          [options]="acciones"
+          [(ngModel)]="accion"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Todas"
+        />
+      </div>
+    </div>
+
+    <p-table
+      [value]="eventos"
+      [lazy]="true"
+      [loading]="cargando"
+      [paginator]="true"
+      [rows]="rows"
+      [rowsPerPageOptions]="[25, 50, 100]"
+      [totalRecords]="total"
+      (onLazyLoad)="onLazy($event)"
+      styleClass="p-datatable-sm"
+      showGridlines
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 140px">Fecha</th>
+          <th style="width: 140px">Quién</th>
+          <th style="width: 170px">Acción</th>
+          <th style="width: 160px">Sobre</th>
+          <th>Detalle</th>
+          <th style="width: 48px"></th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-e>
+        <tr>
+          <td class="mono">{{ e.fecha | date: "dd/MM/yyyy HH:mm" }}</td>
+          <td>
+            {{ e.usuario ?? "—" }}
+            <div class="autoriza" *ngIf="e.autorizadoPor">
+              <i class="pi pi-shield"></i> autorizó {{ e.autorizadoPor }}
+            </div>
+          </td>
+          <td>
+            <p-tag
+              [value]="nombreAccion(e.accion)"
+              [severity]="severidad(e.accion)"
+            />
+          </td>
+          <td>
+            <span class="entidad">{{ e.entidad ?? "—" }}</span>
+            <span class="mono" *ngIf="e.entidadId"> #{{ e.entidadId }}</span>
+          </td>
+          <td class="detalle">
+            {{ e.descripcion ?? "—" }}
+            <div class="origen" *ngIf="e.origen === 'AUTO'">
+              Anotado por el servidor
+            </div>
+          </td>
+          <td>
+            <button
+              *ngIf="tieneDetalle(e)"
+              pButton
+              type="button"
+              class="p-button-text p-button-sm"
+              [icon]="expandido === e.id ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
+              (click)="alternar(e)"
+            ></button>
+          </td>
+        </tr>
+        <tr *ngIf="expandido === e.id" class="fila-detalle">
+          <td colspan="6">
+            <div class="comparar">
+              <div>
+                <div class="comparar__titulo">Antes</div>
+                <pre>{{ bonito(e.antes) }}</pre>
+              </div>
+              <div>
+                <div class="comparar__titulo">Después</div>
+                <pre>{{ bonito(e.despues) }}</pre>
+              </div>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="empty-row">
+            No hay movimientos con esos filtros.
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

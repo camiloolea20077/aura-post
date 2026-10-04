@@ -160,17 +160,13 @@
           />
         </td>
         <td>
-          <p-dropdown
-            [options]="cuentasOpts"
-            optionLabel="label"
+          <app-cuenta-autocomplete
+            [opciones]="cuentasOpts"
             optionValue="id"
             [(ngModel)]="c.cuentaId"
-            [filter]="true"
-            filterBy="label"
             [showClear]="true"
             placeholder="Por defecto (5195)"
             appendTo="body"
-            styleClass="w-full"
           />
         </td>
         <td>

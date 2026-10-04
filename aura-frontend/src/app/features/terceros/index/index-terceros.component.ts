@@ -23,12 +23,14 @@ import {
 import { TerceroService } from '../../../core/services/tercero.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 type FiltroRol = 'TODOS' | 'CLIENTES' | 'PROVEEDORES' | 'EMPLEADOS';
 
 @Component({
   selector: 'app-index-terceros',
   standalone: true,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     TableModule,

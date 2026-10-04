@@ -140,7 +140,7 @@
           <!-- Acciones -->
           <td class="text-center">
             <div class="action-buttons">
-              <button
+              <button *appPuede="'precios.precio-productos:EDITAR'"
                 pButton
                 type="button"
                 icon="pi pi-pencil"
@@ -149,7 +149,7 @@
                 tooltipPosition="top"
                 (click)="openEdit(item)"
               ></button>
-              <button
+              <button *appPuede="'precios.precio-productos:ANULAR'"
                 pButton
                 type="button"
                 icon="pi pi-trash"

@@ -33,6 +33,9 @@ import { AlertService } from '../../../shared/pipes/alert.service';
 import { ModalTirillaComponent } from '../../pos/components/modal-tirilla/modal-tirilla.component';
 import { VentaModel } from '../../../core/models/venta.model';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
+import { Router } from '@angular/router';
+import { FacturaVentaService } from '../../../core/services/factura-venta.service';
 type TagSeverity =
   | 'success'
   | 'secondary'
@@ -47,6 +50,7 @@ type TagSeverity =
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     TableModule,
@@ -130,7 +134,25 @@ export class IndexVentasCampoComponent implements OnInit {
     private readonly empresaService: EmpresaService,
     private readonly alertService: AlertService,
     private readonly confirmationService: ConfirmationService,
+    private readonly facturas: FacturaVentaService,
+    private readonly router: Router,
   ) {}
+
+  /**
+   * Factura de Facturación con el pedido: borrador con sus líneas y su
+   * vendedor. Al emitirla, el pedido queda enlazado y despachado.
+   */
+  async facturarPedido(item: PedidoVendedorTableModel, event: Event): Promise<void> {
+    event.stopPropagation();
+    try {
+      const res = await lastValueFrom(this.facturas.desdePedido(item.id));
+      const id = res?.data?.id;
+      this.alertService.showSuccess('Borrador creado', 'Revise la factura y emítala.');
+      if (id) this.router.navigate(['/ventas/facturas', id, 'editar']);
+    } catch (e: any) {
+      this.alertService.showError('No se pudo facturar', e?.error?.message ?? 'Intente de nuevo');
+    }
+  }
 
   ngOnInit(): void {
     this.loadEmpresaConfig();

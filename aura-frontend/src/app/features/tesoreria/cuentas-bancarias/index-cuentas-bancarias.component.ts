@@ -24,6 +24,7 @@ import {
   TIPOS_CUENTA,
 } from '../../../core/models/cuenta-bancaria.model';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 /**
  * Listado de cuentas bancarias. El formulario es una página plana
  * (form/form-cuenta-bancaria). El saldo actual no se muestra aquí: lo mueve
@@ -34,6 +35,7 @@ import {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     ButtonModule,

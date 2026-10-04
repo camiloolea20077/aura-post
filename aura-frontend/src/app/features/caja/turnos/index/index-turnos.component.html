@@ -5,243 +5,168 @@
         <span class="header-icon"><i class="pi pi-clock"></i></span>
         <div>
           <h1 class="title">Turnos de caja</h1>
-          <p class="subtitle">
-            Historial de aperturas y cierres — cuadre de efectivo
-          </p>
+          <p class="subtitle">Apertura, cuadre y cierre del efectivo</p>
         </div>
       </div>
-      <div class="header-actions">
-        <div class="turno-activo-chip" *ngIf="turnoActivo">
-          <span class="chip-dot"></span>
-          <div class="chip-info">
-            <span class="chip-caja">{{ turnoActivo.cajaNombre }}</span>
-            <span class="chip-label">Turno activo</span>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button
+            *ngIf="!turnoActivo && !cargandoActivo"
+            pButton
+            type="button"
+            label="Abrir turno"
+            icon="pi pi-unlock"
+            class="btn-aura"
+            (click)="openAbrir()"
+          ></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ Turno activo ══════════════════════════════════════ -->
+    <section class="activo" *ngIf="turnoActivo">
+      <div class="activo-hero">
+        <div class="activo-estado">
+          <span class="punto-vivo"></span>
+          <div>
+            <span class="activo-caja">{{ turnoActivo.cajaNombre }}</span>
+            <span class="activo-meta">
+              {{ turnoActivo.usuarioNombre }} · abierto {{ formatFecha(turnoActivo.fechaApertura) }}
+              <ng-container *ngIf="duracionActivo"> · {{ duracionActivo }}</ng-container>
+            </span>
           </div>
+        </div>
+        <div class="activo-acciones">
           <button
             pButton
             type="button"
-            label="Cerrar turno"
-            icon="pi pi-lock"
-            class="btn-verde p-button-sm"
-            (click)="openCerrar()"
+            icon="pi pi-refresh"
+            class="p-button-text p-button-secondary"
+            pTooltip="Actualizar (se actualiza solo cada 30 s)"
+            tooltipPosition="left"
+            [loading]="loadingResumen"
+            (click)="cargarResumen()"
           ></button>
+          <button pButton type="button" label="Cerrar turno" icon="pi pi-lock" class="btn-aura btn-cerrar" (click)="openCerrar()"></button>
         </div>
-        <button
-          pButton
-          type="button"
-          label="Abrir turno"
-          icon="pi pi-unlock"
-          class="btn-aura"
-          [disabled]="!!turnoActivo"
-          pTooltip="{{
-            turnoActivo ? 'Ya tienes un turno activo' : 'Abrir nuevo turno'
-          }}"
-          (click)="openAbrir()"
-        ></button>
       </div>
-    </div>
-  </div>
 
-  <!-- ══════════════════════════════════════════════════════ -->
-  <!-- PANEL RESUMEN EN TIEMPO REAL (solo cuando hay turno)  -->
-  <!-- ══════════════════════════════════════════════════════ -->
-  <ng-container *ngIf="turnoActivo">
-    <!-- KPIs del turno -->
-    <div class="kpi-grid" *ngIf="resumen && !loadingResumen">
-      <div class="kpi-card kpi-ventas">
-        <div class="kpi-icon"><i class="pi pi-shopping-cart"></i></div>
-        <div class="kpi-info">
-          <span class="kpi-label">Ventas del turno</span>
-          <span class="kpi-value">{{ formatCOP(resumen.totalNeto) }}</span>
-          <span class="kpi-sub"
-            >{{ resumen.totalTransacciones }} transacciones</span
-          >
-        </div>
+      <!-- KPIs: esqueleto solo la primera vez, para que no parpadeen al refrescar -->
+      <div class="kpi-grid" *ngIf="!resumen && loadingResumen">
+        <p-skeleton height="88px" borderRadius="14px" *ngFor="let i of [1, 2, 3, 4]" />
       </div>
-      <div class="kpi-card kpi-efectivo">
-        <div class="kpi-icon"><i class="pi pi-money-bill"></i></div>
-        <div class="kpi-info">
-          <span class="kpi-label">Efectivo esperado</span>
-          <span class="kpi-value">
-            {{
-              formatCOP(
-                turnoActivo.baseInicial +
-                  (turnoActivo.totalEfectivoSistema ?? 0)
-              )
-            }}
-          </span>
-          <span class="kpi-sub"
-            >Base {{ formatCOP(turnoActivo.baseInicial) }}</span
-          >
-        </div>
-      </div>
-      <div class="kpi-card kpi-descuentos">
-        <div class="kpi-icon"><i class="pi pi-tag"></i></div>
-        <div class="kpi-info">
-          <span class="kpi-label">Descuentos</span>
-          <span class="kpi-value">{{
-            formatCOP(resumen.totalDescuentos)
-          }}</span>
-          <span class="kpi-sub"
-            >Sobre {{ formatCOP(resumen.totalVentasBruto) }} bruto</span
-          >
-        </div>
-      </div>
-      <div class="kpi-card kpi-refresh">
-        <button
-          pButton
-          icon="pi pi-refresh"
-          label="Actualizar"
-          class="p-button-outlined p-button-secondary btn-refresh"
-          (click)="cargarResumen()"
-        ></button>
-        <span class="refresh-hint">Se actualiza cada 30 seg.</span>
-      </div>
-    </div>
 
-    <!-- Skeleton KPIs -->
-    <div class="kpi-grid" *ngIf="loadingResumen">
-      <p-skeleton
-        height="80px"
-        borderRadius="14px"
-        *ngFor="let i of [1, 2, 3, 4]"
-      />
-    </div>
-
-    <!-- Desglose: categorías + métodos de pago -->
-    <div class="resumen-grid" *ngIf="resumen && !loadingResumen">
-      <!-- Ventas por categoría -->
-      <div class="panel">
-        <div class="panel-header">
-          <i class="pi pi-chart-bar"></i>
-          <span>Ventas por categoría</span>
-          <span
-            class="panel-badge"
-            *ngIf="resumen.ventasPorCategoria.length > 0"
-          >
-            {{ resumen.ventasPorCategoria.length }}
-          </span>
+      <div class="kpi-grid" *ngIf="resumen">
+        <div class="kpi kpi--caja">
+          <span class="kpi-label"><i class="pi pi-wallet"></i> Debe haber en caja</span>
+          <span class="kpi-valor">{{ formatCOP(esperadoActivo) }}</span>
+          <span class="kpi-sub">Base {{ formatCOP(turnoActivo.baseInicial) }} + efectivo y movimientos</span>
         </div>
-        <div class="panel-body">
-          <div class="cat-header-row">
-            <span>Categoría</span>
-            <span class="text-center">Unidades</span>
-            <span class="text-right">Neto</span>
+        <div class="kpi">
+          <span class="kpi-label"><i class="pi pi-shopping-cart"></i> Ventas del turno</span>
+          <span class="kpi-valor">{{ formatCOP(resumen.totalNeto) }}</span>
+          <span class="kpi-sub">{{ resumen.totalTransacciones }} transacciones</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-label"><i class="pi pi-receipt"></i> Ticket promedio</span>
+          <span class="kpi-valor">{{ formatCOP(ticketPromedio) }}</span>
+          <span class="kpi-sub">Por transacción</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-label"><i class="pi pi-tag"></i> Descuentos</span>
+          <span class="kpi-valor">{{ formatCOP(resumen.totalDescuentos) }}</span>
+          <span class="kpi-sub">Sobre {{ formatCOP(resumen.totalVentasBruto) }} bruto</span>
+        </div>
+      </div>
+
+      <div class="resumen-grid" *ngIf="resumen">
+        <!-- Métodos de pago -->
+        <div class="panel">
+          <div class="panel-header">
+            <i class="pi pi-wallet"></i>
+            <span>Cómo pagaron</span>
           </div>
-          <div class="cat-row" *ngFor="let cat of resumen.ventasPorCategoria">
-            <span class="cat-nombre">
-              <span class="cat-dot"></span>{{ cat.categoriaNombre }}
-            </span>
-            <span class="cat-qty text-center">{{
-              cat.totalProductosVendidos
-            }}</span>
-            <div class="cat-neto-wrap">
-              <span class="cat-neto">{{ formatCOP(cat.totalNeto) }}</span>
-              <div class="cat-bar-wrap">
-                <div
-                  class="cat-bar"
-                  [style.width.%]="
-                    resumen!.totalNeto > 0
-                      ? (cat.totalNeto / resumen!.totalNeto) * 100
-                      : 0
-                  "
-                ></div>
+          <div class="panel-body">
+            <div class="metodo-row" *ngFor="let mp of resumen.ventasPorMetodoPago">
+              <div class="metodo-left">
+                <div class="metodo-icon-wrap"><i [class]="metodoPagoIcon(mp.metodoPago)"></i></div>
+                <div class="metodo-info">
+                  <span class="metodo-nombre">{{ mp.metodoPago }}</span>
+                  <span class="metodo-count">{{ mp.totalPagos }} pagos</span>
+                </div>
               </div>
+              <span class="metodo-monto">{{ formatCOP(mp.totalMonto) }}</span>
+            </div>
+            <div class="empty-resumen" *ngIf="resumen.ventasPorMetodoPago.length === 0">
+              <i class="pi pi-inbox"></i> Sin pagos registrados
+            </div>
+            <div class="metodo-total-row" *ngIf="resumen.ventasPorMetodoPago.length > 0">
+              <span>Total recaudado</span>
+              <span class="metodo-total-val">{{ formatCOP(resumen.totalNeto) }}</span>
             </div>
           </div>
-          <div
-            class="cat-total-row"
-            *ngIf="resumen.ventasPorCategoria.length > 0"
-          >
-            <span><strong>Total</strong></span>
-            <span class="text-center text-muted"
-              >{{ resumen.totalTransacciones }} transacc.</span
-            >
-            <span class="cat-total-val">{{
-              formatCOP(resumen.totalNeto)
-            }}</span>
-          </div>
-          <div
-            class="empty-resumen"
-            *ngIf="resumen.ventasPorCategoria.length === 0"
-          >
-            <i class="pi pi-inbox"></i> Sin ventas en este turno
-          </div>
         </div>
-      </div>
 
-      <!-- Métodos de pago -->
-      <div class="panel">
-        <div class="panel-header">
-          <i class="pi pi-wallet"></i>
-          <span>Métodos de pago</span>
-        </div>
-        <div class="panel-body">
-          <div
-            class="metodo-row"
-            *ngFor="let mp of resumen.ventasPorMetodoPago"
-          >
-            <div class="metodo-left">
-              <div class="metodo-icon-wrap">
-                <i [class]="metodoPagoIcon(mp.metodoPago)"></i>
-              </div>
-              <div class="metodo-info">
-                <span class="metodo-nombre">{{ mp.metodoPago }}</span>
-                <span class="metodo-count">{{ mp.totalPagos }} pagos</span>
+        <!-- Ventas por categoría -->
+        <div class="panel">
+          <div class="panel-header">
+            <i class="pi pi-chart-bar"></i>
+            <span>Ventas por categoría</span>
+            <span class="panel-badge" *ngIf="resumen.ventasPorCategoria.length > 0">{{ resumen.ventasPorCategoria.length }}</span>
+          </div>
+          <div class="panel-body">
+            <div class="cat-header-row">
+              <span>Categoría</span>
+              <span class="text-center">Unidades</span>
+              <span class="text-right">Neto</span>
+            </div>
+            <div class="cat-row" *ngFor="let cat of resumen.ventasPorCategoria">
+              <span class="cat-nombre"><span class="cat-dot"></span>{{ cat.categoriaNombre }}</span>
+              <span class="cat-qty text-center">{{ cat.totalProductosVendidos }}</span>
+              <div class="cat-neto-wrap">
+                <span class="cat-neto">{{ formatCOP(cat.totalNeto) }}</span>
+                <div class="cat-bar-wrap">
+                  <div class="cat-bar" [style.width.%]="resumen!.totalNeto > 0 ? (cat.totalNeto / resumen!.totalNeto) * 100 : 0"></div>
+                </div>
               </div>
             </div>
-            <span class="metodo-monto">{{ formatCOP(mp.totalMonto) }}</span>
-          </div>
-          <div
-            class="empty-resumen"
-            *ngIf="resumen.ventasPorMetodoPago.length === 0"
-          >
-            <i class="pi pi-inbox"></i> Sin pagos registrados
-          </div>
-          <div
-            class="metodo-total-row"
-            *ngIf="resumen.ventasPorMetodoPago.length > 0"
-          >
-            <span>Total recaudado</span>
-            <span class="metodo-total-val">{{
-              formatCOP(resumen.totalNeto)
-            }}</span>
+            <div class="empty-resumen" *ngIf="resumen.ventasPorCategoria.length === 0">
+              <i class="pi pi-inbox"></i> Sin ventas en este turno
+            </div>
           </div>
         </div>
       </div>
-    </div>
-    <!-- /resumen-grid -->
+    </section>
 
-    <!-- Skeleton desglose -->
-    <div class="resumen-grid" *ngIf="loadingResumen">
-      <p-skeleton height="200px" borderRadius="14px" />
-      <p-skeleton height="200px" borderRadius="14px" />
-    </div>
-
-    <p-divider />
-  </ng-container>
-  <!-- ── FIN PANEL RESUMEN ── -->
-
-  <!-- Tabla histórica (igual que antes) -->
-  <div class="card">
-    <div class="table-toolbar">
-      <div class="toolbar-left">
-        <span class="p-input-icon-left search-wrap">
-          <i class="pi pi-search"></i>
-          <input
-            type="text"
-            pInputText
-            class="search-input"
-            placeholder="Buscar por caja, cajero o estado..."
-            [(ngModel)]="searchQuery"
-            (input)="onSearch()"
-            (keydown.escape)="clearSearch()"
-          />
-          <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">
-            <i class="pi pi-times"></i>
-          </button>
-        </span>
+    <!-- ══ Sin turno abierto ═════════════════════════════════ -->
+    <section class="sin-turno" *ngIf="!turnoActivo && !cargandoActivo">
+      <i class="pi pi-lock-open"></i>
+      <div>
+        <strong>No tienes un turno abierto</strong>
+        <span>Abre un turno con la base de la caja para empezar a vender en efectivo.</span>
       </div>
+      <button pButton type="button" label="Abrir turno" icon="pi pi-unlock" class="btn-aura" (click)="openAbrir()"></button>
+    </section>
+
+    <!-- ══ Historial ═════════════════════════════════════════ -->
+    <div class="historial-cab">
+      <div>
+        <h2 class="historial-titulo">Historial de turnos</h2>
+        <p class="historial-sub">Aperturas, cierres y diferencias de cada caja</p>
+      </div>
+      <span class="search-wrap">
+        <i class="pi pi-search"></i>
+        <input
+          type="text"
+          pInputText
+          class="search-input"
+          placeholder="Caja, cajero o estado…"
+          [(ngModel)]="searchQuery"
+          (input)="onSearch()"
+          (keydown.escape)="clearSearch()"
+        />
+        <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()"><i class="pi pi-times"></i></button>
+      </span>
     </div>
 
     <p-table

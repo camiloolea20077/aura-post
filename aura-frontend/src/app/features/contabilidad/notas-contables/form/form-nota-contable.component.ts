@@ -58,6 +58,7 @@ import {
 } from '../models/nota-contable.model';
 import { NotaContableService } from '../services/nota-contable.service';
 
+import { PuedeDirective } from '../../../../shared/directives/puede.directive';
 type Opcion = { label: string; value: number };
 
 /**
@@ -81,11 +82,15 @@ function conCodigo(
  * y queda de solo lectura. Las cuentas son solo auxiliares activas: una
  * cuenta de mayor no admite movimiento.
  */
+import { CuentaAutocompleteComponent } from '../../../../shared/components/cuenta-autocomplete/cuenta-autocomplete.component';
+
 @Component({
   selector: 'app-form-nota-contable',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CuentaAutocompleteComponent,
+    PuedeDirective,
     CommonModule,
     ReactiveFormsModule,
     ButtonModule,

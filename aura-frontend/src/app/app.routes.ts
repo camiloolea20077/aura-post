@@ -3,6 +3,7 @@ import { AuthGuard } from './core/guards/auth.guard';
 import { MainLayoutComponent } from './layout/main-layout/main-layout.component';
 import { LoginComponent } from './features/auth/pages/login/login.component';
 import { rolGuard } from './core/guards/role.guard';
+import { permisoGuard } from './core/guards/permiso.guard';
 import { platformGuard } from './core/guards/platform.guard';
 import { clienteGuard } from './core/guards/cliente.guard';
 
@@ -34,13 +35,14 @@ export const routes: Routes = [
     path: '',
     component: MainLayoutComponent,
     canActivate: [AuthGuard, clienteGuard],
+    // Permisos por perfil: oculta en el front las pantallas que el perfil no ve.
+    canActivateChild: [permisoGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 
       // Dashboard
       {
         path: 'dashboard',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/dashboard/dashboard.component').then(
             (m) => m.DashboardComponent,
@@ -57,7 +59,6 @@ export const routes: Routes = [
       // Catálogo
       {
         path: 'catalogo/productos',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/catalogo/productos/index/index-productos.component').then(
             (m) => m.IndexProductosComponent,
@@ -65,7 +66,6 @@ export const routes: Routes = [
       },
       {
         path: 'catalogo/productos/nuevo',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/catalogo/productos/form/form-productos.component').then(
             (m) => m.FormProductosComponent,
@@ -73,7 +73,6 @@ export const routes: Routes = [
       },
       {
         path: 'catalogo/productos/editar/:id',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/catalogo/productos/form/form-productos.component').then(
             (m) => m.FormProductosComponent,
@@ -81,7 +80,6 @@ export const routes: Routes = [
       },
       {
         path: 'catalogo/categorias',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/catalogo/categorias/index/index-categorias.component').then(
             (m) => m.IndexCategoriasComponent,
@@ -89,7 +87,6 @@ export const routes: Routes = [
       },
       {
         path: 'catalogo/marcas',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/catalogo/marcas/index/index-marcas.component').then(
             (m) => m.IndexMarcasComponent,
@@ -97,7 +94,6 @@ export const routes: Routes = [
       },
       {
         path: 'catalogo/unidades',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/catalogo/unidades/index/index-unidades.component').then(
             (m) => m.IndexUnidadesComponent,
@@ -105,7 +101,6 @@ export const routes: Routes = [
       },
       {
         path: 'catalogo/presentaciones',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/catalogo/presentaciones/index/index-presentaciones.component').then(
             (m) => m.IndexPresentacionesComponent,
@@ -113,7 +108,6 @@ export const routes: Routes = [
       },
       {
         path: 'catalogo/composiciones',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/catalogo/composiciones/index/index-composicion.component').then(
             (m) => m.IndexComposicionComponent,
@@ -121,7 +115,6 @@ export const routes: Routes = [
       },
       {
         path: 'catalogo/etiquetas',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/catalogo/etiquetas/index/etiquetas.component').then(
             (m) => m.EtiquetasComponent,
@@ -131,7 +124,6 @@ export const routes: Routes = [
       // Precios
       {
         path: 'precios/listas',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/precios/listas-precios/index/index-lista-precios.component').then(
             (m) => m.IndexListaPreciosComponent,
@@ -139,7 +131,6 @@ export const routes: Routes = [
       },
       {
         path: 'precios/productos',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/precios/precios-producto/index/index-producto-precio.component').then(
             (m) => m.IndexProductoPrecioComponent,
@@ -147,7 +138,6 @@ export const routes: Routes = [
       },
       {
         path: 'precios/descuentos',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/precios/reglas-descuento/index/index-descuentos.component').then(
             (m) => m.IndexDescuentosComponent,
@@ -157,7 +147,6 @@ export const routes: Routes = [
       // Cuentas por cobrar / pagar
       {
         path: 'cuentas/cuentas-por-cobrar',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/cuentas/index-cuentas-por-cobrar/index-cuentas-por-cobrar.component').then(
             (m) => m.IndexCuentasPorCobrarComponent,
@@ -165,7 +154,6 @@ export const routes: Routes = [
       },
       {
         path: 'cuentas/cuentas-por-pagar',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/cuentas/index-cuentas-por-pagar/index-cuentas-por-pagar.component').then(
             (m) => m.IndexCuentasPorPagarComponent,
@@ -177,7 +165,6 @@ export const routes: Routes = [
         // Centro de Contabilidad: el sidebar abre aquí en vez de desplegar
         // las ~22 pantallas; cada una conserva su ruta de siempre.
         path: 'contabilidad',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/centro/centro-contabilidad.component').then(
             (m) => m.CentroContabilidadComponent,
@@ -185,7 +172,6 @@ export const routes: Routes = [
       },
       {
         path: 'contabilidad/cierre',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/cierre/cierre-contable.component').then(
             (m) => m.CierreContableComponent,
@@ -193,7 +179,6 @@ export const routes: Routes = [
       },
       {
         path: 'contabilidad/estado-cuenta',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/estado-cuenta/estado-cuenta.component').then(
             (m) => m.EstadoCuentaComponent,
@@ -201,7 +186,6 @@ export const routes: Routes = [
       },
       {
         path: 'contabilidad/reporte-iva',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/reporte-iva/reporte-iva.component').then(
             (m) => m.ReporteIvaComponent,
@@ -209,7 +193,6 @@ export const routes: Routes = [
       },
       {
         path: 'gastos',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/gastos/index/index-gastos.component').then(
             (m) => m.IndexGastosComponent,
@@ -217,7 +200,6 @@ export const routes: Routes = [
       },
       {
         path: 'gastos/nuevo',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/gastos/form/form-gasto.component').then(
             (m) => m.FormGastoComponent,
@@ -225,7 +207,6 @@ export const routes: Routes = [
       },
       {
         path: 'gastos/editar/:id',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/gastos/form/form-gasto.component').then(
             (m) => m.FormGastoComponent,
@@ -233,7 +214,6 @@ export const routes: Routes = [
       },
       {
         path: 'obligaciones',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/obligaciones/index/index-obligaciones.component').then(
             (m) => m.IndexObligacionesComponent,
@@ -241,7 +221,6 @@ export const routes: Routes = [
       },
       {
         path: 'obligaciones/nuevo',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/obligaciones/form/form-obligacion.component').then(
             (m) => m.FormObligacionComponent,
@@ -249,7 +228,6 @@ export const routes: Routes = [
       },
       {
         path: 'obligaciones/:id',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/obligaciones/detalle/detalle-obligacion.component').then(
             (m) => m.DetalleObligacionComponent,
@@ -259,7 +237,6 @@ export const routes: Routes = [
       // Inventario
       {
         path: 'inventario/stock',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/inventario/inventario/index/index-inventario.component').then(
             (m) => m.IndexInventarioComponent,
@@ -280,7 +257,6 @@ export const routes: Routes = [
       },
       {
         path: 'inventario/bodegas',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import(
             './features/inventario/bodegas/index/index-bodegas.component'
@@ -288,7 +264,6 @@ export const routes: Routes = [
       },
       {
         path: 'inventario/lotes',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/inventario/lotes/index/index-lotes.component').then(
             (m) => m.IndexLotesComponent,
@@ -296,7 +271,6 @@ export const routes: Routes = [
       },
       {
         path: 'inventario/seriales',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/inventario/seriales/index/index-seriales.component').then(
             (m) => m.IndexSerialesComponent,
@@ -304,7 +278,6 @@ export const routes: Routes = [
       },
       {
         path: 'inventario/kardex',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/inventario/kardex/index/index-kardex.component').then(
             (m) => m.IndexKardexComponent,
@@ -312,7 +285,6 @@ export const routes: Routes = [
       },
       {
         path: 'inventario/reconteos',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/inventario/reconteos/index/index-reconteos.component').then(
             (m) => m.IndexReconeosComponent,
@@ -322,7 +294,6 @@ export const routes: Routes = [
       // Operaciones
       {
         path: 'compras',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/compras/index/index-compras.component').then(
             (m) => m.IndexComprasComponent,
@@ -330,7 +301,6 @@ export const routes: Routes = [
       },
       {
         path: 'compras/sugerido',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/compras/sugerido/sugerido-compra.component').then(
             (m) => m.SugeridoCompraComponent,
@@ -338,7 +308,6 @@ export const routes: Routes = [
       },
       {
         path: 'compras/documentos-soporte',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/compras/documentos-soporte/index-documentos-soporte.component').then(
             (m) => m.IndexDocumentosSoporteComponent,
@@ -346,7 +315,6 @@ export const routes: Routes = [
       },
       {
         path: 'compras/ordenes',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/compras/ordenes/index-ordenes.component').then(
             (m) => m.IndexOrdenesComponent,
@@ -354,7 +322,6 @@ export const routes: Routes = [
       },
       {
         path: 'compras/nueva',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/compras/form/form-compra.component').then(
             (m) => m.FormCompraComponent,
@@ -362,7 +329,6 @@ export const routes: Routes = [
       },
       {
         path: 'compras/:id/editar',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/compras/form/form-compra.component').then(
             (m) => m.FormCompraComponent,
@@ -370,7 +336,6 @@ export const routes: Routes = [
       },
       {
         path: 'ventas',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN', 'CAJERO'])],
         loadComponent: () =>
           import('./features/ventas/index/index-ventas.component').then(
             (m) => m.IndexVentasComponent,
@@ -379,7 +344,6 @@ export const routes: Routes = [
       {
         // Notas crédito/débito electrónicas (Factus v1).
         path: 'ventas/notas',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/ventas/nota-electronica/index-notas.component').then(
             (m) => m.IndexNotasComponent,
@@ -387,7 +351,6 @@ export const routes: Routes = [
       },
       {
         path: 'ventas/notas/credito',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         data: { tipo: 'CREDITO' },
         loadComponent: () =>
           import('./features/ventas/nota-electronica/form-nota-credito.component').then(
@@ -396,7 +359,6 @@ export const routes: Routes = [
       },
       {
         path: 'ventas/notas/debito',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         data: { tipo: 'DEBITO' },
         loadComponent: () =>
           import('./features/ventas/nota-electronica/form-nota-credito.component').then(
@@ -407,23 +369,64 @@ export const routes: Routes = [
       // Vendedores
       {
         path: 'vendedores',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN', 'VENDEDOR'])],
         loadChildren: () =>
           import('./features/vendedores/vendedores.routes').then(
             (m) => m.VENDEDORES_ROUTES,
           ),
       },
+      // Ventas › Facturas (Facturación ERP fuera del POS)
+      {
+        path: 'ventas/facturas',
+        loadComponent: () =>
+          import('./features/facturas-venta/index/index-facturas-venta.component').then(
+            (m) => m.IndexFacturasVentaComponent,
+          ),
+      },
+      {
+        path: 'ventas/facturas/condiciones-pago',
+        loadComponent: () =>
+          import('./features/facturas-venta/condiciones/condiciones-pago.component').then(
+            (m) => m.CondicionesPagoComponent,
+          ),
+      },
+      {
+        path: 'ventas/facturas/nueva',
+        loadComponent: () =>
+          import('./features/facturas-venta/form/form-factura-venta.component').then(
+            (m) => m.FormFacturaVentaComponent,
+          ),
+      },
+      {
+        path: 'ventas/facturas/:id/editar',
+        loadComponent: () =>
+          import('./features/facturas-venta/form/form-factura-venta.component').then(
+            (m) => m.FormFacturaVentaComponent,
+          ),
+      },
+      {
+        // La emitida se ve en el mismo formulario, en solo lectura.
+        path: 'ventas/facturas/:id',
+        loadComponent: () =>
+          import('./features/facturas-venta/form/form-factura-venta.component').then(
+            (m) => m.FormFacturaVentaComponent,
+          ),
+      },
       {
         path: 'cotizaciones',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN', 'CAJERO'])],
         loadComponent: () =>
           import('./features/cotizaciones/index/index-cotizaciones.component').then(
             (m) => m.IndexCotizacionesComponent,
           ),
       },
       {
+        path: 'cotizaciones/nueva',
+        loadComponent: () =>
+          import('./features/cotizaciones/form/form-cotizacion.component').then(
+            (m) => m.FormCotizacionComponent,
+          ),
+      },
+      {
         path: 'cotizaciones/editar/:id',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN', 'CAJERO'])],
         loadComponent: () =>
           import('./features/cotizaciones/form/form-cotizacion.component').then(
             (m) => m.FormCotizacionComponent,
@@ -431,7 +434,6 @@ export const routes: Routes = [
       },
       {
         path: 'devoluciones',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN', 'CAJERO'])],
         loadComponent: () =>
           import('./features/devoluciones/index/index-devoluciones.component').then(
             (m) => m.IndexDevolucionesComponent,
@@ -439,7 +441,6 @@ export const routes: Routes = [
       },
       {
         path: 'proyectos',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/proyectos/proyectos.component').then(
             (m) => m.ProyectosComponent,
@@ -447,7 +448,6 @@ export const routes: Routes = [
       },
       {
         path: 'proyectos/:proyectoId/frentes',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/proyectos/frentes/frentes.component').then(
             (m) => m.FrentesComponent,
@@ -455,7 +455,6 @@ export const routes: Routes = [
       },
       {
         path: 'asistencia-frente/digitacion',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/asistencia-frente/digitacion.component').then(
             (m) => m.DigitacionComponent,
@@ -463,7 +462,6 @@ export const routes: Routes = [
       },
       {
         path: 'asistencia-frente/revision',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/asistencia-frente/revision.component').then(
             (m) => m.RevisionFrenteComponent,
@@ -471,7 +469,6 @@ export const routes: Routes = [
       },
       {
         path: 'asistencia-frente/preliquidacion',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/asistencia-frente/preliquidacion.component').then(
             (m) => m.PreliquidacionFrenteComponent,
@@ -479,7 +476,6 @@ export const routes: Routes = [
       },
       {
         path: 'laboral/configuracion',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/laboral/config-laboral.component').then(
             (m) => m.ConfigLaboralComponent,
@@ -487,7 +483,6 @@ export const routes: Routes = [
       },
       {
         path: 'laboral/calendario',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/laboral/calendario-laboral.component').then(
             (m) => m.CalendarioLaboralComponent,
@@ -495,7 +490,6 @@ export const routes: Routes = [
       },
       {
         path: 'mermas',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/mermas/index/index-mermas.component').then(
             (m) => m.IndexMermasComponent,
@@ -503,7 +497,6 @@ export const routes: Routes = [
       },
       {
         path: 'obsequios',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/obsequios/index/index-obsequios.component').then(
             (m) => m.IndexObsequiosComponent,
@@ -511,7 +504,6 @@ export const routes: Routes = [
       },
       {
         path: 'consumo-interno',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import(
             './features/consumo-interno/index/index-consumos-internos.component'
@@ -519,17 +511,23 @@ export const routes: Routes = [
       },
       {
         path: 'traslados',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/traslados/index/index-traslados.component').then(
             (m) => m.IndexTrasladosComponent,
+          ),
+      },
+      {
+        // Formulario plano (antes era un diálogo).
+        path: 'traslados/nuevo',
+        loadComponent: () =>
+          import('./features/traslados/form/form-traslado.component').then(
+            (m) => m.FormTrasladoComponent,
           ),
       },
 
       // Terceros (solo gestión, sin estado de cuenta)
       {
         path: 'terceros',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/terceros/index/index-terceros.component').then(
             (m) => m.IndexTercerosComponent,
@@ -537,7 +535,6 @@ export const routes: Routes = [
       },
       {
         path: 'terceros/nuevo',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/terceros/form-plano/form-tercero-plano.component').then(
             (m) => m.FormTerceroPlanoComponent,
@@ -545,7 +542,6 @@ export const routes: Routes = [
       },
       {
         path: 'terceros/editar/:id',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/terceros/form-plano/form-tercero-plano.component').then(
             (m) => m.FormTerceroPlanoComponent,
@@ -555,7 +551,6 @@ export const routes: Routes = [
       // Caja
       {
         path: 'caja/cajas',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/caja/cajas/index/index-cajas.component').then(
             (m) => m.IndexCajasComponent,
@@ -565,7 +560,6 @@ export const routes: Routes = [
       // pendientes. El origen ya es obligatorio al registrar.
       {
         path: 'caja/supervision',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import(
             './features/caja/supervision/supervision-retroactiva.component'
@@ -580,7 +574,6 @@ export const routes: Routes = [
       },
       {
         path: 'admin/sucursales',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/sucursales/index/index-sucursales.component').then(
             (m) => m.IndexSucursalesComponent,
@@ -588,10 +581,58 @@ export const routes: Routes = [
       },
       {
         path: 'admin/usuarios',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/usuarios/index/index-usuarios.component').then(
             (m) => m.IndexUsuariosComponent,
+          ),
+      },
+      // Usuario en una página con pestañas (datos, sedes, permisos, descuentos).
+      {
+        path: 'admin/usuarios/nuevo',
+        loadComponent: () =>
+          import('./features/usuarios/pagina/usuario-pagina.component').then(
+            (m) => m.UsuarioPaginaComponent,
+          ),
+      },
+      {
+        path: 'admin/usuarios/:id',
+        loadComponent: () =>
+          import('./features/usuarios/pagina/usuario-pagina.component').then(
+            (m) => m.UsuarioPaginaComponent,
+          ),
+      },
+      // La pantalla aparte de permisos pasó a la pestaña Permisos de la página.
+      {
+        path: 'admin/usuarios/:id/permisos',
+        redirectTo: 'admin/usuarios/:id',
+      },
+      {
+        path: 'admin/perfiles',
+        loadComponent: () =>
+          import('./features/perfiles/index/index-perfiles.component').then(
+            (m) => m.IndexPerfilesComponent,
+          ),
+      },
+      {
+        path: 'admin/perfiles/:id',
+        loadComponent: () =>
+          import('./features/perfiles/form/form-perfil.component').then(
+            (m) => m.FormPerfilComponent,
+          ),
+      },
+      {
+        // Sin ítem de menú: se llega por el escudo de la barra superior o la campana.
+        path: 'autorizaciones',
+        loadComponent: () =>
+          import('./features/autorizaciones/autorizaciones.component').then(
+            (m) => m.AutorizacionesComponent,
+          ),
+      },
+      {
+        path: 'admin/bitacora',
+        loadComponent: () =>
+          import('./features/bitacora/bitacora.component').then(
+            (m) => m.BitacoraComponent,
           ),
       },
 
@@ -608,7 +649,6 @@ export const routes: Routes = [
       // Comisiones
       {
         path: 'comisiones/configuracion',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/comisiones/config/index/index-comision-config.component').then(
             (m) => m.IndexComisionConfigComponent,
@@ -616,7 +656,6 @@ export const routes: Routes = [
       },
       {
         path: 'comisiones/liquidaciones',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/comisiones/liquidaciones/index/index-liquidaciones.component').then(
             (m) => m.IndexLiquidacionesComponent,
@@ -626,7 +665,6 @@ export const routes: Routes = [
       // Nómina
       {
         path: 'nomina/config',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/nomina/config/nomina-config.component').then(
             (m) => m.NominaConfigComponent,
@@ -634,7 +672,6 @@ export const routes: Routes = [
       },
       {
         path: 'nomina/empleados',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/nomina/empleados/index/index-empleados.component').then(
             (m) => m.IndexEmpleadosComponent,
@@ -643,7 +680,6 @@ export const routes: Routes = [
       {
         // F7 — carga de saldos iniciales (migración desde otro sistema).
         path: 'nomina/saldos-iniciales',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/nomina/saldos-iniciales/saldos-iniciales.component').then(
             (m) => m.SaldosInicialesComponent,
@@ -653,7 +689,6 @@ export const routes: Routes = [
         // Alta de empleado (flujo nuevo): crea la identidad como tercero y de
         // ahí cae en la ficha para agregar el contrato.
         path: 'nomina/empleados/nuevo',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/nomina/empleados/nuevo/empleado-nuevo.component').then(
             (m) => m.EmpleadoNuevoComponent,
@@ -663,7 +698,6 @@ export const routes: Routes = [
         // Ficha del empleado (maestro-detalle): identidad + tabs de contratos,
         // afiliaciones, retenciones y embargos.
         path: 'nomina/empleados/:id/ficha',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/nomina/empleados/detalle/empleado-detalle.component').then(
             (m) => m.EmpleadoDetalleComponent,
@@ -674,7 +708,6 @@ export const routes: Routes = [
         // empleados: un empleado puede tener varios contratos, por eso la
         // ruta cuelga de él.
         path: 'nomina/empleados/:empleadoId/contratos',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/nomina/contratos/index/index-contratos.component').then(
             (m) => m.IndexContratosComponent,
@@ -684,7 +717,6 @@ export const routes: Routes = [
         // Catálogo de conceptos de nómina (Fase 3). Tarifas parametrizables
         // por vigencia, sin recompilar el motor.
         path: 'nomina/conceptos',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/nomina/conceptos/index/index-conceptos.component').then(
             (m) => m.IndexConceptosComponent,
@@ -692,7 +724,6 @@ export const routes: Routes = [
       },
       {
         path: 'nomina/periodos',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/nomina/periodos/index/index-periodos.component').then(
             (m) => m.IndexPeriodosComponent,
@@ -702,7 +733,6 @@ export const routes: Routes = [
         // PILA (Fase 6). Genera la planilla estructurada; el archivo plano por
         // operador es un export aparte.
         path: 'nomina/pila',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/nomina/pila/pila.component').then(
             (m) => m.PilaComponent,
@@ -710,7 +740,6 @@ export const routes: Routes = [
       },
       {
         path: 'nomina/liquidacion',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/nomina/liquidacion/index/index-liquidacion.component').then(
             (m) => m.IndexLiquidacionComponent,
@@ -719,7 +748,6 @@ export const routes: Routes = [
       {
         // Listado de nóminas electrónicas emitidas (XML, anular, eliminar pruebas).
         path: 'nomina/electronica',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/nomina/electronica/index-nomina-electronica.component').then(
             (m) => m.IndexNominaElectronicaComponent,
@@ -729,7 +757,6 @@ export const routes: Routes = [
       // Asistencia
       {
         path: 'asistencia/turnos',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/asistencia/turnos/turnos.component').then(
             (m) => m.TurnosComponent,
@@ -737,7 +764,6 @@ export const routes: Routes = [
       },
       {
         path: 'asistencia/marcaje',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/asistencia/marcaje/marcaje.component').then(
             (m) => m.MarcajeComponent,
@@ -745,7 +771,6 @@ export const routes: Routes = [
       },
       {
         path: 'asistencia/revision',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/asistencia/revision/revision.component').then(
             (m) => m.RevisionAsistenciaComponent,
@@ -753,7 +778,6 @@ export const routes: Routes = [
       },
       {
         path: 'asistencia/novedades',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/asistencia/novedades/novedades-asistencia.component').then(
             (m) => m.NovedadesAsistenciaComponent,
@@ -761,7 +785,6 @@ export const routes: Routes = [
       },
       {
         path: 'asistencia/autorizaciones',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/asistencia/autorizaciones/autorizaciones.component').then(
             (m) => m.AutorizacionesComponent,
@@ -769,7 +792,6 @@ export const routes: Routes = [
       },
       {
         path: 'nomina/preliquidacion',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/asistencia/cierre/preliquidacion.component').then(
             (m) => m.PreliquidacionComponent,
@@ -777,7 +799,6 @@ export const routes: Routes = [
       },
       {
         path: 'nomina/prestaciones',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/nomina/prestaciones/prestaciones.component').then(
             (m) => m.PrestacionesComponent,
@@ -787,7 +808,6 @@ export const routes: Routes = [
       // Ventas de campo
       {
         path: 'ventas-campo',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/ventas-campo/index/index-ventas-campo.component').then(
             (m) => m.IndexVentasCampoComponent,
@@ -797,7 +817,6 @@ export const routes: Routes = [
       // Cartera
       {
         path: 'cartera',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/cartera/index/index-cartera.component').then(
             (m) => m.IndexCarteraComponent,
@@ -805,7 +824,6 @@ export const routes: Routes = [
       },
       {
         path: 'cartera/reglas',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/cartera/reglas/reglas-credito.component').then(
             (m) => m.ReglasCreditoComponent,
@@ -813,7 +831,6 @@ export const routes: Routes = [
       },
       {
         path: 'cartera/cliente/:id',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/cartera/ficha-cliente/ficha-cliente.component').then(
             (m) => m.FichaClienteComponent,
@@ -823,7 +840,6 @@ export const routes: Routes = [
       // Tesorería
       {
         path: 'tesoreria/cuentas-bancarias',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/tesoreria/cuentas-bancarias/index-cuentas-bancarias.component').then(
             (m) => m.IndexCuentasBancariasComponent,
@@ -831,7 +847,6 @@ export const routes: Routes = [
       },
       {
         path: 'tesoreria/cuentas-bancarias/nueva',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/tesoreria/cuentas-bancarias/form/form-cuenta-bancaria.component').then(
             (m) => m.FormCuentaBancariaComponent,
@@ -839,7 +854,6 @@ export const routes: Routes = [
       },
       {
         path: 'tesoreria/cuentas-bancarias/:id',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/tesoreria/cuentas-bancarias/form/form-cuenta-bancaria.component').then(
             (m) => m.FormCuentaBancariaComponent,
@@ -847,7 +861,6 @@ export const routes: Routes = [
       },
       {
         path: 'tesoreria/egresos',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/tesoreria/egresos/index-egresos.component').then(
             (m) => m.IndexEgresosComponent,
@@ -855,7 +868,6 @@ export const routes: Routes = [
       },
       {
         path: 'tesoreria/recaudos',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/tesoreria/recaudos/index-recaudos.component').then(
             (m) => m.IndexRecaudosComponent,
@@ -863,7 +875,6 @@ export const routes: Routes = [
       },
       {
         path: 'tesoreria/conciliacion',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/tesoreria/conciliacion/index-conciliacion.component').then(
             (m) => m.IndexConciliacionComponent,
@@ -873,7 +884,6 @@ export const routes: Routes = [
       // inventario entre sucursales.
       {
         path: 'tesoreria/traslados-fondos',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/traslados-fondos/index/index-traslados-fondos.component').then(
             (m) => m.IndexTrasladosFondosComponent,
@@ -883,7 +893,6 @@ export const routes: Routes = [
       // Contabilidad — Plan de Cuentas y Asientos
       {
         path: 'contabilidad/plan-cuentas',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/plan-cuentas/plan-cuentas.component').then(
             (m) => m.PlanCuentasComponent,
@@ -891,7 +900,6 @@ export const routes: Routes = [
       },
       {
         path: 'contabilidad/asientos',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/asientos/asientos.component').then(
             (m) => m.AsientosComponent,
@@ -901,7 +909,6 @@ export const routes: Routes = [
       // las deja en borrador y las contabiliza después.
       {
         path: 'contabilidad/notas',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/notas-contables/index/index-notas-contables.component').then(
             (m) => m.IndexNotasContablesComponent,
@@ -910,7 +917,6 @@ export const routes: Routes = [
       // Antes de ':id': si no, 'plantillas' se tomaría como id de una nota.
       {
         path: 'contabilidad/notas/plantillas',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/notas-contables/plantillas/index-plantillas-nota.component').then(
             (m) => m.IndexPlantillasNotaComponent,
@@ -918,7 +924,6 @@ export const routes: Routes = [
       },
       {
         path: 'contabilidad/notas/nueva',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/notas-contables/form/form-nota-contable.component').then(
             (m) => m.FormNotaContableComponent,
@@ -926,7 +931,6 @@ export const routes: Routes = [
       },
       {
         path: 'contabilidad/notas/:id',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/notas-contables/form/form-nota-contable.component').then(
             (m) => m.FormNotaContableComponent,
@@ -934,7 +938,6 @@ export const routes: Routes = [
       },
       {
         path: 'contabilidad/revision',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/revision-asientos/revision-asientos.component').then(
             (m) => m.RevisionAsientosComponent,
@@ -942,7 +945,6 @@ export const routes: Routes = [
       },
       {
         path: 'contabilidad/importar',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/importar/importar-datos.component').then(
             (m) => m.ImportarDatosComponent,
@@ -950,7 +952,6 @@ export const routes: Routes = [
       },
       {
         path: 'contabilidad/declaraciones',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/declaraciones/declaraciones.component').then(
             (m) => m.DeclaracionesComponent,
@@ -958,7 +959,6 @@ export const routes: Routes = [
       },
       {
         path: 'contabilidad/libros',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/libros/libros-contables.component').then(
             (m) => m.LibrosContablesComponent,
@@ -966,7 +966,6 @@ export const routes: Routes = [
       },
       {
         path: 'contabilidad/balance-general',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/balance-general/balance-general.component').then(
             (m) => m.BalanceGeneralComponent,
@@ -974,7 +973,6 @@ export const routes: Routes = [
       },
       {
         path: 'contabilidad/conceptos-caja',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/conceptos-caja/conceptos-caja.component').then(
             (m) => m.ConceptosCajaComponent,
@@ -982,7 +980,6 @@ export const routes: Routes = [
       },
       {
         path: 'contabilidad/saldos-iniciales',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/saldos-iniciales/saldos-iniciales.component').then(
             (m) => m.SaldosInicialesComponent,
@@ -990,7 +987,6 @@ export const routes: Routes = [
       },
       {
         path: 'contabilidad/centros-costo',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/centros-costo/centros-costo.component').then(
             (m) => m.CentrosCostoComponent,
@@ -998,7 +994,6 @@ export const routes: Routes = [
       },
       {
         path: 'contabilidad/periodos',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/periodos-contables/periodos-contables.component').then(
             (m) => m.PeriodosContablesComponent,
@@ -1006,7 +1001,6 @@ export const routes: Routes = [
       },
       {
         path: 'contabilidad/activos-fijos/informe',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/activos-fijos/informe/informe-activos.component').then(
             (m) => m.InformeActivosComponent,
@@ -1014,7 +1008,6 @@ export const routes: Routes = [
       },
       {
         path: 'contabilidad/activos-fijos/:id',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/activos-fijos/ficha/ficha-activo.component').then(
             (m) => m.FichaActivoComponent,
@@ -1022,7 +1015,6 @@ export const routes: Routes = [
       },
       {
         path: 'contabilidad/activos-fijos',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/activos-fijos/activos-fijos.component').then(
             (m) => m.ActivosFijosComponent,
@@ -1030,7 +1022,6 @@ export const routes: Routes = [
       },
       {
         path: 'contabilidad/parametrizacion',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/parametrizacion/parametrizacion-contable.component').then(
             (m) => m.ParametrizacionContableComponent,
@@ -1038,7 +1029,6 @@ export const routes: Routes = [
       },
       {
         path: 'contabilidad/balance-prueba',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/balance-prueba/balance-prueba.component').then(
             (m) => m.BalancePruebaComponent,
@@ -1046,7 +1036,6 @@ export const routes: Routes = [
       },
       {
         path: 'contabilidad/herramientas',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/herramientas/herramientas-contador.component').then(
             (m) => m.HerramientasContadorComponent,
@@ -1054,7 +1043,6 @@ export const routes: Routes = [
       },
       {
         path: 'contabilidad/categorias-contables',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/categorias-contables/categorias-contables.component').then(
             (m) => m.CategoriasContablesComponent,
@@ -1062,7 +1050,6 @@ export const routes: Routes = [
       },
       {
         path: 'contabilidad/tarifas-retencion',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/tarifas-retencion/tarifas-retencion.component').then(
             (m) => m.TarifasRetencionComponent,
@@ -1071,7 +1058,6 @@ export const routes: Routes = [
       // E8: wizard de cierre de ejercicio + distribución de utilidades
       {
         path: 'contabilidad/cierre-anual',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/cierre-anual/cierre-anual.component').then(
             (m) => m.CierreAnualComponent,
@@ -1080,7 +1066,6 @@ export const routes: Routes = [
       // E9: conciliación bancaria (extracto vs libro)
       {
         path: 'contabilidad/conciliacion',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/conciliacion/conciliacion-bancaria.component').then(
             (m) => m.ConciliacionBancariaComponent,
@@ -1089,7 +1074,6 @@ export const routes: Routes = [
       // E10: estados financieros NIIF (patrimonio + flujo de efectivo)
       {
         path: 'contabilidad/eeff',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/eeff/eeff.component').then(
             (m) => m.EeffComponent,
@@ -1098,7 +1082,6 @@ export const routes: Routes = [
       // E11: información exógena DIAN
       {
         path: 'contabilidad/exogena',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/contabilidad/exogena/exogena.component').then(
             (m) => m.ExogenaComponent,
@@ -1108,7 +1091,6 @@ export const routes: Routes = [
       // Comprobantes de caja
       {
         path: 'comprobantes',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN', 'CAJERO'])],
         loadComponent: () =>
           import('./features/comprobantes/index/index-comprobantes.component').then(
             (m) => m.IndexComprobantesComponent,
@@ -1117,7 +1099,6 @@ export const routes: Routes = [
       // Comprobante contable (formulario plano)
       {
         path: 'comprobantes/contable/nuevo',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/comprobantes/contable/form/form-comprobante-contable.component').then(
             (m) => m.FormComprobanteContableComponent,
@@ -1183,7 +1164,6 @@ export const routes: Routes = [
       },
       {
         path: 'reportes/avanzados',
-        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
         loadComponent: () =>
           import('./features/reportes-avanzados/reportes-avanzados.component').then(
             (m) => m.ReportesAvanzadosComponent,

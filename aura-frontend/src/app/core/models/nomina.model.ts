@@ -120,6 +120,9 @@ export interface CreateUsuarioFromEmpleadoDto {
   empleadoId: number;
   username: string;
   password: string;
+  sucursalId?: number;
+  /** Perfil de permisos; null = el del tipo de usuario (cargo). */
+  perfilId?: number | null;
 }
 
 export interface CreateEmpleadoDto {

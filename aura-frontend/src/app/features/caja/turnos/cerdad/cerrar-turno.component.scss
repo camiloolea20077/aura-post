@@ -1,5 +1,5 @@
 $orange:  #f97316;
-$indigo:  #6366f1;
+$indigo:  #2563eb;
 $green:   #10b981;
 $red:     #ef4444;
 $blue:    #3b82f6;
@@ -442,15 +442,6 @@ $muted:   #64748b;
 
 .w-full { width:100%; }
 
-::ng-deep .btn-cierre.p-button {
-  background:linear-gradient(135deg,$indigo,#8b5cf6) !important;
-  border:none !important;
-  box-shadow:0 2px 8px rgba(99,102,241,.3) !important;
-  font-weight:600 !important;
-  &:hover { opacity:.92; }
-  &:disabled { opacity:.5; }
-}
-
 /* ── Documentos de otras fechas ──────────────────────────────────────────
    Egresos que salieron de esta caja pero corresponden a facturas de días
    anteriores. Se separan con un borde ámbar porque son la parte del arqueo
@@ -555,4 +546,320 @@ $muted:   #64748b;
 
 .cifra-ajustada {
   color: #2563eb !important;
+}
+
+// ════════════════════════════════════════════════════════════
+// Rediseño del cierre: conteo (izquierda) + cuadre (derecha)
+// ════════════════════════════════════════════════════════════
+.cierre-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  gap: 1.25rem;
+  align-items: start;
+  margin-top: 0.9rem;
+}
+
+.conteo,
+.cuadre {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+// El cuadre queda a la vista mientras se cuenta.
+.cuadre {
+  position: sticky;
+  top: 0;
+}
+
+.conteo-ayuda {
+  margin: 0 0 0.6rem;
+  font-size: 0.76rem;
+  color: $muted;
+}
+
+.opciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.95rem;
+  border: 1.5px solid #e0e3eb;
+  border-radius: 10px;
+  background: #fff;
+  color: #475569;
+  font-family: inherit;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: #93c5fd;
+  }
+
+  &--activa {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+}
+
+.total-manual {
+  padding: 0.9rem;
+  border: 1px solid $border;
+  border-radius: 12px;
+  background: $bg-light;
+
+  ::ng-deep .input-real input {
+    font-size: 1.3rem;
+    font-weight: 800;
+    font-family: "JetBrains Mono", monospace;
+    height: 52px;
+  }
+}
+
+.contado-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid $border;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: $muted;
+
+  strong {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 1rem;
+    color: $text;
+  }
+}
+
+.resultado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  min-height: 86px;
+  padding: 0.9rem;
+  border-radius: 14px;
+  text-align: center;
+
+  &--pendiente {
+    flex-direction: row;
+    gap: 0.5rem;
+    background: $bg-light;
+    border: 1.5px dashed #cbd5e1;
+    color: $muted;
+    font-size: 0.82rem;
+  }
+
+  &.dif-exacto {
+    background: rgba(16, 185, 129, 0.08);
+    border: 1.5px solid rgba(16, 185, 129, 0.3);
+    color: #059669;
+  }
+
+  &.dif-sobrante {
+    background: rgba(37, 99, 235, 0.07);
+    border: 1.5px solid rgba(37, 99, 235, 0.25);
+    color: #1d4ed8;
+  }
+
+  &.dif-faltante {
+    background: rgba(239, 68, 68, 0.07);
+    border: 1.5px solid rgba(239, 68, 68, 0.3);
+    color: #dc2626;
+  }
+}
+
+.resultado-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.resultado-val {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.detalle-turno-toggle {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  width: 100%;
+  margin: 1.1rem 0 0.75rem;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid $border;
+  border-radius: 10px;
+  background: #fff;
+  color: $text;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: $bg-light;
+  }
+}
+
+.detalle-turno-sub {
+  margin-left: auto;
+  font-weight: 500;
+  font-size: 0.76rem;
+  color: $muted;
+}
+
+// ── Pantallas chicas: una sola columna ───────────────────
+@media (max-width: 860px) {
+  .cierre-grid,
+  .layout-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  // En el teléfono: primero se cuenta y debajo se ve si cuadra.
+  .cuadre {
+    position: static;
+  }
+
+  .col-left {
+    max-height: none;
+  }
+
+  .detalle-turno-sub {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .cierre-footer {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 0.5rem;
+
+    ::ng-deep .p-button {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}
+
+// ── Calculadora flotante (v2) ────────────────────────────
+// El detalle del turno se desplaza solo; el cuadre queda fijo a la derecha.
+.detalle-turno {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  min-width: 0;
+  max-height: 64vh;
+  overflow-y: auto;
+  padding-right: 6px;
+
+  .col-left,
+  .col-right {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+}
+
+.btn-calculadora {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  border: 1.5px solid #bfdbfe;
+  border-radius: 12px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  > i {
+    font-size: 1.35rem;
+  }
+
+  span {
+    display: flex;
+    flex-direction: column;
+  }
+
+  strong {
+    font-size: 0.88rem;
+  }
+
+  small {
+    font-size: 0.72rem;
+    color: #3b82f6;
+  }
+
+  &:hover {
+    background: #dbeafe;
+    border-color: #2563eb;
+  }
+}
+
+.calc-ayuda {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  margin: 0 0 0.75rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  background: #f8fafc;
+  font-size: 0.76rem;
+  color: $muted;
+
+  i {
+    margin-top: 0.1rem;
+    color: #2563eb;
+  }
+}
+
+// La ventana de la calculadora vive en el body (appendTo): su contenedor se
+// alcanza con ::ng-deep. El título es la manija para arrastrarla.
+::ng-deep .calculadora-dialog {
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.28) !important;
+
+  .p-dialog-header {
+    cursor: move;
+  }
+
+  .p-dialog-content {
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 860px) {
+  .detalle-turno {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  // En el teléfono el cuadre va primero: el detalle es largo y queda debajo.
+  .cuadre {
+    order: -1;
+  }
 }

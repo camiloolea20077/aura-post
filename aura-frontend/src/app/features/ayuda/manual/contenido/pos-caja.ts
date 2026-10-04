@@ -197,12 +197,16 @@ export const POS_CAJA: ManualModulo[] = [
         titulo: 'Cerrar turno',
         pasos: [
           'Caja → Turnos → Cerrar turno.',
-          'Revise el resumen: ventas por categoría, por método de pago, ventas a crédito, ingresos y egresos manuales, pagos de documentos de otras fechas y comisiones de técnicos.',
-          'Cuente el efectivo del cajón y escríbalo en "Efectivo contado".',
-          'El sistema muestra la diferencia contra el esperado. Si pasa de $50.000 le pide verificar el conteo.',
-          'Presione Cerrar turno. Puede descargar el cierre en PDF desde la lista.',
+          'A la izquierda está el detalle del turno: ventas por categoría, métodos de pago, crédito, movimientos, documentos de otras fechas y comisiones.',
+          'Presione "Calculadora de billetes": se abre en una ventana aparte que se puede arrastrar desde el título. Muévala a un lado para seguir viendo el detalle mientras cuenta.',
+          'En la calculadora escriba cuántos billetes y monedas hay de cada valor, o use + y −. En "Otros" van vales o cheques. Lo contado pasa solo a "Efectivo contado".',
+          'Si ya contó por su cuenta, escriba la cifra directamente en "Efectivo contado".',
+          'A la derecha, "Cuadre de caja" muestra lo que debe haber (base + ventas en efectivo + ingresos − egresos − comisiones), lo contado y si hay faltante, sobrante o cuadre exacto.',
+          'Si la diferencia pasa de $50.000 le pide verificar el conteo. El botón dice con cuánto se cierra (por ejemplo "Cerrar con faltante de $3.000").',
+          'Presione el botón para cerrar. Puede descargar el cierre en PDF desde la lista.',
         ],
         notas: [
+          'El conteo se guarda en este equipo mientras el turno siga abierto: si cierra la ventana a mitad del arqueo, al volver sigue donde iba. "Volver a contar" lo pone en cero.',
           'Si hay comisiones de servicios pendientes, genere la liquidación antes de entregar el efectivo.',
         ],
       },
@@ -332,23 +336,73 @@ export const POS_CAJA: ManualModulo[] = [
     titulo: 'Usuarios',
     icono: 'pi pi-users',
     rutas: ['/admin/usuarios'],
-    resumen: 'Crear las personas que entran al sistema, su rol, su PIN y las sucursales donde pueden trabajar.',
+    resumen: 'Las personas que entran al sistema: quién es (su tercero), cómo entra, en qué sedes trabaja, qué puede hacer y cuánto descuento puede dar.',
     secciones: [
       {
         titulo: 'Crear un usuario',
         pasos: [
-          'Caja → Usuarios → Nuevo usuario.',
-          'Datos de acceso: username, contraseña (mínimo 6 caracteres), rol y PIN de acceso rápido (hasta 6 dígitos, opcional).',
-          'Datos personales: nombres, apellidos, tipo y número de documento, teléfono y email.',
-          'Sucursales asignadas: marque al menos una y señale la sede principal.',
-          'Guarde. Al editar, deje la contraseña vacía para no cambiarla.',
+          'Caja → Usuarios → Nuevo usuario. Se abre una página con cuatro pestañas y un solo botón Guardar.',
+          'Datos y acceso: busque el tercero de la persona (empleado, vendedor…). Es obligatorio. Si no existe, use "Nuevo tercero". Nombre, documento y correo salen del tercero.',
+          'Usuario de acceso: si lo deja vacío, se usa el correo del tercero. Contraseña de mínimo 6 caracteres, tipo de usuario y perfil de permisos (por defecto, el de su tipo).',
+          'Sedes: marque al menos una y la principal (estrella).',
+          'Permisos y Descuentos y acciones especiales: ajustes solo para esta persona (vea abajo).',
+          'Guardar. Al editar, deje la contraseña vacía para no cambiarla.',
         ],
         notas: [
+          'Un tercero solo puede tener un usuario.',
+          'Nombre, documento y contacto se corrigen en Terceros, no en el usuario.',
           'Desactivar un usuario le impide entrar pero conserva todo lo que registró.',
+          'El tipo de usuario sigue decidiendo cosas del negocio, como que el cajero necesite turno. Lo que ve y lo que puede hacer lo decide su perfil.',
+        ],
+      },
+      {
+        titulo: 'Ajustar los permisos de una sola persona',
+        pasos: [
+          'Abra el usuario (clic en la fila o en el lápiz) y vaya a la pestaña Permisos.',
+          'Lo que tiene por su perfil sale en azul claro. Clic en una casilla para darle algo que su perfil no tiene (azul fuerte) o quitarle algo que sí tiene (rojo). Otro clic la devuelve a lo del perfil.',
+          'En la pestaña Descuentos y acciones especiales: límites propios de descuento y de rebaja de precio (vacío = los del perfil) y acciones especiales ("Lo del perfil", Sí o No).',
+          'Guardar. La persona lo verá al recargar la aplicación.',
+        ],
+        notas: [
+          'Si varias personas necesitan el mismo ajuste, es mejor crear un perfil en Perfiles y Permisos.',
+        ],
+      },
+      {
+        titulo: 'Sesiones, clave y bloqueo',
+        pasos: [
+          'Desactivar un usuario, cambiarle la clave o cambiarle las sedes cierra sus sesiones abiertas: en su próxima acción tendrá que volver a entrar.',
+          'Para sacar a alguien sin cambiarle nada: abra el usuario → Cerrar sesiones (acción especial "Cerrar sesiones").',
+          'Cinco claves erradas seguidas bloquean el usuario 15 minutos. Pasado ese tiempo puede volver a intentarlo; cambiarle la clave también lo desbloquea.',
+          'La sesión dura 12 horas; después hay que volver a entrar.',
+        ],
+      },
+      {
+        titulo: 'Cambiar de sede',
+        pasos: [
+          'Arriba, en el selector de sede (el marcador del mapa), elija la sede donde va a trabajar.',
+          'La aplicación se recarga y todo lo que haga queda en esa sede.',
+        ],
+        notas: [
+          'Solo aparecen las sedes asignadas al usuario. Si su perfil no tiene "todas las sedes", tampoco ve ni opera en las demás.',
         ],
       },
     ],
     errores: [
+      {
+        mensaje: 'Usuario bloqueado por intentos fallidos. Intente después de las …',
+        causa: 'Se escribió mal la clave cinco veces seguidas.',
+        solucion: 'Espere 15 minutos, o pida a un administrador que le cambie la clave.',
+      },
+      {
+        mensaje: 'Su sesión se cerró. Vuelva a iniciar sesión',
+        causa: 'Le desactivaron el usuario, le cambiaron la clave o las sedes, o un administrador cerró sus sesiones.',
+        solucion: 'Entre de nuevo con su usuario y clave.',
+      },
+      {
+        mensaje: 'Esa sede no está asignada a su usuario',
+        causa: 'Se intentó cambiar a una sede que el usuario no tiene.',
+        solucion: 'Pida que le asignen la sede en Usuarios.',
+      },
       {
         mensaje: 'Debes asignar al menos una sucursal',
         causa: 'El usuario no tiene sucursal.',
@@ -358,6 +412,205 @@ export const POS_CAJA: ManualModulo[] = [
         mensaje: 'El username ya está en uso',
         causa: 'Otro usuario usa ese nombre de acceso.',
         solucion: 'Elija otro username.',
+      },
+      {
+        mensaje: 'No puede dar … en …: usted no lo tiene',
+        causa: 'Nadie puede dar a otro un permiso que él mismo no tiene.',
+        solucion: 'Pídale a un usuario con ese permiso (o con acceso total) que haga el cambio.',
+      },
+      {
+        mensaje: 'Solo un SUPER_ADMIN cambia los permisos de otro SUPER_ADMIN',
+        causa: 'Se intentó ajustar los permisos de un SUPER_ADMIN sin serlo.',
+        solucion: 'Pídale el cambio a un SUPER_ADMIN.',
+      },
+    ],
+  },
+  {
+    id: 'perfiles-permisos',
+    grupo: 'Caja',
+    titulo: 'Perfiles y Permisos',
+    icono: 'pi pi-lock',
+    rutas: ['/admin/perfiles'],
+    resumen: 'Qué pantallas ve cada usuario y qué puede hacer en cada una (ver, crear, editar, anular).',
+    secciones: [
+      {
+        titulo: 'Cómo funciona',
+        pasos: [
+          'La empresa manda: lo que la empresa no tiene activo no lo ve nadie, aunque el perfil lo tenga.',
+          'Cada usuario tiene un perfil; el perfil dice qué pantallas ve y si puede crear, editar o anular en cada una.',
+          'A una persona se le pueden hacer ajustes propios sobre su perfil (en el usuario, pestaña Permisos).',
+          'Lo que el perfil no permite desaparece del menú, y los botones Nuevo, Editar o Anular no aparecen si no tiene esa acción.',
+        ],
+        notas: [
+          'Toda empresa trae perfiles del sistema: Administrador (todo lo que la empresa tiene), Cajero, Vendedor, Supervisor y Básico. No se borran.',
+          'El Administrador no se edita: para un administrador con menos acceso (por ejemplo, sin Contabilidad), duplíquelo y quite lo que no quiera.',
+        ],
+      },
+      {
+        titulo: 'Límites de descuento y precio',
+        pasos: [
+          'En el perfil, sección Límites y sedes: descuento máximo y rebaja máxima de precio, en %. Vacío = sin límite.',
+          'El descuento cuenta por línea y el general se suma (10% + 10% = 19%). Las reglas de descuento automáticas no cuentan.',
+          'La rebaja de precio se mide contra el menor precio que tiene el producto (precios 1 a 3, presentación, listas y precios especiales), sin IVA.',
+          'Si una venta pasa el límite, el POS pide la autorización de un supervisor (alguien con la acción "Autorizar descuentos y precios"). Hay dos formas, y en ninguna el supervisor escribe su clave en el equipo del cajero:',
+          'Código: el supervisor toca el escudo de la barra superior (Autorizaciones) → Generar código, y le dicta al cajero los 6 dígitos. Vence en 2 minutos y sirve una sola vez.',
+          'Aprobación remota: el cajero toca "pedir aprobación remota"; al supervisor le aparece en la campana y en Autorizaciones, la aprueba o la rechaza, y el POS sigue solo.',
+          'Queda en la Bitácora quién autorizó, a quién y cuánto.',
+        ],
+        notas: [
+          'Quien autoriza también tiene sus límites: no puede autorizar más de lo que él mismo puede dar.',
+          'La autorización sirve para una sola venta y vence a los 10 minutos. Cinco códigos errados seguidos frenan al cajero unos minutos.',
+        ],
+      },
+      {
+        titulo: 'Sedes',
+        pasos: [
+          '"¿Todas las sedes?" Sí = ve y trabaja en todas. "Solo las suyas" = solo en las sedes asignadas al usuario (Usuarios → Sucursales).',
+        ],
+        notas: [
+          'Mientras el control del servidor está "observando", ver otra sede se anota en el Registro del control pero no se bloquea.',
+        ],
+      },
+      {
+        titulo: 'Acciones especiales',
+        pasos: [
+          'Acciones delicadas que van aparte de crear, editar o anular: reabrir un período contable, aprobar un reconteo, aprobar créditos, aprobar la nómina, vender a crédito, autorizar descuentos y cerrar sesiones de otros.',
+          'Cada una tiene tres opciones: "Igual que …" (la tiene quien tenga esa acción en la pantalla, como venía funcionando), Sí o No.',
+          'Ejemplo: un auxiliar contable que edita períodos pero no los reabre → Reabrir período = No.',
+        ],
+        notas: [
+          'Autorizar descuentos y precios no se hereda: por defecto la tienen el Administrador y el Supervisor.',
+        ],
+      },
+      {
+        titulo: 'Crear o editar un perfil',
+        pasos: [
+          'Caja → Perfiles y Permisos → Nuevo perfil (o clic en uno existente).',
+          'Nombre y descripción. "¿Acceso total?" Sí = todo lo que la empresa tenga, sin elegir pantalla por pantalla.',
+          'En la tabla, marque Ver, Crear, Editar o Anular por pantalla. Crear, editar o anular incluyen ver.',
+          'El círculo de cada módulo o grupo marca o quita esa columna completa de una vez. Use el buscador para encontrar una pantalla.',
+          'Guardar. Los usuarios con ese perfil lo verán al recargar.',
+        ],
+        notas: [
+          'Un perfil inactivo deja sin acceso a quienes lo tengan.',
+          'Solo se puede eliminar un perfil que no tenga usuarios.',
+          'La pestaña Historial de cambios muestra quién cambió qué permiso y cuándo.',
+        ],
+      },
+      {
+        titulo: 'Registro del control',
+        pasos: [
+          'El servidor revisa cada acción contra el perfil del usuario.',
+          'Mientras está en modo "observando" no bloquea: anota en esta pestaña lo que habría bloqueado. Revíselo unos días y ajuste los perfiles.',
+          'Cuando todo esté bien, se pasa a modo bloquear y el servidor responde "Sin permiso" a lo que el perfil no permite.',
+          '"Ruta sin submódulo asignado" es un pendiente técnico: avise a soporte. Mientras tanto esa acción no se bloquea.',
+        ],
+      },
+    ],
+    errores: [
+      {
+        mensaje: 'Sin permiso · No tiene permiso para … en …',
+        causa: 'El perfil del usuario no tiene esa acción en esa pantalla.',
+        solucion: 'Agréguela al perfil o como ajuste del usuario (pestaña Permisos del usuario).',
+      },
+      {
+        mensaje: 'Sin permiso · Su perfil no tiene acceso a "…"',
+        causa: 'Se intentó abrir una pantalla que el perfil no deja ver.',
+        solucion: 'Pida que le agreguen Ver en esa pantalla.',
+      },
+      {
+        mensaje: 'El perfil Administrador da todo lo que la empresa tiene y no se edita',
+        causa: 'Se intentó modificar el perfil Administrador.',
+        solucion: 'Duplíquelo y ajuste la copia.',
+      },
+      {
+        mensaje: 'Solo un usuario con acceso total puede …',
+        causa: 'Marcar, quitar o asignar un perfil de acceso total exige tener acceso total.',
+        solucion: 'Pídale el cambio a un administrador con acceso total.',
+      },
+      {
+        mensaje: 'El perfil lo tienen N usuario(s): asígneles otro perfil antes de eliminarlo',
+        causa: 'Hay usuarios con ese perfil.',
+        solucion: 'Cámbieles el perfil en Usuarios y vuelva a intentarlo.',
+      },
+      {
+        mensaje: 'La venta pasa su límite y necesita autorización de un supervisor',
+        causa: 'El descuento o la rebaja de precio superan el límite de su perfil.',
+        solucion: 'Pida a un supervisor el código de 6 dígitos (lo genera en Autorizaciones) o use "pedir aprobación remota".',
+      },
+      {
+        mensaje: 'El código no es válido o ya venció: pida otro',
+        causa: 'El código se escribió mal, ya se usó o pasaron más de 2 minutos.',
+        solucion: 'Pida al supervisor que genere otro código.',
+      },
+      {
+        mensaje: 'Ese tercero ya tiene el usuario …',
+        causa: 'Cada persona puede tener un solo usuario.',
+        solucion: 'Edite el usuario que ya existe en vez de crear otro.',
+      },
+      {
+        mensaje: 'Elija el tercero del usuario',
+        causa: 'El usuario debe estar ligado a una persona (tercero).',
+        solucion: 'Búsquela en Datos y acceso, o créela con "Nuevo tercero".',
+      },
+      {
+        mensaje: '… no tiene permiso para autorizar descuentos',
+        causa: 'Quien intentó autorizar no tiene la acción "Autorizar descuentos y precios".',
+        solucion: 'Que autorice otra persona, o darle esa acción en su perfil.',
+      },
+      {
+        mensaje: '… solo puede autorizar hasta N% de descuento',
+        causa: 'El supervisor también tiene límite y la venta lo pasa.',
+        solucion: 'Que autorice alguien con un límite mayor (o sin límite).',
+      },
+      {
+        mensaje: 'La autorización venció / ya se usó: pida una nueva',
+        causa: 'La autorización dura 10 minutos y sirve para una sola venta.',
+        solucion: 'Vuelva a cobrar: el POS pedirá otra autorización.',
+      },
+      {
+        mensaje: 'Su perfil solo le permite trabajar en sus sedes asignadas',
+        causa: 'El perfil no tiene "todas las sedes" y se pidió información de otra sede.',
+        solucion: 'Cambie a una de sus sedes, o pida que le asignen la sede.',
+      },
+      {
+        mensaje: 'No puede dar un límite de … mayor que el suyo',
+        causa: 'Nadie da a otro un límite más amplio que el propio.',
+        solucion: 'Que haga el cambio alguien con un límite mayor o sin límite.',
+      },
+    ],
+  },
+  {
+    id: 'bitacora',
+    grupo: 'Caja',
+    titulo: 'Bitácora',
+    icono: 'pi pi-history',
+    rutas: ['/admin/bitacora'],
+    resumen: 'Quién anuló, editó, autorizó o cambió qué y cuándo, con el antes y el después.',
+    secciones: [
+      {
+        titulo: 'Qué queda registrado',
+        pasos: [
+          'Toda edición y anulación de documentos y registros, y toda acción especial (reabrir período, aprobar…).',
+          'Con el antes y el después: cambios de precio o costo de productos, autorizaciones de descuento y ventas que las usaron, cambios de clave y de sedes de usuarios, desactivación y cierre de sesiones.',
+        ],
+        notas: [
+          '"Anotado por el servidor" = lo registró el control automático; trae la ruta y el documento, sin el antes y el después.',
+        ],
+      },
+      {
+        titulo: 'Buscar',
+        pasos: [
+          'Caja → Bitácora. Elija fechas, módulo y acción, o escriba un texto (nombre del producto, usuario…).',
+          'Clic en la flecha de una fila para ver el antes y el después.',
+        ],
+      },
+    ],
+    errores: [
+      {
+        mensaje: 'Sin permiso · No tiene permiso para ver en caja›bitacora',
+        causa: 'El perfil no tiene la pantalla Bitácora.',
+        solucion: 'Pida que le agreguen Ver en Caja › Bitácora.',
       },
     ],
   },

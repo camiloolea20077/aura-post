@@ -1,336 +1,369 @@
-<div class="page-container" *ngIf="!isLoading; else loadingTpl">
-  <!-- Header -->
-  <div class="form-header">
-    <div class="header-left">
-      <button
-        pButton
-        icon="pi pi-arrow-left"
-        class="btn-rojo p-button-sm"
-        label="Volver"
-        (click)="router.navigate(['/cotizaciones'])"
-      ></button>
-      <div class="header-title-area">
-        <h3 class="page-title">Editar Cotización #{{ cotizacion?.numero }}</h3>
-        <p-tag
-          *ngIf="cotizacion"
-          [value]="getEstadoLabel(cotizacion.estado)"
-          [severity]="getEstadoSeverity(cotizacion.estado)"
-          [rounded]="true"
-        />
+<p-confirmDialog />
+
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-file-edit"></i></span>
+        <div>
+          <h1 class="title">
+            {{ titulo }}
+            <p-tag
+              *ngIf="cotizacion"
+              [value]="etiquetaEstado(cotizacion.estado)"
+              [severity]="severidadEstado(cotizacion.estado)"
+              [rounded]="true"
+            />
+          </h1>
+          <p class="subtitle" *ngIf="!soloLectura">La cotización no mueve inventario ni contabilidad: es una propuesta de precio.</p>
+          <p class="subtitle" *ngIf="soloLectura">Solo se editan las cotizaciones pendientes.</p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button pButton type="button" icon="pi pi-arrow-left" label="Volver" class="p-button-text" (click)="volver()"></button>
       </div>
     </div>
-    <div class="header-actions">
-      <button
-        pButton
-        icon="pi pi-file-pdf"
-        label="Generar PDF"
-        class="p-button-outlined"
-        style="color: #ef4444; border-color: #ef4444"
-        [loading]="generandoPDF"
-        [disabled]="!cotizacion"
-        (click)="generarPDF()"
-      ></button>
-      <button
-        pButton
-        icon="pi pi-check"
-        label="Guardar cambios"
-        class="btn-verde"
-        [loading]="isSaving"
-        [disabled]="!puedeEditar"
-        (click)="guardar()"
-      ></button>
-    </div>
-  </div>
 
-  <!-- Alerta si no editable -->
-  <div class="alert alert-warning" *ngIf="!puedeEditar && cotizacion">
-    <i class="pi pi-exclamation-triangle"></i>
-    <span>
-      Esta cotización no se puede editar porque ya está
-      <strong>{{ getEstadoLabel(cotizacion.estado) | lowercase }}</strong
-      >.
-    </span>
-  </div>
+    <div class="cargando" *ngIf="cargando"><i class="pi pi-spin pi-spinner"></i> Cargando…</div>
 
-  <!-- Datos básicos -->
-  <div class="card form-card">
-    <h4 class="section-title">Datos del cliente</h4>
-    <div class="form-grid">
-      <div class="form-field">
-        <label class="field-label">Cliente</label>
-        <app-tercero-autocomplete
-          [terceroId]="terceroSeleccionado?.id ?? null"
-          [label]="terceroLabel"
-          [disabled]="!puedeEditar"
-          rol="CLIENTE"
-          placeholder="Buscar cliente..."
-          (seleccionado)="onCliente($event)"
-        />
-      </div>
+    <ng-container *ngIf="!cargando">
+      <!-- ── Información del tercero ─────────────────────────────── -->
+      <section class="seccion">
+        <header class="seccion__head">
+          <i class="pi pi-user"></i>
+          <div>
+            <h3>Información del tercero</h3>
+            <p>Cliente al que se le cotiza. Sin cliente, la cotización queda para consumidor final.</p>
+          </div>
+        </header>
 
-      <div class="form-field">
-        <label class="field-label">Días de vigencia</label>
-        <p-inputNumber
-          [(ngModel)]="diasVigencia"
-          [min]="1"
-          [max]="365"
-          [disabled]="!puedeEditar"
-          placeholder="30"
-          styleClass="w-full"
-        />
-        <small class="field-hint">
-          Vence el {{ formatFecha(fechaVencimiento) }}
-        </small>
-      </div>
+        <div class="buscar-tercero">
+          <div class="campo buscar-tercero__campo">
+            <label>Cliente</label>
+            <app-tercero-autocomplete
+              [(ngModel)]="clienteId"
+              [label]="clienteLabel"
+              rol="CLIENTE"
+              appendTo="body"
+              placeholder="Buscar por NIT, documento o nombre…"
+              [disabled]="soloLectura"
+              (ngModelChange)="onCliente()"
+            />
+          </div>
+          <button *ngIf="!soloLectura" pButton type="button" icon="pi pi-plus" label="Crear tercero" class="p-button-outlined" (click)="crearTercero()"></button>
+          <button
+            *ngIf="clienteId"
+            pButton
+            type="button"
+            icon="pi pi-pencil"
+            label="Editar tercero"
+            class="p-button-text"
+            (click)="editarTercero()"
+          ></button>
+        </div>
 
-      <div class="form-field span-full">
-        <label class="field-label">Observaciones</label>
+        <div class="grid grid--5" *ngIf="tercero; else sinTercero">
+          <div class="campo">
+            <label>Tipo de documento</label>
+            <input pInputText [value]="tercero.tipoDocumento" readonly />
+          </div>
+          <div class="campo">
+            <label>NIT / Documento</label>
+            <div class="doc-dv">
+              <input pInputText [value]="tercero.numeroDocumento" readonly />
+              <input pInputText class="dv" [value]="tercero.dv ?? ''" readonly placeholder="DV" />
+            </div>
+          </div>
+          <div class="campo campo--doble">
+            <label>Razón social / Nombre</label>
+            <input pInputText [value]="tercero.nombre" readonly />
+          </div>
+          <div class="campo">
+            <label>Nombre comercial</label>
+            <input pInputText [value]="tercero.nombreComercial ?? ''" readonly />
+          </div>
+
+          <div class="campo">
+            <label>Correo electrónico</label>
+            <input pInputText [value]="tercero.email ?? ''" readonly />
+          </div>
+          <div class="campo">
+            <label>Teléfono / Celular</label>
+            <input pInputText [value]="tercero.telefono ?? ''" readonly />
+          </div>
+          <div class="campo campo--doble">
+            <label>Dirección</label>
+            <input pInputText [value]="tercero.direccion ?? ''" readonly />
+          </div>
+          <div class="campo">
+            <label>Ciudad / Municipio</label>
+            <input pInputText [value]="tercero.ciudad ?? ''" readonly />
+          </div>
+
+          <div class="campo">
+            <label>Departamento</label>
+            <input pInputText [value]="tercero.departamento ?? ''" readonly />
+          </div>
+          <div class="campo">
+            <label>Régimen fiscal</label>
+            <input pInputText [value]="tercero.regimen ?? ''" readonly />
+          </div>
+          <div class="campo campo--doble">
+            <label>Responsabilidad fiscal</label>
+            <input pInputText [value]="tercero.responsabilidad ?? ''" readonly />
+          </div>
+        </div>
+        <ng-template #sinTercero>
+          <p class="vacio">Busque el cliente o créelo: sus datos aparecen aquí.</p>
+        </ng-template>
+      </section>
+
+      <!-- ── Datos de la cotización ──────────────────────────────── -->
+      <section class="seccion">
+        <header class="seccion__head">
+          <i class="pi pi-file-edit"></i>
+          <div>
+            <h3>Datos de la cotización</h3>
+            <p>Vigencia y precios de la propuesta.</p>
+          </div>
+        </header>
+        <div class="grid">
+          <div class="campo">
+            <label>Fecha</label>
+            <p-calendar [ngModel]="fecha" dateFormat="dd/mm/yy" [showIcon]="true" [disabled]="true" styleClass="w-full" />
+          </div>
+          <div class="campo">
+            <label>Vigencia</label>
+            <p-inputNumber
+              [(ngModel)]="diasVigencia"
+              [min]="1"
+              [max]="365"
+              suffix=" días"
+              [disabled]="soloLectura"
+              inputStyleClass="w-full"
+              (onInput)="diasVigencia = +($event.value ?? 1); onVigencia()"
+            />
+          </div>
+          <div class="campo">
+            <label>Válida hasta</label>
+            <p-calendar
+              [(ngModel)]="vencimiento"
+              dateFormat="dd/mm/yy"
+              [showIcon]="true"
+              [minDate]="hoy"
+              [disabled]="soloLectura"
+              appendTo="body"
+              styleClass="w-full"
+              (ngModelChange)="onVencimiento()"
+            />
+          </div>
+          <div class="campo">
+            <label>Lista de precios</label>
+            <p-dropdown
+              [options]="listasOpts"
+              [(ngModel)]="listaPreciosId"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Precio del producto"
+              [showClear]="true"
+              [disabled]="soloLectura"
+              styleClass="w-full"
+              appendTo="body"
+              (onChange)="onLista()"
+            />
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Productos y totales ─────────────────────────────────── -->
+      <section class="seccion productos">
+        <div class="productos__lineas">
+          <header class="seccion__head">
+            <i class="pi pi-box"></i>
+            <div>
+              <h3>Productos y servicios</h3>
+              <p>Agregue los productos o servicios que se cotizan.</p>
+            </div>
+          </header>
+          <div class="tabla-scroll">
+            <table class="lineas">
+              <thead>
+                <tr>
+                  <th class="col-n">#</th>
+                  <th class="col-producto">Producto / Servicio</th>
+                  <th class="col-desc">Descripción</th>
+                  <th class="col-cant">Cant.</th>
+                  <th class="col-precio">Precio (sin IVA)</th>
+                  <th class="col-pct">Desc.</th>
+                  <th class="col-pct">IVA</th>
+                  <th class="col-total text-right">Total</th>
+                  <th class="col-x"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let l of lineas; let i = index">
+                  <td class="n">{{ i + 1 }}</td>
+                  <td>
+                    <app-producto-autocomplete
+                      [productoId]="l.productoId"
+                      [label]="l.productoNombre"
+                      appendTo="body"
+                      [disabled]="soloLectura"
+                      (seleccionado)="onProducto(l, $event)"
+                    />
+                    <small class="sub" *ngIf="l.productoSku">Cod: {{ l.productoSku }}</small>
+                  </td>
+                  <td>
+                    <input
+                      pInputText
+                      class="w-full"
+                      [(ngModel)]="l.descripcion"
+                      [readonly]="soloLectura"
+                      maxlength="500"
+                      [placeholder]="l.productoNombre ?? 'Texto en la cotización'"
+                    />
+                  </td>
+                  <td>
+                    <p-inputNumber
+                      [(ngModel)]="l.cantidad"
+                      [min]="0"
+                      [maxFractionDigits]="4"
+                      [suffix]="l.unidad ? ' ' + l.unidad : ''"
+                      [disabled]="soloLectura"
+                      inputStyleClass="num"
+                    />
+                  </td>
+                  <td>
+                    <p-inputNumber
+                      [(ngModel)]="l.precioUnitario"
+                      [min]="0"
+                      mode="currency"
+                      currency="COP"
+                      locale="es-CO"
+                      [maxFractionDigits]="2"
+                      [disabled]="soloLectura"
+                      inputStyleClass="num"
+                    />
+                  </td>
+                  <td>
+                    <p-inputNumber [(ngModel)]="l.descuentoPct" [min]="0" [max]="100" [maxFractionDigits]="2" suffix=" %" [disabled]="soloLectura" inputStyleClass="num" />
+                  </td>
+                  <td>
+                    <p-inputNumber [(ngModel)]="l.impuestoPorcentaje" [min]="0" [max]="100" [maxFractionDigits]="2" suffix=" %" [disabled]="soloLectura" inputStyleClass="num" />
+                  </td>
+                  <td class="text-right total-linea">{{ cop(totalLinea(l)) }}</td>
+                  <td>
+                    <button
+                      *ngIf="!soloLectura"
+                      pButton
+                      type="button"
+                      icon="pi pi-trash"
+                      class="p-button-text p-button-danger p-button-sm"
+                      pTooltip="Quitar línea"
+                      (click)="quitarLinea(i)"
+                    ></button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <button *ngIf="!soloLectura" pButton type="button" icon="pi pi-plus" label="Agregar línea" class="p-button-outlined p-button-sm" (click)="agregarLinea()"></button>
+        </div>
+
+        <aside class="totales">
+          <header class="seccion__head">
+            <i class="pi pi-calculator"></i>
+            <div>
+              <h3>Totales de la cotización</h3>
+            </div>
+          </header>
+          <div class="totales__fila"><span>Subtotal</span><strong>{{ cop(subtotal) }}</strong></div>
+          <div class="totales__fila"><span>Descuentos</span><strong>{{ cop(descuentos) }}</strong></div>
+          <div class="totales__fila" *ngFor="let iva of ivas">
+            <span>IVA {{ iva.tarifa }}%</span><strong>{{ cop(iva.valor) }}</strong>
+          </div>
+          <div class="totales__fila" *ngIf="!ivas.length"><span>IVA</span><strong>{{ cop(0) }}</strong></div>
+          <div class="totales__total"><span>TOTAL</span><strong>{{ cop(total) }}</strong></div>
+        </aside>
+      </section>
+
+      <!-- ── Observaciones ───────────────────────────────────────── -->
+      <section class="seccion">
+        <header class="seccion__head">
+          <i class="pi pi-pencil"></i>
+          <div>
+            <h3>Observaciones</h3>
+            <p>Condiciones, tiempos de entrega o notas para el cliente (opcional).</p>
+          </div>
+        </header>
         <textarea
-          pTextarea
+          pInputTextarea
           [(ngModel)]="observaciones"
-          [rows]="2"
-          [disabled]="!puedeEditar"
-          placeholder="Notas adicionales..."
+          [readonly]="soloLectura"
+          rows="3"
+          [maxlength]="maxNotas"
           class="w-full"
+          placeholder="Aparecen en la cotización (opcional)"
         ></textarea>
-      </div>
-    </div>
-  </div>
+        <div class="contador">{{ observaciones.length }} / {{ maxNotas }}</div>
+      </section>
 
-  <!-- Productos -->
-  <div class="card form-card">
-    <div class="section-header">
-      <h4 class="section-title">Productos</h4>
-      <div class="section-actions">
+      <div class="card-footer acciones">
+        <ng-container *ngIf="cotizacion?.estado === 'PENDIENTE'">
+          <button
+            *appPuede="'ventas.cotizaciones:ANULAR'"
+            pButton
+            type="button"
+            icon="pi pi-ban"
+            label="Anular"
+            class="p-button-text p-button-danger"
+            (click)="anular()"
+          ></button>
+        </ng-container>
+        <span class="espacio"></span>
+        <button *ngIf="cotizacion" pButton type="button" icon="pi pi-file-pdf" label="Descargar PDF" class="p-button-outlined" (click)="descargarPdf()"></button>
+        <ng-container *ngIf="puedeConvertir">
+          <button
+            *appPuede="'ventas.facturas:CREAR'"
+            pButton
+            type="button"
+            icon="pi pi-file"
+            [label]="cotizacion?.estado === 'PARCIAL' ? 'Facturar lo pendiente' : 'Facturar'"
+            class="p-button-outlined"
+            (click)="facturar()"
+          ></button>
+        </ng-container>
         <button
+          *ngIf="puedeConvertir"
           pButton
-          icon="pi pi-plus"
-          label="Agregar producto"
-          class="btn-verde"
-          [disabled]="!puedeEditar"
-          (click)="agregarLinea()"
+          type="button"
+          icon="pi pi-shopping-cart"
+          [label]="cotizacion?.estado === 'PARCIAL' ? 'Vender lo pendiente' : 'Convertir a venta'"
+          class="p-button-outlined"
+          (click)="convertirAVenta()"
+        ></button>
+        <button
+          *ngIf="!soloLectura"
+          pButton
+          type="button"
+          icon="pi pi-save"
+          [label]="id ? 'Guardar cambios' : 'Crear cotización'"
+          class="btn-aura"
+          [disabled]="guardando"
+          (click)="guardar()"
         ></button>
       </div>
-    </div>
-
-    <!-- Tabla de líneas -->
-    <div class="lines-table" *ngIf="lineas.length > 0">
-      <table>
-        <thead>
-          <tr>
-            <th style="width: 40px"></th>
-            <th style="min-width: 180px">Producto</th>
-            <th style="width: 90px">Cantidad</th>
-            <th style="width: 120px">Precio Unit.</th>
-            <th style="width: 120px">Descuento $</th>
-            <th style="width: 60px">IVA</th>
-            <th style="width: 140px" class="text-right">Subtotal</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let linea of lineas; let idx = index; trackBy: trackById">
-            <td class="text-center">
-              <button
-                pButton
-                icon="pi pi-trash"
-                class="p-button-text p-button-danger p-button-sm"
-                [disabled]="!puedeEditar"
-                (click)="eliminarLinea(idx)"
-              ></button>
-            </td>
-            <td>
-              <div
-                class="prod-selector"
-                [class.sin-seleccion]="!linea.productoId"
-                [class.clickable]="puedeEditar"
-                (click)="puedeEditar && openProductDialog(idx)"
-              >
-                <span *ngIf="!linea.productoId" class="placeholder">
-                  Seleccionar producto...
-                </span>
-                <div *ngIf="linea.productoId" class="prod-info">
-                  <div class="prod-nombre">{{ linea.productoNombre }}</div>
-                  <div class="prod-sku" *ngIf="linea.productoSku">
-                    {{ linea.productoSku }}
-                  </div>
-                </div>
-                <i
-                  *ngIf="linea.productoId && puedeEditar"
-                  class="pi pi-search prod-search-icon"
-                ></i>
-              </div>
-            </td>
-            <td>
-              <p-inputNumber
-                [(ngModel)]="linea.cantidad"
-                [min]="1"
-                [disabled]="!puedeEditar"
-                (ngModelChange)="onCantidadChange(linea)"
-                mode="decimal"
-                [minFractionDigits]="0"
-                [maxFractionDigits]="4"
-                styleClass="w-full"
-              />
-            </td>
-            <td>
-              <p-inputNumber
-                [(ngModel)]="linea.precioUnitario"
-                mode="currency"
-                currency="COP"
-                locale="es-CO"
-                [min]="0"
-                (ngModelChange)="onPrecioChange(linea)"
-                [disabled]="!puedeEditar"
-                styleClass="w-full"
-              />
-            </td>
-            <td>
-              <p-inputNumber
-                [(ngModel)]="linea.descuentoValor"
-                mode="currency"
-                currency="COP"
-                locale="es-CO"
-                [min]="0"
-                (ngModelChange)="onDescuentoChange(linea)"
-                [disabled]="!puedeEditar"
-                styleClass="w-full"
-              />
-            </td>
-            <td class="text-center">
-              <span class="iva-pct">{{ linea.ivaPorcentaje }}%</span>
-            </td>
-            <td class="text-right">
-              <span class="subtotal">{{ formatCOP(linea.subtotal) }}</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Empty state -->
-    <div class="empty-lines" *ngIf="lineas.length === 0">
-      <i class="pi pi-shopping-cart"></i>
-      <p>Agrega productos haciendo click en "Agregar producto".</p>
-      <button
-        pButton
-        label="Agregar primer producto"
-        class="btn-verde"
-        [disabled]="!puedeEditar"
-        (click)="agregarLinea()"
-      ></button>
-    </div>
-
-    <!-- Totales -->
-    <div class="totals-section" *ngIf="lineas.length > 0">
-      <div class="totals-row">
-        <span>Subtotal</span>
-        <span class="mono">{{ formatCOP(subtotal) }}</span>
-      </div>
-      <div class="totals-row">
-        <span>Descuento</span>
-        <span class="mono text-danger">-{{ formatCOP(descuento) }}</span>
-      </div>
-      <div class="totals-row">
-        <span>IVA</span>
-        <span class="mono">{{ formatCOP(iva) }}</span>
-      </div>
-      <div class="totals-row total-final">
-        <span>Total</span>
-        <span class="mono">{{ formatCOP(total) }}</span>
-      </div>
-    </div>
+    </ng-container>
   </div>
 </div>
 
-<!-- Loading -->
-<ng-template #loadingTpl>
-  <div class="page-container">
-    <div class="card">
-      <p-skeleton width="200px" height="1.5rem" />
-      <p-skeleton width="100px" height="1rem" class="mt-2" />
-    </div>
-  </div>
-</ng-template>
-
-<!-- Modal selector producto -->
-<p-dialog
-  header="Seleccionar producto"
-  [(visible)]="showProductDialog"
-  [modal]="true"
-  [style]="{ width: '800px' }"
-  [draggable]="false"
->
-  <div class="dialog-search">
-    <span class="p-input-icon-left">
-      <p-iconfield>
-        <p-inputicon class="pi pi-search" />
-        <input
-          pInputText
-          [(ngModel)]="dialogSearch"
-          (keyup.enter)="onDialogSearch()"
-        />
-      </p-iconfield>
-    </span>
-    <button pButton label="Buscar" (click)="onDialogSearch()"></button>
-  </div>
-
-  <p-table
-    [value]="dialogItems"
-    [lazy]="true"
-    (onLazyLoad)="loadDialogTable($event)"
-    [paginator]="true"
-    [rows]="10"
-    [totalRecords]="dialogTotal"
-    [loading]="dialogLoading"
-    [rowsPerPageOptions]="[10, 20, 50]"
-    [showGridlines]="true"
-    selectionMode="single"
-    (onRowSelect)="selectProductFromDialog($event.data)"
-  >
-    <ng-template pTemplate="header">
-      <tr>
-        <th style="width: 60px">ID</th>
-        <th>Nombre</th>
-        <th style="width: 120px">SKU</th>
-        <th style="width: 100px">Precio</th>
-        <th style="width: 80px">IVA</th>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="body" let-item>
-      <tr
-        [class.selected]="
-          lineas[dialogLineIdx] && item.id === lineas[dialogLineIdx].productoId
-        "
-        (click)="selectProductFromDialog(item)"
-        style="cursor: pointer"
-      >
-        <td>
-          <span class="id-badge">#{{ item.id }}</span>
-        </td>
-        <td>{{ item.nombre }}</td>
-        <td>{{ item.sku ?? "—" }}</td>
-        <td>{{ formatCOP(item.precio ?? 0) }}</td>
-        <td>{{ getIvaPorcentaje(item) }}%</td>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="emptymessage">
-      <tr>
-        <td colspan="5">
-          <div class="empty-state">
-            <i class="pi pi-search"></i>
-            <p>
-              {{
-                dialogSearch
-                  ? 'Sin resultados para "' + dialogSearch + '"'
-                  : "Escribe para buscar productos"
-              }}
-            </p>
-          </div>
-        </td>
-      </tr>
-    </ng-template>
-  </p-table>
-</p-dialog>
-
-
-<p-toast />
+@if (mostrarFormTercero) {
+  <app-form-tercero
+    [displayModal]="mostrarFormTercero"
+    [slug]="terceroEditarId ? 'edit' : 'create'"
+    [terceroId]="terceroEditarId"
+    [soloCliente]="!terceroEditarId"
+    (terceroSaved)="onTerceroGuardado($event)"
+    (modalClosed)="mostrarFormTercero = false"
+  />
+}

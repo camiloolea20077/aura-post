@@ -12,7 +12,7 @@
         </div>
       </div>
       <div class="card-head__actions">
-        <button
+        <button *appPuede="'recursos-humanos.proyectos-y-frentes:CREAR'"
           pButton
           type="button"
           label="Nuevo proyecto"
@@ -86,14 +86,14 @@
               pTooltip="Frentes"
               (click)="verFrentes(p)"
             ></button>
-            <button
+            <button *appPuede="'recursos-humanos.proyectos-y-frentes:EDITAR'"
               pButton
               icon="pi pi-pencil"
               class="p-button-text p-button-sm p-button-rounded"
               pTooltip="Editar"
               (click)="editar(p)"
             ></button>
-            <button
+            <button *appPuede="'recursos-humanos.proyectos-y-frentes:ANULAR'"
               pButton
               icon="pi pi-trash"
               class="p-button-text p-button-danger p-button-sm p-button-rounded"

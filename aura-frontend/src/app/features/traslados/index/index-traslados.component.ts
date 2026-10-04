@@ -17,7 +17,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
 import { AlertService } from '../../../shared/pipes/alert.service';
-import { FormTrasladoComponent } from '../form/form-traslado.component';
+import { Router } from '@angular/router';
 import { DetalleTrasladoComponent } from '../detalle/detalle-traslado.component';
 import {
   TrasladoModel,
@@ -25,6 +25,7 @@ import {
 } from '../../../core/models/traslado.model';
 import { TrasladoService } from '../../../core/services/traslado.service';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 type TagSeverity =
   | 'success'
   | 'secondary'
@@ -39,6 +40,7 @@ type TagSeverity =
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     ButtonModule,
@@ -48,7 +50,7 @@ type TagSeverity =
     TooltipModule,
     ConfirmDialogModule,
     ToastModule,
-    FormTrasladoComponent,
+
     DetalleTrasladoComponent,
   ],
   providers: [ConfirmationService, MessageService],
@@ -63,12 +65,12 @@ export class IndexTrasladosComponent implements OnInit {
   page = 0;
   pageSize = 10;
 
-  showForm = false;
   showDetalle = false;
   trasladoDetalle: TrasladoModel | null = null;
   loadingDetalle = false;
 
   constructor(
+    private readonly router: Router,
     private readonly service: TrasladoService,
     private readonly alert: AlertService,
     private readonly confirm: ConfirmationService,
@@ -110,12 +112,9 @@ export class IndexTrasladosComponent implements OnInit {
     this.load();
   }
 
+  // El traslado se crea en su propia página (formulario plano).
   nuevo(): void {
-    this.showForm = true;
-  }
-
-  onSaved(): void {
-    this.load();
+    this.router.navigate(['/traslados/nuevo']);
   }
 
   async verDetalle(t: TrasladoTableModel): Promise<void> {

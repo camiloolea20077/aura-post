@@ -169,7 +169,7 @@
               tooltipPosition="top"
               (click)="abrirEdicion(item)"
             ></button>
-            <button
+            <button *appPuede="'inventario.lotes:ANULAR'"
               pButton
               type="button"
               icon="pi pi-trash"

@@ -15,7 +15,7 @@
         </div>
       </div>
       <div class="card-head__actions">
-        <button
+        <button *appPuede="'terceros-y-sucursales.sucursales:CREAR'"
           pButton
           type="button"
           icon="pi pi-plus"
@@ -88,7 +88,7 @@
             />
           </td>
           <td style="text-align: center" (click)="$event.stopPropagation()">
-            <button
+            <button *appPuede="'terceros-y-sucursales.sucursales:EDITAR'"
               pButton
               icon="pi pi-pencil"
               class="p-button-text p-button-sm"
@@ -96,6 +96,7 @@
               tooltipPosition="left"
               (click)="editar(s.id)"
             ></button>
+            <ng-container *appPuede="'terceros-y-sucursales.sucursales:ANULAR'">
             <button
               pButton
               icon="pi pi-ban"
@@ -105,6 +106,7 @@
               *ngIf="s.activa"
               (click)="confirmarEliminar(s, $event)"
             ></button>
+            </ng-container>
           </td>
         </tr>
       </ng-template>

@@ -182,22 +182,19 @@
             </div>
             <div class="campo campo--ancho">
               <label>Se pagó con / se le debe a</label>
-              <p-dropdown
+              <app-cuenta-autocomplete
+                [opciones]="cuentasContrapartida"
                 [(ngModel)]="adicion.cuentaContrapartidaId"
-                [options]="cuentasContrapartida"
-                optionLabel="label"
-                optionValue="value"
-                [filter]="true"
-                filterBy="label"
                 placeholder="Caja, banco o proveedores"
                 appendTo="body"
+                [showClear]="false"
               />
             </div>
             <div class="campo campo--ancho">
               <label>Proveedor</label>
               <app-tercero-autocomplete [(ngModel)]="adicion.terceroId" rol="PROVEEDOR" appendTo="body" />
             </div>
-            <button
+            <button *appPuede="'contabilidad.activos-fijos:CREAR'"
               pButton
               type="button"
               label="Registrar adición"
@@ -269,7 +266,7 @@
               <label>Próximo</label>
               <p-calendar [(ngModel)]="mantProximo" dateFormat="yy-mm-dd" [showIcon]="true" [showClear]="true" appendTo="body" />
             </div>
-            <button
+            <button *appPuede="'contabilidad.activos-fijos:CREAR'"
               pButton
               type="button"
               label="Registrar"
@@ -300,7 +297,7 @@
                 <td class="text-right">{{ m.costo | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
                 <td>{{ m.proximo | date: "dd/MM/yyyy" }}</td>
                 <td>
-                  <button
+                  <button *appPuede="'contabilidad.activos-fijos:ANULAR'"
                     pButton
                     icon="pi pi-trash"
                     class="p-button-text p-button-sm p-button-danger"

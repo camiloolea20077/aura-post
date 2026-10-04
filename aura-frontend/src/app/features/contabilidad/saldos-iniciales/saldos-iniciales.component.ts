@@ -23,6 +23,7 @@ import {
 import { aFechaLocal } from '../../../shared/utils/fecha.util';
 import { FuenteSaldoInicial } from '../../../core/models/contador.model';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 interface LineaSaldo {
   cuentaId: number | null;
   /** Saldo en la naturaleza de la cuenta; negativo = al lado contrario. */
@@ -43,11 +44,15 @@ const FUENTES: { value: FuenteSaldoInicial; label: string; icon: string }[] = [
   { value: 'PROVEEDORES', label: 'Proveedores', icon: 'pi pi-truck' },
 ];
 
+import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-autocomplete/cuenta-autocomplete.component';
+
 @Component({
   selector: 'app-saldos-iniciales',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CuentaAutocompleteComponent,
+    PuedeDirective,
     CommonModule, FormsModule,
     ButtonModule, TableModule, DropdownModule, InputTextModule, InputNumberModule, TagModule,
     ConfirmDialogModule, CalendarModule,

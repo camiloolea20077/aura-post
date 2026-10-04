@@ -11,6 +11,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
 import { SidebarModule } from 'primeng/sidebar';
+import { DropdownModule } from 'primeng/dropdown';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
@@ -22,11 +23,15 @@ import {
 } from '../../../../core/models/inventario.model';
 import { InventarioService } from '../../../../core/services/inventario.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
+import { SedeActualService } from '../../../../core/services/sede-actual.service';
+import { BodegaService } from '../../../../core/services/bodega.service';
 
+import { PuedeDirective } from '../../../../shared/directives/puede.directive';
 @Component({
   selector: 'app-index-inventario',
   standalone: true,
   imports: [
+    PuedeDirective,
     StockPresentacionPipe,
     CommonModule,
     FormsModule,
@@ -39,6 +44,7 @@ import { AlertService } from '../../../../shared/pipes/alert.service';
     TooltipModule,
     SkeletonModule,
     SidebarModule,
+    DropdownModule,
     FormInventarioComponent,
     HistorialProductoComponent,
   ],
@@ -65,6 +71,14 @@ export class IndexInventarioComponent implements OnInit {
   public searchQuery = '';
   public lastLazyEvent!: TableLazyLoadEvent;
 
+  // Sede y bodega: por defecto la sede en la que se trabaja (un catálogo por
+  // empresa, la existencia es de cada sede y bodega).
+  public sedesOpts: { id: number | null; nombre: string }[] = [];
+  public bodegasOpts: { id: number | null; nombre: string }[] = [];
+  public sedeId: number | null = null;
+  public bodegaId: number | null = null;
+  private filtrosListos = false;
+
   // Panel alertas stock bajo
   public showAlertSidebar = false;
   public stockBajoItems: InventarioTableModel[] = [];
@@ -74,12 +88,55 @@ export class IndexInventarioComponent implements OnInit {
     private readonly inventarioService: InventarioService,
     private readonly alertService: AlertService,
     private readonly confirmationService: ConfirmationService,
+    private readonly sedeActual: SedeActualService,
+    private readonly bodegaService: BodegaService,
   ) {}
 
-  ngOnInit(): void {}
+  async ngOnInit(): Promise<void> {
+    const [{ sedes, todas }, actual] = await Promise.all([
+      this.sedeActual.opciones(),
+      this.sedeActual.id(),
+    ]);
+    this.sedesOpts = [
+      ...(todas ? [{ id: null, nombre: 'Todas las sedes' }] : []),
+      ...sedes.map((s) => ({ id: s.id, nombre: s.nombre })),
+    ];
+    this.sedeId = sedes.some((s) => s.id === actual) ? actual : (sedes[0]?.id ?? null);
+    await this.cargarBodegas();
+    this.filtrosListos = true;
+    this.reloadTable();
+  }
+
+  async onSede(): Promise<void> {
+    this.bodegaId = null;
+    await this.cargarBodegas();
+    this.onSearch();
+  }
+
+  onBodega(): void {
+    this.onSearch();
+  }
+
+  private async cargarBodegas(): Promise<void> {
+    if (!this.sedeId) {
+      this.bodegasOpts = [];
+      return;
+    }
+    try {
+      const res = await lastValueFrom(this.bodegaService.list({ sucursalId: this.sedeId }));
+      this.bodegasOpts = [
+        { id: null, nombre: 'Todas las bodegas' },
+        ...(res?.data ?? []).map((b) => ({ id: b.id, nombre: b.nombre })),
+      ];
+    } catch {
+      this.bodegasOpts = [];
+    }
+  }
 
   async loadTable(event: TableLazyLoadEvent): Promise<void> {
     this.lastLazyEvent = event;
+    // Primero la sede de trabajo; la tabla carga cuando ya se sabe cuál es.
+    if (!this.filtrosListos) return;
     this.loadingTable = true;
     const page =
       event.first != null && event.rows
@@ -95,6 +152,7 @@ export class IndexInventarioComponent implements OnInit {
       search: this.searchQuery || null,
       order_by: sortField ?? 'i.id',
       order: event.sortOrder === 1 ? 'ASC' : 'DESC',
+      params: { sucursalId: this.sedeId, bodegaId: this.bodegaId },
     };
 
     try {

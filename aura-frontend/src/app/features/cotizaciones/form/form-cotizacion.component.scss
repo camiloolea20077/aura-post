@@ -1,357 +1,350 @@
-$indigo: #6366f1;
-$red: #ef4444;
-$orange: #f97316;
-$emerald: #10b981;
-$border: #e2e8f0;
-$text: #1e293b;
-$muted: #94a3b8;
-$bg: #f8fafc;
-$card: #ffffff;
-$font: "Outfit", sans-serif;
-$mono: "JetBrains Mono", monospace;
+// Página plana en UNA card, con secciones divididas (estándar AURA).
 
-.form-header {
+:host {
+  display: block;
+}
+
+.title {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.5rem;
-
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .header-title-area {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  .header-actions {
-    display: flex;
-    gap: 0.5rem;
-  }
-}
-
-.page-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: $text;
-  margin: 0;
-}
-
-.alert {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem 1.25rem;
-  border-radius: 12px;
-  margin-bottom: 1.5rem;
-  font-size: 0.9rem;
-
-  &.alert-warning {
-    background: #fef3c7;
-    color: #92400e;
-    border: 1px solid #fcd34d;
-  }
-}
-
-.form-card {
-  background: $card;
-  border: 1.5px solid $border;
-  border-radius: 16px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.section-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: $text;
-  margin: 0 0 1.25rem 0;
-}
-
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.25rem;
-
-  .section-title {
-    margin: 0;
-  }
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.25rem;
-}
-
-.form-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  position: relative;
-
-  &.span-full {
-    grid-column: span 2;
-  }
-}
-
-.field-label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: $muted;
-}
-
-.field-hint {
-  font-size: 0.75rem;
-  color: $muted;
-}
-
-.clear-tercero,
-.btn-buscar-tercero {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 2;
-}
-
-.btn-buscar-tercero {
-  color: $indigo;
-}
-
-.suggestion-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-
-  .suggestion-nombre {
-    font-weight: 500;
-  }
-
-  .suggestion-doc {
-    font-size: 0.8rem;
-    color: $muted;
-  }
-}
-
-.lines-table {
-  margin-top: 1rem;
-  border: 1.5px solid $border;
-  border-radius: 12px;
-  overflow: hidden;
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.85rem;
-  }
-
-  thead {
-    background: $bg;
-
-    th {
-      padding: 0.75rem 0.5rem;
-      font-weight: 600;
-      color: $muted;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-      border-bottom: 1.5px solid $border;
-    }
-  }
-
-  tbody {
-    tr {
-      border-bottom: 1px solid $border;
-
-      &:last-child {
-        border-bottom: none;
-      }
-
-      &:hover {
-        background: #fafbff;
-      }
-    }
-
-    td {
-      padding: 0.5rem;
-      vertical-align: middle;
-    }
-  }
-}
-
-.prod-selector {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.5rem 0.75rem;
-  border: 1.5px solid $border;
-  border-radius: 8px;
-  min-height: 38px;
-  background: white;
-  cursor: default;
-
-  &.sin-seleccion {
-    border-style: dashed;
-    background: $bg;
-
-    .placeholder {
-      color: $muted;
-      font-style: italic;
-    }
-  }
-
-  &.clickable {
-    cursor: pointer;
-
-    &:hover {
-      border-color: $indigo;
-    }
-  }
-
-  .prod-info {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-    flex: 1;
-    min-width: 0;
-
-    .prod-nombre {
-      font-weight: 500;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .prod-sku {
-      font-size: 0.75rem;
-      color: $muted;
-      font-family: $mono;
-    }
-  }
-
-  .prod-search-icon {
-    color: $muted;
-    font-size: 0.9rem;
-  }
-}
-
-.iva-pct {
-  font-size: 0.8rem;
-  color: $muted;
-}
-
-.subtotal {
-  font-weight: 600;
-  font-family: $mono;
-}
-
-.empty-lines {
-  text-align: center;
-  padding: 3rem 1rem;
-  color: $muted;
-
-  i {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-    opacity: 0.4;
-  }
-
-  p {
-    margin-bottom: 1rem;
-  }
-}
-
-.totals-section {
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1.5px solid $border;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
   gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
-.totals-row {
-  display: flex;
-  justify-content: space-between;
-  width: 240px;
-  padding: 0.35rem 0;
-
-  &.total-final {
-    padding-top: 0.75rem;
-    margin-top: 0.5rem;
-    border-top: 1.5px solid $border;
-    font-weight: 700;
-    font-size: 1.1rem;
-    color: $text;
-  }
-}
-
-.mono {
-  font-family: $mono;
-}
-
-.text-danger {
-  color: $red;
-}
-
-.empty-state {
-  text-align: center;
-  color: $muted;
+.cargando {
   padding: 2rem;
+  text-align: center;
+  color: #94a3b8;
+}
 
-  i {
-    font-size: 1.75rem;
-    margin-bottom: 0.75rem;
-    opacity: 0.5;
+.seccion {
+  padding: 1.1rem 1.25rem;
+  border-top: 1px solid #eef2f7;
+  container-type: inline-size;
+
+  &__head {
+    display: flex;
+    gap: 0.7rem;
+    align-items: flex-start;
+    margin-bottom: 0.9rem;
+
+    > i {
+      width: 2rem;
+      height: 2rem;
+      flex-shrink: 0;
+      border-radius: 8px;
+      background: #eff6ff;
+      color: #2563eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #1e293b;
+    }
+
+    p {
+      margin: 0.1rem 0 0;
+      font-size: 0.78rem;
+      color: #94a3b8;
+    }
   }
 }
 
-.dialog-search {
-  display: flex;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
+// ── Rejillas ────────────────────────────────────────────────────────
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
+  align-items: end;
 
-  .p-input-icon-left {
-    flex: 1;
+  &--5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  @container (max-width: 900px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @container (max-width: 460px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+
+  &--doble {
+    grid-column: span 2;
+
+    @container (max-width: 460px) {
+      grid-column: span 1;
+    }
+  }
+
+  label {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #475569;
   }
 
   input {
     width: 100%;
   }
+
+  input[readonly] {
+    background: #f8fafc;
+    color: #334155;
+  }
+
+  input.falta {
+    border-color: #f59e0b;
+  }
 }
 
-.id-badge {
-  font-family: $mono;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: $muted;
+.doc-dv {
+  display: flex;
+  gap: 0.4rem;
+
+  .dv {
+    width: 3.2rem;
+    flex-shrink: 0;
+    text-align: center;
+  }
 }
 
-::ng-deep .p-dialog {
-  border-radius: 16px;
+.req {
+  color: #ef4444;
 }
 
-::ng-deep .p-datatable .p-datatable-thead > tr > th {
-  background: $bg;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+// ── Tercero ─────────────────────────────────────────────────────────
+.buscar-tercero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+
+  &__campo {
+    flex: 1 1 22rem;
+  }
 }
 
-::ng-deep .p-autocomplete,
-::ng-deep .p-inputnumber,
-::ng-deep .p-inputtext {
+.vacio {
+  margin: 0;
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.82rem;
+  color: #94a3b8;
+  border: 1px dashed #e2e8f0;
+  border-radius: 8px;
+}
+
+.aviso,
+.nota {
+  margin: 0.75rem 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+
+  i {
+    margin-right: 0.3rem;
+  }
+}
+
+.aviso i {
+  color: #f59e0b;
+}
+
+.nota i {
+  color: #2563eb;
+}
+
+// ── Pago ────────────────────────────────────────────────────────────
+.pago {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.9rem 1.5rem;
+
+  .campo--cuenta {
+    flex: 1 1 14rem;
+    max-width: 22rem;
+  }
+
+  .campo--plazo {
+    width: 8.5rem;
+  }
+}
+
+// ── Productos y totales ─────────────────────────────────────────────
+// Totales debajo de la tabla de productos, alineados a la derecha.
+.productos {
+  display: flex;
+  flex-direction: column;
+
+  &__lineas {
+    min-width: 0;
+  }
+}
+
+.tabla-scroll {
+  overflow-x: auto;
+  margin-bottom: 0.75rem;
+}
+
+.lineas {
   width: 100%;
+  min-width: 940px;
+  border-collapse: collapse;
+
+  th {
+    text-align: left;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #64748b;
+    background: #f8fafc;
+    padding: 0.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 0.5rem;
+    vertical-align: top;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .n {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    padding-top: 0.95rem;
+  }
+
+  .col-n {
+    width: 32px;
+  }
+
+  .col-producto {
+    min-width: 230px;
+  }
+
+  .col-desc {
+    min-width: 190px;
+  }
+
+  .col-cant {
+    width: 110px;
+  }
+
+  .col-precio {
+    width: 140px;
+  }
+
+  .col-pct {
+    width: 86px;
+  }
+
+  .col-total {
+    width: 120px;
+  }
+
+  .col-x {
+    width: 44px;
+  }
 }
 
-::ng-deep .btn-aura.p-button {
-  background: linear-gradient(135deg, $indigo, #818cf8) !important;
-  border: none !important;
+// p-inputNumber no pasa styleClass al host: sin esto la columna se desborda.
+:host ::ng-deep .lineas .p-inputnumber,
+:host ::ng-deep .lineas .num,
+:host ::ng-deep .campo--plazo .p-inputnumber {
+  width: 100%;
+  min-width: 0;
+}
+
+.sub {
+  display: block;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin-top: 0.2rem;
+
+  &.servicio {
+    color: #2563eb;
+  }
+}
+
+.total-linea {
+  font-weight: 600;
+  white-space: nowrap;
+  padding-top: 0.95rem !important;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.totales {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1rem;
+  background: #fbfcfe;
+  align-self: flex-end;
+  width: 100%;
+  max-width: 380px;
+  margin-top: 1rem;
+
+  &__fila {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.3rem 0;
+    font-size: 0.86rem;
+    color: #475569;
+  }
+
+  &__total {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid #e2e8f0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #1e293b;
+
+    strong {
+      color: #2563eb;
+    }
+  }
+}
+
+// ── Notas y acciones ────────────────────────────────────────────────
+.contador {
+  text-align: right;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin-top: 0.25rem;
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+
+  .espacio {
+    flex: 1;
+  }
+}
+
+.w-full {
+  width: 100%;
 }

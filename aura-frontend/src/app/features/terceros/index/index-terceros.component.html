@@ -12,7 +12,7 @@
         </div>
       </div>
       <div class="card-head__actions">
-        <button
+        <button *appPuede="'terceros-y-sucursales.terceros:CREAR'"
           pButton
           type="button"
           label="Nuevo tercero"
@@ -147,7 +147,7 @@
           </td>
           <td class="text-center">
             <div class="action-buttons">
-              <button
+              <button *appPuede="'terceros-y-sucursales.terceros:EDITAR'"
                 pButton
                 type="button"
                 icon="pi pi-pencil"
@@ -156,7 +156,7 @@
                 tooltipPosition="top"
                 (click)="openEdit(item)"
               ></button>
-              <button
+              <button *appPuede="'terceros-y-sucursales.terceros:ANULAR'"
                 pButton
                 type="button"
                 icon="pi pi-trash"
@@ -182,7 +182,8 @@
                     : "No hay terceros registrados"
                 }}
               </p>
-              <button
+              <ng-container *appPuede="'terceros-y-sucursales.terceros:CREAR'">
+            <button
                 *ngIf="!searchQuery"
                 pButton
                 type="button"
@@ -191,6 +192,7 @@
                 class="btn-verde p-button-sm"
                 (click)="openCreate()"
               ></button>
+            </ng-container>
             </div>
           </td>
         </tr>

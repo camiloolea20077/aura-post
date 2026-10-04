@@ -15,6 +15,7 @@ import { AlertService } from '../../../../shared/pipes/alert.service';
 import { aFechaLocal } from '../../../../shared/utils/fecha.util';
 import { FormConceptoComponent } from '../form/form-concepto.component';
 
+import { PuedeDirective } from '../../../../shared/directives/puede.directive';
 /**
  * Catálogo de conceptos de nómina (Fase 3).
  *
@@ -27,6 +28,7 @@ import { FormConceptoComponent } from '../form/form-concepto.component';
   selector: 'app-index-conceptos',
   standalone: true,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     TableModule,

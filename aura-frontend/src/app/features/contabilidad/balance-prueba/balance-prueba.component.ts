@@ -24,11 +24,14 @@ import { BalancePruebaModel } from '../../../core/models/contador.model';
  * Balance de prueba (Fase 4): saldo anterior, débitos, créditos y saldo final
  * por cuenta hasta el nivel elegido, con filtros y comparativo mes o año.
  */
+import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-autocomplete/cuenta-autocomplete.component';
+
 @Component({
   selector: 'app-balance-prueba',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, ButtonModule, TableModule, DropdownModule, CalendarModule, InputTextModule,
+  imports: [
+    CuentaAutocompleteComponent, CommonModule, FormsModule, ButtonModule, TableModule, DropdownModule, CalendarModule, InputTextModule,
     TerceroAutocompleteComponent],
   templateUrl: './balance-prueba.component.html',
   styleUrls: ['./balance-prueba.component.scss'],

@@ -22,10 +22,12 @@ import { ListaPreciosService } from '../../../../core/services/lista-precios.ser
 import { AlertService } from '../../../../shared/pipes/alert.service';
 import { IFilterTable } from '../../../../shared/utils/filter-table';
 
+import { PuedeDirective } from '../../../../shared/directives/puede.directive';
 @Component({
   selector: 'app-index-producto-precio',
   standalone: true,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     CurrencyPipe,

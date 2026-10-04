@@ -56,14 +56,11 @@
 
     <div class="field" *ngIf="via === 'CUENTA'">
       <label>Cuenta de fondos</label>
-      <p-dropdown
-        [options]="cuentasOpts"
+      <app-cuenta-autocomplete
+        [opciones]="cuentasOpts"
         [(ngModel)]="cuentaContableId"
-        optionLabel="label"
-        optionValue="value"
         placeholder="Caja menor, fondos..."
-        [filter]="true"
-        [style]="{ width: '100%' }"
+        [showClear]="false"
       />
       <small class="hint">No puede pagar más de lo que tenga la cuenta.</small>
     </div>

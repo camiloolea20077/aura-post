@@ -22,7 +22,7 @@
             class="p-button-outlined p-button-sm"
             (click)="verBalance()"
           ></button>
-          <button
+          <button *appPuede="'contabilidad.asientos-contables:CREAR'"
             pButton
             type="button"
             label="Nueva nota contable"
@@ -137,7 +137,7 @@
                     pTooltip="Ver detalle"
                     (click)="verDetalle(a)"
                   ></button>
-                  <button
+                  <button *appPuede="'contabilidad.asientos-contables:ANULAR'"
                     pButton
                     icon="pi pi-ban"
                     class="p-button-text p-button-sm p-button-rounded p-button-danger"
@@ -352,14 +352,11 @@
       <div class="filters-bar">
         <div class="filter-item" style="flex: 2">
           <label>Cuenta</label>
-          <p-dropdown
+          <app-cuenta-autocomplete
+            [opciones]="cuentasMayorOpts"
             [(ngModel)]="cuentaMayorId"
-            [options]="cuentasMayorOpts"
-            optionLabel="label"
-            optionValue="value"
             placeholder="Seleccionar cuenta…"
-            [filter]="true"
-            styleClass="w-full"
+            [showClear]="false"
           />
         </div>
         <div class="filter-item">
@@ -956,15 +953,12 @@
         <ng-template pTemplate="body" let-d let-i="rowIndex">
           <tr>
             <td>
-              <p-dropdown
+              <app-cuenta-autocomplete
+                [opciones]="cuentasAuxOpts"
                 [(ngModel)]="d.cuentaId"
-                [options]="cuentasAuxOpts"
-                optionLabel="label"
                 appendTo="body"
-                optionValue="value"
                 placeholder="Seleccionar"
-                [filter]="true"
-                styleClass="w-full"
+                [showClear]="false"
               />
             </td>
             <td>
@@ -1053,7 +1047,7 @@
     </div>
 
     <div class="asiento-actions">
-      <button
+      <button *appPuede="'contabilidad.asientos-contables:CREAR'"
         pButton
         icon="pi pi-plus"
         label="Agregar línea"

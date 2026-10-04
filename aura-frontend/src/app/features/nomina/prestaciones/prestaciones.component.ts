@@ -35,6 +35,7 @@ import { CuentaBancariaModel } from '../../../core/models/cuenta-bancaria.model'
 import { AlertService } from '../../../shared/pipes/alert.service';
 
 import { aFechaLocal } from '../../../shared/utils/fecha.util';
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 type TagSeverity =
   | 'success'
   | 'secondary'
@@ -48,6 +49,7 @@ type TagSeverity =
   selector: 'app-prestaciones',
   standalone: true,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     TableModule,

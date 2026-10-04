@@ -33,11 +33,13 @@ import {
 } from '../models/nota-contable.model';
 import { NotaContableService } from '../services/nota-contable.service';
 
+import { PuedeDirective } from '../../../../shared/directives/puede.directive';
 @Component({
   selector: 'app-index-notas-contables',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     ButtonModule,

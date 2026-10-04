@@ -10,8 +10,13 @@ export interface UsuarioSucursalModel {
 // ─── Detalle completo ─────────────────────────────────────────
 export interface UsuarioModel {
   id: number;
+  /** La persona del usuario (obligatoria desde V192). */
+  terceroId?: number | null;
   username: string;
   rol: string;
+  /** Perfil de permisos (docs/PLAN_PERMISOS.md en el backend). */
+  perfilId?: number | null;
+  perfilNombre?: string | null;
   activo: boolean;
   createdAt: string;
   nombres: string;
@@ -28,6 +33,7 @@ export interface UsuarioTableModel {
   id: number;
   username: string;
   rol: string;
+  perfilNombre?: string | null;
   nombreCompleto: string;
   numeroDocumento: string;
   telefono: string | null;
@@ -42,23 +48,26 @@ export interface SucursalAsignacion {
 }
 
 export interface CreateUsuarioDto {
-  username: string;
+  /** Tercero que ya existe: nombre, documento y correo salen de él. */
+  terceroId: number;
+  /** Vacío = el correo del tercero. */
+  username: string | null;
   password: string;
   pinAccesoRapido?: string | null;
   rol: string;
-  nombres: string;
-  apellidos: string;
-  tipoDocumento: string;
-  numeroDocumento: string;
-  telefono?: string | null;
-  email?: string | null;
+  /** null = el perfil de sistema de su tipo de usuario. */
+  perfilId?: number | null;
   sucursales: SucursalAsignacion[];
 }
 
 export interface UpdateUsuarioDto {
+  /** Cambiar la persona del usuario; null = no cambia. */
+  terceroId?: number | null;
   password?: string | null;
   pinAccesoRapido?: string | null;
   rol?: string;
+  /** null = se conserva (o pasa al del tipo nuevo si tenía el del tipo anterior). */
+  perfilId?: number | null;
   nombres?: string;
   apellidos?: string;
   telefono?: string | null;

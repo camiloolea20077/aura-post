@@ -1,0 +1,457 @@
+// Página plana en UNA card, con secciones divididas (estándar AURA).
+
+:host {
+  display: block;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.cargando {
+  padding: 2rem;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.seccion {
+  padding: 1.1rem 1.25rem;
+  border-top: 1px solid #eef2f7;
+  container-type: inline-size;
+
+  &__head {
+    display: flex;
+    gap: 0.7rem;
+    align-items: flex-start;
+    margin-bottom: 0.9rem;
+
+    > i {
+      width: 2rem;
+      height: 2rem;
+      flex-shrink: 0;
+      border-radius: 8px;
+      background: #eff6ff;
+      color: #2563eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+    }
+
+    h3 {
+      margin: 0;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #1e293b;
+    }
+
+    p {
+      margin: 0.1rem 0 0;
+      font-size: 0.78rem;
+      color: #94a3b8;
+    }
+  }
+}
+
+// ── Rejillas ────────────────────────────────────────────────────────
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
+  align-items: end;
+
+  &--5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  @container (max-width: 900px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @container (max-width: 460px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+
+  &--doble {
+    grid-column: span 2;
+
+    @container (max-width: 460px) {
+      grid-column: span 1;
+    }
+  }
+
+  label {
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #475569;
+  }
+
+  input {
+    width: 100%;
+  }
+
+  input[readonly] {
+    background: #f8fafc;
+    color: #334155;
+  }
+
+  input.falta {
+    border-color: #f59e0b;
+  }
+}
+
+.doc-dv {
+  display: flex;
+  gap: 0.4rem;
+
+  .dv {
+    width: 3.2rem;
+    flex-shrink: 0;
+    text-align: center;
+  }
+}
+
+.req {
+  color: #ef4444;
+}
+
+// ── Tercero ─────────────────────────────────────────────────────────
+.buscar-tercero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+
+  &__campo {
+    flex: 1 1 22rem;
+  }
+}
+
+.vacio {
+  margin: 0;
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.82rem;
+  color: #94a3b8;
+  border: 1px dashed #e2e8f0;
+  border-radius: 8px;
+}
+
+.aviso,
+.nota {
+  margin: 0.75rem 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+
+  i {
+    margin-right: 0.3rem;
+  }
+}
+
+.aviso i {
+  color: #f59e0b;
+}
+
+.nota i {
+  color: #2563eb;
+}
+
+// ── Pago ────────────────────────────────────────────────────────────
+.pago {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.9rem 1.5rem;
+
+  .campo--cuenta {
+    flex: 1 1 14rem;
+    max-width: 22rem;
+  }
+
+  .campo--plazo {
+    width: 8.5rem;
+  }
+}
+
+// ── Productos y totales ─────────────────────────────────────────────
+// Totales debajo de la tabla de productos, alineados a la derecha.
+.productos {
+  display: flex;
+  flex-direction: column;
+
+  &__lineas {
+    min-width: 0;
+  }
+}
+
+.tabla-scroll {
+  overflow-x: auto;
+  margin-bottom: 0.75rem;
+}
+
+.lineas {
+  width: 100%;
+  min-width: 940px;
+  border-collapse: collapse;
+
+  th {
+    text-align: left;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #64748b;
+    background: #f8fafc;
+    padding: 0.5rem;
+    border-bottom: 1px solid #e2e8f0;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 0.5rem;
+    vertical-align: top;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .n {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    padding-top: 0.95rem;
+  }
+
+  .col-n {
+    width: 32px;
+  }
+
+  .col-producto {
+    min-width: 230px;
+  }
+
+  .col-desc {
+    min-width: 190px;
+  }
+
+  .col-cant {
+    width: 110px;
+  }
+
+  .col-precio {
+    width: 140px;
+  }
+
+  .col-pct {
+    width: 86px;
+  }
+
+  .col-total {
+    width: 120px;
+  }
+
+  .col-x {
+    width: 44px;
+  }
+}
+
+// p-inputNumber no pasa styleClass al host: sin esto la columna se desborda.
+:host ::ng-deep .lineas .p-inputnumber,
+:host ::ng-deep .lineas .num,
+:host ::ng-deep .campo--plazo .p-inputnumber {
+  width: 100%;
+  min-width: 0;
+}
+
+.sub {
+  display: block;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin-top: 0.2rem;
+
+  &.servicio {
+    color: #2563eb;
+  }
+}
+
+.total-linea {
+  font-weight: 600;
+  white-space: nowrap;
+  padding-top: 0.95rem !important;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.totales {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1rem;
+  background: #fbfcfe;
+  align-self: flex-end;
+  width: 100%;
+  max-width: 380px;
+  margin-top: 1rem;
+
+  &__fila {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.3rem 0;
+    font-size: 0.86rem;
+    color: #475569;
+  }
+
+  &__total {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid #e2e8f0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #1e293b;
+
+    strong {
+      color: #2563eb;
+    }
+  }
+}
+
+// ── Notas y acciones ────────────────────────────────────────────────
+.contador {
+  text-align: right;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin-top: 0.25rem;
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+
+  .espacio {
+    flex: 1;
+  }
+}
+
+.w-full {
+  width: 100%;
+}
+
+// ── AIU ─────────────────────────────────────────────────────────────
+.aiu {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem 1rem;
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px dashed #e2e8f0;
+
+  .campo--pct {
+    width: 8.5rem;
+  }
+}
+
+:host ::ng-deep .aiu .p-inputnumber {
+  width: 100%;
+}
+
+.totales__fila--fuerte {
+  font-weight: 600;
+  color: #1e293b !important;
+}
+
+.campo--sel {
+  width: 14rem;
+  max-width: 100%;
+}
+
+// ── Origen, presentación y anticipos ────────────────────────────────
+.origen {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  color: #2563eb;
+
+  i {
+    margin-right: 0.3rem;
+  }
+}
+
+:host ::ng-deep .presentacion {
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+}
+
+.anticipos {
+  margin-top: 0.9rem;
+  border: 1px solid #dbeafe;
+  background: #f8fbff;
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  overflow-x: auto;
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    color: #334155;
+
+    i {
+      color: #2563eb;
+      margin-right: 0.3rem;
+    }
+  }
+
+  &__tabla {
+    width: 100%;
+    min-width: 520px;
+    border-collapse: collapse;
+    margin-top: 0.4rem;
+
+    th {
+      text-align: left;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: #64748b;
+      padding: 0.35rem 0.5rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    td {
+      font-size: 0.82rem;
+      padding: 0.35rem 0.5rem;
+      border-bottom: 1px solid #eef2f7;
+    }
+
+    .text-right {
+      text-align: right;
+    }
+  }
+
+  &__total {
+    margin-top: 0.5rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #1e293b;
+    text-align: right;
+  }
+}
+
+:host ::ng-deep .anticipos .p-inputnumber {
+  width: 10rem;
+}

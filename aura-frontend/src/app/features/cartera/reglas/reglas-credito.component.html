@@ -14,7 +14,7 @@
         </div>
       </div>
       <div class="card-head__btns">
-        <button pButton type="button" icon="pi pi-plus" label="Nueva regla" class="p-button-sm" (click)="abrirNueva()"></button>
+        <button *appPuede="'cartera.cartera:CREAR'" pButton type="button" icon="pi pi-plus" label="Nueva regla" class="p-button-sm" (click)="abrirNueva()"></button>
       </div>
     </div>
 
@@ -64,8 +64,8 @@
             <button type="button" [class.activa]="r.activo" (click)="cambiarActivo(r, true)">Activa</button>
             <button type="button" [class.activa]="!r.activo" (click)="cambiarActivo(r, false)">Pausada</button>
           </div>
-          <button type="button" class="rc-icon" pTooltip="Editar" (click)="editar(r)"><i class="pi pi-pencil"></i></button>
-          <button type="button" class="rc-icon rc-icon--danger" pTooltip="Eliminar" (click)="eliminar(r)"><i class="pi pi-trash"></i></button>
+          <button *appPuede="'cartera.cartera:EDITAR'" type="button" class="rc-icon" pTooltip="Editar" (click)="editar(r)"><i class="pi pi-pencil"></i></button>
+          <button *appPuede="'cartera.cartera:ANULAR'" type="button" class="rc-icon rc-icon--danger" pTooltip="Eliminar" (click)="eliminar(r)"><i class="pi pi-trash"></i></button>
         </div>
       </div>
     </ng-container>

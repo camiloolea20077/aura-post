@@ -209,4 +209,11 @@
   </ng-template>
 </p-dialog>
 
+<app-autorizacion-supervisor
+  [visible]="showAutorizacion"
+  [exceso]="excesoPendiente"
+  (autorizado)="onAutorizado($event)"
+  (cancelado)="onAutorizacionCancelada()"
+/>
+
 <p-toast />

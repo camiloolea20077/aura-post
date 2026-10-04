@@ -60,11 +60,14 @@ type TagSeverity =
   | 'contrast'
   | undefined;
 
+import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-autocomplete/cuenta-autocomplete.component';
+
 @Component({
   selector: 'app-detalle-cuenta-cobrar',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CuentaAutocompleteComponent,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,

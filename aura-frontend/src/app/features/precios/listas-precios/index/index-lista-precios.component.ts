@@ -24,10 +24,12 @@ import { AlertService } from '../../../../shared/pipes/alert.service';
 import { ProductoPrecioService } from '../../../../core/services/producto-precio.service';
 import { FormProductoPrecioComponent } from '../../precios-producto/form/form-producto-precio.component';
 
+import { PuedeDirective } from '../../../../shared/directives/puede.directive';
 @Component({
   selector: 'app-index-lista-precios',
   standalone: true,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     CurrencyPipe,

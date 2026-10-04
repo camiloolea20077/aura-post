@@ -29,6 +29,19 @@
         </small>
       </div>
       <div class="field">
+        <label class="field-label">Perfil de permisos</label>
+        <p-dropdown
+          [options]="perfilesOpts"
+          formControlName="perfilId"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Según el cargo"
+          [showClear]="true"
+          appendTo="body"
+        />
+        <small class="field-hint">Vacío = el perfil que corresponde a su cargo.</small>
+      </div>
+      <div class="field">
         <label class="field-label"
           >Usuario <span class="required">*</span></label
         >

@@ -30,6 +30,7 @@ import { FormCuentaCobrarComponent } from '../form-cuenta-cobrar/form-cuenta-cob
 import { DetalleCuentaCobrarComponent } from '../detalle-cuenta-cobrar/detalle-cuenta-cobrar.component';
 
 import { aFechaLocal } from '../../../shared/utils/fecha.util';
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 type TagSeverity =
   | 'success'
   | 'secondary'
@@ -44,6 +45,7 @@ type TagSeverity =
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     ButtonModule,

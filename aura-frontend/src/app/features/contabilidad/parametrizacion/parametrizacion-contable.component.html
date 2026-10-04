@@ -98,7 +98,7 @@
             como ADDI o Sistecrédito (queda por cobrarle a él). Con
             <strong>Copiar a…</strong> una forma configurada se aplica a otras.
           </p>
-          <button pButton type="button" label="Nueva forma de pago" icon="pi pi-plus" class="btn-aura" (click)="abrirNuevaForma()"></button>
+          <button *appPuede="'contabilidad.parametrizacion-contable:CREAR'" pButton type="button" label="Nueva forma de pago" icon="pi pi-plus" class="btn-aura" (click)="abrirNuevaForma()"></button>
         </div>
         <div class="tabla-scroll">
           <p-table [value]="formasPago" styleClass="p-datatable-sm" showGridlines [tableStyle]="{ 'min-width': '720px' }">
@@ -115,16 +115,12 @@
               <tr>
                 <td>{{ f.nombre }} <div class="sub">{{ f.codigo }}</div></td>
                 <td>
-                  <p-dropdown
+                  <app-cuenta-autocomplete
+                    [opciones]="cuentasFormaPago"
                     [(ngModel)]="f.cuentaContableId"
-                    [options]="cuentasFormaPago"
-                    optionLabel="label"
-                    optionValue="value"
-                    [filter]="true"
-                    filterBy="label"
                     placeholder="Sin cuenta"
                     appendTo="body"
-                    styleClass="w-full"
+                    [showClear]="false"
                   />
                 </td>
                 <td>
@@ -190,12 +186,22 @@
               <tr>
                 <td>{{ i.nombre }} <div class="sub">{{ i.tipo }} · {{ i.porcentaje }} %</div></td>
                 <td>
-                  <p-dropdown [(ngModel)]="i.cuentaGeneradoId" [options]="cuentasAux" optionLabel="label" optionValue="value"
-                    [filter]="true" filterBy="label" [showClear]="true" placeholder="La de la empresa" appendTo="body" styleClass="w-full" />
+                  <app-cuenta-autocomplete
+                    [opciones]="cuentasAux"
+                    [(ngModel)]="i.cuentaGeneradoId"
+                    [showClear]="true"
+                    placeholder="La de la empresa"
+                    appendTo="body"
+                  />
                 </td>
                 <td>
-                  <p-dropdown [(ngModel)]="i.cuentaDescontableId" [options]="cuentasAux" optionLabel="label" optionValue="value"
-                    [filter]="true" filterBy="label" [showClear]="true" placeholder="La de la empresa" appendTo="body" styleClass="w-full" />
+                  <app-cuenta-autocomplete
+                    [opciones]="cuentasAux"
+                    [(ngModel)]="i.cuentaDescontableId"
+                    [showClear]="true"
+                    placeholder="La de la empresa"
+                    appendTo="body"
+                  />
                 </td>
                 <td>
                   <button pButton icon="pi pi-check" class="p-button-text p-button-sm" pTooltip="Guardar"
@@ -284,16 +290,12 @@
     </div>
     <div class="campo">
       <label>Cuenta <span class="req">*</span></label>
-      <p-dropdown
+      <app-cuenta-autocomplete
+        [opciones]="cuentasFormaPago"
         [(ngModel)]="nuevaForma.cuentaContableId"
-        [options]="cuentasFormaPago"
-        optionLabel="label"
-        optionValue="value"
-        [filter]="true"
-        filterBy="label"
         placeholder="11xx caja/banco o 13xx por cobrar al financiador"
         appendTo="body"
-        styleClass="w-full"
+        [showClear]="false"
       />
       <small class="ayuda">
         Para ADDI crea antes en el Plan de Cuentas una auxiliar como 130510 "Por cobrar ADDI" y elígela aquí.
@@ -329,7 +331,7 @@
   </div>
   <ng-template pTemplate="footer">
     <button pButton label="Cancelar" class="p-button-text" (click)="showNuevaForma = false"></button>
-    <button pButton label="Crear" icon="pi pi-check" class="btn-aura" [disabled]="guardandoForma" (click)="crearForma()"></button>
+    <button *appPuede="'contabilidad.parametrizacion-contable:CREAR'" pButton label="Crear" icon="pi pi-check" class="btn-aura" [disabled]="guardandoForma" (click)="crearForma()"></button>
   </ng-template>
 </p-dialog>
 

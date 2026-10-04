@@ -13,7 +13,7 @@
         </div>
       </div>
       <div class="card-head__actions">
-        <button
+        <button *appPuede="'precios.listas-de-precio:CREAR'"
           pButton
           type="button"
           label="Nueva lista"
@@ -107,7 +107,7 @@
           <!-- Acciones -->
           <td class="text-center">
             <div class="action-buttons">
-              <button
+              <button *appPuede="'precios.listas-de-precio:EDITAR'"
                 pButton
                 type="button"
                 icon="pi pi-pencil"
@@ -116,7 +116,7 @@
                 tooltipPosition="top"
                 (click)="openEdit(item)"
               ></button>
-              <button
+              <button *appPuede="'precios.listas-de-precio:ANULAR'"
                 pButton
                 type="button"
                 icon="pi pi-trash"
@@ -142,7 +142,8 @@
                     : "No hay listas de precios registradas"
                 }}
               </p>
-              <button
+              <ng-container *appPuede="'precios.listas-de-precio:CREAR'">
+            <button
                 *ngIf="!searchQuery"
                 pButton
                 type="button"
@@ -151,6 +152,7 @@
                 class="btn-verde p-button-sm"
                 (click)="openCreate()"
               ></button>
+            </ng-container>
             </div>
           </td>
         </tr>
@@ -230,7 +232,7 @@
           </span>
         </div>
         <div class="precio-actions">
-          <button
+          <button *appPuede="'precios.listas-de-precio:EDITAR'"
             pButton
             type="button"
             icon="pi pi-pencil"
@@ -238,7 +240,7 @@
             pTooltip="Editar precio"
             (click)="openEditarPrecio(p)"
           ></button>
-          <button
+          <button *appPuede="'precios.listas-de-precio:ANULAR'"
             pButton
             type="button"
             icon="pi pi-trash"
@@ -253,7 +255,7 @@
 
   <ng-template pTemplate="footer">
     <div class="dialog-footer-precios">
-      <button
+      <button *appPuede="'precios.listas-de-precio:CREAR'"
         pButton
         type="button"
         label="Agregar precio"

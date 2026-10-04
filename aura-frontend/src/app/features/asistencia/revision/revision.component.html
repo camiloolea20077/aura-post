@@ -19,7 +19,7 @@
         >
 
         <div class="tab-actions">
-          <button
+          <button *appPuede="'recursos-humanos.revision-asistencia:CREAR'"
             pButton
             label="Nuevo período"
             icon="pi pi-plus"
@@ -314,7 +314,7 @@
       class="btn-amarillo"
       (click)="showFormPeriodo = false"
     ></button>
-    <button
+    <button *appPuede="'recursos-humanos.revision-asistencia:CREAR'"
       pButton
       label="Crear"
       icon="pi pi-check"

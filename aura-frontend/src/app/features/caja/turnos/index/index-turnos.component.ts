@@ -72,6 +72,8 @@ export class IndexTurnosComponent implements OnInit, OnDestroy {
   ajusteVisible = false;
   turnoAjuste: TurnoCajaTableModel | null = null;
   turnoActivo: TurnoCajaModel | null = null;
+  /** Mientras se averigua si hay turno abierto (para no mostrar "sin turno" de entrada). */
+  cargandoActivo = true;
   turnoParaCerrar: TurnoCajaModel | null = null;
 
   // ── NUEVO: resumen en tiempo real ─────────────────────────
@@ -115,7 +117,26 @@ export class IndexTurnosComponent implements OnInit, OnDestroy {
     } catch {
       this.turnoActivo = null;
     }
+    this.cargandoActivo = false;
     this.cdr.markForCheck();
+  }
+
+  /** Lo que debe haber en el cajón: base + efectivo + ingresos − egresos − comisiones. */
+  get esperadoActivo(): number {
+    return this.resumen?.totalEsperado ?? this.turnoActivo?.baseInicial ?? 0;
+  }
+
+  get ticketPromedio(): number {
+    const r = this.resumen;
+    return r && r.totalTransacciones > 0 ? r.totalNeto / r.totalTransacciones : 0;
+  }
+
+  /** Cuánto lleva abierto el turno, p. ej. "8 h 25 min". */
+  get duracionActivo(): string {
+    if (!this.turnoActivo?.fechaApertura) return '';
+    const min = Math.max(0, Math.floor((Date.now() - new Date(this.turnoActivo.fechaApertura).getTime()) / 60000));
+    const h = Math.floor(min / 60);
+    return h > 0 ? `${h} h ${min % 60} min` : `${min} min`;
   }
 
   // ── Resumen en tiempo real ────────────────────────────────
@@ -136,6 +157,7 @@ export class IndexTurnosComponent implements OnInit, OnDestroy {
   }
 
   private iniciarPolling(): void {
+    this.detenerPolling(); // nunca dos temporizadores a la vez
     this.polling = setInterval(() => this.cargarResumen(), 30_000);
   }
 

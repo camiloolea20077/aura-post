@@ -92,7 +92,7 @@
                 *ngIf="n.numero"
                 (click)="reenviarCorreo(n)"
               ></button>
-              <button
+              <button *appPuede="'ventas.notas-credito/debito:ANULAR'"
                 pButton
                 type="button"
                 icon="pi pi-trash"

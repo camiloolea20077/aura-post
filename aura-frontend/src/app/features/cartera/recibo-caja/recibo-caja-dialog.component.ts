@@ -53,11 +53,14 @@ type DestinoEfectivo = 'CAJA' | 'OTRO_DIA' | 'CUENTA';
  * Por defecto reparte de la más vieja a la más nueva; el usuario puede
  * corregir factura por factura. Lo que no se aplique queda como anticipo.
  */
+import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-autocomplete/cuenta-autocomplete.component';
+
 @Component({
   selector: 'app-recibo-caja-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CuentaAutocompleteComponent,
     CommonModule,
     FormsModule,
     DialogModule,

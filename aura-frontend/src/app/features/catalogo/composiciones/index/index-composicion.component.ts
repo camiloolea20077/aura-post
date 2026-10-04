@@ -22,6 +22,7 @@ import { ProductoComposicionService } from '../../../../core/services/producto-c
 import { AlertService } from '../../../../shared/pipes/alert.service';
 import { IFilterTable } from '../../../../shared/utils/filter-table';
 
+import { PuedeDirective } from '../../../../shared/directives/puede.directive';
 /**
  * Listado de composiciones agrupado por producto.
  *
@@ -33,6 +34,7 @@ import { IFilterTable } from '../../../../shared/utils/filter-table';
   selector: 'app-index-composicion',
   standalone: true,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     TableModule,

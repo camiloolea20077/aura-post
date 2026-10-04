@@ -67,6 +67,8 @@ export interface CreateEmpresaDto {
   codigoPaisAdmin: string;
   nombreSucursal: string;
   modoContabilizacion?: string;
+  /** Submódulos que tendrá la empresa (sus grupos y módulos se activan solos). */
+  submodulos?: number[];
   // Facturación electrónica (Factus)
   facturaElectronica?: boolean;
   factusClientId?: string;

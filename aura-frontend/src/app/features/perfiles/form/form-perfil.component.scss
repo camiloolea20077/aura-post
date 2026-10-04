@@ -1,0 +1,142 @@
+:host {
+  display: block;
+}
+
+.cuerpo {
+  padding: 1.25rem 1.5rem 1.5rem;
+  container-type: inline-size;
+}
+
+.aviso {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  padding: 0.8rem 1rem;
+  margin-bottom: 1.25rem;
+  border-radius: 10px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e3a8a;
+  font-size: 0.84rem;
+  line-height: 1.45;
+
+  i {
+    margin-top: 0.15rem;
+  }
+}
+
+.seccion {
+  & + & {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  &__titulo {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin: 0 0 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1e293b;
+  }
+
+  &__extra {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #94a3b8;
+  }
+
+  &__ayuda {
+    margin: -0.35rem 0 0.9rem;
+    font-size: 0.8rem;
+    color: #64748b;
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 1.25rem;
+}
+
+@container (max-width: 640px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+
+  input {
+    width: 100%;
+  }
+
+  // p-inputNumber no pasa styleClass al host (gotcha): se estira aquí.
+  ::ng-deep p-inputnumber,
+  ::ng-deep .p-inputnumber {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+.field-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.field-hint {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.req {
+  color: #dc2626;
+}
+
+.opciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.opcion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.95rem;
+  border: 1.5px solid #e0e3eb;
+  border-radius: 10px;
+  background: #fff;
+  color: #475569;
+  font-family: inherit;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  i {
+    font-size: 0.8rem;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: #93c5fd;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.65;
+  }
+
+  &--activa {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+}

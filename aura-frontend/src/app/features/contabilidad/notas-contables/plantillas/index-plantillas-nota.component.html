@@ -24,7 +24,7 @@
             class="btn-rojo"
             (click)="volver()"
           ></button>
-          <button
+          <button *appPuede="'contabilidad.notas-contables:CREAR'"
             pButton
             type="button"
             label="Nueva plantilla"
@@ -121,7 +121,7 @@
                 [disabled]="!p.activa"
                 (click)="usar(p)"
               ></button>
-              <button
+              <button *appPuede="'contabilidad.notas-contables:EDITAR'"
                 pButton
                 type="button"
                 icon="pi pi-list"
@@ -130,7 +130,7 @@
                 tooltipPosition="top"
                 (click)="editarLineas(p)"
               ></button>
-              <button
+              <button *appPuede="'contabilidad.notas-contables:EDITAR'"
                 pButton
                 type="button"
                 icon="pi pi-pencil"
@@ -139,7 +139,7 @@
                 tooltipPosition="top"
                 (click)="editar(p)"
               ></button>
-              <button
+              <button *appPuede="'contabilidad.notas-contables:ANULAR'"
                 pButton
                 type="button"
                 icon="pi pi-trash"

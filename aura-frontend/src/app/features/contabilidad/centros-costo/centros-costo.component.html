@@ -15,7 +15,7 @@
         </div>
       </div>
       <div class="card-head__actions">
-        <button
+        <button *appPuede="'contabilidad.centros-de-costo:CREAR'"
           pButton
           type="button"
           label="Nuevo Centro"
@@ -115,14 +115,14 @@
           </td>
           <td>
             <div style="display: flex; gap: 0.25rem">
-              <button
+              <button *appPuede="'contabilidad.centros-de-costo:EDITAR'"
                 pButton
                 icon="pi pi-pencil"
                 class="p-button-text p-button-sm p-button-rounded"
                 pTooltip="Editar"
                 (click)="abrirEditar(cc)"
               ></button>
-              <button
+              <button *appPuede="'contabilidad.centros-de-costo:ANULAR'"
                 pButton
                 icon="pi pi-trash"
                 class="p-button-text p-button-sm p-button-rounded p-button-danger"

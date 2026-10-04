@@ -21,10 +21,12 @@ import { ColsModel } from '../../../../shared/utils/cols.model';
 import { UnidadMedidaService } from '../../../../core/services/unidad-medida.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 import { IFilterTable } from '../../../../shared/utils/filter-table';
+import { PuedeDirective } from '../../../../shared/directives/puede.directive';
 @Component({
   selector: 'app-index-unidades',
   standalone: true,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     TableModule,

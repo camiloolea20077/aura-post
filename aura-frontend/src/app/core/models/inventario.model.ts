@@ -20,6 +20,8 @@ export interface InventarioTableModel {
   id: number;
   sucursalId: number;
   sucursalNombre: string;
+  bodegaId?: number | null;
+  bodegaNombre?: string | null;
   productoId: number;
   productoNombre: string;
   productoSku: string | null;
@@ -64,6 +66,8 @@ export interface InventarioPageableDto {
   search?: string | null;
   order_by?: string | null;
   order?: string | null;
+  /** Sede y bodega a mirar; sucursalId null = todas las sedes. */
+  params?: { sucursalId: number | null; bodegaId: number | null };
 }
 
 // ─── Historial de producto ────────────────────────────────────

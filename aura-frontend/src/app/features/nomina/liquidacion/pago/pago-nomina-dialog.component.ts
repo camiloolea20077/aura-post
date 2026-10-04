@@ -32,11 +32,14 @@ type Opcion = { label: string; value: number };
  * las mismas tres vías que un gasto: banco, una caja abierta (entra a su
  * arqueo) o una cuenta de fondos como la caja menor (no toca ningún arqueo).
  */
+import { CuentaAutocompleteComponent } from '../../../../shared/components/cuenta-autocomplete/cuenta-autocomplete.component';
+
 @Component({
   selector: 'app-pago-nomina-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, ButtonModule, DialogModule, DropdownModule],
+  imports: [
+    CuentaAutocompleteComponent,CommonModule, FormsModule, ButtonModule, DialogModule, DropdownModule],
   templateUrl: './pago-nomina-dialog.component.html',
   styleUrls: ['./pago-nomina-dialog.component.scss'],
 })

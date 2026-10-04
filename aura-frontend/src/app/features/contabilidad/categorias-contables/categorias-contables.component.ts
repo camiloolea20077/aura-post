@@ -25,6 +25,7 @@ import {
   TipoCategoriaContable,
 } from '../../../core/models/producto.model';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 interface TipoCategoriaOpcion {
   value: TipoCategoriaContable;
   label: string;
@@ -56,11 +57,15 @@ type Opcion = { label: string; value: number };
  * clasificación del catálogo (mercancía, activo fijo, gasto, diferido…).
  * Un producto con categoría usa sus cuentas; sin categoría, las de la empresa.
  */
+import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-autocomplete/cuenta-autocomplete.component';
+
 @Component({
   selector: 'app-categorias-contables',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CuentaAutocompleteComponent,
+    PuedeDirective,
     CommonModule,
     FormsModule,
     ButtonModule,

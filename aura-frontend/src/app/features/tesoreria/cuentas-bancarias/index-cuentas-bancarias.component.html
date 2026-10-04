@@ -13,7 +13,7 @@
         </div>
       </div>
       <div class="card-head__actions">
-        <button
+        <button *appPuede="'tesoreria.cuentas-bancarias:CREAR'"
           pButton
           type="button"
           label="Nueva Cuenta"
@@ -110,7 +110,7 @@
             />
           </td>
           <td class="text-center flex">
-            <button
+            <button *appPuede="'tesoreria.cuentas-bancarias:EDITAR'"
               pButton
               icon="pi pi-pencil"
               class="p-button-text p-button-sm"

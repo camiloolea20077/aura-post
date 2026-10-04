@@ -22,7 +22,8 @@ export class TrasladoService {
   }
 
   create(dto: CreateTrasladoDto): Observable<any> {
-    return this.http.post<any>(`${this.base}traslados`, dto);
+    // El back lo expone en /traslados/create (POST /traslados no existe).
+    return this.http.post<any>(`${this.base}traslados/create`, dto);
   }
 
   anular(id: number): Observable<any> {
@@ -31,6 +32,7 @@ export class TrasladoService {
 
   // Lista de sucursales para selectores
   getSucursales(): Observable<any> {
-    return this.http.get<any>(`${this.base}sucursales/list`);
+    // El endpoint de sucursales es /activas (no /list, que caía en /{id}).
+    return this.http.get<any>(`${this.base}sucursales/activas`);
   }
 }

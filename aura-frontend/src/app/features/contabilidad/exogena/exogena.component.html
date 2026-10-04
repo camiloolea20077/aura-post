@@ -215,7 +215,7 @@
           </p>
           <div>
             <button pButton label="Restaurar defaults" icon="pi pi-refresh" class="p-button-outlined p-button-sm" (click)="restaurarDefaults()"></button>
-            <button pButton label="Nuevo mapeo" icon="pi pi-plus" class="btn-verde p-button-sm ml-2" [disabled]="!formatoId" (click)="abrirNuevoMapeo()"></button>
+            <button *appPuede="'contabilidad.exogena-dian:CREAR'" pButton label="Nuevo mapeo" icon="pi pi-plus" class="btn-verde p-button-sm ml-2" [disabled]="!formatoId" (click)="abrirNuevoMapeo()"></button>
           </div>
         </div>
 

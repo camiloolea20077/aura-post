@@ -272,6 +272,9 @@ body {
 // Botón principal con degradado
 .btn-aura {
   background: var(--aura-gradient) !important;
+  // Fondo siempre azul: el texto siempre blanco. Sin esto toma el color del
+  // tema y en diálogos queda azul sobre azul (no se leía "Cerrar turno").
+  color: #fff !important;
   border: none !important;
   border-radius: 10px !important;
   font-weight: 600 !important;

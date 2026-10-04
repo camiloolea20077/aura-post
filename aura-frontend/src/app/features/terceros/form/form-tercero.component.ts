@@ -25,6 +25,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { DividerModule } from 'primeng/divider';
 import { TabViewModule } from 'primeng/tabview';
 import { ToastModule } from 'primeng/toast';
+import { calcularDv } from '../../../shared/utils/dv.util';
 import { MessageService } from 'primeng/api';
 import {
   AutoCompleteModule,
@@ -164,9 +165,15 @@ export class FormTerceroComponent implements OnInit, OnChanges {
         if (this.esJuridica) {
           this.frmTercero.patchValue({ nombres: null, apellidos: null });
         } else {
-          this.frmTercero.patchValue({ razonSocial: null, dv: null });
+          this.frmTercero.patchValue({ razonSocial: null });
         }
       });
+
+    // El DV se calcula con el número (persona natural o jurídica); se puede corregir a mano.
+    this.frmTercero.get('numeroDocumento')?.valueChanges.subscribe((n: string) => {
+      const dv = calcularDv(n);
+      if (dv !== null) this.frmTercero.patchValue({ dv }, { emitEvent: false });
+    });
   }
 
   private validarNombre(g: AbstractControl) {
@@ -311,7 +318,7 @@ export class FormTerceroComponent implements OnInit, OnChanges {
     const dto: CreateTerceroDto = {
       tipoDocumento: v.tipoDocumento,
       numeroDocumento: v.numeroDocumento.trim(),
-      dv: this.esJuridica ? v.dv?.trim() || null : null,
+      dv: v.dv?.trim() || null,
       razonSocial: this.esJuridica ? v.razonSocial?.trim() || null : null,
       nombres: !this.esJuridica ? v.nombres?.trim() || null : null,
       apellidos: !this.esJuridica ? v.apellidos?.trim() || null : null,
