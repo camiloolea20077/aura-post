@@ -1,0 +1,117 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-file"></i></span>
+        <div>
+          <h1 class="title">Facturas</h1>
+          <p class="subtitle">Facturas de venta fuera del punto de venta: crédito o contado, productos y servicios</p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-calendar"
+          label="Condiciones de pago"
+          class="p-button-text"
+          (click)="condiciones()"
+        ></button>
+        <button
+          *appPuede="'ventas.facturas:CREAR'"
+          pButton
+          type="button"
+          icon="pi pi-plus"
+          label="Nueva factura"
+          class="btn-aura"
+          (click)="nueva()"
+        ></button>
+      </div>
+    </div>
+
+    <div class="filtros">
+      <span class="search-wrap">
+        <i class="pi pi-search"></i>
+        <input
+          type="text"
+          pInputText
+          class="search-input"
+          placeholder="Buscar por número, cliente, documento u orden de compra..."
+          [(ngModel)]="search"
+          (input)="onSearch()"
+          (keydown.escape)="limpiar()"
+        />
+        <button *ngIf="search" class="clear-btn" (click)="limpiar()"><i class="pi pi-times"></i></button>
+      </span>
+      <p-dropdown
+        [options]="estados"
+        [(ngModel)]="estado"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Todos los estados"
+        [showClear]="true"
+        styleClass="filtro-estado"
+        (onChange)="loadTable({ first: 0, rows: rowSize })"
+      />
+    </div>
+
+    <p-table
+      [value]="items"
+      [lazy]="true"
+      (onLazyLoad)="loadTable($event)"
+      [paginator]="true"
+      [rows]="rowSize"
+      [totalRecords]="totalRecords"
+      [loading]="cargando"
+      [rowsPerPageOptions]="[15, 30, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords}"
+      showGridlines
+      [tableStyle]="{ 'min-width': '860px' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 130px">Número</th>
+          <th style="width: 110px">Fecha</th>
+          <th>Cliente</th>
+          <th style="width: 150px">Pago</th>
+          <th style="width: 110px">Vence</th>
+          <th style="width: 130px" class="text-right">Total</th>
+          <th style="width: 130px" class="text-right">Saldo</th>
+          <th style="width: 110px" class="text-center">Estado</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-f>
+        <tr class="fila" (click)="abrir(f)">
+          <td>
+            <span *ngIf="f.numero" class="numero">{{ f.numero }}</span>
+            <span *ngIf="!f.numero" class="borrador">Borrador #{{ f.id }}</span>
+          </td>
+          <td>{{ f.fecha | date: "dd/MM/yyyy" }}</td>
+          <td>
+            <div class="cliente">{{ f.clienteNombre }}</div>
+            <div class="sub">{{ f.clienteDocumento }} · {{ f.sucursalNombre }}</div>
+          </td>
+          <td>
+            {{ f.formaPago === "CREDITO" ? "Crédito" : "Contado" }}
+            <div class="sub" *ngIf="f.condicionPagoNombre">{{ f.condicionPagoNombre }}</div>
+          </td>
+          <td [class.vencida]="vencida(f)">{{ f.fechaVencimiento ? (f.fechaVencimiento | date: "dd/MM/yyyy") : "—" }}</td>
+          <td class="text-right monto">{{ cop(f.total) }}</td>
+          <td class="text-right">{{ f.estado === "EMITIDA" ? cop(f.saldoPendiente) : "—" }}</td>
+          <td class="text-center">
+            <p-tag [value]="etiqueta(f.estado)" [severity]="severidad(f.estado)" [rounded]="true" />
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8" class="vacio">
+            <i class="pi pi-file"></i>
+            {{ search || estado ? "Ninguna factura coincide con la búsqueda." : "Aún no hay facturas. Cree la primera con \"Nueva factura\"." }}
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

@@ -115,6 +115,10 @@ export class IndexCotizacionesComponent implements OnInit {
     this.showDetalle = true;
   }
 
+  nueva(): void {
+    this.router.navigate(['/cotizaciones/nueva']);
+  }
+
   editar(item: CotizacionTableModel, event: Event): void {
     event.stopPropagation();
     this.router.navigate(['/cotizaciones/editar', item.id]);

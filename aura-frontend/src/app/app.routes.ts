@@ -374,11 +374,55 @@ export const routes: Routes = [
             (m) => m.VENDEDORES_ROUTES,
           ),
       },
+      // Ventas › Facturas (Facturación ERP fuera del POS)
+      {
+        path: 'ventas/facturas',
+        loadComponent: () =>
+          import('./features/facturas-venta/index/index-facturas-venta.component').then(
+            (m) => m.IndexFacturasVentaComponent,
+          ),
+      },
+      {
+        path: 'ventas/facturas/condiciones-pago',
+        loadComponent: () =>
+          import('./features/facturas-venta/condiciones/condiciones-pago.component').then(
+            (m) => m.CondicionesPagoComponent,
+          ),
+      },
+      {
+        path: 'ventas/facturas/nueva',
+        loadComponent: () =>
+          import('./features/facturas-venta/form/form-factura-venta.component').then(
+            (m) => m.FormFacturaVentaComponent,
+          ),
+      },
+      {
+        path: 'ventas/facturas/:id/editar',
+        loadComponent: () =>
+          import('./features/facturas-venta/form/form-factura-venta.component').then(
+            (m) => m.FormFacturaVentaComponent,
+          ),
+      },
+      {
+        // La emitida se ve en el mismo formulario, en solo lectura.
+        path: 'ventas/facturas/:id',
+        loadComponent: () =>
+          import('./features/facturas-venta/form/form-factura-venta.component').then(
+            (m) => m.FormFacturaVentaComponent,
+          ),
+      },
       {
         path: 'cotizaciones',
         loadComponent: () =>
           import('./features/cotizaciones/index/index-cotizaciones.component').then(
             (m) => m.IndexCotizacionesComponent,
+          ),
+      },
+      {
+        path: 'cotizaciones/nueva',
+        loadComponent: () =>
+          import('./features/cotizaciones/form/form-cotizacion.component').then(
+            (m) => m.FormCotizacionComponent,
           ),
       },
       {

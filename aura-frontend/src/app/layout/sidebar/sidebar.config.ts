@@ -212,6 +212,12 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
     icon: 'pi pi-receipt',
     items: [
       {
+        label: 'Facturas',
+        codigo: 'ventas.facturas',
+        icon: 'pi pi-file',
+        route: '/ventas/facturas',
+      },
+      {
         label: 'Ventas',
         codigo: 'ventas.ventas',
         icon: 'pi pi-receipt',

@@ -1,0 +1,77 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-calendar"></i></span>
+        <div>
+          <h1 class="title">Condiciones de pago</h1>
+          <p class="subtitle">Plazos de las facturas: los días definen el vencimiento. En 0 días es de contado.</p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button pButton type="button" icon="pi pi-arrow-left" label="Volver" class="p-button-text" (click)="volver()"></button>
+        <button
+          *appPuede="'ventas.facturas:CREAR'"
+          pButton
+          type="button"
+          icon="pi pi-plus"
+          label="Nueva condición"
+          class="btn-aura"
+          (click)="nueva()"
+        ></button>
+      </div>
+    </div>
+
+    <div class="cargando" *ngIf="cargando"><i class="pi pi-spin pi-spinner"></i> Cargando…</div>
+
+    <div class="tabla-scroll" *ngIf="!cargando">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th class="col-dias">Días</th>
+            <th class="col-estado">Estado</th>
+            <th class="col-acc"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let f of filas" [class.inactiva]="!f.activa && !f.editando">
+            <ng-container *ngIf="f.editando; else lectura">
+              <td><input pInputText class="w-full" [(ngModel)]="f.nombre" maxlength="80" placeholder="Crédito 45 días" /></td>
+              <td>
+                <p-inputNumber [(ngModel)]="f.dias" [min]="0" [max]="3650" suffix=" días" inputStyleClass="w-full" />
+              </td>
+              <td>
+                <p-dropdown [options]="estados" [(ngModel)]="f.activa" optionLabel="label" optionValue="value" styleClass="w-full" appendTo="body" />
+              </td>
+              <td class="acciones">
+                <button pButton type="button" icon="pi pi-check" class="p-button-text p-button-sm" [disabled]="guardando" (click)="guardar(f)"></button>
+                <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-sm p-button-secondary" (click)="cancelar(f)"></button>
+              </td>
+            </ng-container>
+            <ng-template #lectura>
+              <td>{{ f.nombre }}</td>
+              <td>{{ f.dias === 0 ? "Contado" : f.dias + " días" }}</td>
+              <td>
+                <p-tag [value]="f.activa ? 'Activa' : 'Inactiva'" [severity]="f.activa ? 'success' : 'secondary'" [rounded]="true" />
+              </td>
+              <td class="acciones">
+                <button
+                  *appPuede="'ventas.facturas:EDITAR'"
+                  pButton
+                  type="button"
+                  icon="pi pi-pencil"
+                  class="p-button-text p-button-sm"
+                  (click)="editar(f)"
+                ></button>
+              </td>
+            </ng-template>
+          </tr>
+          <tr *ngIf="!filas.length">
+            <td colspan="4" class="vacio">No hay condiciones de pago. Cree la primera con "Nueva condición".</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

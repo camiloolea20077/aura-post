@@ -127,6 +127,17 @@
                 tooltipPosition="top"
                 (click)="abrirDespachar(item, $event)"
               ></button>
+              <ng-container *ngIf="!item.ventaId">
+                <button
+                  *appPuede="'ventas.facturas:CREAR'"
+                  pButton
+                  icon="pi pi-file"
+                  class="p-button-text p-button-sm"
+                  pTooltip="Facturar (Ventas › Facturas)"
+                  tooltipPosition="top"
+                  (click)="facturarPedido(item, $event)"
+                ></button>
+              </ng-container>
               <button
                 *ngIf="item.ventaId"
                 pButton

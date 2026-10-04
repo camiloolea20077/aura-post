@@ -5,10 +5,19 @@
         <span class="header-icon"><i class="pi pi-file-edit"></i></span>
         <div>
           <h1 class="title">Cotizaciones</h1>
-          <p class="subtitle">Propuestas de precios generadas desde el POS</p>
+          <p class="subtitle">Propuestas de precio para clientes, creadas aquí o desde el POS</p>
         </div>
       </div>
       <div class="card-head__actions">
+        <button
+          *appPuede="'ventas.cotizaciones:CREAR'"
+          pButton
+          type="button"
+          icon="pi pi-plus"
+          label="Nueva cotización"
+          class="btn-aura"
+          (click)="nueva()"
+        ></button>
         <div class="card-head__search">
           <span class="search-wrap">
             <i class="pi pi-search"></i>
