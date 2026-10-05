@@ -171,6 +171,15 @@ export const routes: Routes = [
           ),
       },
       {
+        // Centro de Recursos Humanos: igual que Contabilidad, el sidebar abre
+        // aquí y cada pantalla conserva su ruta de siempre.
+        path: 'recursos-humanos',
+        loadComponent: () =>
+          import('./features/nomina/centro/centro-rrhh.component').then(
+            (m) => m.CentroRrhhComponent,
+          ),
+      },
+      {
         path: 'contabilidad/cierre',
         loadComponent: () =>
           import('./features/contabilidad/cierre/cierre-contable.component').then(
