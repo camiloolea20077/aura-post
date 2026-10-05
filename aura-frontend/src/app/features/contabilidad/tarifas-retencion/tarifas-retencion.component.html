@@ -15,7 +15,7 @@
         </div>
       </div>
       <div class="card-head__actions">
-        <button
+        <button *appPuede="'contabilidad.tarifas-retencion:CREAR'"
           pButton
           type="button"
           label="Nueva Tarifa"
@@ -104,14 +104,14 @@
           </td>
           <td>
             <div style="display: flex; gap: 0.25rem">
-              <button
+              <button *appPuede="'contabilidad.tarifas-retencion:EDITAR'"
                 pButton
                 icon="pi pi-pencil"
                 class="p-button-text p-button-sm p-button-rounded"
                 pTooltip="Editar"
                 (click)="abrirEditar(t)"
               ></button>
-              <button
+              <button *appPuede="'contabilidad.tarifas-retencion:ANULAR'"
                 pButton
                 icon="pi pi-trash"
                 class="p-button-text p-button-sm p-button-rounded p-button-danger"

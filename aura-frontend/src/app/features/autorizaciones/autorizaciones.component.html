@@ -1,0 +1,91 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-shield"></i></span>
+        <div>
+          <h1 class="title">Autorizaciones</h1>
+          <p class="subtitle">
+            Descuentos y precios por encima del límite de cajeros y vendedores
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="cuerpo" *ngIf="!puedeAutorizar">
+      <div class="aviso">
+        <i class="pi pi-lock"></i>
+        Su perfil no tiene la acción "Autorizar descuentos y precios".
+      </div>
+    </div>
+
+    <div class="cuerpo" *ngIf="puedeAutorizar">
+      <section class="seccion">
+        <h3 class="seccion__titulo">Código para dictar</h3>
+        <p class="seccion__ayuda">
+          Si está junto al cajero, genere un código y díctelo. Sirve una sola vez
+          y vence en 2 minutos: su clave nunca se escribe en el equipo del cajero.
+        </p>
+        <div class="codigo" *ngIf="codigo">
+          <span class="codigo__numero">{{ codigo.codigo }}</span>
+          <span class="codigo__vence">Vence en {{ segundos }} s</span>
+          <span class="codigo__cubre"
+            >Cubre hasta: descuento {{ limite(codigo.descuentoMaxPct) }}, rebaja
+            {{ limite(codigo.rebajaPrecioMaxPct) }}</span
+          >
+        </div>
+        <button
+          pButton
+          type="button"
+          icon="pi pi-key"
+          [label]="codigo ? 'Generar otro' : 'Generar código'"
+          class="btn-aura"
+          [loading]="generando"
+          (click)="generar()"
+        ></button>
+      </section>
+
+      <section class="seccion">
+        <h3 class="seccion__titulo">
+          Solicitudes pendientes
+          <span class="seccion__extra">{{ pendientes.length }}</span>
+        </h3>
+        <p class="vacio" *ngIf="!pendientes.length">
+          Nadie está esperando una autorización.
+        </p>
+        <div class="solicitud" *ngFor="let s of pendientes">
+          <div class="solicitud__texto">
+            <strong>{{ s.solicitante ?? "Un usuario" }}</strong>
+            <span
+              >Descuento {{ s.descuentoPct ?? 0 }}% · rebaja
+              {{ s.rebajaPct ?? 0 }}% · {{ s.fecha | date: "HH:mm" }}</span
+            >
+            <ul *ngIf="lineas(s).length">
+              <li *ngFor="let l of lineas(s)">{{ l }}</li>
+            </ul>
+            <em *ngIf="s.motivo">“{{ s.motivo }}”</em>
+          </div>
+          <div class="solicitud__botones">
+            <button
+              pButton
+              type="button"
+              label="Rechazar"
+              class="p-button-outlined p-button-danger p-button-sm"
+              [disabled]="respondiendo === s.id"
+              (click)="rechazar(s)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              label="Aprobar"
+              icon="pi pi-check"
+              class="p-button-sm"
+              [loading]="respondiendo === s.id"
+              (click)="aprobar(s)"
+            ></button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>

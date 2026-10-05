@@ -18,11 +18,11 @@ import { normalize } from '../../shared/utils/commons';
 import { IndexDBService } from '../../core/services/index-db.service';
 import { StateStore } from '../../core/store/state';
 import { MobileMenuComponent } from '../mobile-menu/mobile-menu.component';
-import { SIDEBAR_MENU } from '../sidebar/sidebar.config';
 import { lastValueFrom } from 'rxjs';
 import { NotificacionService } from '../../core/services/notificacion.service';
 import { NotificacionModel } from '../../core/models/notificacion.model';
 import { AlertService } from '../../shared/pipes/alert.service';
+import { AuthService } from '../../core/services/auth.service';
 
 interface BreadcrumbItem {
   label: string;
@@ -55,6 +55,7 @@ export class TopbarComponent implements OnInit {
   @Output() toggleSidebar = new EventEmitter<void>();
 
   public readonly state = inject(StateStore);
+  private readonly authService = inject(AuthService);
   public breadcrumbs: BreadcrumbItem[] = [];
   public userName = '';
   public userRole = '';
@@ -192,40 +193,69 @@ export class TopbarComponent implements OnInit {
         value: s.id,
       }));
 
-      // Seleccionar la default si existe, si no la primera
-      const defaultSucursal =
-        auth.sucursales.find((s: any) => s.esDefault) ?? auth.sucursales[0];
+      // La sede de la sesión (si ya la cambió), si no la default, si no la primera.
+      const actual =
+        auth.sucursales.find((s: any) => s.id === auth.sucursalActualId) ??
+        auth.sucursales.find((s: any) => s.esDefault) ??
+        auth.sucursales[0];
 
-      if (defaultSucursal) {
-        this.frmTopbar.patchValue({ sucursalId: defaultSucursal.id });
+      if (actual) {
+        this.frmTopbar.patchValue(
+          { sucursalId: actual.id },
+          { emitEvent: false },
+        );
       }
+      this.escucharCambioDeSede(actual?.id ?? null);
 
       // Cargar menú para mobile
       this.loadMenuForMobile();
     }
   }
 
-  private loadMenuForMobile(): void {
-    this.menuGroups = SIDEBAR_MENU.filter((g) =>
-      this.tieneAcceso(g.roles, this.userRole),
-    )
-      .map((g) => ({
-        label: g.label,
-        items: g.items
-          .filter((i) => this.tieneAcceso(i.roles, this.userRole))
-          .map((i) => ({
-            label: i.label,
-            icon: i.icon,
-            route: i.route,
-          })),
-      }))
-      .filter((g) => g.items.length > 0);
+  /**
+   * Cambiar de sede pide un token nuevo con esa sede (PLAN_PERMISOS P9): antes el
+   * selector no hacía nada y todo seguía en la sede del login. Se recarga la
+   * aplicación para que cada pantalla tome la sede nueva.
+   */
+  private escucharCambioDeSede(inicial: number | null): void {
+    let actual = inicial;
+    this.frmTopbar.get('sucursalId')?.valueChanges.subscribe(async (id) => {
+      if (!id || id === actual) return;
+      try {
+        const res = await lastValueFrom(this.authService.cambiarSede(id));
+        const auth = await this.indexDBService.loadDataAuthDB();
+        if (res?.data?.token && auth) {
+          await this.indexDBService.saveAuthData({
+            ...auth,
+            token: res.data.token,
+            sucursalActualId: id,
+          });
+          actual = id;
+          window.location.reload();
+        }
+      } catch (err: any) {
+        this.alertService.showError(
+          'No se pudo cambiar de sede',
+          err?.error?.message ?? 'Intente de nuevo.',
+        );
+        this.frmTopbar.patchValue({ sucursalId: actual }, { emitEvent: false });
+      }
+    });
   }
 
-  private tieneAcceso(roles: string[] | undefined, rol: string): boolean {
-    if (rol === 'PLATFORM_ADMIN') return true;
-    if (!roles || roles.length === 0) return true;
-    return roles.includes(rol);
+  /** El menú ya filtrado por el perfil del usuario (StateStore), aplanado. */
+  private loadMenuForMobile(): void {
+    this.menuGroups = this.state
+      .menuGroups()
+      .map((g) => ({
+        label: g.label,
+        items: [...g.items, ...(g.subgroups ?? []).flatMap((sg) => sg.items)].map((i) => ({
+          label: i.label,
+          icon: i.icon,
+          route: i.route,
+        })),
+      }))
+      .filter((g) => g.items.length > 0);
   }
 
   onMobileMenuClose(): void {

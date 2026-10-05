@@ -1,266 +1,229 @@
-<p-dialog
-  header="Nuevo Traslado"
-  [(visible)]="visible"
-  (onHide)="close()"
-  [modal]="true"
-  [style]="{ width: '900px', maxHeight: '90vh' }"
-  [draggable]="false"
-  [resizable]="false"
->
-  <div class="dialog-body" [formGroup]="form">
-    <!-- Sucursales + observación -->
-    <div class="dialog-section">
-      <div class="form-grid-3">
-        <div class="field">
-          <label class="field-label"
-            >Sucursal origen <span class="required">*</span></label
-          >
-          <p-dropdown
-            formControlName="sucursalOrigenId"
-            [options]="sucursales"
-            optionLabel="nombre"
-            optionValue="id"
-            placeholder="Selecciona origen"
-            styleClass="w-full"
-            [class.ng-invalid]="isInvalid('sucursalOrigenId')"
-          />
-          <small class="field-error" *ngIf="isInvalid('sucursalOrigenId')"
-            >Obligatorio</small
-          >
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-arrow-right-arrow-left"></i></span>
+        <div>
+          <h1 class="title">Nuevo traslado</h1>
+          <p class="subtitle">Mueve existencias de una bodega a otra</p>
         </div>
-
-        <div class="field">
-          <label class="field-label"
-            >Bodega origen <span class="required">*</span></label
-          >
-          <p-dropdown
-            formControlName="bodegaOrigenId"
-            [options]="bodegasOrigen"
-            optionLabel="nombre"
-            optionValue="id"
-            placeholder="Selecciona la bodega"
-            styleClass="w-full"
-            [class.ng-invalid]="isInvalid('bodegaOrigenId')"
-          />
-          <small class="field-error" *ngIf="isInvalid('bodegaOrigenId')"
-            >Obligatorio</small
-          >
-        </div>
-
-        <div class="field">
-          <label class="field-label"
-            >Sucursal destino <span class="required">*</span></label
-          >
-          <p-dropdown
-            formControlName="sucursalDestinoId"
-            [options]="sucursales"
-            optionLabel="nombre"
-            optionValue="id"
-            placeholder="Selecciona destino"
-            styleClass="w-full"
-            [class.ng-invalid]="isInvalid('sucursalDestinoId')"
-          />
-          <small class="field-error" *ngIf="isInvalid('sucursalDestinoId')"
-            >Obligatorio</small
-          >
-        </div>
-
-        <div class="field">
-          <label class="field-label"
-            >Bodega destino <span class="required">*</span></label
-          >
-          <p-dropdown
-            formControlName="bodegaDestinoId"
-            [options]="bodegasDestino"
-            optionLabel="nombre"
-            optionValue="id"
-            placeholder="Selecciona la bodega"
-            styleClass="w-full"
-            [class.ng-invalid]="isInvalid('bodegaDestinoId') || mismaBodega"
-          />
-          <small class="field-error" *ngIf="isInvalid('bodegaDestinoId')"
-            >Obligatorio</small
-          >
-          <small class="field-error" *ngIf="mismaBodega"
-            >La bodega de origen y la de destino no pueden ser la misma</small
-          >
-        </div>
-
-        <div class="field">
-          <label class="field-label">Observación</label>
-          <textarea
-            pTextarea
-            formControlName="observacion"
-            placeholder="Opcional..."
-            rows="2"
-            class="w-full"
-          ></textarea>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button
+            pButton
+            type="button"
+            icon="pi pi-arrow-left"
+            label="Volver"
+            class="p-button-outlined p-button-secondary"
+            (click)="volver()"
+          ></button>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-check"
+            label="Crear traslado"
+            class="btn-aura"
+            [loading]="loading"
+            (click)="guardar()"
+          ></button>
         </div>
       </div>
     </div>
 
-    <!-- Líneas de productos -->
-    <div class="dialog-section">
-      <div class="section-header">
-        <span class="section-title"
-          ><i class="pi pi-list"></i> Productos a trasladar</span
-        >
-        <button
-          pButton
-          label="Agregar producto"
-          icon="pi pi-plus"
-          class="btn-verde p-button-sm"
-          (click)="addLinea()"
-        ></button>
-      </div>
-
-      <!-- Empty -->
-      <div class="lines-empty" *ngIf="lineas.length === 0">
-        <i class="pi pi-arrow-right-arrow-left"></i>
-        <p>Selecciona el origen y agrega los productos a trasladar</p>
-      </div>
-
-      <!-- Tabla -->
-      <div class="lines-wrap" *ngIf="lineas.length > 0">
-        <div class="lines-header">
-          <span class="col-producto">Producto</span>
-          <span class="col-lote">Lote</span>
-          <span class="col-stock">Stock origen</span>
-          <span class="col-cantidad">Cantidad</span>
-          <span class="col-costo">Costo unit.</span>
-          <span class="col-accion"></span>
-        </div>
-
-        <div class="line-row" *ngFor="let l of lineas; trackBy: trackById">
-          <!-- Producto -->
-          <div class="col-producto">
-            <p-autoComplete
-              [(ngModel)]="l.productoNombre"
-              [ngModelOptions]="{ standalone: true }"
-              [suggestions]="productoSugerencias"
-              field="label"
-              placeholder="Buscar producto..."
-              styleClass="w-full"
-              inputStyleClass="line-ac-input"
-              (completeMethod)="buscarProductos($event)"
-              (onSelect)="seleccionarProducto($event, l)"
-              [minLength]="2"
-            />
-            <button
-                *ngIf="l.manejaSerial"
-                type="button"
-                class="seriales-link"
-                [class.seriales-link--ok]="(l.serialIds?.length ?? 0) === unidadesSerial(l) && unidadesSerial(l) > 0"
-                (click)="abrirSeriales(l)"
-              >
-                <i class="pi pi-barcode"></i>
-                Seriales {{ l.serialIds?.length ?? 0 }}/{{ unidadesSerial(l) | number: "1.0-4" }}
-              </button>
-          </div>
-
-          <!-- Lote -->
-          <div class="col-lote">
+    <div class="cuerpo" [formGroup]="form">
+      <!-- ── Origen y destino ─────────────────────────────── -->
+      <section class="seccion">
+        <h3 class="seccion__titulo">Origen y destino</h3>
+        <div class="grid">
+          <div class="field">
+            <label class="field-label">Sucursal origen <span class="req">*</span></label>
             <p-dropdown
-              *ngIf="l.manejaLotes"
-              [(ngModel)]="l.loteId"
-              [ngModelOptions]="{ standalone: true }"
-              [options]="l.lotesDisponibles"
-              optionLabel="etiqueta"
+              formControlName="sucursalOrigenId"
+              [options]="sucursales"
+              optionLabel="nombre"
               optionValue="id"
-              [showClear]="true"
-              placeholder="Automático (vence primero)"
-              styleClass="w-full"
-              (onChange)="onLoteChange(l, $event.value)"
+              placeholder="Seleccione el origen"
+              [class.ng-invalid]="isInvalid('sucursalOrigenId')"
             />
-            <span class="no-aplica" *ngIf="!l.manejaLotes">—</span>
           </div>
-
-          <!-- Stock origen -->
-          <div class="col-stock">
-            <span
-              class="stock-pill"
-              [class.danger]="l.productoId && l.cantidad > l.stockOrigen"
+          <div class="field">
+            <label class="field-label">Bodega origen <span class="req">*</span></label>
+            <p-dropdown
+              formControlName="bodegaOrigenId"
+              [options]="bodegasOrigen"
+              optionLabel="nombre"
+              optionValue="id"
+              placeholder="Seleccione la bodega"
+              [class.ng-invalid]="isInvalid('bodegaOrigenId')"
+            />
+          </div>
+          <div class="field">
+            <label class="field-label">Sucursal destino <span class="req">*</span></label>
+            <p-dropdown
+              formControlName="sucursalDestinoId"
+              [options]="sucursales"
+              optionLabel="nombre"
+              optionValue="id"
+              placeholder="Seleccione el destino"
+              [class.ng-invalid]="isInvalid('sucursalDestinoId')"
+            />
+          </div>
+          <div class="field">
+            <label class="field-label">Bodega destino <span class="req">*</span></label>
+            <p-dropdown
+              formControlName="bodegaDestinoId"
+              [options]="bodegasDestino"
+              optionLabel="nombre"
+              optionValue="id"
+              placeholder="Seleccione la bodega"
+              [class.ng-invalid]="isInvalid('bodegaDestinoId') || mismaBodega"
+            />
+            <small class="field-error" *ngIf="mismaBodega"
+              >La bodega de origen y la de destino no pueden ser la misma</small
             >
-              {{ l.stockOrigen }}
-            </span>
           </div>
-
-          <!-- Cantidad -->
-          <div class="col-cantidad">
-            <p-inputNumber
-              [ngModel]="l.cantidad"
-              [ngModelOptions]="{ standalone: true }"
-              (ngModelChange)="updateCantidad(l, $event)"
-              [min]="0.001"
-              [maxFractionDigits]="4"
-              inputStyleClass="line-input text-center"
-              styleClass="w-full"
-            />
-          </div>
-
-          <!-- Costo -->
-          <div class="col-costo">
-            <p-inputNumber
-              [ngModel]="l.costoUnitario"
-              [ngModelOptions]="{ standalone: true }"
-              (ngModelChange)="onCostoChange(l, $event)"
-              [min]="0"
-              mode="currency"
-              currency="COP"
-              locale="es-CO"
-              [minFractionDigits]="0"
-              inputStyleClass="line-input text-right"
-              styleClass="w-full"
-            />
-          </div>
-
-          <!-- Eliminar -->
-          <div class="col-accion">
-            <button
-              pButton
-              icon="pi pi-trash"
-              class="p-button-text p-button-danger p-button-sm"
-              (click)="removeLinea(l._id)"
-            ></button>
+          <div class="field field--ancho">
+            <label class="field-label">Observación</label>
+            <textarea
+              pTextarea
+              formControlName="observacion"
+              rows="2"
+              placeholder="Opcional"
+            ></textarea>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <!-- Alerta stock -->
-    <div class="stock-alert" *ngIf="hayStockInvalido">
-      <i class="pi pi-exclamation-triangle"></i>
-      Hay productos con cantidad mayor al stock disponible en origen
+      <!-- ── Productos ───────────────────────────────────── -->
+      <section class="seccion">
+        <h3 class="seccion__titulo">
+          Productos
+          <span class="seccion__extra">{{ totalProductos }}</span>
+        </h3>
+
+        <div class="agregar">
+          <label class="field-label">Agregar producto</label>
+          <ng-container *ngFor="let k of [buscadorKey]">
+            <app-producto-autocomplete
+              [disabled]="!origenListo || agregando"
+              [placeholder]="origenListo ? 'Nombre, SKU o código… (lupa = búsqueda avanzada)' : 'Elija primero la bodega de origen'"
+              (seleccionado)="onProducto($event)"
+            />
+          </ng-container>
+          <small class="field-hint"
+            >El stock es el de la bodega de origen. Si el producto ya está en la
+            lista, suma uno.</small
+          >
+        </div>
+
+        <div class="vacio" *ngIf="!lineas.length">
+          <i class="pi pi-box"></i>
+          <span>Busque y agregue los productos a trasladar</span>
+        </div>
+
+        <div class="tabla-wrap" *ngIf="lineas.length">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th class="col-lote">Lote</th>
+                <th class="num">Stock origen</th>
+                <th class="num col-cant">Cantidad</th>
+                <th class="num col-costo">Costo unit.</th>
+                <th class="num">Total</th>
+                <th class="col-accion"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let l of lineas; trackBy: trackById">
+                <td>
+                  <div class="prod">
+                    <strong>{{ l.productoNombre }}</strong>
+                    <span *ngIf="l.productoSku">{{ l.productoSku }}</span>
+                    <button
+                      *ngIf="l.manejaSerial"
+                      type="button"
+                      class="seriales-link"
+                      [class.seriales-link--ok]="(l.serialIds?.length ?? 0) === unidadesSerial(l) && unidadesSerial(l) > 0"
+                      (click)="abrirSeriales(l)"
+                    >
+                      <i class="pi pi-barcode"></i>
+                      Seriales {{ l.serialIds?.length ?? 0 }}/{{ unidadesSerial(l) | number: "1.0-4" }}
+                    </button>
+                  </div>
+                </td>
+                <td class="col-lote">
+                  <p-dropdown
+                    *ngIf="l.manejaLotes"
+                    [ngModel]="l.loteId"
+                    [ngModelOptions]="{ standalone: true }"
+                    [options]="l.lotesDisponibles"
+                    optionLabel="etiqueta"
+                    optionValue="id"
+                    [showClear]="true"
+                    placeholder="Automático (vence primero)"
+                    appendTo="body"
+                    (onChange)="onLoteChange(l, $event.value)"
+                  />
+                  <span class="no-aplica" *ngIf="!l.manejaLotes">—</span>
+                </td>
+                <td class="num">
+                  <span class="stock" [class.stock--mal]="l.cantidad > l.stockOrigen">{{
+                    l.stockOrigen | number: "1.0-4"
+                  }}</span>
+                </td>
+                <td class="num col-cant">
+                  <p-inputNumber
+                    [ngModel]="l.cantidad"
+                    [ngModelOptions]="{ standalone: true }"
+                    (ngModelChange)="updateCantidad(l, $event)"
+                    [min]="0.001"
+                    [maxFractionDigits]="4"
+                    inputStyleClass="text-right"
+                  />
+                </td>
+                <td class="num col-costo">
+                  <p-inputNumber
+                    [ngModel]="l.costoUnitario"
+                    [ngModelOptions]="{ standalone: true }"
+                    (ngModelChange)="onCostoChange(l, $event)"
+                    [min]="0"
+                    mode="currency"
+                    currency="COP"
+                    locale="es-CO"
+                    [minFractionDigits]="0"
+                    inputStyleClass="text-right"
+                  />
+                </td>
+                <td class="num">{{ l.cantidad * l.costoUnitario | currency: "COP" : "$" : "1.0-0" }}</td>
+                <td class="col-accion">
+                  <button
+                    pButton
+                    type="button"
+                    icon="pi pi-trash"
+                    class="p-button-text p-button-danger p-button-sm"
+                    (click)="removeLinea(l._id)"
+                  ></button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="alerta" *ngIf="hayStockInvalido">
+          <i class="pi pi-exclamation-triangle"></i>
+          Hay productos con más cantidad que el stock de la bodega de origen.
+        </div>
+
+        <div class="resumen" *ngIf="lineas.length">
+          <span>{{ totalProductos }} producto(s)</span>
+          <strong>Costo total {{ totalCosto | currency: "COP" : "$" : "1.0-0" }}</strong>
+        </div>
+      </section>
     </div>
   </div>
-
-  <!-- Footer -->
-  <ng-template pTemplate="footer">
-    <div class="dialog-footer">
-      <div class="resumen-wrap">
-        <span class="resumen-label">Productos</span>
-        <span class="resumen-val">{{ totalProductos }}</span>
-      </div>
-      <div class="footer-actions">
-        <button
-          pButton
-          label="Cancelar"
-          icon="pi pi-times"
-          class="btn-amarillo"
-          (click)="close()"
-        ></button>
-        <button
-          pButton
-          label="Crear traslado"
-          icon="pi pi-check"
-          class="btn-verde"
-          [loading]="loading"
-          (click)="guardar()"
-        ></button>
-      </div>
-    </div>
-  </ng-template>
-</p-dialog>
+</div>
 
 <app-serial-picker
   [(visible)]="serialPickerVisible"

@@ -5,7 +5,9 @@ import {
   OnChanges,
   Output,
   SimpleChanges,
+  inject,
 } from '@angular/core';
+import { StateStore } from '../../../../core/store/state';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -61,6 +63,9 @@ type TagSeverity =
   styleUrls: ['./detalle-nomina.component.scss'],
 })
 export class DetalleNominaComponent implements OnChanges {
+  /** Acciones especiales del perfil (PLAN_PERMISOS P6). */
+  private readonly permisosStore = inject(StateStore);
+
   @Input() visible = false;
   @Input() nominaId: number | null = null;
   @Output() closed = new EventEmitter<void>();
@@ -352,7 +357,10 @@ export class DetalleNominaComponent implements OnChanges {
   }
 
   get puedeAprobar(): boolean {
-    return this.nomina?.estado === 'BORRADOR';
+    return (
+      this.nomina?.estado === 'BORRADOR' &&
+      this.permisosStore.puede('recursos-humanos.liquidacion-nomina', 'APROBAR')
+    );
   }
 
   get puedePagar(): boolean {

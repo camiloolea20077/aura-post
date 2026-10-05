@@ -12,7 +12,7 @@
         </div>
       </div>
       <div class="card-head__actions">
-        <button
+        <button *appPuede="'compras.compras:CREAR'"
           pButton
           type="button"
           label="Nueva compra"
@@ -157,6 +157,7 @@
               tooltipPosition="top"
               (click)="verDetalle(item)"
             ></button>
+            <ng-container *appPuede="'compras.compras:EDITAR'">
             <button
               *ngIf="item.estado === 'RECIBIDA'"
               pButton
@@ -167,6 +168,7 @@
               tooltipPosition="top"
               (click)="editarCompra(item)"
             ></button>
+            </ng-container>
             <button
               pButton
               type="button"
@@ -202,7 +204,8 @@
                     : "No hay compras registradas"
                 }}
               </p>
-              <button
+              <ng-container *appPuede="'compras.compras:CREAR'">
+            <button
                 *ngIf="!searchQuery"
                 pButton
                 type="button"
@@ -211,6 +214,7 @@
                 class="btn-verde p-button-sm"
                 (click)="openForm()"
               ></button>
+            </ng-container>
             </div>
           </td>
         </tr>

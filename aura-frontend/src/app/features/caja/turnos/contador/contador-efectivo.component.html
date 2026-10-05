@@ -1,0 +1,80 @@
+<div class="contador">
+  <ng-template #fila let-d>
+    <div class="den" [class.den--con]="cantidades[d.valor] > 0">
+      <span class="den-chip" [class.den-chip--moneda]="d.tipo === 'moneda'" [style.--c]="d.color">
+        $ {{ etiqueta(d) }}
+      </span>
+      <div class="den-cant">
+        <button type="button" class="den-btn" [disabled]="disabled || !(cantidades[d.valor] > 0)" (click)="sumar(d, -1)" aria-label="Quitar uno">
+          <i class="pi pi-minus"></i>
+        </button>
+        <p-inputNumber
+          [ngModel]="cantidades[d.valor]"
+          (ngModelChange)="onCantidad(d, $event)"
+          [min]="0"
+          [useGrouping]="false"
+          [disabled]="disabled"
+          inputStyleClass="den-input"
+          [inputId]="'den-' + d.valor"
+          ariaLabel="Cantidad"
+        />
+        <button type="button" class="den-btn den-btn--mas" [disabled]="disabled" (click)="sumar(d, 1)" aria-label="Agregar uno">
+          <i class="pi pi-plus"></i>
+        </button>
+      </div>
+      <span class="den-sub">{{ subtotal(d) > 0 ? formatCOP(subtotal(d)) : '—' }}</span>
+    </div>
+  </ng-template>
+
+  <div class="grupo">
+    <div class="grupo-cab">
+      <span><i class="pi pi-money-bill"></i> Billetes</span>
+      <strong>{{ formatCOP(totalBilletes) }}</strong>
+    </div>
+    <ng-container *ngFor="let d of billetes; trackBy: trackValor">
+      <ng-container *ngTemplateOutlet="fila; context: { $implicit: d }"></ng-container>
+    </ng-container>
+  </div>
+
+  <div class="grupo">
+    <div class="grupo-cab">
+      <span><i class="pi pi-circle"></i> Monedas</span>
+      <strong>{{ formatCOP(totalMonedas) }}</strong>
+    </div>
+    <ng-container *ngFor="let d of monedas; trackBy: trackValor">
+      <ng-container *ngTemplateOutlet="fila; context: { $implicit: d }"></ng-container>
+    </ng-container>
+  </div>
+
+  <div class="grupo">
+    <div class="den den--otros">
+      <span class="den-otros-label">
+        Otros
+        <small>Vales, cheques u otro efectivo</small>
+      </span>
+      <p-inputNumber
+        [ngModel]="otros"
+        (ngModelChange)="onOtros($event)"
+        mode="currency"
+        currency="COP"
+        locale="es-CO"
+        [minFractionDigits]="0"
+        [min]="0"
+        [disabled]="disabled"
+        inputStyleClass="den-otros-input"
+        placeholder="$ 0"
+      />
+    </div>
+  </div>
+
+  <div class="pie">
+    <div class="pie-total">
+      <span>Total contado</span>
+      <strong>{{ formatCOP(total) }}</strong>
+      <small>{{ piezas }} billete(s) y moneda(s)</small>
+    </div>
+    <button type="button" class="pie-limpiar" [disabled]="disabled || total === 0" (click)="limpiar()">
+      <i class="pi pi-eraser"></i> Volver a contar
+    </button>
+  </div>
+</div>

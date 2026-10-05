@@ -1,0 +1,298 @@
+<div class="page cc">
+  <!-- ══ Resumen del mes ═══════════════════════════════════════════════ -->
+  <section class="card" aria-labelledby="rh-titulo">
+    <header class="card-head">
+      <div class="card-head__title">
+        <div class="header-icon"><i class="pi pi-id-card" aria-hidden="true"></i></div>
+        <div>
+          <h2 class="title" id="rh-titulo">Recursos Humanos</h2>
+          <p class="subtitle">Resumen de nómina y gestión del personal</p>
+        </div>
+      </div>
+      <div class="cc-periodo">
+        <label for="rh-mes">Período</label>
+        <p-calendar
+          inputId="rh-mes"
+          [ngModel]="periodo"
+          (ngModelChange)="cambiarPeriodo($event)"
+          view="month"
+          dateFormat="MM yy"
+          [maxDate]="maxPeriodo"
+          [readonlyInput]="true"
+          [showIcon]="true"
+          styleClass="cc-cal"
+        />
+        <button
+          type="button"
+          class="cc-icon"
+          pTooltip="Actualizar"
+          tooltipPosition="top"
+          aria-label="Actualizar resumen"
+          (click)="cargar()"
+        >
+          <i class="pi pi-refresh" [class.pi-spin]="cargando()"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Error -->
+    <div class="cc-estado-vacio cc-estado-vacio--error" *ngIf="error() && !cargando()" role="alert">
+      <i class="pi pi-exclamation-triangle"></i>
+      <span>No fue posible cargar el resumen de recursos humanos.</span>
+      <button type="button" class="btn-aura" (click)="cargar()">
+        <i class="pi pi-refresh"></i> Reintentar
+      </button>
+    </div>
+
+    <!-- Cargando -->
+    <ng-container *ngIf="cargando() && !resumen()">
+      <div class="cc-stats">
+        <div class="cc-stat" *ngFor="let _ of [1, 2, 3, 4]">
+          <p-skeleton width="60%" height="0.8rem" />
+          <p-skeleton width="80%" height="1.6rem" styleClass="mt-2" />
+          <p-skeleton width="40%" height="0.8rem" styleClass="mt-2" />
+        </div>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="resumen() as r">
+      <!-- ── KPIs ─────────────────────────────────────────────────── -->
+      <div class="cc-stats" [class.cc-cargando]="cargando()">
+        <div class="cc-stat">
+          <span class="cc-stat__label">Empleados activos</span>
+          <span class="cc-stat__valor">{{ r.personal.activos | number: '1.0-0' : 'es-CO' }}</span>
+          <span class="cc-stat__meta">
+            <span class="cc-delta" [ngClass]="r.personal.ingresosMes > 0 ? 'bien' : 'neutro'">
+              +{{ r.personal.ingresosMes }}
+            </span>
+            {{ r.personal.ingresosMes === 1 ? 'ingreso' : 'ingresos' }} ·
+            <span class="cc-delta" [ngClass]="r.personal.retirosMes > 0 ? 'mal' : 'neutro'">
+              {{ r.personal.retirosMes }}
+            </span>
+            {{ r.personal.retirosMes === 1 ? 'retiro' : 'retiros' }}
+          </span>
+        </div>
+
+        <div class="cc-stat">
+          <span class="cc-stat__label" pTooltip="Devengado + aportes del empleador + prestaciones" tooltipPosition="top">
+            Costo de nómina <i class="pi pi-info-circle" aria-hidden="true"></i>
+          </span>
+          <span class="cc-stat__valor">{{ formatCOP(r.mesActual.costoTotal) }}</span>
+          <span class="cc-stat__meta">
+            <ng-container *ngIf="variacion(r.mesActual.costoTotal, r.mesAnterior.costoTotal) as d">
+              <span class="cc-delta" [ngClass]="claseVariacion(d, 'subirEsMalo')">
+                <i class="pi" [ngClass]="d > 0 ? 'pi-arrow-up' : 'pi-arrow-down'" aria-hidden="true"></i>
+                {{ d > 0 ? '+' : '' }}{{ d }}%
+              </span>
+            </ng-container>
+            vs. {{ nombreMes(r.mesAnterior.anio, r.mesAnterior.mes) }}
+          </span>
+        </div>
+
+        <div class="cc-stat">
+          <span class="cc-stat__label">Neto a pagar</span>
+          <span class="cc-stat__valor">{{ formatCOP(r.mesActual.neto) }}</span>
+          <span class="cc-stat__meta">
+            {{ r.mesActual.empleadosLiquidados }}
+            {{ r.mesActual.empleadosLiquidados === 1 ? 'empleado liquidado' : 'empleados liquidados' }}
+          </span>
+        </div>
+
+        <div class="cc-stat">
+          <span class="cc-stat__label">Novedades por aprobar</span>
+          <span class="cc-stat__valor">{{ r.estado.novedadesPendientes | number: '1.0-0' : 'es-CO' }}</span>
+          <span class="cc-stat__meta">
+            <span class="cc-delta" [ngClass]="r.estado.contratosPorVencer > 0 ? 'mal' : 'neutro'">
+              {{ r.estado.contratosPorVencer }}
+            </span>
+            {{ r.estado.contratosPorVencer === 1 ? 'contrato vence' : 'contratos vencen' }} en 30 días
+          </span>
+        </div>
+      </div>
+
+      <div class="cc-estado-vacio" *ngIf="sinDatos()">
+        <i class="pi pi-inbox"></i>
+        <span>No hay nómina liquidada para el período seleccionado.</span>
+      </div>
+    </ng-container>
+  </section>
+
+  <!-- ══ Módulos ═══════════════════════════════════════════════════════ -->
+  <section class="card cc-modulos" aria-labelledby="rh-modulos">
+    <header class="card-head">
+      <div>
+        <h2 class="title" id="rh-modulos">Módulos de Recursos Humanos</h2>
+        <p class="subtitle">Selecciona un módulo para acceder a sus funcionalidades.</p>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__search">
+          <div class="search-wrap">
+            <i class="pi pi-search" aria-hidden="true"></i>
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Buscar módulo..."
+              aria-label="Buscar módulo de recursos humanos"
+              [ngModel]="busqueda()"
+              (ngModelChange)="busqueda.set($event)"
+            />
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="cc-grupos" *ngIf="gruposVisibles().length; else sinModulos">
+      <div class="cc-grupo" *ngFor="let g of gruposVisibles()">
+        <h3 class="cc-grupo__titulo">
+          <i [class]="g.icono" aria-hidden="true"></i> {{ g.titulo }}
+        </h3>
+        <nav [attr.aria-label]="g.titulo">
+          <a
+            *ngFor="let m of g.modulos"
+            class="cc-modulo"
+            [routerLink]="m.route"
+            [attr.aria-label]="m.titulo + (m.descripcion ? ': ' + m.descripcion : '')"
+          >
+            <i [class]="m.icon + ' cc-modulo__icono'" aria-hidden="true"></i>
+            <span class="cc-modulo__texto">
+              <span class="cc-modulo__titulo">{{ m.titulo }}</span>
+              <span class="cc-modulo__desc" *ngIf="m.descripcion">{{ m.descripcion }}</span>
+            </span>
+            <i class="pi pi-chevron-right cc-modulo__flecha" aria-hidden="true"></i>
+          </a>
+        </nav>
+      </div>
+    </div>
+
+    <ng-template #sinModulos>
+      <div class="cc-estado-vacio">
+        <i class="pi pi-search"></i>
+        <span *ngIf="busqueda(); else sinPermisos">Ningún módulo coincide con "{{ busqueda() }}".</span>
+        <ng-template #sinPermisos>
+          <span>No tienes módulos de recursos humanos habilitados.</span>
+        </ng-template>
+      </div>
+    </ng-template>
+  </section>
+
+  <!-- ══ Detalle del mes: gráficas y pendientes (al final para no empujar los módulos) ══ -->
+  <section class="card" aria-label="Detalle de nómina del mes" *ngIf="resumen() || cargando()">
+    <div class="cc-paneles" *ngIf="cargando() && !resumen()">
+      <div class="cc-panel"><p-skeleton height="260px" /></div>
+      <div class="cc-panel"><p-skeleton height="260px" /></div>
+      <div class="cc-panel"><p-skeleton height="260px" /></div>
+    </div>
+
+    <ng-container *ngIf="resumen() as r">
+      <div class="cc-paneles" [class.cc-cargando]="cargando()">
+        <!-- A. Costo de nómina por meses -->
+        <div class="cc-panel cc-panel--ancho">
+          <div class="cc-panel__head">
+            <h3>Costo de nómina</h3>
+            <span class="cc-sub">Enero a {{ nombrePeriodo }}</span>
+          </div>
+          <div class="cc-chart">
+            <p-chart *ngIf="chartCosto() as data" type="bar" [data]="data" [options]="opcionesCosto" height="250" />
+            <div class="cc-vacio" *ngIf="!chartCosto()">
+              <i class="pi pi-chart-bar"></i> Sin nómina liquidada en el año
+            </div>
+          </div>
+        </div>
+
+        <!-- B. Estado de la nómina -->
+        <div class="cc-panel">
+          <div class="cc-panel__head">
+            <h3>Estado de la nómina</h3>
+          </div>
+          <ul class="cc-checklist">
+            <li>
+              <a *ngIf="puedeAbrir('/nomina/periodos'); else txtPeriodo" routerLink="/nomina/periodos">
+                Período {{ r.estado.periodoDescripcion ?? (nombrePeriodo | lowercase) }}
+              </a>
+              <ng-template #txtPeriodo>
+                <span>Período {{ r.estado.periodoDescripcion ?? (nombrePeriodo | lowercase) }}</span>
+              </ng-template>
+              <span class="cc-tag" [ngClass]="{
+                'cc-tag--ok': r.estado.periodoEstado === 'PAGADO',
+                'cc-tag--neutro': r.estado.periodoEstado === 'LIQUIDADO',
+                'cc-tag--warn': r.estado.periodoEstado === 'ABIERTO' || r.estado.periodoEstado === 'SIN_PERIODO'
+              }">
+                <i class="pi" aria-hidden="true" [ngClass]="r.estado.periodoEstado === 'PAGADO' ? 'pi-check' : r.estado.periodoEstado === 'LIQUIDADO' ? 'pi-lock' : r.estado.periodoEstado === 'ABIERTO' ? 'pi-lock-open' : 'pi-minus-circle'"></i>
+                {{ etiquetaPeriodo(r.estado.periodoEstado) }}
+              </span>
+            </li>
+            <li>
+              <a *ngIf="puedeAbrir('/nomina/liquidacion'); else txtBorrador" routerLink="/nomina/liquidacion">
+                Nóminas en borrador
+              </a>
+              <ng-template #txtBorrador><span>Nóminas en borrador</span></ng-template>
+              <span class="cc-tag" [ngClass]="r.estado.nominasBorrador > 0 ? 'cc-tag--warn' : 'cc-tag--ok'">
+                <i class="pi" aria-hidden="true" [ngClass]="r.estado.nominasBorrador > 0 ? 'pi-clock' : 'pi-check'"></i>
+                {{ r.estado.nominasBorrador }}
+              </span>
+            </li>
+            <li>
+              <a *ngIf="puedeAbrir('/nomina/liquidacion'); else txtPagar" routerLink="/nomina/liquidacion">
+                Aprobadas sin pagar
+              </a>
+              <ng-template #txtPagar><span>Aprobadas sin pagar</span></ng-template>
+              <span class="cc-tag" [ngClass]="r.estado.nominasPorPagar > 0 ? 'cc-tag--warn' : 'cc-tag--ok'">
+                <i class="pi" aria-hidden="true" [ngClass]="r.estado.nominasPorPagar > 0 ? 'pi-clock' : 'pi-check'"></i>
+                {{ r.estado.nominasPorPagar }}
+              </span>
+            </li>
+            <li>
+              <a *ngIf="puedeAbrir('/asistencia/novedades'); else txtNovedades" routerLink="/asistencia/novedades">
+                Novedades de asistencia
+              </a>
+              <ng-template #txtNovedades><span>Novedades de asistencia</span></ng-template>
+              <span class="cc-tag" [ngClass]="r.estado.novedadesPendientes > 0 ? 'cc-tag--warn' : 'cc-tag--ok'">
+                <i class="pi" aria-hidden="true" [ngClass]="r.estado.novedadesPendientes > 0 ? 'pi-clock' : 'pi-check'"></i>
+                {{ r.estado.novedadesPendientes }}
+              </span>
+            </li>
+            <li>
+              <a *ngIf="puedeAbrir('/nomina/empleados'); else txtContratos" routerLink="/nomina/empleados">
+                Contratos por vencer (30 días)
+              </a>
+              <ng-template #txtContratos><span>Contratos por vencer (30 días)</span></ng-template>
+              <span class="cc-tag" [ngClass]="r.estado.contratosPorVencer > 0 ? 'cc-tag--warn' : 'cc-tag--ok'">
+                <i class="pi" aria-hidden="true" [ngClass]="r.estado.contratosPorVencer > 0 ? 'pi-clock' : 'pi-check'"></i>
+                {{ r.estado.contratosPorVencer }}
+              </span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- C. Distribución del costo -->
+        <div class="cc-panel">
+          <div class="cc-panel__head">
+            <h3>Distribución del costo</h3>
+            <span class="cc-sub">{{ nombrePeriodo }}</span>
+          </div>
+          <ng-container *ngIf="chartRubros() as data; else sinCosto">
+            <div class="cc-dona">
+              <p-chart type="doughnut" [data]="data" [options]="opcionesRubros" height="150" />
+              <div class="cc-dona__centro">
+                <span>Total</span>
+                <strong>{{ formatCorto(totalCostoMes()) }}</strong>
+              </div>
+            </div>
+            <ul class="cc-leyenda">
+              <li *ngFor="let g of r.distribucionCosto; let i = index">
+                <span class="cc-punto" [style.background]="colorRubro(i)" aria-hidden="true"></span>
+                <span class="cc-leyenda__nombre" [pTooltip]="formatCOP(g.valor)" tooltipPosition="top">
+                  {{ g.nombre }}
+                </span>
+                <span class="cc-leyenda__pct">{{ porcentajeRubro(g.valor) }}%</span>
+              </li>
+            </ul>
+          </ng-container>
+          <ng-template #sinCosto>
+            <div class="cc-vacio"><i class="pi pi-chart-pie"></i> Sin nómina liquidada en el mes</div>
+          </ng-template>
+        </div>
+      </div>
+    </ng-container>
+  </section>
+</div>

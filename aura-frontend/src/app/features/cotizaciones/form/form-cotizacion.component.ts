@@ -1,854 +1,548 @@
-import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  OnInit,
-} from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
-import { InputNumberModule } from 'primeng/inputnumber';
 import { CalendarModule } from 'primeng/calendar';
 import { DropdownModule } from 'primeng/dropdown';
-import {
-  AutoCompleteModule,
-  AutoCompleteSelectEvent,
-} from 'primeng/autocomplete';
-import { TableModule, TableLazyLoadEvent } from 'primeng/table';
-import { SkeletonModule } from 'primeng/skeleton';
-import { TextareaModule } from 'primeng/textarea';
-import { DividerModule } from 'primeng/divider';
-import { TooltipModule } from 'primeng/tooltip';
-import { ToastModule } from 'primeng/toast';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextModule } from 'primeng/inputtext';
+import { InputTextarea } from 'primeng/inputtextarea';
 import { TagModule } from 'primeng/tag';
-import { DialogModule } from 'primeng/dialog';
-import { MessageService } from 'primeng/api';
+import { TooltipModule } from 'primeng/tooltip';
+import { ConfirmDialog } from 'primeng/confirmdialog';
+import { ConfirmationService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
-import { v4 as uuidv4 } from 'uuid';
-import pdfMake from 'pdfmake/build/pdfmake';
-import pdfFonts from 'pdfmake/build/vfs_fonts';
+
 import {
   CotizacionModel,
-  CotizacionLineaUI,
-  UpdateCotizacionDto,
   CreateCotizacionDetalleDto,
-  ProductoOpcion,
   EstadoCotizacion,
 } from '../../../core/models/cotizacion.model';
-import { TerceroTableModel } from '../../../core/models/tercero.model';
+import { ProductoTableModel } from '../../../core/models/producto.model';
+import { TerceroModel } from '../../../core/models/tercero.model';
+import { CotizacionPdfService } from '../../../core/services/cotizacion-pdf.service';
 import { CotizacionService } from '../../../core/services/cotizacion.service';
-import { TerceroAutocompleteComponent } from '../../../shared/components/tercero-autocomplete/tercero-autocomplete.component';
-import { TerceroService } from '../../../core/services/tercero.service';
-import { ProductoService } from '../../../core/services/producto.service';
 import { EmpresaService } from '../../../core/services/empresa.service';
+import { FacturaVentaService } from '../../../core/services/factura-venta.service';
+import { SedeActualService } from '../../../core/services/sede-actual.service';
+import { ListaPreciosService } from '../../../core/services/lista-precios.service';
+import { ProductoPrecioService } from '../../../core/services/producto-precio.service';
+import { TerceroService } from '../../../core/services/tercero.service';
+import { FormTerceroComponent } from '../../terceros/form/form-tercero.component';
+import { ProductoAutocompleteComponent } from '../../../shared/components/producto-autocomplete/producto-autocomplete.component';
+import { TerceroAutocompleteComponent } from '../../../shared/components/tercero-autocomplete/tercero-autocomplete.component';
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 import { AlertService } from '../../../shared/pipes/alert.service';
-import {
-  PageableDto,
-  ProductoTableModel,
-} from '../../../core/models/producto.model';
-import { IconFieldModule } from 'primeng/iconfield';
-import { InputIconModule } from 'primeng/inputicon';
 
+/** Línea del formulario: lo que se guarda más lo que se muestra. */
+interface LineaForm {
+  productoId: number | null;
+  productoNombre: string | null;
+  productoSku: string | null;
+  unidad: string | null;
+  manejaInventario: boolean;
+  ivaIncluido: boolean;
+  descripcion: string;
+  cantidad: number;
+  /** Sin IVA. */
+  precioUnitario: number;
+  descuentoPct: number;
+  impuestoPorcentaje: number;
+}
+
+/** Datos del tercero que se muestran (solo lectura: se editan en el tercero). */
+interface DatosTercero {
+  tipoDocumento: string;
+  numeroDocumento: string;
+  dv: string | null;
+  nombre: string;
+  nombreComercial: string | null;
+  email: string | null;
+  telefono: string | null;
+  direccion: string | null;
+  ciudad: string | null;
+  departamento: string | null;
+  regimen: string | null;
+  responsabilidad: string | null;
+}
+
+/**
+ * Cotización: el mismo formulario plano de Ventas › Facturas (tercero, datos,
+ * productos con totales al lado, observaciones). Se crea aquí o desde el POS;
+ * solo la PENDIENTE se edita, las demás se ven en solo lectura con PDF y
+ * conversión a venta.
+ */
 @Component({
   selector: 'app-form-cotizacion',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    TerceroAutocompleteComponent,
     CommonModule,
     FormsModule,
-    ReactiveFormsModule,
     ButtonModule,
-    InputTextModule,
-    InputNumberModule,
     CalendarModule,
     DropdownModule,
-    AutoCompleteModule,
-    TableModule,
-    SkeletonModule,
-    TextareaModule,
-    DividerModule,
-    TooltipModule,
-    ToastModule,
+    InputNumberModule,
+    InputTextModule,
+    InputTextarea,
     TagModule,
-    DialogModule,
-    IconFieldModule,
-    InputIconModule,
+    TooltipModule,
+    ConfirmDialog,
+    PuedeDirective,
+    ProductoAutocompleteComponent,
+    TerceroAutocompleteComponent,
+    FormTerceroComponent,
   ],
-  providers: [MessageService],
+  providers: [ConfirmationService],
   templateUrl: './form-cotizacion.component.html',
   styleUrls: ['./form-cotizacion.component.scss'],
 })
 export class FormCotizacionComponent implements OnInit {
-  cotizacionId: number | null = null;
+  id: number | null = null;
   cotizacion: CotizacionModel | null = null;
-  isLoading = true;
-  isSaving = false;
-  generandoPDF = false;
+  cargando = true;
+  guardando = false;
+  soloLectura = false;
 
-  // Header
-  terceroQuery = '';
-  terceroSeleccionado: TerceroTableModel | null = null;
+  // Tercero
+  clienteId: number | null = null;
+  clienteLabel: string | null = null;
+  tercero: DatosTercero | null = null;
+  mostrarFormTercero = false;
+  terceroEditarId: number | null = null;
+
+  // Datos
+  fecha = new Date();
+  diasVigencia = 15;
+  vencimiento: Date | null = null;
+  listaPreciosId: number | null = null;
+  listasOpts: { label: string; value: number }[] = [];
+  private preciosLista = new Map<number, Map<number, number>>();
+
+  lineas: LineaForm[] = [];
   observaciones = '';
-  diasVigencia = 30;
-  fechaVencimiento: Date = new Date();
-
-  // Líneas
-  lineas: CotizacionLineaUI[] = [];
-
-  // Modal selector producto
-  showProductDialog = false;
-  dialogLineIdx = -1;
-  dialogSearch = '';
-  dialogItems: ProductoTableModel[] = [];
-  dialogTotal = 0;
-  dialogLoading = false;
-  private dialogLastEvent!: TableLazyLoadEvent;
-
-
-  // Estados
-  get puedeEditar(): boolean {
-    // Si no hay cotización cargada aún, permitir edición (se puede agregar líneas)
-    // Solo bloquar si ya se cargó y no está en estado PENDIENTE
-    if (!this.cotizacion) return true;
-    return this.cotizacion.estado === 'PENDIENTE';
-  }
-
-  get esNueva(): boolean {
-    return !this.cotizacionId;
-  }
-
-  // Totales
-  get subtotal(): number {
-    return this.lineas.reduce(
-      (a, l) => a + Math.max(0, l.precioUnitario * l.cantidad - l.descuentoValor),
-      0,
-    );
-  }
-  get descuento(): number {
-    return this.lineas.reduce((a, l) => a + l.descuentoValor, 0);
-  }
-  get iva(): number {
-    return this.lineas.reduce(
-      (a, l) => {
-        const baseNeta = Math.max(0, l.precioUnitario * l.cantidad - l.descuentoValor);
-        return a + (baseNeta * l.ivaPorcentaje) / 100;
-      },
-      0,
-    );
-  }
-  get total(): number {
-    return this.subtotal - this.descuento + this.iva;
-  }
+  readonly maxNotas = 1000;
+  readonly hoy = new Date();
 
   constructor(
-    private readonly cdr: ChangeDetectorRef,
-    private readonly route: ActivatedRoute,
-    public readonly router: Router,
-    private readonly cotizacionService: CotizacionService,
+    private readonly service: CotizacionService,
     private readonly terceroService: TerceroService,
-    private readonly productoService: ProductoService,
+    private readonly listaService: ListaPreciosService,
+    private readonly precioService: ProductoPrecioService,
     private readonly empresaService: EmpresaService,
-    private readonly alertService: AlertService,
-  ) {
-    (pdfMake as any).vfs = (pdfFonts as any).pdfMake?.vfs || pdfFonts;
-  }
+    private readonly pdf: CotizacionPdfService,
+    private readonly facturas: FacturaVentaService,
+    private readonly sede: SedeActualService,
+    private readonly alert: AlertService,
+    private readonly confirm: ConfirmationService,
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
+    private readonly cdr: ChangeDetectorRef,
+  ) {}
 
   async ngOnInit(): Promise<void> {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.cotizacionId = +id;
-      await this.loadCotizacion();
-    }
-    this.isLoading = false;
-    this.cdr.markForCheck();
-  }
-
-  private async loadCotizacion(): Promise<void> {
-    if (!this.cotizacionId) return;
+    const idParam = this.route.snapshot.paramMap.get('id');
+    this.id = idParam ? Number(idParam) : null;
     try {
-      const res = await lastValueFrom(
-        this.cotizacionService.getById(this.cotizacionId),
-      );
-      this.cotizacion = res?.data ?? null;
-      if (this.cotizacion) {
-        this.cargarDatosDesdeCotizacion();
+      const listas = await lastValueFrom(this.listaService.list()).catch(() => null);
+      this.listasOpts = (listas?.data ?? []).map((l: any) => ({ label: l.nombre, value: l.id }));
+      if (this.id) {
+        await this.recargar();
+        if (this.cotizacion?.terceroId) await this.cargarTercero(this.cotizacion.terceroId);
+      } else {
+        this.onVigencia();
+        this.agregarLinea();
       }
-    } catch (err: any) {
-      this.alertService.showError(
-        'Error',
-        err?.error?.message ?? 'No se pudo cargar la cotización.',
-      );
-      this.router.navigate(['/cotizaciones']);
-    }
-  }
-
-  private cargarDatosDesdeCotizacion(): void {
-    if (!this.cotizacion) return;
-    this.terceroQuery = this.cotizacion.terceroNombre ?? '';
-    this.terceroSeleccionado = this.cotizacion.terceroId
-      ? {
-          id: this.cotizacion.terceroId,
-          nombreCompleto: this.cotizacion.terceroNombre ?? '',
-          numeroDocumento: this.cotizacion.terceroDocumento ?? '',
-          tipoDocumento: 'CC',
-          telefono: null,
-          email: null,
-          esCliente: true,
-          esProveedor: false,
-          esEmpleado: false,
-          activo: true,
-        }
-      : null;
-    this.observaciones = this.cotizacion.observaciones ?? '';
-    this.diasVigencia = this.cotizacion.diasVigencia;
-    this.fechaVencimiento = new Date(this.cotizacion.fechaVencimiento);
-    this.lineas = this.cotizacion.detalles.map((d) => ({
-      _id: uuidv4(),
-      id: d.id,
-      productoId: d.productoId,
-      productoNombre: d.productoNombre,
-      productoSku: d.productoSku,
-      cantidad: d.cantidad,
-      precioUnitario: d.precioUnitario,
-      ivaPorcentaje: d.ivaPorcentaje,
-      descuentoValor: d.descuentoValor,
-      subtotal: d.subtotal,
-    }));
-  }
-
-  // ─── Cliente ───────────────────────────────────────────────────
-  get terceroLabel(): string | null {
-    const c = this.terceroSeleccionado;
-    if (!c) return null;
-    return c.numeroDocumento ? `${c.numeroDocumento} — ${c.nombreCompleto}` : c.nombreCompleto;
-  }
-
-  /** Elegido (o quitado) en el autocomplete / buscador avanzado. */
-  onCliente(t: TerceroTableModel | null): void {
-    this.terceroSeleccionado = t;
-    this.terceroQuery = t?.nombreCompleto ?? '';
-    this.cdr.markForCheck();
-  }
-
-  limpiarTercero(): void {
-    this.onCliente(null);
-  }
-
-  // ─── Líneas ───────────────────────────────────────────────────
-  agregarLinea(): void {
-    const nueva: CotizacionLineaUI = {
-      _id: uuidv4(),
-      id: null,
-      productoId: null,
-      productoNombre: '',
-      productoSku: null,
-      cantidad: 1,
-      precioUnitario: 0,
-      ivaPorcentaje: 0,
-      descuentoValor: 0,
-      subtotal: 0,
-    };
-    // Agregar al inicio de la lista
-    this.lineas = [nueva, ...this.lineas];
-    // Abrir el selector de producto directamente
-    this.openProductDialog(0);
-  }
-
-  eliminarLinea(idx: number): void {
-    this.lineas = this.lineas.filter((_, i) => i !== idx);
-    this.cdr.markForCheck();
-  }
-
-  // ─── Selector producto ───────────────────────────────────────
-  openProductDialog(lineIdx: number): void {
-    this.dialogLineIdx = lineIdx;
-    this.dialogSearch = '';
-    this.dialogItems = [];
-    this.dialogTotal = 0;
-    this.showProductDialog = true;
-    this.loadDialogTable({ first: 0, rows: 10 });
-  }
-
-  async loadDialogTable(event: TableLazyLoadEvent): Promise<void> {
-    this.dialogLastEvent = event;
-    this.dialogLoading = true;
-    this.cdr.markForCheck();
-
-    const page =
-      event.first != null && event.rows
-        ? Math.floor(event.first / event.rows)
-        : 0;
-
-    const dto: PageableDto = {
-      page,
-      rows: event.rows ?? 10,
-      search: this.dialogSearch || null,
-      order_by: 'p.nombre',
-      order: 'ASC',
-    };
-
-    try {
-      const res = await lastValueFrom(this.productoService.page(dto));
-      this.dialogItems = res?.data?.content ?? [];
-      this.dialogTotal = res?.data?.totalElements ?? 0;
     } catch {
-      this.dialogItems = [];
-      this.dialogTotal = 0;
+      this.alert.showError('Error', 'No se pudo cargar la cotización');
     } finally {
-      this.dialogLoading = false;
+      this.cargando = false;
       this.cdr.markForCheck();
     }
   }
 
-  onDialogSearch(): void {
-    this.loadDialogTable({ ...this.dialogLastEvent, first: 0 });
-  }
-
-  async selectProductFromDialog(item: any): Promise<void> {
-    const linea = this.lineas[this.dialogLineIdx];
-    if (!linea) return;
-
-    linea.productoId = item.id;
-    linea.productoNombre = item.nombre;
-    linea.productoSku = item.sku ?? null;
-    linea.ivaPorcentaje = item.ivaPorcentaje ?? 0;
-    // Cargar el precio desde el producto
-    linea.precioUnitario = item.precio ?? 0;
-    this.calcLinea(linea);
-
-    this.showProductDialog = false;
-    this.lineas = [...this.lineas];
-    this.cdr.markForCheck();
-  }
-
-  // ─── Cálculos ─────────────────────────────────────────────
-  onCantidadChange(linea: CotizacionLineaUI): void {
-    this.calcLinea(linea);
-    this.lineas = [...this.lineas];
-    this.cdr.markForCheck();
-  }
-
-  onPrecioChange(linea: CotizacionLineaUI): void {
-    this.calcLinea(linea);
-    this.lineas = [...this.lineas];
-    this.cdr.markForCheck();
-  }
-
-  onDescuentoChange(linea: CotizacionLineaUI): void {
-    this.calcLinea(linea);
-    this.lineas = [...this.lineas];
-    this.cdr.markForCheck();
-  }
-
-  private calcLinea(linea: CotizacionLineaUI): void {
-    const base = linea.cantidad * linea.precioUnitario;
-    const descuento = linea.descuentoValor;
-    linea.subtotal = Math.max(0, base - descuento);
-  }
-
-  // ─── Guardar ─────────────────────────────────────────────────
-  private validar(): string | null {
-    if (this.lineas.length === 0) {
-      return 'Agrega al menos un producto.';
-    }
-    for (let i = 0; i < this.lineas.length; i++) {
-      const l = this.lineas[i];
-      if (!l.productoId) {
-        return `Línea ${i + 1}: selecciona un producto.`;
-      }
-      if (l.cantidad <= 0) {
-        return `Línea ${i + 1}: la cantidad debe ser mayor a 0.`;
-      }
-      if (l.precioUnitario < 0) {
-        return `Línea ${i + 1}: el precio no puede ser negativo.`;
-      }
-    }
-    return null;
-  }
-
-  async guardar(): Promise<void> {
-    if (!this.puedeEditar) {
-      this.alertService.showError(
-        'No editable',
-        'Solo puedes editar cotizaciones en estado PENDIENTE.',
-      );
-      return;
-    }
-
-    const error = this.validar();
-    if (error) {
-      this.alertService.showError('Error', error);
-      return;
-    }
-
-    this.isSaving = true;
-
-    const detalles: CreateCotizacionDetalleDto[] = this.lineas
-      .filter((l) => l.productoId)
-      .map((l) => ({
-        productoId: l.productoId!,
-        descripcion: null,
-        cantidad: l.cantidad,
-        precioUnitario: l.precioUnitario,
-        ivaPorcentaje: l.ivaPorcentaje,
-        descuentoValor: l.descuentoValor,
-      }));
-
-    const dto: UpdateCotizacionDto = {
-      terceroId: this.terceroSeleccionado?.id ?? null,
-      observaciones: this.observaciones || null,
-      diasVigencia: this.diasVigencia,
-      detalles,
-    };
-
-    try {
-      await lastValueFrom(
-        this.cotizacionService.update(this.cotizacionId!, dto),
-      );
-      this.alertService.showSuccess('Cotización actualizada', '');
-    } catch (err: any) {
-      this.alertService.showError(
-        'Error',
-        err?.error?.message ?? 'No se pudo guardar.',
-      );
-    } finally {
-      this.isSaving = false;
-      this.cdr.markForCheck();
-    }
-  }
-
-  // ─── Utils ─────────────────────────────────────────────────
-  formatCOP = (v: number) =>
-    new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      maximumFractionDigits: 0,
-    }).format(v ?? 0);
-
-  formatFecha(f: Date | string): string {
-    const d = f instanceof Date ? f : new Date(f);
-    return d.toLocaleDateString('es-CO', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
+  private async recargar(): Promise<void> {
+    if (!this.id) return;
+    const c = (await lastValueFrom(this.service.getById(this.id)))?.data;
+    if (!c) throw new Error();
+    this.cotizacion = c;
+    this.soloLectura = c.estado !== 'PENDIENTE';
+    this.clienteId = c.terceroId;
+    this.clienteLabel = c.terceroNombre ? `${c.terceroDocumento ?? ''} — ${c.terceroNombre}` : null;
+    this.fecha = new Date(c.fecha + 'T00:00:00');
+    this.diasVigencia = c.diasVigencia;
+    this.vencimiento = new Date(c.fechaVencimiento + 'T00:00:00');
+    this.observaciones = c.observaciones ?? '';
+    this.lineas = (c.detalles ?? []).map((d) => {
+      const bruto = Number(d.cantidad) * Number(d.precioUnitario);
+      return {
+        productoId: d.productoId,
+        productoNombre: d.productoNombre,
+        productoSku: d.productoSku,
+        unidad: null,
+        manejaInventario: true,
+        ivaIncluido: false,
+        descripcion: d.descripcion ?? '',
+        cantidad: Number(d.cantidad),
+        precioUnitario: Number(d.precioUnitario),
+        descuentoPct: bruto > 0 ? Math.round((Number(d.descuentoValor) / bruto) * 10000) / 100 : 0,
+        impuestoPorcentaje: Number(d.ivaPorcentaje ?? 0),
+      };
     });
+    if (!this.soloLectura) this.agregarLinea();
+    this.cdr.markForCheck();
   }
 
-  getEstadoSeverity(
-    e: EstadoCotizacion,
-  ):
-    | 'success'
-    | 'secondary'
-    | 'info'
-    | 'warn'
-    | 'danger'
-    | 'contrast'
-    | undefined {
-    const map: Record<EstadoCotizacion, string> = {
-      PENDIENTE: 'info',
-      PARCIAL: 'warn',
-      VENCIDA: 'warn',
-      ANULADA: 'danger',
-      CONVERTIDA: 'success',
-    };
-    return map[e] as any;
+  get titulo(): string {
+    return this.cotizacion ? `Cotización ${this.cotizacion.numero}` : 'Nueva cotización';
   }
 
-  getEstadoLabel(e: EstadoCotizacion): string {
-    const labels: Record<EstadoCotizacion, string> = {
+  etiquetaEstado(e: EstadoCotizacion): string {
+    const m: Record<EstadoCotizacion, string> = {
       PENDIENTE: 'Pendiente',
       PARCIAL: 'Parcial',
       VENCIDA: 'Vencida',
       ANULADA: 'Anulada',
       CONVERTIDA: 'Convertida',
     };
-    return labels[e] ?? e;
+    return m[e] ?? e;
   }
 
-  trackById(_: number, item: CotizacionLineaUI): string {
-    return item._id;
+  severidadEstado(e: EstadoCotizacion): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
+    return e === 'PENDIENTE' ? 'info' : e === 'CONVERTIDA' ? 'success' : e === 'PARCIAL' ? 'warn' : e === 'ANULADA' ? 'danger' : 'secondary';
   }
 
-  getIvaPorcentaje(item: ProductoTableModel): number {
-    return (item as any).ivaPorcentaje ?? 0;
+  // ── Tercero ─────────────────────────────────────────────────────────
+  async onCliente(): Promise<void> {
+    await this.cargarTercero(this.clienteId);
   }
 
-  // ─── PDF ─────────────────────────────────────────────────────
-  async generarPDF(): Promise<void> {
-    if (!this.cotizacion) return;
-    this.generandoPDF = true;
+  private async cargarTercero(id: number | null): Promise<void> {
+    if (!id) {
+      this.tercero = null;
+      this.cdr.markForCheck();
+      return;
+    }
+    try {
+      const t = (await lastValueFrom(this.terceroService.getById(id)))?.data;
+      if (!t) return;
+      let ciudad = t.municipio ?? null;
+      let departamento: string | null = null;
+      if (t.municipioId) {
+        const m = (await lastValueFrom(this.terceroService.getMunicipioById(t.municipioId)).catch(() => null))?.data;
+        if (m) {
+          ciudad = m.nombre;
+          const partes = (m.label ?? '').split(' - ');
+          departamento = partes.length > 1 ? partes.slice(1).join(' - ') : null;
+        }
+      }
+      this.tercero = {
+        tipoDocumento: t.tipoDocumento,
+        numeroDocumento: t.numeroDocumento,
+        dv: t.dv,
+        nombre: this.nombreTercero(t),
+        nombreComercial: t.nombreComercial ?? null,
+        email: t.emailFe || t.email,
+        telefono: t.telefono,
+        direccion: t.direccion,
+        ciudad,
+        departamento,
+        regimen: t.regimen ?? null,
+        responsabilidad: t.responsabilidadFiscal,
+      };
+      this.clienteLabel = `${t.numeroDocumento} — ${this.tercero.nombre}`;
+    } catch {
+      this.tercero = null;
+    }
+    this.cdr.markForCheck();
+  }
+
+  private nombreTercero(t: TerceroModel): string {
+    return (
+      t.razonSocial?.trim() ||
+      [t.nombre1, t.nombre2, t.apellido1, t.apellido2].filter(Boolean).join(' ').trim() ||
+      [t.nombres, t.apellidos].filter(Boolean).join(' ').trim()
+    );
+  }
+
+  crearTercero(): void {
+    this.terceroEditarId = null;
+    this.mostrarFormTercero = true;
+  }
+
+  editarTercero(): void {
+    if (!this.clienteId) return;
+    this.terceroEditarId = this.clienteId;
+    this.mostrarFormTercero = true;
+  }
+
+  async onTerceroGuardado(t: TerceroModel): Promise<void> {
+    this.mostrarFormTercero = false;
+    this.clienteId = t.id;
+    await this.cargarTercero(t.id);
+  }
+
+  // ── Vigencia y lista de precios ─────────────────────────────────────
+  onVigencia(): void {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + Math.max(1, this.diasVigencia || 1));
+    this.vencimiento = d;
+  }
+
+  onVencimiento(): void {
+    if (!this.vencimiento) return;
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    this.diasVigencia = Math.max(1, Math.round((this.vencimiento.getTime() - hoy.getTime()) / 86400000));
+  }
+
+  /** Cambiar la lista vuelve a poner el precio de esa lista en cada línea que lo tenga. */
+  async onLista(): Promise<void> {
+    if (this.listaPreciosId && !this.preciosLista.has(this.listaPreciosId)) {
+      const res = await lastValueFrom(this.precioService.listByLista(this.listaPreciosId)).catch(() => null);
+      const m = new Map<number, number>();
+      for (const p of res?.data ?? []) {
+        if (p.productoId != null && p.productoPresentacionId == null) m.set(p.productoId, Number(p.precio));
+      }
+      this.preciosLista.set(this.listaPreciosId, m);
+    }
+    for (const l of this.lineas) {
+      const p = this.precioDeLista(l.productoId);
+      if (p != null) l.precioUnitario = this.sinIva(p, l.impuestoPorcentaje, l.ivaIncluido);
+    }
+    this.cdr.markForCheck();
+  }
+
+  private precioDeLista(productoId: number | null): number | null {
+    if (!productoId || !this.listaPreciosId) return null;
+    return this.preciosLista.get(this.listaPreciosId)?.get(productoId) ?? null;
+  }
+
+  private sinIva(precio: number, iva: number, incluido: boolean): number {
+    return incluido && iva > 0 ? Math.round((precio / (1 + iva / 100)) * 100) / 100 : precio;
+  }
+
+  // ── Líneas ──────────────────────────────────────────────────────────
+  agregarLinea(): void {
+    this.lineas = [
+      ...this.lineas,
+      {
+        productoId: null,
+        productoNombre: null,
+        productoSku: null,
+        unidad: null,
+        manejaInventario: false,
+        ivaIncluido: false,
+        descripcion: '',
+        cantidad: 1,
+        precioUnitario: 0,
+        descuentoPct: 0,
+        impuestoPorcentaje: 0,
+      },
+    ];
+  }
+
+  quitarLinea(i: number): void {
+    this.lineas = this.lineas.filter((_, k) => k !== i);
+    if (!this.lineas.length) this.agregarLinea();
+  }
+
+  onProducto(l: LineaForm, p: ProductoTableModel | null): void {
+    if (!p) {
+      Object.assign(l, { productoId: null, productoNombre: null, productoSku: null, unidad: null });
+      this.cdr.markForCheck();
+      return;
+    }
+    const iva = Number(p.ivaPorcentaje ?? 0);
+    l.productoId = p.id;
+    l.productoNombre = p.nombre;
+    l.productoSku = p.codigoBarras || p.sku;
+    l.unidad = p.unidadAbreviatura ?? null;
+    l.manejaInventario = p.tipoProducto !== 'SERVICIO';
+    l.ivaIncluido = !!p.ivaIncluido;
+    l.impuestoPorcentaje = iva;
+    l.precioUnitario = this.sinIva(this.precioDeLista(p.id) ?? Number(p.precio ?? 0), iva, l.ivaIncluido);
+    if (this.lineas[this.lineas.length - 1] === l) this.agregarLinea();
+    this.cdr.markForCheck();
+  }
+
+  bruto(l: LineaForm): number {
+    return (l.cantidad || 0) * (l.precioUnitario || 0);
+  }
+
+  descuento(l: LineaForm): number {
+    return Math.round(this.bruto(l) * (l.descuentoPct || 0)) / 100;
+  }
+
+  base(l: LineaForm): number {
+    return Math.round((this.bruto(l) - this.descuento(l)) * 100) / 100;
+  }
+
+  impuesto(l: LineaForm): number {
+    return Math.round(this.base(l) * (l.impuestoPorcentaje || 0)) / 100;
+  }
+
+  totalLinea(l: LineaForm): number {
+    return this.base(l) + this.impuesto(l);
+  }
+
+  private get conProducto(): LineaForm[] {
+    return this.lineas.filter((l) => l.productoId);
+  }
+
+  get subtotal(): number {
+    return this.conProducto.reduce((s, l) => s + this.bruto(l), 0);
+  }
+
+  get descuentos(): number {
+    return this.conProducto.reduce((s, l) => s + this.descuento(l), 0);
+  }
+
+  get ivas(): { tarifa: number; valor: number }[] {
+    const m = new Map<number, number>();
+    for (const l of this.conProducto) {
+      if (!l.impuestoPorcentaje) continue;
+      m.set(l.impuestoPorcentaje, (m.get(l.impuestoPorcentaje) ?? 0) + this.impuesto(l));
+    }
+    return [...m.entries()].sort((a, b) => b[0] - a[0]).map(([tarifa, valor]) => ({ tarifa, valor }));
+  }
+
+  get total(): number {
+    return this.conProducto.reduce((s, l) => s + this.totalLinea(l), 0);
+  }
+
+  // ── Guardar ─────────────────────────────────────────────────────────
+  private detalles(): CreateCotizacionDetalleDto[] | null {
+    const lineas = this.conProducto;
+    if (!lineas.length) {
+      this.alert.showWarn('Sin productos', 'Agregue al menos un producto o servicio.');
+      return null;
+    }
+    if (lineas.some((l) => !l.cantidad || l.cantidad <= 0)) {
+      this.alert.showWarn('Cantidad', 'Cada línea debe tener una cantidad mayor a cero.');
+      return null;
+    }
+    return lineas.map((l) => ({
+      productoId: l.productoId!,
+      descripcion: l.descripcion.trim() && l.descripcion.trim() !== l.productoNombre ? l.descripcion.trim() : null,
+      cantidad: l.cantidad,
+      precioUnitario: l.precioUnitario,
+      ivaPorcentaje: l.impuestoPorcentaje || 0,
+      descuentoValor: this.descuento(l),
+    }));
+  }
+
+  async guardar(): Promise<void> {
+    const detalles = this.detalles();
+    if (!detalles) return;
+    this.guardando = true;
     this.cdr.markForCheck();
     try {
-      const empRes = await lastValueFrom(this.empresaService.getConfig());
-      const emp: any = empRes?.data ?? {};
-      if (emp.logoUrl) {
-        emp.logoBase64 = await this.urlToBase64(emp.logoUrl);
+      const base = {
+        terceroId: this.clienteId,
+        observaciones: this.observaciones.trim() || null,
+        diasVigencia: this.diasVigencia,
+        detalles,
+      };
+      if (this.id) {
+        await lastValueFrom(this.service.update(this.id, base));
+        this.alert.showSuccess('Cotización guardada', '');
+        await this.recargar();
+      } else {
+        const res = await lastValueFrom(this.service.create({ ...base, turnoCajaId: null }));
+        const nueva = res?.data;
+        this.alert.showSuccess('Cotización creada', nueva?.numero ?? '');
+        if (nueva?.id) this.router.navigate(['/cotizaciones/editar', nueva.id], { replaceUrl: true });
       }
-      const doc = this.buildCotizacionDoc(this.cotizacion, emp);
-      const nombreArchivo = this.cotizacion?.numero ?? `COT-${this.cotizacionId}`;
-      pdfMake.createPdf(doc).download(`${nombreArchivo}.pdf`);
-    } catch {
-      this.alertService.showError('Error', 'No se pudo generar el PDF.');
+    } catch (e: any) {
+      this.alert.showError('Error', e?.error?.message ?? 'No se pudo guardar la cotización');
     } finally {
-      this.generandoPDF = false;
+      this.guardando = false;
       this.cdr.markForCheck();
     }
   }
 
-  private async urlToBase64(url: string): Promise<string> {
-    const res = await fetch(url);
-    const blob = await res.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
+  // ── Acciones de la cotización guardada ──────────────────────────────
+  get puedeConvertir(): boolean {
+    return !!this.cotizacion && (this.cotizacion.estado === 'PENDIENTE' || this.cotizacion.estado === 'PARCIAL');
+  }
+
+  async descargarPdf(): Promise<void> {
+    if (!this.cotizacion) {
+      this.alert.showWarn('Guarde primero', 'Guarde la cotización para descargar el PDF.');
+      return;
+    }
+    try {
+      const empresa = (await lastValueFrom(this.empresaService.getConfig()))?.data ?? {};
+      await this.pdf.cotizacion(this.cotizacion, empresa);
+    } catch {
+      this.alert.showError('Error', 'No se pudo generar el PDF');
+    }
+  }
+
+  async convertirAVenta(): Promise<void> {
+    if (!this.cotizacion) return;
+    try {
+      const res = await lastValueFrom(this.service.convertirAVenta(this.cotizacion.id));
+      if (res?.data) this.router.navigate(['/pos'], { state: { cotizacion: res.data } });
+    } catch (e: any) {
+      this.alert.showError('Error', e?.error?.message ?? 'No se pudo convertir la cotización.');
+    }
+  }
+
+  /**
+   * Factura de Facturación con lo que le queda pendiente: se crea como
+   * borrador en la sede actual y se abre para revisarla y emitirla.
+   */
+  async facturar(): Promise<void> {
+    if (!this.cotizacion) return;
+    if (!this.cotizacion.terceroId) {
+      this.alert.showWarn('Sin cliente', 'Asigne un cliente a la cotización para poder facturarla.');
+      return;
+    }
+    const sedeId = await this.sede.id();
+    if (!sedeId) {
+      this.alert.showWarn('Sin sede', 'Elija la sede en la barra superior para facturar.');
+      return;
+    }
+    try {
+      const res = await lastValueFrom(this.facturas.desdeCotizacion(this.cotizacion.id, sedeId));
+      const id = res?.data?.id;
+      this.alert.showSuccess('Borrador creado', 'Revise la factura y emítala.');
+      if (id) this.router.navigate(['/ventas/facturas', id, 'editar']);
+    } catch (e: any) {
+      this.alert.showError('No se pudo facturar', e?.error?.message ?? 'Intente de nuevo');
+    }
+  }
+
+  anular(): void {
+    if (!this.cotizacion) return;
+    this.confirm.confirm({
+      header: 'Anular cotización',
+      message: `¿Anular la cotización ${this.cotizacion.numero}?`,
+      acceptLabel: 'Anular',
+      rejectLabel: 'Cancelar',
+      accept: async () => {
+        try {
+          await lastValueFrom(this.service.anular(this.cotizacion!.id));
+          this.alert.showSuccess('Cotización anulada', '');
+          await this.recargar();
+        } catch (e: any) {
+          this.alert.showError('No se pudo anular', e?.error?.message ?? 'Intente de nuevo');
+        }
+      },
     });
   }
 
-  private buildCotizacionDoc(c: CotizacionModel, emp: any): any {
-    const numero = c.numero ?? `COT-${String(c.id).padStart(6, '0')}`;
-    const fecha = c.fecha
-      ? new Date(c.fecha).toLocaleDateString('es-CO', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-        })
-      : '—';
-    const vencimiento = c.fechaVencimiento
-      ? new Date(c.fechaVencimiento).toLocaleDateString('es-CO', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric',
-        })
-      : '—';
+  volver(): void {
+    this.router.navigate(['/cotizaciones']);
+  }
 
-    const headerContent = [
-      { text: numero, fontSize: 20, bold: true, color: '#1e293b' },
-      {
-        text: `Fecha: ${fecha}   Vence: ${vencimiento}`,
-        fontSize: 10,
-        color: '#64748b',
-        margin: [0, 2, 0, 0],
-      },
-      {
-        text: 'Estado: COMPLETADA',
-        fontSize: 10,
-        color: '#10b981',
-        margin: [0, 2, 0, 0],
-      },
-    ];
-
-    const clientContent = c.terceroNombre
-      ? [
-          {
-            text: 'CLIENTE',
-            fontSize: 8,
-            bold: true,
-            color: '#94a3b8',
-            margin: [0, 0, 0, 4],
-          },
-          { text: c.terceroNombre, fontSize: 11, bold: true },
-          {
-            text: c.terceroDocumento ?? '',
-            fontSize: 9,
-            color: '#64748b',
-            margin: [0, 2, 0, 0],
-          },
-        ]
-      : [
-          {
-            text: 'CLIENTE',
-            fontSize: 8,
-            bold: true,
-            color: '#94a3b8',
-            margin: [0, 0, 0, 4],
-          },
-          { text: 'Sin cliente', fontSize: 11, color: '#94a3b8' },
-        ];
-
-    const detalleRows = c.detalles.map((d, i) => [
-      {
-        text: String(i + 1),
-        fontSize: 9,
-        alignment: 'center',
-        margin: [0, 4, 0, 4],
-      },
-      {
-        text: d.productoNombre,
-        fontSize: 9,
-        margin: [0, 4, 0, 4],
-        width: '*',
-      },
-      {
-        text:
-          d.cantidad % 1 === 0 ? d.cantidad.toFixed(0) : d.cantidad.toFixed(2),
-        fontSize: 9,
-        alignment: 'right',
-        margin: [0, 4, 0, 4],
-      },
-      {
-        text: this.formatCOP(d.precioUnitario),
-        fontSize: 9,
-        alignment: 'right',
-        margin: [0, 4, 0, 4],
-      },
-      {
-        text:
-          d.descuentoValor > 0 ? `-${this.formatCOP(d.descuentoValor)}` : '—',
-        fontSize: 9,
-        alignment: 'right',
-        margin: [0, 4, 0, 4],
-        color: '#ef4444',
-      },
-      {
-        text: `${d.ivaPorcentaje}%`,
-        fontSize: 9,
-        alignment: 'center',
-        margin: [0, 4, 0, 4],
-      },
-      {
-        text: this.formatCOP(d.subtotal),
-        fontSize: 9,
-        alignment: 'right',
-        margin: [0, 4, 0, 4],
-        bold: true,
-      },
-    ]);
-
-    const tablaBody = [
-      [
-        {
-          text: '#',
-          fontSize: 8,
-          bold: true,
-          color: '#94a3b8',
-          margin: [0, 4, 0, 4],
-        },
-        {
-          text: 'Producto',
-          fontSize: 8,
-          bold: true,
-          color: '#94a3b8',
-          margin: [0, 4, 0, 4],
-        },
-        {
-          text: 'Cant.',
-          fontSize: 8,
-          bold: true,
-          color: '#94a3b8',
-          margin: [0, 4, 0, 4],
-          alignment: 'right',
-        },
-        {
-          text: 'Precio',
-          fontSize: 8,
-          bold: true,
-          color: '#94a3b8',
-          margin: [0, 4, 0, 4],
-          alignment: 'right',
-        },
-        {
-          text: 'Desc.',
-          fontSize: 8,
-          bold: true,
-          color: '#94a3b8',
-          margin: [0, 4, 0, 4],
-          alignment: 'right',
-        },
-        {
-          text: 'IVA',
-          fontSize: 8,
-          bold: true,
-          color: '#94a3b8',
-          margin: [0, 4, 0, 4],
-          alignment: 'center',
-        },
-        {
-          text: 'Subtotal',
-          fontSize: 8,
-          bold: true,
-          color: '#94a3b8',
-          margin: [0, 4, 0, 4],
-          alignment: 'right',
-        },
-      ],
-      ...detalleRows,
-    ];
-
-    const doc: any = {
-      pageSize: 'A4',
-      pageMargins: [20, 20, 20, 60],
-      content: [
-        {
-          columns: [
-            {
-              width: 70,
-              image: emp.logoUrl ? 'LOGO' : undefined,
-              fit: [60, 60],
-            },
-            {
-              width: 5,
-              text: '',
-            },
-            {
-              width: '*',
-              stack: [
-                {
-                  text: emp.nombreComercial ?? emp.razonSocial ?? 'Mi Empresa',
-                  fontSize: 14,
-                  bold: true,
-                },
-                {
-                  text: emp.direccion ?? '',
-                  fontSize: 9,
-                  color: '#64748b',
-                  margin: [0, 2, 0, 0],
-                },
-                { text: emp.telefono ?? '', fontSize: 9, color: '#64748b' },
-              ],
-            },
-            { width: 'auto', stack: headerContent, alignment: 'right' },
-          ],
-        },
-        {
-          canvas: [
-            {
-              type: 'line',
-              x1: 0,
-              y1: 5,
-              x2: 515,
-              y2: 5,
-              lineWidth: 0.5,
-              lineColor: '#e2e8f0',
-            },
-          ],
-        },
-        {
-          columns: [
-            { width: '*', stack: clientContent },
-            { width: '*', stack: [], alignment: 'right' },
-          ],
-          margin: [0, 15, 0, 0],
-        },
-        c.observaciones
-          ? {
-              text: `Notas: ${c.observaciones}`,
-              fontSize: 9,
-              color: '#64748b',
-              margin: [0, 10, 0, 0],
-            }
-          : {},
-        {
-          table: {
-            headerRows: 1,
-            widths: [25, '*', 55, 75, 70, 35, 80],
-            body: tablaBody,
-          },
-          layout: {
-            hLineWidth: () => 0.5,
-            vLineWidth: () => 0,
-            hLineColor: () => '#e2e8f0',
-            paddingTop: () => 0,
-            paddingBottom: () => 0,
-          },
-          margin: [0, 15, 0, 0],
-        },
-        {
-          columns: [
-            { width: '*', text: '' },
-            {
-              width: 180,
-              stack: [
-                {
-                  columns: [
-                    { text: 'Subtotal:', fontSize: 10, color: '#64748b' },
-                    {
-                      text: this.formatCOP(c.subtotal),
-                      fontSize: 10,
-                      alignment: 'right',
-                    },
-                  ],
-                  margin: [0, 4, 0, 0],
-                },
-                {
-                  columns: [
-                    { text: 'Descuento:', fontSize: 10, color: '#64748b' },
-                    {
-                      text: `-${this.formatCOP(c.descuento)}`,
-                      fontSize: 10,
-                      alignment: 'right',
-                      color: '#ef4444',
-                    },
-                  ],
-                  margin: [0, 2, 0, 0],
-                },
-                {
-                  columns: [
-                    { text: 'IVA:', fontSize: 10, color: '#64748b' },
-                    {
-                      text: this.formatCOP(c.iva),
-                      fontSize: 10,
-                      alignment: 'right',
-                    },
-                  ],
-                  margin: [0, 2, 0, 0],
-                },
-                {
-                  canvas: [
-                    {
-                      type: 'line',
-                      x1: 0,
-                      y1: 2,
-                      x2: 180,
-                      y2: 2,
-                      lineWidth: 0.5,
-                      lineColor: '#cbd5e1',
-                    },
-                  ],
-                },
-                {
-                  columns: [
-                    { text: 'TOTAL:', fontSize: 12, bold: true },
-                    {
-                      text: this.formatCOP(c.total),
-                      fontSize: 12,
-                      bold: true,
-                      alignment: 'right',
-                      color: '#1e293b',
-                    },
-                  ],
-                  margin: [0, 4, 0, 0],
-                },
-              ],
-            },
-          ],
-          margin: [0, 15, 0, 0],
-        },
-      ],
-      footer: (currentPage: number, pageCount: number) => ({
-        columns: [
-          {
-            text: `${emp.nit ? 'NIT: ' + emp.nit : ''}`,
-            fontSize: 8,
-            color: '#94a3b8',
-          },
-          {
-            text: `Página ${currentPage} de ${pageCount}`,
-            fontSize: 8,
-            color: '#94a3b8',
-            alignment: 'right',
-          },
-        ],
-        margin: [20, 0, 20, 0],
-      }),
-      images: emp.logoUrl ? { LOGO: emp.logoBase64 } : {},
-      styles: {},
-    };
-
-    return doc;
+  cop(v: number): string {
+    return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 2 }).format(
+      v ?? 0,
+    );
   }
 }

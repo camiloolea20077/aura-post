@@ -13,7 +13,7 @@
         </div>
       </div>
       <div class="card-head__actions">
-        <button
+        <button *appPuede="'precios.descuentos:CREAR'"
           pButton
           type="button"
           label="Nueva regla"
@@ -168,7 +168,7 @@
           <!-- Acciones -->
           <td class="text-center">
             <div class="action-buttons">
-              <button
+              <button *appPuede="'precios.descuentos:EDITAR'"
                 pButton
                 type="button"
                 icon="pi pi-pencil"
@@ -177,7 +177,7 @@
                 tooltipPosition="top"
                 (click)="openEdit(item)"
               ></button>
-              <button
+              <button *appPuede="'precios.descuentos:ANULAR'"
                 pButton
                 type="button"
                 icon="pi pi-trash"
@@ -203,7 +203,8 @@
                     : "No hay reglas de descuento registradas"
                 }}
               </p>
-              <button
+              <ng-container *appPuede="'precios.descuentos:CREAR'">
+            <button
                 *ngIf="!searchQuery"
                 pButton
                 type="button"
@@ -212,6 +213,7 @@
                 class="btn-verde p-button-sm"
                 (click)="openCreate()"
               ></button>
+            </ng-container>
             </div>
           </td>
         </tr>

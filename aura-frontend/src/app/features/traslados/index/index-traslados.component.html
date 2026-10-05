@@ -9,7 +9,7 @@
         </div>
       </div>
       <div class="card-head__actions">
-        <button
+        <button *appPuede="'inventario.traslados:CREAR'"
           pButton
           label="Nuevo traslado"
           icon="pi pi-plus"
@@ -87,7 +87,7 @@
                 pTooltip="Ver detalle"
                 (click)="verDetalle(t)"
               ></button>
-              <button
+              <button *appPuede="'inventario.traslados:ANULAR'"
                 pButton
                 icon="pi pi-ban"
                 class="p-button-text p-button-danger p-button-sm"
@@ -109,7 +109,7 @@
 </div>
 
 <!-- Dialogs -->
-<app-form-traslado [(visible)]="showForm" (saved)="onSaved()" />
+
 
 <app-detalle-traslado
   [(visible)]="showDetalle"

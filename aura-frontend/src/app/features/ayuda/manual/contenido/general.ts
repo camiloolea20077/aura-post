@@ -45,7 +45,7 @@ export const GENERAL: ManualModulo[] = [
           'Sucursales (Terceros y Sucursales → Sucursales) y sus bodegas (Inventario → Bodegas).',
           'Usuarios con su rol y sucursales (Caja → Usuarios).',
           'Cajas de cada sucursal (Caja → Cajas).',
-          'Plan de cuentas: "Cargar PUC Básico" si la empresa lleva contabilidad (Contabilidad → Plan de Cuentas).',
+          'Plan de cuentas: "Cargar PUC completo" si la empresa lleva contabilidad (Contabilidad → Plan de Cuentas).',
           'Cuentas bancarias y billeteras (Tesorería → Cuentas Bancarias).',
           'Catálogo: unidades, categorías, marcas y productos.',
           'Terceros: clientes y proveedores.',

@@ -32,10 +32,12 @@ import { IndexDBService } from '../../../../core/services/index-db.service';
 import { LoteService } from '../../../../core/services/lote.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 
+import { PuedeDirective } from '../../../../shared/directives/puede.directive';
 @Component({
   selector: 'app-index-lotes',
   standalone: true,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     CurrencyPipe,

@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -7,6 +7,7 @@ import {
   CreateEmpleadoDto,
   CreatePeriodoDto,
   CreateUsuarioFromEmpleadoDto,
+  DashboardRrhhModel,
   EmpleadoModel,
   EmpleadoTableModel,
   HistorialPagoModel,
@@ -31,6 +32,16 @@ export class NominaService {
   private readonly base = environment.apiUrl;
 
   constructor(private readonly http: HttpClient) {}
+
+  // ─── Centro de Recursos Humanos ─────────────────────────────
+  /** Resumen del mes: nómina, serie enero..mes, costo por rubro, personal y pendientes. */
+  dashboard(anio: number, mes: number): Observable<ResponseModel<DashboardRrhhModel>> {
+    const params = new HttpParams().set('anio', anio).set('mes', mes);
+    return this.http.get<ResponseModel<DashboardRrhhModel>>(
+      `${this.base}recursos-humanos/dashboard`,
+      { params },
+    );
+  }
 
   // ─── Config ─────────────────────────────────────────────────
   getConfig(): Observable<ResponseModel<NominaConfigModel>> {

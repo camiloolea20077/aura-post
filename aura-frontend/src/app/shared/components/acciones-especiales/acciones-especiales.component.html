@@ -1,0 +1,68 @@
+<div class="vacio" *ngIf="!catalogo.length">
+  La empresa no tiene activos los módulos con acciones especiales.
+</div>
+
+<div class="grupo" *ngFor="let g of grupos">
+  <div class="grupo__titulo">{{ g.titulo }}</div>
+  <div class="accion" *ngFor="let a of g.acciones">
+    <div class="accion__texto">
+      <span class="accion__nombre">
+        {{ a.nombre }}
+        <span
+          class="estado"
+          [class.estado--si]="efectivo(a)"
+          [class.estado--no]="!efectivo(a)"
+          >{{ efectivo(a) ? "Puede" : "No puede" }}</span
+        >
+      </span>
+      <span class="accion__desc" *ngIf="a.descripcion">{{ a.descripcion }}</span>
+      <span class="accion__desc accion__desc--aviso" *ngIf="!visible(a)"
+        >Necesita ver la pantalla para usarla.</span
+      >
+    </div>
+    <div class="opciones">
+      <button
+        type="button"
+        class="opcion"
+        [class.opcion--activa]="valor(a) === null"
+        [disabled]="soloLectura"
+        (click)="set(a, null)"
+      >
+        <i
+          class="pi"
+          [class.pi-circle-fill]="valor(a) === null"
+          [class.pi-circle]="valor(a) !== null"
+        ></i>
+        {{ textoHeredado(a) }}
+      </button>
+      <button
+        type="button"
+        class="opcion"
+        [class.opcion--activa]="valor(a) === true"
+        [disabled]="soloLectura"
+        (click)="set(a, true)"
+      >
+        <i
+          class="pi"
+          [class.pi-circle-fill]="valor(a) === true"
+          [class.pi-circle]="valor(a) !== true"
+        ></i>
+        Sí
+      </button>
+      <button
+        type="button"
+        class="opcion"
+        [class.opcion--activa]="valor(a) === false"
+        [disabled]="soloLectura"
+        (click)="set(a, false)"
+      >
+        <i
+          class="pi"
+          [class.pi-circle-fill]="valor(a) === false"
+          [class.pi-circle]="valor(a) !== false"
+        ></i>
+        No
+      </button>
+    </div>
+  </div>
+</div>

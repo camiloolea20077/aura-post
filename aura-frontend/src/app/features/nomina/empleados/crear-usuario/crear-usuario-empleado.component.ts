@@ -27,6 +27,7 @@ import { lastValueFrom } from 'rxjs';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 import { NominaService } from '../../../../core/services/nomina.service';
 import { IndexDBService } from '../../../../core/services/index-db.service';
+import { PermisosService } from '../../../../core/services/permisos.service';
 import { EmpleadoTableModel } from '../../../../core/models/nomina.model';
 import { PasswordModule } from 'primeng/password';
 import { DropdownModule } from 'primeng/dropdown';
@@ -60,6 +61,7 @@ export class CrearUsuarioEmpleadoComponent {
 
   form!: FormGroup;
   sucursalesOpts: { label: string; value: number }[] = [];
+  perfilesOpts: { label: string; value: number }[] = [];
 
   constructor(
     private readonly nominaService: NominaService,
@@ -67,17 +69,34 @@ export class CrearUsuarioEmpleadoComponent {
     private readonly alert: AlertService,
     private readonly fb: FormBuilder,
     private readonly cdr: ChangeDetectorRef,
+    private readonly permisosService: PermisosService,
   ) {
     this.initForm();
   }
 
   ngOnInit(): void {
     this.loadSucursales();
+    this.loadPerfiles();
+  }
+
+  /** Perfiles activos para elegir (docs/PLAN_PERMISOS.md en el backend). */
+  private async loadPerfiles(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.permisosService.opciones());
+      this.perfilesOpts = (res?.data ?? []).map((p) => ({
+        label: p.nombre + (p.accesoTotal ? ' (acceso total)' : ''),
+        value: p.id,
+      }));
+      this.cdr.markForCheck();
+    } catch {
+      /* sin permiso para verlos: se asigna el del tipo de usuario */
+    }
   }
 
   private initForm(): void {
     this.form = this.fb.group({
       sucursalId: [null, Validators.required],
+      perfilId: [null as number | null],
       username: [
         '',
         [
@@ -135,6 +154,7 @@ export class CrearUsuarioEmpleadoComponent {
         empleadoId: this.empleado.id,
         username: this.form.value.username!,
         password: this.form.value.password!,
+        perfilId: this.form.value.perfilId ?? null,
       };
 
       await lastValueFrom(this.nominaService.createUsuarioFromEmpleado(dto));

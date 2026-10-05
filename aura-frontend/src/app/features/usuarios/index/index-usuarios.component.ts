@@ -16,13 +16,12 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
-import {
-  UsuarioModel,
-  UsuarioTableModel,
-} from '../../../core/models/usuario.model';
+import { UsuarioTableModel } from '../../../core/models/usuario.model';
 import { UsuarioService } from '../../../core/services/usuario.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
-import { FormUsuarioComponent } from '../form/form-usuario.component';
+
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-index-usuarios',
@@ -39,7 +38,8 @@ import { FormUsuarioComponent } from '../form/form-usuario.component';
     TooltipModule,
     SkeletonModule,
     ConfirmDialogModule,
-    FormUsuarioComponent,
+
+    PuedeDirective,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './index-usuarios.component.html',
@@ -54,15 +54,21 @@ export class IndexUsuariosComponent implements OnInit {
   lastEvent!: TableLazyLoadEvent;
 
   // Dialogs
-  showForm = false;
-  editTarget: UsuarioModel | null = null;
 
   constructor(
     private readonly usuarioService: UsuarioService,
     private readonly alertService: AlertService,
     private readonly confirmationService: ConfirmationService,
     private readonly cdr: ChangeDetectorRef,
+    private readonly router: Router,
   ) {}
+
+  /** Perfil y excepciones del usuario (docs/PLAN_PERMISOS.md). */
+  permisos(id: number): void {
+    this.router.navigate(['/admin/usuarios', id], {
+      queryParams: { tab: 'permisos' },
+    });
+  }
 
   ngOnInit(): void {
     /* lazy */
@@ -117,20 +123,13 @@ export class IndexUsuariosComponent implements OnInit {
   }
 
   // ── CRUD ──────────────────────────────────────────────────
+  // El usuario se crea y edita en su propia página con pestañas.
   nuevo(): void {
-    this.editTarget = null;
-    this.showForm = true;
+    this.router.navigate(['/admin/usuarios/nuevo']);
   }
 
-  async editar(id: number): Promise<void> {
-    try {
-      const res = await lastValueFrom(this.usuarioService.getById(id));
-      this.editTarget = res?.data ?? null;
-      this.showForm = true;
-      this.cdr.markForCheck();
-    } catch {
-      this.alertService.showError('Error', 'No se pudo cargar el usuario');
-    }
+  editar(id: number): void {
+    this.router.navigate(['/admin/usuarios', id]);
   }
 
   confirmarDesactivar(item: UsuarioTableModel, event: Event): void {
@@ -157,10 +156,6 @@ export class IndexUsuariosComponent implements OnInit {
     }
   }
 
-  onSaved(): void {
-    this.showForm = false;
-    this.reloadTable();
-  }
 
   // ── Helpers UI ────────────────────────────────────────────
   getRolSeverity(rol: string): 'info' | 'warn' | 'success' | 'secondary' {

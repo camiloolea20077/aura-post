@@ -1,11 +1,8 @@
 import {
-  Component,
-  OnChanges,
-  Input,
-  Output,
-  EventEmitter,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
+  Component,
+  OnInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -15,68 +12,71 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { ButtonModule } from 'primeng/button';
-import { InputNumberModule } from 'primeng/inputnumber';
 import { DropdownModule } from 'primeng/dropdown';
-import { DialogModule } from 'primeng/dialog';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { TextareaModule } from 'primeng/textarea';
 import { TooltipModule } from 'primeng/tooltip';
-import { AutoCompleteModule } from 'primeng/autocomplete';
 import { lastValueFrom } from 'rxjs';
 import { v4 as uuid } from 'uuid';
-import { HttpClient } from '@angular/common/http';
 
-import {
-  SerialPickerComponent,
-  SerialesElegidos,
-} from '../../../shared/components/serial-picker/serial-picker.component';
-import { AlertService } from '../../../shared/pipes/alert.service';
-import { BodegaService } from '../../../core/services/bodega.service';
 import { BodegaDto } from '../../../core/models/bodega.model';
+import { ProductoTableModel } from '../../../core/models/producto.model';
 import {
   CreateTrasladoDto,
   SucursalSelectorModel,
   TrasladoLineaUI,
 } from '../../../core/models/traslado.model';
+import { BodegaService } from '../../../core/services/bodega.service';
 import { TrasladoService } from '../../../core/services/traslado.service';
+import { ProductoAutocompleteComponent } from '../../../shared/components/producto-autocomplete/producto-autocomplete.component';
+import {
+  SerialPickerComponent,
+  SerialesElegidos,
+} from '../../../shared/components/serial-picker/serial-picker.component';
+import { AlertService } from '../../../shared/pipes/alert.service';
 import { etiquetaLote } from '../../../shared/utils/lote-etiqueta';
 import { environment } from '../../../../environments/environment';
 
+/**
+ * Nuevo traslado en página plana (antes era un diálogo). El producto se agrega
+ * con el buscador de productos (autocomplete + lupa del buscador avanzado) y el
+ * stock que se muestra es el de la BODEGA de origen, no la suma de la sede: con
+ * varias bodegas en una sede, lo que se puede sacar es lo de esa bodega.
+ */
 @Component({
   selector: 'app-form-traslado',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    FormsModule,
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     ButtonModule,
-    InputNumberModule,
     DropdownModule,
-    DialogModule,
+    InputNumberModule,
     TextareaModule,
     TooltipModule,
-    AutoCompleteModule,
+    ProductoAutocompleteComponent,
     SerialPickerComponent,
   ],
   templateUrl: './form-traslado.component.html',
   styleUrls: ['./form-traslado.component.scss'],
 })
-export class FormTrasladoComponent implements OnChanges {
-  @Input() visible = false;
-  @Output() visibleChange = new EventEmitter<boolean>();
-  @Output() saved = new EventEmitter<void>();
-
+export class FormTrasladoComponent implements OnInit {
   form: FormGroup;
   loading = false;
+  agregando = false;
 
   sucursales: SucursalSelectorModel[] = [];
-  // Con bodegas el destino ya NO excluye la sucursal origen: pasar de la
-  // bodega de atras a la vitrina es un traslado dentro de la misma sede.
+  // El destino puede ser la misma sede: de la bodega de atrás a la vitrina.
   bodegasOrigen: BodegaDto[] = [];
   bodegasDestino: BodegaDto[] = [];
   lineas: TrasladoLineaUI[] = [];
-  productoSugerencias: any[] = [];
+  /** Cambia para limpiar el buscador después de agregar. */
+  buscadorKey = 0;
 
   constructor(
     private readonly fb: FormBuilder,
@@ -84,7 +84,8 @@ export class FormTrasladoComponent implements OnChanges {
     private readonly alert: AlertService,
     private readonly bodegaService: BodegaService,
     private readonly http: HttpClient,
-    private cdr: ChangeDetectorRef,
+    private readonly router: Router,
+    private readonly cdr: ChangeDetectorRef,
   ) {
     this.form = this.fb.group({
       sucursalOrigenId: [null, Validators.required],
@@ -94,33 +95,26 @@ export class FormTrasladoComponent implements OnChanges {
       observacion: [null],
     });
 
-    // Cambiar de sucursal cambia las bodegas y anula las lineas: el stock
-    // que se estaba trasladando era el de la bodega anterior.
+    // Cambiar el origen anula las líneas: el stock era el de la bodega anterior.
     this.form.get('sucursalOrigenId')!.valueChanges.subscribe((id) => {
       this.form.get('bodegaOrigenId')!.setValue(null);
       this.lineas = [];
       this.cargarBodegas(id, 'origen');
       this.cdr.markForCheck();
     });
-
     this.form.get('sucursalDestinoId')!.valueChanges.subscribe((id) => {
       this.form.get('bodegaDestinoId')!.setValue(null);
       this.cargarBodegas(id, 'destino');
       this.cdr.markForCheck();
     });
-
     this.form.get('bodegaOrigenId')!.valueChanges.subscribe(() => {
       this.lineas = [];
       this.cdr.markForCheck();
     });
   }
 
-  ngOnChanges(): void {
-    if (this.visible) {
-      this.form.reset();
-      this.lineas = [];
-      this.loadSucursales();
-    }
+  ngOnInit(): void {
+    this.loadSucursales();
   }
 
   private async loadSucursales(): Promise<void> {
@@ -147,8 +141,7 @@ export class FormTrasladoComponent implements OnChanges {
       const bodegas = res?.data ?? [];
       if (lado === 'origen') this.bodegasOrigen = bodegas;
       else this.bodegasDestino = bodegas;
-
-      // Con una sola bodega no hay nada que elegir: se preselecciona.
+      // Con una sola bodega no hay nada que elegir.
       if (bodegas.length === 1) {
         this.form
           .get(lado === 'origen' ? 'bodegaOrigenId' : 'bodegaDestinoId')!
@@ -161,100 +154,92 @@ export class FormTrasladoComponent implements OnChanges {
     this.cdr.markForCheck();
   }
 
-  // ── Búsqueda de productos ─────────────────────────────────
-  async buscarProductos(event: any): Promise<void> {
-    const q = event.query?.trim();
-    const origenId = this.form.get('sucursalOrigenId')!.value;
-    if (!q || q.length < 2 || !origenId) {
-      this.productoSugerencias = [];
+  get origenListo(): boolean {
+    return !!this.form.get('sucursalOrigenId')!.value && !!this.form.get('bodegaOrigenId')!.value;
+  }
+
+  // ── Agregar producto ──────────────────────────────────────
+  /** Elegido en el buscador: trae su stock en la bodega de origen y agrega la línea. */
+  async onProducto(p: ProductoTableModel | null): Promise<void> {
+    if (!p) return;
+    if (!this.origenListo) {
+      this.alert.showWarn('Atención', 'Elija primero la sucursal y la bodega de origen');
+      this.limpiarBuscador();
       return;
     }
-
+    const existente = this.lineas.find((l) => l.productoId === p.id && !l.manejaLotes && !l.manejaSerial);
+    if (existente) {
+      existente.cantidad += 1;
+      this.limpiarBuscador();
+      return;
+    }
+    const sucursalId = this.form.get('sucursalOrigenId')!.value;
+    const bodegaId = this.form.get('bodegaOrigenId')!.value;
+    this.agregando = true;
+    this.cdr.markForCheck();
     try {
-      // /productos/inventario con la sucursal origen: el endpoint anterior
-      // (inventario/disponible) no existía y la búsqueda nunca traía nada.
       const res: any = await lastValueFrom(
         this.http.get<any>(
-          `${environment.apiUrl}productos/inventario?search=${encodeURIComponent(q)}&sucursalId=${origenId}`,
+          `${environment.apiUrl}productos/inventario/id/${p.id}?sucursalId=${sucursalId}&bodegaId=${bodegaId}`,
         ),
       );
-      this.productoSugerencias = (res?.data ?? []).map((p: any) => ({
-        ...p,
-        label: `${p.nombre}${p.sku ? ' — ' + p.sku : ''}`,
-      }));
-    } catch {
-      this.productoSugerencias = [];
+      const d = res?.data;
+      if (!d || d.manejaInventario === false) {
+        this.alert.showWarn('No se traslada', `"${p.nombre}" no maneja inventario.`);
+        return;
+      }
+      const linea: TrasladoLineaUI = {
+        _id: uuid(),
+        productoId: d.id,
+        productoNombre: d.nombre,
+        productoSku: d.sku ?? null,
+        stockOrigen: Number(d.stockActual ?? 0),
+        stockOrigenProducto: Number(d.stockActual ?? 0),
+        manejaLotes: !!d.manejaLotes,
+        manejaSerial: !!d.manejaSerial,
+        serialIds: [],
+        loteId: null,
+        codigoLote: null,
+        lotesDisponibles: [],
+        cantidad: 1,
+        costoUnitario: Number(d.costo ?? 0),
+      };
+      this.lineas = [...this.lineas, linea];
+      if (linea.manejaLotes) this.cargarLotes(linea, linea.productoId!);
+    } catch (err: any) {
+      // Los servicios no aparecen en el inventario: el endpoint responde 404.
+      this.alert.showWarn(
+        'No se traslada',
+        err?.status === 404 ? `"${p.nombre}" no maneja inventario.` : 'No se pudo leer el stock del producto.',
+      );
+    } finally {
+      this.agregando = false;
+      this.limpiarBuscador();
     }
+  }
+
+  private limpiarBuscador(): void {
+    this.buscadorKey++;
     this.cdr.markForCheck();
   }
 
-  seleccionarProducto(event: any, linea: TrasladoLineaUI): void {
-    const p = event.value ?? event;
-    linea.productoId = p.id;
-    linea.productoNombre = p.nombre;
-    linea.productoSku = p.sku ?? null;
-    linea.stockOrigen = p.stockActual ?? 0;
-    linea.stockOrigenProducto = linea.stockOrigen;
-    linea.costoUnitario = p.costo ?? 0;
-    linea.manejaLotes = p.manejaLotes ?? false;
-    linea.manejaSerial = !!p.manejaSerial;
-    linea.serialIds = [];
-    linea.loteId = null;
-    linea.codigoLote = null;
-    linea.lotesDisponibles = [];
-    if (p.manejaLotes) this.cargarLotes(linea, p.id);
-    this.cdr.markForCheck();
-  }
-
-  private async cargarLotes(
-    linea: TrasladoLineaUI,
-    productoId: number,
-  ): Promise<void> {
+  private async cargarLotes(linea: TrasladoLineaUI, productoId: number): Promise<void> {
     const origenId = this.form.get('sucursalOrigenId')!.value;
     try {
       const res: any = await lastValueFrom(
-        this.http.get<any>(
-          `${environment.apiUrl}lotes/disponibles/${productoId}/${origenId}`,
-        ),
+        this.http.get<any>(`${environment.apiUrl}lotes/disponibles/${productoId}/${origenId}`),
       );
       linea.lotesDisponibles = (res?.data ?? []).map((l: any) => ({
         ...l,
         etiqueta: etiquetaLote(l),
       }));
-      this.cdr.markForCheck();
     } catch {
       linea.lotesDisponibles = [];
     }
-  }
-
-  // ── CRUD líneas ───────────────────────────────────────────
-  addLinea(): void {
-    if (!this.form.get('sucursalOrigenId')!.value) {
-      this.alert.showWarn(
-        'Atención',
-        'Selecciona la sucursal de origen primero',
-      );
-      return;
-    }
-    this.lineas = [
-      ...this.lineas,
-      {
-        _id: uuid(),
-        productoId: null,
-        productoNombre: '',
-        productoSku: null,
-        stockOrigen: 0,
-        manejaLotes: false,
-        loteId: null,
-        codigoLote: null,
-        lotesDisponibles: [],
-        cantidad: 1,
-        costoUnitario: 0,
-      },
-    ];
     this.cdr.markForCheck();
   }
 
+  // ── Líneas ────────────────────────────────────────────────
   removeLinea(id: string): void {
     this.lineas = this.lineas.filter((l) => l._id !== id);
     this.cdr.markForCheck();
@@ -262,7 +247,11 @@ export class FormTrasladoComponent implements OnChanges {
 
   updateCantidad(linea: TrasladoLineaUI, val: number | null): void {
     linea.cantidad = Math.max(0.001, val ?? 0.001);
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
+  }
+
+  onCostoChange(linea: TrasladoLineaUI, val: number | null): void {
+    linea.costoUnitario = val ?? 0;
     this.cdr.markForCheck();
   }
 
@@ -270,21 +259,21 @@ export class FormTrasladoComponent implements OnChanges {
     const lote = linea.lotesDisponibles.find((l) => l.id === loteId);
     linea.loteId = loteId;
     linea.codigoLote = lote?.codigoLote ?? null;
-    linea.stockOrigen = lote
-      ? lote.stockActual
-      : (linea.stockOrigenProducto ?? linea.stockOrigen);
+    linea.stockOrigen = lote ? lote.stockActual : (linea.stockOrigenProducto ?? linea.stockOrigen);
     this.cdr.markForCheck();
   }
 
-  // ── Totales / estado ──────────────────────────────────────
+  // ── Totales ───────────────────────────────────────────────
   get totalProductos(): number {
     return this.lineas.length;
   }
 
+  get totalCosto(): number {
+    return this.lineas.reduce((s, l) => s + (l.cantidad || 0) * (l.costoUnitario || 0), 0);
+  }
+
   get hayStockInvalido(): boolean {
-    return this.lineas.some(
-      (l) => l.productoId !== null && l.cantidad > l.stockOrigen,
-    );
+    return this.lineas.some((l) => l.productoId !== null && l.cantidad > l.stockOrigen);
   }
 
   /** Lo que no puede repetirse es la BODEGA, no la sucursal. */
@@ -294,37 +283,37 @@ export class FormTrasladoComponent implements OnChanges {
     return !!(o && d && o === d);
   }
 
-  // ── Validar y guardar ─────────────────────────────────────
+  // ── Guardar ───────────────────────────────────────────────
   private validar(): string | null {
-    if (this.mismaBodega)
-      return 'La bodega de origen y la de destino no pueden ser la misma';
-    if (!this.lineas.length) return 'Agrega al menos un producto al traslado';
+    if (this.mismaBodega) return 'La bodega de origen y la de destino no pueden ser la misma';
+    if (!this.lineas.length) return 'Agregue al menos un producto al traslado';
     for (const l of this.lineas) {
-      if (!l.productoId) return 'Hay líneas sin producto seleccionado';
       if (l.cantidad <= 0) return 'La cantidad debe ser mayor a 0';
       if (l.manejaSerial) {
         if (!Number.isInteger(l.cantidad))
           return `"${l.productoNombre}" maneja serial: la cantidad tiene que ser entera`;
         if ((l.serialIds ?? []).length !== l.cantidad)
-          return `"${l.productoNombre}": elige ${l.cantidad} seriales (van ${(l.serialIds ?? []).length})`;
+          return `"${l.productoNombre}": elija ${l.cantidad} seriales (van ${(l.serialIds ?? []).length})`;
       }
       if (l.cantidad > l.stockOrigen)
-        return `"${l.productoNombre}" supera el stock disponible en origen (${l.stockOrigen})`;
+        return `"${l.productoNombre}" supera el stock de la bodega de origen (${l.stockOrigen})`;
     }
     return null;
   }
 
   async guardar(): Promise<void> {
     this.form.markAllAsTouched();
-    if (this.form.invalid) return;
-
+    if (this.form.invalid) {
+      this.alert.showWarn('Validación', 'Complete el origen y el destino');
+      return;
+    }
     const error = this.validar();
     if (error) {
       this.alert.showWarn('Validación', error);
       return;
     }
-
     this.loading = true;
+    this.cdr.markForCheck();
     const dto: CreateTrasladoDto = {
       sucursalOrigenId: this.form.value.sucursalOrigenId,
       sucursalDestinoId: this.form.value.sucursalDestinoId,
@@ -339,29 +328,20 @@ export class FormTrasladoComponent implements OnChanges {
         costoUnitario: l.costoUnitario,
       })),
     };
-
     try {
       await lastValueFrom(this.service.create(dto));
-      this.alert.showSuccess(
-        'Traslado creado',
-        'El stock fue transferido correctamente',
-      );
-      this.saved.emit();
-      this.close();
+      this.alert.showSuccess('Traslado creado', 'El stock fue transferido correctamente');
+      this.router.navigate(['/traslados']);
     } catch (err: any) {
-      this.alert.showError(
-        'Error',
-        err?.error?.message ?? 'No se pudo crear el traslado',
-      );
+      this.alert.showError('Error', err?.error?.message ?? 'No se pudo crear el traslado');
     } finally {
       this.loading = false;
       this.cdr.markForCheck();
     }
   }
 
-  close(): void {
-    this.visible = false;
-    this.visibleChange.emit(false);
+  volver(): void {
+    this.router.navigate(['/traslados']);
   }
 
   isInvalid(field: string): boolean {
@@ -369,8 +349,7 @@ export class FormTrasladoComponent implements OnChanges {
     return !!(c?.invalid && c?.touched);
   }
 
-
-  // ── Seriales de la línea ─────────────────────────────────────
+  // ── Seriales ──────────────────────────────────────────────
   serialLinea: TrasladoLineaUI | null = null;
 
   get serialPickerVisible(): boolean {
@@ -400,9 +379,5 @@ export class FormTrasladoComponent implements OnChanges {
 
   trackById(_: number, l: TrasladoLineaUI): string {
     return l._id;
-  }
-  onCostoChange(linea: TrasladoLineaUI, val: number | null): void {
-    linea.costoUnitario = val ?? 0;
-    this.cdr.markForCheck();
   }
 }

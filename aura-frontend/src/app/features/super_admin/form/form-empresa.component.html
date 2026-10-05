@@ -238,6 +238,25 @@
         </div>
       </div>
 
+      <!-- ── Módulos que tendrá la empresa ────────────────────── -->
+      <div class="fe-section" *ngIf="!isEdit">
+        <div class="section-title"><i class="pi pi-sitemap"></i> Módulos que tendrá</div>
+        <p class="section-hint">
+          Marque lo que se le vendió. Después se puede cambiar en "Módulos de la empresa". Dentro de esto,
+          la empresa decide qué ve cada usuario con sus perfiles.
+        </p>
+        <div class="aviso-modulos" *ngIf="catalogoModulos.length && submodulosElegidos.length === 0">
+          <i class="pi pi-exclamation-triangle"></i> Sin módulos la empresa no verá nada al entrar.
+        </div>
+        <app-arbol-modulos [modulos]="catalogoModulos" (seleccionChange)="onModulos($event)" />
+      </div>
+
+      <div class="fe-section" *ngIf="isEdit">
+        <div class="section-title"><i class="pi pi-sitemap"></i> Módulos de la empresa</div>
+        <p class="section-hint">Qué módulos y pantallas tiene contratados.</p>
+        <button pButton type="button" icon="pi pi-sitemap" label="Ver o cambiar módulos" class="p-button-outlined" (click)="verModulos()"></button>
+      </div>
+
       <!-- ── Facturación electrónica ─────────────────────────── -->
       <div class="fe-section">
         <div class="section-title"><i class="pi pi-file-pdf"></i> Facturación electrónica (Factus)</div>
@@ -295,7 +314,7 @@
       <!-- Footer -->
       <div class="fe-footer">
         <button pButton type="button" label="Cancelar" icon="pi pi-times" class="btn-amarillo" (click)="volver()"></button>
-        <button pButton type="button" [label]="isEdit ? 'Actualizar' : 'Crear empresa'" icon="pi pi-check" class="btn-verde" [loading]="loading" (click)="save()"></button>
+        <button pButton type="button" [label]="isEdit ? 'Actualizar' : 'Crear empresa'" icon="pi pi-check" class="btn-aura" [loading]="loading" (click)="save()"></button>
       </div>
     </div>
   </form>

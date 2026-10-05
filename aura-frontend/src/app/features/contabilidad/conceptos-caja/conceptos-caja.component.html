@@ -14,7 +14,7 @@
         </div>
       </div>
       <div class="card-head__actions">
-        <button
+        <button *appPuede="'contabilidad.conceptos-de-caja:CREAR'"
           pButton
           type="button"
           label="Nuevo concepto"
@@ -77,14 +77,14 @@
           </td>
           <td>{{ c.cuentaCodigo }} - {{ c.cuentaNombre }}</td>
           <td class="text-center">
-            <button
+            <button *appPuede="'contabilidad.conceptos-de-caja:EDITAR'"
               pButton
               icon="pi pi-pencil"
               class="p-button-text p-button-rounded p-button-sm"
               pTooltip="Editar"
               (click)="abrirEditar(c)"
             ></button>
-            <button
+            <button *appPuede="'contabilidad.conceptos-de-caja:ANULAR'"
               pButton
               icon="pi pi-trash"
               class="p-button-text p-button-rounded p-button-sm p-button-danger"
@@ -140,16 +140,13 @@
     </div>
     <div class="field">
       <label>Cuenta contable <span class="req">*</span></label>
-      <p-dropdown
+      <app-cuenta-autocomplete
+        [opciones]="cuentasOpts"
         [(ngModel)]="form.cuentaContableId"
-        [options]="cuentasOpts"
-        optionLabel="label"
-        optionValue="value"
         appendTo="body"
         placeholder="Selecciona la cuenta"
-        [filter]="true"
-        styleClass="w-full"
-      ></p-dropdown>
+        [showClear]="false"
+      />
       <small class="hint"
         >A esta cuenta irá la contrapartida del asiento (la caja es la otra
         línea).</small

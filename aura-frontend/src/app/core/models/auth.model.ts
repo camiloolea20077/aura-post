@@ -11,6 +11,8 @@ export interface AuthResponse {
   logo_url?: string;
   facturaElectronica?: boolean;
   sucursales: SucursalAuth[];
+  /** Sede elegida en la barra superior; sin valor = la default del login. */
+  sucursalActualId?: number | null;
 }
 
 export interface UserAuth {

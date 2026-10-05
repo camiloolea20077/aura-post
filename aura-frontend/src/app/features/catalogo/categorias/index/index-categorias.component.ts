@@ -22,10 +22,12 @@ import { CategoriaService } from '../../../../core/services/categoria.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 import { IFilterTable } from '../../../../shared/utils/filter-table';
 
+import { PuedeDirective } from '../../../../shared/directives/puede.directive';
 @Component({
   selector: 'app-index-categorias',
   standalone: true,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     TableModule,

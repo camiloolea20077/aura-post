@@ -151,16 +151,12 @@
         <span class="req" *ngIf="esEfectivo">*</span>
         <small *ngIf="!esEfectivo">(vacío = la de la forma de pago)</small>
       </label>
-      <p-dropdown
+      <app-cuenta-autocomplete
+        [opciones]="cuentasOpts"
         [(ngModel)]="cuentaContableId"
-        [options]="cuentasOpts"
-        optionLabel="label"
-        optionValue="value"
-        [filter]="true"
         [showClear]="true"
         placeholder="Seleccionar cuenta"
         appendTo="body"
-        styleClass="w-full"
       />
     </div>
 

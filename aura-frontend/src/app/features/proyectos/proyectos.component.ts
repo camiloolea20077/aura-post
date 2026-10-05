@@ -30,6 +30,7 @@ import {
   ProyectoTableModel,
 } from '../../core/models/proyecto.model';
 
+import { PuedeDirective } from '../../shared/directives/puede.directive';
 type Sev = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
 
 @Component({
@@ -37,6 +38,7 @@ type Sev = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     ButtonModule,

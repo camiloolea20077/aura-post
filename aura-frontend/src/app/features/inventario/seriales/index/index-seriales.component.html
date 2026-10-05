@@ -19,7 +19,7 @@
           class="p-button-outlined"
           (click)="abrirTrazabilidad()"
         ></button>
-        <button
+        <button *appPuede="'inventario.seriales:CREAR'"
           pButton
           type="button"
           label="Registrar serial"
@@ -148,7 +148,7 @@
               tooltipPosition="top"
               (click)="abrirTrazabilidad(item.serial)"
             ></button>
-            <button
+            <button *appPuede="'inventario.seriales:ANULAR'"
               pButton
               type="button"
               icon="pi pi-trash"
@@ -171,7 +171,8 @@
                   searchQuery ? "Sin resultados" : "No hay seriales registrados"
                 }}
               </p>
-              <button
+              <ng-container *appPuede="'inventario.seriales:CREAR'">
+            <button
                 *ngIf="!searchQuery"
                 pButton
                 type="button"
@@ -180,6 +181,7 @@
                 class="btn-verde"
                 (click)="openCreate()"
               ></button>
+            </ng-container>
             </div>
           </td>
         </tr>

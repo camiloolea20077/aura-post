@@ -5,7 +5,9 @@ import {
   EventEmitter,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
+  inject,
 } from '@angular/core';
+import { StateStore } from '../../../../core/store/state';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
@@ -59,6 +61,9 @@ type TagSeverity =
   styleUrls: ['./detalle-reconteo.component.scss'],
 })
 export class DetalleReconteoComponent {
+  /** Acciones especiales del perfil (PLAN_PERMISOS P6). */
+  private readonly permisosStore = inject(StateStore);
+
   @Input() visible = false;
   @Input() reconteo: ReconteoModel | null = null;
   @Input() loading = false;
@@ -109,6 +114,7 @@ export class DetalleReconteoComponent {
 
   get canAprobar(): boolean {
     return (
+      this.permisosStore.puede('inventario.reconteos', 'APROBAR') &&
       !!this.reconteo &&
       (this.reconteo.estado === 'BORRADOR' ||
         this.reconteo.estado === 'EN_CONTEO')

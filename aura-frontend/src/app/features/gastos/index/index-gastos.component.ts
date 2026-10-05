@@ -25,11 +25,13 @@ import { InputIconModule } from 'primeng/inputicon';
 
 import { DocumentoSoporteDialogComponent } from '../../../shared/components/documento-soporte-dialog/documento-soporte-dialog.component';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 @Component({
   selector: 'app-index-gastos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     ButtonModule,

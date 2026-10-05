@@ -59,12 +59,14 @@
         pInputText
         type="text"
         [(ngModel)]="search"
+        (ngModelChange)="onFiltro()"
         placeholder="Buscar por razón social, nombre o NIT..."
       />
     </p-inputGroup>
     <p-dropdown
       [options]="planOpts"
       [(ngModel)]="filtroPlan"
+      (ngModelChange)="onFiltro()"
       optionLabel="label"
       optionValue="value"
       styleClass="flt"
@@ -72,6 +74,7 @@
     <p-dropdown
       [options]="estadoFiltroOpts"
       [(ngModel)]="filtroEstado"
+      (ngModelChange)="onFiltro()"
       optionLabel="label"
       optionValue="value"
       styleClass="flt"
@@ -93,8 +96,8 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let c of filtrados" [class.row-vencida]="c.vencida">
-          <td>
+        <tr *ngFor="let c of pagina" [class.row-vencida]="c.vencida">
+          <td data-label="Empresa">
             <div class="emp">
               <span class="e-nom">{{ c.razonSocial }}</span>
               <span class="e-meta">
@@ -107,18 +110,18 @@
               </span>
             </div>
           </td>
-          <td>{{ planLabel(c.tipoPlan) }}</td>
-          <td>
+          <td data-label="Plan">{{ planLabel(c.tipoPlan) }}</td>
+          <td data-label="Estado">
             <p-tag
               [severity]="estadoSeverity(c.estadoEfectivo)"
               [value]="c.estadoEfectivo"
               [rounded]="true"
             />
           </td>
-          <td class="text-right money">
+          <td data-label="Valor" class="text-right money">
             {{ c.tieneSuscripcion ? formatMonto(c.valor, c.moneda ?? "COP") : "—" }}
           </td>
-          <td>
+          <td data-label="Próximo pago">
             <ng-container *ngIf="c.tipoPlan === 'MENSUAL' && c.fechaProximoPago">
               <span [class.vencido-txt]="c.vencida">
                 {{ c.fechaProximoPago | date: "dd MMM yy" : "" : "es-CO" }}
@@ -134,7 +137,7 @@
             <span *ngIf="c.tipoPlan === 'UNICO'" class="muted">Sin vencimiento</span>
             <span *ngIf="!c.tieneSuscripcion" class="muted">—</span>
           </td>
-          <td class="text-right money">
+          <td data-label="Total pagado" class="text-right money">
             {{ c.tieneSuscripcion ? formatMonto(c.totalPagado, c.moneda ?? "COP") : "—" }}
           </td>
           <td class="acciones">
@@ -174,11 +177,22 @@
         </tr>
       </tbody>
     </table>
+    <p-paginator
+      *ngIf="filtrados.length > filas || first > 0"
+      [first]="first"
+      [rows]="filas"
+      [totalRecords]="filtrados.length"
+      [rowsPerPageOptions]="[20, 50, 100]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}–{last} de {totalRecords}"
+      (onPageChange)="onPagina($event)"
+    />
   </div>
 </div>
 
 <!-- ── Dialog membresía ── -->
 <p-dialog
+  [breakpoints]="{ '640px': '95vw' }"
   [(visible)]="showMembresia"
   [modal]="true"
   [draggable]="false"
@@ -282,6 +296,7 @@
 
 <!-- ── Dialog registrar pago ── -->
 <p-dialog
+  [breakpoints]="{ '640px': '95vw' }"
   [(visible)]="showPago"
   [modal]="true"
   [draggable]="false"
@@ -380,6 +395,7 @@
 
 <!-- ── Dialog historial ── -->
 <p-dialog
+  [breakpoints]="{ '640px': '95vw' }"
   [(visible)]="showHistorial"
   [modal]="true"
   [draggable]="false"

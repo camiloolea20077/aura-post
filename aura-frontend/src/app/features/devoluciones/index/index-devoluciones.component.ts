@@ -27,6 +27,7 @@ import { AlertService } from '../../../shared/pipes/alert.service';
 import { CreateDevolucionComponent } from '../create/create-devolucion.component';
 import { DetalleDevolucionComponent } from '../detalle/detalle-devolucion.component';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 type TagSeverity =
   | 'success'
   | 'secondary'
@@ -41,6 +42,7 @@ type TagSeverity =
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     TableModule,

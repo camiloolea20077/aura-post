@@ -13,7 +13,7 @@
       </div>
       <div class="card-head__actions">
         <div class="card-head__btns">
-          <button
+          <button *appPuede="'contabilidad.categorias-contables:CREAR'"
             pButton
             type="button"
             label="Nueva categoría"
@@ -96,7 +96,7 @@
             />
           </td>
           <td>
-            <button
+            <button *appPuede="'contabilidad.categorias-contables:EDITAR'"
               pButton
               icon="pi pi-pencil"
               class="p-button-text p-button-sm p-button-rounded"
@@ -177,17 +177,12 @@
 
     <div class="form-group full-width">
       <label>{{ tipoActual.cuentaCompra }} ({{ tipoActual.prefijosCompra.join(", ") }}xx)</label>
-      <p-dropdown
+      <app-cuenta-autocomplete
+        [opciones]="cuentasCompra"
         [(ngModel)]="form.cuentaInventarioId"
-        [options]="cuentasCompra"
-        optionLabel="label"
-        optionValue="value"
-        [filter]="true"
-        filterPlaceholder="Código o nombre..."
         [showClear]="true"
         appendTo="body"
         placeholder="La de la configuración de la empresa"
-        styleClass="w-full"
       />
       <small class="hint">A esta cuenta va el débito cuando se compra un ítem de esta categoría.</small>
     </div>
@@ -195,30 +190,22 @@
     <ng-container *ngIf="tipoActual.seVende">
       <div class="form-group">
         <label>Ingreso (4xx)</label>
-        <p-dropdown
+        <app-cuenta-autocomplete
+          [opciones]="cuentasIngreso"
           [(ngModel)]="form.cuentaIngresoId"
-          [options]="cuentasIngreso"
-          optionLabel="label"
-          optionValue="value"
-          [filter]="true"
           [showClear]="true"
           appendTo="body"
           placeholder="La de la empresa"
-          styleClass="w-full"
         />
       </div>
       <div class="form-group">
         <label>Costo de venta (5, 6, 7)</label>
-        <p-dropdown
+        <app-cuenta-autocomplete
+          [opciones]="cuentasCosto"
           [(ngModel)]="form.cuentaCostoId"
-          [options]="cuentasCosto"
-          optionLabel="label"
-          optionValue="value"
-          [filter]="true"
           [showClear]="true"
           appendTo="body"
           placeholder="La de la empresa"
-          styleClass="w-full"
         />
       </div>
     </ng-container>
@@ -226,30 +213,22 @@
     <ng-container *ngIf="tipoActual.deprecia">
       <div class="form-group">
         <label>Depreciación acumulada</label>
-        <p-dropdown
+        <app-cuenta-autocomplete
+          [opciones]="cuentasDepreciacion"
           [(ngModel)]="form.cuentaDepreciacionId"
-          [options]="cuentasDepreciacion"
-          optionLabel="label"
-          optionValue="value"
-          [filter]="true"
           [showClear]="true"
           appendTo="body"
           placeholder="1592 / 1698 por defecto"
-          styleClass="w-full"
         />
       </div>
       <div class="form-group">
         <label>Gasto por depreciación</label>
-        <p-dropdown
+        <app-cuenta-autocomplete
+          [opciones]="cuentasGastoDepreciacion"
           [(ngModel)]="form.cuentaGastoDepreciacionId"
-          [options]="cuentasGastoDepreciacion"
-          optionLabel="label"
-          optionValue="value"
-          [filter]="true"
           [showClear]="true"
           appendTo="body"
           placeholder="5160 por defecto"
-          styleClass="w-full"
         />
       </div>
       <div class="form-group">
@@ -268,16 +247,12 @@
     <ng-container *ngIf="tipoActual.difiere">
       <div class="form-group">
         <label>Gasto de cada mes (5xx)</label>
-        <p-dropdown
+        <app-cuenta-autocomplete
+          [opciones]="cuentasCosto"
           [(ngModel)]="form.cuentaCostoId"
-          [options]="cuentasCosto"
-          optionLabel="label"
-          optionValue="value"
-          [filter]="true"
           [showClear]="true"
           appendTo="body"
           placeholder="5195 por defecto"
-          styleClass="w-full"
         />
       </div>
       <div class="form-group">

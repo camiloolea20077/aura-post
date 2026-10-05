@@ -29,6 +29,7 @@ import {
   ImpuestoModel,
 } from '../../../core/models/contador.model';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 interface GrupoConceptos {
   nombre: string;
   conceptos: CuentaConfigModel[];
@@ -51,11 +52,15 @@ const GRUPOS: { nombre: string; test: (c: string) => boolean }[] = [
  * forma de pago y cada impuesto; modo de contabilización e historial. Antes
  * todo esto solo se podía cambiar por SQL.
  */
+import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-autocomplete/cuenta-autocomplete.component';
+
 @Component({
   selector: 'app-parametrizacion-contable',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CuentaAutocompleteComponent,
+    PuedeDirective,
     InputNumberModule,
     CommonModule,
     FormsModule,

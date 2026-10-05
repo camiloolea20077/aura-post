@@ -32,11 +32,14 @@ const FORMATO_PESOS = '#,##0;[Red]-#,##0';
  * de Asientos Contables muestra una cuenta a la vez y sin tercero; aquí se ve
  * a quién se le debe y quién debe, y el diario completo con sus partidas.
  */
+import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-autocomplete/cuenta-autocomplete.component';
+
 @Component({
   selector: 'app-libros-contables',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CuentaAutocompleteComponent,
     CommonModule,
     FormsModule,
     ButtonModule,

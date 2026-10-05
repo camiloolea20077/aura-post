@@ -21,7 +21,7 @@
     border-radius: 12px;
     display: grid;
     place-items: center;
-    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
     color: #fff;
     i {
       font-size: 1.25rem;
@@ -89,7 +89,7 @@
     border-left-color: #ef4444;
   }
   &.accent {
-    border-left-color: #6366f1;
+    border-left-color: #2563eb;
   }
 }
 
@@ -285,4 +285,76 @@ $flt-h: 42px;
 ::ng-deep .w-full .p-inputnumber,
 ::ng-deep .w-full .p-calendar {
   width: 100%;
+}
+
+// ── Teléfono: cada cliente como tarjeta ──────────────────
+@media (max-width: 720px) {
+  .clientes-page {
+    padding: 0.75rem;
+  }
+
+  .page-head {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .filtros {
+    flex-direction: column;
+    align-items: stretch;
+
+    .search,
+    ::ng-deep .flt {
+      width: 100% !important;
+    }
+  }
+
+  .tabla-wrap {
+    border: none;
+    background: transparent;
+    overflow: visible;
+  }
+
+  .tabla:not(.mini) {
+    thead {
+      display: none;
+    }
+
+    tr {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.4rem 0.75rem;
+      margin-bottom: 0.6rem;
+      padding: 0.8rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    td {
+      padding: 0 !important;
+      border: none !important;
+      text-align: left !important;
+
+      &[data-label]::before {
+        content: attr(data-label);
+        display: block;
+        font-size: 0.66rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: #94a3b8;
+      }
+
+      &[data-label='Empresa'],
+      &.acciones,
+      &.empty {
+        grid-column: 1 / -1;
+      }
+
+      &.acciones {
+        border-top: 1px solid #f1f5f9 !important;
+        padding-top: 0.35rem !important;
+      }
+    }
+  }
 }

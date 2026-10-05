@@ -67,6 +67,8 @@ export interface ProductoTableModel {
   unidadAbreviatura?: string | null;
   manejaLotes?: boolean;
   manejaSerial?: boolean;
+  /** Existencia en la sede que se está mirando; null sin sede. */
+  stockSede?: number | null;
 }
 
 // ─── DTOs ────────────────────────────────────────────────────
@@ -131,6 +133,10 @@ export interface PageableDto {
     categoriaId?: number | null;
     marcaId?: number | null;
     activo?: boolean | null;
+    /** Sede cuyas existencias se muestran (columna Stock sede). */
+    sucursalId?: number | null;
+    /** Solo lo que tiene existencias en esa sede. */
+    conExistencias?: boolean | null;
   } | null;
 }
 

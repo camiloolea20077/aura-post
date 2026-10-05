@@ -59,7 +59,7 @@
           class="p-button-outlined p-button-sm" [disabled]="!facturasSinAcuerdo"
           [pTooltip]="facturasSinAcuerdo ? 'Pagar facturas en cuotas' : 'No hay facturas libres para un acuerdo'"
           tooltipPosition="bottom" (click)="nuevoAcuerdo()"></button>
-        <button pButton type="button" icon="pi pi-wallet" label="Registrar pago"
+        <button *appPuede="'cartera.cartera:CREAR'" pButton type="button" icon="pi pi-wallet" label="Registrar pago"
           class="p-button-sm" (click)="registrarPago()"></button>
       </div>
     </div>
@@ -336,6 +336,7 @@
                 <button type="button" class="f-icon" pTooltip="Imprimir" (click)="imprimirRecibo(r.id)">
                   <i class="pi pi-print"></i>
                 </button>
+                <ng-container *appPuede="'cartera.cartera:ANULAR'">
                 <button
                   *ngIf="r.estado === 'ACTIVO'"
                   type="button"
@@ -345,6 +346,7 @@
                 >
                   <i class="pi pi-ban"></i>
                 </button>
+                </ng-container>
               </td>
             </tr>
             <tr *ngIf="!ficha.recibos.length">
@@ -614,7 +616,7 @@
   </div>
   <ng-template pTemplate="footer">
     <button pButton type="button" label="Cancelar" class="p-button-text" (click)="gestionVisible = false"></button>
-    <button
+    <button *appPuede="'cartera.cartera:CREAR'"
       pButton
       type="button"
       label="Registrar"

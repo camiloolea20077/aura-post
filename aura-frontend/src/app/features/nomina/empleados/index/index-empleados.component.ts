@@ -23,10 +23,12 @@ import {
 } from '../../../../core/models/nomina.model';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 
+import { PuedeDirective } from '../../../../shared/directives/puede.directive';
 @Component({
   selector: 'app-index-empleados',
   standalone: true,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     TableModule,

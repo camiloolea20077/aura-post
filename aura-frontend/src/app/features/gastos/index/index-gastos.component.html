@@ -13,7 +13,7 @@
         </div>
       </div>
       <div class="card-head__actions">
-        <button
+        <button *appPuede="'contabilidad.gastos:CREAR'"
           pButton
           type="button"
           label="Registrar gasto"
@@ -117,7 +117,7 @@
             />
           </td>
           <td class="text-center flex">
-            <button
+            <button *appPuede="'contabilidad.gastos:EDITAR'"
               pButton
               type="button"
               icon="pi pi-pencil"
@@ -135,7 +135,7 @@
               tooltipPosition="top"
               (click)="abrirDocumentoSoporte(item)"
             ></button>
-            <button
+            <button *appPuede="'contabilidad.gastos:ANULAR'"
               pButton
               type="button"
               icon="pi pi-trash"
@@ -160,7 +160,8 @@
                     : "No hay gastos registrados"
                 }}
               </p>
-              <button
+              <ng-container *appPuede="'contabilidad.gastos:CREAR'">
+            <button
                 *ngIf="!searchQuery"
                 pButton
                 type="button"
@@ -169,6 +170,7 @@
                 class="btn-verde p-button-sm"
                 (click)="openForm()"
               ></button>
+            </ng-container>
             </div>
           </td>
         </tr>

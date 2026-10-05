@@ -54,6 +54,8 @@ export interface CreatePedidoDto {
   clienteId: number | null;
   observaciones: string | null;
   detalles: CreatePedidoDetalleDto[];
+  /** Autorización del supervisor si el descuento pasa el límite del vendedor (V192). */
+  autorizacionId?: number | null;
 }
 
 export interface RegistrarCobroDto {

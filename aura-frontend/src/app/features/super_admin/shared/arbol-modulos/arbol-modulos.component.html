@@ -1,0 +1,51 @@
+<div class="arbol">
+  <div class="arbol-barra">
+    <span class="search-wrap arbol-buscar">
+      <i class="pi pi-search"></i>
+      <input pInputText class="search-input" [(ngModel)]="filtro" placeholder="Buscar módulo o pantalla…" />
+    </span>
+    <div class="arbol-acciones" *ngIf="!soloLectura">
+      <button type="button" class="link-btn" (click)="todo(true)">Marcar todo</button>
+      <button type="button" class="link-btn" (click)="todo(false)">Quitar todo</button>
+    </div>
+  </div>
+  <p class="arbol-resumen">{{ totalActivas }} de {{ totalPantallas }} pantallas activas</p>
+
+  <div class="bloque" *ngFor="let b of bloquesVisibles; trackBy: trackBloque" [class.bloque--abierto]="abierto(b)">
+    <div class="bloque-cab" (click)="toggleAbierto(b)">
+      <button
+        type="button"
+        class="check"
+        [ngClass]="'check--' + estado(b.pantallas.length ? b.pantallas : b.todos)"
+        [disabled]="soloLectura"
+        (click)="toggleModulo(b, $event)"
+        [attr.aria-label]="'Todo ' + b.modulo.moduloNombre"
+      >
+        <i [class]="icono(estado(b.pantallas.length ? b.pantallas : b.todos))"></i>
+      </button>
+      <span class="bloque-nombre">{{ b.modulo.moduloNombre }}</span>
+      <span class="bloque-cont">{{ contar(b) }}/{{ b.pantallas.length }}</span>
+      <i class="pi bloque-flecha" [class.pi-chevron-down]="abierto(b)" [class.pi-chevron-right]="!abierto(b)"></i>
+    </div>
+
+    <div class="bloque-cuerpo" *ngIf="abierto(b)">
+      <div class="vacio" *ngIf="b.filas.length === 0">Este módulo no tiene submódulos.</div>
+      <button
+        type="button"
+        class="fila"
+        *ngFor="let f of b.filas; trackBy: trackFila"
+        [class.fila--grupo]="f.sub.esGrupo"
+        [class.fila--hija]="f.nivel === 1"
+        [disabled]="soloLectura"
+        (click)="toggleFila(f)"
+      >
+        <span class="check" [ngClass]="'check--' + estadoFila(f)"><i [class]="icono(estadoFila(f))"></i></span>
+        <i *ngIf="f.sub.esGrupo" class="pi pi-folder-open fila-icono"></i>
+        <span class="fila-nombre">{{ f.sub.submoduloNombre }}</span>
+        <span class="fila-codigo">{{ f.sub.submoduloCodigo }}</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="vacio" *ngIf="bloquesVisibles.length === 0">No hay módulos que coincidan.</div>
+</div>

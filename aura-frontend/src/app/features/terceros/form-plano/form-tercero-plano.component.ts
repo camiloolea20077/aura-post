@@ -7,6 +7,7 @@ import {
   Output,
   EventEmitter,
 } from '@angular/core';
+import { calcularDv } from '../../../shared/utils/dv.util';
 import { CommonModule } from '@angular/common';
 import {
   AbstractControl,
@@ -307,6 +308,12 @@ export class FormTerceroPlanoComponent implements OnInit {
       },
       { validators: this.validarNombre },
     );
+
+    // El DV se calcula con el número (persona natural o jurídica); se puede corregir a mano.
+    this.frm.get('numeroDocumento')?.valueChanges.subscribe((n: string) => {
+      const dv = calcularDv(n);
+      if (dv !== null) this.frm.patchValue({ dv }, { emitEvent: false });
+    });
   }
 
   private validarNombre(g: AbstractControl) {
@@ -367,7 +374,7 @@ export class FormTerceroPlanoComponent implements OnInit {
     if (this.esJuridica) {
       this.frm.patchValue({ nombres: null, apellidos: null });
     } else {
-      this.frm.patchValue({ razonSocial: null, dv: null });
+      this.frm.patchValue({ razonSocial: null });
     }
   }
 
@@ -532,7 +539,7 @@ export class FormTerceroPlanoComponent implements OnInit {
     const dto: CreateTerceroDto & { esBanco: boolean } = {
       tipoDocumento: v.tipoDocumento,
       numeroDocumento: v.numeroDocumento.trim(),
-      dv: juridica ? v.dv?.trim() || null : null,
+      dv: v.dv?.trim() || null,
       razonSocial: juridica ? v.razonSocial?.trim() || null : null,
       nombres: nombresFinal,
       apellidos: apellidosFinal,

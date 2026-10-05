@@ -3,7 +3,9 @@ import {
   ChangeDetectorRef,
   Component,
   OnInit,
+  inject,
 } from '@angular/core';
+import { StateStore } from '../../../core/store/state';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { lastValueFrom } from 'rxjs';
@@ -55,6 +57,9 @@ import {
   styleUrls: ['./periodos-contables.component.scss'],
 })
 export class PeriodosContablesComponent implements OnInit {
+  /** Acciones especiales del perfil (PLAN_PERMISOS P6). */
+  private readonly permisosStore = inject(StateStore);
+
   periodos: PeriodoContableModel[] = [];
   periodoActivo: PeriodoContableModel | null = null;
   loading = false;
@@ -177,6 +182,14 @@ export class PeriodosContablesComponent implements OnInit {
       this.saving = false;
       this.cdr.markForCheck();
     }
+  }
+
+  /** Reabrir es una acción especial del perfil y solo aplica al último mes cerrado. */
+  puedeReabrir(periodo: PeriodoContableModel): boolean {
+    return (
+      this.esUltimoCerrado(periodo) &&
+      this.permisosStore.puede('contabilidad.periodos-contables', 'REABRIR')
+    );
   }
 
   /** Solo el último mes cerrado se puede reabrir: los de atrás piden reabrir primero los de adelante. */

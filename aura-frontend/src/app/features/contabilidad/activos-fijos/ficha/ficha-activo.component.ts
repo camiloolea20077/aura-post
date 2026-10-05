@@ -36,15 +36,20 @@ import {
   METODO_DEPRECIACION_OPTIONS,
 } from '../../../../core/models/activo-fijo.model';
 
+import { PuedeDirective } from '../../../../shared/directives/puede.directive';
 /**
  * Ficha de un activo fijo: resumen, depreciación (historial y proyección),
  * adiciones que se capitalizan y mantenimientos.
  */
+import { CuentaAutocompleteComponent } from '../../../../shared/components/cuenta-autocomplete/cuenta-autocomplete.component';
+
 @Component({
   selector: 'app-ficha-activo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CuentaAutocompleteComponent,
+    PuedeDirective,
     CommonModule,
     FormsModule,
     ButtonModule,

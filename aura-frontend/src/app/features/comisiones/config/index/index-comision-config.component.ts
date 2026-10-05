@@ -25,11 +25,13 @@ import {
 } from '../../../../core/models/comision.model';
 import { FormComisionConfigComponent } from '../form/form-comision-config.component';
 
+import { PuedeDirective } from '../../../../shared/directives/puede.directive';
 @Component({
   selector: 'app-index-comision-config',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     TableModule,

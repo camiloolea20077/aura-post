@@ -13,6 +13,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { Router } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
+import { SedeActualService } from '../../../../core/services/sede-actual.service';
 
 import {
   CLASIFICACION_OPTIONS,
@@ -27,10 +28,12 @@ import {
 import { ProductoService } from '../../../../core/services/producto.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 
+import { PuedeDirective } from '../../../../shared/directives/puede.directive';
 @Component({
   selector: 'app-index-productos',
   standalone: true,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     CurrencyPipe,
@@ -61,18 +64,50 @@ export class IndexProductosComponent implements OnInit {
   public readonly usoOptions = USO_PRODUCTO_OPTIONS;
   public lastLazyEvent!: TableLazyLoadEvent;
 
+  // Un catálogo para toda la empresa; la existencia es de cada sede. La columna
+  // de stock y el filtro "solo con existencias" miran la sede elegida.
+  public sedesOpts: { id: number; nombre: string }[] = [];
+  public sedeId: number | null = null;
+  public soloConExistencias = false;
+  private filtrosListos = false;
+
   constructor(
     private readonly productoService: ProductoService,
     private readonly alertService: AlertService,
     private readonly confirmationService: ConfirmationService,
     private readonly router: Router,
+    private readonly sedeActual: SedeActualService,
   ) {}
 
-  ngOnInit(): void {}
+  async ngOnInit(): Promise<void> {
+    const [{ sedes }, actual] = await Promise.all([
+      this.sedeActual.opciones(),
+      this.sedeActual.id(),
+    ]);
+    this.sedesOpts = sedes.map((s) => ({ id: s.id, nombre: s.nombre }));
+    this.sedeId = sedes.some((s) => s.id === actual) ? actual : (sedes[0]?.id ?? null);
+    this.filtrosListos = true;
+    if (this.lastLazyEvent) this.loadTable(this.lastLazyEvent);
+  }
+
+  get sedeNombre(): string {
+    return this.sedesOpts.find((s) => s.id === this.sedeId)?.nombre ?? 'esta sede';
+  }
+
+  onSedeChange(): void {
+    this.onSearch();
+  }
+
+  setSoloConExistencias(v: boolean): void {
+    this.soloConExistencias = v;
+    this.onSearch();
+  }
 
   // ─── Cargar tabla ─────────────────────────────────────────
   async loadTable(event: TableLazyLoadEvent): Promise<void> {
     this.lastLazyEvent = event;
+    // Primero la sede de trabajo; la tabla carga cuando ya se sabe cuál es.
+    if (!this.filtrosListos) return;
     this.loadingTable = true;
 
     const page =
@@ -90,10 +125,12 @@ export class IndexProductosComponent implements OnInit {
       search: this.searchQuery || null,
       order_by: sortField ?? 'p.id',
       order: event.sortOrder === 1 ? 'ASC' : 'DESC',
-      params:
-        this.usoFiltro || this.clasificacionFiltro
-          ? { uso: this.usoFiltro, clasificacion: this.clasificacionFiltro }
-          : null,
+      params: {
+        uso: this.usoFiltro,
+        clasificacion: this.clasificacionFiltro,
+        sucursalId: this.sedeId,
+        conExistencias: this.soloConExistencias,
+      },
     };
 
     try {

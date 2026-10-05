@@ -72,3 +72,35 @@
 .vacio { text-align: center; color: #94a3b8; padding: 1.25rem; }
 
 .fila-bloqueada td { color: #94a3b8; background: #f8fafc; }
+
+.config-origen {
+  margin: 0.75rem 0;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid #dbeafe;
+  background: #f8fbff;
+  border-radius: 8px;
+
+  p {
+    margin: 0 0 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  i {
+    color: #2563eb;
+    margin-right: 0.35rem;
+  }
+}
+
+.pregunta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin: 0.5rem 0 0.75rem;
+
+  label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #334155;
+  }
+}

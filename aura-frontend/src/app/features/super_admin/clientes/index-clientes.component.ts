@@ -20,6 +20,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { CalendarModule } from 'primeng/calendar';
 import { TooltipModule } from 'primeng/tooltip';
 import { ToastModule } from 'primeng/toast';
+import { PaginatorModule, PaginatorState } from 'primeng/paginator';
 import { MessageService } from 'primeng/api';
 
 import { ClienteService } from './cliente.service';
@@ -56,6 +57,7 @@ type Sev = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast';
     CalendarModule,
     TooltipModule,
     ToastModule,
+    PaginatorModule,
   ],
   providers: [MessageService],
   templateUrl: './index-clientes.component.html',
@@ -151,6 +153,24 @@ export class IndexClientesComponent implements OnInit {
       this.loading = false;
       this.cdr.markForCheck();
     }
+  }
+
+  // ── Paginación (en el navegador: la lista ya viene completa) ──
+  first = 0;
+  filas = 20;
+
+  get pagina(): ClienteModel[] {
+    return this.filtrados.slice(this.first, this.first + this.filas);
+  }
+
+  onPagina(e: PaginatorState): void {
+    this.first = e.first ?? 0;
+    this.filas = e.rows ?? this.filas;
+  }
+
+  /** Al buscar o filtrar se vuelve a la primera página. */
+  onFiltro(): void {
+    this.first = 0;
   }
 
   get filtrados(): ClienteModel[] {

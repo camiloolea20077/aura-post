@@ -453,6 +453,63 @@ export const COMPRAS_VENTAS: ManualModulo[] = [
     ],
   },
   {
+    id: 'facturas-venta',
+    grupo: 'Ventas',
+    titulo: 'Facturas',
+    icono: 'pi pi-file',
+    rutas: ['/ventas/facturas'],
+    resumen: 'Factura de venta fuera del punto de venta: crédito o contado, productos y servicios, sin caja.',
+    secciones: [
+      {
+        titulo: 'Crear y emitir',
+        pasos: [
+          'Ventas → Facturas → "Nueva factura". Tercero: búsquelo por NIT, documento o nombre (la lupa abre el buscador avanzado) o use "Crear tercero". Sus datos (documento, DV, razón social, correo, dirección, ciudad, régimen, responsabilidad) se muestran para revisarlos; se corrigen con "Editar tercero".',
+          'Datos de la factura: sede que factura, bodega de donde sale el inventario, orden de compra del cliente, lista de precios (cambia el precio de las líneas) y vendedor. La fecha de emisión es la del día: la DIAN no deja otra.',
+          'Pago: Crédito (condición de pago, plazo en días y vencimiento, que se calculan entre sí; queda en cartera) o Contado (transferencia, consignación, tarjeta o cheque a una cuenta bancaria, o efectivo a la caja general).',
+          'Líneas: producto o servicio con el buscador (la lupa abre el avanzado). El precio (sin IVA), el IVA y la unidad salen del producto o de la lista de precios y se pueden cambiar; el descuento va en %. "Descripción factura" reemplaza el nombre en esa línea, p. ej. "Mantenimiento preventivo octubre". Al lado se ven los totales con el IVA por tarifa.',
+          '"Guardar borrador": no toma consecutivo, no mueve inventario ni contabilidad. Se puede editar o eliminar.',
+          '"Emitir factura": toma el consecutivo de la sede, descuenta el inventario de la bodega (los servicios no), registra la cartera o el pago y genera el asiento.',
+          'La factura emitida se abre en el mismo formulario, sin poder editarla: "Descargar PDF" (con QR, CUFE y resolución cuando ya es electrónica), "Enviar a la DIAN" la envía como factura electrónica y "Anular" devuelve el inventario, la saca de cartera y reversa el asiento.',
+        ],
+        notas: [
+          'Los servicios se facturan como productos de tipo Servicio (no manejan inventario): así conservan su cuenta de ingreso y su IVA.',
+          'Factura AIU (construcción): en "Tipo de factura" elija "AIU (construcción)" y ponga los porcentajes de Administración, Imprevistos y Utilidad y el IVA sobre la utilidad. Las líneas de la obra son el costo directo y no llevan IVA; al guardar se agregan las tres líneas del AIU y el IVA se liquida solo sobre la Utilidad.',
+          'Desde una cotización: botón "Facturar" (o "Facturar lo pendiente" si es Parcial) en la cotización. Crea el borrador con lo que le falta por vender; al emitir, la cotización queda Parcial o Convertida.',
+          'Desde un pedido de vendedor: en Ventas de Campo, ícono de factura en el pedido Creado o Pendiente de despacho. Al emitir, el pedido queda enlazado y despachado.',
+          'Presentación: si el producto se vende por caja, paquete, etc., debajo del producto aparece el select de presentación; el precio cambia al de esa presentación.',
+          'Centro de costo: en Datos de la factura. Vacío, el asiento usa el de la sede.',
+          'Anticipos: si la factura es a crédito y el cliente tiene anticipos, aparecen en la sección Pago. Escriba cuánto aplicar de cada uno (o "Aplicar todo lo posible"); al emitir se cruzan contra la factura y en cartera queda solo el resto.',
+          'Condiciones de pago: botón "Condiciones de pago" en el listado de facturas para crear o desactivar plazos (p. ej. Crédito 45 días).',
+          '"Copiar factura" (en una emitida, anulada o en un borrador guardado) crea un borrador nuevo con el mismo cliente, condiciones, AIU y líneas; el vencimiento se calcula desde hoy y la orden de compra queda vacía.',
+          'El efectivo de una factura de contado no pasa por ningún turno de caja ni arqueo: el efectivo de mostrador se cobra en el POS.',
+          'Hoy se factura en la unidad base del producto; los productos que solo se venden por presentación se facturan desde el POS.',
+        ],
+      },
+    ],
+    errores: [
+      {
+        mensaje: 'Elija la cuenta bancaria donde entró el pago',
+        causa: 'Factura de contado por transferencia, consignación o tarjeta sin cuenta bancaria.',
+        solucion: 'Elija la cuenta bancaria, o cambie a efectivo si se pagó en efectivo.',
+      },
+      {
+        mensaje: 'La factura ya fue emitida: no se puede modificar. Anúlela o haga una nota crédito',
+        causa: 'Solo los borradores se editan.',
+        solucion: 'Anule la factura y haga una nueva, o haga una nota crédito.',
+      },
+      {
+        mensaje: 'El vencimiento ya pasó: corríjalo en el borrador antes de emitir',
+        causa: 'El borrador se guardó hace días con un vencimiento que ya pasó.',
+        solucion: 'Cambie la condición de pago o la fecha de vencimiento y vuelva a emitir.',
+      },
+      {
+        mensaje: 'Stock insuficiente para: …',
+        causa: 'La bodega elegida no tiene la cantidad facturada.',
+        solucion: 'Elija otra bodega, haga un traslado o ajuste la cantidad.',
+      },
+    ],
+  },
+  {
     id: 'cotizaciones',
     grupo: 'Ventas',
     titulo: 'Cotizaciones',
@@ -463,7 +520,7 @@ export const COMPRAS_VENTAS: ManualModulo[] = [
       {
         titulo: 'Crear y usar',
         pasos: [
-          'Se crean desde el POS (ícono de guardar como cotización) o se editan desde Ventas → Cotizaciones.',
+          'Se crean con "Nueva cotización" en Ventas → Cotizaciones o desde el POS (ícono de guardar como cotización). El formulario es el mismo de Facturas: tercero (buscar, crear o editar), vigencia en días o fecha "válida hasta", lista de precios, productos con descripción propia, descuento en % e IVA, totales con el IVA por tarifa y observaciones.',
           'Cliente, días de vigencia (muestra la fecha de vencimiento), observaciones y productos con precio y descuento.',
           'Generar PDF o imprimir tirilla para entregar al cliente.',
           '"Convertir a venta" carga los productos en el carrito del POS para cobrar.',

@@ -16,7 +16,7 @@
             </p>
           </div>
         </div>
-        <button
+        <button *appPuede="'contabilidad.conciliacion-bancaria:CREAR'"
           pButton
           label="Nuevo extracto"
           icon="pi pi-plus"
@@ -80,6 +80,7 @@
                 class="p-button-text p-button-sm"
                 (click)="abrir(e)"
               ></button>
+              <ng-container *appPuede="'contabilidad.conciliacion-bancaria:ANULAR'">
               <button
                 *ngIf="e.estado === 'ABIERTO'"
                 pButton
@@ -88,6 +89,7 @@
                 pTooltip="Eliminar (solo sin ajustes)"
                 (click)="eliminarExtracto(e)"
               ></button>
+              </ng-container>
             </td>
           </tr>
         </ng-template>
@@ -406,7 +408,7 @@
       class="btn-amarillo"
       (click)="showCrear = false"
     ></button>
-    <button
+    <button *appPuede="'contabilidad.conciliacion-bancaria:CREAR'"
       pButton
       label="Crear"
       icon="pi pi-check"

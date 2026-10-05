@@ -1,73 +1,59 @@
 <p-toast position="top-right" />
-<div class="platform-shell">
-  <!-- Sidebar -->
-  <aside class="platform-sidebar">
-    <div class="ps-logo">
-      <div class="ps-logo-icon">CT</div>
-      <div class="ps-logo-text">
-        <span class="ps-logo-title">Platform</span>
-        <span class="ps-logo-sub">Admin Panel</span>
+
+<div class="shell" [class.shell--menu-abierto]="menuAbierto">
+  <!-- Barra superior (solo teléfono / pantallas chicas) -->
+  <header class="barra">
+    <button type="button" class="barra-btn" (click)="toggleMenu()" aria-label="Abrir menú">
+      <i class="pi" [class.pi-bars]="!menuAbierto" [class.pi-times]="menuAbierto"></i>
+    </button>
+    <span class="barra-titulo">{{ titulo }}</span>
+    <span class="logo-icono logo-icono--chico">CT</span>
+  </header>
+
+  <!-- Fondo oscuro detrás del cajón -->
+  <div class="velo" *ngIf="menuAbierto" (click)="menuAbierto = false"></div>
+
+  <aside class="lateral">
+    <div class="logo">
+      <span class="logo-icono">CT</span>
+      <div>
+        <span class="logo-titulo">Platform</span>
+        <span class="logo-sub">Panel de administración</span>
       </div>
     </div>
 
-    <nav class="ps-nav">
+    <nav class="nav">
+      <span class="nav-seccion">General</span>
       <a
-        class="ps-nav-item"
-        routerLink="/platform/dashboard"
-        routerLinkActive="active"
+        *ngFor="let i of principal"
+        class="nav-item"
+        [routerLink]="i.route"
+        routerLinkActive="activo"
       >
-        <i class="pi pi-th-large"></i>
-        <span>Dashboard</span>
-      </a>
-      <a
-        class="ps-nav-item"
-        routerLink="/platform/empresas"
-        routerLinkActive="active"
-      >
-        <i class="pi pi-building"></i>
-        <span>Empresas</span>
+        <i [class]="i.icon"></i>
+        <span>{{ i.label }}</span>
       </a>
 
+      <span class="nav-seccion">Soporte</span>
       <a
-        class="ps-nav-item"
-        routerLink="/platform/clientes"
-        routerLinkActive="active"
+        *ngFor="let i of soporte"
+        class="nav-item"
+        [class.nav-item--peligro]="i.peligro"
+        [routerLink]="i.route"
+        routerLinkActive="activo"
       >
-        <i class="pi pi-users"></i>
-        <span>Clientes</span>
-      </a>
-
-      <a
-        class="ps-nav-item"
-        routerLink="/platform/modulos"
-        routerLinkActive="active"
-      >
-        <i class="pi pi-shield"></i>
-        <span>Módulos</span>
-      </a>
-
-      <div class="ps-nav-divider"></div>
-
-      <a
-        class="ps-nav-item ps-nav-item--danger"
-        routerLink="/platform/errores"
-        routerLinkActive="active"
-      >
-        <i class="pi pi-shield"></i>
-        <span>Monitor errores</span>
+        <i [class]="i.icon"></i>
+        <span>{{ i.label }}</span>
       </a>
     </nav>
 
-    <div class="ps-footer">
-      <button class="ps-logout-btn" (click)="logout()">
-        <i class="pi pi-sign-out"></i>
-        <span>Cerrar sesión</span>
-      </button>
-    </div>
+    <button type="button" class="salir" (click)="logout()">
+      <i class="pi pi-sign-out"></i>
+      <span>Cerrar sesión</span>
+    </button>
   </aside>
 
-  <!-- Contenido -->
-  <main class="platform-content">
+  <main class="contenido">
     <router-outlet />
   </main>
 </div>

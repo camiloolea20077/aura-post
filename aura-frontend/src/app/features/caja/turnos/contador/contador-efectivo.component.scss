@@ -1,0 +1,247 @@
+:host {
+  display: block;
+  container-type: inline-size;
+}
+
+.contador {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.grupo {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.grupo-cab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.85rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #eef2f7;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #64748b;
+
+  i {
+    margin-right: 0.3rem;
+  }
+
+  strong {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.82rem;
+    color: #1e293b;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+}
+
+.den {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) 110px;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.85rem;
+  border-top: 1px solid #f4f6f9;
+
+  &:first-of-type {
+    border-top: none;
+  }
+
+  &--con {
+    background: #f8fbff;
+  }
+
+  &--otros {
+    grid-template-columns: minmax(0, 1fr) 170px;
+    padding: 0.6rem 0.85rem;
+  }
+}
+
+.den-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  border-radius: 6px;
+  border-left: 6px solid var(--c);
+  background: color-mix(in srgb, var(--c) 14%, #fff);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #1e293b;
+
+  &--moneda {
+    border-left: none;
+    border-radius: 999px;
+    border: 2px solid var(--c);
+    background: color-mix(in srgb, var(--c) 18%, #fff);
+  }
+}
+
+.den-cant {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+
+  ::ng-deep .p-inputnumber {
+    width: 64px;
+    min-width: 0;
+  }
+
+  ::ng-deep .den-input {
+    width: 64px;
+    height: 38px;
+    text-align: center;
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 700;
+    font-size: 0.95rem;
+    padding: 0 0.25rem;
+  }
+}
+
+.den-btn {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.12s;
+
+  i {
+    font-size: 0.8rem;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: #2563eb;
+    color: #2563eb;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.95);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  &--mas {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+  }
+}
+
+.den-sub {
+  text-align: right;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.den-otros-label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #334155;
+
+  small {
+    font-weight: 500;
+    font-size: 0.72rem;
+    color: #94a3b8;
+  }
+}
+
+:host ::ng-deep .den-otros-input {
+  width: 100%;
+  text-align: right;
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 700;
+}
+
+.pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.8rem 0.95rem;
+  border-radius: 12px;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.pie-total {
+  display: flex;
+  flex-direction: column;
+
+  span {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #94a3b8;
+  }
+
+  strong {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 1.35rem;
+    color: #fff;
+  }
+
+  small {
+    font-size: 0.72rem;
+    color: #94a3b8;
+  }
+}
+
+.pie-limpiar {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: transparent;
+  color: #e2e8f0;
+  border-radius: 10px;
+  padding: 0.5rem 0.8rem;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+// Teléfono: el subtotal baja debajo de la denominación.
+@container (max-width: 420px) {
+  .den {
+    grid-template-columns: 84px minmax(0, 1fr);
+    row-gap: 0.15rem;
+  }
+
+  .den-sub {
+    grid-column: 1 / -1;
+    text-align: right;
+    font-size: 0.75rem;
+    color: #64748b;
+  }
+
+  .den--otros {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

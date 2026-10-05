@@ -21,6 +21,26 @@
     </div>
   </div>
 
+  <div class="form-row w-full">
+    <div class="w-full">
+      <label class="field-label">Grupo (tercer nivel)</label>
+      <p-dropdown
+        formControlName="padreId"
+        [options]="grupos"
+        optionLabel="nombre"
+        optionValue="id"
+        [showClear]="true"
+        placeholder="Sin grupo: cuelga directo del módulo"
+        styleClass="w-full"
+        [style]="{ width: '100%' }"
+        appendTo="body"
+      />
+      <small class="field-hint"
+        >Ej.: en Recursos Humanos, "Empleados" va dentro del grupo "Gestión".</small
+      >
+    </div>
+  </div>
+
   <div class="form-row two-col">
     <div class="field">
       <label class="field-label required">Nombre</label>

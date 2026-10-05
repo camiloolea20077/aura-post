@@ -29,6 +29,7 @@ import {
 import { AlertService } from '../../../shared/pipes/alert.service';
 import { TicketComprobanteCajaComponent } from '../ticket/ticket-comprobante-caja.component';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' | undefined;
 
 @Component({
@@ -36,6 +37,7 @@ type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contr
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     TableModule,

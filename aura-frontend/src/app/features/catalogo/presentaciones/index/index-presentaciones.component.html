@@ -14,7 +14,7 @@
         </div>
       </div>
       <div class="card-head__actions">
-        <button
+        <button *appPuede="'catalogo.presentaciones:CREAR'"
           pButton
           type="button"
           label="Nueva presentación"
@@ -137,7 +137,7 @@
           <!-- Acciones -->
           <td class="text-center">
             <div class="action-buttons">
-              <button
+              <button *appPuede="'catalogo.presentaciones:EDITAR'"
                 pButton
                 type="button"
                 icon="pi pi-pencil"
@@ -146,7 +146,7 @@
                 tooltipPosition="top"
                 (click)="openEdit(item)"
               ></button>
-              <button
+              <button *appPuede="'catalogo.presentaciones:ANULAR'"
                 pButton
                 type="button"
                 icon="pi pi-trash"
@@ -172,7 +172,8 @@
                     : "No hay presentaciones registradas"
                 }}
               </p>
-              <button
+              <ng-container *appPuede="'catalogo.presentaciones:CREAR'">
+            <button
                 *ngIf="!searchQuery"
                 pButton
                 type="button"
@@ -181,6 +182,7 @@
                 class="btn-verde p-button-sm"
                 (click)="openCreate()"
               ></button>
+            </ng-container>
             </div>
           </td>
         </tr>

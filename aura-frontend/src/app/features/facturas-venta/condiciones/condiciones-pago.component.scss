@@ -1,0 +1,65 @@
+// Header (.card-head) y card (.card) son estándar global en styles.scss.
+
+.cargando,
+.vacio {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.tabla-scroll {
+  overflow-x: auto;
+  padding: 0 1.25rem 1.25rem;
+}
+
+.tabla {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+
+  th {
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #64748b;
+    background: #f8fafc;
+    padding: 0.55rem 0.6rem;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  td {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.86rem;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+  }
+
+  .col-dias {
+    width: 160px;
+  }
+
+  .col-estado {
+    width: 150px;
+  }
+
+  .col-acc {
+    width: 100px;
+  }
+
+  .acciones {
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .inactiva td {
+    color: #94a3b8;
+  }
+}
+
+:host ::ng-deep .tabla .p-inputnumber {
+  width: 100%;
+}
+
+.w-full {
+  width: 100%;
+}

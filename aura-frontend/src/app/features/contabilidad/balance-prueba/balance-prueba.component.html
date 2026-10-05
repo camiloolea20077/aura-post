@@ -32,11 +32,11 @@
       </div>
       <div class="campo campo--corto">
         <label>Cuenta desde</label>
-        <input pInputText [(ngModel)]="cuentaDesde" placeholder="Ej: 1" />
+        <app-cuenta-autocomplete [(ngModel)]="cuentaDesde" valor="codigo" [soloMovimiento]="false" [textoLibre]="true" placeholder="Ej: 1" header="Buscar cuenta" />
       </div>
       <div class="campo campo--corto">
         <label>Cuenta hasta</label>
-        <input pInputText [(ngModel)]="cuentaHasta" placeholder="Ej: 3" />
+        <app-cuenta-autocomplete [(ngModel)]="cuentaHasta" valor="codigo" [soloMovimiento]="false" [textoLibre]="true" placeholder="Ej: 3" header="Buscar cuenta" />
       </div>
       <div class="campo campo--ancho">
         <label>Tercero</label>

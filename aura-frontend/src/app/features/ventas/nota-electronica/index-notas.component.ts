@@ -14,12 +14,14 @@ import { NotaElectronicaService } from '../../../core/services/nota-electronica.
 import { NotaElectronicaEstado } from '../../../core/models/nota-electronica.model';
 import { AlertService } from '../../../shared/pipes/alert.service';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | undefined;
 
 @Component({
   selector: 'app-index-notas',
   standalone: true,
   imports: [
+    PuedeDirective,
     CommonModule,
     TableModule,
     ButtonModule,

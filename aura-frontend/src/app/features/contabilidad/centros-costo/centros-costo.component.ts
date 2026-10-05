@@ -32,11 +32,13 @@ import {
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 @Component({
   selector: 'app-centros-costo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     ButtonModule,

@@ -20,10 +20,12 @@ import {
 import { ProductoPresentacionService } from '../../../../core/services/producto-presentacion.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 
+import { PuedeDirective } from '../../../../shared/directives/puede.directive';
 @Component({
   selector: 'app-index-presentaciones',
   standalone: true,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     TableModule,

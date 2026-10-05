@@ -76,7 +76,7 @@ export const CONTABILIDAD: ManualModulo[] = [
       {
         titulo: 'Configuración mínima',
         pasos: [
-          'Cargar el PUC (Plan de Cuentas → Cargar PUC Básico).',
+          'Cargar el PUC (Plan de Cuentas → Cargar PUC completo).',
           'Asociar cada cuenta bancaria a su cuenta 11xx (Tesorería → Cuentas Bancarias).',
           'Marcar la caja menor y fondos como medio de pago en el plan de cuentas.',
           'Crear conceptos de caja para los ingresos y egresos del cajero.',
@@ -123,9 +123,29 @@ export const CONTABILIDAD: ManualModulo[] = [
     resumen: 'El catálogo de cuentas contables de la empresa.',
     secciones: [
       {
+        titulo: 'Ver el plan en árbol',
+        pasos: [
+          'Las cuentas se ven en árbol: clase (1 Activo) → grupo (11 Disponible) → cuenta (1105 Caja) → subcuenta (110505 Caja general) → auxiliar (11050501).',
+          'Clic en la flecha de una cuenta para desplegar sus cuentas asociadas ahí mismo. "Abrir hasta" despliega de una vez hasta clases, grupos, cuentas, subcuentas o todo.',
+          'El buscador encuentra por código (empieza por) o por nombre y abre el camino hasta cada coincidencia.',
+          'La columna Movimiento dice si la cuenta recibe asientos (✓) o solo agrupa (—).',
+        ],
+      },
+      {
+        titulo: 'Buscar una cuenta en cualquier pantalla',
+        pasos: [
+          'Todo campo de cuenta contable (configuración, formas de pago, productos, gastos, notas, asientos, libros, balance…) funciona igual: escriba el código o parte del nombre y elija de la lista.',
+          'La lupa dentro del campo abre el buscador avanzado: código, nombre, clase, tipo, naturaleza y si recibe movimiento, con el camino de cada cuenta (clase › grupo › cuenta).',
+          'Si el campo necesita una cuenta que reciba movimiento, las que solo agrupan salen en gris: al hacer clic se muestran sus subcuentas.',
+          'En los filtros "cuenta desde / hasta" de los reportes se puede elegir una cuenta o escribir un prefijo (p. ej. 13).',
+        ],
+      },
+      {
         titulo: 'Cargar y crear cuentas',
         pasos: [
-          'Si la lista está vacía, "Cargar PUC Básico" crea el plan de cuentas colombiano estándar.',
+          '"Cargar PUC completo" agrega el plan de cuentas completo: clases 1 a 9 con sus grupos, cuentas, subcuentas y auxiliares de 8 dígitos (unas 1.100 cuentas). Solo agrega las que falten: las que ya tiene no cambian.',
+          'En una empresa nueva, la configuración por defecto queda en las auxiliares: la caja en 11050501, clientes en 13050501, ventas en 41350101, IVA generado en 24080501, inventario en 14350501, costo en 61010501, etc.',
+          'En cada fila, el "+" agrega una subcuenta debajo de esa cuenta (hereda tipo y naturaleza; el código empieza como el del padre). Así se crean los auxiliares de 8 dígitos, p. ej. 11100501 Banco de Bogotá.',
           '"Nueva Cuenta": código (1105), nombre, tipo (Activo, Pasivo, Patrimonio, Ingreso, Gasto, Costo, Orden), naturaleza (Débito o Crédito), nivel y cuenta padre.',
           'Homologación DIAN (opcional) para la exógena.',
           '"Cuenta auxiliar (acepta movimientos)": solo las auxiliares reciben asientos; las demás agrupan.',
@@ -133,6 +153,7 @@ export const CONTABILIDAD: ManualModulo[] = [
         ],
         notas: [
           'Desactivar una cuenta la oculta de los formularios pero conserva su historia.',
+          'Al cargar el PUC completo, las cuentas nuevas reciben movimiento solo si son la última del árbol (subcuenta sin hijas).',
         ],
       },
     ],
@@ -943,10 +964,13 @@ export const CONTABILIDAD: ManualModulo[] = [
         pasos: [
           'Cuenta de origen, cuenta de destino (auxiliar), rango de fechas y, si se quiere, solo un tercero.',
           '"Ver qué se mueve": la lista de movimientos (fecha, comprobante, detalle, tercero, débito y crédito), todos marcados. Desmarca los que no deben moverse. Los de meses cerrados salen con candado y no se pueden elegir.',
+          'Si la cuenta de origen está configurada en algún lado (conceptos, formas de pago, categorías, productos, impuestos, conceptos de caja, cuentas bancarias…), aparece la lista y la pregunta "¿Pasar también esa configuración a la cuenta destino?". Con Sí, lo que se registre de ahí en adelante va a la cuenta nueva.',
+          '"¿Dejar la cuenta de origen como agrupadora si queda vacía?": con Sí, si la cuenta vieja quedó sin movimientos ni configuración, deja de recibir movimientos.',
           'Motivo y "Trasladar": se mueven solo los marcados. Queda en la bitácora.',
         ],
         notas: [
-          'Solo cambia el mayor. Si la cuenta vieja sigue asignada a un concepto o categoría, corríjala también en Parametrización o los documentos nuevos seguirán yendo allá.',
+          'Para pasar de una cuenta a su auxiliar (p. ej. de 110505 Caja general a 11050501): origen 110505, destino 11050501, rango desde el primer movimiento hasta hoy, configuración Sí y agrupadora Sí.',
+          'Si desmarca todos los movimientos, solo se pasa la configuración.',
         ],
       },
       {
@@ -968,6 +992,11 @@ export const CONTABILIDAD: ManualModulo[] = [
         mensaje: 'La cuenta no tiene movimientos en ese rango',
         causa: 'Nada que trasladar.',
         solucion: 'Revise la cuenta y las fechas.',
+      },
+      {
+        mensaje: 'La cuenta no tiene movimientos en ese rango ni configuración que la use',
+        causa: 'Se pidió pasar la configuración, pero no hay movimientos ni configuración en la cuenta de origen.',
+        solucion: 'Revise la cuenta de origen y las fechas.',
       },
       {
         mensaje: 'Los dos terceros tienen ficha de empleado: una persona no puede ser dos empleados. Retire la ficha duplicada antes de fusionar',

@@ -11,7 +11,7 @@
       </div>
       <div class="card-head__actions">
         <div class="card-head__btns">
-          <button
+          <button *appPuede="'recursos-humanos.empleados:CREAR'"
             pButton
             type="button"
             label="Nuevo cargo"
@@ -19,7 +19,7 @@
             class="btn-verde"
             (click)="showTipoEmpleadoModal = true"
           ></button>
-          <button
+          <button *appPuede="'recursos-humanos.empleados:CREAR'"
             pButton
             type="button"
             label="Nuevo empleado"
@@ -144,7 +144,7 @@
               tooltipPosition="top"
               (click)="verContratos(item)"
             ></button>
-            <button
+            <button *appPuede="'recursos-humanos.empleados:EDITAR'"
               pButton
               type="button"
               icon="pi pi-pencil"
@@ -179,7 +179,8 @@
                     : "No hay empleados registrados"
                 }}
               </p>
-              <button
+              <ng-container *appPuede="'recursos-humanos.empleados:CREAR'">
+          <button
                 *ngIf="!searchQuery"
                 pButton
                 type="button"
@@ -188,6 +189,7 @@
                 class="btn-verde p-button-sm"
                 (click)="openForm()"
               ></button>
+          </ng-container>
             </div>
           </td>
         </tr>

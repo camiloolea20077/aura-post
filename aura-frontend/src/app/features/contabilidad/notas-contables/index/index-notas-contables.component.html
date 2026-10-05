@@ -24,7 +24,7 @@
             class="p-button-outlined"
             (click)="plantillas()"
           ></button>
-          <button
+          <button *appPuede="'contabilidad.notas-contables:CREAR'"
             pButton
             type="button"
             label="Nueva nota"
@@ -201,7 +201,7 @@
                   [disabled]="descuadrada(n)"
                   (click)="contabilizar(n)"
                 ></button>
-                <button
+                <button *appPuede="'contabilidad.notas-contables:ANULAR'"
                   pButton
                   type="button"
                   icon="pi pi-trash"
@@ -211,7 +211,8 @@
                   (click)="eliminar(n)"
                 ></button>
               </ng-container>
-              <button
+              <ng-container *appPuede="'contabilidad.notas-contables:ANULAR'">
+          <button
                 *ngIf="n.estado === 'CONTABILIZADO' && !n.revertidoPorNumero"
                 pButton
                 type="button"
@@ -221,6 +222,7 @@
                 tooltipPosition="top"
                 (click)="abrirAnular(n)"
               ></button>
+          </ng-container>
             </div>
           </td>
         </tr>

@@ -24,11 +24,13 @@ import { LaboralService } from '../../core/services/laboral.service';
 import { AlertService } from '../../shared/pipes/alert.service';
 import { JornadaConfigModel } from '../../core/models/laboral.model';
 
+import { PuedeDirective } from '../../shared/directives/puede.directive';
 @Component({
   selector: 'app-config-laboral',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     ButtonModule,

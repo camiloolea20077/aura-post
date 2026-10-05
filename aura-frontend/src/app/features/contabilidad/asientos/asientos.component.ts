@@ -34,11 +34,16 @@ import { TerceroTableModel } from '../../../core/models/tercero.model';
 import { CentroCostoDto } from '../../../core/models/centro-costo.model';
 
 import { aFechaLocal } from '../../../shared/utils/fecha.util';
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
+import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-autocomplete/cuenta-autocomplete.component';
+
 @Component({
   selector: 'app-asientos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CuentaAutocompleteComponent,
+    PuedeDirective,
     CommonModule, FormsModule,
     ButtonModule, TableModule, CalendarModule, DropdownModule,
     DialogModule, TabViewModule, TagModule, ToastModule, TooltipModule,

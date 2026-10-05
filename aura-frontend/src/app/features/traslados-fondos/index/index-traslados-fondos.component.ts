@@ -41,6 +41,7 @@ import {
   TrasladoFondosModel,
 } from '../../../core/models/traslado-fondos.model';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 type Opcion = { label: string; value: number };
 
 /**
@@ -54,11 +55,15 @@ type Opcion = { label: string; value: number };
  * administrador paga sus gastos contra esa cuenta y deja de descuadrarle el
  * arqueo al cajero del punto de venta.
  */
+import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-autocomplete/cuenta-autocomplete.component';
+
 @Component({
   selector: 'app-index-traslados-fondos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CuentaAutocompleteComponent,
+    PuedeDirective,
     CommonModule,
     FormsModule,
     ReactiveFormsModule,

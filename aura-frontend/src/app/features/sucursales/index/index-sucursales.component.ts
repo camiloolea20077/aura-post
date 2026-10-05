@@ -23,11 +23,13 @@ import {
 } from '../../../core/models/sucursal.model';
 import { SucursalService } from '../../../core/services/sucursal.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 @Component({
   selector: 'app-index-sucursales',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     TableModule,

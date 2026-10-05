@@ -11,7 +11,7 @@
           </p>
         </div>
       </div>
-      <button
+      <button *appPuede="'recursos-humanos.periodos:CREAR'"
         pButton
         type="button"
         label="Nuevo período"
@@ -40,7 +40,7 @@
       <p>
         No hay períodos creados. Crea el primero para empezar a liquidar nómina.
       </p>
-      <button
+      <button *appPuede="'recursos-humanos.periodos:CREAR'"
         pButton
         type="button"
         label="Crear período"
@@ -72,6 +72,7 @@
             [severity]="estadoSeverity(p.estado)"
             [rounded]="true"
           />
+          <ng-container *appPuede="'recursos-humanos.periodos:ANULAR'">
           <button
             *ngIf="p.estado !== 'ANULADO' && p.estado !== 'PAGADO'"
             pButton
@@ -82,6 +83,7 @@
             tooltipPosition="top"
             (click)="anular(p)"
           ></button>
+          </ng-container>
         </div>
       </div>
     </div>
@@ -132,7 +134,7 @@
       class="btn-amarillo"
       (click)="showModal = false"
     ></button>
-    <button
+    <button *appPuede="'recursos-humanos.periodos:CREAR'"
       pButton
       type="button"
       label="Crear período"

@@ -28,11 +28,11 @@
           </div>
           <div class="filtro filtro--corto">
             <label>Cuenta desde</label>
-            <input pInputText [(ngModel)]="cuentaDesde" placeholder="Ej: 13" />
+            <app-cuenta-autocomplete [(ngModel)]="cuentaDesde" valor="codigo" [soloMovimiento]="false" [textoLibre]="true" placeholder="Ej: 13" header="Buscar cuenta" />
           </div>
           <div class="filtro filtro--corto">
             <label>Cuenta hasta</label>
-            <input pInputText [(ngModel)]="cuentaHasta" placeholder="Igual a desde" />
+            <app-cuenta-autocomplete [(ngModel)]="cuentaHasta" valor="codigo" [soloMovimiento]="false" [textoLibre]="true" placeholder="Igual a desde" header="Buscar cuenta" />
           </div>
           <div class="filtro filtro--ancho">
             <label>Tercero</label>

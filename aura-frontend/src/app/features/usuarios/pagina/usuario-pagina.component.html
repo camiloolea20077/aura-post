@@ -1,0 +1,325 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-user"></i></span>
+        <div>
+          <h1 class="title">
+            {{ esNuevo ? "Nuevo usuario" : terceroLabel || username || "Usuario" }}
+          </h1>
+          <p class="subtitle">
+            <ng-container *ngIf="!esNuevo">{{ username }} · </ng-container>
+            Datos de acceso, sedes, permisos y descuentos
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button
+            pButton
+            type="button"
+            icon="pi pi-arrow-left"
+            label="Volver"
+            class="p-button-outlined p-button-secondary"
+            (click)="volver()"
+          ></button>
+          <ng-container *ngIf="!esNuevo">
+            <button
+              *appPuede="'caja.usuarios:CERRAR_SESIONES'"
+              pButton
+              type="button"
+              icon="pi pi-sign-out"
+              label="Cerrar sesiones"
+              class="p-button-outlined p-button-secondary"
+              [loading]="cerrando"
+              (click)="cerrarSesiones()"
+            ></button>
+          </ng-container>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-save"
+            label="Guardar"
+            class="btn-aura"
+            [loading]="guardando"
+            (click)="guardar()"
+          ></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cuerpo" *ngIf="cargando">
+      <p-skeleton height="2.5rem" styleClass="mb-2" />
+      <p-skeleton height="18rem" />
+    </div>
+
+    <div class="cuerpo" *ngIf="!cargando">
+      <p-tabView [(activeIndex)]="tab">
+        <!-- ── Datos y acceso ─────────────────────────────── -->
+        <p-tabPanel header="Datos y acceso">
+          <section class="seccion">
+            <h3 class="seccion__titulo">Persona</h3>
+            <div class="tercero">
+              <div class="field tercero__buscar">
+                <label class="field-label">Tercero <span class="req">*</span></label>
+                <app-tercero-autocomplete
+                  [terceroId]="terceroId"
+                  [label]="terceroLabel"
+                  (seleccionado)="onTercero($event)"
+                  placeholder="Nombre o documento del empleado, vendedor…"
+                />
+              </div>
+              <button
+                *appPuede="'terceros-y-sucursales.terceros:CREAR'"
+                pButton
+                type="button"
+                icon="pi pi-user-plus"
+                label="Nuevo tercero"
+                class="p-button-outlined tercero__nuevo"
+                (click)="mostrarNuevoTercero = true"
+              ></button>
+            </div>
+            <small class="field-error" *ngIf="intentoGuardar && !terceroId"
+              >Elija el tercero: el usuario queda ligado a esa persona.</small
+            >
+            <div class="ficha" *ngIf="tercero">
+              <div class="dato">
+                <span class="dato__label">Documento</span>
+                <span class="dato__valor">{{ tercero.documento || "—" }}</span>
+              </div>
+              <div class="dato">
+                <span class="dato__label">Correo</span>
+                <span class="dato__valor">{{ tercero.email || "—" }}</span>
+              </div>
+              <div class="dato">
+                <span class="dato__label">Teléfono</span>
+                <span class="dato__valor">{{ tercero.telefono || "—" }}</span>
+              </div>
+            </div>
+            <small class="field-hint"
+              >Nombre, documento y contacto se editan en Terceros: el usuario los
+              toma de ahí.</small
+            >
+          </section>
+
+          <section class="seccion">
+            <h3 class="seccion__titulo">Acceso</h3>
+            <div class="grid">
+              <div class="field">
+                <label class="field-label">Usuario de acceso</label>
+                <input
+                  pInputText
+                  [(ngModel)]="username"
+                  [readOnly]="!esNuevo"
+                  maxlength="100"
+                  placeholder="Vacío = el correo del tercero"
+                />
+              </div>
+              <div class="field">
+                <label class="field-label"
+                  >Contraseña
+                  <span class="req" *ngIf="esNuevo">*</span>
+                  <span class="field-hint" *ngIf="!esNuevo"
+                    >(vacío = no cambia)</span
+                  ></label
+                >
+                <p-password
+                  [(ngModel)]="password"
+                  [feedback]="false"
+                  [toggleMask]="true"
+                  placeholder="Mínimo 6 caracteres"
+                />
+              </div>
+              <div class="field">
+                <label class="field-label">Tipo de usuario</label>
+                <p-dropdown
+                  [options]="rolesOpts"
+                  [(ngModel)]="rol"
+                  (onChange)="onRol()"
+                  optionLabel="label"
+                  optionValue="value"
+                />
+                <small class="field-hint"
+                  >Decide cosas del negocio (el cajero necesita turno). Lo que ve y
+                  puede hacer lo decide el perfil.</small
+                >
+              </div>
+              <div class="field">
+                <label class="field-label">Perfil de permisos</label>
+                <p-dropdown
+                  [options]="perfilesOpts"
+                  [(ngModel)]="perfilId"
+                  (onChange)="cargarPerfil()"
+                  optionLabel="label"
+                  optionValue="value"
+                  [showClear]="true"
+                  placeholder="El de su tipo de usuario"
+                />
+              </div>
+              <div class="field">
+                <label class="field-label">PIN de acceso rápido</label>
+                <input
+                  pInputText
+                  type="password"
+                  [(ngModel)]="pin"
+                  maxlength="6"
+                  autocomplete="new-password"
+                  [placeholder]="esNuevo ? 'Opcional' : 'Vacío = no cambia'"
+                />
+              </div>
+              <div class="field" *ngIf="!esNuevo">
+                <label class="field-label">¿Activo?</label>
+                <div class="opciones">
+                  <button
+                    type="button"
+                    class="opcion"
+                    [class.opcion--activa]="activo"
+                    (click)="activo = true"
+                  >
+                    <i class="pi" [class.pi-circle-fill]="activo" [class.pi-circle]="!activo"></i>
+                    Sí
+                  </button>
+                  <button
+                    type="button"
+                    class="opcion"
+                    [class.opcion--activa]="!activo"
+                    (click)="activo = false"
+                  >
+                    <i class="pi" [class.pi-circle-fill]="!activo" [class.pi-circle]="activo"></i>
+                    No
+                  </button>
+                </div>
+                <small class="field-hint"
+                  >Desactivarlo cierra sus sesiones abiertas.</small
+                >
+              </div>
+            </div>
+          </section>
+        </p-tabPanel>
+
+        <!-- ── Sedes ──────────────────────────────────────── -->
+        <p-tabPanel header="Sedes">
+          <p class="ayuda">
+            Marque las sedes donde trabaja y la principal (estrella): con esa
+            entra al iniciar sesión. Si su perfil no tiene "todas las sedes", solo
+            verá estas.
+          </p>
+          <div class="sedes">
+            <div
+              class="sede"
+              *ngFor="let s of sucursalesOpts"
+              [class.sede--marcada]="tieneSede(s.id)"
+            >
+              <p-checkbox
+                [ngModel]="tieneSede(s.id)"
+                [binary]="true"
+                [inputId]="'sede-' + s.id"
+                (ngModelChange)="toggleSede(s.id, $event)"
+              />
+              <label [for]="'sede-' + s.id" class="sede__nombre">{{ s.nombre }}</label>
+              <button
+                *ngIf="tieneSede(s.id)"
+                type="button"
+                class="sede__estrella"
+                [class.sede__estrella--activa]="sedeDefault === s.id"
+                pTooltip="Sede principal"
+                (click)="sedeDefault = s.id"
+              >
+                <i class="pi" [class.pi-star-fill]="sedeDefault === s.id" [class.pi-star]="sedeDefault !== s.id"></i>
+              </button>
+            </div>
+          </div>
+          <small class="field-error" *ngIf="intentoGuardar && !sedes.length"
+            >Asigne al menos una sede.</small
+          >
+        </p-tabPanel>
+
+        <!-- ── Permisos ───────────────────────────────────── -->
+        <p-tabPanel header="Permisos">
+          <p class="ayuda">
+            Lo que tiene por su perfil sale en azul claro. Haga clic para darle
+            algo que su perfil no tiene o quitarle algo que sí tiene; otro clic lo
+            devuelve a lo del perfil. Si varias personas necesitan lo mismo, mejor
+            cree un perfil.
+          </p>
+          <div class="aviso" *ngIf="!puedeAjustarPermisos">
+            <i class="pi pi-lock"></i> Su perfil no le permite ajustar permisos.
+          </div>
+          <app-matriz-permisos
+            [arbol]="arbol"
+            modo="excepciones"
+            [heredado]="delPerfil"
+            [heredaTodo]="perfilAccesoTotal"
+            [excepciones]="excepciones"
+            [soloLectura]="!puedeAjustarPermisos"
+            (excepcionesChange)="onExcepciones($event)"
+          />
+        </p-tabPanel>
+
+        <!-- ── Descuentos y acciones especiales ───────────── -->
+        <p-tabPanel header="Descuentos y acciones especiales">
+          <section class="seccion">
+            <h3 class="seccion__titulo">Límites de descuento y precio</h3>
+            <p class="ayuda">
+              Vacío = los de su perfil
+              <ng-container *ngIf="perfilElegido"
+                >({{ perfilElegido.nombre }}: descuento
+                {{ perfilAccesoTotal ? "sin límite" : limite(perfilElegido.descuentoMaxPct) }},
+                rebaja
+                {{ perfilAccesoTotal ? "sin límite" : limite(perfilElegido.rebajaPrecioMaxPct) }})</ng-container
+              >. Por encima del límite, la venta pide el código o la aprobación de
+              un supervisor.
+            </p>
+            <div class="grid">
+              <div class="field">
+                <label class="field-label">Descuento máximo</label>
+                <p-inputNumber
+                  [(ngModel)]="descuentoMaxPct"
+                  [disabled]="!puedeAjustarPermisos"
+                  [min]="0"
+                  [max]="100"
+                  [maxFractionDigits]="2"
+                  suffix=" %"
+                  placeholder="El del perfil"
+                />
+              </div>
+              <div class="field">
+                <label class="field-label">Rebaja máxima de precio</label>
+                <p-inputNumber
+                  [(ngModel)]="rebajaPrecioMaxPct"
+                  [disabled]="!puedeAjustarPermisos"
+                  [min]="0"
+                  [max]="100"
+                  [maxFractionDigits]="2"
+                  suffix=" %"
+                  placeholder="La del perfil"
+                />
+              </div>
+            </div>
+          </section>
+
+          <section class="seccion">
+            <h3 class="seccion__titulo">Acciones especiales</h3>
+            <app-acciones-especiales
+              [catalogo]="catalogo"
+              [arbol]="arbol"
+              [valores]="especiales"
+              [base]="baseEspeciales"
+              [visibles]="visibles"
+              etiquetaHeredar="Lo del perfil"
+              [soloLectura]="!puedeAjustarPermisos"
+              (valoresChange)="onEspeciales($event)"
+            />
+          </section>
+        </p-tabPanel>
+      </p-tabView>
+    </div>
+  </div>
+</div>
+
+<app-form-tercero
+  [displayModal]="mostrarNuevoTercero"
+  slug="create"
+  (terceroSaved)="onTerceroCreado($event)"
+  (modalClosed)="mostrarNuevoTercero = false"
+/>

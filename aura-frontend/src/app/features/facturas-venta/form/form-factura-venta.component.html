@@ -1,0 +1,636 @@
+<p-confirmDialog />
+
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-file"></i></span>
+        <div>
+          <h1 class="title">
+            {{ titulo }}
+            <p-tag
+              *ngIf="factura && factura.estado !== 'BORRADOR'"
+              [value]="factura.estado === 'EMITIDA' ? 'Emitida' : 'Anulada'"
+              [severity]="factura.estado === 'EMITIDA' ? 'success' : 'danger'"
+              [rounded]="true"
+            />
+            <p-tag *ngIf="factura?.cufe" value="Electrónica" severity="info" [rounded]="true" />
+          </h1>
+          <p class="subtitle" *ngIf="!soloLectura">El borrador no toma consecutivo ni mueve inventario: eso pasa al emitir.</p>
+          <p class="origen" *ngIf="factura?.cotizacionNumero || factura?.pedidoNumero">
+            <i class="pi pi-link"></i>
+            <ng-container *ngIf="factura?.cotizacionNumero">Desde la cotización <strong>{{ factura?.cotizacionNumero }}</strong></ng-container>
+            <ng-container *ngIf="factura?.pedidoNumero">Desde el pedido <strong>{{ factura?.pedidoNumero }}</strong></ng-container>
+          </p>
+          <p class="subtitle" *ngIf="soloLectura && factura">
+            Emitida el {{ (factura.fechaEmision ?? factura.emitidaAt) | date: "dd/MM/yyyy HH:mm" }}
+            <ng-container *ngIf="factura.formaPago === 'CREDITO' && factura.estado === 'EMITIDA'">
+              · Saldo en cartera {{ cop(factura.saldoPendiente ?? 0) }}
+            </ng-container>
+            <ng-container *ngIf="factura.cufe"> · CUFE {{ factura.cufe | slice: 0 : 16 }}…</ng-container>
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button pButton type="button" icon="pi pi-arrow-left" label="Volver" class="p-button-text" (click)="volver()"></button>
+      </div>
+    </div>
+
+    <div class="cargando" *ngIf="cargando"><i class="pi pi-spin pi-spinner"></i> Cargando…</div>
+
+    <ng-container *ngIf="!cargando">
+      <!-- ── Información del tercero ─────────────────────────────── -->
+      <section class="seccion">
+        <header class="seccion__head">
+          <i class="pi pi-user"></i>
+          <div>
+            <h3>Información del tercero</h3>
+            <p>Datos del cliente o tercero al que se le emite la factura.</p>
+          </div>
+        </header>
+
+        <div class="buscar-tercero">
+          <div class="campo buscar-tercero__campo">
+            <label>Cliente <span class="req">*</span></label>
+            <app-tercero-autocomplete
+              [(ngModel)]="clienteId"
+              [label]="clienteLabel"
+              rol="CLIENTE"
+              appendTo="body"
+              placeholder="Buscar por NIT, documento o nombre…"
+              [disabled]="soloLectura"
+              (ngModelChange)="onCliente()"
+            />
+          </div>
+          <button *ngIf="!soloLectura" pButton type="button" icon="pi pi-plus" label="Crear tercero" class="p-button-outlined" (click)="crearTercero()"></button>
+          <button
+            *ngIf="clienteId"
+            pButton
+            type="button"
+            icon="pi pi-pencil"
+            label="Editar tercero"
+            class="p-button-text"
+            (click)="editarTercero()"
+          ></button>
+        </div>
+
+        <div class="grid grid--5" *ngIf="tercero; else sinTercero">
+          <div class="campo">
+            <label>Tipo de documento</label>
+            <input pInputText [value]="tercero.tipoDocumento" readonly />
+          </div>
+          <div class="campo campo--doc">
+            <label>NIT / Documento</label>
+            <div class="doc-dv">
+              <input pInputText [value]="tercero.numeroDocumento" readonly />
+              <input pInputText class="dv" [value]="tercero.dv ?? ''" readonly placeholder="DV" />
+            </div>
+          </div>
+          <div class="campo campo--doble">
+            <label>Razón social / Nombre</label>
+            <input pInputText [value]="tercero.nombre" readonly />
+          </div>
+          <div class="campo">
+            <label>Nombre comercial</label>
+            <input pInputText [value]="tercero.nombreComercial ?? ''" readonly />
+          </div>
+
+          <div class="campo">
+            <label>Correo electrónico</label>
+            <input pInputText [value]="tercero.email ?? ''" readonly [class.falta]="!tercero.email" />
+          </div>
+          <div class="campo">
+            <label>Teléfono / Celular</label>
+            <input pInputText [value]="tercero.telefono ?? ''" readonly />
+          </div>
+          <div class="campo campo--doble">
+            <label>Dirección</label>
+            <input pInputText [value]="tercero.direccion ?? ''" readonly />
+          </div>
+          <div class="campo">
+            <label>Ciudad / Municipio</label>
+            <input pInputText [value]="tercero.ciudad ?? ''" readonly />
+          </div>
+
+          <div class="campo">
+            <label>Departamento</label>
+            <input pInputText [value]="tercero.departamento ?? ''" readonly />
+          </div>
+          <div class="campo">
+            <label>Régimen fiscal</label>
+            <input pInputText [value]="tercero.regimen ?? ''" readonly />
+          </div>
+          <div class="campo campo--doble">
+            <label>Responsabilidad fiscal</label>
+            <input pInputText [value]="tercero.responsabilidad ?? ''" readonly />
+          </div>
+        </div>
+        <p class="aviso" *ngIf="tercero && !tercero.email">
+          <i class="pi pi-exclamation-triangle"></i>
+          El tercero no tiene correo: la factura electrónica lo necesita. Complételo con "Editar tercero".
+        </p>
+        <ng-template #sinTercero>
+          <p class="vacio">Busque el cliente o créelo: sus datos aparecen aquí.</p>
+        </ng-template>
+      </section>
+
+      <!-- ── Datos de la factura ─────────────────────────────────── -->
+      <section class="seccion">
+        <header class="seccion__head">
+          <i class="pi pi-file"></i>
+          <div>
+            <h3>Datos de la factura</h3>
+            <p>Información general de la factura.</p>
+          </div>
+        </header>
+        <div class="grid">
+          <div class="campo">
+            <label>Sede que factura <span class="req">*</span></label>
+            <p-dropdown
+              [disabled]="soloLectura"
+              [options]="sucursales"
+              [(ngModel)]="sucursalId"
+              optionLabel="nombre"
+              optionValue="id"
+              placeholder="Elija la sede"
+              styleClass="w-full"
+              appendTo="body"
+              (onChange)="onSucursal()"
+            />
+          </div>
+          <div class="campo">
+            <label>Bodega <span class="req">*</span></label>
+            <p-dropdown
+              [disabled]="soloLectura"
+              [options]="bodegas"
+              [(ngModel)]="bodegaId"
+              optionLabel="nombre"
+              optionValue="id"
+              placeholder="La principal de la sede"
+              styleClass="w-full"
+              appendTo="body"
+            />
+          </div>
+          <div class="campo">
+            <label>Fecha de emisión</label>
+            <p-calendar
+              [ngModel]="fechaEmision"
+              dateFormat="dd/mm/yy"
+              [showIcon]="true"
+              [disabled]="true"
+              styleClass="w-full"
+              pTooltip="La DIAN exige la fecha del día en que se emite"
+              tooltipPosition="top"
+            />
+          </div>
+          <div class="campo">
+            <label>Fecha de vencimiento</label>
+            <p-calendar
+              [(ngModel)]="vencimiento"
+              dateFormat="dd/mm/yy"
+              [showIcon]="true"
+              [minDate]="hoy"
+              [disabled]="soloLectura || formaPago === 'CONTADO'"
+              appendTo="body"
+              styleClass="w-full"
+              (ngModelChange)="onVencimiento()"
+            />
+          </div>
+
+          <div class="campo">
+            <label>Orden de compra cliente</label>
+            <input pInputText [(ngModel)]="ordenCompra" maxlength="60" placeholder="Opcional" [readonly]="soloLectura" />
+          </div>
+          <div class="campo">
+            <label>Lista de precios</label>
+            <p-dropdown
+              [disabled]="soloLectura"
+              [options]="listasOpts"
+              [(ngModel)]="listaPreciosId"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Precio del producto"
+              [showClear]="true"
+              styleClass="w-full"
+              appendTo="body"
+              (onChange)="onLista()"
+            />
+          </div>
+          <div class="campo">
+            <label>Vendedor / Asesor</label>
+            <p-dropdown
+              [disabled]="soloLectura"
+              [options]="vendedoresOpts"
+              [(ngModel)]="vendedorId"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sin vendedor"
+              [showClear]="true"
+              [filter]="true"
+              filterBy="label"
+              styleClass="w-full"
+              appendTo="body"
+            />
+          </div>
+          <div class="campo">
+            <label>Centro de costo</label>
+            <p-dropdown
+              [options]="centrosOpts"
+              [(ngModel)]="centroCostoId"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="El de la sede"
+              [showClear]="true"
+              [filter]="true"
+              filterBy="label"
+              [disabled]="soloLectura"
+              styleClass="w-full"
+              appendTo="body"
+            />
+          </div>
+          <div class="campo">
+            <label>Moneda</label>
+            <input pInputText value="COP - Peso colombiano" readonly />
+          </div>
+        </div>
+
+        <div class="aiu">
+          <div class="campo campo--sel">
+            <label>Tipo de factura</label>
+            <p-dropdown
+              [options]="tiposFactura"
+              [(ngModel)]="esAiu"
+              optionLabel="label"
+              optionValue="value"
+              [disabled]="soloLectura"
+              styleClass="w-full"
+              appendTo="body"
+              (onChange)="onTipoFactura()"
+            />
+          </div>
+          <ng-container *ngIf="esAiu">
+            <div class="campo campo--pct">
+              <label>Administración</label>
+              <p-inputNumber [(ngModel)]="aiuAdministracionPct" [min]="0" [max]="100" [maxFractionDigits]="2" suffix=" %" [disabled]="soloLectura" inputStyleClass="w-full" />
+            </div>
+            <div class="campo campo--pct">
+              <label>Imprevistos</label>
+              <p-inputNumber [(ngModel)]="aiuImprevistosPct" [min]="0" [max]="100" [maxFractionDigits]="2" suffix=" %" [disabled]="soloLectura" inputStyleClass="w-full" />
+            </div>
+            <div class="campo campo--pct">
+              <label>Utilidad</label>
+              <p-inputNumber [(ngModel)]="aiuUtilidadPct" [min]="0" [max]="100" [maxFractionDigits]="2" suffix=" %" [disabled]="soloLectura" inputStyleClass="w-full" />
+            </div>
+            <div class="campo campo--pct">
+              <label>IVA sobre utilidad</label>
+              <p-inputNumber [(ngModel)]="aiuIvaPct" [min]="0" [max]="100" [maxFractionDigits]="2" suffix=" %" [disabled]="soloLectura" inputStyleClass="w-full" />
+            </div>
+          </ng-container>
+        </div>
+        <p class="nota" *ngIf="esAiu">
+          <i class="pi pi-info-circle"></i>
+          Contrato AIU: las líneas de la obra son el costo directo y no llevan IVA. Administración, Imprevistos y
+          Utilidad se agregan como líneas al guardar, y el IVA se liquida solo sobre la Utilidad.
+        </p>
+      </section>
+
+      <!-- ── Pago ────────────────────────────────────────────────── -->
+      <section class="seccion">
+        <header class="seccion__head">
+          <i class="pi pi-credit-card"></i>
+          <div>
+            <h3>Pago</h3>
+            <p>Condiciones y medio de pago de la factura.</p>
+          </div>
+        </header>
+        <div class="pago">
+          <div class="campo campo--sel">
+            <label>Condición de pago</label>
+            <p-dropdown
+              [disabled]="soloLectura"
+              [options]="formas"
+              [(ngModel)]="formaPago"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-full"
+              appendTo="body"
+              (onChange)="onFormaPago()"
+            />
+          </div>
+
+          <ng-container *ngIf="formaPago === 'CONTADO'">
+            <div class="campo campo--sel">
+              <label>¿Cómo pagó?</label>
+              <p-dropdown
+                [disabled]="soloLectura"
+                [options]="metodos"
+                [(ngModel)]="metodoPago"
+                optionLabel="label"
+                optionValue="value"
+                styleClass="w-full"
+                appendTo="body"
+              />
+            </div>
+            <div class="campo campo--cuenta" *ngIf="metodoPago !== 'EFECTIVO'">
+              <label>Cuenta bancaria <span class="req">*</span></label>
+              <p-dropdown
+              [disabled]="soloLectura"
+                [options]="cuentasOpts"
+                [(ngModel)]="cuentaBancariaId"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="¿A qué cuenta entró?"
+                styleClass="w-full"
+                appendTo="body"
+              />
+            </div>
+          </ng-container>
+
+          <ng-container *ngIf="formaPago === 'CREDITO'">
+            <div class="campo campo--cuenta">
+              <label>Plazo según</label>
+              <p-dropdown
+              [disabled]="soloLectura"
+                [options]="condiciones"
+                [(ngModel)]="condicionPagoId"
+                optionLabel="nombre"
+                optionValue="id"
+                placeholder="Condición de pago"
+                styleClass="w-full"
+                appendTo="body"
+                (onChange)="onCondicion()"
+              />
+            </div>
+          </ng-container>
+
+          <div class="campo campo--plazo">
+            <label>Plazo</label>
+            <p-inputNumber
+              [(ngModel)]="plazo"
+              [min]="0"
+              [max]="3650"
+              suffix=" días"
+              [disabled]="soloLectura || formaPago === 'CONTADO'"
+              inputStyleClass="w-full"
+              (onInput)="plazo = +($event.value ?? 0); onPlazo()"
+            />
+          </div>
+        </div>
+        <p class="nota" *ngIf="formaPago === 'CONTADO' && metodoPago === 'EFECTIVO'">
+          <i class="pi pi-info-circle"></i>
+          El efectivo entra a la caja general, sin turno de caja ni arqueo.
+        </p>
+        <p class="nota" *ngIf="formaPago === 'CREDITO'">
+          <i class="pi pi-info-circle"></i>
+          Queda en cartera del cliente con vencimiento el {{ vencimiento | date: "dd/MM/yyyy" }}.
+        </p>
+
+        <div class="anticipos" *ngIf="formaPago === 'CREDITO' && anticipos.length && !soloLectura">
+          <div class="anticipos__head">
+            <span><i class="pi pi-wallet"></i> El cliente tiene anticipos: se cruzan contra la factura al emitirla.</span>
+            <button pButton type="button" label="Aplicar todo lo posible" class="p-button-text p-button-sm" (click)="aplicarAnticipos()"></button>
+          </div>
+          <table class="anticipos__tabla">
+            <thead>
+              <tr>
+                <th>Anticipo</th>
+                <th>Fecha</th>
+                <th class="text-right">Saldo</th>
+                <th class="text-right">Aplicar</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let a of anticipos">
+                <td>#{{ a.id }} <small class="sub" *ngIf="a.observaciones">{{ a.observaciones }}</small></td>
+                <td>{{ a.fecha | date: "dd/MM/yyyy" }}</td>
+                <td class="text-right">{{ cop(a.saldo) }}</td>
+                <td class="text-right">
+                  <p-inputNumber [(ngModel)]="a.aplicar" [min]="0" [max]="a.saldo" mode="currency" currency="COP" locale="es-CO" inputStyleClass="num" />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="anticipos__total" *ngIf="totalAnticipos > 0">
+            Se cruzan {{ cop(totalAnticipos) }} · queda en cartera {{ cop(total - totalAnticipos) }}
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Productos y totales ─────────────────────────────────── -->
+      <section class="seccion productos">
+        <div class="productos__lineas">
+          <header class="seccion__head">
+            <i class="pi pi-box"></i>
+            <div>
+              <h3>Productos y servicios</h3>
+              <p>Agregue los productos o servicios incluidos en la factura.</p>
+            </div>
+          </header>
+          <div class="tabla-scroll">
+            <table class="lineas">
+              <thead>
+                <tr>
+                  <th class="col-n">#</th>
+                  <th class="col-producto">Producto / Servicio</th>
+                  <th class="col-desc">Descripción factura</th>
+                  <th class="col-cant">Cant.</th>
+                  <th class="col-precio">Precio (sin IVA)</th>
+                  <th class="col-pct">Desc.</th>
+                  <th class="col-pct">IVA</th>
+                  <th class="col-total text-right">Total</th>
+                  <th class="col-x"></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let l of lineas; let i = index">
+                  <td class="n">{{ i + 1 }}</td>
+                  <td>
+                    <app-producto-autocomplete
+              [disabled]="soloLectura"
+                      [productoId]="l.productoId"
+                      [label]="l.productoNombre"
+                      appendTo="body"
+                      (seleccionado)="onProducto(l, $event)"
+                    />
+                    <p-dropdown
+                      *ngIf="!soloLectura && (l.presentaciones.length > 1 || (l.presentaciones.length === 1 && l.presentaciones[0].value !== null))"
+                      [options]="l.presentaciones"
+                      [(ngModel)]="l.productoPresentacionId"
+                      optionLabel="label"
+                      optionValue="value"
+                      styleClass="w-full presentacion"
+                      appendTo="body"
+                      (onChange)="onPresentacion(l)"
+                    />
+                    <small class="sub" *ngIf="l.productoSku">Cod: {{ l.productoSku }}</small>
+                    <small class="sub servicio" *ngIf="l.productoId && !l.manejaInventario">Servicio · no mueve inventario</small>
+                  </td>
+                  <td>
+                    <input
+                      pInputText
+                      class="w-full"
+                      [(ngModel)]="l.descripcion"
+                      [readonly]="soloLectura"
+                      maxlength="500"
+                      [placeholder]="l.productoNombre ?? 'Texto en la factura'"
+                    />
+                  </td>
+                  <td>
+                    <p-inputNumber
+              [disabled]="soloLectura"
+                      [(ngModel)]="l.cantidad"
+                      [min]="0"
+                      [maxFractionDigits]="4"
+                      [suffix]="l.unidad ? ' ' + l.unidad : ''"
+                      inputStyleClass="num"
+                    />
+                  </td>
+                  <td>
+                    <p-inputNumber
+              [disabled]="soloLectura"
+                      [(ngModel)]="l.precioUnitario"
+                      [min]="0"
+                      mode="currency"
+                      currency="COP"
+                      locale="es-CO"
+                      [maxFractionDigits]="2"
+                      inputStyleClass="num"
+                    />
+                  </td>
+                  <td>
+                    <p-inputNumber
+              [disabled]="soloLectura" [(ngModel)]="l.descuentoPct" [min]="0" [max]="100" [maxFractionDigits]="2" suffix=" %" inputStyleClass="num" />
+                  </td>
+                  <td>
+                    <p-inputNumber
+              [disabled]="soloLectura || esAiu" [(ngModel)]="l.impuestoPorcentaje" [min]="0" [max]="100" [maxFractionDigits]="2" suffix=" %" inputStyleClass="num" />
+                  </td>
+                  <td class="text-right total-linea">{{ cop(totalLinea(l)) }}</td>
+                  <td>
+                    <button
+                      *ngIf="!soloLectura"
+                      pButton
+                      type="button"
+                      icon="pi pi-trash"
+                      class="p-button-text p-button-danger p-button-sm"
+                      pTooltip="Quitar línea"
+                      (click)="quitarLinea(i)"
+                    ></button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <button *ngIf="!soloLectura" pButton type="button" icon="pi pi-plus" label="Agregar línea" class="p-button-outlined p-button-sm" (click)="agregarLinea()"></button>
+        </div>
+
+        <aside class="totales">
+          <header class="seccion__head">
+            <i class="pi pi-calculator"></i>
+            <div>
+              <h3>Totales de la factura</h3>
+            </div>
+          </header>
+          <div class="totales__fila"><span>Subtotal</span><strong>{{ cop(subtotal) }}</strong></div>
+          <div class="totales__fila"><span>Descuentos</span><strong>{{ cop(descuentos) }}</strong></div>
+          <ng-container *ngIf="!esAiu">
+            <div class="totales__fila" *ngFor="let iva of ivas">
+              <span>IVA {{ iva.tarifa }}%</span><strong>{{ cop(iva.valor) }}</strong>
+            </div>
+            <div class="totales__fila" *ngIf="!ivas.length"><span>IVA</span><strong>{{ cop(0) }}</strong></div>
+          </ng-container>
+          <ng-container *ngIf="esAiu">
+            <div class="totales__fila totales__fila--fuerte"><span>Costo directo</span><strong>{{ cop(costoDirecto) }}</strong></div>
+            <div class="totales__fila" *ngFor="let a of aiuLineas">
+              <span>{{ a.nombre }} {{ a.pct }}%</span><strong>{{ cop(a.valor) }}</strong>
+            </div>
+            <div class="totales__fila" *ngFor="let a of aiuLineas">
+              <ng-container *ngIf="a.iva > 0">
+                <span>IVA {{ a.ivaPct }}% s/ utilidad</span><strong>{{ cop(a.iva) }}</strong>
+              </ng-container>
+            </div>
+          </ng-container>
+          <div class="totales__total"><span>TOTAL</span><strong>{{ cop(total) }}</strong></div>
+        </aside>
+      </section>
+
+      <!-- ── Notas ───────────────────────────────────────────────── -->
+      <section class="seccion">
+        <header class="seccion__head">
+          <i class="pi pi-pencil"></i>
+          <div>
+            <h3>Notas</h3>
+            <p>Notas adicionales para la factura (opcional).</p>
+          </div>
+        </header>
+        <textarea
+          pInputTextarea
+          [(ngModel)]="notas"
+          [readonly]="soloLectura"
+          rows="3"
+          [maxlength]="maxNotas"
+          class="w-full"
+          placeholder="Aparecen en la factura (opcional)"
+        ></textarea>
+        <div class="contador">{{ notas.length }} / {{ maxNotas }}</div>
+      </section>
+
+      <div class="card-footer acciones" *ngIf="soloLectura && factura">
+        <ng-container *ngIf="factura.estado === 'EMITIDA'">
+          <button
+            *appPuede="'ventas.facturas:ANULAR'"
+            pButton
+            type="button"
+            icon="pi pi-ban"
+            label="Anular"
+            class="p-button-text p-button-danger"
+            [disabled]="guardando"
+            (click)="anular()"
+          ></button>
+        </ng-container>
+        <span class="espacio"></span>
+        <button pButton type="button" icon="pi pi-copy" label="Copiar factura" class="p-button-text" (click)="copiar()"></button>
+        <button pButton type="button" icon="pi pi-file-pdf" label="Descargar PDF" class="p-button-outlined" (click)="descargarPdf()"></button>
+        <button
+          *ngIf="puedeEnviarDian"
+          pButton
+          type="button"
+          icon="pi pi-send"
+          label="Enviar a la DIAN"
+          class="btn-aura"
+          [disabled]="guardando"
+          (click)="enviarDian()"
+        ></button>
+      </div>
+
+      <div class="card-footer acciones" *ngIf="!soloLectura">
+        <button
+          *ngIf="id"
+          pButton
+          type="button"
+          icon="pi pi-trash"
+          label="Eliminar borrador"
+          class="p-button-text p-button-danger"
+          [disabled]="guardando"
+          (click)="eliminar()"
+        ></button>
+        <span class="espacio"></span>
+        <button *ngIf="id" pButton type="button" icon="pi pi-copy" label="Copiar" class="p-button-text" (click)="copiar()"></button>
+        <button pButton type="button" icon="pi pi-file-pdf" label="Vista previa PDF" class="p-button-text" (click)="descargarPdf()"></button>
+        <button pButton type="button" icon="pi pi-save" label="Guardar borrador" class="p-button-outlined" [disabled]="guardando" (click)="guardar()"></button>
+        <button pButton type="button" icon="pi pi-send" label="Emitir factura" class="btn-aura" [disabled]="guardando" (click)="emitir()"></button>
+      </div>
+    </ng-container>
+  </div>
+</div>
+
+@if (mostrarFormTercero) {
+  <app-form-tercero
+    [displayModal]="mostrarFormTercero"
+    [slug]="terceroEditarId ? 'edit' : 'create'"
+    [terceroId]="terceroEditarId"
+    [soloCliente]="!terceroEditarId"
+    (terceroSaved)="onTerceroGuardado($event)"
+    (modalClosed)="mostrarFormTercero = false"
+  />
+}

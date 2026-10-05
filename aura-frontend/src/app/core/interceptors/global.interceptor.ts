@@ -57,6 +57,12 @@ export class GlobalInterceptor implements HttpInterceptor {
                 );
                 this.indexDBService.deleteDataAuthDB();
                 this.router.navigate(['/login']);
+              } else if (error.status === 403) {
+                // Permisos por perfil: el perfil del usuario no permite la acción.
+                this.alertService.showError(
+                  'Sin permiso',
+                  error.error?.message ?? 'Su perfil no permite esta acción.'
+                );
               } else if (error.status >= 400) {
                 this.alertService.showError(
                   'Error',

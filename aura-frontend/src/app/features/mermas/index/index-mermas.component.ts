@@ -23,11 +23,13 @@ import { DetalleMermaComponent } from '../detalles/detalle-merma.component';
 import { MermaModel, MermaTableModel } from '../../../core/models/merma.model';
 import { MermaService } from '../../../core/services/merma.service';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 @Component({
   selector: 'app-index-mermas',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     ButtonModule,

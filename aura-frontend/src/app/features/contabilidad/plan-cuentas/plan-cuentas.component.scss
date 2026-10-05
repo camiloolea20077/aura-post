@@ -34,3 +34,96 @@
   label { font-size: 0.82rem; font-weight: 600; color: #374151; }
   input, p-dropdown { width: 100%; }
 }
+
+// ── Árbol del PUC ────────────────────────────────────────────────────
+.niveles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.nivel-btn {
+  padding: 0.3rem 0.7rem;
+  border: 1.5px solid #e0e3eb;
+  border-radius: 999px;
+  background: #fff;
+  color: #475569;
+  font-family: inherit;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    border-color: #93c5fd;
+    color: #1d4ed8;
+  }
+}
+
+.cuenta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.codigo {
+  flex-shrink: 0;
+  padding: 0.12rem 0.5rem;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+
+  &--n1 {
+    background: #2563eb;
+    color: #fff;
+  }
+
+  &--n2 {
+    background: #dbeafe;
+  }
+}
+
+.nombre {
+  min-width: 0;
+  font-size: 0.85rem;
+  color: #334155;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &--fuerte {
+    font-weight: 700;
+    color: #1e293b;
+  }
+}
+
+.medio-pago {
+  font-size: 0.75rem;
+  color: #2563eb;
+}
+
+.fila-inactiva {
+  opacity: 0.55;
+}
+
+:host ::ng-deep .arbol-puc {
+  .p-treetable-tbody > tr > td {
+    padding: 0.4rem 0.75rem;
+  }
+
+  .p-treetable-thead > tr > th {
+    padding: 0.55rem 0.75rem;
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #64748b;
+  }
+}

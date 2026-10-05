@@ -43,11 +43,16 @@ import { TerceroTableModel } from '../../../../core/models/tercero.model';
 import { CentroCostoDto } from '../../../../core/models/centro-costo.model';
 
 import { aFechaLocal } from '../../../../shared/utils/fecha.util';
+import { PuedeDirective } from '../../../../shared/directives/puede.directive';
+import { CuentaAutocompleteComponent } from '../../../../shared/components/cuenta-autocomplete/cuenta-autocomplete.component';
+
 @Component({
   selector: 'app-form-comprobante-contable',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CuentaAutocompleteComponent,
+    PuedeDirective,
     CommonModule,
     ReactiveFormsModule,
     FormsModule,

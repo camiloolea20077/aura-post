@@ -27,11 +27,16 @@ import {
 } from '../../../core/models/concepto-caja.model';
 import { PlanCuentaModel } from '../../../core/models/contabilidad.model';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
+import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-autocomplete/cuenta-autocomplete.component';
+
 @Component({
   selector: 'app-conceptos-caja',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    CuentaAutocompleteComponent,
+    PuedeDirective,
     CommonModule,
     FormsModule,
     ButtonModule,

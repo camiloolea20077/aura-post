@@ -94,6 +94,7 @@
               [disabled]="procesando === n.id"
               (click)="anular(n)"
             ></button>
+            <ng-container *appPuede="'recursos-humanos.nomina-electronica:ANULAR'">
             <button
               pButton
               icon="pi pi-trash"
@@ -103,6 +104,7 @@
               [disabled]="procesando === n.id"
               (click)="eliminarSandbox(n)"
             ></button>
+            </ng-container>
           </td>
         </tr>
       </ng-template>

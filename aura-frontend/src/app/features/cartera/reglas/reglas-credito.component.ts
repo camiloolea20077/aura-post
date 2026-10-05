@@ -32,6 +32,7 @@ import {
   TIPOS_REGLA,
 } from '../../../core/models/cartera.model';
 
+import { PuedeDirective } from '../../../shared/directives/puede.directive';
 interface FilaCondicion {
   campo: CampoCondicion | null;
   valor: any;
@@ -100,6 +101,7 @@ function vacias(valores: Partial<CondicionesReglaModel> = {}): CondicionesReglaM
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     ButtonModule,

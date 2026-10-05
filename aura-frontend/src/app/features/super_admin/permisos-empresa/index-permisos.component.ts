@@ -1,59 +1,54 @@
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnInit,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
-import { ToastModule } from 'primeng/toast';
-import { AccordionModule } from 'primeng/accordion';
-import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { CheckboxModule } from 'primeng/checkbox';
 import { SkeletonModule } from 'primeng/skeleton';
+import { ToastModule } from 'primeng/toast';
 import { MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
-import { PermisoService } from './services/permiso.service';
-import {
-  EmpresaPermisos,
-  ModuloPermiso,
-  SubmoduloPermiso,
-  ModuloPermisoUpdate,
-} from './models/permiso.model';
-import { AlertService } from '../../../shared/pipes/alert.service';
 
+import { AlertService } from '../../../shared/pipes/alert.service';
+import { PermisoService } from './services/permiso.service';
+import { EmpresaPermisos, ModuloPermisoUpdate } from './models/permiso.model';
+import { ArbolModulosComponent } from '../shared/arbol-modulos/arbol-modulos.component';
+
+/**
+ * Módulos y submódulos que tiene una empresa (lo contratado). Lo que aquí se
+ * apaga no lo ve ningún usuario de la empresa, sin importar su perfil.
+ */
 @Component({
   selector: 'app-index-permisos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [
-    CommonModule,
-    FormsModule,
-    RouterModule,
-    ButtonModule,
-    ToastModule,
-    AccordionModule,
-    ToggleSwitchModule,
-    CheckboxModule,
-    SkeletonModule,
-  ],
+  imports: [CommonModule, RouterModule, ButtonModule, SkeletonModule, ToastModule, ArbolModulosComponent],
   providers: [MessageService],
   templateUrl: './index-permisos.component.html',
   styleUrls: ['./index-permisos.component.scss'],
 })
 export class IndexPermisosComponent implements OnInit {
-  loading = true;
-  loadingSave = false;
-  permisos: EmpresaPermisos | null = null;
-  modulos: ModuloPermiso[] = [];
   empresaId!: number;
-  hasChanges = false;
-  originalState: string = '';
+  cargando = true;
+  guardando = false;
+  permisos: EmpresaPermisos | null = null;
+  seleccion: number[] = [];
+  private original = '';
 
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
-    private readonly permisoService: PermisoService,
-    private readonly alertService: AlertService,
+    private readonly service: PermisoService,
+    private readonly alert: AlertService,
     private readonly cdr: ChangeDetectorRef,
   ) {}
+
+  get hayCambios(): boolean {
+    return JSON.stringify([...this.seleccion].sort((a, b) => a - b)) !== this.original;
+  }
 
   async ngOnInit(): Promise<void> {
     this.empresaId = Number(this.route.snapshot.paramMap.get('id'));
@@ -61,84 +56,60 @@ export class IndexPermisosComponent implements OnInit {
       this.router.navigate(['/platform/empresas']);
       return;
     }
-    await this.loadPermisos();
+    await this.cargar();
   }
 
-  async loadPermisos(): Promise<void> {
-    this.loading = true;
+  async cargar(): Promise<void> {
+    this.cargando = true;
+    this.cdr.markForCheck();
     try {
-      const res = await lastValueFrom(this.permisoService.getPermisos(this.empresaId));
+      const res = await lastValueFrom(this.service.getPermisos(this.empresaId));
       this.permisos = res?.data ?? null;
-      this.modulos = this.permisos?.modulos ?? [];
-      this.originalState = JSON.stringify(this.getPermisosUpdate());
-      this.hasChanges = false;
+      this.seleccion = (this.permisos?.modulos ?? []).flatMap((m) =>
+        m.submodulos.filter((s) => s.activo).map((s) => s.submoduloId),
+      );
+      this.original = JSON.stringify([...this.seleccion].sort((a, b) => a - b));
     } catch {
-      this.alertService.showError('Error', 'No se pudieron cargar los permisos');
+      this.permisos = null;
     } finally {
-      this.loading = false;
+      this.cargando = false;
       this.cdr.markForCheck();
     }
   }
 
-  onModuloChange(modulo: ModuloPermiso): void {
-    if (modulo.activo) {
-      modulo.submodulos.forEach((s: SubmoduloPermiso) => (s.activo = true));
-    } else {
-      modulo.submodulos.forEach((s: SubmoduloPermiso) => (s.activo = false));
-    }
-    this.checkChanges();
-    this.cdr.markForCheck();
-  }
-
-  onSubmoduloChange(modulo: ModuloPermiso, submodulo: SubmoduloPermiso): void {
-    const anyActivo = modulo.submodulos.some((s: SubmoduloPermiso) => s.activo);
-    if (!anyActivo && modulo.activo) {
-      modulo.activo = false;
-    } else if (anyActivo && !modulo.activo) {
-      modulo.activo = true;
-    }
-    this.checkChanges();
-    this.cdr.markForCheck();
-  }
-
-  isSubmoduloDisabled(modulo: ModuloPermiso): boolean {
-    return !modulo.activo;
-  }
-
-  private checkChanges(): void {
-    const currentState = JSON.stringify(this.getPermisosUpdate());
-    this.hasChanges = currentState !== this.originalState;
-  }
-
-  private getPermisosUpdate(): ModuloPermisoUpdate[] {
-    return this.modulos.map((m) => ({
-      moduloId: m.moduloId,
-      activo: m.activo,
-      submodulos: m.submodulos.map((s) => ({
-        submoduloId: s.submoduloId,
-        activo: s.activo,
-      })),
-    }));
+  onSeleccion(ids: number[]): void {
+    this.seleccion = ids;
   }
 
   async guardar(): Promise<void> {
-    this.loadingSave = true;
+    if (!this.permisos) return;
+    const activos = new Set(this.seleccion);
+    // El back activa el módulo si tiene algo y los grupos de las pantallas activas.
+    const modulos: ModuloPermisoUpdate[] = this.permisos.modulos.map((m) => {
+      const submodulos = m.submodulos.map((s) => ({ submoduloId: s.submoduloId, activo: activos.has(s.submoduloId) }));
+      return { moduloId: m.moduloId, activo: submodulos.some((s) => s.activo), submodulos };
+    });
+    this.guardando = true;
+    this.cdr.markForCheck();
     try {
-      const dto = { modulos: this.getPermisosUpdate() };
-      await lastValueFrom(this.permisoService.updatePermisos(this.empresaId, dto));
-      this.alertService.showSuccess('Guardado', 'Permisos actualizados correctamente');
-      this.originalState = JSON.stringify(dto.modulos);
-      this.hasChanges = false;
-    } catch (err: unknown) {
-      const message = (err as any)?.error?.message ?? 'No se pudieron guardar los permisos';
-      this.alertService.showError('Error', message);
+      const res = await lastValueFrom(this.service.updatePermisos(this.empresaId, { modulos }));
+      this.alert.showSuccess('Módulos guardados', 'Los usuarios de la empresa lo verán al recargar.');
+      if (res?.data) {
+        this.permisos = res.data;
+        this.seleccion = res.data.modulos.flatMap((m: any) =>
+          m.submodulos.filter((s: any) => s.activo).map((s: any) => s.submoduloId),
+        );
+      }
+      this.original = JSON.stringify([...this.seleccion].sort((a, b) => a - b));
+    } catch {
+      /* el interceptor muestra el error */
     } finally {
-      this.loadingSave = false;
+      this.guardando = false;
       this.cdr.markForCheck();
     }
   }
 
-  cancelar(): void {
+  volver(): void {
     this.router.navigate(['/platform/empresas']);
   }
 }

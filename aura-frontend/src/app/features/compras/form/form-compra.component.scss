@@ -618,6 +618,18 @@
     flex: 1 1 auto;
     min-width: 0;
   }
+
+  // En qué se compra (presentación de compra o unidad base): fijo, sin elegir.
+  &__nombre {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #475569;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 ::ng-deep .cant-pres__cantidad {
   width: 100%;

@@ -1,30 +1,29 @@
-// ─── index-empresas.component.ts ─────────────────────────────
 import {
-  Component,
-  OnInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  OnInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
+import { PaginatorModule, PaginatorState } from 'primeng/paginator';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { TableLazyLoadEvent, TableModule } from 'primeng/table';
-import { MessageService, ConfirmationService } from 'primeng/api';
-import { RouterModule } from '@angular/router';
-import { lastValueFrom } from 'rxjs';
-import {
-  EmpresaTableModel,
-} from '../../../core/models/platform.model';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { Subject, Subscription, debounceTime, lastValueFrom } from 'rxjs';
+
+import { EmpresaTableModel } from '../../../core/models/platform.model';
 import { PlatformService } from '../../../core/services/platform.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
-import { Router } from '@angular/router';
 
+/** Empresas clientes del sistema: búsqueda y paginación en el servidor. */
 @Component({
   selector: 'app-index-empresas',
   standalone: true,
@@ -32,129 +31,132 @@ import { Router } from '@angular/router';
   imports: [
     CommonModule,
     FormsModule,
-    TableModule,
+    RouterModule,
     ButtonModule,
     InputTextModule,
     TagModule,
     ToastModule,
     TooltipModule,
     SkeletonModule,
+    PaginatorModule,
     ConfirmDialogModule,
-    RouterModule,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './index-empresas.component.html',
   styleUrls: ['./index-empresas.component.scss'],
 })
-export class IndexEmpresasComponent implements OnInit {
+export class IndexEmpresasComponent implements OnInit, OnDestroy {
   rows: EmpresaTableModel[] = [];
-  totalRows = 0;
-  loadingTable = true;
+  total = 0;
+  cargando = true;
   search = '';
-  rowSize = 15;
-  lastEvent!: TableLazyLoadEvent;
+  first = 0;
+  filas = 15;
+
+  private buscar$ = new Subject<void>();
+  private sub?: Subscription;
 
   constructor(
-    private readonly platformService: PlatformService,
-    private readonly alertService: AlertService,
-    private readonly confirmService: ConfirmationService,
-    private readonly cdr: ChangeDetectorRef,
+    private readonly service: PlatformService,
+    private readonly alert: AlertService,
+    private readonly confirm: ConfirmationService,
     private readonly router: Router,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    // Espera a que deje de escribir: no consulta en cada tecla.
+    this.sub = this.buscar$.pipe(debounceTime(350)).subscribe(() => {
+      this.first = 0;
+      this.cargar();
+    });
+    this.cargar();
+  }
 
-  async loadTable(event: TableLazyLoadEvent): Promise<void> {
-    this.lastEvent = event;
-    this.loadingTable = true;
-    const page =
-      event.first != null && event.rows
-        ? Math.floor(event.first / event.rows)
-        : 0;
-
-    try {
-      const res = await lastValueFrom(
-        this.platformService.page({
-          page,
-          rows: event.rows ?? this.rowSize,
-          search: this.search || null,
-        }),
-      );
-      this.rows = res?.data?.content ?? [];
-      this.totalRows = res?.data?.totalElements ?? 0;
-    } catch {
-      this.rows = [];
-      this.totalRows = 0;
-    } finally {
-      this.loadingTable = false;
-      this.cdr.markForCheck();
-    }
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
   }
 
   onSearch(): void {
-    if (this.lastEvent) this.loadTable({ ...this.lastEvent, first: 0 });
+    this.buscar$.next();
   }
-  clearSearch(): void {
+
+  limpiar(): void {
     this.search = '';
-    this.onSearch();
+    this.first = 0;
+    this.cargar();
   }
-  private reload(): void {
-    if (this.lastEvent) this.loadTable(this.lastEvent);
+
+  onPagina(e: PaginatorState): void {
+    this.first = e.first ?? 0;
+    this.filas = e.rows ?? this.filas;
+    this.cargar();
+  }
+
+  async cargar(): Promise<void> {
+    this.cargando = true;
+    this.cdr.markForCheck();
+    try {
+      const res = await lastValueFrom(
+        this.service.page({
+          page: Math.floor(this.first / this.filas),
+          rows: this.filas,
+          search: this.search.trim() || null,
+        }),
+      );
+      this.rows = res?.data?.content ?? [];
+      this.total = res?.data?.totalElements ?? 0;
+    } catch {
+      this.rows = [];
+      this.total = 0;
+    } finally {
+      this.cargando = false;
+      this.cdr.markForCheck();
+    }
   }
 
   nueva(): void {
     this.router.navigate(['/platform/empresas/nueva']);
   }
 
-  editar(id: number): void {
-    this.router.navigate(['/platform/empresas', id, 'editar']);
+  editar(e: EmpresaTableModel): void {
+    this.router.navigate(['/platform/empresas', e.id, 'editar']);
   }
 
-  confirmarSuspender(item: EmpresaTableModel, event: Event): void {
-    event.stopPropagation();
-    this.confirmService.confirm({
-      target: event.target as EventTarget,
-      message: `¿Suspender <strong>${item.razonSocial}</strong>? Los usuarios no podrán acceder.`,
+  modulos(e: EmpresaTableModel, ev: Event): void {
+    ev.stopPropagation();
+    this.router.navigate(['/platform/permisos', e.id]);
+  }
+
+  confirmarSuspender(e: EmpresaTableModel, ev: Event): void {
+    ev.stopPropagation();
+    this.confirm.confirm({
+      message: `¿Suspender <strong>${e.razonSocial}</strong>? Sus usuarios no podrán entrar.`,
       header: 'Suspender empresa',
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Sí, suspender',
       rejectLabel: 'Cancelar',
       acceptButtonStyleClass: 'p-button-danger',
-      accept: () => this.suspender(item.id),
+      accept: async () => {
+        try {
+          await lastValueFrom(this.service.suspender(e.id));
+          this.alert.showSuccess('Suspendida', e.razonSocial);
+          this.cargar();
+        } catch {
+          /* el interceptor muestra el error */
+        }
+      },
     });
   }
 
-  private async suspender(id: number): Promise<void> {
+  async activar(e: EmpresaTableModel, ev: Event): Promise<void> {
+    ev.stopPropagation();
     try {
-      await lastValueFrom(this.platformService.suspender(id));
-      this.alertService.showSuccess('Suspendida', 'Empresa suspendida');
-      this.reload();
+      await lastValueFrom(this.service.activar(e.id));
+      this.alert.showSuccess('Activada', e.razonSocial);
+      this.cargar();
     } catch {
-      this.alertService.showError('Error', 'No se pudo suspender');
+      /* el interceptor muestra el error */
     }
-  }
-
-  async activar(id: number, event: Event): Promise<void> {
-    event.stopPropagation();
-    try {
-      await lastValueFrom(this.platformService.activar(id));
-      this.alertService.showSuccess('Activada', 'Empresa activada');
-      this.reload();
-    } catch {
-      this.alertService.showError('Error', 'No se pudo activar');
-    }
-  }
-
-  gestionarPermisos(item: EmpresaTableModel, event: Event): void {
-    event.stopPropagation();
-    this.router.navigate(['/platform/permisos', item.id]);
-  }
-
-  formatFecha(iso: string): string {
-    return new Date(iso).toLocaleDateString('es-CO', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
   }
 }

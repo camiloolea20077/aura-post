@@ -21,6 +21,7 @@ import { AfiliacionesComponent } from '../afiliaciones/afiliaciones.component';
 import { RetefuenteComponent } from '../retefuente/retefuente.component';
 import { EmbargosComponent } from '../embargos/embargos.component';
 
+import { PuedeDirective } from '../../../../shared/directives/puede.directive';
 /**
  * Contratos de un empleado (Fase 2).
  *
@@ -31,6 +32,7 @@ import { EmbargosComponent } from '../embargos/embargos.component';
   selector: 'app-index-contratos',
   standalone: true,
   imports: [
+    PuedeDirective,
     CommonModule,
     FormsModule,
     TableModule,

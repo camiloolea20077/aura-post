@@ -20,7 +20,7 @@
         </div>
       </div>
       <div class="card-head__actions">
-        <button
+        <button *appPuede="'recursos-humanos.proyectos-y-frentes:CREAR'"
           pButton
           type="button"
           label="Nuevo frente"
@@ -70,14 +70,14 @@
             />
           </td>
           <td class="text-center">
-            <button
+            <button *appPuede="'recursos-humanos.proyectos-y-frentes:EDITAR'"
               pButton
               icon="pi pi-pencil"
               class="p-button-text p-button-sm p-button-rounded"
               pTooltip="Editar / trabajadores"
               (click)="editar(f)"
             ></button>
-            <button
+            <button *appPuede="'recursos-humanos.proyectos-y-frentes:ANULAR'"
               pButton
               icon="pi pi-trash"
               class="p-button-text p-button-danger p-button-sm p-button-rounded"
@@ -219,7 +219,7 @@
           styleClass="w-full"
           placeholder="Selecciona un trabajador para agregar..."
         />
-        <button
+        <button *appPuede="'recursos-humanos.proyectos-y-frentes:CREAR'"
           pButton
           type="button"
           icon="pi pi-plus"
@@ -323,7 +323,7 @@
               <td>{{ ft.fechaInicio ?? "—" }}</td>
               <td>{{ ft.fechaFin ?? "Vigente" }}</td>
               <td class="text-center">
-                <button
+                <button *appPuede="'recursos-humanos.proyectos-y-frentes:ANULAR'"
                   pButton
                   icon="pi pi-trash"
                   class="p-button-text p-button-danger p-button-sm p-button-rounded"

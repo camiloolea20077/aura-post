@@ -12,7 +12,7 @@
         </div>
       </div>
       <div class="card-head__actions">
-        <button
+        <button *appPuede="'caja.cajas:CREAR'"
           pButton
           type="button"
           label="Nueva caja"
@@ -91,7 +91,7 @@
           </td>
           <td class="text-center">
             <div class="action-buttons">
-              <button
+              <button *appPuede="'caja.cajas:EDITAR'"
                 pButton
                 icon="pi pi-pencil"
                 class="p-button-text p-button-sm action-edit"
@@ -99,7 +99,7 @@
                 tooltipPosition="top"
                 (click)="openEdit(item)"
               ></button>
-              <button
+              <button *appPuede="'caja.cajas:ANULAR'"
                 pButton
                 icon="pi pi-power-off"
                 class="p-button-text p-button-sm p-button-warning action-toggle"
@@ -122,7 +122,8 @@
                   searchQuery ? "Sin resultados" : "No hay cajas registradas"
                 }}
               </p>
-              <button
+              <ng-container *appPuede="'caja.cajas:CREAR'">
+            <button
                 *ngIf="!searchQuery"
                 pButton
                 label="Crear primera caja"
@@ -130,6 +131,7 @@
                 class="btn-verde p-button-sm"
                 (click)="openCreate()"
               ></button>
+            </ng-container>
             </div>
           </td>
         </tr>

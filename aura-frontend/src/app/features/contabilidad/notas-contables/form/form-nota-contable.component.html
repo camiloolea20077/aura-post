@@ -221,7 +221,7 @@
                 class="p-button-outlined p-button-sm"
                 (click)="showImportar = true"
               ></button>
-              <button
+              <button *appPuede="'contabilidad.notas-contables:CREAR'"
                 pButton
                 type="button"
                 label="Agregar línea"
@@ -264,20 +264,12 @@
                 <label class="celda-label"
                   >Cuenta <span class="req">*</span></label
                 >
-                <p-dropdown
+                <app-cuenta-autocomplete
+                  [opciones]="cuentaOpts"
                   formControlName="cuentaId"
-                  [options]="cuentaOpts"
-                  optionLabel="label"
-                  optionValue="value"
                   placeholder="Cuenta auxiliar"
-                  [filter]="true"
-                  filterBy="label"
-                  [resetFilterOnHide]="true"
-                  [virtualScroll]="true"
-                  [virtualScrollItemSize]="36"
-                  styleClass="w-full"
-                  panelStyleClass="nota-dd-panel"
-                ></p-dropdown>
+                  [showClear]="false"
+                />
               </div>
 
               <div class="c-tercero celda">
