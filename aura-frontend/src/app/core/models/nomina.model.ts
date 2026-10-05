@@ -333,3 +333,49 @@ export interface NominaPageableDto {
   order_by?: string | null;
   order?: string | null;
 }
+
+// ── Centro de Recursos Humanos ──────────────────────────────────────
+/** Nómina de un mes (períodos que terminan en él, sin anuladas). */
+export interface NominaMesModel {
+  anio: number;
+  mes: number;
+  devengado: number;
+  /** Seguridad social y parafiscales del empleador. */
+  aportes: number;
+  /** Prima, cesantías, intereses y vacaciones. */
+  provisiones: number;
+  neto: number;
+  empleadosLiquidados: number;
+  /** devengado + aportes + provisiones. */
+  costoTotal: number;
+}
+
+export interface RubroCostoModel {
+  codigo: string;
+  nombre: string;
+  valor: number;
+}
+
+export interface DashboardRrhhModel {
+  anio: number;
+  mes: number;
+  mesActual: NominaMesModel;
+  mesAnterior: NominaMesModel;
+  serie: NominaMesModel[];
+  distribucionCosto: RubroCostoModel[];
+  personal: {
+    activos: number;
+    activosMesAnterior: number;
+    ingresosMes: number;
+    retirosMes: number;
+  };
+  estado: {
+    /** ABIERTO | LIQUIDADO | PAGADO | SIN_PERIODO */
+    periodoEstado: string;
+    periodoDescripcion: string | null;
+    nominasBorrador: number;
+    nominasPorPagar: number;
+    novedadesPendientes: number;
+    contratosPorVencer: number;
+  };
+}

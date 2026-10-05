@@ -609,167 +609,157 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
     ],
   },
 
-  // ── Recursos Humanos (con submódulos: Gestión / Asistencia / Parámetros) ─────
+  // ── Recursos Humanos ────────────────────────────────────────────────────────
+  // Como Contabilidad: en el sidebar es un solo enlace al Centro de Recursos
+  // Humanos (/recursos-humanos). Los ítems siguen pasando por
+  // filtrarMenuPorPermisos y el centro los agrupa (Gestión / Asistencia /
+  // Parámetros) con centro-rrhh.config.ts. Pantalla nueva: ítem aquí +
+  // descripción y grupo allá.
   {
     label: 'Recursos Humanos',
     icon: 'pi pi-id-card',
-    items: [],
-    subgroups: [
+    hubRoute: '/recursos-humanos',
+    items: [
+      // Gestión
       {
-        label: 'Gestión',
-        icon: 'pi pi-briefcase',
-        items: [
-          {
-            label: 'Empleados',
-            codigo: 'recursos-humanos.empleados',
-            icon: 'pi pi-users',
-            route: '/nomina/empleados',
-          },
-          {
-            label: 'Saldos iniciales',
-            codigo: 'recursos-humanos.saldos-iniciales',
-            icon: 'pi pi-database',
-            route: '/nomina/saldos-iniciales',
-          },
-          {
-            label: 'Proyectos y Frentes',
-            codigo: 'recursos-humanos.proyectos-y-frentes',
-            icon: 'pi pi-building',
-            route: '/proyectos',
-          },
-          {
-            label: 'Conceptos',
-            codigo: 'recursos-humanos.conceptos',
-            icon: 'pi pi-sliders-h',
-            route: '/nomina/conceptos',
-          },
-          {
-            label: 'Períodos',
-            codigo: 'recursos-humanos.periodos',
-            icon: 'pi pi-calendar',
-            route: '/nomina/periodos',
-          },
-          {
-            label: 'Liquidación Nómina',
-            codigo: 'recursos-humanos.liquidacion-nomina',
-            icon: 'pi pi-calculator',
-            route: '/nomina/liquidacion',
-          },
-          {
-            label: 'Preliquidación / Auditoría',
-            codigo: 'recursos-humanos.preliquidacion-auditoria',
-            icon: 'pi pi-verified',
-            route: '/nomina/preliquidacion',
-          },
-          {
-            label: 'Nómina Electrónica',
-            codigo: 'recursos-humanos.nomina-electronica',
-            icon: 'pi pi-file-o',
-            route: '/nomina/electronica',
-          },
-          {
-            label: 'PILA',
-            codigo: 'recursos-humanos.pila',
-            icon: 'pi pi-shield',
-            route: '/nomina/pila',
-          },
-          {
-            label: 'Prestaciones',
-            codigo: 'recursos-humanos.prestaciones',
-            icon: 'pi pi-gift',
-            route: '/nomina/prestaciones',
-          },
-          {
-            label: 'Comisiones',
-            codigo: 'recursos-humanos.comisiones',
-            icon: 'pi pi-percentage',
-            route: '/comisiones/configuracion',
-          },
-          {
-            label: 'Liquidar Comisiones',
-            codigo: 'recursos-humanos.liquidar-comisiones',
-            icon: 'pi pi-wallet',
-            route: '/comisiones/liquidaciones',
-          },
-        ],
+        label: 'Empleados',
+        codigo: 'recursos-humanos.empleados',
+        icon: 'pi pi-users',
+        route: '/nomina/empleados',
       },
       {
-        label: 'Asistencia',
-        icon: 'pi pi-clock',
-        items: [
-          {
-            label: 'Digitación Asistencia',
-            codigo: 'recursos-humanos.digitacion-asistencia',
-            icon: 'pi pi-pencil',
-            route: '/asistencia-frente/digitacion',
-          },
-          {
-            label: 'Revisión Asistencia (Frente)',
-            codigo: 'recursos-humanos.revision-asistencia-frente',
-            icon: 'pi pi-check-square',
-            route: '/asistencia-frente/revision',
-          },
-          {
-            label: 'Preliquidación (Frente)',
-            codigo: 'recursos-humanos.preliquidacion-frente',
-            icon: 'pi pi-calculator',
-            route: '/asistencia-frente/preliquidacion',
-          },
-          {
-            label: 'Turnos Empleado',
-            codigo: 'recursos-humanos.turnos-empleado',
-            icon: 'pi pi-clock',
-            route: '/asistencia/turnos',
-          },
-          {
-            label: 'Marcaje',
-            codigo: 'recursos-humanos.marcaje',
-            icon: 'pi pi-stopwatch',
-            route: '/asistencia/marcaje',
-          },
-          {
-            label: 'Revisión asistencia',
-            codigo: 'recursos-humanos.revision-asistencia',
-            icon: 'pi pi-check-square',
-            route: '/asistencia/revision',
-          },
-          {
-            label: 'Novedades asistencia',
-            codigo: 'recursos-humanos.novedades-asistencia',
-            icon: 'pi pi-bolt',
-            route: '/asistencia/novedades',
-          },
-          {
-            label: 'Autorizaciones',
-            codigo: 'recursos-humanos.autorizaciones',
-            icon: 'pi pi-shield',
-            route: '/asistencia/autorizaciones',
-          },
-        ],
+        label: 'Saldos iniciales',
+        codigo: 'recursos-humanos.saldos-iniciales',
+        icon: 'pi pi-database',
+        route: '/nomina/saldos-iniciales',
       },
       {
-        label: 'Parámetros',
+        label: 'Proyectos y Frentes',
+        codigo: 'recursos-humanos.proyectos-y-frentes',
+        icon: 'pi pi-building',
+        route: '/proyectos',
+      },
+      {
+        label: 'Conceptos',
+        codigo: 'recursos-humanos.conceptos',
         icon: 'pi pi-sliders-h',
-        items: [
-          {
-            label: 'Configuración laboral',
-            codigo: 'recursos-humanos.configuracion-laboral',
-            icon: 'pi pi-sliders-h',
-            route: '/laboral/configuracion',
-          },
-          {
-            label: 'Calendario laboral',
-            codigo: 'recursos-humanos.calendario-laboral',
-            icon: 'pi pi-calendar',
-            route: '/laboral/calendario',
-          },
-          {
-            label: 'Config. Nómina',
-            codigo: 'recursos-humanos.config-nomina',
-            icon: 'pi pi-cog',
-            route: '/nomina/config',
-          },
-        ],
+        route: '/nomina/conceptos',
+      },
+      {
+        label: 'Períodos',
+        codigo: 'recursos-humanos.periodos',
+        icon: 'pi pi-calendar',
+        route: '/nomina/periodos',
+      },
+      {
+        label: 'Liquidación Nómina',
+        codigo: 'recursos-humanos.liquidacion-nomina',
+        icon: 'pi pi-calculator',
+        route: '/nomina/liquidacion',
+      },
+      {
+        label: 'Preliquidación / Auditoría',
+        codigo: 'recursos-humanos.preliquidacion-auditoria',
+        icon: 'pi pi-verified',
+        route: '/nomina/preliquidacion',
+      },
+      {
+        label: 'Nómina Electrónica',
+        codigo: 'recursos-humanos.nomina-electronica',
+        icon: 'pi pi-file-o',
+        route: '/nomina/electronica',
+      },
+      {
+        label: 'PILA',
+        codigo: 'recursos-humanos.pila',
+        icon: 'pi pi-shield',
+        route: '/nomina/pila',
+      },
+      {
+        label: 'Prestaciones',
+        codigo: 'recursos-humanos.prestaciones',
+        icon: 'pi pi-gift',
+        route: '/nomina/prestaciones',
+      },
+      {
+        label: 'Comisiones',
+        codigo: 'recursos-humanos.comisiones',
+        icon: 'pi pi-percentage',
+        route: '/comisiones/configuracion',
+      },
+      {
+        label: 'Liquidar Comisiones',
+        codigo: 'recursos-humanos.liquidar-comisiones',
+        icon: 'pi pi-wallet',
+        route: '/comisiones/liquidaciones',
+      },
+      // Asistencia
+      {
+        label: 'Digitación Asistencia',
+        codigo: 'recursos-humanos.digitacion-asistencia',
+        icon: 'pi pi-pencil',
+        route: '/asistencia-frente/digitacion',
+      },
+      {
+        label: 'Revisión Asistencia (Frente)',
+        codigo: 'recursos-humanos.revision-asistencia-frente',
+        icon: 'pi pi-check-square',
+        route: '/asistencia-frente/revision',
+      },
+      {
+        label: 'Preliquidación (Frente)',
+        codigo: 'recursos-humanos.preliquidacion-frente',
+        icon: 'pi pi-calculator',
+        route: '/asistencia-frente/preliquidacion',
+      },
+      {
+        label: 'Turnos Empleado',
+        codigo: 'recursos-humanos.turnos-empleado',
+        icon: 'pi pi-clock',
+        route: '/asistencia/turnos',
+      },
+      {
+        label: 'Marcaje',
+        codigo: 'recursos-humanos.marcaje',
+        icon: 'pi pi-stopwatch',
+        route: '/asistencia/marcaje',
+      },
+      {
+        label: 'Revisión asistencia',
+        codigo: 'recursos-humanos.revision-asistencia',
+        icon: 'pi pi-check-square',
+        route: '/asistencia/revision',
+      },
+      {
+        label: 'Novedades asistencia',
+        codigo: 'recursos-humanos.novedades-asistencia',
+        icon: 'pi pi-bolt',
+        route: '/asistencia/novedades',
+      },
+      {
+        label: 'Autorizaciones',
+        codigo: 'recursos-humanos.autorizaciones',
+        icon: 'pi pi-shield',
+        route: '/asistencia/autorizaciones',
+      },
+      // Parámetros
+      {
+        label: 'Configuración laboral',
+        codigo: 'recursos-humanos.configuracion-laboral',
+        icon: 'pi pi-sliders-h',
+        route: '/laboral/configuracion',
+      },
+      {
+        label: 'Calendario laboral',
+        codigo: 'recursos-humanos.calendario-laboral',
+        icon: 'pi pi-calendar',
+        route: '/laboral/calendario',
+      },
+      {
+        label: 'Config. Nómina',
+        codigo: 'recursos-humanos.config-nomina',
+        icon: 'pi pi-cog',
+        route: '/nomina/config',
       },
     ],
   },
