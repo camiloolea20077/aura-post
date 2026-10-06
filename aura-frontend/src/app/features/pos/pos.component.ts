@@ -196,9 +196,12 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
   private searchSubject$ = new Subject<string>();
   private destroy$ = new Subject<void>();
   private _barcodeTimer: ReturnType<typeof setTimeout> | null = null;
-  private _ultimaTecla = 0;
-  private _inicioLectura = 0;
-  private _escritoEnRafaga = true;
+  // Ráfaga de teclas en curso (lector): hora real de la primera y la última,
+  // cuántas van y en qué posición del buscador empezó.
+  private _rafagaInicio = 0;
+  private _rafagaUltima = 0;
+  private _rafagaTeclas = 0;
+  private _rafagaPos = 0;
   tempCantidad: number = 0;
   // ── Órdenes múltiples ─────────────────────────────────────
   readonly MAX_TABS = 5;
@@ -560,56 +563,66 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-onSearch(): void {
-  const query = this.searchProduct.trim();
-
-  // Siempre permitir búsqueda normal por:
-  // nombre, SKU, código de barras, presentación, etc.
-  this.searchSubject$.next(query);
-
-  if (this._barcodeTimer) {
-    clearTimeout(this._barcodeTimer);
-    this._barcodeTimer = null;
+  /**
+   * Arma las ráfagas con la hora real de cada tecla (la da el sistema
+   * operativo), no con la hora en que Angular alcanza a procesarla: con el
+   * POS ocupado repintando, el lector se sigue viendo como ráfaga.
+   * Una pausa de más de 100 ms empieza una ráfaga nueva, así que una lectura
+   * se reconoce aunque el buscador tenga texto de una lectura anterior.
+   */
+  onSearchKeydown(e: KeyboardEvent): void {
+    if (e.key.length !== 1) {
+      // Borrar o mover el cursor corta la ráfaga; Enter y Shift (mayúsculas
+      // que manda el lector) no.
+      if (e.key !== 'Enter' && e.key !== 'Shift') this._rafagaTeclas = 0;
+      return;
+    }
+    const t = e.timeStamp;
+    if (!this._rafagaTeclas || t - this._rafagaUltima > 100) {
+      const input = e.target as HTMLInputElement;
+      this._rafagaPos = input.selectionStart ?? input.value.length;
+      this._rafagaInicio = t;
+      this._rafagaTeclas = 0;
+    }
+    this._rafagaTeclas++;
+    this._rafagaUltima = t;
   }
 
-  if (!query) {
-    this._inicioLectura = 0;
-    this._escritoEnRafaga = false;
-    return;
+  /**
+   * Lo que trajo el lector en la ráfaga actual, o null si se está escribiendo
+   * a mano (promedio de 50 ms o más por tecla). Sobre texto que ya estaba se
+   * piden al menos 4 teclas seguidas, para no confundir a quien escribe rápido.
+   */
+  private lecturaDelLector(): string | null {
+    const n = this._rafagaTeclas;
+    if (n < 2) return null;
+    if ((this._rafagaUltima - this._rafagaInicio) / (n - 1) >= 50) return null;
+    if (this._rafagaPos > 0 && n < 4) return null;
+    const valor = this.searchInputRef?.nativeElement?.value ?? this.searchProduct;
+    return valor.substring(this._rafagaPos).trim() || null;
   }
 
-  const ahora = performance.now();
+  onSearch(): void {
+    const query = this.searchProduct.trim();
 
-  // Primera tecla: todavía NO sabemos si es scanner o persona
-  if (query.length === 1) {
-    this._inicioLectura = ahora;
-    this._ultimaTecla = ahora;
-    this._escritoEnRafaga = false;
-    return;
+    // Siempre permitir búsqueda normal por:
+    // nombre, SKU, código de barras, presentación, etc.
+    this.searchSubject$.next(query);
+
+    if (this._barcodeTimer) {
+      clearTimeout(this._barcodeTimer);
+      this._barcodeTimer = null;
+    }
+
+    // Solo intentar auto-agregar cuando parece lector
+    if (!query || !this.lecturaDelLector()) return;
+
+    this._barcodeTimer = setTimeout(() => {
+      this._barcodeTimer = null;
+      const codigo = this.lecturaDelLector();
+      if (codigo) this.procesarCodigo(codigo, true);
+    }, 150);
   }
-
-  // A partir de la segunda tecla podemos medir velocidad
-  const promedioPorTecla =
-    (ahora - this._inicioLectura) / (query.length - 1);
-
-  this._escritoEnRafaga = promedioPorTecla < 50;
-  this._ultimaTecla = ahora;
-
-  // Solo intentar auto-agregar cuando parece lector
-  if (!this._escritoEnRafaga) {
-    return;
-  }
-
-  this._barcodeTimer = setTimeout(() => {
-    this._barcodeTimer = null;
-
-    const codigo = this.searchProduct.trim();
-
-    if (!codigo) return;
-
-    this.procesarCodigo(codigo, true);
-  }, 150);
-}
 
   /** Enter en el buscador: confirma el código escrito aunque haya otros más largos (50 vs 506). */
   onSearchEnter(): void {
@@ -617,7 +630,9 @@ onSearch(): void {
       clearTimeout(this._barcodeTimer);
       this._barcodeTimer = null;
     }
-    this.procesarCodigo(this.searchProduct.trim(), true);
+    const codigo = this.lecturaDelLector() ?? this.searchProduct.trim();
+    this._rafagaTeclas = 0;
+    this.procesarCodigo(codigo, true);
   }
 
   /** Hay otro SKU o código que empieza igual: el usuario puede seguir escribiendo. */
@@ -632,11 +647,6 @@ onSearch(): void {
     );
   }
 
-  /**
-   * Agrega por código de balanza, código de barras, SKU o serial.
-   * `confirmado`: vino del lector (ráfaga) o de Enter; si no, un código exacto
-   * que es prefijo de otro (50 → 506) espera a que termine de escribir.
-   */
   /**
    * Agrega por código de balanza, código de barras, SKU o serial.
    * `confirmado`: vino del lector (ráfaga) o de Enter; si no, un código exacto

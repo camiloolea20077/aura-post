@@ -55,6 +55,7 @@
           class="product-search"
           placeholder="Buscar producto o SKU..."
           [(ngModel)]="searchProduct"
+          (keydown)="onSearchKeydown($event)"
           (input)="onSearch()"
           (keydown.enter)="onSearchEnter()"
         />
