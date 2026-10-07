@@ -1,0 +1,51 @@
+<section class="card tc" aria-labelledby="tc-titulo">
+  <header class="card-head">
+    <div class="card-head__title">
+      <div class="header-icon"><i class="pi pi-briefcase"></i></div>
+      <div>
+        <h2 class="title" id="tc-titulo">Comercial</h2>
+        <p class="subtitle">Mes en curso · {{ hoy | fechaEs: 'mes' }}</p>
+      </div>
+    </div>
+  </header>
+
+  <div class="tc-cuerpo">
+    <div class="tc-error" *ngIf="error()" role="alert">
+      <i class="pi pi-exclamation-circle"></i> No se pudo cargar el resumen.
+      <button type="button" class="tc-reintentar" (click)="cargar()">Reintentar</button>
+    </div>
+
+    <ng-container *ngIf="datos() as d">
+      <div class="tc-stats">
+        <a class="tc-stat" routerLink="/ventas/facturas">
+          <span class="tc-stat__label">Facturado</span>
+          <span class="tc-stat__valor">{{ cop(d.facturadoMes) }}</span>
+          <span class="tc-stat__meta">{{ d.facturasMes }} factura(s) emitida(s)</span>
+        </a>
+        <a class="tc-stat" routerLink="/compras">
+          <span class="tc-stat__label">Comprado</span>
+          <span class="tc-stat__valor">{{ cop(d.compradoMes) }}</span>
+          <span class="tc-stat__meta">{{ d.comprasMes }} compra(s)</span>
+        </a>
+        <a class="tc-stat" routerLink="/cotizaciones">
+          <span class="tc-stat__label">Cotizaciones abiertas</span>
+          <span class="tc-stat__valor">{{ d.cotizacionesAbiertas }}</span>
+          <span class="tc-stat__meta">{{ cop(d.cotizadoAbierto) }} por cerrar</span>
+        </a>
+        <a class="tc-stat" routerLink="/inventario/stock">
+          <span class="tc-stat__label">Stock bajo</span>
+          <span class="tc-stat__valor" [class.tc-alerta]="d.productosStockBajo > 0">{{ d.productosStockBajo }}</span>
+          <span class="tc-stat__meta">
+            producto(s) en o bajo el mínimo<ng-container *ngIf="d.pedidosAbiertos"> · {{ d.pedidosAbiertos }} pedido(s) por despachar</ng-container>
+          </span>
+        </a>
+      </div>
+
+      <app-resumen-financiero [datos]="d.financiero" />
+    </ng-container>
+
+    <div class="tc-stats" *ngIf="cargando() && !datos()">
+      <div class="tc-stat tc-stat--skeleton" *ngFor="let _ of [1, 2, 3, 4]"></div>
+    </div>
+  </div>
+</section>

@@ -15,7 +15,7 @@ export const GENERAL: ManualModulo[] = [
         pasos: [
           'Escriba su usuario y contraseña en la pantalla de inicio y presione Ingresar.',
           'Si olvidó la contraseña, use "¿Olvidaste tu contraseña?" y siga el enlace que llega al correo registrado.',
-          'Al entrar, el sistema abre el Dashboard (administradores) o el Punto de Venta (cajeros).',
+          'Al entrar, el sistema abre el Inicio con el tablero de lo que usa su empresa (punto de venta, comercial, contabilidad o nómina). Si su perfil no tiene el Inicio, abre la primera pantalla que sí puede ver.',
         ],
         notas: [
           'La sesión se cierra sola después de un tiempo sin uso. Si le aparece "Sesión expirada", vuelva a ingresar: lo que ya guardó no se pierde.',
@@ -190,14 +190,35 @@ export const GENERAL: ManualModulo[] = [
   {
     id: 'dashboard',
     grupo: 'Principal',
-    titulo: 'Dashboard',
+    titulo: 'Inicio (Dashboard)',
     icono: 'pi pi-home',
     rutas: ['/dashboard'],
     resumen:
-      'La primera pantalla del administrador: cómo va el negocio hoy y en el mes, y qué necesita atención (vencimientos, stock bajo).',
+      'La primera pantalla: el tablero de lo que usa su empresa, cómo va el negocio y qué falta configurar para operar.',
     secciones: [
       {
-        titulo: 'Qué muestra',
+        titulo: 'Un tablero por línea de uso',
+        texto: [
+          'Cada empresa declara para qué usa Aura: Punto de venta, Comercial (factura y compra sin mostrador), Contabilidad o Nómina. Puede ser más de una.',
+          'El Inicio muestra el tablero de esas líneas. Con varias, aparecen pestañas arriba; la última que abrió queda recordada.',
+          'Contabilidad: disponible en caja y bancos, cuentas por cobrar y por pagar (con lo vencido) y el centro contable con el resultado del mes.',
+          'Comercial: lo facturado y comprado en el mes, cotizaciones abiertas, stock bajo y la misma cartera.',
+          'Nómina: el centro de Recursos Humanos con el costo y el estado de la nómina.',
+        ],
+        notas: [
+          'Las líneas las define el administrador de la plataforma al crear o editar la empresa.',
+          'Una pestaña solo aparece si su perfil puede ver ese módulo.',
+        ],
+      },
+      {
+        titulo: 'Puesta en marcha',
+        texto: [
+          'Mientras falte algo por configurar, arriba aparece la tarjeta "Puesta en marcha" con los pasos pendientes de cada línea: plan de cuentas, parametrización contable, cuentas bancarias, saldos iniciales, configuración de nómina, afiliaciones, productos, etc.',
+          'Cada paso pendiente tiene un enlace "Resolver" que lleva a la pantalla donde se arregla. Cuando todo está listo, la tarjeta desaparece sola.',
+        ],
+      },
+      {
+        titulo: 'Tablero de punto de venta',
         texto: [
           'Ventas de hoy, ventas del mes, compras del mes e inventario a costo de la sucursal actual.',
           'Ventas de la semana (lunes a domingo), medios de pago del mes y el más usado.',
@@ -212,6 +233,11 @@ export const GENERAL: ManualModulo[] = [
       },
     ],
     errores: [
+      {
+        mensaje: 'Puesta en marcha: "Plan de cuentas cargado" sigue pendiente',
+        causa: 'La empresa no tiene plan de cuentas.',
+        solucion: 'Cárguelo en Contabilidad → Plan de cuentas o impórtelo desde Contabilidad → Importar datos. Si la empresa es nueva, el administrador de la plataforma puede usar "Cargar ahora" en la ficha de la empresa.',
+      },
       {
         mensaje: 'El dashboard sale en ceros',
         causa: 'No hay ventas en la sucursal actual o está trabajando en otra sucursal.',

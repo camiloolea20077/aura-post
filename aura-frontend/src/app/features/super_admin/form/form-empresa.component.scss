@@ -370,3 +370,34 @@ $green: #10b981;
     }
   }
 }
+
+// ── Líneas de uso ─────────────────────────────────────────────
+.lineas-grid {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+.arranque {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  align-items: flex-start;
+}
+.arranque-fila {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  min-width: 0;
+  > i {
+    margin-top: 2px;
+    color: #94a3b8;
+    &.ok { color: #059669; }
+    &.error { color: #dc2626; }
+  }
+}
+.arranque-texto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 0.85rem;
+  span { color: #64748b; overflow-wrap: anywhere; }
+}
