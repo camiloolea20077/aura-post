@@ -617,11 +617,16 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
     // Solo intentar auto-agregar cuando parece lector
     if (!query || !this.lecturaDelLector()) return;
 
+    // Lector sin Enter al final. Con el POS ocupado, este timer puede correr
+    // antes de que lleguen las teclas que quedaron en cola, o sea con el código
+    // a medias: por eso aquí no es "confirmado" (no busca seriales ni
+    // selecciona el texto, que haría que el resto del código lo reemplace).
+    // Si el lector manda Enter, onSearchEnter procesa el código completo.
     this._barcodeTimer = setTimeout(() => {
       this._barcodeTimer = null;
       const codigo = this.lecturaDelLector();
-      if (codigo) this.procesarCodigo(codigo, true);
-    }, 150);
+      if (codigo) this.procesarCodigo(codigo, false);
+    }, 300);
   }
 
   /** Enter en el buscador: confirma el código escrito aunque haya otros más largos (50 vs 506). */
@@ -667,7 +672,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
       );
       if (prod) {
         this.addToCartConPeso(prod, balanza.pesoKg);
-        this.searchProduct = '';
+        this.limpiarBuscador();
         this.filtrar();
         this.focusSearch();
         this.cdr.markForCheck();
@@ -706,20 +711,34 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (encontrado) {
       this.addToCart(encontrado.p, encontrado.opcion);
-      this.searchProduct = '';
+      this.limpiarBuscador();
       this.filtrar();
       this.focusSearch();
       this.cdr.markForCheck();
-    } else {
+    } else if (confirmado) {
       // No es un código de producto: puede ser el serial de una unidad.
       void this.agregarPorSerial(q);
       // Si no era nada, deja el texto seleccionado: la próxima lectura lo reemplaza.
-      if (confirmado) this.searchInputRef?.nativeElement?.select();
+      this.searchInputRef?.nativeElement?.select();
     }
   }
 
-  clearSearch(): void {
+  /**
+   * Vacía el buscador también en pantalla. Con eventCoalescing la detección de
+   * cambios corre en el siguiente frame: si el lector manda el código y el
+   * Enter en el mismo frame, [ngModel] nunca vio el código y al pasar a ''
+   * "no cambió", así que la caja seguía mostrando el código ya agregado.
+   * También corta la ráfaga, para que un Enter tardío no lo agregue otra vez.
+   */
+  private limpiarBuscador(): void {
     this.searchProduct = '';
+    this._rafagaTeclas = 0;
+    const input = this.searchInputRef?.nativeElement;
+    if (input) input.value = '';
+  }
+
+  clearSearch(): void {
+    this.limpiarBuscador();
     this.filtrar();
     this.focusSearch();
     this.cdr.markForCheck();
@@ -1152,7 +1171,7 @@ export class PosComponent implements OnInit, AfterViewInit, OnDestroy {
         nueva.serialIds = [...(nueva.serialIds ?? []), encontrado.serialId];
         nueva.seriales = [...(nueva.seriales ?? []), encontrado.serial];
       }
-      this.searchProduct = '';
+      this.limpiarBuscador();
       this.filtrar();
       this.focusSearch();
       this.saveState();
