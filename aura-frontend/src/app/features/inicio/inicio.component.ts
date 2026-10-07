@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { lastValueFrom } from 'rxjs';
 
@@ -42,7 +42,8 @@ const CLAVE_PESTANA = 'aura.inicio.pestana';
 @Component({
   selector: 'app-inicio',
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  // Sin OnPush: <app-dashboard> (POS) es Default y llena campos sueltos tras
+  // sus peticiones; bajo un padre OnPush nunca se repintaba y quedaba vacío.
   imports: [
     CommonModule,
     DashboardComponent,
