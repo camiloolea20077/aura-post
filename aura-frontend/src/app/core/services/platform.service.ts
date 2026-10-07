@@ -8,6 +8,9 @@ import {
   UpdateEmpresaDto,
   ErrorLogPageableDto,
   ErrorLogGrupoPageableDto,
+  LineaUsoModel,
+  ConfiguracionEmpresaModel,
+  ActualizarConfiguracionDto,
 } from '../models/platform.model';
 import { ResponseModel } from '../../shared/utils/responde.models';
 import { environment } from '../../../environments/environment';
@@ -44,6 +47,26 @@ export class PlatformService {
 
   activar(id: number): Observable<any> {
     return this.http.patch<any>(`${this.base}/empresas/${id}/activar`, {});
+  }
+
+  // ─── Líneas de uso ────────────────────────────────────────────
+  lineasUso(): Observable<ResponseModel<LineaUsoModel[]>> {
+    return this.http.get<ResponseModel<LineaUsoModel[]>>(`${this.base}/lineas-uso`);
+  }
+
+  configuracion(id: number): Observable<ResponseModel<ConfiguracionEmpresaModel>> {
+    return this.http.get<ResponseModel<ConfiguracionEmpresaModel>>(`${this.base}/empresas/${id}/configuracion`);
+  }
+
+  actualizarConfiguracion(
+    id: number,
+    dto: ActualizarConfiguracionDto,
+  ): Observable<ResponseModel<ConfiguracionEmpresaModel>> {
+    return this.http.put<ResponseModel<ConfiguracionEmpresaModel>>(`${this.base}/empresas/${id}/configuracion`, dto);
+  }
+
+  reintentarArranque(id: number): Observable<ResponseModel<ConfiguracionEmpresaModel>> {
+    return this.http.post<ResponseModel<ConfiguracionEmpresaModel>>(`${this.base}/empresas/${id}/arranque`, {});
   }
 
   // ─── Error Logs ───────────────────────────────────────────────

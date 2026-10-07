@@ -69,6 +69,8 @@ export interface CreateEmpresaDto {
   modoContabilizacion?: string;
   /** Submódulos que tendrá la empresa (sus grupos y módulos se activan solos). */
   submodulos?: number[];
+  /** Líneas de uso (POS, COMERCIAL, CONTABILIDAD, NOMINA); vacío = se trata como POS. */
+  lineas?: string[];
   // Facturación electrónica (Factus)
   facturaElectronica?: boolean;
   factusClientId?: string;
@@ -165,4 +167,45 @@ export interface ErrorLogGrupoPageableDto {
   categoria?: ErrorCategoria | null;
   desde?: string | null;
   hasta?: string | null;
+}
+
+// ─── Líneas de uso (docs/PLAN_PERFIL_EMPRESA.md del back) ─────────────────────
+
+export type CodigoLineaUso = 'POS' | 'COMERCIAL' | 'CONTABILIDAD' | 'NOMINA';
+
+export interface LineaUsoModel {
+  codigo: CodigoLineaUso;
+  nombre: string;
+  descripcion: string;
+  /** Submódulos que trae marcados en el árbol (incluye la base común). */
+  submodulos: number[];
+  /** Submódulos sin los cuales la línea no tiene sentido. */
+  minimos: number[];
+}
+
+export interface EstadoPasoArranque {
+  paso: string;
+  nombre: string;
+  resultado: 'OK' | 'ERROR' | 'PENDIENTE';
+  ejecutado: string | null;
+  detalle: string | null;
+}
+
+export interface ConfiguracionEmpresaModel {
+  empresaId: number;
+  version: number;
+  lineas: CodigoLineaUso[];
+  /** false = nunca declaró líneas y se trata como POS. */
+  declarada: boolean;
+  inicio: CodigoLineaUso | null;
+  inicioResuelto: CodigoLineaUso;
+  arranque: EstadoPasoArranque[];
+  arranquePendiente: boolean;
+}
+
+export interface ActualizarConfiguracionDto {
+  lineas: string[];
+  inicio: string | null;
+  /** Suma los submódulos de la plantilla a los que ya tiene (no apaga nada). */
+  completarModulos: boolean;
 }

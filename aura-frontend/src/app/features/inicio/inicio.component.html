@@ -1,0 +1,30 @@
+<div class="inicio">
+  <app-puesta-en-marcha />
+
+  <nav class="inicio-tabs" *ngIf="pestanas().length > 1" role="tablist" aria-label="Tableros">
+    <button
+      *ngFor="let p of pestanas()"
+      type="button"
+      role="tab"
+      class="inicio-tab"
+      [class.inicio-tab--activa]="activa() === p.linea"
+      [attr.aria-selected]="activa() === p.linea"
+      (click)="elegir(p.linea)"
+    >
+      <i class="pi" [ngClass]="p.icon" aria-hidden="true"></i>
+      {{ p.label }}
+    </button>
+  </nav>
+
+  <div class="inicio-panel" [ngSwitch]="activa()">
+    <app-dashboard *ngSwitchCase="'POS'" />
+    <app-tablero-comercial *ngSwitchCase="'COMERCIAL'" />
+    <ng-container *ngSwitchCase="'CONTABILIDAD'">
+      <app-resumen-financiero />
+      <app-centro-contabilidad />
+    </ng-container>
+    <app-centro-rrhh *ngSwitchCase="'NOMINA'" />
+  </div>
+
+  <app-resumen-financiero *ngIf="soloResumen()" />
+</div>
