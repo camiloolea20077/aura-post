@@ -169,6 +169,80 @@
         </div>
       </div>
 
+      <!-- ── Líneas de uso: para qué usará Aura ──────────────── -->
+      <div class="fe-section" *ngIf="lineasCatalogo.length">
+        <div class="section-title"><i class="pi pi-compass"></i> ¿Para qué usará Aura?</div>
+        <p class="section-hint" *ngIf="!isEdit">
+          Elija una o varias. Marca los módulos que corresponden, carga el plan de cuentas y define el tablero que ve
+          al entrar. Sin elegir ninguna, se trata como punto de venta.
+        </p>
+        <p class="section-hint" *ngIf="isEdit">
+          Al agregar una línea se activan los módulos que necesita (no se apaga ninguno).
+          <span *ngIf="configuracion && !configuracion.declarada">Esta empresa no ha declarado líneas: hoy se trata como punto de venta.</span>
+        </p>
+        <div class="modo-grid lineas-grid">
+          <button
+            type="button"
+            class="modo-card"
+            *ngFor="let l of lineasCatalogo"
+            [class.active]="lineaElegida(l.codigo)"
+            (click)="toggleLinea(l.codigo)"
+          >
+            <div class="modo-top">
+              <i [class]="'pi ' + iconoLinea[l.codigo]"></i>
+              <span class="modo-check" *ngIf="lineaElegida(l.codigo)">
+                <i class="pi pi-check-circle"></i>
+              </span>
+            </div>
+            <div class="modo-titulo">{{ l.nombre }}</div>
+            <div class="modo-desc">{{ l.descripcion }}</div>
+          </button>
+        </div>
+
+        <div class="form-row two-col" *ngIf="isEdit && lineasElegidas.length > 1">
+          <div class="field">
+            <label class="field-label">Tablero al entrar</label>
+            <p-dropdown
+              [options]="inicioOpts"
+              [ngModel]="inicio"
+              [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="onInicio($event)"
+              optionLabel="label"
+              optionValue="value"
+              styleClass="w-full"
+            />
+          </div>
+        </div>
+
+        <div class="arranque" *ngIf="isEdit && configuracion">
+          <div class="arranque-fila" *ngFor="let p of configuracion.arranque">
+            <i
+              class="pi"
+              [class.pi-check-circle]="p.resultado === 'OK'"
+              [class.pi-times-circle]="p.resultado === 'ERROR'"
+              [class.pi-clock]="p.resultado === 'PENDIENTE'"
+              [class.ok]="p.resultado === 'OK'"
+              [class.error]="p.resultado === 'ERROR'"
+            ></i>
+            <div class="arranque-texto">
+              <strong>{{ p.nombre }}</strong>
+              <span *ngIf="p.resultado === 'PENDIENTE'">Todavía no se ha cargado.</span>
+              <span *ngIf="p.detalle">{{ p.detalle }}</span>
+            </div>
+          </div>
+          <button
+            *ngIf="configuracion.arranquePendiente"
+            pButton
+            type="button"
+            icon="pi pi-refresh"
+            label="Cargar ahora"
+            class="p-button-outlined"
+            [loading]="reintentando"
+            (click)="reintentarArranque()"
+          ></button>
+        </div>
+      </div>
+
       <!-- ── Administrador + sucursal (solo creación) ────────── -->
       <div class="fe-section" *ngIf="!isEdit">
         <div class="section-title"><i class="pi pi-user"></i> Administrador de la empresa</div>

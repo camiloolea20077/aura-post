@@ -40,12 +40,13 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 
-      // Dashboard
+      // Inicio: el tablero de las líneas de uso de la empresa (POS, comercial,
+      // contabilidad, nómina). El dashboard POS de siempre vive dentro.
       {
         path: 'dashboard',
         loadComponent: () =>
-          import('./features/dashboard/dashboard.component').then(
-            (m) => m.DashboardComponent,
+          import('./features/inicio/inicio.component').then(
+            (m) => m.InicioComponent,
           ),
       },
 

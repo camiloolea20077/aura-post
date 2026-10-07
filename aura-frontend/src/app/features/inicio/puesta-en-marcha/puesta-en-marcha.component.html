@@ -1,0 +1,35 @@
+<section class="card pm" *ngIf="datos() as d" [hidden]="d.completa" aria-labelledby="pm-titulo">
+  <header class="card-head">
+    <div class="card-head__title">
+      <div class="header-icon"><i class="pi pi-flag"></i></div>
+      <div>
+        <h2 class="title" id="pm-titulo">Puesta en marcha</h2>
+        <p class="subtitle">
+          {{ d.pendientes }} {{ d.pendientes === 1 ? 'paso pendiente' : 'pasos pendientes' }} para operar con todo
+        </p>
+      </div>
+    </div>
+    <button type="button" class="pm-toggle" (click)="alternar()" [attr.aria-expanded]="abierta()">
+      {{ abierta() ? 'Ocultar' : 'Ver pasos' }}
+      <i class="pi" [class.pi-chevron-up]="abierta()" [class.pi-chevron-down]="!abierta()"></i>
+    </button>
+  </header>
+
+  <div class="pm-grupos" *ngIf="abierta()">
+    <div class="pm-grupo" *ngFor="let g of d.grupos">
+      <h3 class="pm-grupo__titulo">{{ g.nombre }}</h3>
+      <ul class="pm-lista">
+        <li class="pm-item" *ngFor="let c of g.chequeos" [class.pm-item--ok]="c.ok">
+          <i class="pi" [class.pi-check-circle]="c.ok" [class.pi-circle]="!c.ok" aria-hidden="true"></i>
+          <div class="pm-item__texto">
+            <span class="pm-item__titulo">{{ c.titulo }}</span>
+            <span class="pm-item__detalle" *ngIf="c.detalle">{{ c.detalle }}</span>
+          </div>
+          <a *ngIf="!c.ok && c.ruta" class="pm-item__ir" [routerLink]="c.ruta">
+            Resolver <i class="pi pi-arrow-right"></i>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</section>

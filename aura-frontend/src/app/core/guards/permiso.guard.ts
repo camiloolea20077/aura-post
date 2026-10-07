@@ -7,6 +7,8 @@ import { AlertService } from '../../shared/pipes/alert.service';
 import { PermisosUsuario } from '../models/permisos.model';
 import { StateStore } from '../store/state';
 
+const INICIO = '/dashboard';
+
 /** Ítems del menú con su ruta, para saber qué submódulo protege cada URL. */
 const ITEMS: SidebarMenuItem[] = SIDEBAR_MENU.flatMap((g) => [
   ...g.items,
@@ -58,10 +60,14 @@ export const permisoGuard: CanActivateChildFn = async (_route, state) => {
   if (!p) return true; // sin permisos cargados no se bloquea: el back decide
   if (puedeVer(item, p, p.rol)) return true;
 
-  alert.showError(
-    'Sin permiso',
-    `Su perfil no tiene acceso a "${item.label}".`,
-  );
+  // El inicio es a donde lleva el login: sin él, se entra a la primera pantalla
+  // permitida sin regañar al usuario en cada sesión.
+  if (item.route !== INICIO) {
+    alert.showError(
+      'Sin permiso',
+      `Su perfil no tiene acceso a "${item.label}".`,
+    );
+  }
   const destino = ITEMS.find(
     (i) => i.route !== item.route && puedeVer(i, p, p.rol),
   );

@@ -1,0 +1,73 @@
+:host {
+  display: block;
+  container-type: inline-size;
+}
+
+.rf {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.rf-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+  padding: 1rem 1.15rem;
+  background: var(--aura-surface);
+  border: 1px solid var(--aura-border);
+  border-radius: 12px;
+  color: inherit;
+  text-decoration: none;
+
+  &--link:hover {
+    border-color: var(--aura-blue);
+  }
+
+  &--danger .rf-stat__valor {
+    color: var(--aura-danger);
+  }
+
+  &--skeleton {
+    min-height: 96px;
+    background: var(--aura-bg);
+  }
+}
+
+.rf-stat__label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--aura-text-muted);
+
+  .pi {
+    font-size: 0.85rem;
+    color: var(--aura-blue);
+  }
+}
+
+.rf-stat__valor {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--aura-text);
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.rf-stat__meta {
+  font-size: 0.78rem;
+  color: var(--aura-text-muted);
+}
+
+.rf-alerta {
+  color: var(--aura-danger);
+  font-weight: 500;
+}
+
+@container (max-width: 760px) {
+  .rf {
+    grid-template-columns: 1fr;
+  }
+}

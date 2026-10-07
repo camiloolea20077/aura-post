@@ -13,6 +13,10 @@ export interface AuthResponse {
   sucursales: SucursalAuth[];
   /** Sede elegida en la barra superior; sin valor = la default del login. */
   sucursalActualId?: number | null;
+  /** Líneas de uso de la empresa (POS, COMERCIAL, CONTABILIDAD, NOMINA). */
+  lineas?: string[] | null;
+  /** Línea cuyo tablero ve al entrar. */
+  inicio?: string | null;
 }
 
 export interface UserAuth {

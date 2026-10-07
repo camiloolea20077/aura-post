@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
+  FormsModule,
   ReactiveFormsModule,
   FormBuilder,
   FormGroup,
@@ -22,8 +23,11 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
 import { lastValueFrom } from 'rxjs';
 import {
+  CodigoLineaUso,
+  ConfiguracionEmpresaModel,
   CreateEmpresaResponseDto,
   EmpresaPlataformaModel,
+  LineaUsoModel,
 } from '../../../core/models/platform.model';
 import {
   TIPO_DOCUMENTO_OPTIONS,
@@ -44,6 +48,7 @@ import { ArbolModulosComponent } from '../shared/arbol-modulos/arbol-modulos.com
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     ButtonModule,
     InputTextModule,
@@ -89,6 +94,31 @@ export class FormEmpresaComponent implements OnInit {
       desc: 'Los asientos nacen en BORRADOR y el contador los aprueba en la bandeja de revisión antes de impactar los reportes.',
     },
   ];
+
+  // ── Líneas de uso (para qué usará Aura) ─────────────────
+  lineasCatalogo: LineaUsoModel[] = [];
+  lineasElegidas: CodigoLineaUso[] = [];
+  /** Tablero de inicio preferido; null = el de la primera línea. */
+  inicio: CodigoLineaUso | null = null;
+  configuracion: ConfiguracionEmpresaModel | null = null;
+  reintentando = false;
+  private lineasOriginales = '';
+
+  readonly iconoLinea: Record<CodigoLineaUso, string> = {
+    POS: 'pi-shopping-cart',
+    COMERCIAL: 'pi-briefcase',
+    CONTABILIDAD: 'pi-calculator',
+    NOMINA: 'pi-users',
+  };
+
+  get inicioOpts(): { label: string; value: CodigoLineaUso | null }[] {
+    return [
+      { label: 'Automático (primera línea)', value: null },
+      ...this.lineasCatalogo
+        .filter((l) => this.lineasElegidas.includes(l.codigo))
+        .map((l) => ({ label: l.nombre, value: l.codigo })),
+    ];
+  }
 
   get isEdit(): boolean {
     return this.empresaId != null;
@@ -160,10 +190,12 @@ export class FormEmpresaComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarMunicipios('');
+    this.cargarLineas();
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam) {
       this.empresaId = +idParam;
       this.cargarEmpresa(this.empresaId);
+      this.cargarConfiguracion(this.empresaId);
     } else {
       this.aplicarValidadoresCreacion();
       this.cargarCatalogoModulos();
@@ -189,6 +221,89 @@ export class FormEmpresaComponent implements OnInit {
       this.catalogoModulos = [];
     }
     this.cdr.markForCheck();
+  }
+
+  private async cargarLineas(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.service.lineasUso());
+      this.lineasCatalogo = res?.data ?? [];
+    } catch {
+      this.lineasCatalogo = [];
+    }
+    this.cdr.markForCheck();
+  }
+
+  private async cargarConfiguracion(id: number): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.service.configuracion(id));
+      this.aplicarConfiguracion(res?.data ?? null);
+    } catch {
+      this.configuracion = null;
+    }
+    this.cdr.markForCheck();
+  }
+
+  private aplicarConfiguracion(cfg: ConfiguracionEmpresaModel | null): void {
+    this.configuracion = cfg;
+    // Si nunca declaró, no se pre-marca nada: así guardar sin tocar no la declara POS.
+    this.lineasElegidas = cfg?.declarada ? [...cfg.lineas] : [];
+    this.inicio = cfg?.inicio ?? null;
+    this.lineasOriginales = this.firmaLineas();
+  }
+
+  private firmaLineas(): string {
+    return [...this.lineasElegidas].sort().join(',') + '|' + (this.inicio ?? '');
+  }
+
+  lineaElegida(codigo: CodigoLineaUso): boolean {
+    return this.lineasElegidas.includes(codigo);
+  }
+
+  toggleLinea(codigo: CodigoLineaUso): void {
+    this.lineasElegidas = this.lineaElegida(codigo)
+      ? this.lineasElegidas.filter((c) => c !== codigo)
+      : [...this.lineasElegidas, codigo];
+    if (this.inicio && !this.lineasElegidas.includes(this.inicio)) this.inicio = null;
+    if (!this.isEdit) this.aplicarPlantilla();
+    this.cdr.markForCheck();
+  }
+
+  onInicio(value: CodigoLineaUso | null): void {
+    this.inicio = value;
+  }
+
+  /** Marca en el árbol lo que traen las líneas elegidas; sin líneas, todo (como antes). */
+  private aplicarPlantilla(): void {
+    const ids = new Set<number>();
+    for (const l of this.lineasCatalogo) {
+      if (this.lineasElegidas.includes(l.codigo)) l.submodulos.forEach((id) => ids.add(id));
+    }
+    const todo = this.lineasElegidas.length === 0;
+    this.catalogoModulos = this.catalogoModulos.map((m) => {
+      const submodulos = m.submodulos.map((s) => ({ ...s, activo: todo || ids.has(s.submoduloId) }));
+      return { ...m, activo: submodulos.some((s) => s.activo), submodulos };
+    });
+    this.submodulosElegidos = this.catalogoModulos.flatMap((m) =>
+      m.submodulos.filter((s) => s.activo).map((s) => s.submoduloId),
+    );
+  }
+
+  async reintentarArranque(): Promise<void> {
+    if (!this.empresaId) return;
+    this.reintentando = true;
+    this.cdr.markForCheck();
+    try {
+      const res = await lastValueFrom(this.service.reintentarArranque(this.empresaId));
+      this.aplicarConfiguracion(res?.data ?? null);
+      if (this.configuracion?.arranquePendiente)
+        this.alert.showError('Arranque', 'Sigue con errores. Revise el detalle.');
+      else this.alert.showSuccess('Arranque', 'Plan de cuentas y configuración contable listos');
+    } catch (err: any) {
+      this.alert.showError('Error', err?.error?.message ?? 'No se pudo ejecutar el arranque');
+    } finally {
+      this.reintentando = false;
+      this.cdr.markForCheck();
+    }
   }
 
   onModulos(ids: number[]): void {
@@ -271,6 +386,10 @@ export class FormEmpresaComponent implements OnInit {
       this.alert.showError('Revisa el formulario', 'Hay campos obligatorios sin completar.');
       return;
     }
+    if (this.isEdit && this.configuracion?.declarada && this.lineasElegidas.length === 0) {
+      this.alert.showError('Líneas de uso', 'Elija al menos una: para qué usa Aura esta empresa.');
+      return;
+    }
     this.loading = true;
     this.cdr.markForCheck();
     try {
@@ -298,6 +417,16 @@ export class FormEmpresaComponent implements OnInit {
             factusPrefijo: v.factusPrefijo,
           }),
         );
+        // Líneas: solo si cambiaron. Se completan los módulos que pidan (no se apaga nada).
+        if (this.lineasElegidas.length && this.firmaLineas() !== this.lineasOriginales) {
+          await lastValueFrom(
+            this.service.actualizarConfiguracion(this.empresaId!, {
+              lineas: this.lineasElegidas,
+              inicio: this.inicio,
+              completarModulos: true,
+            }),
+          );
+        }
         this.alert.showSuccess('Actualizada', 'Empresa actualizada correctamente');
         this.volver();
       } else {
@@ -326,6 +455,7 @@ export class FormEmpresaComponent implements OnInit {
             codigoPaisAdmin: v.codigoPaisAdmin,
             nombreSucursal: v.nombreSucursal,
             submodulos: this.submodulosElegidos,
+            lineas: this.lineasElegidas,
             facturaElectronica: v.facturaElectronica,
             factusClientId: v.factusClientId,
             factusClientSecret: v.factusClientSecret,

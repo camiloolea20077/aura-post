@@ -1,0 +1,27 @@
+<div class="rf" *ngIf="resumen() as r; else cargando">
+  <div class="rf-stat" [class.rf-stat--danger]="r.disponible < 0">
+    <span class="rf-stat__label"><i class="pi pi-wallet"></i> Disponible en caja y bancos</span>
+    <span class="rf-stat__valor">{{ cop(r.disponible) }}</span>
+    <span class="rf-stat__meta">Saldo de las cuentas 11 en el mayor</span>
+  </div>
+  <a class="rf-stat rf-stat--link" routerLink="/cuentas/cuentas-por-cobrar">
+    <span class="rf-stat__label"><i class="pi pi-arrow-down-left"></i> Por cobrar</span>
+    <span class="rf-stat__valor">{{ cop(r.cxcSaldo) }}</span>
+    <span class="rf-stat__meta" [class.rf-alerta]="r.cxcVencido > 0">
+      {{ r.cxcVencido > 0 ? cop(r.cxcVencido) + ' vencido en ' + r.cxcVencidas + ' cuenta(s)' : 'Nada vencido' }}
+    </span>
+  </a>
+  <a class="rf-stat rf-stat--link" routerLink="/cuentas/cuentas-por-pagar">
+    <span class="rf-stat__label"><i class="pi pi-arrow-up-right"></i> Por pagar</span>
+    <span class="rf-stat__valor">{{ cop(r.cxpSaldo) }}</span>
+    <span class="rf-stat__meta" [class.rf-alerta]="r.cxpVencido > 0">
+      {{ r.cxpVencido > 0 ? cop(r.cxpVencido) + ' vencido en ' + r.cxpVencidas + ' cuenta(s)' : 'Nada vencido' }}
+    </span>
+  </a>
+</div>
+
+<ng-template #cargando>
+  <div class="rf" *ngIf="!error()">
+    <div class="rf-stat rf-stat--skeleton" *ngFor="let _ of [1, 2, 3]"></div>
+  </div>
+</ng-template>

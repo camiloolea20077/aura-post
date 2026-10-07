@@ -1,0 +1,57 @@
+:host {
+  display: block;
+}
+
+.inicio {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.inicio-tabs {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--aura-border);
+  scrollbar-width: thin;
+}
+
+.inicio-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+  padding: 0.65rem 1rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: transparent;
+  color: var(--aura-text-muted);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--aura-text);
+  }
+
+  &--activa {
+    color: var(--aura-blue);
+    border-bottom-color: var(--aura-blue);
+  }
+}
+
+.inicio-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+// Los centros traen su propio .page (para cuando se abren solos); dentro del
+// inicio el espacio ya lo da el layout.
+.inicio-panel ::ng-deep > app-centro-contabilidad > .page,
+.inicio-panel ::ng-deep > app-centro-rrhh > .page {
+  padding: 0;
+}
