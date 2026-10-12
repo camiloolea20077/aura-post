@@ -308,3 +308,43 @@ export interface DocumentoSinAsientoModel {
   numero: string;
   vigentes: number;
 }
+
+/** Comprobante manual (CE/RC) cargado para corregirlo. */
+export interface ComprobanteEdicionModel {
+  id: number;
+  numeroComprobante: string;
+  tipoComprobante: string;
+  fecha: string;
+  concepto: string;
+  beneficiarioTerceroId: number | null;
+  beneficiarioNombre: string | null;
+  beneficiarioDireccion: string | null;
+  beneficiarioTelefono: string | null;
+  ciudad: string | null;
+  fechaVencimiento: string | null;
+  origenFondos: 'CAJA' | 'BANCO' | 'CUENTA' | 'CAJA_OTRO_DIA';
+  metodoPago: string | null;
+  cuentaBancariaId: number | null;
+  cuentaContableId: number | null;
+  sucursalId: number | null;
+  editable: boolean;
+  motivoNoEditable: string | null;
+  lineas: {
+    cuentaId: number;
+    descripcion: string | null;
+    debito: number;
+    credito: number;
+    terceroId: number | null;
+    terceroNombre: string | null;
+    centroCostoId: number | null;
+  }[];
+  aplicaciones: {
+    tipo: 'CXC' | 'CXP';
+    cuentaId: number;
+    monto: number;
+    numeroCuenta: string;
+    nombre: string;
+    terceroId: number | null;
+    saldoDisponible: number;
+  }[];
+}

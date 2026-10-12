@@ -1,0 +1,155 @@
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="$event ? null : cerrar()"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '720px', maxWidth: '96vw' }"
+  [contentStyle]="{ padding: 0 }"
+  styleClass="aura-dialog"
+  header="Política de cartera"
+>
+  <div class="mc mc--dialog" *ngIf="!cargando; else cargandoTpl">
+    <!-- ══ Deterioro ═════════════════════════════════════════════════ -->
+    <section class="mc-seccion">
+      <div class="mc-seccion__head">
+        <h3>Deterioro de cartera</h3>
+        <button
+          pButton
+          type="button"
+          icon="pi pi-plus"
+          label="Agregar tramo"
+          class="p-button-text p-button-sm"
+          (click)="agregarTramo()"
+        ></button>
+      </div>
+      <div class="mc-seccion__body mc-tramos">
+        <span class="mc-ayuda">
+          Porcentaje del saldo que se provisiona según los días de mora. Cada factura toma el tramo más alto que alcanza.
+        </span>
+        <div class="mc-tramo" *ngFor="let t of tramos; let i = index">
+          <p-inputNumber [(ngModel)]="t.dias" [min]="1" prefix="Desde " suffix=" días" styleClass="w-full" />
+          <p-inputNumber
+            [(ngModel)]="t.porcentaje"
+            [min]="0"
+            [max]="100"
+            [maxFractionDigits]="2"
+            suffix=" %"
+            styleClass="w-full"
+          />
+          <button
+            pButton
+            type="button"
+            icon="pi pi-trash"
+            class="p-button-text p-button-danger p-button-sm"
+            pTooltip="Quitar tramo"
+            (click)="quitarTramo(i)"
+          ></button>
+        </div>
+        <div class="mc-vacio" *ngIf="!tramos.length">Sin tramos: no se sugiere deterioro.</div>
+      </div>
+    </section>
+
+    <!-- ══ Castigo ═══════════════════════════════════════════════════ -->
+    <section class="mc-seccion">
+      <div class="mc-seccion__head"><h3>Castigo de cartera</h3></div>
+      <div class="mc-seccion__body mc-grid">
+        <div class="mc-field">
+          <label>Sugerir castigo desde</label>
+          <p-inputNumber [(ngModel)]="diasCastigo" [min]="30" suffix=" días de mora" styleClass="w-full" />
+        </div>
+        <div class="mc-field mc-ayuda">
+          Las facturas con más mora aparecen como candidatas. Castigar siempre lo decide una persona, con su motivo.
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ Interés de mora ═══════════════════════════════════════════ -->
+    <section class="mc-seccion">
+      <div class="mc-seccion__head"><h3>Intereses de mora <span class="mc-ayuda">(opcional)</span></h3></div>
+      <div class="mc-seccion__body mc-grid">
+        <div class="mc-field mc-field--full">
+          <label>¿Cobra intereses a los clientes morosos?</label>
+          <p-dropdown
+            [(ngModel)]="interesActivo"
+            [options]="opcionesInteres"
+            optionLabel="label"
+            optionValue="value"
+            appendTo="body"
+            styleClass="w-full"
+          />
+          <span class="mc-ayuda">
+            El interés solo se vuelve ingreso cuando se factura (cuenta por cobrar aparte, ingreso en 4210).
+          </span>
+        </div>
+
+        <ng-container *ngIf="interesActivo">
+          <div class="mc-field">
+            <label>Tasa de mora pactada</label>
+            <p-inputNumber
+              [(ngModel)]="tasaMora"
+              [min]="0"
+              [max]="10"
+              [minFractionDigits]="0"
+              [maxFractionDigits]="4"
+              suffix=" % mensual"
+              styleClass="w-full"
+            />
+          </div>
+          <div class="mc-field">
+            <label>Días de gracia</label>
+            <p-inputNumber [(ngModel)]="diasGracia" [min]="0" [max]="365" suffix=" días" styleClass="w-full" />
+          </div>
+          <div class="mc-field">
+            <label>Tasa de usura vigente</label>
+            <p-inputNumber
+              [(ngModel)]="tasaUsura"
+              [min]="0"
+              [max]="10"
+              [minFractionDigits]="0"
+              [maxFractionDigits]="4"
+              suffix=" % mensual"
+              styleClass="w-full"
+            />
+            <span class="mc-ayuda">La certifica la Superfinanciera cada mes. Es el tope legal.</span>
+          </div>
+          <div class="mc-field">
+            <label>Usura vigente hasta</label>
+            <p-calendar [(ngModel)]="usuraHasta" dateFormat="dd/mm/yy" appendTo="body" styleClass="w-full" />
+            <span class="mc-ayuda">Cuando pase la fecha, el sistema pide actualizarla antes de facturar.</span>
+          </div>
+          <div class="mc-field mc-field--full">
+            <div class="mc-aviso" [class.mc-aviso--warn]="tasaAplicable !== (tasaMora ?? 0)">
+              <i class="pi pi-info-circle"></i>
+              <span>
+                Se cobrará <strong>{{ tasaAplicable }} % mensual</strong>
+                <ng-container *ngIf="tasaAplicable !== (tasaMora ?? 0)">
+                  (la tasa pactada pasa la usura: se cobra la usura)
+                </ng-container>
+                sobre el saldo vencido, día a día, desde el vencimiento más los días de gracia.
+              </span>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </section>
+  </div>
+
+  <ng-template #cargandoTpl>
+    <div class="mc-vacio"><i class="pi pi-spin pi-spinner"></i> Cargando…</div>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <span class="mc-ayuda" *ngIf="problema">{{ problema }}</span>
+    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="cerrar()"></button>
+    <button
+      pButton
+      type="button"
+      label="Guardar"
+      icon="pi pi-check"
+      [loading]="guardando"
+      [disabled]="!!problema || cargando"
+      (click)="guardar()"
+    ></button>
+  </ng-template>
+</p-dialog>

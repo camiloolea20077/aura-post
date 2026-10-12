@@ -177,6 +177,14 @@
     ></button>
     <button
       pButton
+      label="Cargar conteo (Excel)"
+      icon="pi pi-file-import"
+      class="p-button-outlined"
+      *ngIf="canEdit"
+      (click)="mostrarImportar = true"
+    ></button>
+    <button
+      pButton
       label="Anular"
       icon="pi pi-ban"
       class="p-button-danger p-button-outlined"
@@ -196,3 +204,10 @@
 
 <p-confirmDialog />
 <p-toast />
+
+<app-importar-excel
+  [(visible)]="mostrarImportar"
+  [plantilla]="plantillaImportar"
+  [extra]="{ reconteoId: reconteo?.id }"
+  (importado)="onImportado()"
+/>

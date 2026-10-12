@@ -1,0 +1,123 @@
+@if (editable && documento.claseComprobante === 'LIQUIDACION_DEFINITIVA') {
+  <p class="nota-definitiva">Liquidación definitiva: el empleado viene del retiro. No se agregan otros empleados.</p>
+}
+
+@if (editable && documento.claseComprobante !== 'LIQUIDACION_DEFINITIVA') {
+  <div class="agregar" *appPuede="'recursos-humanos.prenomina:EDITAR'">
+    <div class="field tipo">
+      <label class="field-label">Agregar por</label>
+      <p-select [options]="opcionesTipoLista" [(ngModel)]="tipoLista" optionLabel="label" optionValue="value"
+        (onChange)="onTipoLista()" styleClass="w-full" />
+    </div>
+
+    <div class="field valor">
+      @switch (tipoLista) {
+        @case ('EMPLEADO') {
+          <label class="field-label">Empleado</label>
+          <app-tercero-autocomplete [(ngModel)]="terceroId" rol="EMPLEADO" [rolFijo]="true"
+            placeholder="Nombre o documento del empleado…" />
+        }
+        @case ('TODOS') {
+          <label class="field-label">&nbsp;</label>
+          <span class="nota">Todas las vinculaciones activas del período que admite el comprobante</span>
+        }
+        @default {
+          <label class="field-label">{{ tipoLista === 'VINCULACION' ? 'Vinculaciones' : tipoLista === 'GRUPO' ? 'Grupos' : 'Tipos' }}</label>
+          <p-multiSelect [options]="opcionesIds" [(ngModel)]="ids" optionLabel="label" optionValue="value"
+            [filter]="true" display="chip" placeholder="Seleccione" styleClass="w-full" />
+        }
+      }
+    </div>
+
+    <div class="field boton">
+      <label class="field-label">&nbsp;</label>
+      <button pButton type="button" label="Agregar" icon="pi pi-user-plus" class="btn-aura"
+        [loading]="agregando" [disabled]="!puedeAgregar" (click)="agregar()"></button>
+    </div>
+  </div>
+
+  @if (omitidos.length > 0) {
+    <div class="omitidos">
+      <div class="omitidos__head">
+        <span><i class="pi pi-exclamation-triangle"></i> {{ omitidos.length }} no se agregaron</span>
+        <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-sm" (click)="cerrarOmitidos()"></button>
+      </div>
+      <ul>
+        @for (o of omitidos; track o.contratoId) {
+          <li><strong>{{ o.empleadoNombre }}</strong> ({{ o.codigoVinculacion ?? 'sin código' }}): {{ o.motivo }}</li>
+        }
+      </ul>
+    </div>
+  }
+}
+
+<div class="lista-head">
+  <span class="conteo">{{ filas.length }} empleado(s)</span>
+  <span class="search-wrap buscar-tab">
+    <i class="pi pi-search"></i>
+    <input type="text" pInputText class="search-input" placeholder="Buscar empleado, documento, vinculación o cargo..."
+      [(ngModel)]="busqueda" (ngModelChange)="tabla.filterGlobal($event, 'contains')"
+      (keydown.escape)="busqueda = ''; tabla.filterGlobal('', 'contains')" />
+    @if (busqueda) {
+      <button type="button" class="clear-btn" (click)="busqueda = ''; tabla.filterGlobal('', 'contains')">
+        <i class="pi pi-times"></i>
+      </button>
+    }
+  </span>
+  @if (editable && seleccion.length > 0) {
+    <button *appPuede="'recursos-humanos.prenomina:EDITAR'" pButton type="button"
+      [label]="'Quitar seleccionados (' + seleccion.length + ')'" icon="pi pi-user-minus"
+      class="p-button-outlined p-button-danger p-button-sm" (click)="confirmarQuitar(seleccion)"></button>
+  }
+</div>
+
+<p-table #tabla [value]="filas" [globalFilterFields]="['empleadoNombre', 'empleadoDocumento', 'codigoVinculacion', 'cargo', 'tipoVinculacion', 'grupoNomina']" [loading]="cargando" [(selection)]="seleccion" dataKey="nominaId" [scrollable]="true"
+  [tableStyle]="{ 'min-width': '62rem' }" showGridlines [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50, 100]" [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} de {totalRecords} registros">
+  <ng-template pTemplate="header">
+    <tr>
+      @if (editable) {
+        <th style="width: 3rem"><p-tableHeaderCheckbox /></th>
+      }
+      <th style="width: 110px">Vinculación</th>
+      <th>Empleado</th>
+      <th style="width: 180px">Cargo</th>
+      <th style="width: 180px">Tipo / grupo</th>
+      <th style="width: 200px">Centro de costo</th>
+      <th style="width: 140px" class="text-right">Salario</th>
+      @if (editable) {
+        <th style="width: 70px"></th>
+      }
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="body" let-f>
+    <tr>
+      @if (editable) {
+        <td><p-tableCheckbox [value]="f" /></td>
+      }
+      <td><code class="codigo">{{ f.codigoVinculacion ?? '—' }}</code></td>
+      <td class="nombre">{{ f.empleadoDocumento }} - {{ f.empleadoNombre }}</td>
+      <td>{{ f.cargo ?? '—' }}</td>
+      <td>{{ f.tipoVinculacion ?? 'Sin tipo' }} / {{ f.grupoNomina ?? 'Sin grupo' }}</td>
+      <td>{{ f.centrosCosto ?? '—' }}</td>
+      <td class="text-right mono">{{ f.salarioBase | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+      @if (editable) {
+        <td>
+          <button *appPuede="'recursos-humanos.prenomina:EDITAR'" pButton icon="pi pi-user-minus"
+            class="p-button-text p-button-danger p-button-sm" (click)="confirmarQuitar([f])"></button>
+        </td>
+      }
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td [attr.colspan]="editable ? 8 : 6">
+        <div class="empty-state">
+          <i class="pi pi-users"></i>
+          <p>Aún no hay empleados en la prenómina.</p>
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>

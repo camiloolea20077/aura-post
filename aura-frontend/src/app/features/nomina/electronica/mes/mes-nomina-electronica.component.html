@@ -1,0 +1,74 @@
+<div class="mes-barra">
+  <div class="mes-filtro">
+    <label class="field-label" for="ne-mes">Mes</label>
+    <p-calendar inputId="ne-mes" [ngModel]="mes" (ngModelChange)="cambiarMes($event)" view="month"
+      dateFormat="MM yy" [maxDate]="maxMes" [readonlyInput]="true" [showIcon]="true" styleClass="mes-cal" />
+  </div>
+  <div class="mes-resumen">
+    <span class="chip listo">{{ contar('LISTO') }} listo(s)</span>
+    <span class="chip incompleto">{{ contar('INCOMPLETO') }} incompleto(s)</span>
+    <span class="chip enviado">{{ contar('ENVIADO') }} enviado(s)</span>
+  </div>
+  <button *appPuede="'recursos-humanos.nomina-documento:EDITAR'" pButton type="button"
+    [label]="enviando ? 'Enviando ' + avance + ' / ' + listos.length + '…' : 'Enviar todos los listos'"
+    icon="pi pi-send" class="btn-aura" [loading]="enviando" [disabled]="enviando || !listos.length"
+    (click)="enviarListos()"></button>
+</div>
+
+<p class="mes-nota">
+  La DIAN recibe un solo documento por empleado y mes con todo lo pagado (las dos quincenas, prima, vacaciones…).
+  Se puede enviar cuando las nóminas confirmadas cubren el mes completo.
+</p>
+
+@if (rechazos.length) {
+  <div class="mes-rechazos">
+    @for (r of rechazos; track r.nombre) {
+      <div><b>{{ r.nombre }}:</b> {{ r.motivo }}</div>
+    }
+  </div>
+}
+
+<p-table [value]="filtradas" [loading]="cargando" dataKey="contratoId" styleClass="p-datatable-sm"
+  [tableStyle]="{ 'min-width': '56rem' }" [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50]">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Empleado</th>
+      <th style="width: 110px" class="text-right">Nóminas</th>
+      <th style="width: 150px" class="text-right">Devengado del mes</th>
+      <th>Estado</th>
+      <th style="width: 110px">Documento</th>
+      <th style="width: 80px"></th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-f>
+    <tr>
+      <td>
+        <div class="nombre">{{ f.empleadoNombre }}</div>
+        <div class="meta">{{ f.empleadoDocumento }}</div>
+      </td>
+      <td class="text-right">{{ f.cantidadNominas || '—' }}</td>
+      <td class="text-right mono">{{ f.totalDevengado | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+      <td>
+        <p-tag [value]="estado(f).texto" [severity]="estado(f).severidad" styleClass="tag-mini" />
+        @if (estado(f).clave === 'INCOMPLETO' && f.motivo) {
+          <div class="meta motivo">{{ f.motivo }}</div>
+        }
+      </td>
+      <td>{{ f.documentoNumero ?? '—' }}</td>
+      <td class="text-right">
+        <button pButton type="button" class="p-button-text p-button-sm"
+          [icon]="estado(f).clave === 'LISTO' ? 'pi pi-send' : 'pi pi-eye'"
+          [pTooltip]="estado(f).clave === 'LISTO' ? 'Revisar y enviar' : 'Ver'" (click)="abrir(f)"></button>
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td colspan="6" class="text-center p-4">
+        {{ filtro ? 'Ningún empleado coincide con la búsqueda.' : 'No hay nóminas confirmadas en este mes.' }}
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<app-nomina-electronica [visible]="mostrarModal" [nominaId]="nominaModal" (closed)="cerrarModal()" />

@@ -38,9 +38,9 @@ export class EmpleadoNuevoComponent {
     try {
       const res = await lastValueFrom(this.nominaService.crearEmpleadoDesdeTercero(terceroId));
       const empleadoId = res?.data?.id;
-      this.alert.showSuccess('Empleado creado', 'Ahora crea su contrato en la ficha.');
+      this.alert.showSuccess('Empleado creado', 'Ahora crea su vinculación.');
       if (empleadoId) {
-        this.router.navigate(['/nomina/empleados', empleadoId, 'ficha']);
+        this.router.navigate(['/nomina/empleados', empleadoId, 'editar']);
       } else {
         this.router.navigate(['/nomina/empleados']);
       }

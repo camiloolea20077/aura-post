@@ -1,0 +1,102 @@
+:host {
+  display: block;
+  container-type: inline-size;
+}
+
+.mes-barra {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.mes-filtro {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  width: 220px;
+}
+
+.field-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.mes-resumen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-right: auto;
+}
+
+.chip {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+
+  &.listo {
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+  &.incompleto {
+    background: #fffbeb;
+    color: #b45309;
+  }
+  &.enviado {
+    background: #f0fdf4;
+    color: #15803d;
+  }
+}
+
+.mes-nota {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin: 0 0 0.75rem;
+}
+
+.mes-rechazos {
+  font-size: 0.8rem;
+  color: #b91c1c;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.nombre {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.85rem;
+}
+
+.meta {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  margin-top: 0.15rem;
+
+  &.motivo {
+    color: #b45309;
+  }
+}
+
+.mono {
+  font-variant-numeric: tabular-nums;
+}
+
+:host ::ng-deep .mes-cal {
+  width: 100%;
+}
+
+@container (max-width: 560px) {
+  .mes-filtro {
+    width: 100%;
+  }
+}

@@ -1,0 +1,151 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i [class]="pantalla.icono"></i></span>
+        <div>
+          <h1 class="title">{{ pantalla.titulo }}</h1>
+          <p class="subtitle">
+            @if (pantalla.clase === 'NOMINA') {
+              Nóminas generadas desde la prenómina confirmada: revíselas y
+              confírmelas para contabilizar
+            } @else {
+              Arme el documento por tipo de comprobante, liquídelo y revíselo
+              antes de confirmar la nómina
+            }
+          </p>
+        </div>
+      </div>
+
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          @if (pantalla.clase === 'PRENOMINA') {
+          <button
+            *appPuede="'recursos-humanos.prenomina:CREAR'"
+            pButton
+            type="button"
+            label="Nueva prenómina"
+            icon="pi pi-plus"
+            class="btn-aura"
+            (click)="nueva()"
+          ></button>
+          }
+        </div>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              class="search-input"
+              placeholder="Buscar número, tipo o descripción..."
+              [(ngModel)]="busqueda"
+              (input)="buscar()"
+              (keydown.escape)="limpiarBusqueda()"
+            />
+            <button
+              *ngIf="busqueda"
+              class="clear-btn"
+              (click)="limpiarBusqueda()"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <p-table
+      [value]="filas"
+      [lazy]="true"
+      [loading]="cargando"
+      [totalRecords]="totalFilas"
+      [rows]="tamano"
+      [paginator]="true"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      (onPage)="onPagina($event)"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords} registros"
+      [scrollable]="true"
+      [tableStyle]="{ 'min-width': '60rem' }"
+      showGridlines
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 150px">Número</th>
+          <th>Dependencia</th>
+          <th style="width: 210px">Período</th>
+          <th style="width: 130px">Fecha de pago</th>
+          <th style="width: 100px" class="text-right">Empleados</th>
+          <th style="width: 150px" class="text-right">Neto a pagar</th>
+          <th style="width: 120px">Estado</th>
+          <th style="width: 80px">Abrir</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-d>
+        <tr [class.row-inactiva]="d.estado === 'ANULADO'">
+          <td>
+            <code class="codigo">{{ d.numeroCompleto }}</code>
+            @if (d.simulacion) {
+              <div class="meta">Simulación</div>
+            }
+            @if (d.documentoOrigenNumero) {
+              <div class="meta">De {{ d.documentoOrigenNumero }}</div>
+            }
+            @if (d.nominaGeneradaNumero) {
+              <div class="meta">Nómina {{ d.nominaGeneradaNumero }}</div>
+            }
+          </td>
+          <td>
+            <div class="nombre">{{ d.tipoComprobanteNombre }}</div>
+            @if (d.descripcion) {
+              <div class="meta">{{ d.descripcion }}</div>
+            }
+          </td>
+          <td>{{ d.fechaDesde | fechaEs }} → {{ d.fechaHasta | fechaEs }}</td>
+          <td>{{ d.fechaPago ? (d.fechaPago | fechaEs) : '—' }}</td>
+          <td class="text-right mono">{{ d.empleados }}</td>
+          <td class="text-right mono">
+            {{ d.totalNeto | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+          </td>
+          <td>
+            @if (pagada(d)) {
+              <p-tag value="Pagada" severity="success" styleClass="tag-mini" />
+            } @else {
+              <p-tag
+                [value]="textoEstado(d.estado)"
+                [severity]="severidad(d.estado)"
+                styleClass="tag-mini"
+              />
+            }
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button
+                pButton
+                icon="pi pi-eye"
+                class="p-button-text p-button-sm action-edit"
+                pTooltip="Abrir"
+                (click)="abrir(d)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8">
+            <div class="empty-state">
+              <i class="pi pi-list-check"></i>
+              <p>
+                {{ pantalla.clase === 'NOMINA' ? 'No hay nóminas. Se generan desde una prenómina confirmada.' : 'No hay prenóminas.' }}
+              </p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

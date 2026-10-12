@@ -1,0 +1,123 @@
+// Header (.card-head), card (.card) y buscador (.search-wrap) son estándar global en styles.scss.
+
+:host {
+  display: block;
+}
+
+.card-head__btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.filtros {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 220px));
+  gap: 0.75rem;
+  padding: 0 0 1rem;
+
+  .filtro {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 0;
+
+    label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #64748b;
+    }
+
+    ::ng-deep .p-dropdown,
+    ::ng-deep .p-calendar {
+      width: 100%;
+      min-width: 0;
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .filtros {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+
+    .filtro:first-child {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+.fila-click {
+  cursor: pointer;
+}
+
+.num {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.cell-prov {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  .prov-nombre {
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  .prov-sub {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.valor {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.saldo-cero {
+  color: #94a3b8;
+}
+
+.row-anulada > td {
+  opacity: 0.5;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem 1rem;
+  color: #94a3b8;
+
+  i {
+    font-size: 2rem;
+  }
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+// La .card no trae relleno: el cuerpo lleva el mismo margen lateral que el .card-head.
+.card-body {
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .card-body {
+    padding: 1rem;
+  }
+}

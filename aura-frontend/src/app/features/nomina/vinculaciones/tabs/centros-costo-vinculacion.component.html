@@ -1,0 +1,60 @@
+<div class="tab-head">
+  <p>Cómo se reparte el costo laboral (salario, prestaciones y aportes) entre centros de costo. Sin filas,
+    todo va al centro por defecto de la configuración contable.</p>
+  @if (!soloLectura) {
+    <div>
+      <button pButton type="button" label="Agregar" icon="pi pi-plus" class="p-button-outlined p-button-sm"
+        (click)="agregar()"></button>
+      <button pButton type="button" label="Guardar" icon="pi pi-check" class="btn-aura p-button-sm" [loading]="guardando"
+        (click)="guardar()"></button>
+    </div>
+  }
+</div>
+
+<p-table [value]="filas" styleClass="p-datatable-sm" [tableStyle]="{ 'min-width': '28rem' }" [scrollable]="true">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Centro de costo</th>
+      <th style="width: 10rem" class="text-right">Porcentaje</th>
+      <th style="width: 4rem"></th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-f let-i="rowIndex">
+    <tr>
+      <td>
+        @if (soloLectura) {
+          {{ f.centroCostoCodigo }} — {{ f.centroCostoNombre }}
+        } @else {
+          <p-select [options]="opciones" [(ngModel)]="f.centroCostoId" optionLabel="label" optionValue="value"
+            [filter]="true" filterBy="label" placeholder="Seleccione" styleClass="w-full" />
+        }
+      </td>
+      <td class="text-right">
+        @if (soloLectura) {
+          <span class="mono">{{ f.porcentaje }} %</span>
+        } @else {
+          <p-inputNumber [(ngModel)]="f.porcentaje" [min]="0" [max]="100" [maxFractionDigits]="2" suffix=" %"
+            inputStyleClass="text-right" />
+        }
+      </td>
+      <td>
+        @if (!soloLectura) {
+          <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm"
+            pTooltip="Quitar" (click)="quitar(i)"></button>
+        }
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="footer">
+    @if (filas.length) {
+      <tr>
+        <td class="text-right">Total</td>
+        <td class="text-right mono total" [class.total--mal]="!cuadra" [class.total--bien]="cuadra">{{ total }} %</td>
+        <td></td>
+      </tr>
+    }
+  </ng-template>
+  <ng-template pTemplate="emptymessage">
+    <tr><td colspan="3" class="vacio">Sin distribución por centro de costo.</td></tr>
+  </ng-template>
+</p-table>

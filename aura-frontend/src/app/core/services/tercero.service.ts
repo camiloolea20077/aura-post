@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import {
+  TipoImagenTercero,
   TerceroModel,
   TerceroTableModel,
   CreateTerceroDto,
@@ -74,6 +75,30 @@ export class TerceroService {
     return this.http.get<ResponseModel<TerceroTableModel[]>>(
       `${this.apiUrl}/selector`,
     );
+  }
+
+  /** Sube o reemplaza la foto oficial, la foto de perfil o la firma. Devuelve la URL. */
+  subirImagen(id: number, tipo: TipoImagenTercero, archivo: File): Observable<ResponseModel<string>> {
+    const form = new FormData();
+    form.append('archivo', archivo);
+    return this.http.post<ResponseModel<string>>(`${this.apiUrl}/${id}/imagen/${tipo}`, form);
+  }
+
+  quitarImagen(id: number, tipo: TipoImagenTercero): Observable<ResponseModel<boolean>> {
+    return this.http.delete<ResponseModel<boolean>>(`${this.apiUrl}/${id}/imagen/${tipo}`);
+  }
+
+  /** Departamentos de Colombia (select que filtra los municipios). */
+  departamentos(): Observable<ResponseModel<string[]>> {
+    return this.http.get<ResponseModel<string[]>>(`${environment.apiUrl}municipios/departamentos`);
+  }
+
+  /** Municipios de un departamento, filtrados por nombre. */
+  municipiosDe(departamento: string, search = ''): Observable<ResponseModel<MunicipioDto[]>> {
+    return this.http.post<ResponseModel<MunicipioDto[]>>(`${environment.apiUrl}municipios`, {
+      search,
+      departamento,
+    });
   }
 
   create(dto: CreateTerceroDto): Observable<ResponseModel<TerceroModel>> {

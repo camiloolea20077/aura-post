@@ -23,10 +23,14 @@ import { AlertService } from '../../../../shared/pipes/alert.service';
 import { IFilterTable } from '../../../../shared/utils/filter-table';
 
 import { PuedeDirective } from '../../../../shared/directives/puede.directive';
+import { ImportarExcelComponent } from '../../../../shared/components/importar-excel/importar-excel.component';
+import { PLANTILLA_CATEGORIAS } from '../../../../shared/components/importar-excel/plantillas-catalogo';
+
 @Component({
   selector: 'app-index-categorias',
   standalone: true,
   imports: [
+    ImportarExcelComponent,
     PuedeDirective,
     CommonModule,
     FormsModule,
@@ -45,6 +49,14 @@ import { PuedeDirective } from '../../../../shared/directives/puede.directive';
   styleUrls: ['./index-categorias.component.scss'],
 })
 export class IndexCategoriasComponent implements OnInit {
+  // Importar desde Excel (docs/PLAN_EXCEL_IMPORTADORES_MODULOS.md §2)
+  readonly plantillaImportar = PLANTILLA_CATEGORIAS;
+  mostrarImportar = false;
+
+  onImportado(): void {
+    this.reloadTable();
+  }
+
   filtersTable!: IFilterTable<CategoriaFilterParams>;
   globalFilter: string = '';
   // ─── Modal ───────────────────────────────────────────────

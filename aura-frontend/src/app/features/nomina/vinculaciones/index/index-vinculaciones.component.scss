@@ -1,0 +1,46 @@
+// Estructura (.page, .card, .card-head, .search-wrap) global en styles.scss.
+
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+
+  .search-wrap {
+    flex: 1 1 260px;
+    min-width: 0;
+  }
+}
+
+:host ::ng-deep .filtros .filtro {
+  flex: 0 1 190px;
+  min-width: 0;
+}
+
+.codigo {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.75rem;
+  background: #f1f5f9;
+  border-radius: 5px;
+  padding: 0.05rem 0.4rem;
+}
+
+.nombre {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.85rem;
+}
+
+.meta {
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.mono {
+  font-variant-numeric: tabular-nums;
+}
+
+.row-inactiva td {
+  opacity: 0.6;
+}

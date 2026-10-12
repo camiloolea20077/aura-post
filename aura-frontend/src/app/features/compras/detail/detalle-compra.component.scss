@@ -323,3 +323,63 @@
     font-size: 0.65rem;
   }
 }
+
+/* Devoluciones hechas sobre la compra */
+.devoluciones-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.devolucion-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: #fffbeb;
+  min-width: 0;
+
+  &.anulada {
+    opacity: 0.5;
+  }
+
+  .dev-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .dev-num {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #1e293b;
+  }
+
+  .dev-anulada {
+    margin-left: 0.35rem;
+    font-size: 0.7rem;
+    color: #dc2626;
+    text-transform: uppercase;
+  }
+
+  .dev-meta {
+    font-size: 0.75rem;
+    color: #64748b;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .dev-valor {
+    font-weight: 700;
+    color: #b45309;
+    white-space: nowrap;
+  }
+}
+
+.totales-panel .devuelto {
+  color: #b45309;
+  font-weight: 600;
+}

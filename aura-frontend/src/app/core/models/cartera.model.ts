@@ -106,7 +106,7 @@ export interface CreateGestionCobroDto {
 }
 
 // ─── Opciones UI ──────────────────────────────────────────────────
-export type TabCartera = 'dashboard' | 'agenda' | 'autorizaciones' | 'clientes' | 'edades' | 'alertas' | 'recibos' | 'acuerdos';
+export type TabCartera = 'dashboard' | 'agenda' | 'autorizaciones' | 'clientes' | 'edades' | 'alertas' | 'recibos' | 'acuerdos' | 'intereses' | 'castigos';
 
 export const TIPOS_GESTION = [
   { label: 'Llamada',      value: 'LLAMADA' },

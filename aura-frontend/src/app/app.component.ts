@@ -6,13 +6,16 @@ import { IndexDBService } from './core/services/index-db.service';
 import { SocketService } from './shared/services/socket.service';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
 import { ConfirmationService } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { DialogModule } from 'primeng/dialog';
+import { CambioVersion, novedadesNuevas } from './core/models/novedades-version.model';
 import { filter } from 'rxjs';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ProgressSpinner, ConfirmDialogModule],
+  imports: [RouterOutlet, ProgressSpinner, ConfirmDialogModule, DialogModule, ButtonModule],
   providers: [ConfirmationService],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',
@@ -22,10 +25,13 @@ export class AppComponent implements OnInit {
   private readonly indexDBService = inject(IndexDBService);
   private readonly socketService = inject(SocketService);
   private readonly swUpdate = inject(SwUpdate);
-  private readonly confirmationService = inject(ConfirmationService);
   title = 'aura-frontend';
 
   public loading = signal(false);
+
+  /** Aviso de versión nueva con lo que cambia (appData de ngsw-config.json). */
+  public mostrarActualizacion = signal(false);
+  public cambiosVersion = signal<CambioVersion[]>([]);
 
   constructor() {
     this.stateStore.setWindowWidth(window.innerWidth);
@@ -53,22 +59,21 @@ export class AppComponent implements OnInit {
 
     this.swUpdate.versionUpdates
       .pipe(filter((e): e is VersionReadyEvent => e.type === 'VERSION_READY'))
-      .subscribe(() => this.promptUpdate());
+      .subscribe((e) => this.promptUpdate(e));
   }
 
-  private promptUpdate(): void {
-    this.confirmationService.confirm({
-      header: 'Nueva versión disponible',
-      message:
-        'Hay una actualización del sistema. Se recargará la página para aplicarla.',
-      icon: 'pi pi-info-circle',
-      acceptLabel: 'Actualizar ahora',
-      rejectLabel: 'Más tarde',
-      accept: () => this.applyUpdate(),
-    });
+  /**
+   * Muestra el aviso con las novedades del envío. Solo lista cambios si el envío
+   * trae una `version` de novedades distinta a la actual (si nadie las actualizó, no
+   * se repiten las viejas).
+   */
+  private promptUpdate(e: VersionReadyEvent): void {
+    this.cambiosVersion.set(novedadesNuevas(e.currentVersion.appData, e.latestVersion.appData));
+    this.mostrarActualizacion.set(true);
   }
 
-  private async applyUpdate(): Promise<void> {
+  public async applyUpdate(): Promise<void> {
+    this.mostrarActualizacion.set(false);
     try {
       await this.swUpdate.activateUpdate();
     } catch {

@@ -12,6 +12,9 @@ import {
   ExogenaLinea,
   ExogenaLote,
   ExogenaMapeo,
+  ExogenaColumna,
+  ExogenaResumenFormato,
+  TipoPersonaExogena,
 } from '../models/exogena.model';
 
 /** E11 · Información exógena DIAN — /api/contabilidad/exogena */
@@ -105,6 +108,30 @@ export class ExogenaService {
       `${this.api}/lotes/${loteId}/aprobar`,
       {},
     );
+  }
+
+  /** Columnas de valor del formato (orden del prevalidador). */
+  columnas(formatoId: number): Observable<ResponseModel<ExogenaColumna[]>> {
+    return this.http.get<ResponseModel<ExogenaColumna[]>>(`${this.api}/formatos/${formatoId}/columnas`);
+  }
+
+  /** Tipo de persona del informante (natural o jurídica). */
+  config(): Observable<ResponseModel<{ tipoPersona: TipoPersonaExogena }>> {
+    return this.http.get<ResponseModel<{ tipoPersona: TipoPersonaExogena }>>(`${this.api}/config`);
+  }
+
+  cambiarTipoPersona(tipoPersona: TipoPersonaExogena): Observable<ResponseModel<{ tipoPersona: TipoPersonaExogena }>> {
+    return this.http.put<ResponseModel<{ tipoPersona: TipoPersonaExogena }>>(`${this.api}/config`, { tipoPersona });
+  }
+
+  /** Genera los lotes del año de todos los formatos que reporta la empresa. */
+  generarTodos(anio: number): Observable<ResponseModel<ExogenaResumenFormato[]>> {
+    return this.http.post<ResponseModel<ExogenaResumenFormato[]>>(`${this.api}/lotes/todos`, { anio });
+  }
+
+  /** Excel del año: una hoja por formato (última versión de cada lote). */
+  exportarAnio(anio: number): Observable<Blob> {
+    return this.http.get(`${this.api}/anio/${anio}/export`, { responseType: 'blob' });
   }
 
   /** Descarga el Excel del prevalidador DIAN. */

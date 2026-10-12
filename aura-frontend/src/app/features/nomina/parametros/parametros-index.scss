@@ -1,0 +1,35 @@
+// La página (.page), la card (.card), el header (.card-head), el buscador
+// (.search-wrap) y los botones son estándar global en styles.scss. Aquí solo
+// va lo propio de las tablas de parámetros de nómina.
+
+.codigo {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.75rem;
+  background: #f1f5f9;
+  border-radius: 5px;
+  padding: 0.05rem 0.4rem;
+}
+
+.nombre {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.85rem;
+}
+
+.meta {
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.mono {
+  font-variant-numeric: tabular-nums;
+}
+
+.sin-dato {
+  color: #94a3b8;
+}
+
+.row-inactiva td {
+  opacity: 0.6;
+}

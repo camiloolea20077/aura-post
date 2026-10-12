@@ -6,7 +6,7 @@
         <span class="header-icon"><i class="pi pi-users"></i></span>
         <div>
           <h1 class="title">Empleados</h1>
-          <p class="subtitle">Gestión del personal vinculado a la empresa</p>
+          <p class="subtitle">Personal activo de la empresa. Los retiros se hacen desde Retiros, con su liquidación</p>
         </div>
       </div>
       <div class="card-head__actions">
@@ -75,13 +75,12 @@
           <th style="min-width: 120px">Ingreso</th>
           <th style="min-width: 140px" class="text-right">Salario base</th>
           <th style="min-width: 130px">Contrato</th>
-          <th style="width: 90px" class="text-center">Estado</th>
           <th style="width: 90px" class="text-center">Acciones</th>
         </tr>
       </ng-template>
 
       <ng-template pTemplate="body" let-item>
-        <tr [class.row-inactivo]="!item.activo">
+        <tr>
           <td>
             <span class="id-badge">#{{ item.id }}</span>
           </td>
@@ -115,13 +114,6 @@
           <td>
             <span class="contrato-chip">{{ contrato(item.tipoContrato) }}</span>
           </td>
-          <td class="text-center">
-            <p-tag
-              [value]="item.activo ? 'Activo' : 'Retirado'"
-              [severity]="item.activo ? 'success' : 'secondary'"
-              [rounded]="true"
-            />
-          </td>
           <td class="text-center flex">
             <button
               pButton
@@ -135,15 +127,6 @@
             ></button>
             <!-- Ficha: identidad + contratos, afiliaciones, retenciones y
                  embargos en tabs (reemplaza los botones sueltos por fila). -->
-            <button
-              pButton
-              type="button"
-              icon="pi pi-id-card"
-              class="p-button-text p-button-sm action-edit"
-              pTooltip="Abrir ficha"
-              tooltipPosition="top"
-              (click)="verContratos(item)"
-            ></button>
             <button *appPuede="'recursos-humanos.empleados:EDITAR'"
               pButton
               type="button"
@@ -153,23 +136,13 @@
               tooltipPosition="top"
               (click)="editEmpleado(item)"
             ></button>
-            <button
-              pButton
-              type="button"
-              icon="pi pi-sign-out"
-              class="p-button-text p-button-sm action-retire"
-              pTooltip="Retirar"
-              tooltipPosition="top"
-              *ngIf="item.activo"
-              (click)="retirarEmpleado(item)"
-            ></button>
           </td>
         </tr>
       </ng-template>
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="9">
+          <td colspan="8">
             <div class="empty-state">
               <i class="pi pi-users"></i>
               <p>

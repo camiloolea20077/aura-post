@@ -10,6 +10,13 @@ export interface TarifaRetencionModel {
   tarifaJuridica: number;
   baseMinima: number;
   activo: boolean;
+  /** Cuenta del concepto (2365xx / 2367xx / 2368xx). Sin ella, la cuenta por defecto. */
+  cuentaContableId: number | null;
+  cuentaCodigo: string | null;
+  cuentaNombre: string | null;
+  /** A quién se le paga: DIAN (retefuente, reteIVA) o la secretaría de hacienda (reteICA). */
+  terceroAcreedorId: number | null;
+  terceroAcreedorNombre: string | null;
 }
 
 export interface CreateTarifaRetencionDto {
@@ -20,6 +27,8 @@ export interface CreateTarifaRetencionDto {
   tarifaJuridica: number;
   baseMinima?: number;
   activo?: boolean;
+  cuentaContableId?: number | null;
+  terceroAcreedorId?: number | null;
 }
 
 export interface RetencionesSugeridasModel {

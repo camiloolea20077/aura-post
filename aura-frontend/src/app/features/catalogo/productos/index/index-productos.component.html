@@ -16,14 +16,25 @@
       </div>
       <div class="card-head__actions">
         <!-- Crear (arriba) -->
-        <button *appPuede="'catalogo.productos:CREAR'"
-          pButton
-          type="button"
-          label="Nuevo producto"
-          icon="pi pi-plus"
-          class="btn-verde"
-          (click)="openCreate()"
-        ></button>
+        <div class="card-head__btns">
+          <button *appPuede="'catalogo.productos:CREAR'"
+            pButton
+            type="button"
+            label="Nuevo producto"
+            icon="pi pi-plus"
+            class="btn-verde"
+            (click)="openCreate()"
+          ></button>
+          <button *appPuede="'catalogo.productos:CREAR'"
+            pButton
+            type="button"
+            label="Importar"
+            icon="pi pi-file-import"
+            class="p-button-outlined"
+            pTooltip="Cargar desde un Excel"
+            (click)="mostrarImportar = true"
+          ></button>
+        </div>
 
         <!-- Filtro por uso + búsqueda (debajo) -->
         <div class="card-head__search">
@@ -357,3 +368,9 @@
 
 <p-toast />
 <p-confirmDialog />
+
+<app-importar-excel
+  [(visible)]="mostrarImportar"
+  [plantilla]="plantillaImportar"
+  (importado)="onImportado()"
+/>

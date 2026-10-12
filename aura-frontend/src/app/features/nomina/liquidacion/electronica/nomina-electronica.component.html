@@ -80,6 +80,26 @@
     </div>
   </div>
 
+  <!-- Documento del mes: qué nóminas junta y si ya se puede enviar -->
+  <div *ngIf="!loading && !enviando && !anulando && mesInfo" class="ne-mes" [class.incompleto]="mesIncompleto">
+    <i class="pi" [ngClass]="mesIncompleto ? 'pi-clock' : 'pi-calendar'"></i>
+    <div class="ne-mes-body">
+      <div class="ne-mes-title">Documento del mes de {{ mesLabel }}</div>
+      <div class="ne-mes-txt" *ngIf="mesInfo.nominas.length">
+        Junta {{ mesInfo.nominas.length }} nómina(s):
+        <span *ngFor="let n of mesInfo.nominas; let last = last">
+          <b>{{ n.numero ?? 'Nómina ' + n.nominaId }}</b> ({{ rangoNomina(n.periodoInicio, n.periodoFin) }}){{ last ? '' : ', ' }}
+        </span>
+      </div>
+      <div class="ne-mes-txt" *ngIf="mesIncompleto">
+        {{ mesInfo.motivo }} Se envía un solo documento cuando el mes esté completo.
+      </div>
+      <div class="ne-mes-txt" *ngIf="soloConsulta && !yaEnviada && !mesIncompleto">
+        El mes está completo: envíelo desde Nómina electrónica → Por mes.
+      </div>
+    </div>
+  </div>
+
   <!-- Datos de la nómina electrónica (formulario plano) -->
   <ng-container *ngIf="!loading && !enviando && !respuesta && payload">
     <p-tag
@@ -136,42 +156,25 @@
     <!-- Devengados -->
     <section class="ne-sec">
       <div class="ne-sec-title devengado">Devengados</div>
-      <div class="ne-line" *ngIf="acc?.suel">
-        <span>Sueldo</span><span class="mny">{{ money(acc?.suel?.amount) }}</span>
+      <div class="ne-line" *ngFor="let l of devengados">
+        <span>{{ l.etiqueta }}</span><span class="mny">{{ money(l.valor) }}</span>
       </div>
-      <div class="ne-line" *ngFor="let t of acc?.tra">
-        <span>Auxilio de transporte</span><span class="mny">{{ money(t.amount) }}</span>
-      </div>
-      <div class="ne-line" *ngFor="let h of acc?.hora">
-        <span>{{ horaLabel(h.accrual_type_code) }} ({{ h.quantity }} h · {{ h.percentage }}%)</span>
-        <span class="mny">{{ money(h.amount) }}</span>
-      </div>
-      <div class="ne-line" *ngFor="let c of acc?.comi">
-        <span>Comisión</span><span class="mny">{{ money(c.amount) }}</span>
+      <div class="ne-line ne-total">
+        <span>Total devengado</span><span class="mny">{{ money(totalDevengado) }}</span>
       </div>
     </section>
 
     <!-- Deducciones -->
     <section class="ne-sec">
       <div class="ne-sec-title deduccion">Deducciones</div>
-      <div class="ne-line" *ngIf="ded?.salu">
-        <span>Salud ({{ ded?.salu?.percentage }}%)</span>
-        <span class="mny red">{{ money(ded?.salu?.amount) }}</span>
+      <div class="ne-line" *ngFor="let l of deducciones">
+        <span>{{ l.etiqueta }}</span><span class="mny red">{{ money(l.valor) }}</span>
       </div>
-      <div class="ne-line" *ngIf="ded?.pens">
-        <span>Pensión ({{ ded?.pens?.percentage }}%)</span>
-        <span class="mny red">{{ money(ded?.pens?.amount) }}</span>
+      <div class="ne-line ne-total">
+        <span>Total deducciones</span><span class="mny red">{{ money(totalDeducido) }}</span>
       </div>
-      <div class="ne-line" *ngIf="ded?.dedu">
-        <span>Fondo solidaridad pensional</span>
-        <span class="mny red">{{ money(ded?.dedu?.amount) }}</span>
-      </div>
-      <div class="ne-line" *ngIf="ded?.rete">
-        <span>Retención en la fuente</span>
-        <span class="mny red">{{ money(ded?.rete?.amount) }}</span>
-      </div>
-      <div class="ne-line" *ngFor="let o of ded?.otra">
-        <span>Otra deducción</span><span class="mny red">{{ money(o.amount) }}</span>
+      <div class="ne-line ne-total">
+        <span>Neto a pagar</span><span class="mny">{{ money(totalDevengado - totalDeducido) }}</span>
       </div>
     </section>
   </ng-container>
@@ -187,10 +190,10 @@
         (click)="close()"
       ></button>
       <button
-        *ngIf="payload && !respuesta && !yaEnviada && estadoLocal?.estado !== 'ANULADO'"
+        *ngIf="!soloConsulta && payload && !respuesta && !yaEnviada && !mesIncompleto"
         pButton
         type="button"
-        label="Enviar a la DIAN"
+        [label]="anulada ? 'Enviar corregida a la DIAN' : 'Enviar a la DIAN'"
         icon="pi pi-send"
         class="btn-nomina"
         (click)="pedirConfirmacion()"
@@ -216,7 +219,17 @@
         (click)="descargarXml()"
       ></button>
       <button
-        *ngIf="(respuesta?.exitoso || yaEnviada) && !anulada"
+        *ngIf="(respuesta?.exitoso || yaEnviada)"
+        pButton
+        type="button"
+        label="Descargar PDF"
+        icon="pi pi-file-pdf"
+        class="p-button-outlined"
+        [loading]="descargando"
+        (click)="descargarPdf()"
+      ></button>
+      <button
+        *ngIf="!soloConsulta && (respuesta?.exitoso || yaEnviada) && !anulada"
         pButton
         type="button"
         label="Nota de ajuste"

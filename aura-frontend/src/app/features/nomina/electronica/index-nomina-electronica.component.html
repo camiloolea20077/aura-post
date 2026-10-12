@@ -9,7 +9,7 @@
         <div>
           <h1 class="title">Nómina electrónica</h1>
           <p class="subtitle">
-            Documentos emitidos a la DIAN: descarga el XML, anula o elimina
+            Un documento por empleado y mes: envíe los meses completos y consulte, descargue o anule lo emitido
           </p>
         </div>
       </div>
@@ -20,7 +20,7 @@
           label="Actualizar"
           icon="pi pi-refresh"
           class="btn-aura"
-          (click)="cargar()"
+          (click)="actualizar()"
         ></button>
         <div class="card-head__search">
           <span class="search-wrap">
@@ -29,7 +29,7 @@
               type="text"
               pInputText
               class="search-input"
-              placeholder="Buscar empleado, CUNE o documento..."
+              [placeholder]="pestana === 0 ? 'Buscar empleado o documento...' : 'Buscar empleado, CUNE o documento...'"
               [(ngModel)]="searchQuery"
               (input)="onSearch()"
               (keydown.escape)="clearSearch()"
@@ -42,80 +42,98 @@
       </div>
     </div>
 
-    <p-table
-      [value]="filtrados"
-      [loading]="loading"
-      dataKey="id"
-      styleClass="p-datatable-sm"
-      [tableStyle]="{ 'min-width': '60rem' }"
-      [paginator]="true"
-      [rows]="10"
-      [rowsPerPageOptions]="[10, 25, 50]"
-    >
-      <ng-template pTemplate="header">
-        <tr>
-          <th>Empleado</th>
-          <th>Período</th>
-          <th>Documento</th>
-          <th class="text-center">Estado</th>
-          <th>CUNE</th>
-          <th style="width: 12rem"></th>
-        </tr>
-      </ng-template>
+    <p-tabView [(activeIndex)]="pestana">
+      <p-tabPanel>
+        <ng-template pTemplate="header">
+          <span class="tab-label"><i class="pi pi-calendar"></i> Por mes</span>
+        </ng-template>
+        <app-mes-nomina-electronica #mesTab [filtro]="searchQuery" [mesInicial]="mesInicial" />
+      </p-tabPanel>
+      <p-tabPanel>
+        <ng-template pTemplate="header">
+          <span class="tab-label"><i class="pi pi-file-o"></i> Documentos emitidos</span>
+        </ng-template>
+        <p-table
+          [value]="filtrados"
+          [loading]="loading"
+          dataKey="id"
+          styleClass="p-datatable-sm"
+          [tableStyle]="{ 'min-width': '60rem' }"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[10, 25, 50]"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Empleado</th>
+              <th>Período</th>
+              <th>Documento</th>
+              <th class="text-center">Estado</th>
+              <th>CUNE</th>
+              <th style="width: 12rem"></th>
+            </tr>
+          </ng-template>
 
-      <ng-template pTemplate="body" let-n>
-        <tr [class.row-off]="n.estado === 'ANULADO'">
-          <td>{{ n.empleadoNombre || '—' }}</td>
-          <td>{{ periodo(n) }}</td>
-          <td>{{ documento(n) || '—' }}</td>
-          <td class="text-center">
-            <p-tag [value]="n.estado" [severity]="estadoSeverity(n.estado)" [rounded]="true" />
-          </td>
-          <td>
-            <code class="cune" *ngIf="n.cune" [pTooltip]="n.cune">{{ n.cune | slice: 0 : 16 }}…</code>
-            <span *ngIf="!n.cune">—</span>
-          </td>
-          <td class="text-right">
-            <button
-              pButton
-              icon="pi pi-download"
-              class="p-button-sm p-button-text"
-              pTooltip="Descargar XML"
-              *ngIf="n.estado === 'ACEPTADO'"
-              [disabled]="procesando === n.id"
-              (click)="descargarXml(n)"
-            ></button>
-            <button
-              pButton
-              icon="pi pi-ban"
-              class="p-button-sm p-button-text p-button-danger"
-              pTooltip="Nota de ajuste (anular)"
-              *ngIf="n.estado === 'ACEPTADO'"
-              [disabled]="procesando === n.id"
-              (click)="anular(n)"
-            ></button>
-            <ng-container *appPuede="'recursos-humanos.nomina-electronica:ANULAR'">
-            <button
-              pButton
-              icon="pi pi-trash"
-              class="p-button-sm p-button-text"
-              pTooltip="Eliminar en Factus (solo pruebas)"
-              *ngIf="n.estado === 'ACEPTADO'"
-              [disabled]="procesando === n.id"
-              (click)="eliminarSandbox(n)"
-            ></button>
-            </ng-container>
-          </td>
-        </tr>
-      </ng-template>
+          <ng-template pTemplate="body" let-n>
+            <tr [class.row-off]="n.estado === 'ANULADO'">
+              <td>{{ n.empleadoNombre || '—' }}</td>
+              <td>{{ periodo(n) }}</td>
+              <td>
+                {{ documento(n) || '—' }}
+                @if (n.esAjuste) {
+                  <div class="nota-ajuste">Nota de ajuste (eliminación)</div>
+                }
+              </td>
+              <td class="text-center">
+                <p-tag [value]="n.estado" [severity]="estadoSeverity(n.estado)" [rounded]="true" />
+              </td>
+              <td>
+                <code class="cune" *ngIf="n.cune" [pTooltip]="n.cune">{{ n.cune | slice: 0 : 16 }}…</code>
+                <span *ngIf="!n.cune">—</span>
+              </td>
+              <td class="text-right">
+                @if (!n.esAjuste) {
+                  <button pButton icon="pi pi-download" class="p-button-sm p-button-text" pTooltip="Descargar XML"
+                    *ngIf="n.estado !== 'PENDIENTE' && n.estado !== 'RECHAZADO'" [disabled]="procesando === n.id"
+                    (click)="descargarXml(n)"></button>
+                  <button pButton icon="pi pi-file-pdf" class="p-button-sm p-button-text" pTooltip="Descargar PDF"
+                    *ngIf="n.estado !== 'PENDIENTE' && n.estado !== 'RECHAZADO'" [disabled]="procesando === n.id"
+                    (click)="descargarPdf(n)"></button>
+                  <button pButton icon="pi pi-ban" class="p-button-sm p-button-text p-button-danger"
+                    pTooltip="Nota de ajuste (anular ante la DIAN)" *ngIf="n.estado === 'ACEPTADO'"
+                    [disabled]="procesando === n.id" (click)="anular(n)"></button>
+                  <ng-container *appPuede="'recursos-humanos.nomina-electronica:ANULAR'">
+                    <button pButton icon="pi pi-trash" class="p-button-sm p-button-text"
+                      pTooltip="Eliminar en Factus (solo si la DIAN no la validó)" *ngIf="n.estado === 'ACEPTADO'"
+                      [disabled]="procesando === n.id" (click)="eliminarSandbox(n)"></button>
+                  </ng-container>
+                } @else {
+                  <button pButton icon="pi pi-download" class="p-button-sm p-button-text"
+                    pTooltip="Descargar XML de la nota" *ngIf="n.numero" [disabled]="procesando === n.id"
+                    (click)="descargarAjuste(n, 'xml')"></button>
+                  <button pButton icon="pi pi-file-pdf" class="p-button-sm p-button-text"
+                    pTooltip="Descargar PDF de la nota" *ngIf="n.numero" [disabled]="procesando === n.id"
+                    (click)="descargarAjuste(n, 'pdf')"></button>
+                  <ng-container *appPuede="'recursos-humanos.nomina-electronica:ANULAR'">
+                    <button pButton icon="pi pi-trash" class="p-button-sm p-button-text p-button-danger"
+                      pTooltip="Eliminar la nota en Factus (solo si la DIAN no la validó)"
+                      *ngIf="n.estado === 'ACEPTADO'" [disabled]="procesando === n.id"
+                      (click)="eliminarAjuste(n)"></button>
+                  </ng-container>
+                }
+              </td>
+            </tr>
+          </ng-template>
 
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="6" class="text-center p-4">
-            Sin nóminas electrónicas emitidas.
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6" class="text-center p-4">
+                Sin nóminas electrónicas emitidas.
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-tabPanel>
+    </p-tabView>
   </div>
 </div>

@@ -104,15 +104,18 @@ export class IndexContratosComponent implements OnInit {
   /** Contrato en edición (null = alta). */
   contratoEditId: number | null = null;
 
+  /**
+   * Alta y edición se hacen en el módulo de Vinculaciones (rediseño R2), que
+   * exige tipo de vinculación y cargo del catálogo.
+   */
   nuevo(): void {
-    this.contratoEditId = null;
-    this.contratoSeleccionado = null;
-    this.showForm = true;
+    void this.router.navigate(['/nomina/vinculaciones/nueva'], {
+      queryParams: { empleadoId: this.empleadoId },
+    });
   }
 
   editar(c: ContratoTableModel): void {
-    this.contratoEditId = c.id;
-    this.showForm = true;
+    void this.router.navigate(['/nomina/vinculaciones', c.id]);
   }
 
   /**

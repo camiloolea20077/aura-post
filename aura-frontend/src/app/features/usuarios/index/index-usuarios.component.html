@@ -41,6 +41,101 @@
       </div>
     </div>
 
+    <!-- ─── Firma contable con acceso (PLAN_FIRMA_CONTABLE F5) ──── -->
+    <div class="firma-acceso" *ngIf="accesoFirma as a">
+      <div class="firma-acceso__icono"><i class="pi pi-briefcase"></i></div>
+      <div class="firma-acceso__texto">
+        <span class="firma-acceso__titulo">Firma contable con acceso</span>
+        <span class="firma-acceso__nombre">{{ a.firma.firmaNombre }} · NIT {{ a.firma.firmaNit }}</span>
+        <span class="firma-acceso__usuarios" *ngIf="a.usuarios.length">
+          Entran: {{ nombresAcceso(a) }}
+        </span>
+        <span class="firma-acceso__usuarios" *ngIf="!a.usuarios.length">
+          Ningún usuario de la firma tiene asignada esta empresa todavía.
+        </span>
+      </div>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-ban"
+        label="Quitar acceso"
+        class="p-button-sm p-button-outlined p-button-danger firma-acceso__btn"
+        [loading]="quitandoAcceso"
+        (click)="confirmarQuitarAcceso($event)"
+      ></button>
+    </div>
+
+    <!-- ─── Solicitar una firma contable (PLAN_FIRMA_CONTABLE §9) ──── -->
+    <div class="firma-acceso" *ngIf="esFirma">
+      <div class="firma-acceso__icono"><i class="pi pi-briefcase"></i></div>
+      <div class="firma-acceso__texto">
+        <span class="firma-acceso__titulo">Firma contable</span>
+        <span class="firma-acceso__nombre">
+          {{ clientesFirma }} {{ clientesFirma === 1 ? 'cliente' : 'clientes' }} · {{ gestionadosFirma }} de {{ cupoFirma }} gestionados
+        </span>
+        <span class="firma-acceso__usuarios">
+          Cree clientes gestionados, responda solicitudes y asigne clientes a sus auxiliares (pestaña "Clientes que atiende").
+        </span>
+      </div>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-arrow-right"
+        iconPos="right"
+        label="Clientes de la firma"
+        class="p-button-sm btn-aura firma-acceso__btn"
+        (click)="irAClientesFirma()"
+      ></button>
+    </div>
+
+    <div class="firma-acceso firma-acceso--suave" *ngIf="esAdmin && !esFirma && !accesoFirma">
+      <div class="firma-acceso__icono"><i class="pi pi-briefcase"></i></div>
+
+      <ng-container *ngIf="solicitudPendiente; else sinSolicitud">
+        <div class="firma-acceso__texto">
+          <span class="firma-acceso__titulo">Solicitud enviada</span>
+          <span class="firma-acceso__nombre">{{ solicitud!.firmaNombre }} · NIT {{ solicitud!.firmaNit }}</span>
+          <span class="firma-acceso__usuarios">Esperando que la firma acepte llevarle la contabilidad.</span>
+        </div>
+        <button pButton type="button" label="Cancelar solicitud" class="p-button-sm p-button-text firma-acceso__btn" (click)="cancelarSolicitud()"></button>
+      </ng-container>
+
+      <ng-template #sinSolicitud>
+        <div class="firma-acceso__texto">
+          <span class="firma-acceso__titulo">Firma contable</span>
+          <span class="firma-acceso__nombre">¿Quiere que una firma contable le lleve la contabilidad?</span>
+          <span class="firma-acceso__usuarios" *ngIf="rechazoReciente">
+            {{ solicitud!.firmaNombre }} rechazó su solicitud<ng-container *ngIf="solicitud!.motivo">: {{ solicitud!.motivo }}</ng-container>.
+          </span>
+        </div>
+        <button
+          *ngIf="!pidiendoFirma"
+          pButton
+          type="button"
+          icon="pi pi-search"
+          label="Solicitar firma"
+          class="p-button-sm p-button-outlined firma-acceso__btn"
+          (click)="pidiendoFirma = true"
+        ></button>
+
+        <div class="firma-buscar" *ngIf="pidiendoFirma">
+          <div class="firma-buscar__fila">
+            <input pInputText [(ngModel)]="nitFirma" placeholder="NIT de la firma contable" inputmode="numeric" (keyup.enter)="buscarFirma()" />
+            <button pButton type="button" icon="pi pi-search" label="Buscar" class="p-button-sm" [loading]="buscandoFirma" (click)="buscarFirma()"></button>
+            <button pButton type="button" label="Cerrar" class="p-button-sm p-button-text" (click)="pidiendoFirma = false; firmaEncontrada = null"></button>
+          </div>
+          <div class="firma-buscar__resultado" *ngIf="firmaEncontrada as f">
+            <span><strong>{{ f.razonSocial }}</strong> · NIT {{ f.nit }}<ng-container *ngIf="f.dv">-{{ f.dv }}</ng-container></span>
+            <button pButton type="button" icon="pi pi-send" label="Enviar solicitud" class="p-button-sm btn-aura" [loading]="enviandoSolicitud" (click)="enviarSolicitud()"></button>
+          </div>
+          <small class="firma-buscar__nota">
+            La firma recibe un aviso y decide si acepta. Si acepta, sus contadores entran a su empresa con el perfil
+            "Contador externo"; usted puede quitarles el acceso cuando quiera.
+          </small>
+        </div>
+      </ng-template>
+    </div>
+
     <p-table
       [value]="rows"
       [lazy]="true"

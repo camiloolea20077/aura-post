@@ -53,6 +53,7 @@ const GRUPOS: { nombre: string; test: (c: string) => boolean }[] = [
  * todo esto solo se podía cambiar por SQL.
  */
 import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-autocomplete/cuenta-autocomplete.component';
+import { TerceroAutocompleteComponent } from '../../../shared/components/tercero-autocomplete/tercero-autocomplete.component';
 
 @Component({
   selector: 'app-parametrizacion-contable',
@@ -60,6 +61,7 @@ import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-a
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CuentaAutocompleteComponent,
+    TerceroAutocompleteComponent,
     PuedeDirective,
     InputNumberModule,
     CommonModule,
@@ -289,12 +291,47 @@ export class ParametrizacionContableComponent implements OnInit {
   }
 
   // ── Impuestos ────────────────────────────────────────────────
+  readonly tiposImpuesto = [
+    { label: 'IVA', value: 'IVA' },
+    { label: 'INC (impoconsumo)', value: 'INC' },
+    { label: 'Excluido', value: 'EXCLUIDO' },
+    { label: 'Exento', value: 'EXENTO' },
+  ];
+
+  /** Fila nueva al inicio de la tabla: se guarda con el mismo botón. */
+  nuevoImpuesto(): void {
+    if (this.impuestos.some((i) => !i.id)) return;
+    this.impuestos = [
+      {
+        nombre: '',
+        tipo: 'IVA',
+        porcentaje: 0,
+        cuentaGeneradoId: null,
+        cuentaDescontableId: null,
+        terceroAcreedorId: null,
+        activo: true,
+      },
+      ...this.impuestos,
+    ];
+    this.cdr.markForCheck();
+  }
+
+  descartarNuevoImpuesto(): void {
+    this.impuestos = this.impuestos.filter((i) => !!i.id);
+    this.cdr.markForCheck();
+  }
+
   async guardarImpuesto(i: ImpuestoModel): Promise<void> {
-    if (!i.id) return;
-    this.guardando = 'IMP' + i.id;
+    if (!i.id && !i.nombre?.trim()) {
+      this.alert.showWarn('Falta el nombre', 'Escriba el nombre del impuesto (ej. IVA 19%).');
+      return;
+    }
+    this.guardando = 'IMP' + (i.id ?? 'nuevo');
     this.cdr.markForCheck();
     try {
-      const res = await lastValueFrom(this.service.actualizarImpuesto(i.id, i));
+      const res = await lastValueFrom(
+        i.id ? this.service.actualizarImpuesto(i.id, i) : this.service.crearImpuesto(i),
+      );
       Object.assign(i, res?.data ?? {});
       this.alert.showSuccess('Guardado', `Impuesto ${i.nombre}`);
     } catch (e: any) {

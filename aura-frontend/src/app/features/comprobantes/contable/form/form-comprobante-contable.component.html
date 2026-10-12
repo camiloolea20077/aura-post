@@ -6,14 +6,20 @@
         <div class="card-head__title">
           <span class="header-icon"><i class="pi pi-file-edit"></i></span>
           <div>
-            <h1 class="title">Nuevo comprobante</h1>
-            <p class="subtitle">Egreso o recibo de caja</p>
+            <h1 class="title">{{ modoEdicion ? "Corregir " + consecutivoPreview : "Nuevo comprobante" }}</h1>
+            <p class="subtitle">
+              {{ modoEdicion ? "Conserva su número: se rehacen el asiento, la cartera y la caja con los valores nuevos" : "Egreso o recibo de caja" }}
+            </p>
           </div>
         </div>
       </div>
 
       <!-- Cuerpo -->
       <div class="cmp-body">
+        <div class="aviso-edicion" *ngIf="cargandoEdicion"><i class="pi pi-spin pi-spinner"></i> Cargando el comprobante…</div>
+        <div class="aviso-edicion aviso-edicion--bloqueo" *ngIf="motivoNoEditable">
+          <i class="pi pi-lock"></i> {{ motivoNoEditable }}
+        </div>
         <!-- Cabecera -->
         <div class="cmp-grid">
           <div class="field">
@@ -453,11 +459,11 @@
         <button
           pButton
           type="submit"
-          label="Guardar y contabilizar"
+          [label]="modoEdicion ? 'Guardar corrección' : 'Guardar y contabilizar'"
           icon="pi pi-check"
           class="btn-verde"
           [loading]="saving"
-          [disabled]="!cuadrado"
+          [disabled]="!cuadrado || !!motivoNoEditable || cargandoEdicion"
         ></button>
       </div>
     </div>

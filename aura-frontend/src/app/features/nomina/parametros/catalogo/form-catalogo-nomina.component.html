@@ -1,0 +1,150 @@
+<p-dialog
+  [header]="
+    (esEdicion ? 'Editar' : 'Nuevo') + ' · ' + (definicion?.nombre ?? '')
+  "
+  [(visible)]="visible"
+  (onHide)="cerrar()"
+  [modal]="true"
+  [style]="{ width: '560px' }"
+  [breakpoints]="{ '640px': '95vw' }"
+  [draggable]="false"
+>
+  <form [formGroup]="form" class="dialog-form">
+    <div class="form-grid">
+      <div class="field">
+        <label class="field-label"
+          >Código <span class="required">*</span></label
+        >
+        <input
+          type="text"
+          pInputText
+          formControlName="codigo"
+          class="w-full"
+          placeholder="Ej. N1"
+        />
+        <small class="field-error" *ngIf="invalido('codigo')"
+          >El código es obligatorio (hasta 20 caracteres)</small
+        >
+      </div>
+      <div class="field">
+        <label class="field-label">Estado</label>
+        <p-select
+          formControlName="activo"
+          [options]="opcionesEstado"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+        />
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Nombre <span class="required">*</span></label>
+      <input type="text" pInputText formControlName="nombre" class="w-full" />
+      <small class="field-error" *ngIf="invalido('nombre')"
+        >El nombre es obligatorio</small
+      >
+    </div>
+
+    <!-- Campos propios del catálogo -->
+    @if (camposPropios.length) {
+      <div class="form-grid" formGroupName="atributos">
+        @for (a of camposPropios; track a.nombre) {
+          <div class="field">
+            <label class="field-label">
+              {{ a.etiqueta }}
+              @if (a.obligatorio) {
+                <span class="required">*</span>
+              }
+            </label>
+            @switch (a.tipo) {
+              @case ("BOOLEANO") {
+                <p-select
+                  [formControlName]="a.nombre"
+                  [options]="opcionesSiNo"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="w-full"
+                />
+              }
+              @case ("OPCION") {
+                <p-select
+                  [formControlName]="a.nombre"
+                  [options]="opcionesDe(a)"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="w-full"
+                  placeholder="Seleccione"
+                />
+              }
+              @case ("TEXTO") {
+                <input
+                  type="text"
+                  pInputText
+                  [formControlName]="a.nombre"
+                  class="w-full"
+                />
+              }
+              @default {
+                <p-inputNumber
+                  [formControlName]="a.nombre"
+                  [min]="a.minimo ?? undefined"
+                  [max]="a.maximo ?? undefined"
+                  [minFractionDigits]="0"
+                  [maxFractionDigits]="decimales(a)"
+                  mode="decimal"
+                  locale="es-CO"
+                  styleClass="w-full"
+                  inputStyleClass="w-full"
+                />
+              }
+            }
+            @if (a.ayuda) {
+              <small class="field-hint">{{ a.ayuda }}</small>
+            }
+            @if (
+              atributos.get(a.nombre)?.invalid &&
+              atributos.get(a.nombre)?.touched
+            ) {
+              <small class="field-error">
+                Valor requerido{{
+                  a.minimo != null && a.maximo != null
+                    ? " entre " + a.minimo + " y " + a.maximo
+                    : ""
+                }}
+              </small>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <div class="field">
+      <label class="field-label">Descripción</label>
+      <textarea
+        pTextarea
+        formControlName="descripcion"
+        rows="2"
+        class="w-full"
+      ></textarea>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="btn-amarillo"
+      (click)="cerrar()"
+    ></button>
+    <button
+      pButton
+      [label]="esEdicion ? 'Actualizar' : 'Guardar'"
+      icon="pi pi-check"
+      class="btn-verde"
+      [loading]="guardando"
+      (click)="guardar()"
+    ></button>
+  </ng-template>
+</p-dialog>

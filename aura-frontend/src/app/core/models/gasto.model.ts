@@ -52,6 +52,9 @@ export interface GastoModel {
   baseReteica: number;
   tarifaReteica: number;
   valorReteica: number;
+  /** Concepto de retención (tarifa) elegido: de él salen la cuenta y el acreedor. */
+  retefuenteTarifaId?: number | null;
+  reteicaTarifaId?: number | null;
   tipoDocSoporte: string | null;
   numeroDocSoporte: string | null;
 }
@@ -113,6 +116,9 @@ export interface CreateGastoDto {
   baseReteica: number;
   tarifaReteica: number;
   valorReteica: number;
+  /** Concepto de retención (tarifa) elegido: de él salen la cuenta y el acreedor. */
+  retefuenteTarifaId?: number | null;
+  reteicaTarifaId?: number | null;
   tipoDocSoporte: string | null;
   numeroDocSoporte: string | null;
 }

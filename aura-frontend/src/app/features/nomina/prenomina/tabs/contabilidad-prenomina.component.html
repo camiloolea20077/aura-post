@@ -1,0 +1,66 @@
+@if (proyeccion && proyeccion.lineas.length > 0) {
+  <div class="acciones">
+    <span class="nota">
+      Asiento que se genera al confirmar la nómina, con los {{ proyeccion.empleados }} empleado(s) liquidados:
+      gasto por concepto y pasivos a nombre de cada EPS, AFP, ARL, caja, DIAN o empleado.
+    </span>
+    <p-tag [value]="cuadra ? 'Cuadra' : 'Descuadrado'" [severity]="cuadra ? 'success' : 'danger'" />
+  </div>
+}
+
+@if (proyeccion && proyeccion.advertencias.length > 0) {
+  <div class="avisos">
+    <div class="avisos__head"><i class="pi pi-exclamation-triangle"></i> Revise antes de confirmar</div>
+    <ul>
+      @for (a of proyeccion.advertencias; track $index) {
+        <li>{{ a }}</li>
+      }
+    </ul>
+  </div>
+}
+
+<p-table [value]="proyeccion?.lineas ?? []" [loading]="cargando" [scrollable]="true"
+  [tableStyle]="{ 'min-width': '62rem' }" showGridlines>
+  <ng-template pTemplate="header">
+    <tr>
+      <th style="width: 120px">Cuenta</th>
+      <th>Nombre</th>
+      <th>Descripción</th>
+      <th style="width: 220px">Tercero</th>
+      <th style="width: 150px" class="text-right">Débito</th>
+      <th style="width: 150px" class="text-right">Crédito</th>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="body" let-l>
+    <tr>
+      <td><code class="codigo">{{ l.cuentaCodigo ?? '—' }}</code></td>
+      <td>{{ l.cuentaNombre ?? '—' }}</td>
+      <td>{{ l.descripcion }}</td>
+      <td>{{ l.terceroNombre ?? '—' }}</td>
+      <td class="text-right mono">{{ l.debito ? (l.debito | currency: 'COP' : 'symbol-narrow' : '1.0-0') : '' }}</td>
+      <td class="text-right mono">{{ l.credito ? (l.credito | currency: 'COP' : 'symbol-narrow' : '1.0-0') : '' }}</td>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    @if (proyeccion && proyeccion.lineas.length > 0) {
+      <tr class="totales">
+        <td colspan="4">Totales</td>
+        <td class="text-right mono">{{ proyeccion.totalDebito | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+        <td class="text-right mono">{{ proyeccion.totalCredito | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+      </tr>
+    }
+  </ng-template>
+
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td colspan="6">
+        <div class="empty-state">
+          <i class="pi pi-book"></i>
+          <p>La proyección contable aparece al liquidar.</p>
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>

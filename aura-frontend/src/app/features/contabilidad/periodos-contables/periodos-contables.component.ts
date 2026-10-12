@@ -22,6 +22,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { TabViewModule } from 'primeng/tabview';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
+import { CierreMesPanelComponent } from './cierre-mes/cierre-mes-panel.component';
 
 import { PeriodoContableService } from '../../../core/services/periodo-contable.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
@@ -51,6 +52,7 @@ import {
     TextareaModule,
     TabViewModule,
     SkeletonModule,
+    CierreMesPanelComponent,
   ],
   providers: [MessageService],
   templateUrl: './periodos-contables.component.html',

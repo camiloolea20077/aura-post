@@ -1,8 +1,8 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, from } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { AuthResponse, LoginDto, Modulo } from '../models/auth.model';
+import { AuthResponse, EmpresaOpcion, LoginDto, Modulo } from '../models/auth.model';
 
 import { ResponseModel } from '../../shared/utils/responde.models';
 import { environment } from '../../../environments/environment';
@@ -31,6 +31,25 @@ export class AuthService {
       `${this.apiUrl}/cambiar-sede`,
       { sucursalId },
     );
+  }
+
+  // ─── Firma contable: elegir o cambiar la empresa de trabajo ──
+  /**
+   * Devuelve el token para esa empresa. Tras el login se manda el token de paso
+   * ({@code tokenPaso}); desde "Cambiar empresa", el de la sesión.
+   */
+  seleccionarEmpresa(empresaId: number, tokenPaso?: string): Observable<ResponseModel<AuthResponse>> {
+    const headers = tokenPaso ? new HttpHeaders({ Authorization: `Bearer ${tokenPaso}` }) : undefined;
+    return this.http.post<ResponseModel<AuthResponse>>(
+      `${this.apiUrl}/seleccionar-empresa`,
+      { empresaId },
+      { headers },
+    );
+  }
+
+  /** Empresas en las que puede trabajar (su firma y sus clientes). */
+  empresas(): Observable<ResponseModel<EmpresaOpcion[]>> {
+    return this.http.get<ResponseModel<EmpresaOpcion[]>>(`${this.apiUrl}/empresas`);
   }
 
   // ─── Obtener sesión guardada como Observable ─────────────────

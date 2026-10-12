@@ -1,0 +1,257 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-sun"></i></span>
+        <div>
+          <h1 class="title">Vacaciones</h1>
+          <p class="subtitle">
+            Registre las vacaciones en tiempo o en dinero; entran solas a la nómina del período y descuentan del saldo
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button *appPuede="'recursos-humanos.vacaciones:CREAR'" pButton type="button" label="Colectivas"
+            icon="pi pi-users" class="p-button-outlined" (click)="nuevasColectivas()"></button>
+          <button *appPuede="'recursos-humanos.vacaciones:CREAR'" pButton type="button" label="Nuevas vacaciones"
+            icon="pi pi-plus" class="btn-aura" (click)="nuevo()"></button>
+        </div>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input type="text" pInputText class="search-input"
+              placeholder="Buscar empleado, documento, vinculación o lote..." [(ngModel)]="busqueda"
+              (input)="buscar()" (keydown.escape)="limpiarBusqueda()" />
+            @if (busqueda) {
+              <button class="clear-btn" (click)="limpiarBusqueda()"><i class="pi pi-times"></i></button>
+            }
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <p-table [value]="filas" [lazy]="true" [loading]="cargando" [totalRecords]="totalFilas" [rows]="tamano"
+      [paginator]="true" [rowsPerPageOptions]="[10, 25, 50]" (onPage)="onPagina($event)"
+      [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} de {totalRecords} registros"
+      [scrollable]="true" [tableStyle]="{ 'min-width': '62rem' }" showGridlines>
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Empleado</th>
+          <th style="width: 110px">Tipo</th>
+          <th style="width: 230px">Fechas</th>
+          <th style="width: 130px" class="num">Días</th>
+          <th style="width: 160px">Estado</th>
+          <th style="width: 110px">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-v>
+        <tr [class.row-inactiva]="v.estado === 'ANULADA'">
+          <td>
+            <div class="nombre">{{ v.empleadoDocumento }} - {{ v.empleadoNombre }}</div>
+            <div class="meta">
+              {{ v.codigoVinculacion ?? 'Sin código' }}
+              @if (v.lote) {
+                · Colectivas {{ v.lote }}
+              }
+            </div>
+          </td>
+          <td>{{ textoTipo(v) }}</td>
+          <td>
+            @if (v.tipo === 'TIEMPO') {
+              {{ v.fechaInicio | fechaEs }} al {{ v.fechaFin | fechaEs }}
+              <div class="meta">
+                @if (v.fechaRegresoAnticipado) {
+                  Regresó el {{ v.fechaRegresoAnticipado | fechaEs }}
+                } @else {
+                  Regresa el {{ v.fechaRegreso | fechaEs }}
+                }
+              </div>
+            } @else {
+              Se pagan con la nómina del {{ v.fechaInicio | fechaEs }}
+            }
+          </td>
+          <td class="num">
+            {{ v.diasHabiles | number: '1.0-2' }} {{ v.tipo === 'TIEMPO' ? 'hábiles' : 'días' }}
+            @if (v.diasNoDisfrutados > 0) {
+              <div class="meta">{{ v.diasNoDisfrutados | number: '1.0-2' }} vuelven al saldo</div>
+            }
+          </td>
+          <td><p-tag [value]="textoEstado(v)" [severity]="severidad(v.estado)" styleClass="tag-mini" /></td>
+          <td>
+            <div class="action-buttons">
+              @if (v.tipo === 'TIEMPO' && v.estado === 'REGISTRADA') {
+                <button *appPuede="'recursos-humanos.vacaciones:EDITAR'" pButton icon="pi pi-replay"
+                  class="p-button-text p-button-sm" pTooltip="Regreso anticipado"
+                  (click)="abrirRetorno(v)"></button>
+              }
+              @if (v.estado !== 'ANULADA') {
+                <button *appPuede="'recursos-humanos.vacaciones:ELIMINAR'" pButton icon="pi pi-ban"
+                  class="p-button-text p-button-danger p-button-sm" pTooltip="Anular"
+                  (click)="confirmarAnular(v)"></button>
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6">
+            <div class="empty-state">
+              <i class="pi pi-sun"></i>
+              <p>No hay vacaciones registradas.</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<!-- Registrar -->
+<p-dialog header="Nuevas vacaciones" [(visible)]="mostrarForm" [modal]="true" [style]="{ width: '640px' }"
+  [breakpoints]="{ '700px': '95vw' }" [draggable]="false">
+  <div class="form-vac">
+    <div class="campo ancho">
+      <label>Vinculación *</label>
+      <p-select [options]="vinculaciones" [(ngModel)]="form.contratoId" optionLabel="label" optionValue="value"
+        [filter]="true" filterBy="label" placeholder="Empleado o código de vinculación" styleClass="w-full"
+        appendTo="body" (onChange)="onVinculacion()" />
+    </div>
+
+    @if (cargandoSaldo) {
+      <p class="nota ancho"><i class="pi pi-spin pi-spinner"></i> Consultando el saldo...</p>
+    } @else if (saldo) {
+      <div class="saldo ancho">
+        <div><span>Causados</span><b>{{ saldo.diasCausados | number: '1.0-2' }}</b></div>
+        <div><span>Saldo inicial</span><b>{{ saldo.saldoInicial | number: '1.0-2' }}</b></div>
+        <div><span>Tomados</span><b>{{ saldo.diasTomados | number: '1.0-2' }}</b></div>
+        <div class="disp"><span>Disponibles</span><b>{{ saldo.diasDisponibles | number: '1.0-2' }}</b></div>
+      </div>
+    }
+
+    <div class="campo ancho">
+      <label>Tipo *</label>
+      <p-select [options]="tipos" [(ngModel)]="form.tipo" optionLabel="label" optionValue="value"
+        styleClass="w-full" appendTo="body" />
+    </div>
+
+    @if (form.tipo === 'TIEMPO') {
+      <div class="campo">
+        <label>Desde *</label>
+        <p-calendar [(ngModel)]="form.fechaInicio" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
+          appendTo="body" />
+      </div>
+      <div class="campo">
+        <label>Hasta (último día de descanso) *</label>
+        <p-calendar [(ngModel)]="form.fechaFin" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
+          [minDate]="form.fechaInicio ?? undefined" appendTo="body" />
+      </div>
+      <p class="nota ancho">
+        Los días se cuentan hábiles (sin domingos ni festivos) y el regreso es el siguiente día hábil.
+      </p>
+    } @else {
+      <div class="campo">
+        <label>Fecha de pago *</label>
+        <p-calendar [(ngModel)]="form.fechaInicio" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
+          appendTo="body" />
+        <small>Entran a la nómina del período de esta fecha</small>
+      </div>
+      <div class="campo">
+        <label>Días a compensar *</label>
+        <p-inputNumber [(ngModel)]="form.dias" [min]="0" [maxFractionDigits]="2" styleClass="w-full"
+          inputStyleClass="w-full" />
+        <small>Hasta la mitad de lo causado (CST art. 189)</small>
+      </div>
+    }
+
+    <div class="campo ancho">
+      <label>Observación</label>
+      <input pInputText [(ngModel)]="form.observacion" class="w-full" />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancelar" icon="pi pi-times" class="btn-amarillo" (click)="mostrarForm = false"></button>
+    <button pButton label="Registrar" icon="pi pi-check" class="btn-verde" [loading]="guardando"
+      (click)="guardar()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Colectivas -->
+<p-dialog header="Vacaciones colectivas" [(visible)]="mostrarColectivas" [modal]="true" [style]="{ width: '640px' }"
+  [breakpoints]="{ '700px': '95vw' }" [draggable]="false">
+  <div class="form-vac">
+    <div class="campo ancho">
+      <label>Vinculaciones</label>
+      <p-multiSelect [options]="vinculaciones" [(ngModel)]="colectivas.contratoIds" optionLabel="label"
+        optionValue="value" [filter]="true" filterBy="label" placeholder="Todas las vinculaciones activas"
+        styleClass="w-full" appendTo="body" display="chip" />
+      <small>Déjelo vacío para registrarlas a todas las vinculaciones activas</small>
+    </div>
+    <div class="campo">
+      <label>Desde *</label>
+      <p-calendar [(ngModel)]="colectivas.fechaInicio" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
+        appendTo="body" />
+    </div>
+    <div class="campo">
+      <label>Hasta (último día de descanso) *</label>
+      <p-calendar [(ngModel)]="colectivas.fechaFin" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
+        [minDate]="colectivas.fechaInicio ?? undefined" appendTo="body" />
+    </div>
+    <div class="campo ancho">
+      <label>Observación</label>
+      <input pInputText [(ngModel)]="colectivas.observacion" class="w-full" />
+    </div>
+
+    @if (resultadoColectivas) {
+      <div class="resultado ancho">
+        <p>
+          <b>{{ resultadoColectivas.registradas }}</b> registradas (lote {{ resultadoColectivas.lote }}).
+          No se registraron {{ resultadoColectivas.omitidos.length }}:
+        </p>
+        <ul>
+          @for (o of resultadoColectivas.omitidos; track o) {
+            <li>{{ o }}</li>
+          }
+        </ul>
+      </div>
+    }
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Cerrar" icon="pi pi-times" class="btn-amarillo" (click)="mostrarColectivas = false"></button>
+    @if (!resultadoColectivas) {
+      <button pButton label="Registrar" icon="pi pi-check" class="btn-verde" [loading]="guardando"
+        (click)="guardarColectivas()"></button>
+    }
+  </ng-template>
+</p-dialog>
+
+<!-- Regreso anticipado -->
+<p-dialog header="Regreso anticipado" [(visible)]="mostrarRetorno" [modal]="true" [style]="{ width: '440px' }"
+  [breakpoints]="{ '500px': '95vw' }" [draggable]="false">
+  @if (retornoDe) {
+    <div class="form-vac una">
+      <p class="nota">
+        {{ retornoDe.empleadoNombre }} · del {{ retornoDe.fechaInicio | fechaEs }} al {{ retornoDe.fechaFin | fechaEs }}
+      </p>
+      <div class="campo">
+        <label>Volvió a trabajar el *</label>
+        <p-calendar [(ngModel)]="fechaRetorno" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
+          appendTo="body" />
+        <small>Los días hábiles desde esa fecha hasta el fin vuelven al saldo</small>
+      </div>
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancelar" icon="pi pi-times" class="btn-amarillo" (click)="mostrarRetorno = false"></button>
+    <button pButton label="Registrar regreso" icon="pi pi-check" class="btn-verde" [loading]="guardando"
+      (click)="guardarRetorno()"></button>
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog />

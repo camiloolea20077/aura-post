@@ -128,7 +128,7 @@ export const FINANZAS: ManualModulo[] = [
     icono: 'pi pi-wallet',
     rutas: ['/cartera', '/cartera/cliente'],
     resumen:
-      'Gestión completa del crédito a clientes: cupos, tablero, agenda de cobro, ficha del cliente, recibos de caja con retenciones, acuerdos de pago y autorizaciones.',
+      'Gestión completa del crédito a clientes: cupos, tablero, agenda de cobro, ficha del cliente, recibos de caja con retenciones, acuerdos de pago, autorizaciones, intereses de mora, deterioro y castigo.',
     secciones: [
       {
         titulo: 'Las pestañas de Cartera',
@@ -137,6 +137,7 @@ export const FINANZAS: ManualModulo[] = [
           'Cobrar hoy: promesas incumplidas, promesas para hoy, vencidos sin gestión y facturas que vencen pronto, con botones para llamar, WhatsApp y registrar gestión o pago.',
           'Autorizaciones: ventas a crédito que pasan el cupo y esperan aprobación.',
           'Cuentas Vencidas, Clientes (cupos), Edades de Cartera, Recibos de caja y Acuerdos de pago.',
+          'Deterioro y castigo (ver abajo). Su botón Política fija los tramos de deterioro, desde cuántos días se sugiere castigar y, si la empresa los cobra, los intereses de mora. La pestaña Intereses de mora solo aparece cuando se activan.',
         ],
       },
       {
@@ -184,6 +185,26 @@ export const FINANZAS: ManualModulo[] = [
         ],
       },
       {
+        titulo: 'Intereses de mora',
+        pasos: [
+          'Son opcionales y vienen apagados: si la empresa no cobra intereses no tiene que hacer nada. Para activarlos: Deterioro y castigo → Política → "Sí, cobrar intereses de mora", la tasa pactada (% mensual), la tasa de usura vigente y hasta cuándo rige, y los días de gracia. Nunca se cobra más que la usura.',
+          'La pestaña Intereses de mora muestra lo causado a hoy por cliente; la flecha de Facturas lo abre factura por factura.',
+          '"Facturar": elija las facturas, la fecha y el plazo. Se crea una cuenta por cobrar aparte con su asiento (1305 contra ingreso 4210). Antes de facturar, el interés no es ingreso.',
+          'El siguiente cobro empieza donde terminó el anterior. Anular un cobro (sin abonos) anula su cuenta y su asiento, y esos días vuelven a quedar por cobrar.',
+          'La ficha del cliente muestra los intereses causados y los facturados sin pagar.',
+        ],
+      },
+      {
+        titulo: 'Deterioro y castigo de cartera',
+        pasos: [
+          'Deterioro sugerido: aplica los tramos de la política (p. ej. 180+ días: 50 %) a cada factura vencida y lo compara con la provisión que ya hay en la 1399.',
+          '"Proponer asiento" crea el ajuste en borrador; el contador lo aprueba en Revisión de comprobantes. Solo se propone lo que falta.',
+          'Candidatas a castigo: facturas vencidas con más días de los que fija la política (o los que escriba). Selecciónelas, "Castigar", fecha y motivo (es el soporte ante la DIAN).',
+          'El castigo usa primero la provisión (1399) y el resto va al gasto (5199). La factura queda "Castigada": sale de la cartera, de las edades y de Cobrar hoy, pero conserva sus abonos.',
+          'Si el cliente paga después, anule el castigo (botón de la fila): la factura vuelve con su saldo y luego se registra el pago.',
+        ],
+      },
+      {
         titulo: 'Reglas de crédito y autorizaciones',
         texto: [
           'Reglas de crédito (botón en Cartera): suben o bajan cupos y suspenden clientes solos según cómo pagan. Se arman con condiciones (score, mora, cupo), qué hacen, cuándo se revisan y cada cuánto pueden repetirse. "Probar con los clientes de hoy" muestra a quién afectaría.',
@@ -226,6 +247,26 @@ export const FINANZAS: ManualModulo[] = [
         mensaje: 'El sobrante de este recibo ya se cruzó contra otra factura',
         causa: 'El anticipo ya se aplicó.',
         solucion: 'Reverse ese cruce antes de anular el recibo.',
+      },
+      {
+        mensaje: 'La cuenta … está castigada. Anule el castigo antes de registrar o reversar pagos sobre ella',
+        causa: 'Se intentó abonar, cruzar un anticipo o anular un pago de una factura castigada.',
+        solucion: 'Cartera → Deterioro y castigo → anule el castigo y repita la operación.',
+      },
+      {
+        mensaje: 'Escriba el motivo del castigo (mínimo 10 caracteres)',
+        causa: 'Motivo vacío o muy corto.',
+        solucion: 'Explique por qué es incobrable (cliente liquidado, cobro jurídico agotado…).',
+      },
+      {
+        mensaje: 'Ya hay una propuesta de deterioro en borrador',
+        causa: 'Hay un ajuste de deterioro sin aprobar.',
+        solucion: 'Apruébelo o anúlelo en Revisión de comprobantes antes de proponer otro.',
+      },
+      {
+        mensaje: 'El cliente ya abonó a estos intereses: anule los abonos antes de anular el cobro',
+        causa: 'La cuenta de intereses tiene pagos.',
+        solucion: 'Anule primero esos pagos.',
       },
       {
         mensaje: 'La cuenta … ya está en el acuerdo …: anúlelo primero',

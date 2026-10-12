@@ -8,6 +8,7 @@ import {
   NominaElectronicaEstado,
   NominaElectronicaPayload,
   NominaElectronicaRespuesta,
+  NominaElectronicaMes,
 } from '../models/nomina-electronica.model';
 
 @Injectable({ providedIn: 'root' })
@@ -55,6 +56,18 @@ export class NominaElectronicaService {
   }
 
   /** Listado local (persistido) de todas las nóminas electrónicas de la empresa. */
+  /** El mes de la nómina: qué nóminas junta el documento y si ya se puede enviar. */
+  mes(nominaId: number): Observable<ResponseModel<NominaElectronicaMes>> {
+    return this.http.get<ResponseModel<NominaElectronicaMes>>(`${this.base}nomina-electronica/nomina/${nominaId}/mes`);
+  }
+
+  /** Vista por mes: empleados con nóminas confirmadas en el mes y su documento. */
+  listarMes(anio: number, mes: number): Observable<ResponseModel<NominaElectronicaMes[]>> {
+    return this.http.get<ResponseModel<NominaElectronicaMes[]>>(`${this.base}nomina-electronica/mes`, {
+      params: { anio, mes },
+    });
+  }
+
   listarLocal(): Observable<ResponseModel<NominaElectronicaEstado[]>> {
     return this.http.get<ResponseModel<NominaElectronicaEstado[]>>(
       `${this.base}nomina-electronica/local`,
@@ -74,6 +87,38 @@ export class NominaElectronicaService {
       `${this.base}nomina-electronica/nomina/${nominaId}/xml`,
       { responseType: 'blob' },
     );
+  }
+
+  /** Descarga el PDF de la nómina electrónica (Factus v2). */
+  descargarPdf(nominaId: number): Observable<Blob> {
+    return this.http.get(`${this.base}nomina-electronica/nomina/${nominaId}/pdf`, { responseType: 'blob' });
+  }
+
+  /** Consulta en Factus una nómina electrónica por su número (prefijo + consecutivo). */
+  verPorNumero(numero: string): Observable<ResponseModel<unknown>> {
+    return this.http.get<ResponseModel<unknown>>(`${this.base}nomina-electronica/numero/${numero}`);
+  }
+
+  /** Consulta en Factus una nota de ajuste por su número. */
+  verAjuste(numero: string): Observable<ResponseModel<unknown>> {
+    return this.http.get<ResponseModel<unknown>>(`${this.base}nomina-electronica/ajustes/${numero}`);
+  }
+
+  /** Elimina en Factus una nota de ajuste que la DIAN no validó (la nómina vuelve a aceptada). */
+  eliminarAjuste(referenceCode: string): Observable<ResponseModel<unknown>> {
+    return this.http.delete<ResponseModel<unknown>>(
+      `${this.base}nomina-electronica/ajustes/reference/${referenceCode}`,
+    );
+  }
+
+  /** XML de una nota de ajuste. */
+  descargarXmlAjuste(numero: string): Observable<Blob> {
+    return this.http.get(`${this.base}nomina-electronica/ajustes/${numero}/xml`, { responseType: 'blob' });
+  }
+
+  /** PDF de una nota de ajuste. */
+  descargarPdfAjuste(numero: string): Observable<Blob> {
+    return this.http.get(`${this.base}nomina-electronica/ajustes/${numero}/pdf`, { responseType: 'blob' });
   }
 
   /**

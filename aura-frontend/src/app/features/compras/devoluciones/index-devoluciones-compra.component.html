@@ -1,0 +1,212 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-replay"></i></span>
+        <div>
+          <h1 class="title">Devoluciones en compras</h1>
+          <p class="subtitle">
+            Mercancía devuelta al proveedor — descuenta el stock, el kardex y lo
+            que se le debe
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button
+            *appPuede="'compras.compras:CREAR'"
+            pButton
+            type="button"
+            label="Nueva devolución"
+            icon="pi pi-plus"
+            class="btn-aura"
+            (click)="nuevaDevolucion()"
+          ></button>
+          <button
+            pButton
+            type="button"
+            label="Excel"
+            icon="pi pi-file-excel"
+            class="p-button-outlined"
+            [loading]="exportando"
+            (click)="exportarExcel()"
+          ></button>
+        </div>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              class="search-input"
+              placeholder="Buscar por N° nota, compra, proveedor o motivo..."
+              [(ngModel)]="searchQuery"
+              (input)="onSearch()"
+              (keydown.escape)="clearSearch()"
+            />
+            <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body">
+
+    <div class="filtros">
+      <div class="filtro">
+        <label for="dev-estado">Estado</label>
+        <p-dropdown
+          inputId="dev-estado"
+          [options]="estadoOpts"
+          [(ngModel)]="estado"
+          optionLabel="label"
+          optionValue="value"
+          (onChange)="recargar()"
+        />
+      </div>
+      <div class="filtro">
+        <label for="dev-desde">Desde</label>
+        <p-calendar
+          inputId="dev-desde"
+          [(ngModel)]="desde"
+          dateFormat="yy-mm-dd"
+          [showIcon]="true"
+          [showClear]="true"
+          (onSelect)="recargar()"
+          (onClear)="recargar()"
+        />
+      </div>
+      <div class="filtro">
+        <label for="dev-hasta">Hasta</label>
+        <p-calendar
+          inputId="dev-hasta"
+          [(ngModel)]="hasta"
+          dateFormat="yy-mm-dd"
+          [showIcon]="true"
+          [showClear]="true"
+          (onSelect)="recargar()"
+          (onClear)="recargar()"
+        />
+      </div>
+    </div>
+
+    <p-table
+      [value]="items"
+      [lazy]="true"
+      (onLazyLoad)="loadTable($event)"
+      [paginator]="true"
+      [rows]="rowSize"
+      showGridlines
+      [totalRecords]="totalRecords"
+      [loading]="loadingTable"
+      [rowsPerPageOptions]="[10, 15, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords}"
+      [tableStyle]="{ 'min-width': '760px' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 66px">#</th>
+          <th style="min-width: 170px">Nota crédito</th>
+          <th style="min-width: 190px">Proveedor</th>
+          <th style="width: 120px">Fecha</th>
+          <th style="min-width: 170px">Qué pasa con la plata</th>
+          <th style="width: 90px" class="text-right">Unidades</th>
+          <th style="width: 130px" class="text-right">Valor</th>
+          <th style="width: 92px" class="text-center">Estado</th>
+          <th style="width: 70px" class="text-center">Ver</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item>
+        <tr [class.row-anulada]="item.estado === 'ANULADA'">
+          <td><span class="id-badge">#{{ item.id }}</span></td>
+          <td>
+            <div class="cell-doc">
+              <span class="num" *ngIf="item.numeroCompra">{{ item.numeroCompra }}</span>
+              <span class="sin-num" *ngIf="!item.numeroCompra">Sin número</span>
+              <button
+                type="button"
+                class="link-compra"
+                pTooltip="Ver la compra que se devolvió"
+                tooltipPosition="top"
+                (click)="verCompraOrigen(item)"
+              >
+                compra {{ item.compraOrigenNumero }}
+              </button>
+              <span class="motivo" *ngIf="item.observaciones" [pTooltip]="item.observaciones">
+                {{ item.observaciones }}
+              </span>
+            </div>
+          </td>
+          <td>
+            <div class="cell-prov">
+              <span class="prov-nombre">{{ item.proveedorNombre }}</span>
+              <span class="prov-sub">
+                {{ item.sucursalNombre }}<ng-container *ngIf="item.bodegaNombre"> · {{ item.bodegaNombre }}</ng-container>
+              </span>
+            </div>
+          </td>
+          <td>{{ item.fecha | date: "dd/MM/yyyy" }}</td>
+          <td>
+            <p-tag
+              [value]="destinoLabel(item.destinoNotaCredito)"
+              [severity]="destinoSeverity(item.destinoNotaCredito)"
+            />
+          </td>
+          <td class="text-right">{{ item.unidades | number: "1.0-4" }}</td>
+          <td class="text-right">
+            <span class="valor">{{ item.total | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span>
+          </td>
+          <td class="text-center">
+            <p-tag
+              [value]="item.estado === 'ANULADA' ? 'Anulada' : 'Vigente'"
+              [severity]="item.estado === 'ANULADA' ? 'danger' : 'success'"
+              [rounded]="true"
+            />
+          </td>
+          <td class="text-center">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-eye"
+              class="p-button-text p-button-sm"
+              pTooltip="Ver detalle"
+              tooltipPosition="top"
+              (click)="verDetalle(item)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9">
+            <div class="empty-state">
+              <i class="pi pi-replay"></i>
+              <p>
+                {{ searchQuery ? 'Sin resultados para "' + searchQuery + '"' : "No hay devoluciones con estos filtros" }}
+              </p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr *ngFor="let s of [1, 2, 3, 4, 5]">
+          <td *ngFor="let c of [1, 2, 3, 4, 5, 6, 7, 8, 9]"><p-skeleton /></td>
+        </tr>
+      </ng-template>
+    </p-table>
+    </div>
+  </div>
+</div>
+
+<app-detalle-compra
+  [visible]="showDetalle"
+  [compraId]="selectedId"
+  (closed)="onDetalleClosed()"
+  (anulada)="onAnulada()"
+/>

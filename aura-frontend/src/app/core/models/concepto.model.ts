@@ -25,8 +25,10 @@ export type BaseConcepto =
   | 'DEVENGADO_TOTAL'
   /** Valor fijo, sin cálculo. */
   | 'FIJO'
-  /** Lo resuelve el motor (ARL, retefuente) o viene de una novedad. */
-  | 'MANUAL';
+  /** Lo resuelve el motor (ARL, retefuente). */
+  | 'MANUAL'
+  /** El valor lo trae la novedad o el concepto propio de la vinculación (V217). */
+  | 'NOVEDAD';
 
 export const CLASE_CONCEPTO_OPTS = [
   { label: 'Devengado', value: 'DEVENGADO' },
@@ -42,6 +44,7 @@ export const BASE_CONCEPTO_OPTS = [
   { label: 'Total devengado', value: 'DEVENGADO_TOTAL' },
   { label: 'Valor fijo', value: 'FIJO' },
   { label: 'Manual (lo resuelve el motor)', value: 'MANUAL' },
+  { label: 'Novedad (el valor lo trae la novedad)', value: 'NOVEDAD' },
 ];
 
 export interface ConceptoModel {

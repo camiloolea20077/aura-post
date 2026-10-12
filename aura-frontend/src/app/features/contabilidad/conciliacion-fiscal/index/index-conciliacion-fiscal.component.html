@@ -1,0 +1,79 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-sliders-h"></i></span>
+        <div>
+          <h1 class="title">Conciliación fiscal</h1>
+          <p class="subtitle">
+            Formatos 2516 y 2517: de lo contable a lo fiscal, con sus ajustes e impuesto diferido
+          </p>
+        </div>
+      </div>
+      <button
+        *appPuede="'contabilidad.declaraciones:CREAR'"
+        pButton
+        type="button"
+        [label]="creando ? 'Cancelar' : 'Nueva conciliación'"
+        [icon]="creando ? 'pi pi-times' : 'pi pi-plus'"
+        [class]="creando ? 'p-button-text' : 'btn-aura'"
+        (click)="creando = !creando"
+      ></button>
+    </div>
+
+    <div class="card-body">
+
+    <div class="nueva" *ngIf="creando">
+      <div class="campo">
+        <label for="cf-anio">Año gravable</label>
+        <p-dropdown inputId="cf-anio" [options]="anios" [(ngModel)]="anio" optionLabel="label" optionValue="value" />
+      </div>
+      <div class="campo campo--ancho">
+        <label for="cf-formato">Formato</label>
+        <p-dropdown inputId="cf-formato" [options]="formatos" [(ngModel)]="formato" optionLabel="label" optionValue="value" />
+      </div>
+      <div class="campo">
+        <label for="cf-tarifa">Tarifa de renta</label>
+        <p-inputNumber inputId="cf-tarifa" [(ngModel)]="tarifaRenta" suffix=" %" [min]="0" [max]="100" [maxFractionDigits]="2" />
+      </div>
+      <div class="campo campo--boton">
+        <button pButton type="button" label="Crear" icon="pi pi-check" class="btn-aura" [loading]="guardando" (click)="crear()"></button>
+      </div>
+      <p class="ayuda campo--todo">
+        Después de crearla se carga el balance del año (Excel o la contabilidad de Aura) y el sistema lo analiza.
+        <ng-container *ngIf="formato === '2517'">
+          Para personas naturales la renta se liquida con la tabla del art. 241 E.T.: la tarifa aquí solo se usa para el
+          impuesto diferido y como referencia.
+        </ng-container>
+      </p>
+    </div>
+
+    <div class="cargando" *ngIf="cargando"><i class="pi pi-spin pi-spinner"></i> Cargando…</div>
+
+    <div class="vacio" *ngIf="!cargando && !items.length">
+      <i class="pi pi-sliders-h"></i>
+      <p>No hay conciliaciones. Cree la del año gravable que va a declarar.</p>
+    </div>
+
+    <div class="lista" *ngIf="!cargando && items.length">
+      <button type="button" class="item" *ngFor="let c of items" (click)="abrir(c)">
+        <div class="item-anio">{{ c.anio }}</div>
+        <div class="item-info">
+          <span class="item-titulo">{{ nombreFormato[c.formato] }}</span>
+          <span class="item-sub">
+            {{ c.cuentas ? c.cuentas + " cuentas" : "Sin balance" }}
+            <ng-container *ngIf="c.origen"> · {{ c.origen === "EXCEL" ? "desde Excel" : "desde la contabilidad" }}</ng-container>
+            · {{ c.ajustes }} ajuste(s) · tarifa {{ c.tarifaRenta }} %
+          </span>
+        </div>
+        <p-tag
+          [value]="c.estado === 'CERRADA' ? 'Cerrada' : 'Borrador'"
+          [severity]="c.estado === 'CERRADA' ? 'success' : 'warn'"
+          [rounded]="true"
+        />
+        <i class="pi pi-chevron-right item-flecha"></i>
+      </button>
+    </div>
+    </div>
+  </div>
+</div>

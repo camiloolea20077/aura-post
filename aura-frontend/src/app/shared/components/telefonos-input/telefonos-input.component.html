@@ -1,0 +1,26 @@
+<div class="entrada entrada--telefono">
+  <p-select [options]="tipos" [(ngModel)]="tipo" optionLabel="label" optionValue="value"
+    [disabled]="disabled" styleClass="entrada__tipo" />
+  <input pInputText type="tel" class="entrada__texto" [(ngModel)]="numero" [placeholder]="placeholder"
+    [disabled]="disabled" (keydown.enter)="agregar($event)" />
+  <input pInputText class="entrada__ext" [(ngModel)]="extension" placeholder="Ext."
+    [disabled]="disabled" (keydown.enter)="agregar($event)" />
+  <button type="button" class="entrada__mas" [disabled]="disabled || !numero.trim()" (click)="agregar()"
+    aria-label="Agregar teléfono"><i class="pi pi-plus"></i></button>
+</div>
+@if (telefonos.length) {
+  <div class="chips">
+    @for (t of telefonos; track $index) {
+      <span class="chip">
+        <i class="pi" [class.pi-mobile]="t.tipo === 'CELULAR'" [class.pi-phone]="t.tipo !== 'CELULAR'"></i>
+        <span class="chip__tipo">{{ etiquetaTipo(t.tipo) }}</span>
+        {{ t.numero }}@if (t.extension) { <span class="chip__extra">ext. {{ t.extension }}</span> }
+        @if (!disabled) {
+          <button type="button" class="chip__quitar" (click)="quitar($index)" aria-label="Quitar"><i class="pi pi-times"></i></button>
+        }
+      </span>
+    }
+  </div>
+} @else {
+  <small class="vacio">Agregue un teléfono</small>
+}

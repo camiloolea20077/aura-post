@@ -3,6 +3,7 @@ import {
   ChangeDetectorRef,
   Component,
   OnInit,
+  inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -39,6 +40,8 @@ import { aFechaLocal } from '../../../shared/utils/fecha.util';
  * no por gravedad — y con el cruce que los produjo. Eso último es lo que hace
  * defendible cada cifra cuando alguien la cuestione.
  */
+import { ExcelReporteService } from '../../../shared/services/excel-reporte.service';
+
 @Component({
   selector: 'app-reporte-gerencial',
   standalone: true,
@@ -58,6 +61,9 @@ import { aFechaLocal } from '../../../shared/utils/fecha.util';
   styleUrls: ['./reporte-gerencial.component.scss'],
 })
 export class ReporteGerencialComponent implements OnInit {
+  private readonly excel = inject(ExcelReporteService);
+  exportandoExcel = false;
+
   frm: FormGroup;
 
   resultado: AuditoriaResultadoModel | null = null;
@@ -223,5 +229,56 @@ export class ReporteGerencialComponent implements OnInit {
       currency: 'COP',
       maximumFractionDigits: 0,
     }).format(v ?? 0);
+  }
+
+  // ── Excel (docs/PLAN_EXCEL_IMPORTADORES_MODULOS.md §1) ──────────────
+  async descargarExcel(): Promise<void> {
+    const r = this.resultado;
+    if (!r) return;
+    const todos = [...r.hallazgos, ...r.heredados];
+    await this.conExcel(() =>
+      this.excel.descargar({
+        titulo: 'Reporte gerencial',
+        subtitulo: `Del ${r.fechaDesde} al ${r.fechaHasta}`,
+        archivo: `reporte_gerencial_${r.fechaDesde}_${r.fechaHasta}`,
+        hojas: [
+          {
+            nombre: 'Hallazgos',
+            columnas: [
+              { titulo: 'Código', ancho: 12 }, { titulo: 'Área', ancho: 14 }, { titulo: 'Severidad', ancho: 11 },
+              { titulo: 'Hallazgo', ancho: 44 }, { titulo: 'Cantidad', tipo: 'numero' }, { titulo: 'Monto', tipo: 'pesos' },
+              { titulo: 'Magnitud', ancho: 18 }, { titulo: 'Cruce', ancho: 40 }, { titulo: 'Recomendación', ancho: 50 },
+              { titulo: 'Heredado', ancho: 10 },
+            ],
+            filas: [
+              ...todos.map((h) => [h.codigo, h.area, h.severidad, h.titulo, h.cantidad, h.monto, h.magnitud,
+                h.cruce, h.recomendacion, h.heredado ? 'Sí' : 'No']),
+              { valores: ['', '', '', 'Monto en riesgo (severidad alta)', null, r.montoEnRiesgo], estilo: 'total' },
+            ],
+          },
+          {
+            nombre: 'Detalle',
+            columnas: [
+              { titulo: 'Código', ancho: 12 }, { titulo: 'Hallazgo', ancho: 40 }, { titulo: 'Referencia', ancho: 18 },
+              { titulo: 'Fecha', ancho: 12 }, { titulo: 'Descripción', ancho: 50 }, { titulo: 'Monto', tipo: 'pesos' },
+            ],
+            filas: todos.flatMap((h) => h.detalle.map((d) => [h.codigo, h.titulo, d.referencia, d.fecha,
+              d.descripcion, d.monto])),
+          },
+        ],
+      }),
+    );
+    this.cdr.markForCheck();
+  }
+
+  private async conExcel(fn: () => Promise<void>): Promise<void> {
+    this.exportandoExcel = true;
+    try {
+      await fn();
+    } catch {
+      // El servicio ya escribió lo que pudo; si falla, que no quede cargando.
+    } finally {
+      this.exportandoExcel = false;
+    }
   }
 }

@@ -169,6 +169,80 @@
         </div>
       </div>
 
+      <!-- ── Firma contable (docs/PLAN_FIRMA_CONTABLE.md) ───── -->
+      <div class="fe-section">
+        <div class="section-title"><i class="pi pi-briefcase"></i> Firma contable</div>
+        <p class="section-hint">
+          Una firma contable es gratis y atiende la contabilidad de otras empresas: sus usuarios entran a cada cliente
+          con el perfil "Contador externo".
+        </p>
+        <div class="modo-grid">
+          <button
+            type="button"
+            class="modo-card"
+            *ngFor="let t of tipoEmpresaOpts"
+            [class.active]="esFirma === t.value"
+            (click)="seleccionarTipoEmpresa(t.value)"
+          >
+            <div class="modo-top">
+              <i [class]="'pi ' + t.icon"></i>
+              <span class="modo-check" *ngIf="esFirma === t.value"><i class="pi pi-check-circle"></i></span>
+            </div>
+            <div class="modo-titulo">{{ t.titulo }}</div>
+            <div class="modo-desc">{{ t.desc }}</div>
+          </button>
+        </div>
+
+        <p class="section-hint firma-nota" *ngIf="esFirma && isEdit">
+          <i class="pi pi-users"></i>
+          Atiende {{ totalClientesFirma }} {{ totalClientesFirma === 1 ? 'cliente' : 'clientes' }}.
+          <span *ngIf="totalClientesFirma > 0">Para desmarcarla, primero quíteles la firma.</span>
+        </p>
+
+        <div class="form-row two-col" *ngIf="esFirma && isEdit">
+          <div class="field">
+            <label class="field-label">Cupo de clientes gestionados</label>
+            <p-inputNumber
+              [ngModel]="cupoGestionados"
+              [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="cupoGestionados = $event ?? 0"
+              [min]="0"
+              [showButtons]="true"
+              styleClass="w-full"
+            />
+            <small class="field-hint">
+              Lleva {{ totalGestionados }}. Son las empresas que la firma crea y paga por contrato aparte.
+            </small>
+          </div>
+        </div>
+
+        <div class="form-row two-col" *ngIf="!esFirma">
+          <div class="field">
+            <label class="field-label">Firma contable que la atiende</label>
+            <p-dropdown
+              [options]="firmaOpts"
+              [ngModel]="firmaContableId"
+              [ngModelOptions]="{ standalone: true }"
+              (ngModelChange)="firmaContableId = $event"
+              optionLabel="label"
+              optionValue="value"
+              [filter]="true"
+              filterBy="label"
+              [showClear]="true"
+              [loading]="firmaLoading"
+              (onFilter)="onFirmaFilter($event)"
+              placeholder="Ninguna"
+              emptyMessage="No hay firmas contables"
+              emptyFilterMessage="Ninguna firma coincide"
+              styleClass="w-full"
+            />
+            <small class="field-hint" *ngIf="isEdit && firmaContableId !== firmaContableOriginal">
+              {{ firmaContableId ? 'Al guardar, la firma anterior pierde el acceso.' : 'Al guardar, la firma pierde el acceso.' }}
+            </small>
+          </div>
+        </div>
+      </div>
+
       <!-- ── Líneas de uso: para qué usará Aura ──────────────── -->
       <div class="fe-section" *ngIf="lineasCatalogo.length">
         <div class="section-title"><i class="pi pi-compass"></i> ¿Para qué usará Aura?</div>

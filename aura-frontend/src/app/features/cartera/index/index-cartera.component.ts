@@ -21,11 +21,14 @@ import { TextareaModule } from 'primeng/textarea';
 import { CalendarModule } from 'primeng/calendar';
 import { Router } from '@angular/router';
 import { aFechaLocal } from '../../../shared/utils/fecha.util';
-import { ViewChild } from '@angular/core';
+import { ViewChild, inject } from '@angular/core';
+import { CarteraMoraService } from '../../../core/services/cartera-mora.service';
 import { AgendaCobroComponent } from '../agenda/agenda-cobro.component';
 import { TableroCarteraComponent } from '../tablero/tablero-cartera.component';
 import { AutorizacionesCreditoComponent } from '../autorizaciones/autorizaciones-credito.component';
 import { AcuerdoDetalleDialogComponent } from '../acuerdos/acuerdo-detalle-dialog.component';
+import { InteresesMoraComponent } from '../mora/intereses-mora.component';
+import { CastigoCarteraComponent } from '../mora/castigo-cartera.component';
 import { MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
@@ -74,6 +77,8 @@ import { PuedeDirective } from '../../../shared/directives/puede.directive';
     TableroCarteraComponent,
     AutorizacionesCreditoComponent,
     AcuerdoDetalleDialogComponent,
+    InteresesMoraComponent,
+    CastigoCarteraComponent,
   ],
   providers: [MessageService, CurrencyPipe],
   templateUrl: './index-cartera.component.html',
@@ -176,10 +181,16 @@ export class IndexCarteraComponent implements OnInit {
   @ViewChild(AgendaCobroComponent) agendaCmp?: AgendaCobroComponent;
   @ViewChild(TableroCarteraComponent) tableroCmp?: TableroCarteraComponent;
   @ViewChild(AutorizacionesCreditoComponent) autorizacionesCmp?: AutorizacionesCreditoComponent;
+  @ViewChild(InteresesMoraComponent) interesesCmp?: InteresesMoraComponent;
+  @ViewChild(CastigoCarteraComponent) castigosCmp?: CastigoCarteraComponent;
   pendientesAutorizacion = 0;
+  /** Muchos negocios no cobran intereses: la pestaña solo aparece si la empresa los activó. */
+  interesActivo = false;
+  private readonly moraService = inject(CarteraMoraService);
 
   ngOnInit(): void {
     this.contarAutorizaciones();
+    this.leerPoliticaInteres();
     // La campana abre la pestaña que corresponde al aviso.
     const estado = history.state;
     const desdeCampana: TabCartera[] = ['agenda', 'autorizaciones', 'alertas', 'acuerdos'];
@@ -519,10 +530,28 @@ export class IndexCarteraComponent implements OnInit {
     if (this.tab === 'acuerdos') this.cargarAcuerdos(0);
     if (this.tab === 'agenda') this.agendaCmp?.cargar();
     if (this.tab === 'autorizaciones') this.autorizacionesCmp?.cargar();
+    if (this.tab === 'intereses') this.interesesCmp?.recargar();
+    if (this.tab === 'castigos') this.castigosCmp?.recargar();
   }
 
   irAReglas(): void {
     this.router.navigate(['/cartera/reglas']);
+  }
+
+  private async leerPoliticaInteres(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.moraService.politica());
+      this.onPoliticaInteres(!!res.data?.interesActivo);
+    } catch {
+      // Sin política legible la pestaña de intereses simplemente no aparece.
+    }
+  }
+
+  /** Al activar o apagar los intereses en la política, la pestaña aparece o se va. */
+  onPoliticaInteres(activo: boolean): void {
+    this.interesActivo = activo;
+    if (!activo && this.tab === 'intereses') this.tab = 'castigos';
+    this.cdr.markForCheck();
   }
 
   private async contarAutorizaciones(): Promise<void> {

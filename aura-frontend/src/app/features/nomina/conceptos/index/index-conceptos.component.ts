@@ -124,6 +124,7 @@ export class IndexConceptosComponent implements OnInit {
         : '—';
     }
     if (c.base === 'MANUAL') return 'Manual';
+    if (c.base === 'NOVEDAD') return 'Por novedad';
     return c.porcentaje != null ? `${c.porcentaje} %` : '—';
   }
 

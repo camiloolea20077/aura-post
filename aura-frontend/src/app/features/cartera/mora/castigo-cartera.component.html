@@ -1,0 +1,339 @@
+<div class="mc">
+  <!-- ══ Cabecera ══════════════════════════════════════════════════ -->
+  <div class="mc-head">
+    <div>
+      <h2>Deterioro y castigo</h2>
+      <p>Provisión de la cartera dudosa y baja de las facturas incobrables</p>
+    </div>
+    <div class="mc-head__btns">
+      <button
+        pButton
+        type="button"
+        icon="pi pi-cog"
+        label="Política"
+        class="p-button-outlined p-button-sm"
+        (click)="politicaVisible = true"
+      ></button>
+    </div>
+  </div>
+
+  <!-- ══ Deterioro ═════════════════════════════════════════════════ -->
+  <section class="mc-seccion">
+    <div class="mc-seccion__head">
+      <div>
+        <h3>Deterioro sugerido</h3>
+        <span class="cell-sub">{{ tramosTexto }}</span>
+      </div>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-file-edit"
+        label="Proponer asiento"
+        class="p-button-sm"
+        [loading]="proponiendo"
+        [disabled]="!puedeProponer"
+        pTooltip="Queda en borrador: el contador lo aprueba en Revisión de comprobantes"
+        (click)="proponer()"
+      ></button>
+    </div>
+    <div class="mc-seccion__body mc">
+      <div class="mc-stats" *ngIf="deterioro">
+        <div class="mc-stat">
+          <span class="mc-stat__label">Deterioro calculado</span>
+          <span class="mc-stat__valor">{{ formatCOP(deterioro.totalCalculado) }}</span>
+          <span class="mc-stat__meta">{{ deterioro.facturas.length }} facturas vencidas</span>
+        </div>
+        <div class="mc-stat">
+          <span class="mc-stat__label">Provisión actual</span>
+          <span class="mc-stat__valor">{{ formatCOP(deterioro.provisionActual) }}</span>
+          <span class="mc-stat__meta">saldo de la cuenta 1399</span>
+        </div>
+        <div class="mc-stat" [ngClass]="deterioro.ajuste > 0 ? 'mc-stat--warn' : 'mc-stat--primary'">
+          <span class="mc-stat__label">{{ deterioro.ajuste > 0 ? 'Falta provisionar' : 'Sobra provisión' }}</span>
+          <span class="mc-stat__valor">{{ formatCOP(deterioro.ajuste > 0 ? deterioro.ajuste : -deterioro.ajuste) }}</span>
+          <span class="mc-stat__meta">calculado − provisión</span>
+        </div>
+        <div class="mc-stat">
+          <span class="mc-stat__label">Propuestas en borrador</span>
+          <span class="mc-stat__valor">{{ deterioro.borradoresPendientes }}</span>
+          <span class="mc-stat__meta">por aprobar</span>
+        </div>
+      </div>
+
+      <div class="mc-aviso mc-aviso--warn" *ngIf="deterioro && deterioro.borradoresPendientes > 0">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>Hay una propuesta de deterioro en borrador. Apruébela o anúlela en Revisión de comprobantes antes de proponer otra.</span>
+      </div>
+
+      <div *ngIf="deterioro?.facturas?.length">
+        <a class="cell-link" (click)="verFacturasDeterioro = !verFacturasDeterioro">
+          {{ verFacturasDeterioro ? 'Ocultar' : 'Ver' }} el cálculo por factura
+          <i class="pi" [ngClass]="verFacturasDeterioro ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+        </a>
+        <div class="mc-tabla" *ngIf="verFacturasDeterioro">
+          <p-table [value]="deterioro?.facturas ?? []" styleClass="p-datatable-sm p-datatable-striped" showGridlines>
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Factura</th>
+                <th style="min-width: 180px">Cliente</th>
+                <th class="text-center">Mora</th>
+                <th class="text-right">Saldo</th>
+                <th class="text-center">%</th>
+                <th class="text-right">Deterioro</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-f>
+              <tr>
+                <td>{{ f.numeroCuenta }}</td>
+                <td>{{ f.terceroNombre }}</td>
+                <td class="text-center">{{ f.diasMora }} d</td>
+                <td class="text-right mono">{{ formatCOP(f.saldo) }}</td>
+                <td class="text-center">{{ f.porcentaje }} %</td>
+                <td class="text-right mono font-bold">{{ formatCOP(f.valor) }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ Candidatas a castigo ══════════════════════════════════════ -->
+  <section class="mc-seccion">
+    <div class="mc-seccion__head">
+      <div>
+        <h3>Candidatas a castigo</h3>
+        <span class="cell-sub">Facturas vencidas con saldo, de la más antigua a la más reciente</span>
+      </div>
+      <div class="mc-filtro">
+        <span>Con más de</span>
+        <p-inputNumber
+          [(ngModel)]="dias"
+          [min]="0"
+          suffix=" días"
+          placeholder="Según política"
+          [inputStyle]="{ width: '9rem' }"
+          (onBlur)="cargarCandidatos()"
+          (keydown.enter)="cargarCandidatos()"
+        />
+        <button
+          pButton
+          type="button"
+          icon="pi pi-times-circle"
+          label="Castigar"
+          class="p-button-sm p-button-danger"
+          [disabled]="!seleccion.length"
+          (click)="abrirCastigar()"
+        ></button>
+      </div>
+    </div>
+    <div class="mc-tabla">
+      <p-table
+        [value]="candidatos"
+        [loading]="cargandoCandidatos"
+        [(selection)]="seleccion"
+        dataKey="cuentaCobrarId"
+        [paginator]="candidatos.length > 20"
+        [rows]="20"
+        styleClass="p-datatable-sm p-datatable-striped"
+        showGridlines
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 3rem"><p-tableHeaderCheckbox /></th>
+            <th>Factura</th>
+            <th style="min-width: 190px">Cliente</th>
+            <th class="text-center">Venció</th>
+            <th class="text-center">Mora</th>
+            <th class="text-right">Saldo</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-c>
+          <tr>
+            <td><p-tableCheckbox [value]="c" /></td>
+            <td>{{ c.referencia || c.numeroCuenta }}</td>
+            <td>
+              <a class="cell-link" (click)="verFicha(c.terceroId)">{{ c.terceroNombre }}</a>
+              <div class="cell-sub">{{ c.documento }}</div>
+            </td>
+            <td class="text-center">{{ c.fechaVencimiento | fechaEs }}</td>
+            <td class="text-center">{{ c.diasMora }} d</td>
+            <td class="text-right mono font-bold">{{ formatCOP(c.saldo) }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="mc-vacio">No hay facturas con esa mora.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </section>
+
+  <!-- ══ Historial ═════════════════════════════════════════════════ -->
+  <section class="mc-seccion">
+    <div class="mc-seccion__head">
+      <h3>Castigos registrados</h3>
+      <span class="p-input-icon-left search-wrap">
+        <i class="pi pi-search"></i>
+        <input
+          type="text"
+          pInputText
+          class="search-input"
+          placeholder="Número, factura o cliente..."
+          [(ngModel)]="search"
+          (input)="onSearch()"
+        />
+      </span>
+    </div>
+    <div class="mc-tabla">
+      <p-table
+        [value]="castigos"
+        [loading]="cargandoCastigos"
+        [lazy]="true"
+        [totalRecords]="totalCastigos"
+        [rows]="rowsCastigos"
+        [paginator]="true"
+        (onLazyLoad)="onPage($event)"
+        styleClass="p-datatable-sm p-datatable-striped"
+        showGridlines
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Castigo</th>
+            <th>Factura</th>
+            <th style="min-width: 180px">Cliente</th>
+            <th class="text-right">Valor</th>
+            <th class="text-right">Contra provisión</th>
+            <th class="text-right">Al gasto</th>
+            <th class="text-center">Estado</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-k>
+          <tr [class.fila-anulada]="k.estado === 'ANULADO'">
+            <td>
+              <div class="font-bold">{{ k.numero }}</div>
+              <div class="cell-sub">{{ k.fecha | fechaEs }} · {{ k.diasMora }} d de mora</div>
+            </td>
+            <td>{{ k.numeroCuenta }}</td>
+            <td>
+              <a class="cell-link" (click)="verFicha(k.terceroId)">{{ k.terceroNombre }}</a>
+              <div class="cell-sub" [pTooltip]="k.motivo">{{ k.motivo }}</div>
+            </td>
+            <td class="text-right mono font-bold">{{ formatCOP(k.valor) }}</td>
+            <td class="text-right mono">{{ formatCOP(k.contraProvision) }}</td>
+            <td class="text-right mono">{{ formatCOP(k.contraGasto) }}</td>
+            <td class="text-center">
+              <span class="mc-chip mc-chip--warn" [class.mc-chip--anulado]="k.estado === 'ANULADO'"
+                    [pTooltip]="k.motivoAnulacion || ''">
+                {{ k.estado === 'ANULADO' ? 'Anulado' : 'Castigado' }}
+              </span>
+            </td>
+            <td class="text-center">
+              <button
+                *ngIf="k.estado === 'CASTIGADO'"
+                pButton
+                type="button"
+                icon="pi pi-replay"
+                class="p-button-text p-button-sm"
+                pTooltip="Anular castigo: la factura vuelve a la cartera"
+                (click)="abrirAnular(k)"
+              ></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="8" class="mc-vacio">No se ha castigado cartera.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </section>
+</div>
+
+<!-- ══ Diálogo: castigar ═══════════════════════════════════════════ -->
+<p-dialog
+  [(visible)]="castigarVisible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '560px', maxWidth: '96vw' }"
+  [contentStyle]="{ padding: 0 }"
+  styleClass="aura-dialog"
+  header="Castigar cartera"
+>
+  <div class="mc mc--dialog">
+    <div class="mc-aviso mc-aviso--danger">
+      <i class="pi pi-exclamation-triangle"></i>
+      <span>
+        {{ seleccion.length }} {{ seleccion.length === 1 ? 'factura sale' : 'facturas salen' }} de la cartera activa por
+        <strong>{{ formatCOP(totalSeleccion) }}</strong>. El asiento usa primero la provisión (1399) y el resto va al gasto
+        (5199). El historial de abonos se conserva y el castigo se puede anular.
+      </span>
+    </div>
+    <div class="mc-grid">
+      <div class="mc-field">
+        <label>Fecha del castigo</label>
+        <p-calendar [(ngModel)]="fecha" dateFormat="dd/mm/yy" [maxDate]="hoy" appendTo="body" styleClass="w-full" />
+      </div>
+      <div class="mc-field mc-field--full">
+        <label>Motivo</label>
+        <textarea
+          pTextarea
+          rows="3"
+          [(ngModel)]="motivoCastigo"
+          maxlength="500"
+          class="w-full"
+          placeholder="Ej.: cliente liquidado, se agotó el cobro jurídico, acta de comité del 30/09…"
+        ></textarea>
+        <span class="mc-ayuda">Mínimo 10 caracteres. Es el soporte del contador ante la DIAN.</span>
+      </div>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="castigarVisible = false"></button>
+    <button
+      pButton
+      type="button"
+      label="Castigar"
+      icon="pi pi-check"
+      class="p-button-danger"
+      [loading]="castigando"
+      [disabled]="motivoCastigo.trim().length < 10"
+      (click)="castigar()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ══ Diálogo: anular ═════════════════════════════════════════════ -->
+<p-dialog
+  [(visible)]="anularVisible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '460px', maxWidth: '96vw' }"
+  styleClass="aura-dialog"
+  [header]="'Anular ' + (anularCastigo?.numero ?? '')"
+>
+  <div class="mc-field">
+    <label>Motivo de la anulación</label>
+    <textarea pTextarea rows="3" [(ngModel)]="motivoAnular" maxlength="300" class="w-full"></textarea>
+    <span class="mc-ayuda">La factura vuelve a la cartera con su saldo y el asiento del castigo se reversa.</span>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="anularVisible = false"></button>
+    <button
+      pButton
+      type="button"
+      label="Anular castigo"
+      icon="pi pi-replay"
+      [loading]="anulando"
+      [disabled]="!motivoAnular.trim()"
+      (click)="anular()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<app-politica-cartera-dialog [(visible)]="politicaVisible" (guardada)="onPoliticaGuardada($event)" />

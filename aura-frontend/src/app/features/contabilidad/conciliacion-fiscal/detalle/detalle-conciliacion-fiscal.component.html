@@ -1,0 +1,461 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" (onClick)="volver()" />
+        <span class="header-icon"><i class="pi pi-sliders-h"></i></span>
+        <div>
+          <h1 class="title">
+            Conciliación fiscal {{ r?.cabecera?.anio }}
+            <p-tag
+              *ngIf="r"
+              [value]="cerrada ? 'Cerrada' : 'Borrador'"
+              [severity]="cerrada ? 'success' : 'warn'"
+              [rounded]="true"
+            />
+          </h1>
+          <p class="subtitle" *ngIf="r">{{ nombreFormato[r.cabecera.formato] }}</p>
+        </div>
+      </div>
+      <div class="acciones" *ngIf="r">
+        <ng-container *ngIf="!cerrada">
+          <button
+            *appPuede="'contabilidad.declaraciones:EDITAR'"
+            pButton
+            type="button"
+            label="Subir balance (Excel)"
+            icon="pi pi-file-import"
+            class="btn-aura"
+            (click)="mostrarImportar = true"
+          ></button>
+          <button
+            *appPuede="'contabilidad.declaraciones:EDITAR'"
+            pButton
+            type="button"
+            label="Traer de la contabilidad"
+            icon="pi pi-download"
+            class="p-button-outlined"
+            [loading]="ocupado"
+            pTooltip="Balance del año desde los asientos de Aura (sin el cierre anual)"
+            tooltipPosition="bottom"
+            (click)="traerDelSistema()"
+          ></button>
+        </ng-container>
+        <button pButton type="button" label="Excel" icon="pi pi-file-excel" class="p-button-outlined" (click)="exportar()"></button>
+        <button
+          *appPuede="'contabilidad.declaraciones:EDITAR'"
+          pButton
+          type="button"
+          [label]="cerrada ? 'Reabrir' : 'Cerrar'"
+          [icon]="cerrada ? 'pi pi-lock-open' : 'pi pi-lock'"
+          class="p-button-text"
+          (click)="cerrarOReabrir()"
+        ></button>
+      </div>
+    </div>
+
+    <div class="card-body">
+
+    <div class="cargando" *ngIf="cargando"><i class="pi pi-spin pi-spinner"></i> Cargando…</div>
+
+    <ng-container *ngIf="r && !cargando">
+      <!-- Indicadores -->
+      <div class="kpis">
+        <div class="kpi">
+          <span class="kpi-label">Patrimonio contable</span>
+          <span class="kpi-val">{{ r.patrimonioContable | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-label">Patrimonio líquido fiscal</span>
+          <span class="kpi-val">{{ r.patrimonioFiscal | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-label">Resultado contable</span>
+          <span class="kpi-val">{{ r.resultadoContable | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span>
+        </div>
+        <div class="kpi kpi--fuerte">
+          <span class="kpi-label">Renta líquida</span>
+          <span class="kpi-val">{{ r.rentaLiquida | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-label">Impuesto ({{ r.cabecera.tarifaRenta }} %)</span>
+          <span class="kpi-val">{{ r.impuestoRenta | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span>
+        </div>
+        <div class="kpi">
+          <span class="kpi-label">Impuesto diferido neto</span>
+          <span class="kpi-val">{{ r.impuestoDiferidoActivo - r.impuestoDiferidoPasivo | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span>
+        </div>
+      </div>
+
+      <p-tabView [(activeIndex)]="tab">
+        <!-- ═══ Análisis ═══ -->
+        <p-tabPanel header="Análisis">
+          <div class="validaciones">
+            <div class="validacion" *ngFor="let v of r.validaciones" [ngClass]="'validacion--' + v.nivel.toLowerCase()">
+              <i
+                class="pi"
+                [ngClass]="v.nivel === 'OK' ? 'pi-check-circle' : v.nivel === 'ERROR' ? 'pi-times-circle' : 'pi-exclamation-triangle'"
+              ></i>
+              <span>{{ v.mensaje }}</span>
+            </div>
+          </div>
+
+          <div class="sub-head" *ngIf="r.sugerencias.length">
+            <h3>Ajustes que el sistema propone ({{ r.sugerencias.length }})</h3>
+            <button
+              *ngIf="!cerrada && sugerenciasSeguras"
+              pButton
+              type="button"
+              [label]="'Aplicar los ' + sugerenciasSeguras + ' seguros'"
+              icon="pi pi-check-square"
+              class="p-button-sm btn-aura"
+              [loading]="ocupado"
+              (click)="aplicarTodas()"
+            ></button>
+          </div>
+          <div class="sugerencias">
+            <div class="sugerencia" *ngFor="let s of r.sugerencias">
+              <div class="sug-info">
+                <span class="sug-titulo">
+                  {{ s.concepto }}
+                  <p-tag *ngIf="s.revisar" value="Revisar" severity="warn" />
+                </span>
+                <span class="sug-sub">{{ s.cuentaNombre }} · {{ s.renglonNombre }}</span>
+                <span class="sug-sub">{{ s.fundamento }}</span>
+              </div>
+              <div class="sug-valor">
+                <span>{{ s.tipo === "MENOR" ? "Menor" : "Mayor" }} valor · {{ s.diferencia === "PERMANENTE" ? "permanente" : "temporaria" }}</span>
+                <strong>{{ s.valor | currency: "COP" : "symbol-narrow" : "1.0-0" }}</strong>
+              </div>
+              <button
+                *ngIf="!cerrada"
+                pButton
+                type="button"
+                label="Aplicar"
+                icon="pi pi-plus"
+                class="p-button-sm p-button-outlined"
+                [disabled]="ocupado"
+                (click)="aplicarSugerencia(s)"
+              ></button>
+            </div>
+            <p class="ayuda" *ngIf="!r.sugerencias.length && r.cabecera.cuentas">
+              No hay ajustes por proponer. Revise las diferencias propias de la empresa (depreciación fiscal, deterioro,
+              ingresos no gravados…) y regístrelas en la pestaña Ajustes.
+            </p>
+          </div>
+
+          <div class="sin-clasificar" *ngIf="r.sinClasificar.length">
+            <h3>Cuentas sin renglón ({{ r.sinClasificar.length }})</h3>
+            <p class="ayuda">Clasifíquelas en la pestaña Balance: mientras tanto no suman en el formato.</p>
+          </div>
+        </p-tabPanel>
+
+        <!-- ═══ ESF ═══ -->
+        <p-tabPanel header="ESF · Patrimonio">
+          <ng-container *ngTemplateOutlet="tablaRenglones; context: { $implicit: renglonesDe('ESF_ACTIVO', 'ESF_PASIVO', 'ESF_PATRIMONIO') }"></ng-container>
+          <div class="totales">
+            <div class="total-row"><span>Total activos</span><span>{{ r.activosContable | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span><span>{{ r.activosFiscal | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span></div>
+            <div class="total-row"><span>Total pasivos</span><span>{{ r.pasivosContable | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span><span>{{ r.pasivosFiscal | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span></div>
+            <div class="total-row final"><span>Patrimonio</span><span>{{ r.patrimonioContable | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span><span>{{ r.patrimonioFiscal | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span></div>
+            <p class="ayuda">Columnas: contable · fiscal. El patrimonio fiscal es activos fiscales menos pasivos fiscales.</p>
+          </div>
+        </p-tabPanel>
+
+        <!-- ═══ ERI ═══ -->
+        <p-tabPanel header="ERI · Renta líquida">
+          <ng-container *ngTemplateOutlet="tablaRenglones; context: { $implicit: renglonesDe('ERI_INGRESO', 'ERI_COSTO', 'ERI_GASTO') }"></ng-container>
+          <div class="totales">
+            <div class="total-row"><span>Ingresos</span><span>{{ r.ingresosContable | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span><span>{{ r.ingresosFiscal | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span></div>
+            <div class="total-row"><span>Costos</span><span>{{ r.costosContable | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span><span>{{ r.costosFiscal | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span></div>
+            <div class="total-row"><span>Gastos</span><span>{{ r.gastosContable | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span><span>{{ r.gastosFiscal | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span></div>
+            <div class="total-row final"><span>Resultado / renta líquida</span><span>{{ r.resultadoContable | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span><span>{{ r.rentaLiquida | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span></div>
+          </div>
+          <div class="tarifa" *ngIf="!cerrada">
+            <label for="cf-tarifa">Tarifa de renta</label>
+            <p-inputNumber inputId="cf-tarifa" [(ngModel)]="tarifa" suffix=" %" [min]="0" [max]="100" [maxFractionDigits]="2" />
+            <button pButton type="button" label="Guardar" class="p-button-sm p-button-outlined" (click)="guardarTarifa()"></button>
+            <span class="ayuda" *ngIf="r.cabecera.formato === '2517'">
+              Personas naturales: la renta se liquida con la tabla del art. 241 E.T.; esta tarifa es referencia y base del impuesto diferido.
+            </span>
+          </div>
+        </p-tabPanel>
+
+        <!-- ═══ Formulario 110 ═══ -->
+        <p-tabPanel header="Formulario 110">
+          <ng-container *ngIf="r.cabecera.formato === '2516'; else solo2516">
+            <p class="ayuda">
+              Borrador del formulario 110 con los valores fiscales de esta conciliación, redondeados a miles.
+              Escriba lo que la contabilidad no sabe y calcule.
+            </p>
+            <div class="f110-manuales">
+              <div class="f110-campo">
+                <label>Ingresos no constitutivos de renta</label>
+                <p-inputNumber [(ngModel)]="manuales110.ingresosNoConstitutivos" mode="currency" currency="COP" locale="es-CO" [maxFractionDigits]="0" [min]="0" />
+              </div>
+              <div class="f110-campo">
+                <label>Compensaciones (pérdidas, excesos)</label>
+                <p-inputNumber [(ngModel)]="manuales110.compensaciones" mode="currency" currency="COP" locale="es-CO" [maxFractionDigits]="0" [min]="0" />
+              </div>
+              <div class="f110-campo">
+                <label>Descuentos tributarios</label>
+                <p-inputNumber [(ngModel)]="manuales110.descuentosTributarios" mode="currency" currency="COP" locale="es-CO" [maxFractionDigits]="0" [min]="0" />
+              </div>
+              <div class="f110-campo">
+                <label>Saldo a favor del año anterior</label>
+                <p-inputNumber [(ngModel)]="manuales110.saldoFavorAnterior" mode="currency" currency="COP" locale="es-CO" [maxFractionDigits]="0" [min]="0" />
+              </div>
+              <div class="f110-campo">
+                <label>Anticipo para el año siguiente</label>
+                <p-inputNumber [(ngModel)]="manuales110.anticipoSiguiente" mode="currency" currency="COP" locale="es-CO" [maxFractionDigits]="0" [min]="0" />
+              </div>
+              <div class="f110-campo f110-campo--btn">
+                <button pButton type="button" label="Calcular" icon="pi pi-calculator" class="btn-aura"
+                  [loading]="cargando110" (click)="calcular110()"></button>
+              </div>
+            </div>
+
+            <ng-container *ngIf="f110">
+              <div class="f110-avisos" *ngIf="f110.advertencias.length">
+                <p *ngFor="let a of f110.advertencias"><i class="pi pi-info-circle"></i> {{ a }}</p>
+              </div>
+              <div class="f110-bloque" *ngFor="let b of f110.bloques">
+                <h4>{{ b.titulo }}</h4>
+                <div class="f110-linea" *ngFor="let l of b.lineas" [class.f110-linea--total]="l.total">
+                  <span>{{ l.concepto }} <small *ngIf="l.manual" class="ayuda">(escrito por usted)</small></span>
+                  <span class="num">{{ l.valor | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span>
+                </div>
+              </div>
+              <div class="f110-resultado">
+                <span>{{ f110.saldoPagar > 0 ? 'Saldo a pagar' : 'Saldo a favor' }}</span>
+                <b>{{ (f110.saldoPagar > 0 ? f110.saldoPagar : f110.saldoFavor) | currency: "COP" : "symbol-narrow" : "1.0-0" }}</b>
+              </div>
+            </ng-container>
+          </ng-container>
+          <ng-template #solo2516>
+            <p class="ayuda">
+              El borrador del formulario 110 es para personas jurídicas (formato 2516). Las personas naturales
+              declaran en el 210 con cédulas, que este borrador no calcula.
+            </p>
+          </ng-template>
+        </p-tabPanel>
+
+        <!-- ═══ Balance ═══ -->
+        <p-tabPanel [header]="'Balance (' + cuentas.length + ')'">
+          <div class="vacio" *ngIf="!cuentas.length">
+            <i class="pi pi-file-import"></i>
+            <p>Suba el balance de prueba del año en Excel o tráigalo de la contabilidad de Aura.</p>
+          </div>
+          <ng-container *ngIf="cuentas.length">
+            <div class="barra">
+              <p-dropdown [options]="filtroOpts" [(ngModel)]="filtroCuentas" optionLabel="label" optionValue="value" />
+              <span class="ayuda" *ngIf="r.cabecera.cargadoAt">
+                Cargado {{ r.cabecera.cargadoAt | date: "dd/MM/yyyy HH:mm" }} ·
+                {{ r.cabecera.origen === "EXCEL" ? "desde Excel" : "desde la contabilidad" }}
+              </span>
+            </div>
+            <div class="tabla-scroll">
+              <table class="tabla">
+                <thead>
+                  <tr>
+                    <th>Cuenta</th>
+                    <th>Nombre</th>
+                    <th class="num">Saldo</th>
+                    <th style="min-width: 280px">Renglón</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let c of cuentasVisibles" [class.sin]="!c.renglon">
+                    <td class="mono">{{ c.codigo }}</td>
+                    <td>{{ c.nombre }}</td>
+                    <td class="num">{{ c.saldo | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+                    <td>
+                      <p-dropdown
+                        *ngIf="!cerrada; else soloTexto"
+                        [options]="renglonesClasificar"
+                        [group]="true"
+                        [ngModel]="c.renglon"
+                        (ngModelChange)="reclasificar(c, $event)"
+                        optionLabel="label"
+                        optionValue="value"
+                        [filter]="true"
+                        placeholder="Sin clasificar"
+                        styleClass="w-full"
+                      />
+                      <ng-template #soloTexto>{{ c.renglonNombre ?? "Sin clasificar" }}</ng-template>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </ng-container>
+        </p-tabPanel>
+
+        <!-- ═══ Ajustes ═══ -->
+        <p-tabPanel [header]="'Ajustes (' + r.ajustes.length + ')'">
+          <div class="nuevo-ajuste" *ngIf="!cerrada">
+            <div class="campo campo--ancho">
+              <label>Renglón</label>
+              <p-dropdown
+                [options]="renglonesGrupos"
+                [group]="true"
+                [(ngModel)]="nuevo.renglon"
+                optionLabel="label"
+                optionValue="value"
+                [filter]="true"
+                placeholder="Elija el renglón"
+              />
+            </div>
+            <div class="campo">
+              <label>Tipo</label>
+              <p-dropdown [options]="tipoOpts" [(ngModel)]="nuevo.tipo" optionLabel="label" optionValue="value" />
+            </div>
+            <div class="campo">
+              <label>Diferencia</label>
+              <p-dropdown [options]="diferenciaOpts" [(ngModel)]="nuevo.diferencia" optionLabel="label" optionValue="value" />
+            </div>
+            <div class="campo">
+              <label>Valor</label>
+              <p-inputNumber [(ngModel)]="nuevo.valor" mode="currency" currency="COP" locale="es-CO" [minFractionDigits]="0" />
+            </div>
+            <div class="campo campo--ancho">
+              <label>Concepto</label>
+              <input type="text" pInputText [(ngModel)]="nuevo.concepto" maxlength="300" placeholder="Depreciación fiscal, deterioro no aceptado…" />
+            </div>
+            <div class="campo campo--boton">
+              <button pButton type="button" label="Agregar" icon="pi pi-plus" class="btn-aura" [loading]="ocupado" (click)="agregarAjuste()"></button>
+            </div>
+          </div>
+
+          <div class="vacio" *ngIf="!r.ajustes.length"><p>Sin ajustes todavía.</p></div>
+          <div class="tabla-scroll" *ngIf="r.ajustes.length">
+            <table class="tabla">
+              <thead>
+                <tr>
+                  <th>Renglón</th>
+                  <th>Concepto</th>
+                  <th>Tipo</th>
+                  <th>Diferencia</th>
+                  <th class="num">Valor</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let a of r.ajustes">
+                  <td><span class="mono">{{ a.renglon }}</span> {{ a.renglonNombre }}</td>
+                  <td>
+                    {{ a.concepto }}
+                    <div class="sub" *ngIf="a.sugerencia">Propuesto por el sistema</div>
+                  </td>
+                  <td>{{ a.tipo === "MENOR" ? "Menor valor" : "Mayor valor" }}</td>
+                  <td>{{ a.diferencia === "PERMANENTE" ? "Permanente" : "Temporaria" }}</td>
+                  <td class="num">{{ a.valor | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+                  <td class="num">
+                    <button
+                      *ngIf="!cerrada"
+                      pButton
+                      type="button"
+                      icon="pi pi-trash"
+                      class="p-button-text p-button-danger p-button-sm"
+                      pTooltip="Quitar ajuste"
+                      (click)="eliminarAjuste(a)"
+                    ></button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </p-tabPanel>
+
+        <!-- ═══ Impuesto diferido ═══ -->
+        <p-tabPanel header="Impuesto diferido">
+          <div class="vacio" *ngIf="!r.impuestoDiferido.length">
+            <p>Sin diferencias temporarias en el ESF. Las genera un ajuste "temporario" sobre un activo o un pasivo.</p>
+          </div>
+          <div class="tabla-scroll" *ngIf="r.impuestoDiferido.length">
+            <table class="tabla">
+              <thead>
+                <tr>
+                  <th>Renglón</th>
+                  <th class="num">Contable</th>
+                  <th class="num">Fiscal</th>
+                  <th class="num">Diferencia</th>
+                  <th>Tipo</th>
+                  <th class="num">Activo ID</th>
+                  <th class="num">Pasivo ID</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let d of r.impuestoDiferido">
+                  <td><span class="mono">{{ d.renglon }}</span> {{ d.nombre }}</td>
+                  <td class="num">{{ d.contable | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+                  <td class="num">{{ d.fiscal | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+                  <td class="num">{{ d.diferencia | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+                  <td>{{ d.tipo === "DEDUCIBLE" ? "Deducible" : "Imponible" }}</td>
+                  <td class="num">{{ d.activo | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+                  <td class="num">{{ d.pasivo | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+                </tr>
+                <tr class="fila-total">
+                  <td colspan="5">Total</td>
+                  <td class="num">{{ r.impuestoDiferidoActivo | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+                  <td class="num">{{ r.impuestoDiferidoPasivo | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </p-tabPanel>
+      </p-tabView>
+
+      <div class="zona-borrar" *ngIf="!cerrada">
+        <ng-container *appPuede="'contabilidad.declaraciones:ANULAR'">
+          <button
+            *ngIf="!confirmandoBorrar"
+            pButton
+            type="button"
+            label="Eliminar conciliación"
+            icon="pi pi-trash"
+            class="p-button-text p-button-danger p-button-sm"
+            (click)="confirmandoBorrar = true"
+          ></button>
+          <ng-container *ngIf="confirmandoBorrar">
+            <span>Se borran el balance cargado y los ajustes.</span>
+            <button pButton type="button" label="Cancelar" class="p-button-text p-button-sm" (click)="confirmandoBorrar = false"></button>
+            <button pButton type="button" label="Sí, eliminar" class="p-button-danger p-button-sm" (click)="eliminar()"></button>
+          </ng-container>
+        </ng-container>
+      </div>
+    </ng-container>
+    </div>
+  </div>
+</div>
+
+<ng-template #tablaRenglones let-renglones>
+  <div class="tabla-scroll">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Renglón</th>
+          <th class="num">Contable</th>
+          <th class="num">Menor valor fiscal</th>
+          <th class="num">Mayor valor fiscal</th>
+          <th class="num">Fiscal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let x of renglones; let i = index">
+          <tr class="fila-seccion" *ngIf="i === 0 || renglones[i - 1].seccion !== x.seccion">
+            <td colspan="5">{{ x.seccionTitulo }}</td>
+          </tr>
+          <tr [class.vacia]="!x.contable && !x.fiscal">
+            <td><span class="mono">{{ x.codigo }}</span> {{ x.nombre }}</td>
+            <td class="num">{{ x.contable | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+            <td class="num">{{ x.menorValor ? (x.menorValor | currency: "COP" : "symbol-narrow" : "1.0-0") : "" }}</td>
+            <td class="num">{{ x.mayorValor ? (x.mayorValor | currency: "COP" : "symbol-narrow" : "1.0-0") : "" }}</td>
+            <td class="num fuerte">{{ x.fiscal | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+          </tr>
+        </ng-container>
+      </tbody>
+    </table>
+  </div>
+</ng-template>
+
+<app-importar-excel [(visible)]="mostrarImportar" [plantilla]="plantilla" (importado)="recargar()" />

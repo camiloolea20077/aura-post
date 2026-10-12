@@ -66,14 +66,6 @@ export class IndexEmpleadosComponent implements OnInit {
     private readonly router: Router,
   ) {}
 
-  /**
-   * Ficha del empleado: identidad (form de tercero) + tabs de contratos,
-   * afiliaciones, retenciones y embargos. El salario, las fechas y la
-   * terminación viven en el tab de contratos (preservan histórico).
-   */
-  verContratos(item: EmpleadoTableModel): void {
-    this.router.navigate(['/nomina/empleados', item.id, 'ficha']);
-  }
 
   ngOnInit(): void {}
 
@@ -126,24 +118,11 @@ export class IndexEmpleadosComponent implements OnInit {
     this.router.navigate(['/nomina/empleados/nuevo']);
   }
 
-  /** Editar = abrir la ficha (identidad + contratos/afiliaciones/etc.). */
+  /** Editar = solo los datos personales; lo laboral está en la vinculación. */
   editEmpleado(item: EmpleadoTableModel): void {
-    this.router.navigate(['/nomina/empleados', item.id, 'ficha']);
+    this.router.navigate(['/nomina/empleados', item.id, 'editar']);
   }
 
-  async retirarEmpleado(item: EmpleadoTableModel): Promise<void> {
-    if (!confirm(`¿Retirar a ${item.nombreCompleto}?`)) return;
-    try {
-      await lastValueFrom(this.nominaService.retirarEmpleado(item.id));
-      this.alertService.showSuccess(
-        'Retirado',
-        'Empleado retirado correctamente',
-      );
-      this.reloadTable();
-    } catch {
-      this.alertService.showError('Error', 'No se pudo retirar el empleado');
-    }
-  }
 
   onFormClosed(): void {
     this.showFormModal = false;

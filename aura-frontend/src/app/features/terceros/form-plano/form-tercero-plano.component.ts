@@ -30,6 +30,10 @@ import {
   CreateTerceroDto,
   RESPONSABILIDAD_FISCAL_OPTIONS,
   SEXO_OPTS,
+  ESTADO_CIVIL_OPTS,
+  RH_OPTS,
+  ZONA_OPTS,
+  TipoImagenTercero,
   TIPO_PERSONA_OPTIONS,
   REGIMEN_OPTIONS,
   TIPO_DOCUMENTO_OPTIONS,
@@ -39,12 +43,27 @@ import { AlertService } from '../../../shared/pipes/alert.service';
 import { TerceroAutocompleteComponent } from '../../../shared/components/tercero-autocomplete/tercero-autocomplete.component';
 import { TerceroTableModel } from '../../../core/models/tercero.model';
 import { aDate } from '../../../shared/utils/fecha.util';
+import { PAIS_OPTS, nombrePais } from '../../../shared/utils/paises';
+import { LugarSelectComponent } from '../../../shared/components/lugar-select/lugar-select.component';
+import { TelefonosInputComponent } from '../../../shared/components/telefonos-input/telefonos-input.component';
+import { CorreosInputComponent } from '../../../shared/components/correos-input/correos-input.component';
+import { ImagenRedondaComponent } from '../../../shared/components/imagen-redonda/imagen-redonda.component';
+import {
+  ImagenesTercero,
+  separarCorreos,
+  separarTelefonos,
+  unirCorreos,
+  unirTelefonos,
+} from './datos-persona.util';
 
-/** Roles del tercero. BANCO es exclusivo (sin rol comercial). */
+/**
+ * Roles del tercero. BANCO es exclusivo (sin rol comercial). EMPLEADO no se
+ * ofrece: el empleado se crea en Empleados → Nuevo (con su hoja de vida), que
+ * usa este mismo formulario con el rol fijo.
+ */
 const ROL_OPTIONS = [
   { label: 'Cliente', value: 'CLIENTE' },
   { label: 'Proveedor', value: 'PROVEEDOR' },
-  { label: 'Empleado', value: 'EMPLEADO' },
   { label: 'Banco / Entidad financiera', value: 'BANCO' },
   // Entidades de seguridad social (V120): son terceros a los que se les paga.
   { label: 'EPS (salud)', value: 'EPS' },
@@ -57,25 +76,6 @@ const ROL_OPTIONS = [
 /** Roles de seguridad social: los que exigen código UGPP. */
 const ROLES_SS = ['EPS', 'AFP', 'CCF', 'ARL', 'CESANTIAS'];
 
-/**
- * Países más frecuentes para terceros de empresas colombianas. `value` es el
- * código ISO que va en `codigoPais`; `label` se guarda en `pais`.
- */
-const PAIS_OPTIONS = [
-  { label: 'Colombia', value: 'CO' },
-  { label: 'Venezuela', value: 'VE' },
-  { label: 'Ecuador', value: 'EC' },
-  { label: 'Perú', value: 'PE' },
-  { label: 'Panamá', value: 'PA' },
-  { label: 'México', value: 'MX' },
-  { label: 'Chile', value: 'CL' },
-  { label: 'Argentina', value: 'AR' },
-  { label: 'Brasil', value: 'BR' },
-  { label: 'Estados Unidos', value: 'US' },
-  { label: 'España', value: 'ES' },
-  { label: 'China', value: 'CN' },
-  { label: 'Otro', value: 'ZZ' },
-];
 
 /** Indicadores fiscales (no aplican a banco ni entidad de seguridad social). */
 const INDICADORES_FISCALES = [
@@ -100,6 +100,10 @@ const INDICADORES_FISCALES = [
     TooltipModule,
     CalendarModule,
     TerceroAutocompleteComponent,
+    LugarSelectComponent,
+    TelefonosInputComponent,
+    CorreosInputComponent,
+    ImagenRedondaComponent,
   ],
   templateUrl: './form-tercero-plano.component.html',
   styleUrls: ['./form-tercero-plano.component.scss'],
@@ -112,6 +116,8 @@ export class FormTerceroPlanoComponent implements OnInit {
   @Input() terceroIdInput: number | null = null;
   /** Roles fijos (p. ej. ['EMPLEADO']) cuando el contexto ya define el tipo. */
   @Input() rolesFijos: string[] | null = null;
+  /** Empleados → el banco va en su propia pestaña de la hoja de vida, no aquí. */
+  @Input() mostrarBanco = true;
   /** Emite el id del tercero guardado (útil para el alta de empleado). */
   @Output() guardado = new EventEmitter<number>();
 
@@ -129,16 +135,27 @@ export class FormTerceroPlanoComponent implements OnInit {
   readonly hoy = new Date();
   readonly regimenOpts = REGIMEN_OPTIONS;
   readonly respFiscalOpts = RESPONSABILIDAD_FISCAL_OPTIONS;
-  readonly rolOpts = ROL_OPTIONS;
-  readonly paisOpts = PAIS_OPTIONS;
+  readonly estadoCivilOpts = ESTADO_CIVIL_OPTS;
+  readonly rhOpts = RH_OPTS;
+  readonly zonaOpts = ZONA_OPTS;
+  /** Foto oficial, foto de perfil y firma (se suben después de guardar). */
+  readonly imagenes = new ImagenesTercero();
+  /** Texto del municipio de residencia (el tercero lo guarda para los PDF). */
+  municipioNombre: string | null = null;
+  /** El tercero ya era empleado: se conserva aunque Terceros no ofrezca el rol. */
+  private eraEmpleado = false;
+
+  /** Empleado solo aparece cuando lo fija el contexto (Empleados → Nuevo). */
+  get rolOpts(): { label: string; value: string }[] {
+    return this.rolesFijos?.includes('EMPLEADO')
+      ? [{ label: 'Empleado', value: 'EMPLEADO' }, ...ROL_OPTIONS]
+      : ROL_OPTIONS;
+  }
+  readonly paisOpts = PAIS_OPTS;
 
   /** Roles seleccionados (multiselect). */
   roles: string[] = ['CLIENTE'];
 
-  /** Opciones del select de municipio (carga progresiva). */
-  municipioOpts: { label: string; value: number }[] = [];
-  municipioLoading = false;
-  private municipioTimer?: ReturnType<typeof setTimeout>;
 
   constructor(
     private readonly fb: FormBuilder,
@@ -151,8 +168,8 @@ export class FormTerceroPlanoComponent implements OnInit {
 
   ngOnInit(): void {
     this.initForm();
-    this.cargarMunicipios('');
     if (this.rolesFijos?.length) this.roles = [...this.rolesFijos];
+    this.aplicarBloqueos();
     // Embebido: el id viene por Input; página normal: por la ruta.
     const id = this.terceroIdInput ?? this.route.snapshot.params['id'];
     if (id) {
@@ -183,13 +200,21 @@ export class FormTerceroPlanoComponent implements OnInit {
     this.bancoNombre = t ? t.nombreCompleto : null;
   }
 
-  get esColombia(): boolean {
-    return (this.frm?.get('codigoPais')?.value ?? 'CO') === 'CO';
+  /**
+   * Hoja de vida completa (fotos, expedición, nacimiento, residencia, contacto):
+   * solo para el empleado. A un cliente o proveedor no se le piden.
+   */
+  get esPersona(): boolean {
+    return this.esEmpleado && !this.esJuridica && !this.esEntidadSimple;
   }
 
-  /** Los municipios son de Colombia: fuera de Colombia no aplica. */
-  onPaisChange(): void {
-    if (!this.esColombia) this.frm.patchValue({ municipioId: null });
+  onImagen(tipo: TipoImagenTercero, archivo: File): void {
+    this.imagenes.elegir(tipo, archivo);
+    this.cdr.markForCheck();
+  }
+
+  quitarImagen(tipo: TipoImagenTercero): void {
+    this.imagenes.quitar(tipo);
     this.cdr.markForCheck();
   }
 
@@ -219,7 +244,11 @@ export class FormTerceroPlanoComponent implements OnInit {
   private aplicarBloqueos(): void {
     const persona = this.frm.get('tipoPersona')!;
     const doc = this.frm.get('tipoDocumento')!;
-    if (this.esEntidadSimple) persona.disable({ emitEvent: false });
+    // El empleado siempre es persona natural.
+    if (this.rolesFijos?.includes('EMPLEADO')) {
+      persona.setValue('NATURAL', { emitEvent: false });
+      persona.disable({ emitEvent: false });
+    } else if (this.esEntidadSimple) persona.disable({ emitEvent: false });
     else persona.enable({ emitEvent: false });
     if (this.esEntidadSeguridadSocial) doc.disable({ emitEvent: false });
     else doc.enable({ emitEvent: false });
@@ -275,8 +304,22 @@ export class FormTerceroPlanoComponent implements OnInit {
         representanteLegalNombre: [null, Validators.maxLength(150)],
         representanteLegalDocumento: [null, Validators.maxLength(30)],
 
-        telefono: [null, Validators.maxLength(20)],
-        email: [null, [Validators.email, Validators.maxLength(100)]],
+        // ── Persona natural ampliada (V211) ───────────────────────────
+        rut: [null, Validators.maxLength(20)],
+        codigoPaisExpedicion: ['CO'],
+        estadoCivil: [null],
+        rh: [null],
+        codigoPaisNacimiento: ['CO'],
+        municipioNacimientoId: [null],
+        zona: [null],
+        comuna: [null, Validators.maxLength(80)],
+        barrio: [null, Validators.maxLength(80)],
+        // Varios teléfonos y correos, propios y de la persona de contacto.
+        telefonos: [[]],
+        correos: [[]],
+        contactoNombre: [null, Validators.maxLength(150)],
+        contactoTelefonos: [[]],
+        contactoCorreos: [[]],
         emailFe: [null, [Validators.email, Validators.maxLength(100)]],
         direccion: [null, Validators.maxLength(200)],
         pais: ['Colombia', Validators.maxLength(60)],
@@ -378,33 +421,6 @@ export class FormTerceroPlanoComponent implements OnInit {
     }
   }
 
-  /** Filtro del select: consulta al backend con debounce (carga poco a poco). */
-  onMunicipioFilter(event: { filter: string }): void {
-    if (this.municipioTimer) clearTimeout(this.municipioTimer);
-    this.municipioTimer = setTimeout(() => this.cargarMunicipios(event.filter ?? ''), 250);
-  }
-
-  private async cargarMunicipios(query: string): Promise<void> {
-    this.municipioLoading = true;
-    this.cdr.markForCheck();
-    try {
-      const res = await lastValueFrom(this.service.buscarMunicipios(query));
-      const opts = (res?.data ?? []).map((m) => ({ label: m.label || m.nombre, value: m.id }));
-      // Conserva la opción seleccionada actual aunque no venga en el filtro.
-      const selId = this.frm?.get('municipioId')?.value as number | null;
-      if (selId && !opts.some((o) => o.value === selId)) {
-        const actual = this.municipioOpts.find((o) => o.value === selId);
-        if (actual) opts.unshift(actual);
-      }
-      this.municipioOpts = opts;
-    } catch {
-      this.municipioOpts = [];
-    } finally {
-      this.municipioLoading = false;
-      this.cdr.markForCheck();
-    }
-  }
-
   private async loadData(id: number): Promise<void> {
     this.loading = true;
     this.cdr.markForCheck();
@@ -416,29 +432,17 @@ export class FormTerceroPlanoComponent implements OnInit {
         if (d.esCliente) this.roles.push('CLIENTE');
         if (d.esProveedor) this.roles.push('PROVEEDOR');
         if (d.esEmpleado) this.roles.push('EMPLEADO');
+        this.eraEmpleado = !!d.esEmpleado;
         // Roles de seguridad social (V120): vienen en `roles`, no en booleanos.
         for (const r of ROLES_SS) {
           if (d.roles?.includes(r)) this.roles.push(r);
         }
         if (d.esBanco) this.roles = ['BANCO'];
         this.rolesPrevHadBanco = this.esBanco;
-        // Sembrar la opción del municipio guardado para que el select lo muestre.
-        // El nombre puede no venir en el tercero (no se persiste); si falta, se
-        // resuelve por id para poder mostrar la etiqueta seleccionada.
-        if (d.municipioId) {
-          let nombre: string | null = d.municipio ?? null;
-          if (!nombre) {
-            try {
-              const mRes = await lastValueFrom(this.service.getMunicipioById(d.municipioId));
-              nombre = mRes?.data?.label ?? mRes?.data?.nombre ?? null;
-            } catch {
-              nombre = null;
-            }
-          }
-          if (nombre && !this.municipioOpts.some((o) => o.value === d.municipioId)) {
-            this.municipioOpts = [{ label: nombre, value: d.municipioId }, ...this.municipioOpts];
-          }
-        }
+        this.municipioNombre = d.municipio ?? null;
+        this.imagenes.cargar(d);
+        const tels = separarTelefonos(d);
+        const correos = separarCorreos(d);
         this.frm.patchValue({
           tipoPersona: d.tipoPersona ?? 'NATURAL',
           tipoDocumento: d.tipoDocumento,
@@ -447,8 +451,20 @@ export class FormTerceroPlanoComponent implements OnInit {
           razonSocial: d.razonSocial,
           nombres: d.nombres,
           apellidos: d.apellidos,
-          telefono: d.telefono,
-          email: d.email,
+          telefonos: tels.propios,
+          correos: correos.propios,
+          contactoNombre: d.contactoNombre ?? null,
+          contactoTelefonos: tels.contacto,
+          contactoCorreos: correos.contacto,
+          rut: d.rut ?? null,
+          codigoPaisExpedicion: d.codigoPaisExpedicion ?? 'CO',
+          estadoCivil: d.estadoCivil ?? null,
+          rh: d.rh ?? null,
+          codigoPaisNacimiento: d.codigoPaisNacimiento ?? 'CO',
+          municipioNacimientoId: d.municipioNacimientoId ?? null,
+          zona: d.zona ?? null,
+          comuna: d.comuna ?? null,
+          barrio: d.barrio ?? null,
           emailFe: d.emailFe,
           direccion: d.direccion,
           pais: d.pais ?? 'Colombia',
@@ -543,16 +559,20 @@ export class FormTerceroPlanoComponent implements OnInit {
       razonSocial: juridica ? v.razonSocial?.trim() || null : null,
       nombres: nombresFinal,
       apellidos: apellidosFinal,
-      telefono: v.telefono?.trim() || null,
-      email: v.email?.trim() || null,
+      // telefono/email los llena el back con el primero de cada lista.
+      telefono: null,
+      email: null,
+      telefonos: this.esBanco ? [] : unirTelefonos(v.telefonos, v.contactoTelefonos),
+      correos: this.esBanco ? [] : unirCorreos(v.correos, v.contactoCorreos),
+      contactoNombre: this.esBanco ? null : v.contactoNombre?.trim() || null,
       emailFe: v.emailFe?.trim() || null,
       direccion: v.direccion?.trim() || null,
       municipioId: v.codigoPais === 'CO' ? (v.municipioId ?? null) : null,
-      municipio: this.municipioOpts.find((o) => o.value === v.municipioId)?.label ?? null,
+      municipio: v.codigoPais === 'CO' && v.municipioId ? this.municipioNombre : null,
       responsabilidadFiscal: v.responsabilidadFiscal || null,
       esCliente: this.roles.includes('CLIENTE'),
       esProveedor: this.roles.includes('PROVEEDOR'),
-      esEmpleado: this.roles.includes('EMPLEADO'),
+      esEmpleado: this.roles.includes('EMPLEADO') || this.eraEmpleado,
       esBanco: this.roles.includes('BANCO'),
       // Roles de seguridad social (V120): van por lista, no por booleano.
       roles: this.roles.filter((r) => ROLES_SS.includes(r)),
@@ -566,7 +586,7 @@ export class FormTerceroPlanoComponent implements OnInit {
       autoRetenedor: v.autoRetenedor,
       codigoCIIU: v.codigoCIIU?.trim() || null,
       actividadEconomica: v.actividadEconomica?.trim() || null,
-      pais: PAIS_OPTIONS.find((o) => o.value === v.codigoPais)?.label ?? 'Colombia',
+      pais: nombrePais(v.codigoPais),
       codigoPais: v.codigoPais || 'CO',
 
       // ── Fase 1: identificación desagregada ────────────────────────
@@ -581,6 +601,15 @@ export class FormTerceroPlanoComponent implements OnInit {
       sexo: !juridica ? v.sexo || null : null,
       fechaExpedicionDocumento: !juridica ? this.aFecha(v.fechaExpedicionDocumento) : null,
       municipioExpedicionId: !juridica ? (v.municipioExpedicionId ?? null) : null,
+      rut: !juridica ? v.rut?.trim() || null : null,
+      codigoPaisExpedicion: !juridica ? v.codigoPaisExpedicion || null : null,
+      estadoCivil: !juridica ? v.estadoCivil || null : null,
+      rh: !juridica ? v.rh || null : null,
+      codigoPaisNacimiento: !juridica ? v.codigoPaisNacimiento || null : null,
+      municipioNacimientoId: !juridica ? (v.municipioNacimientoId ?? null) : null,
+      zona: !juridica ? v.zona || null : null,
+      comuna: !juridica ? v.comuna?.trim() || null : null,
+      barrio: !juridica ? v.barrio?.trim() || null : null,
 
       // ── Persona jurídica ──────────────────────────────────────────
       nombreComercial: v.nombreComercial?.trim() || null,
@@ -612,6 +641,7 @@ export class FormTerceroPlanoComponent implements OnInit {
         this.isEdit = true;
         this.terceroId = res.data.id;
       }
+      await this.guardarImagenes();
       this.guardado.emit(this.terceroId ?? undefined);
     } catch (err: any) {
       this.alert.showError('Error', err?.message ?? 'No se pudo guardar el tercero.');
@@ -619,6 +649,19 @@ export class FormTerceroPlanoComponent implements OnInit {
       this.saving = false;
       this.cdr.markForCheck();
     }
+  }
+
+  /** Sube o quita las imágenes pendientes una vez el tercero tiene id. */
+  private async guardarImagenes(): Promise<void> {
+    if (!this.terceroId) return;
+    const id = this.terceroId;
+    const fallidas = await this.imagenes.aplicar(
+      (tipo, archivo) => this.service.subirImagen(id, tipo, archivo),
+      (tipo) => this.service.quitarImagen(id, tipo),
+      lastValueFrom,
+    );
+    if (fallidas.length)
+      this.alert.showWarn('Imágenes', 'El tercero se guardó, pero no se pudo cargar: ' + fallidas.join(', ') + '.');
   }
 
   cancelar(): void {

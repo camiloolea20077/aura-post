@@ -34,6 +34,8 @@ import { IndexDBService } from '../../../core/services/index-db.service';
 import { TerceroService } from '../../../core/services/tercero.service';
 import { ContabilidadService } from '../../../core/services/contabilidad.service';
 import { CuentaBancariaService } from '../../../core/services/cuenta-bancaria.service';
+import { TarifaRetencionService } from '../../../core/services/tarifa-retencion.service';
+import { TarifaRetencionModel } from '../../../core/models/tarifa-retencion.model';
 import {
   CATEGORIAS_GASTO,
   CreateGastoDto,
@@ -158,6 +160,7 @@ export class FormGastoComponent implements OnInit {
     private readonly terceroService: TerceroService,
     private readonly contabilidadService: ContabilidadService,
     private readonly cuentaBancariaService: CuentaBancariaService,
+    private readonly tarifaRetencionService: TarifaRetencionService,
     private readonly router: Router,
     private readonly route: ActivatedRoute,
     public readonly cdr: ChangeDetectorRef,
@@ -172,6 +175,7 @@ export class FormGastoComponent implements OnInit {
       this.loadCuentas(),
       this.loadMediosPago(),
       this.loadCuentasBancarias(),
+      this.loadConceptosRetencion(),
     ]);
     if (id) {
       await this.cargarParaEditar(+id);
@@ -203,16 +207,118 @@ export class FormGastoComponent implements OnInit {
       numeroDocSoporte: [''],
       descripcion: [''],
       cuentaContableId: [null],
+      // Impuestos: la base arranca en el monto y el valor se calcula solo
+      // (base × tarifa). El valor se puede corregir a mano si la factura trae
+      // otro por redondeo.
       baseIva: [0],
       tarifaIva: [0],
-      valorIva: [{ value: 0, disabled: true }],
+      valorIva: [0],
+      retefuenteTarifaId: [null],
       baseRetefuente: [0],
       tarifaRetefuente: [0],
-      valorRetefuente: [{ value: 0, disabled: true }],
+      valorRetefuente: [0],
+      reteicaTarifaId: [null],
       baseReteica: [0],
       tarifaReteica: [0],
-      valorReteica: [{ value: 0, disabled: true }],
+      valorReteica: [0],
     });
+    this.engancharImpuestos();
+  }
+
+  // ── Impuestos ──────────────────────────────────────────────────────
+  readonly tarifasIvaOpts = [
+    { label: 'Sin IVA', value: 0 },
+    { label: '5 %', value: 5 },
+    { label: '19 %', value: 19 },
+  ];
+  conceptosRetefuente: { label: string; value: number; tarifa: TarifaRetencionModel }[] = [];
+  conceptosReteica: { label: string; value: number; tarifa: TarifaRetencionModel }[] = [];
+  /** Bases que el usuario cambió a mano: ya no siguen al monto. */
+  private readonly baseManual = { Iva: false, Retefuente: false, Reteica: false };
+  /** Mientras se carga un gasto para editar no se recalcula nada. */
+  private cargandoImpuestos = false;
+
+  private engancharImpuestos(): void {
+    const tipos = ['Iva', 'Retefuente', 'Reteica'] as const;
+    this.frm.get('monto')!.valueChanges.subscribe((monto) => {
+      if (this.cargandoImpuestos) return;
+      for (const t of tipos) {
+        if (!this.baseManual[t] && this.tieneImpuesto(t)) {
+          this.frm.get('base' + t)!.setValue(monto ?? 0, { emitEvent: false });
+        }
+        this.calcular(t);
+      }
+    });
+    for (const t of tipos) {
+      this.frm.get('base' + t)!.valueChanges.subscribe((base) => {
+        if (this.cargandoImpuestos) return;
+        this.baseManual[t] = (base ?? 0) !== (this.frm.get('monto')!.value ?? 0);
+        this.calcular(t);
+      });
+      this.frm.get('tarifa' + t)!.valueChanges.subscribe(() => {
+        if (this.cargandoImpuestos) return;
+        this.basePorDefecto(t);
+        this.calcular(t);
+      });
+    }
+    this.frm.get('retefuenteTarifaId')!.valueChanges.subscribe((id) => this.aplicarConcepto('Retefuente', id));
+    this.frm.get('reteicaTarifaId')!.valueChanges.subscribe((id) => this.aplicarConcepto('Reteica', id));
+  }
+
+  private tieneImpuesto(t: 'Iva' | 'Retefuente' | 'Reteica'): boolean {
+    return (this.frm.get('tarifa' + t)!.value ?? 0) > 0;
+  }
+
+  /** Al poner una tarifa sin base, la base es el monto del gasto. */
+  private basePorDefecto(t: 'Iva' | 'Retefuente' | 'Reteica'): void {
+    const base = this.frm.get('base' + t)!;
+    if (this.tieneImpuesto(t) && !(base.value > 0)) {
+      base.setValue(this.frm.get('monto')!.value ?? 0, { emitEvent: false });
+      this.baseManual[t] = false;
+    }
+  }
+
+  /** Valor = base × tarifa (el reteICA va por mil). */
+  private calcular(t: 'Iva' | 'Retefuente' | 'Reteica'): void {
+    const base = this.frm.get('base' + t)!.value ?? 0;
+    const tarifa = this.frm.get('tarifa' + t)!.value ?? 0;
+    const divisor = t === 'Reteica' ? 1000 : 100;
+    this.frm.get('valor' + t)!.setValue(Math.round((base * tarifa) / divisor), { emitEvent: false });
+    this.cdr.markForCheck();
+  }
+
+  /** El concepto pone la tarifa (natural o jurídica según el tercero). */
+  private aplicarConcepto(t: 'Retefuente' | 'Reteica', id: number | null): void {
+    if (this.cargandoImpuestos) return;
+    if (id == null) {
+      this.frm.patchValue({ ['tarifa' + t]: 0, ['base' + t]: 0, ['valor' + t]: 0 }, { emitEvent: false });
+      this.baseManual[t] = false;
+      this.cdr.markForCheck();
+      return;
+    }
+    const lista = t === 'Retefuente' ? this.conceptosRetefuente : this.conceptosReteica;
+    const c = lista.find((x) => x.value === id)?.tarifa;
+    if (!c) return;
+    const natural = (this.terceroSeleccionado as any)?.tipoPersona === 'NATURAL';
+    const pct = Number(natural ? c.tarifaNatural : c.tarifaJuridica) || 0;
+    // El catálogo guarda el reteICA en %; el formulario lo pide por mil.
+    this.frm.get('tarifa' + t)!.setValue(t === 'Reteica' ? +(pct * 10).toFixed(3) : pct);
+  }
+
+  private async loadConceptosRetencion(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.tarifaRetencionService.todas());
+      const activas = (res?.data ?? []).filter((x) => x.activo !== false);
+      const op = (x: TarifaRetencionModel, unidad: string, factor: number) => ({
+        label: `${x.concepto} · ${+(Number(x.tarifaJuridica) * factor).toFixed(3)} ${unidad}`,
+        value: x.id,
+        tarifa: x,
+      });
+      this.conceptosRetefuente = activas.filter((x) => x.tipo === 'RETEFUENTE').map((x) => op(x, '%', 1));
+      this.conceptosReteica = activas.filter((x) => x.tipo === 'RETEICA').map((x) => op(x, '‰', 10));
+    } catch {
+      // Sin catálogo se escribe la tarifa a mano.
+    }
   }
 
   private async loadSucursales(): Promise<void> {
@@ -272,6 +378,25 @@ export class FormGastoComponent implements OnInit {
   get esCredito(): boolean {
     return this.origen === 'CREDITO';
   }
+
+  get totalRetenciones(): number {
+    const v = this.frm.getRawValue();
+    return (v.valorRetefuente ?? 0) + (v.valorReteica ?? 0);
+  }
+
+  /** Lo que sale de la caja o del banco (o se debe): valor + IVA − retenciones, igual que el asiento. */
+  get totalAPagar(): number {
+    const v = this.frm.getRawValue();
+    return (v.monto ?? 0) + (v.valorIva ?? 0) - this.totalRetenciones;
+  }
+
+  cop(v: number | null | undefined): string {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      maximumFractionDigits: 0,
+    }).format(v ?? 0);
+  }
   get esCaja(): boolean {
     return this.origen === 'CAJA';
   }
@@ -321,6 +446,7 @@ export class FormGastoComponent implements OnInit {
       const g = res?.data ?? null;
       this.gastoToEdit = g;
       if (g) {
+        this.cargandoImpuestos = true;
         this.frm.patchValue({
           sucursalId: g.sucursalId ?? null,
           categoria: g.categoria,
@@ -352,7 +478,13 @@ export class FormGastoComponent implements OnInit {
           baseReteica: g.baseReteica ?? 0,
           tarifaReteica: g.tarifaReteica ?? 0,
           valorReteica: g.valorReteica ?? 0,
+          retefuenteTarifaId: g.retefuenteTarifaId ?? null,
+          reteicaTarifaId: g.reteicaTarifaId ?? null,
         });
+        this.cargandoImpuestos = false;
+        this.baseManual.Iva = (g.baseIva ?? 0) !== (g.monto ?? 0);
+        this.baseManual.Retefuente = (g.baseRetefuente ?? 0) !== (g.monto ?? 0);
+        this.baseManual.Reteica = (g.baseReteica ?? 0) !== (g.monto ?? 0);
         // Reconstruir el tercero seleccionado para el autocomplete (muestra nombreCompleto)
         this.terceroSeleccionado = g.terceroId
           ? ({
@@ -399,28 +531,8 @@ export class FormGastoComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  recalcularIva(): void {
-    const base = this.frm.get('baseIva')?.value ?? 0;
-    const tarifa = this.frm.get('tarifaIva')?.value ?? 0;
-    this.frm.get('valorIva')?.setValue(+((base * tarifa) / 100).toFixed(2));
-    this.cdr.markForCheck();
-  }
 
-  recalcularRetefuente(): void {
-    const base = this.frm.get('baseRetefuente')?.value ?? 0;
-    const tarifa = this.frm.get('tarifaRetefuente')?.value ?? 0;
-    this.frm
-      .get('valorRetefuente')
-      ?.setValue(+((base * tarifa) / 100).toFixed(2));
-    this.cdr.markForCheck();
-  }
 
-  recalcularReteica(): void {
-    const base = this.frm.get('baseReteica')?.value ?? 0;
-    const tarifa = this.frm.get('tarifaReteica')?.value ?? 0;
-    this.frm.get('valorReteica')?.setValue(+((base * tarifa) / 100).toFixed(2));
-    this.cdr.markForCheck();
-  }
 
   async save(): Promise<void> {
     if (this.frm.invalid) {
@@ -489,6 +601,8 @@ export class FormGastoComponent implements OnInit {
       baseReteica: v.baseReteica,
       tarifaReteica: v.tarifaReteica,
       valorReteica: v.valorReteica,
+      retefuenteTarifaId: (v.valorRetefuente ?? 0) > 0 ? v.retefuenteTarifaId : null,
+      reteicaTarifaId: (v.valorReteica ?? 0) > 0 ? v.reteicaTarifaId : null,
     };
     this.isSubmitting = true;
     this.cdr.markForCheck();

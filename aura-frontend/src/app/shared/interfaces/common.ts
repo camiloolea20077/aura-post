@@ -24,6 +24,8 @@ export interface SidebarMenuItem {
   codigo?: string;
   /** Solo para estos tipos de usuario (pantallas personales, p. ej. del vendedor). */
   tipos?: string[];
+  /** Solo para el administrador de una firma contable (lo dice el back en sus permisos). */
+  soloFirma?: boolean;
 }
 
 export interface SidebarSubgroup {

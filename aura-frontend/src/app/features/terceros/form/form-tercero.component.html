@@ -267,21 +267,8 @@
           </div>
           <i class="pi pi-check-circle check-icon" *ngIf="frmTercero.get('esProveedor')?.value"></i>
         </div>
-
-        <div
-          class="role-card"
-          [class.active]="frmTercero.get('esEmpleado')?.value"
-          (click)="frmTercero.patchValue({ esEmpleado: !frmTercero.get('esEmpleado')?.value })"
-        >
-          <div class="role-icon empleado">
-            <i class="pi pi-id-card"></i>
-          </div>
-          <div class="role-info">
-            <span class="role-label">Empleado</span>
-            <span class="role-desc">Personal de la empresa</span>
-          </div>
-          <i class="pi pi-check-circle check-icon" *ngIf="frmTercero.get('esEmpleado')?.value"></i>
-        </div>
+        <!-- Empleado no se marca aquí: se crea en Empleados → Nuevo, con su hoja
+             de vida. Un tercero que ya es empleado lo conserva (esEmpleado). -->
       </ng-container>
     </div>
 

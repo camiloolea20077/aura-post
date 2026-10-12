@@ -90,6 +90,7 @@ export class IndexCuentasPorCobrarComponent implements OnInit {
     { label: 'Activa', value: 'activa' },
     { label: 'Pagada', value: 'pagada' },
     { label: 'Vencida', value: 'vencida' },
+    { label: 'Castigada', value: 'castigada' },
   ];
 
   constructor(
@@ -193,6 +194,7 @@ export class IndexCuentasPorCobrarComponent implements OnInit {
       pagada: 'success',
       activa: 'info',
       vencida: 'danger',
+      castigada: 'contrast',
     };
     return map[estado] ?? 'secondary';
   }
@@ -202,6 +204,7 @@ export class IndexCuentasPorCobrarComponent implements OnInit {
       pagada: 'Pagada',
       activa: 'Activa',
       vencida: 'Vencida',
+      castigada: 'Castigada',
     };
     return map[estado] ?? estado;
   }

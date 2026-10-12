@@ -1,0 +1,153 @@
+<p-dialog
+  [header]="
+    esEdicion ? 'Editar tipo de vinculación' : 'Nuevo tipo de vinculación'
+  "
+  [(visible)]="visible"
+  (onHide)="cerrar()"
+  [modal]="true"
+  [style]="{ width: '620px' }"
+  [breakpoints]="{ '680px': '95vw' }"
+  [draggable]="false"
+>
+  <form [formGroup]="form" class="dialog-form">
+    <div class="form-grid">
+      <div class="field">
+        <label class="field-label"
+          >Código <span class="required">*</span></label
+        >
+        <input
+          type="text"
+          pInputText
+          formControlName="codigo"
+          class="w-full"
+          placeholder="Ej. PLANTA"
+        />
+        <small class="field-error" *ngIf="invalido('codigo')"
+          >El código es obligatorio (hasta 20 caracteres)</small
+        >
+      </div>
+      <div class="field">
+        <label class="field-label">Estado</label>
+        <p-select
+          formControlName="activo"
+          [options]="opcionesEstado"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+        />
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Nombre <span class="required">*</span></label>
+      <input
+        type="text"
+        pInputText
+        formControlName="nombre"
+        class="w-full"
+        placeholder="Planta (término indefinido)"
+      />
+      <small class="field-error" *ngIf="invalido('nombre')"
+        >El nombre es obligatorio</small
+      >
+    </div>
+
+    <div class="seccion">Valores por defecto al vincular</div>
+    <div class="form-grid tres">
+      <div class="field">
+        <label class="field-label">Tipo de contrato</label>
+        <p-select
+          formControlName="tipoContrato"
+          [options]="opcionesContrato"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+        />
+      </div>
+      <div class="field">
+        <label class="field-label"
+          >Remuneración <span class="required">*</span></label
+        >
+        <p-select
+          formControlName="tipoRemuneracion"
+          [options]="opcionesRemuneracion"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+        />
+      </div>
+      <div class="field">
+        <label class="field-label"
+          >Frecuencia de pago <span class="required">*</span></label
+        >
+        <p-select
+          formControlName="frecuenciaPago"
+          [options]="opcionesFrecuencia"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+        />
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="field">
+        <label class="field-label">¿Exige fecha de terminación?</label>
+        <p-select
+          formControlName="exigeFechaFin"
+          [options]="opcionesSiNo"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+        />
+        <small class="field-hint"
+          >Fijo, obra y aprendizaje siempre la exigen.</small
+        >
+      </div>
+      <div class="field">
+        <label class="field-label"
+          >¿Una sola vinculación activa por empleado?</label
+        >
+        <p-select
+          formControlName="unicaPorEmpleado"
+          [options]="opcionesSiNo"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+        />
+        <small class="field-hint"
+          >En "No", el empleado puede tener otra vinculación de este tipo a la
+          vez.</small
+        >
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">Descripción</label>
+      <textarea
+        pTextarea
+        formControlName="descripcion"
+        rows="2"
+        class="w-full"
+      ></textarea>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="btn-amarillo"
+      (click)="cerrar()"
+    ></button>
+    <button
+      pButton
+      [label]="esEdicion ? 'Actualizar' : 'Guardar'"
+      icon="pi pi-check"
+      class="btn-verde"
+      [loading]="guardando"
+      (click)="guardar()"
+    ></button>
+  </ng-template>
+</p-dialog>

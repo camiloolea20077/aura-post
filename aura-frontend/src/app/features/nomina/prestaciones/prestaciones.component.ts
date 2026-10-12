@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
@@ -45,6 +45,8 @@ type TagSeverity =
   | 'contrast'
   | undefined;
 
+import { ExcelReporteService } from '../../../shared/services/excel-reporte.service';
+
 @Component({
   selector: 'app-prestaciones',
   standalone: true,
@@ -69,6 +71,9 @@ type TagSeverity =
   styleUrls: ['./prestaciones.component.scss'],
 })
 export class PrestacionesComponent implements OnInit {
+  private readonly excel = inject(ExcelReporteService);
+  exportandoExcel = false;
+
   public lotes: LotePrestacionModel[] = [];
   public loading = true;
 
@@ -500,5 +505,33 @@ export class PrestacionesComponent implements OnInit {
       ANULADA: 'danger',
     };
     return m[e];
+  }
+
+  // ── Excel (docs/PLAN_EXCEL_IMPORTADORES_MODULOS.md §1) ──────────────
+  /** Las liquidaciones de prestaciones que se ven en la lista. */
+  async descargarExcel(): Promise<void> {
+    if (!this.lotes.length) return;
+    this.exportandoExcel = true;
+    try {
+      await this.excel.descargar({
+        titulo: 'Liquidaciones de prestaciones sociales',
+        archivo: 'prestaciones_sociales',
+        hojas: [{
+          nombre: 'Prestaciones',
+          columnas: [
+            { titulo: 'Fecha', ancho: 12 }, { titulo: 'Documento', ancho: 14 }, { titulo: 'Empleado', ancho: 34 },
+            { titulo: 'Tipo', ancho: 30 }, { titulo: 'Definitiva', ancho: 10 }, { titulo: 'Conceptos', tipo: 'numero' },
+            { titulo: 'Total', tipo: 'pesos' }, { titulo: 'Estado', ancho: 12 },
+          ],
+          filas: [
+            ...this.lotes.map((l) => [l.fecha, l.empleadoDocumento, l.empleadoNombre, l.tipoResumen,
+              l.definitiva ? 'Sí' : 'No', l.cantidad, l.total, l.estado]),
+            { valores: ['', '', 'TOTAL', '', '', null, this.lotes.reduce((s, l) => s + (l.total ?? 0), 0)], estilo: 'total' },
+          ],
+        }],
+      });
+    } finally {
+      this.exportandoExcel = false;
+    }
   }
 }

@@ -40,6 +40,11 @@ export class StateStore {
 
   readonly state = computed(() => this._state());
   readonly isMobile = computed(() => this._state().isMobile);
+  /** Tablet (768–1024px): el menú lateral va colapsado y se abre encima del contenido. */
+  readonly isTablet = computed(() => {
+    const w = this._state().windowWidth;
+    return w >= 768 && w <= 1024;
+  });
   readonly menuGroups = computed(() => this._state().menuGroups);
   readonly role = computed(() => this._state().role);
   readonly usuarioId = computed(() => this._state().usuarioId);

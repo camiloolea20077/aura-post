@@ -36,6 +36,7 @@
         placeholder="Selecciona la cuenta"
         [filter]="true"
         [style]="{ width: '100%' }"
+        appendTo="body"
       />
     </div>
 
@@ -48,6 +49,7 @@
         optionValue="value"
         placeholder="Selecciona la caja"
         [style]="{ width: '100%' }"
+        appendTo="body"
       />
       <small class="hint" *ngIf="turnosOpts.length === 0">
         No hay cajas abiertas. Abre una o paga desde otra cuenta.
@@ -60,6 +62,7 @@
         [opciones]="cuentasOpts"
         [(ngModel)]="cuentaContableId"
         placeholder="Caja menor, fondos..."
+        appendTo="body"
         [showClear]="false"
       />
       <small class="hint">No puede pagar más de lo que tenga la cuenta.</small>

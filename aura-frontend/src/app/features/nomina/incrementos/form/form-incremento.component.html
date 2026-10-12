@@ -1,0 +1,173 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <button pButton type="button" icon="pi pi-arrow-left" class="p-button-text p-button-rounded"
+          (click)="volver()"></button>
+        <div>
+          <h1 class="title">{{ incremento ? 'Incremento ' + incremento.numeroCompleto : 'Nuevo incremento salarial' }}</h1>
+          <p class="subtitle">
+            @if (incremento) {
+              {{ incremento.empleados }} empleado(s) · rige desde el {{ incremento.fechaAplicacion | fechaEs }}
+            } @else {
+              Elija a quién aplica y cómo; Calcular arma la vista previa sin cambiar ningún salario
+            }
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          @if (incremento) {
+            <p-tag [value]="textoEstado()" [severity]="severidad(incremento.estado)" />
+          }
+          @if (incremento?.estado === 'PENDIENTE') {
+            <button *appPuede="'recursos-humanos.incrementos:ELIMINAR'" pButton type="button" label="Anular"
+              icon="pi pi-ban" class="p-button-outlined p-button-danger" [disabled]="!!trabajando"
+              (click)="confirmarAnular()"></button>
+            <button *appPuede="'recursos-humanos.incrementos:EDITAR'" pButton type="button" label="Aplicar"
+              icon="pi pi-check-circle" class="p-button-outlined" [disabled]="!!trabajando || !detalle.length"
+              [loading]="trabajando === 'aplicar'" (click)="confirmarAplicar()"></button>
+          }
+          @if (incremento?.estado === 'APLICADO') {
+            <button *appPuede="'recursos-humanos.incrementos:EDITAR'" pButton type="button" label="Reversar"
+              icon="pi pi-undo" class="p-button-outlined p-button-danger" [disabled]="!!trabajando"
+              [loading]="trabajando === 'reversar'" (click)="confirmarReversar()"></button>
+          }
+          @if (editable) {
+            <button *appPuede="'recursos-humanos.incrementos:CREAR'" pButton type="button"
+              [label]="incremento ? 'Recalcular' : 'Calcular'" icon="pi pi-refresh" class="btn-aura"
+              [disabled]="!!trabajando || cargando" [loading]="trabajando === 'calcular'" (click)="calcular()"></button>
+          }
+        </div>
+      </div>
+    </div>
+
+    @if (cargando) {
+      <div class="page-loading"><i class="pi pi-spin pi-spinner"></i><span>Cargando...</span></div>
+    } @else {
+      <div class="form-body">
+        <div class="seccion">A quién aplica</div>
+        <div class="grid">
+          <div class="field">
+            <label class="field-label">Tipo de lista <span class="required">*</span></label>
+            <p-select [options]="opcionesTipoLista" [(ngModel)]="form.tipoLista" optionLabel="label"
+              optionValue="value" styleClass="w-full" [disabled]="!editable" (onChange)="onTipoLista()" />
+          </div>
+          <div class="field span-3">
+            @switch (form.tipoLista) {
+              @case ('EMPLEADO') {
+                <label class="field-label">Empleado <span class="required">*</span></label>
+                <app-tercero-autocomplete [(ngModel)]="form.terceroId" rol="EMPLEADO" [rolFijo]="true"
+                  placeholder="Nombre o documento del empleado…" [disabled]="!editable" />
+              }
+              @case ('TODOS') {
+                <label class="field-label">&nbsp;</label>
+                <small class="field-hint todos">Todas las vinculaciones activas con salario (sin prestación de
+                  servicios ni aprendices)</small>
+              }
+              @default {
+                <label class="field-label">
+                  {{ form.tipoLista === 'VINCULACION' ? 'Vinculaciones' : form.tipoLista === 'GRUPO' ? 'Grupos' : 'Tipos de vinculación' }}
+                  <span class="required">*</span>
+                </label>
+                <p-multiSelect [options]="opcionesIds" [(ngModel)]="form.ids" optionLabel="label" optionValue="value"
+                  [filter]="true" display="chip" placeholder="Seleccione" styleClass="w-full" [disabled]="!editable" />
+              }
+            }
+          </div>
+        </div>
+
+        <div class="seccion">Incremento</div>
+        <div class="grid">
+          <div class="field">
+            <label class="field-label">Tipo <span class="required">*</span></label>
+            <p-select [options]="opcionesTipo" [(ngModel)]="form.tipoIncremento" optionLabel="label"
+              optionValue="value" styleClass="w-full" [disabled]="!editable" />
+          </div>
+          @if (conValor) {
+            <div class="field">
+              <label class="field-label">{{ etiquetaValor }} <span class="required">*</span></label>
+              @if (form.tipoIncremento === 'PORCENTAJE') {
+                <p-inputNumber [(ngModel)]="form.valor" [min]="0" [maxFractionDigits]="4" suffix=" %"
+                  styleClass="w-full" inputStyleClass="w-full" [disabled]="!editable" />
+              } @else {
+                <p-inputNumber [(ngModel)]="form.valor" [min]="0" mode="currency" currency="COP" locale="es-CO"
+                  [maxFractionDigits]="0" styleClass="w-full" inputStyleClass="w-full" [disabled]="!editable" />
+              }
+            </div>
+          }
+          <div class="field">
+            <label class="field-label">Redondeo <span class="required">*</span></label>
+            <p-select [options]="opcionesRedondeo" [(ngModel)]="form.redondeo" optionLabel="label"
+              optionValue="value" styleClass="w-full" [disabled]="!editable" />
+          </div>
+          <div class="field">
+            <label class="field-label">Rige desde <span class="required">*</span></label>
+            <p-calendar [(ngModel)]="form.fechaAplicacion" dateFormat="yy-mm-dd" [showIcon]="true"
+              styleClass="w-full" [disabled]="!editable" />
+            <small class="field-hint">Es lo negociado: aplica a las nóminas que se liquiden desde esta fecha, sin retroactivo</small>
+          </div>
+          <div class="field span-4">
+            <label class="field-label">Descripción</label>
+            <input pInputText [(ngModel)]="form.descripcion" class="w-full" [disabled]="!editable"
+              placeholder="Ej.: Incremento anual 2027" />
+          </div>
+        </div>
+
+        @if (incremento) {
+          <div class="seccion">Vista previa</div>
+          <p-table [value]="detalle" [scrollable]="true" [tableStyle]="{ 'min-width': '52rem' }" showGridlines
+            [paginator]="detalle.length > 25" [rows]="25">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Empleado</th>
+                <th style="width: 150px" class="num">Salario actual</th>
+                <th style="width: 150px" class="num">Salario nuevo</th>
+                <th style="width: 140px" class="num">Diferencia</th>
+                @if (editable) {
+                  <th style="width: 70px"></th>
+                }
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-d>
+              <tr>
+                <td>
+                  <div class="nombre">{{ d.empleadoDocumento }} - {{ d.empleadoNombre }}</div>
+                  <div class="meta">{{ d.codigoVinculacion ?? 'Sin código' }} · {{ d.cargo ?? 'Sin cargo' }}</div>
+                </td>
+                <td class="num">{{ d.salarioAnterior | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+                <td class="num nuevo">{{ d.salarioNuevo | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+                <td class="num">{{ d.diferencia | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+                @if (editable) {
+                  <td>
+                    <button pButton icon="pi pi-times" class="p-button-text p-button-danger p-button-sm"
+                      pTooltip="Quitar del incremento" [disabled]="!!trabajando" (click)="quitar(d)"></button>
+                  </td>
+                }
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="footer">
+              <tr>
+                <td class="nombre">Total ({{ detalle.length }})</td>
+                <td class="num">{{ incremento.totalAnterior | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+                <td class="num nuevo">{{ incremento.totalNuevo | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+                <td class="num">{{ totalDiferencia | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+                <td></td>
+                @if (editable) {
+                  <td></td>
+                }
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td [attr.colspan]="editable ? 6 : 5" class="vacio">No quedan empleados en el incremento.</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        }
+      </div>
+    }
+  </div>
+</div>
+
+<p-confirmDialog />

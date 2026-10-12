@@ -76,7 +76,7 @@
           </th>
           <th style="width: 140px" class="text-right">Total</th>
           <th style="width: 92px" class="text-center">Estado</th>
-          <th style="width: 80px" class="text-center">Detalle</th>
+          <th style="width: 190px" class="text-center">Acciones</th>
         </tr>
       </ng-template>
 
@@ -147,7 +147,8 @@
           </td>
 
           <!-- Acciones -->
-          <td class="text-center flex">
+          <td class="text-center">
+            <div class="acciones-fila">
             <button
               pButton
               type="button"
@@ -156,6 +157,16 @@
               pTooltip="Ver detalle"
               tooltipPosition="top"
               (click)="verDetalle(item)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-file-pdf"
+              class="p-button-text p-button-sm p-button-danger"
+              pTooltip="Descargar PDF"
+              tooltipPosition="top"
+              [disabled]="descargandoPdfId === item.id"
+              (click)="descargarPdf(item)"
             ></button>
             <ng-container *appPuede="'compras.compras:EDITAR'">
             <button
@@ -188,6 +199,7 @@
               tooltipPosition="top"
               (click)="abrirDocumentoSoporte(item)"
             ></button>
+            </div>
           </td>
         </tr>
       </ng-template>
@@ -264,3 +276,4 @@
   origenTipo="COMPRA"
   [origenId]="compraDocSoporteId"
 />
+

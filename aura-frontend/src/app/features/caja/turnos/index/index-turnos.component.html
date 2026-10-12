@@ -274,6 +274,15 @@
                 (click)="descargarPdf(item)"
               ></button>
               <button
+                pButton
+                [icon]="exportandoExcelId === item.id ? 'pi pi-spin pi-spinner' : 'pi pi-file-excel'"
+                class="p-button-rounded p-button-sm p-button-outlined p-button-secondary"
+                [disabled]="exportandoExcelId === item.id"
+                pTooltip="Descargar cierre en Excel"
+                tooltipPosition="left"
+                (click)="descargarExcel(item)"
+              ></button>
+              <button
                 *ngIf="item.estado === 'ABIERTA'"
                 pButton
                 icon="pi pi-lock"

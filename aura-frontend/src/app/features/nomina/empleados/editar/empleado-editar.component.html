@@ -1,0 +1,52 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" (onClick)="volver()" />
+        <span class="header-icon"><i class="pi pi-user-edit"></i></span>
+        <div>
+          <h1 class="title">{{ nombre }}</h1>
+          <p class="subtitle">Hoja de vida del empleado</p>
+        </div>
+      </div>
+    </div>
+
+    @if (cargando) {
+      <div class="contenido"><p-skeleton height="18rem" /></div>
+    } @else if (empleado?.terceroId) {
+      <p-tabView styleClass="aura-tabs">
+        <p-tabPanel>
+          <ng-template pTemplate="header"><span class="tab-label"><i class="pi pi-id-card"></i> Datos personales</span></ng-template>
+          <div class="asistencia">
+            <label for="asistencia">Control de asistencia</label>
+            <p-select inputId="asistencia" [options]="opcionesAsistencia" optionLabel="label" optionValue="value"
+              [ngModel]="empleado?.requiereControlAsistencia ?? false" (ngModelChange)="cambiarAsistencia($event)"
+              styleClass="asistencia__select" />
+          </div>
+          <app-form-tercero-plano [embedded]="true" [terceroIdInput]="empleado!.terceroId!" [rolesFijos]="['EMPLEADO']"
+            [mostrarBanco]="false" (guardado)="cargar()" />
+        </p-tabPanel>
+        <p-tabPanel>
+          <ng-template pTemplate="header"><span class="tab-label"><i class="pi pi-building-columns"></i> Banco</span></ng-template>
+          <div class="contenido">
+            <app-cuentas-bancarias-empleado [empleadoId]="empleadoId" />
+          </div>
+        </p-tabPanel>
+        <p-tabPanel>
+          <ng-template pTemplate="header"><span class="tab-label"><i class="pi pi-users"></i> Familia</span></ng-template>
+          <div class="contenido">
+            <app-familiares-empleado [empleadoId]="empleadoId" />
+          </div>
+        </p-tabPanel>
+        <p-tabPanel>
+          <ng-template pTemplate="header"><span class="tab-label"><i class="pi pi-briefcase"></i> Historial laboral</span></ng-template>
+          <div class="contenido">
+            <app-experiencia-empleado [empleadoId]="empleadoId" />
+          </div>
+        </p-tabPanel>
+      </p-tabView>
+    } @else {
+      <p class="contenido muted">Este empleado no tiene identidad (tercero) enlazada.</p>
+    }
+  </div>
+</div>

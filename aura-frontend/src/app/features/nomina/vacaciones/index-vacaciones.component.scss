@@ -1,0 +1,154 @@
+// Estructura (.page, .card, .card-head, .search-wrap) global en styles.scss.
+
+.nombre {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.85rem;
+}
+
+.meta {
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.num {
+  text-align: right;
+}
+
+.row-inactiva td {
+  opacity: 0.6;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem 1rem;
+  color: #94a3b8;
+
+  i {
+    font-size: 1.6rem;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+  }
+}
+
+.form-vac {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem 1rem;
+  container-type: inline-size;
+
+  &.una {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  @container (max-width: 480px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+
+    label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    small {
+      font-size: 0.72rem;
+      color: #94a3b8;
+    }
+  }
+
+  .ancho {
+    grid-column: 1 / -1;
+  }
+
+  .nota {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #64748b;
+  }
+}
+
+.saldo {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+
+  @container (max-width: 480px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.55rem 0.75rem;
+    background: #f8fafc;
+
+    span {
+      font-size: 0.7rem;
+      color: #64748b;
+    }
+
+    b {
+      font-size: 0.95rem;
+      color: #1e293b;
+    }
+  }
+
+  .disp {
+    background: #eff6ff;
+
+    b {
+      color: #2563eb;
+    }
+  }
+}
+
+.resultado {
+  border: 1px solid #fde68a;
+  background: #fffbeb;
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.8rem;
+  color: #78350f;
+
+  p {
+    margin: 0 0 0.35rem;
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 1.1rem;
+    max-height: 180px;
+    overflow-y: auto;
+  }
+}
+
+:host ::ng-deep .form-vac {
+  .p-select,
+  .p-multiselect,
+  .p-datepicker,
+  .p-inputnumber {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+.w-full {
+  width: 100%;
+}

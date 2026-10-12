@@ -1,0 +1,178 @@
+// Header (.card-head) y card (.card) son estándar global en styles.scss.
+
+:host {
+  display: block;
+}
+
+.seccion {
+  padding: 1rem 0;
+  border-top: 1px solid #f1f5f9;
+
+  &:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+}
+
+.seccion-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.75rem;
+
+  i {
+    color: #2563eb;
+  }
+
+  &__extra {
+    font-weight: 400;
+    font-size: 0.8rem;
+    color: #94a3b8;
+  }
+}
+
+// Campos: se acomodan solos al ancho (teléfono, tablet, pc).
+.grid-campos,
+.grid-linea {
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+  gap: 0.75rem 1rem;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+
+  &--ancho {
+    grid-column: span 2;
+  }
+
+  label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #475569;
+  }
+
+  input,
+  ::ng-deep .p-dropdown,
+  ::ng-deep .p-calendar,
+  ::ng-deep .p-inputnumber,
+  ::ng-deep .p-inputnumber input {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .campo--ancho {
+    grid-column: auto;
+  }
+}
+
+.opcional {
+  font-weight: 400;
+  color: #94a3b8;
+}
+
+.ayuda {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.valor {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.linea {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem 0.85rem;
+  margin-bottom: 0.75rem;
+  background: #fafbfe;
+}
+
+.linea-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.linea-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: #2563eb;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.error-calculo {
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+  margin-bottom: 0.75rem;
+}
+
+.avisos {
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 0.85rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.totales {
+  max-width: 420px;
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: #334155;
+
+  &.resta span:last-child {
+    color: #b45309;
+  }
+
+  &.final {
+    border-top: 2px solid #e2e8f0;
+    padding-top: 0.5rem;
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: #1e293b;
+  }
+}
+
+// La .card no trae relleno: el cuerpo lleva el mismo margen lateral que el .card-head.
+.card-body {
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .card-body {
+    padding: 1rem;
+  }
+}
