@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
@@ -64,6 +64,9 @@ export class IndexNominaElectronicaComponent implements OnInit {
 
   @ViewChild('mesTab') mesTab?: MesNominaElectronicaComponent;
 
+  /** Con inject(): mesInicial la lee al inicializar, antes del constructor. */
+  private readonly route = inject(ActivatedRoute);
+
   /** Mes pedido por la URL (?anio=&mes=), p. ej. al venir desde una nómina. */
   public readonly mesInicial: Date | null = (() => {
     const q = this.route.snapshot.queryParamMap;
@@ -99,7 +102,6 @@ export class IndexNominaElectronicaComponent implements OnInit {
     private readonly service: NominaElectronicaService,
     private readonly alert: AlertService,
     private readonly confirm: ConfirmationService,
-    private readonly route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
