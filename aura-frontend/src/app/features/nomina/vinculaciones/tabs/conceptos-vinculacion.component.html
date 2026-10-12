@@ -1,0 +1,95 @@
+<div class="tab-head">
+  <p>Conceptos propios de esta vinculación: lo que se le paga o descuenta de forma fija (bonificación, auxilio de
+    rodamiento, descuento pactado) con su vigencia.</p>
+  @if (!soloLectura) {
+    <button pButton type="button" label="Agregar concepto" icon="pi pi-plus" class="btn-aura p-button-sm"
+      (click)="nuevo()"></button>
+  }
+</div>
+
+<p-table [value]="filas" styleClass="p-datatable-sm" [tableStyle]="{ 'min-width': '44rem' }" [scrollable]="true">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Concepto</th>
+      <th style="width: 7rem" class="text-right">Cantidad</th>
+      <th style="width: 9rem" class="text-right">Valor</th>
+      <th style="width: 6rem" class="text-right">%</th>
+      <th style="width: 12rem">Vigencia</th>
+      <th style="width: 6rem"></th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-c>
+    <tr>
+      <td>
+        <div>{{ c.conceptoNombre ?? c.conceptoCodigo }}</div>
+        <div class="meta">
+          {{ c.conceptoCodigo }}
+          @if (c.clase) { · <p-tag [value]="c.clase" [severity]="severidadClase(c.clase)" styleClass="tag-mini" /> }
+        </div>
+      </td>
+      <td class="text-right mono">{{ c.cantidad ?? '—' }}</td>
+      <td class="text-right mono">{{ c.valor != null ? (c.valor | currency: 'COP' : 'symbol-narrow' : '1.0-0') : '—' }}</td>
+      <td class="text-right mono">{{ c.porcentaje != null ? c.porcentaje + ' %' : '—' }}</td>
+      <td>{{ c.fechaDesde }} → {{ c.fechaHasta ?? 'Sin fin' }}</td>
+      <td>
+        @if (!soloLectura) {
+          <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-sm" pTooltip="Editar"
+            (click)="editar(c)"></button>
+          <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm"
+            pTooltip="Quitar" (click)="confirmarEliminar(c)"></button>
+        }
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="emptymessage">
+    <tr><td colspan="6" class="vacio">La vinculación no tiene conceptos propios.</td></tr>
+  </ng-template>
+</p-table>
+
+<p-dialog [header]="editando ? 'Editar concepto' : 'Agregar concepto'" [(visible)]="mostrarForm" [modal]="true"
+  [style]="{ width: '560px' }" [breakpoints]="{ '640px': '95vw' }" [draggable]="false">
+  <form [formGroup]="form" class="dialog-form">
+    <div class="grid">
+      <div class="field span-2">
+        <label>Concepto *</label>
+        <p-select formControlName="conceptoCodigo" [options]="opciones" optionLabel="label" optionValue="value"
+          [filter]="true" filterBy="label" placeholder="Seleccione" styleClass="w-full" />
+      </div>
+      <div class="field">
+        <label>Cantidad</label>
+        <p-inputNumber formControlName="cantidad" [min]="0" [maxFractionDigits]="2" />
+        <small>Horas, días o unidades</small>
+      </div>
+      <div class="field">
+        <label>Valor</label>
+        <p-inputNumber formControlName="valor" mode="currency" currency="COP" locale="es-CO" [maxFractionDigits]="0"
+          [min]="0" />
+      </div>
+      <div class="field">
+        <label>Porcentaje</label>
+        <p-inputNumber formControlName="porcentaje" [min]="0" [max]="100" [maxFractionDigits]="4" suffix=" %" />
+      </div>
+      <div class="field">
+        <label>Desde *</label>
+        <p-calendar formControlName="fechaDesde" dateFormat="yy-mm-dd" [showIcon]="true" [minDate]="minimo"
+          styleClass="w-full" />
+      </div>
+      <div class="field">
+        <label>Hasta</label>
+        <p-calendar formControlName="fechaHasta" dateFormat="yy-mm-dd" [showIcon]="true" [showClear]="true"
+          styleClass="w-full" />
+        <small>Vacío = sin fin</small>
+      </div>
+      <div class="field span-2">
+        <label>Observación</label>
+        <input pInputText formControlName="observacion" class="w-full" />
+      </div>
+    </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancelar" icon="pi pi-times" class="btn-amarillo" (click)="mostrarForm = false"></button>
+    <button pButton label="Guardar" icon="pi pi-check" class="btn-verde" [loading]="guardando" (click)="guardar()"></button>
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog />

@@ -44,6 +44,8 @@
         [label]="'Cerrar ' + mesLabel(m.mes) + ' ' + m.anio"
         icon="pi pi-lock"
         class="btn-rojo p-button-sm"
+        [disabled]="m.borradores > 0"
+        [pTooltip]="m.borradores > 0 ? 'Tiene comprobantes en borrador: revíselo en la pestaña Cierre del mes' : ''"
         (click)="abrirDialogCerrar(m)"
       ></button>
     </div>
@@ -140,11 +142,13 @@
                   pButton
                   icon="pi pi-lock"
                   class="p-button-text p-button-sm p-button-rounded p-button-danger"
-                  [disabled]="pendientesAntesDe(p).length > 0"
+                  [disabled]="pendientesAntesDe(p).length > 0 || p.borradores > 0"
                   [pTooltip]="
                     pendientesAntesDe(p).length
                       ? 'Cierre primero los meses anteriores'
-                      : 'Cerrar período'
+                      : p.borradores > 0
+                        ? 'Tiene comprobantes en borrador: revíselo en la pestaña Cierre del mes'
+                        : 'Cerrar período'
                   "
                   (click)="abrirDialogCerrar(p)"
                 ></button>
@@ -170,6 +174,15 @@
           </ng-template>
         </p-table>
       </div>
+    </p-tabPanel>
+
+    <!-- Tab: Cierre del mes (lista de chequeo, ajustes, acta y comparativo) -->
+    <p-tabPanel header="Cierre del mes" leftIcon="pi pi-check-square">
+      <app-cierre-mes-panel
+        [periodos]="periodos"
+        [siguienteACerrar]="masAntiguoAbierto"
+        (cerrar)="abrirDialogCerrar($event)"
+      />
     </p-tabPanel>
 
     <!-- Tab 2: Balance de Comprobación -->

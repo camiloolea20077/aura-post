@@ -182,6 +182,22 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         route: '/compras',
       },
       {
+        // Mismo permiso que Compras: una devolución es la nota crédito de
+        // compra, que ya vive en ese submódulo (sin SQL de menú).
+        label: 'Devoluciones',
+        codigo: 'compras.compras',
+        icon: 'pi pi-replay',
+        route: '/compras/devoluciones',
+      },
+      {
+        // Facturas de gastos y servicios con retenciones (PLAN_EXCEL §4).
+        // Mismo permiso que Compras: sin SQL de menú.
+        label: 'Causaciones',
+        codigo: 'compras.compras',
+        icon: 'pi pi-file-edit',
+        route: '/compras/causaciones',
+      },
+      {
         label: 'Órdenes de Compra',
         codigo: 'compras.ordenes-de-compra',
         icon: 'pi pi-file-edit',
@@ -396,6 +412,14 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         route: '/admin/usuarios',
       },
       {
+        // Firma contable: clientes, solicitudes y gestionados (PLAN_FIRMA_CONTABLE §9).
+        label: 'Clientes de la firma',
+        codigo: 'caja.usuarios',
+        icon: 'pi pi-briefcase',
+        route: '/firma/clientes',
+        soloFirma: true,
+      },
+      {
         label: 'Perfiles y Permisos',
         codigo: 'caja.perfiles',
         icon: 'pi pi-lock',
@@ -520,6 +544,14 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         route: '/contabilidad/declaraciones',
       },
       {
+        // Formatos 2516/2517 (PLAN_EXCEL §5). Mismo permiso que Declaraciones:
+        // sin SQL de menú.
+        label: 'Conciliación Fiscal',
+        codigo: 'contabilidad.declaraciones',
+        icon: 'pi pi-sliders-h',
+        route: '/contabilidad/conciliacion-fiscal',
+      },
+      {
         // normalize('Importar Datos') = 'importar-datos'
         // (docs/sql/menu_submodulo_importar_datos.sql en el backend).
         label: 'Importar Datos',
@@ -628,6 +660,12 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         route: '/nomina/empleados',
       },
       {
+        label: 'Vinculaciones',
+        codigo: 'recursos-humanos.vinculaciones',
+        icon: 'pi pi-file-edit',
+        route: '/nomina/vinculaciones',
+      },
+      {
         label: 'Saldos iniciales',
         codigo: 'recursos-humanos.saldos-iniciales',
         icon: 'pi pi-database',
@@ -646,22 +684,34 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         route: '/nomina/conceptos',
       },
       {
-        label: 'Períodos',
-        codigo: 'recursos-humanos.periodos',
-        icon: 'pi pi-calendar',
-        route: '/nomina/periodos',
+        label: 'Prenómina',
+        codigo: 'recursos-humanos.prenomina',
+        icon: 'pi pi-list-check',
+        route: '/nomina/prenomina',
       },
       {
-        label: 'Liquidación Nómina',
-        codigo: 'recursos-humanos.liquidacion-nomina',
-        icon: 'pi pi-calculator',
-        route: '/nomina/liquidacion',
+        label: 'Nómina',
+        codigo: 'recursos-humanos.nomina-documento',
+        icon: 'pi pi-wallet',
+        route: '/nomina/nominas',
       },
       {
-        label: 'Preliquidación / Auditoría',
-        codigo: 'recursos-humanos.preliquidacion-auditoria',
-        icon: 'pi pi-verified',
-        route: '/nomina/preliquidacion',
+        label: 'Retiros',
+        codigo: 'recursos-humanos.retiros',
+        icon: 'pi pi-sign-out',
+        route: '/nomina/retiros',
+      },
+      {
+        label: 'Vacaciones',
+        codigo: 'recursos-humanos.vacaciones',
+        icon: 'pi pi-sun',
+        route: '/nomina/vacaciones',
+      },
+      {
+        label: 'Incrementos salariales',
+        codigo: 'recursos-humanos.incrementos',
+        icon: 'pi pi-arrow-up-right',
+        route: '/nomina/incrementos',
       },
       {
         label: 'Nómina Electrónica',
@@ -674,12 +724,6 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         codigo: 'recursos-humanos.pila',
         icon: 'pi pi-shield',
         route: '/nomina/pila',
-      },
-      {
-        label: 'Prestaciones',
-        codigo: 'recursos-humanos.prestaciones',
-        icon: 'pi pi-gift',
-        route: '/nomina/prestaciones',
       },
       {
         label: 'Comisiones',
@@ -760,6 +804,79 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         codigo: 'recursos-humanos.config-nomina',
         icon: 'pi pi-cog',
         route: '/nomina/config',
+      },
+      {
+        label: 'Cuentas contables de nómina',
+        codigo: 'recursos-humanos.cuentas-nomina',
+        icon: 'pi pi-book',
+        route: '/nomina/cuentas-contables',
+      },
+      // Catálogos de nómina (rediseño R1)
+      {
+        label: 'Cargos',
+        codigo: 'recursos-humanos.cargos',
+        icon: 'pi pi-briefcase',
+        route: '/nomina/cargos',
+      },
+      {
+        label: 'Tipos de vinculación',
+        codigo: 'recursos-humanos.tipos-vinculacion',
+        icon: 'pi pi-link',
+        route: '/nomina/tipos-vinculacion',
+      },
+      {
+        label: 'Tipos de comprobante',
+        codigo: 'recursos-humanos.tipos-comprobante-nomina',
+        icon: 'pi pi-file',
+        route: '/nomina/tipos-comprobante',
+      },
+      {
+        label: 'Grupos de nómina',
+        codigo: 'recursos-humanos.grupos-nomina',
+        icon: 'pi pi-sitemap',
+        route: '/nomina/parametros/grupos-nomina',
+      },
+      {
+        label: 'Niveles de cargo',
+        codigo: 'recursos-humanos.niveles-cargo',
+        icon: 'pi pi-sort-amount-up',
+        route: '/nomina/parametros/niveles-cargo',
+      },
+      {
+        label: 'Tipos de cargo',
+        codigo: 'recursos-humanos.tipos-cargo',
+        icon: 'pi pi-tags',
+        route: '/nomina/parametros/tipos-cargo',
+      },
+      {
+        label: 'Tipos de embargo',
+        codigo: 'recursos-humanos.tipos-embargo',
+        icon: 'pi pi-lock',
+        route: '/nomina/parametros/tipos-embargo',
+      },
+      {
+        label: 'Motivos de retiro',
+        codigo: 'recursos-humanos.motivos-retiro',
+        icon: 'pi pi-sign-out',
+        route: '/nomina/parametros/motivos-retiro',
+      },
+      {
+        label: 'Motivos de ausentismo',
+        codigo: 'recursos-humanos.motivos-ausentismo',
+        icon: 'pi pi-heart',
+        route: '/nomina/parametros/motivos-ausentismo',
+      },
+      {
+        label: 'Riesgos ARL',
+        codigo: 'recursos-humanos.riesgos-arl',
+        icon: 'pi pi-exclamation-triangle',
+        route: '/nomina/parametros/riesgos-arl',
+      },
+      {
+        label: 'Calendarios laborales',
+        codigo: 'recursos-humanos.calendarios-laborales',
+        icon: 'pi pi-calendar-times',
+        route: '/nomina/parametros/calendarios-laborales',
       },
     ],
   },

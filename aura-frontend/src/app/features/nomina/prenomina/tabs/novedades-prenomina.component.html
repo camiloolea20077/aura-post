@@ -1,0 +1,143 @@
+@if (editable) {
+  <div class="acciones" *appPuede="'recursos-humanos.prenomina:EDITAR'">
+    <span class="nota">Al agregar o quitar una novedad, el empleado queda sin liquidar: reliquídelo en la pestaña Liquidación.</span>
+    <button pButton type="button" label="Agregar novedad" icon="pi pi-plus" class="btn-aura"
+      [disabled]="documento.empleados === 0" (click)="nueva()"></button>
+  </div>
+}
+
+<div class="buscar-fila">
+  <span class="search-wrap buscar-tab">
+    <i class="pi pi-search"></i>
+    <input type="text" pInputText class="search-input" placeholder="Buscar empleado, documento, tipo o descripción..."
+      [(ngModel)]="busqueda" (ngModelChange)="tabla.filterGlobal($event, 'contains')"
+      (keydown.escape)="busqueda = ''; tabla.filterGlobal('', 'contains')" />
+    @if (busqueda) {
+      <button type="button" class="clear-btn" (click)="busqueda = ''; tabla.filterGlobal('', 'contains')">
+        <i class="pi pi-times"></i>
+      </button>
+    }
+  </span>
+</div>
+
+<p-table #tabla [value]="novedades" [globalFilterFields]="['empleadoNombre', 'empleadoDocumento', 'tipo', 'subtipo', 'descripcion']" [loading]="cargando" [scrollable]="true" [tableStyle]="{ 'min-width': '60rem' }"
+  showGridlines [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50, 100]" [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} de {totalRecords} registros">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Empleado</th>
+      <th style="width: 190px">Novedad</th>
+      <th style="width: 200px">Fechas</th>
+      <th style="width: 90px" class="text-right">Cantidad</th>
+      <th style="width: 140px" class="text-right">Valor</th>
+      <th style="width: 100px">Origen</th>
+      @if (editable) {
+        <th style="width: 70px"></th>
+      }
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="body" let-n>
+    <tr>
+      <td class="nombre">{{ n.empleadoDocumento }} - {{ n.empleadoNombre }}</td>
+      <td>
+        {{ textoTipo(n.tipo) }}
+        @if (n.descripcion) {
+          <div class="meta">{{ n.descripcion }}</div>
+        }
+      </td>
+      <td>
+        @if (n.fechaInicio) {
+          {{ n.fechaInicio | fechaEs }} → {{ n.fechaFin | fechaEs }}
+          @if (n.dias) { <span class="meta">({{ n.dias }} días)</span> }
+        } @else {
+          —
+        }
+      </td>
+      <td class="text-right mono">{{ n.cantidad }}</td>
+      <td class="text-right mono" [class.causa]="n.esDeduccion">
+        {{ n.esDeduccion ? '-' : '' }}{{ n.valorTotal | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+      </td>
+      <td>
+        <p-tag [value]="n.origen === 'MANUAL' ? 'Manual' : n.origen" severity="secondary" styleClass="tag-mini" />
+      </td>
+      @if (editable) {
+        <td>
+          <button *appPuede="'recursos-humanos.prenomina:EDITAR'" pButton icon="pi pi-trash"
+            class="p-button-text p-button-danger p-button-sm" pTooltip="Quitar" (click)="confirmarEliminar(n)"></button>
+        </td>
+      }
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td [attr.colspan]="editable ? 7 : 6">
+        <div class="empty-state">
+          <i class="pi pi-bolt"></i>
+          <p>No hay novedades en este documento.</p>
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<p-dialog header="Agregar novedad" [(visible)]="mostrarForm" [modal]="true" [style]="{ width: '640px' }"
+  [breakpoints]="{ '680px': '95vw' }" [draggable]="false">
+  <div class="form-novedad">
+    <div class="campo ancho">
+      <label>Empleado *</label>
+      <p-select [options]="empleados" [(ngModel)]="form.nominaId" optionLabel="label" optionValue="value"
+        [filter]="true" filterBy="label" placeholder="Seleccione" styleClass="w-full" appendTo="body" />
+    </div>
+    <div class="campo">
+      <label>Tipo de novedad *</label>
+      <p-select [options]="opcionesTipo" [(ngModel)]="form.tipo" optionLabel="label" optionValue="value"
+        placeholder="Seleccione" styleClass="w-full" appendTo="body" />
+    </div>
+    @if (form.tipo === 'INCAPACIDAD') {
+      <div class="campo">
+        <label>Origen de la incapacidad</label>
+        <p-select [options]="opcionesSubtipo" [(ngModel)]="form.subtipo" optionLabel="label" optionValue="value"
+          placeholder="Seleccione" styleClass="w-full" appendTo="body" />
+      </div>
+    }
+    @if (pideFechas) {
+      <div class="campo">
+        <label>Desde *</label>
+        <p-calendar [(ngModel)]="form.fechaInicio" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
+          appendTo="body" />
+      </div>
+      <div class="campo">
+        <label>Hasta *</label>
+        <p-calendar [(ngModel)]="form.fechaFin" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
+          appendTo="body" />
+      </div>
+      <div class="campo">
+        <label>N.º de autorización</label>
+        <input pInputText [(ngModel)]="form.numeroAutorizacion" class="w-full" />
+      </div>
+    }
+    <div class="campo">
+      <label>Cantidad</label>
+      <p-inputNumber [(ngModel)]="form.cantidad" [minFractionDigits]="0" [maxFractionDigits]="2" styleClass="w-full" />
+      <small>Horas, días o unidades</small>
+    </div>
+    <div class="campo">
+      <label>Valor unitario{{ pideFechas ? '' : ' *' }}</label>
+      <p-inputNumber [(ngModel)]="form.valorUnitario" mode="currency" currency="COP" locale="es-CO"
+        [maxFractionDigits]="0" styleClass="w-full" />
+      @if (form.tipo === 'INCAPACIDAD') {
+        <small>Vacío: se calcula solo según el origen y los días</small>
+      }
+    </div>
+    <div class="campo ancho">
+      <label>Descripción</label>
+      <input pInputText [(ngModel)]="form.descripcion" class="w-full" />
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancelar" icon="pi pi-times" class="btn-amarillo" (click)="mostrarForm = false"></button>
+    <button pButton label="Agregar" icon="pi pi-check" class="btn-verde" [loading]="guardando" (click)="guardar()"></button>
+  </ng-template>
+</p-dialog>

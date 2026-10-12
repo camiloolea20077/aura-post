@@ -1,0 +1,21 @@
+<ng-container [formGroup]="grupo">
+  <div class="field">
+    <label>País {{ titulo }}</label>
+    <p-select [formControlName]="paisControl" [options]="paises" optionLabel="label" optionValue="value"
+      [filter]="true" filterBy="label" styleClass="w-full" />
+  </div>
+  @if (esColombia) {
+    <div class="field">
+      <label>Departamento {{ titulo }}</label>
+      <p-select [options]="departamentos" [ngModel]="departamento" [ngModelOptions]="{ standalone: true }"
+        (ngModelChange)="onDepartamento($event)" optionLabel="label" optionValue="value" [filter]="true"
+        filterBy="label" placeholder="Seleccione" [showClear]="true" [disabled]="grupo.disabled" styleClass="w-full" />
+    </div>
+    <div class="field">
+      <label>Municipio {{ titulo }}</label>
+      <p-select [formControlName]="municipioControl" [options]="municipios" optionLabel="label" optionValue="value"
+        [filter]="true" filterBy="label" [loading]="cargando"
+        [placeholder]="departamento ? 'Seleccione' : 'Elija el departamento'" [showClear]="true" styleClass="w-full" />
+    </div>
+  }
+</ng-container>

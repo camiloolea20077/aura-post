@@ -174,4 +174,13 @@
   </div>
 </div>
 
+<app-selector-empresa
+  [visible]="selectorVisible"
+  [empresas]="empresas"
+  [cargandoId]="abriendoEmpresaId"
+  [cerrable]="false"
+  (elegir)="elegirEmpresa($event)"
+  (salir)="cancelarSeleccion()"
+/>
+
 <p-toast position="top-right" />

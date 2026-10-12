@@ -499,3 +499,60 @@
     background: #b91c1c;
   }
 }
+
+// ── Empresa de trabajo (firma contable) ─────────────────────
+.empresa-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: 220px;
+  min-width: 0;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--aura-border);
+  border-radius: 999px;
+  background: var(--aura-surface, #fff);
+  color: var(--aura-text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--aura-blue);
+  }
+
+  &--cliente {
+    border-color: var(--aura-blue);
+    color: var(--aura-blue);
+    background: rgba(37, 99, 235, 0.06);
+  }
+
+  .pi {
+    font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+}
+
+.empresa-chip__nombre {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.user-empresa {
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
+  color: var(--aura-text-muted);
+}
+
+// Teléfono y tablet angosta: solo el ícono (el nombre está en el menú de usuario).
+@media (max-width: 900px) {
+  .empresa-chip {
+    padding: 0.4rem;
+
+    .empresa-chip__nombre,
+    .empresa-chip__cambiar {
+      display: none;
+    }
+  }
+}

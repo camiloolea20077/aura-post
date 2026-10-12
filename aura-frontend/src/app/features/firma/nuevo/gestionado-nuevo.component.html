@@ -1,0 +1,139 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-building"></i></span>
+        <div>
+          <h1 class="title">Nuevo cliente gestionado</h1>
+          <p class="subtitle">Una empresa que la firma administra en Aura; el cliente no necesita usar el sistema</p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button pButton type="button" icon="pi pi-arrow-left" label="Volver" class="p-button-sm p-button-text" (click)="volver()"></button>
+          <button pButton type="button" icon="pi pi-check" label="Crear cliente" class="btn-aura" [loading]="guardando" (click)="guardar()"></button>
+        </div>
+      </div>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="guardar()">
+      <!-- ── Empresa ──────────────────────────────────────────── -->
+      <div class="seccion">
+        <h2 class="seccion-titulo">Empresa</h2>
+        <div class="grid">
+          <div class="campo campo--ancho">
+            <label>Razón social *</label>
+            <input pInputText formControlName="razonSocial" placeholder="Como aparece en el RUT" [class.ng-invalid]="invalido('razonSocial')" />
+            <small class="error" *ngIf="invalido('razonSocial')">La razón social es obligatoria</small>
+          </div>
+          <div class="campo">
+            <label>Nombre comercial</label>
+            <input pInputText formControlName="nombreComercial" />
+          </div>
+          <div class="campo campo--nit">
+            <label>NIT *</label>
+            <div class="nit">
+              <input pInputText formControlName="nit" placeholder="900123456" inputmode="numeric" [class.ng-invalid]="invalido('nit')" />
+              <span>-</span>
+              <input pInputText formControlName="dv" placeholder="DV" class="dv" maxlength="2" inputmode="numeric" />
+            </div>
+            <small class="error" *ngIf="invalido('nit')">El NIT es obligatorio</small>
+          </div>
+          <div class="campo">
+            <label>Teléfono</label>
+            <input pInputText formControlName="telefono" inputmode="tel" />
+          </div>
+          <div class="campo">
+            <label>Correo</label>
+            <input pInputText formControlName="correo" type="email" [class.ng-invalid]="invalido('correo')" />
+            <small class="error" *ngIf="invalido('correo')">El correo no tiene un formato válido</small>
+          </div>
+          <div class="campo">
+            <label>Dirección</label>
+            <input pInputText formControlName="direccion" />
+          </div>
+          <div class="campo">
+            <label>Municipio</label>
+            <p-dropdown
+              formControlName="municipioId"
+              [options]="municipioOpts"
+              optionLabel="label"
+              optionValue="value"
+              [filter]="true"
+              filterBy="label"
+              [showClear]="true"
+              [loading]="municipioLoading"
+              (onFilter)="onMunicipioFilter($event)"
+              placeholder="Buscar municipio"
+              styleClass="w-full"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Módulos ──────────────────────────────────────────── -->
+      <div class="seccion">
+        <h2 class="seccion-titulo">Módulos</h2>
+        <p class="ayuda">Punto de venta, caja e inventario no están disponibles. Puede cambiar los módulos después.</p>
+        <div class="paquetes">
+          <label class="paquete" *ngFor="let p of catalogo" [class.paquete--activo]="elegido(p.codigo)">
+            <p-checkbox
+              [ngModel]="elegido(p.codigo)"
+              [ngModelOptions]="{ standalone: true }"
+              [binary]="true"
+              [disabled]="p.codigo === 'CONTABILIDAD'"
+              (ngModelChange)="toggle(p.codigo, $event)"
+            />
+            <span class="paquete__texto">
+              <span class="paquete__nombre">{{ p.nombre }}<small *ngIf="p.codigo === 'CONTABILIDAD'"> · siempre</small></span>
+              <span class="paquete__desc">{{ p.descripcion }}</span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <!-- ── Usuario de consulta ──────────────────────────────── -->
+      <div class="seccion">
+        <h2 class="seccion-titulo">Acceso del cliente</h2>
+        <p class="ayuda">
+          Si quiere, el cliente puede entrar a mirar el estado de su empresa con un usuario de solo consulta: ve todo y no
+          puede cambiar nada.
+        </p>
+        <div class="grid">
+          <div class="campo campo--ancho">
+            <label>¿Crear usuario para el cliente?</label>
+            <p-dropdown formControlName="crearConsulta" [options]="consultaOpts" optionLabel="label" optionValue="value" styleClass="w-full" />
+          </div>
+          <ng-container *ngIf="crearConsulta">
+            <div class="campo">
+              <label>Nombres *</label>
+              <input pInputText formControlName="cNombres" [class.ng-invalid]="invalido('cNombres')" />
+            </div>
+            <div class="campo">
+              <label>Apellidos</label>
+              <input pInputText formControlName="cApellidos" />
+            </div>
+            <div class="campo">
+              <label>Tipo de documento</label>
+              <p-dropdown formControlName="cTipoDocumento" [options]="tipoDocOpts" optionLabel="label" optionValue="value" styleClass="w-full" />
+            </div>
+            <div class="campo">
+              <label>Documento *</label>
+              <input pInputText formControlName="cDocumento" inputmode="numeric" [class.ng-invalid]="invalido('cDocumento')" />
+            </div>
+            <div class="campo">
+              <label>Correo (usuario de acceso) *</label>
+              <input pInputText type="email" formControlName="cEmail" [class.ng-invalid]="invalido('cEmail')" />
+              <small class="error" *ngIf="invalido('cEmail')">Escriba un correo válido</small>
+            </div>
+            <div class="campo">
+              <label>Contraseña *</label>
+              <p-password formControlName="cPassword" [feedback]="false" [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full" />
+              <small class="error" *ngIf="invalido('cPassword')">Mínimo 6 caracteres</small>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

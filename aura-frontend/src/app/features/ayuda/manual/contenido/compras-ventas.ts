@@ -173,6 +173,101 @@ export const COMPRAS_VENTAS: ManualModulo[] = [
     ],
   },
   {
+    id: 'devoluciones-compra',
+    grupo: 'Compras',
+    titulo: 'Devoluciones en compras',
+    icono: 'pi pi-replay',
+    rutas: ['/compras/devoluciones'],
+    resumen:
+      'Mercancía que se le devuelve al proveedor (nota crédito de compra): descuenta stock, kardex, lotes y seriales, y lo que se le debe.',
+    secciones: [
+      {
+        titulo: 'Devolver mercancía',
+        pasos: [
+          'Abra la compra (Compras › ver detalle) y pulse "Devolver mercancía". El formulario llega con el proveedor, la sede, la factura y lo que queda por devolver.',
+          'Quite los productos que no se devuelven o baje sus cantidades.',
+          'Escriba el número de la nota crédito del proveedor y el motivo.',
+          'Elija qué pasa con la plata: se descuenta de la deuda, el proveedor la devuelve o queda como saldo a favor.',
+          'Registre. La mercancía sale de la bodega donde entró la compra.',
+        ],
+      },
+      {
+        titulo: 'El listado',
+        texto: [
+          'Compras › Devoluciones muestra cada nota crédito con la compra que corrige, el motivo, el valor y qué pasó con la plata. Filtra por estado y fechas y descarga a Excel.',
+          'El detalle de la compra muestra sus devoluciones y el total devuelto.',
+        ],
+        notas: ['No se puede devolver más de lo que trajo la factura, contando las devoluciones anteriores.'],
+      },
+    ],
+    errores: [
+      {
+        mensaje: 'No se puede acreditar … la compra #… solo tiene … sin acreditar',
+        causa: 'Se intenta devolver más de lo que queda de esa factura.',
+        solucion: 'Baje la cantidad a lo que queda por devolver.',
+      },
+      {
+        mensaje: 'La nota crédito debe ser del mismo proveedor de la compra',
+        causa: 'Se cambió el proveedor después de elegir la factura.',
+        solucion: 'Use "Devolver mercancía" desde el detalle de la compra.',
+      },
+    ],
+  },
+  {
+    id: 'causaciones',
+    grupo: 'Compras',
+    titulo: 'Causaciones de gastos y servicios',
+    icono: 'pi pi-file-edit',
+    rutas: ['/compras/causaciones'],
+    resumen:
+      'La factura de un servicio (arriendo, honorarios, servicios públicos…) con varios conceptos, IVA y retenciones. Deja la cuenta por pagar por el neto y el asiento.',
+    secciones: [
+      {
+        titulo: 'Causar una factura',
+        pasos: [
+          'Compras › Causaciones › "Nueva causación".',
+          'Elija el proveedor (debe estar marcado como proveedor en Terceros), el tipo de soporte y el número de la factura.',
+          'Por cada concepto: la cuenta de gasto, el valor antes de IVA, el centro de costo, el IVA y las retenciones.',
+          'La retención en la fuente se elige por concepto: el sistema usa la tarifa de persona natural o jurídica según el proveedor. Si la base del documento no llega a la base mínima del concepto, no retiene y avisa.',
+          'Revise los totales (se calculan solos) y pulse "Causar".',
+        ],
+      },
+      {
+        titulo: 'Qué deja',
+        texto: [
+          'Una cuenta por pagar por el neto (valor + IVA − retenciones), con su vencimiento. El pago se registra después como abono en Cuentas por pagar.',
+          'Un asiento: débito a cada gasto (el IVA no descontable se suma al gasto), débito al IVA descontable, crédito a las retenciones y a la cuenta por pagar, todo con el proveedor.',
+        ],
+        notas: [
+          'Una causación no se edita: se anula (reversa el asiento con fecha de hoy y anula la cuenta por pagar) y se vuelve a causar.',
+          'Los conceptos de retención y sus tarifas se configuran en Tarifas de retención.',
+        ],
+      },
+    ],
+    errores: [
+      {
+        mensaje: 'El tercero no está marcado como proveedor',
+        causa: 'El tercero elegido no tiene el rol de proveedor.',
+        solucion: 'Márquelo como proveedor en Terceros.',
+      },
+      {
+        mensaje: 'La factura … de este proveedor ya está causada',
+        causa: 'Ese número de factura ya se causó para el proveedor.',
+        solucion: 'Revise el listado; si la anterior estaba mal, anúlela primero.',
+      },
+      {
+        mensaje: 'La cuenta … no recibe movimiento: elija una subcuenta auxiliar',
+        causa: 'Se eligió una cuenta mayor.',
+        solucion: 'Elija la subcuenta auxiliar.',
+      },
+      {
+        mensaje: 'Esta causación ya tiene pagos: anule los abonos…',
+        causa: 'Se intenta anular una causación con abonos en su cuenta por pagar.',
+        solucion: 'Anule primero los abonos en Cuentas por pagar.',
+      },
+    ],
+  },
+  {
     id: 'sugerido-compra',
     grupo: 'Compras',
     titulo: 'Sugerido de compra',

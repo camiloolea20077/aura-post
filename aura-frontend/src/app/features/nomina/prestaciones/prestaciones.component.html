@@ -11,7 +11,18 @@
         </div>
       </div>
       <div class="card-head__btns">
-        <button *appPuede="'recursos-humanos.prestaciones:CREAR'"
+        <button
+          pButton
+          type="button"
+          label="Excel"
+          icon="pi pi-file-excel"
+          class="p-button-outlined"
+          [loading]="exportandoExcel"
+          [disabled]="!lotes.length"
+          (click)="descargarExcel()"
+        ></button>
+        <button
+          *appPuede="'recursos-humanos.prestaciones:CREAR'"
           pButton
           type="button"
           label="Nueva liquidación"
@@ -77,7 +88,11 @@
           <td class="text-center">{{ l.fecha }}</td>
           <td class="text-right monto">{{ formatMonto(l.total) }}</td>
           <td class="text-center">
-            <p-tag [value]="l.estado" [severity]="estadoSeverity(l.estado)" [rounded]="true" />
+            <p-tag
+              [value]="l.estado"
+              [severity]="estadoSeverity(l.estado)"
+              [rounded]="true"
+            />
           </td>
           <td class="text-center acc">
             <button
@@ -112,14 +127,14 @@
               (click)="confirmarProgramado(l)"
             ></button>
             <ng-container *appPuede="'recursos-humanos.prestaciones:ANULAR'">
-            <button
-              pButton
-              icon="pi pi-times"
-              class="p-button-sm p-button-danger p-button-outlined"
-              pTooltip="Anular"
-              *ngIf="l.estado !== 'PAGADA' && l.estado !== 'ANULADA'"
-              (click)="anular(l)"
-            ></button>
+              <button
+                pButton
+                icon="pi pi-times"
+                class="p-button-sm p-button-danger p-button-outlined"
+                pTooltip="Anular"
+                *ngIf="l.estado !== 'PAGADA' && l.estado !== 'ANULADA'"
+                (click)="anular(l)"
+              ></button>
             </ng-container>
           </td>
         </tr>
@@ -144,7 +159,11 @@
   [modal]="true"
   [draggable]="false"
   [style]="{ width: '54rem' }"
-  [header]="detalleLoteSel ? 'Liquidación de ' + detalleLoteSel.empleadoNombre : 'Detalle'"
+  [header]="
+    detalleLoteSel
+      ? 'Liquidación de ' + detalleLoteSel.empleadoNombre
+      : 'Detalle'
+  "
 >
   @if (loadingDetalle) {
     <p-skeleton height="10rem" />
@@ -165,14 +184,30 @@
       <ng-template pTemplate="body" let-p>
         <tr [class.row-off]="p.estado === 'ANULADA'">
           <td>{{ p.empleadoNombre }}</td>
-          <td><strong>{{ tipoLabel(p.tipo) }}</strong></td>
-          <td class="text-center muted">{{ p.fechaDesde }} → {{ p.fechaHasta }}</td>
+          <td>
+            <strong>{{ tipoLabel(p.tipo) }}</strong>
+          </td>
+          <td class="text-center muted">
+            {{ p.fechaDesde }} → {{ p.fechaHasta }}
+          </td>
           <td class="text-center">{{ p.dias }}</td>
           <td class="text-right">{{ formatMonto(p.baseSalarial) }}</td>
           <td class="text-right monto">{{ formatMonto(p.valor) }}</td>
-          <td class="text-center"><p-tag [value]="p.estado" [severity]="estadoSeverity(p.estado)" [rounded]="true" /></td>
+          <td class="text-center">
+            <p-tag
+              [value]="p.estado"
+              [severity]="estadoSeverity(p.estado)"
+              [rounded]="true"
+            />
+          </td>
           <td class="text-right">
-            <button pButton icon="pi pi-file-pdf" class="p-button-sm p-button-text" pTooltip="Comprobante" (click)="descargarPdf(p)"></button>
+            <button
+              pButton
+              icon="pi pi-file-pdf"
+              class="p-button-sm p-button-text"
+              pTooltip="Comprobante"
+              (click)="descargarPdf(p)"
+            ></button>
           </td>
         </tr>
       </ng-template>
@@ -187,7 +222,12 @@
   }
 
   <ng-template pTemplate="footer">
-    <button pButton label="Cerrar" class="btn-amarillo" (click)="showDetalle = false"></button>
+    <button
+      pButton
+      label="Cerrar"
+      class="btn-amarillo"
+      (click)="showDetalle = false"
+    ></button>
   </ng-template>
 </p-dialog>
 
@@ -272,8 +312,8 @@
   header="Generar prestación en lote"
 >
   <p class="lote-hint">
-    Genera la prestación para <b>todos los empleados activos</b> en un solo lote.
-    A cada uno se le recorta el período a su fecha de ingreso.
+    Genera la prestación para <b>todos los empleados activos</b> en un solo
+    lote. A cada uno se le recorta el período a su fecha de ingreso.
   </p>
   <div class="form-grid">
     <div class="field span2">
@@ -306,7 +346,11 @@
     </div>
     <div class="field span2">
       <label>Observación</label>
-      <input pInputText [(ngModel)]="formLote.observacion" placeholder="Opcional (ej: Prima 1er semestre 2026)" />
+      <input
+        pInputText
+        [(ngModel)]="formLote.observacion"
+        placeholder="Opcional (ej: Prima 1er semestre 2026)"
+      />
     </div>
   </div>
   <ng-template pTemplate="footer">
@@ -387,8 +431,8 @@
         [style]="{ width: '100%' }"
       />
       <small class="hint"
-        >Si consignaste cesantías al fondo por fuera del sistema, indica hasta qué
-        fecha: no se volverán a liquidar.</small
+        >Si consignaste cesantías al fondo por fuera del sistema, indica hasta
+        qué fecha: no se volverán a liquidar.</small
       >
     </div>
   </div>

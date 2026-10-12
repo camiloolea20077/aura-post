@@ -312,6 +312,40 @@
             />
           </section>
         </p-tabPanel>
+
+        <!-- ── Clientes de la firma contable ──────────────────── -->
+        <p-tabPanel header="Clientes que atiende" *ngIf="clientesFirma.length">
+          <p class="ayuda">
+            Esta empresa es una firma contable. Marque los clientes en los que este usuario trabaja: al iniciar sesión
+            elige en cuál entra, con el perfil "Contador externo" de cada cliente. Si le quita uno, su sesión en ese
+            cliente se cierra.
+          </p>
+          <p class="ayuda ayuda--destacada" *ngIf="rol === 'ADMIN' || rol === 'SUPER_ADMIN'">
+            <i class="pi pi-info-circle"></i>
+            Es administrador de la firma: atiende todos los clientes de la firma, no hace falta marcarlos.
+          </p>
+          <ng-container *ngIf="rol !== 'ADMIN' && rol !== 'SUPER_ADMIN'">
+          <div class="clientes-acciones">
+            <button type="button" class="link-btn" (click)="todosLosClientes(true)">Marcar todos</button>
+            <button type="button" class="link-btn" (click)="todosLosClientes(false)">Ninguno</button>
+            <span class="clientes-cuenta">{{ clientesAsignados.length }} de {{ clientesFirma.length }}</span>
+          </div>
+          <div class="sedes">
+            <div class="sede" *ngFor="let c of clientesFirma" [class.sede--marcada]="atiende(c.id)">
+              <p-checkbox
+                [ngModel]="atiende(c.id)"
+                [binary]="true"
+                [inputId]="'cli-' + c.id"
+                (ngModelChange)="toggleCliente(c.id, $event)"
+              />
+              <label [for]="'cli-' + c.id" class="sede__nombre">
+                {{ c.clienteNombre }}
+                <small class="cliente-nit">NIT {{ c.clienteNit }}</small>
+              </label>
+            </div>
+          </div>
+          </ng-container>
+        </p-tabPanel>
       </p-tabView>
     </div>
   </div>

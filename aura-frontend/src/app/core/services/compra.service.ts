@@ -10,6 +10,8 @@ import {
   CompraTableModel,
   CreateCompraDto,
   CompraPageableDto,
+  DevolucionCompraFiltroDto,
+  DevolucionCompraModel,
 } from '../models/compra.model';
 import { environment } from '../../../environments/environment';
 import { ResponseTableModel } from '../../shared/utils/response-table.model';
@@ -55,6 +57,25 @@ export class CompraService {
   ): Observable<ResponseModel<CompraAcreditableItemModel[]>> {
     return this.http.get<ResponseModel<CompraAcreditableItemModel[]>>(
       `${this.apiUrl}/${compraId}/acreditable`,
+    );
+  }
+
+  /** Devoluciones en compras: las notas crédito de compra. */
+  devolucionesPage(
+    dto: CompraPageableDto & { params?: DevolucionCompraFiltroDto },
+  ): Observable<ResponseTableModel<DevolucionCompraModel>> {
+    return this.http.post<ResponseTableModel<DevolucionCompraModel>>(
+      `${this.apiUrl}/devoluciones/page`,
+      dto,
+    );
+  }
+
+  /** Devoluciones hechas sobre una compra. */
+  devolucionesDeCompra(
+    compraId: number,
+  ): Observable<ResponseModel<DevolucionCompraModel[]>> {
+    return this.http.get<ResponseModel<DevolucionCompraModel[]>>(
+      `${this.apiUrl}/${compraId}/devoluciones`,
     );
   }
 

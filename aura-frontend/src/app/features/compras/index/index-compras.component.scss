@@ -231,3 +231,13 @@
 .text-center {
   text-align: center !important;
 }
+
+// Botones de la fila en una sola línea: el td con display:flex dejaba de
+// comportarse como celda y el último botón se salía de la columna.
+.acciones-fila {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+}

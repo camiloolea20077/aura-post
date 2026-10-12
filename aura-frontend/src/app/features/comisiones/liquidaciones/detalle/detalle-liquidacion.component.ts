@@ -6,6 +6,7 @@ import {
   OnChanges,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
+  inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
@@ -25,6 +26,8 @@ import {
   EstadoLiquidacion,
 } from '../../../../core/models/comision.model';
 
+import { ExcelReporteService } from '../../../../shared/services/excel-reporte.service';
+
 @Component({
   selector: 'app-detalle-liquidacion',
   standalone: true,
@@ -43,6 +46,9 @@ import {
   styleUrls: ['./detalle-liquidacion.component.scss'],
 })
 export class DetalleLiquidacionComponent implements OnChanges {
+  private readonly excel = inject(ExcelReporteService);
+  exportandoExcel = false;
+
   @Input() visible = false;
   @Input() liquidacionId: number | null = null;
   @Output() visibleChange = new EventEmitter<boolean>();
@@ -464,6 +470,35 @@ export class DetalleLiquidacionComponent implements OnChanges {
     } finally {
       this.generandoPdf = false;
       this.cdr.markForCheck();
+    }
+  }
+
+  // ── Excel (docs/PLAN_EXCEL_IMPORTADORES_MODULOS.md §1) ──────────────
+  async descargarExcel(): Promise<void> {
+    const d = this.data;
+    if (!d) return;
+    this.exportandoExcel = true;
+    try {
+      await this.excel.descargar({
+        titulo: `Liquidación de comisiones #${d.id}`,
+        subtitulo: `${d.tecnicoNombre} — del ${d.fechaDesde} al ${d.fechaHasta}`,
+        archivo: `liquidacion_comisiones_${d.id}`,
+        hojas: [{
+          nombre: 'Servicios',
+          columnas: [
+            { titulo: 'Venta', ancho: 10 }, { titulo: 'Fecha', ancho: 12 }, { titulo: 'Producto o servicio', ancho: 40 },
+            { titulo: 'Valor venta', tipo: 'pesos' }, { titulo: '% técnico', tipo: 'numero' },
+            { titulo: 'Valor técnico', tipo: 'pesos' }, { titulo: 'Valor negocio', tipo: 'pesos' },
+          ],
+          filas: [
+            ...(d.detalles ?? []).map((c) => [c.ventaConsecutivo, c.ventaFecha, c.productoNombre, c.valorTotal,
+              c.porcentajeTecnico, c.valorTecnico, c.valorNegocio]),
+            { valores: ['', '', `TOTAL (${d.totalServicios} servicios)`, null, null, d.valorTotal], estilo: 'total' },
+          ],
+        }],
+      });
+    } finally {
+      this.exportandoExcel = false;
     }
   }
 }

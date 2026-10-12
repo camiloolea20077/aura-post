@@ -25,7 +25,10 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { ExogenaService } from '../../../core/services/exogena.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
 import {
+  ExogenaColumna,
   ExogenaConcepto,
+  ExogenaResumenFormato,
+  TipoPersonaExogena,
   ExogenaError,
   ExogenaFormato,
   ExogenaLinea,
@@ -71,6 +74,20 @@ export class ExogenaComponent implements OnInit {
   formatos: ExogenaFormato[] = [];
   formatoId: number | null = null;
   conceptos: ExogenaConcepto[] = [];
+  /** Columnas de valor del formato activo, en el orden del prevalidador. */
+  columnas: ExogenaColumna[] = [];
+
+  /** Tipo de persona del informante: una persona natural no reporta el 1010. */
+  tipoPersona: TipoPersonaExogena = 'JURIDICA';
+  readonly tipoPersonaOpts = [
+    { label: 'Persona jurídica (sociedad)', value: 'JURIDICA' },
+    { label: 'Persona natural', value: 'NATURAL' },
+  ];
+
+  /** Generar todos los formatos del año. */
+  generandoTodos = false;
+  descargandoAnio = false;
+  resumenTodos: ExogenaResumenFormato[] = [];
 
   // ── Wizard ────────────────────────────────────────────────────────
   errores: ExogenaError[] = [];
@@ -96,6 +113,7 @@ export class ExogenaComponent implements OnInit {
   nuevoCuentaDesde = '';
   nuevoCuentaHasta = '';
   nuevoTipoValor = 'MOVIMIENTO_DB';
+  nuevoColumna: string | null = null;
 
   readonly tipoValorOpts = [
     { label: 'Movimiento débito del año', value: 'MOVIMIENTO_DB' },
@@ -112,7 +130,95 @@ export class ExogenaComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    void this.cargarConfig();
     this.cargarFormatos();
+  }
+
+  /** El 2276 sale de la nómina: no usa mapeos de cuentas. */
+  get esNomina(): boolean {
+    return this.formatoActivo?.fuente === 'NOMINA';
+  }
+
+  private async cargarConfig(): Promise<void> {
+    const res = await lastValueFrom(this.service.config()).catch(() => null);
+    this.tipoPersona = res?.data?.tipoPersona ?? 'JURIDICA';
+    this.cdr.markForCheck();
+  }
+
+  async cambiarTipoPersona(): Promise<void> {
+    try {
+      await lastValueFrom(this.service.cambiarTipoPersona(this.tipoPersona));
+      this.alertService.showSuccess(
+        'Tipo de persona',
+        this.tipoPersona === 'NATURAL'
+          ? 'Persona natural: no reporta el formato 1010 (socios).'
+          : 'Persona jurídica: reporta también el formato 1010 (socios).',
+      );
+      this.formatoId = null;
+      await this.cargarFormatos();
+    } catch (e: any) {
+      this.alertService.showError('Error', e?.error?.message ?? 'No se pudo guardar el tipo de persona');
+    }
+  }
+
+  /** Genera de una vez los lotes del año de todos los formatos. */
+  async generarTodos(): Promise<void> {
+    this.generandoTodos = true;
+    this.cdr.markForCheck();
+    try {
+      const res = await lastValueFrom(this.service.generarTodos(this.anio));
+      this.resumenTodos = res?.data ?? [];
+      const hechos = this.resumenTodos.filter((r) => r.generado).length;
+      this.alertService.showSuccess('Exógena del año', `${hechos} formato(s) generados en borrador.`);
+      await this.cargarLotes();
+    } catch (e: any) {
+      this.alertService.showError('Error', e?.error?.message ?? 'No se pudieron generar los formatos');
+    } finally {
+      this.generandoTodos = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  /** Excel del año: una hoja por formato con la última versión de su lote. */
+  async exportarAnio(): Promise<void> {
+    this.descargandoAnio = true;
+    this.cdr.markForCheck();
+    try {
+      const blob = await lastValueFrom(this.service.exportarAnio(this.anio));
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `exogena-${this.anio}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      this.alertService.showError('Error', 'No se pudo descargar el Excel del año');
+    } finally {
+      this.descargandoAnio = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  /** Valor de una columna en una línea (las viejas solo traen la principal). */
+  valorColumna(l: ExogenaLinea, c: ExogenaColumna): number {
+    const v = l.valores?.[c.codigo];
+    if (v != null) return v;
+    return c.principal ? (l.valores?.['VALOR'] ?? l.valor ?? 0) : 0;
+  }
+
+  /** Total de una columna del lote abierto. */
+  totalColumna(c: ExogenaColumna): number {
+    return this.lineas.reduce((s, l) => s + (this.valorColumna(l, c) || 0), 0);
+  }
+
+  columnaLabel(codigo: string | null): string {
+    if (!codigo) return this.columnas.find((c) => c.principal)?.nombre ?? 'Principal';
+    return this.columnas.find((c) => c.codigo === codigo)?.nombre ?? codigo;
+  }
+
+  /** Porcentaje (1010) con decimales; el resto en pesos. */
+  formatoValor(c: ExogenaColumna, v: number): string {
+    return c.codigo === 'PORCENTAJE' ? `${(v ?? 0).toFixed(2)} %` : this.formatCOP(v);
   }
 
   get formatoActivo(): ExogenaFormato | null {
@@ -138,12 +244,15 @@ export class ExogenaComponent implements OnInit {
     this.errores = [];
     this.loteActivo = null;
     if (!this.formatoId) return;
-    const [conceptosRes] = await Promise.all([
+    this.cuantiaMenorUmbral = this.formatoActivo?.cuantiaMenor ?? 0;
+    const [conceptosRes, columnasRes] = await Promise.all([
       lastValueFrom(this.service.conceptos(this.formatoId)).catch(() => null),
+      lastValueFrom(this.service.columnas(this.formatoId)).catch(() => null),
       this.cargarMapeos(),
       this.cargarLotes(),
     ]);
     this.conceptos = conceptosRes?.data ?? [];
+    this.columnas = columnasRes?.data ?? [];
     this.cdr.markForCheck();
   }
 
@@ -320,6 +429,7 @@ export class ExogenaComponent implements OnInit {
     this.nuevoCuentaDesde = '';
     this.nuevoCuentaHasta = '';
     this.nuevoTipoValor = 'MOVIMIENTO_DB';
+    this.nuevoColumna = null;
     this.showMapeoDialog = true;
     this.cdr.markForCheck();
   }
@@ -335,6 +445,7 @@ export class ExogenaComponent implements OnInit {
           cuentaDesde: this.nuevoCuentaDesde.trim(),
           cuentaHasta: this.nuevoCuentaHasta.trim() || null,
           tipoValor: this.nuevoTipoValor,
+          columna: this.nuevoColumna,
         }),
       );
       this.showMapeoDialog = false;
@@ -378,7 +489,7 @@ export class ExogenaComponent implements OnInit {
       await lastValueFrom(this.service.seedMapeos());
       this.alertService.showSuccess(
         'Mapeos default',
-        'Se sembraron los mapeos sobre el PUC estándar',
+        'Se agregaron los mapeos estándar que faltaban (los suyos no se tocan)',
       );
       await this.cargarMapeos();
     } catch (e: any) {
@@ -399,7 +510,7 @@ export class ExogenaComponent implements OnInit {
   tipoErrorSeverity(tipo: string): 'danger' | 'warn' | 'info' {
     if (tipo === 'COMPROBANTE_BORRADOR' || tipo === 'PERIODO_ABIERTO')
       return 'danger';
-    if (tipo === 'TERCERO_INCOMPLETO' || tipo === 'SIN_MAPEO') return 'warn';
+    if (tipo === 'TERCERO_INCOMPLETO' || tipo === 'SIN_MAPEO' || tipo === 'INFORMANTE_INCOMPLETO') return 'warn';
     return 'info';
   }
 

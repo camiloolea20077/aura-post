@@ -11,6 +11,8 @@ import {
   LineaUsoModel,
   ConfiguracionEmpresaModel,
   ActualizarConfiguracionDto,
+  EmpresaPlataformaModel,
+  FirmaContableOpcion,
 } from '../models/platform.model';
 import { ResponseModel } from '../../shared/utils/responde.models';
 import { environment } from '../../../environments/environment';
@@ -47,6 +49,20 @@ export class PlatformService {
 
   activar(id: number): Observable<any> {
     return this.http.patch<any>(`${this.base}/empresas/${id}/activar`, {});
+  }
+
+  // ─── Firma contable (docs/PLAN_FIRMA_CONTABLE.md) ─────────────
+  firmasContables(texto = ''): Observable<ResponseModel<FirmaContableOpcion[]>> {
+    return this.http.get<ResponseModel<FirmaContableOpcion[]>>(`${this.base}/firmas-contables`, {
+      params: { texto },
+    });
+  }
+
+  /** Cambia o quita (null) la firma que atiende a la empresa; la anterior pierde el acceso. */
+  asignarFirmaContable(id: number, firmaEmpresaId: number | null): Observable<ResponseModel<EmpresaPlataformaModel>> {
+    return this.http.put<ResponseModel<EmpresaPlataformaModel>>(`${this.base}/empresas/${id}/firma-contable`, {
+      firmaEmpresaId,
+    });
   }
 
   // ─── Líneas de uso ────────────────────────────────────────────

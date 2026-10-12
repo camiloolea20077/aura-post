@@ -30,10 +30,14 @@ import { PuedeDirective } from '../../../../shared/directives/puede.directive';
  * compuestos veía cientos de filas sueltas y tenía que editarlas de a una.
  * Ahora cada fila es una receta completa y se edita entera en un solo guardado.
  */
+import { ImportarExcelComponent } from '../../../../shared/components/importar-excel/importar-excel.component';
+import { PLANTILLA_RECETAS } from '../../../../shared/components/importar-excel/plantillas-catalogo';
+
 @Component({
   selector: 'app-index-composicion',
   standalone: true,
   imports: [
+    ImportarExcelComponent,
     PuedeDirective,
     CommonModule,
     FormsModule,
@@ -53,6 +57,14 @@ import { PuedeDirective } from '../../../../shared/directives/puede.directive';
   styleUrls: ['./index-composicion.component.scss'],
 })
 export class IndexComposicionComponent {
+  // Importar desde Excel (docs/PLAN_EXCEL_IMPORTADORES_MODULOS.md §2b)
+  readonly plantillaImportar = PLANTILLA_RECETAS;
+  mostrarImportar = false;
+
+  onImportado(): void {
+    this.reloadTable();
+  }
+
   public showModal = false;
   public selectedPadreId: number | null = null;
 

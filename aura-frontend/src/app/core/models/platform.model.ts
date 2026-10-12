@@ -23,6 +23,15 @@ export interface EmpresaPlataformaModel {
   factusPassword: string | null;
   factusNumberingRangeId: number | null;
   factusPrefijo: string | null;
+  // Firma contable (V199)
+  esFirmaContable?: boolean;
+  firmaContableId?: number | null;
+  firmaContableNombre?: string | null;
+  totalClientesFirma?: number;
+  cupoGestionados?: number;
+  totalGestionadosFirma?: number;
+  /** CLIENTE_PAGA | GESTIONADO; null sin firma. */
+  firmaModalidad?: string | null;
 }
 
 export interface EmpresaTableModel {
@@ -35,6 +44,15 @@ export interface EmpresaTableModel {
   totalSucursales: number;
   totalUsuarios: number;
   totalRows: number;
+  // Firma contable (V199)
+  esFirmaContable?: boolean;
+  firmaContableId?: number | null;
+  firmaContableNombre?: string | null;
+  totalClientesFirma?: number;
+  cupoGestionados?: number;
+  totalGestionadosFirma?: number;
+  /** CLIENTE_PAGA | GESTIONADO; null sin firma. */
+  firmaModalidad?: string | null;
 }
 
 export interface CreateEmpresaResponseDto {
@@ -79,6 +97,10 @@ export interface CreateEmpresaDto {
   factusPassword?: string;
   factusNumberingRangeId?: number | null;
   factusPrefijo?: string;
+  /** Firma contable (gratis) que atiende la contabilidad de otras empresas. */
+  esFirmaContable?: boolean;
+  /** Firma contable que atiende a esta empresa; null = ninguna. */
+  firmaContableId?: number | null;
 }
 
 export interface UpdateEmpresaDto {
@@ -99,6 +121,20 @@ export interface UpdateEmpresaDto {
   factusPassword?: string;
   factusNumberingRangeId?: number | null;
   factusPrefijo?: string;
+  /** undefined = no cambia. */
+  esFirmaContable?: boolean;
+  /** Clientes gestionados que puede crear la firma. */
+  cupoGestionados?: number;
+}
+
+/** Firma contable para el buscador (GET /platform/firmas-contables). */
+export interface FirmaContableOpcion {
+  id: number;
+  razonSocial: string;
+  nombreComercial: string | null;
+  nit: string;
+  dv: string | null;
+  logoUrl: string | null;
 }
 
 // ─── Dashboard ────────────────────────────────────────────────

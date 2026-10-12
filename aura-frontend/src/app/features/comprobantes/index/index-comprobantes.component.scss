@@ -124,3 +124,9 @@
 
 .text-center { text-align: center !important; }
 .text-right  { text-align: right !important; }
+
+.acciones-fila {
+  display: flex;
+  justify-content: center;
+  gap: 0.1rem;
+}

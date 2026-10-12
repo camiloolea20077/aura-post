@@ -52,6 +52,12 @@ $text-muted: #94a3b8;
   border-radius: 12px;
   padding: 0.3rem;
   width: fit-content;
+  // En pantallas pequeñas las pestañas se desplazan dentro de la barra: antes
+  // medía ~1000px y empujaba todo el contenido, que quedaba corrido y fijo.
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
 }
 
 .ctab {

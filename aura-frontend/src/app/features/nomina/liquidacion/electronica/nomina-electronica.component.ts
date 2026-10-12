@@ -1,4 +1,5 @@
 import {
+  ChangeDetectorRef,
   Component,
   EventEmitter,
   Input,
@@ -17,10 +18,13 @@ import { TooltipModule } from 'primeng/tooltip';
 import { lastValueFrom } from 'rxjs';
 
 import { NominaElectronicaService } from '../../../../core/services/nomina-electronica.service';
+import { lineasDeduccion, lineasDevengado, totalLineas } from './nomina-electronica-lineas';
 import {
   NominaElectronicaEstado,
+  NominaElectronicaLinea,
   NominaElectronicaPayload,
   NominaElectronicaRespuesta,
+  NominaElectronicaMes,
 } from '../../../../core/models/nomina-electronica.model';
 import { TerceroService } from '../../../../core/services/tercero.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
@@ -44,6 +48,11 @@ import { AlertService } from '../../../../shared/pipes/alert.service';
 export class NominaElectronicaComponent implements OnChanges {
   @Input() visible = false;
   @Input() nominaId: number | null = null;
+  /**
+   * Solo consulta (desde la nómina): muestra el documento del mes, su estado y las
+   * descargas, sin enviar ni anular. Eso se hace en Nómina electrónica → Por mes.
+   */
+  @Input() soloConsulta = false;
   @Output() closed = new EventEmitter<void>();
 
   public payload: NominaElectronicaPayload | null = null;
@@ -53,6 +62,12 @@ export class NominaElectronicaComponent implements OnChanges {
   public anulando = false;
   public anulada = false;
   public descargando = false;
+
+  /**
+   * El mes de la nómina: la DIAN recibe un documento por empleado y mes, así que se
+   * envía cuando el mes está completo (con quincenas, al confirmar la 2ª).
+   */
+  public mesInfo: NominaElectronicaMes | null = null;
 
   /** Estado local persistido: si ya se envió, se muestra el CUNE y se oculta "Enviar". */
   public estadoLocal: NominaElectronicaEstado | null = null;
@@ -121,6 +136,7 @@ export class NominaElectronicaComponent implements OnChanges {
     private readonly service: NominaElectronicaService,
     private readonly terceroService: TerceroService,
     private readonly alertService: AlertService,
+    private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -152,11 +168,34 @@ export class NominaElectronicaComponent implements OnChanges {
     return this.estadoLocal?.estado === 'ACEPTADO';
   }
 
+  /** El mes aún no se puede enviar (falta confirmar alguna nómina del mes). */
+  get mesIncompleto(): boolean {
+    return !!this.mesInfo && !this.mesInfo.completo && !this.yaEnviada;
+  }
+
+  /** "septiembre de 2026". */
+  get mesLabel(): string {
+    if (!this.mesInfo) return '';
+    const f = new Date(this.mesInfo.agno, this.mesInfo.mes - 1, 1);
+    return f.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
+  }
+
+  /** "1–15 sep." para listar las nóminas que junta el documento. */
+  rangoNomina(inicio: string, fin: string): string {
+    const d = (x: string) => Number(x.substring(8, 10));
+    const mes = new Date(fin.substring(0, 10) + 'T00:00:00').toLocaleDateString('es-CO', { month: 'short' });
+    return `${d(inicio)}–${d(fin)} ${mes}`;
+  }
+
   async cargar(): Promise<void> {
     this.loading = true;
     try {
-      const res = await lastValueFrom(this.service.preview(this.nominaId!));
+      const [res, mes] = await Promise.all([
+        lastValueFrom(this.service.preview(this.nominaId!)),
+        lastValueFrom(this.service.mes(this.nominaId!)),
+      ]);
       this.payload = res?.data ?? null;
+      this.mesInfo = mes?.data ?? null;
       await this.resolverMunicipio();
       // Estado local: si ya está ACEPTADA, la vista muestra el CUNE en vez de "Enviar".
       const est = await lastValueFrom(this.service.estado(this.nominaId!));
@@ -168,6 +207,8 @@ export class NominaElectronicaComponent implements OnChanges {
         'No se pudo generar la nómina electrónica',
       );
     } finally {
+      // El diálogo vive dentro de pantallas OnPush: hay que avisar que cambió.
+      this.cdr.markForCheck();
       this.loading = false;
     }
   }
@@ -201,10 +242,14 @@ export class NominaElectronicaComponent implements OnChanges {
       const res = await lastValueFrom(this.service.enviar(this.nominaId));
       this.respuesta = res?.data ?? null;
       if (this.respuesta?.exitoso) {
-        this.alertService.showSuccess(
-          'Enviada',
-          'Nómina electrónica aceptada por la DIAN',
-        );
+        this.anulada = false;
+        this.estadoLocal = null;
+        // Factus devuelve el documento que ya tenía si la referencia existe: el back
+        // avisa cuando sus valores no son los de la nómina.
+        if (res?.message && res.message !== 'Envío procesado')
+          this.alertService.showWarn('Factus conservó otros valores', res.message);
+        else
+          this.alertService.showSuccess('Enviada', 'Nómina electrónica aceptada por la DIAN');
       } else {
         this.errorFactus = this.extraerMensaje(this.respuesta?.responseBody);
         this.alertService.showWarn(
@@ -218,6 +263,8 @@ export class NominaElectronicaComponent implements OnChanges {
         'No se pudo enviar la nómina electrónica',
       );
     } finally {
+      // El diálogo vive dentro de pantallas OnPush: hay que avisar que cambió.
+      this.cdr.markForCheck();
       this.enviando = false;
     }
   }
@@ -238,6 +285,8 @@ export class NominaElectronicaComponent implements OnChanges {
       // Nota de eliminación (forma DIAN), no el borrado directo de sandbox.
       await lastValueFrom(this.service.notaEliminacion(referencia));
       this.anulada = true;
+      // Queda lista para enviar la corregida (con una referencia nueva).
+      this.respuesta = null;
       if (this.estadoLocal) this.estadoLocal.estado = 'ANULADO';
       this.alertService.showSuccess('Anulada', 'Nómina electrónica anulada (nota de eliminación)');
     } catch (err: any) {
@@ -246,6 +295,8 @@ export class NominaElectronicaComponent implements OnChanges {
         err?.error?.message ?? 'No se pudo anular la nómina electrónica',
       );
     } finally {
+      // El diálogo vive dentro de pantallas OnPush: hay que avisar que cambió.
+      this.cdr.markForCheck();
       this.anulando = false;
     }
   }
@@ -267,6 +318,30 @@ export class NominaElectronicaComponent implements OnChanges {
     } catch {
       this.alertService.showError('Error', 'No se pudo descargar el XML');
     } finally {
+      // El diálogo vive dentro de pantallas OnPush: hay que avisar que cambió.
+      this.cdr.markForCheck();
+      this.descargando = false;
+    }
+  }
+
+  /** Descarga el PDF de la nómina electrónica (Factus lo genera). */
+  async descargarPdf(): Promise<void> {
+    if (!this.nominaId) return;
+    this.descargando = true;
+    try {
+      const blob = await lastValueFrom(this.service.descargarPdf(this.nominaId));
+      const numero = (this.estadoLocal?.prefijo ?? '') + (this.estadoLocal?.consecutivo ?? '');
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `nomina-${numero || this.nominaId}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      this.alertService.showError('Error', 'No se pudo descargar el PDF');
+    } finally {
+      // El diálogo vive dentro de pantallas OnPush: hay que avisar que cambió.
+      this.cdr.markForCheck();
       this.descargando = false;
     }
   }
@@ -300,6 +375,19 @@ export class NominaElectronicaComponent implements OnChanges {
   }
   get ded() {
     return this.payload?.deductions;
+  }
+  /** Todos los devengados del documento (bonos, prima, vacaciones…), no solo el sueldo. */
+  get devengados(): NominaElectronicaLinea[] {
+    return lineasDevengado(this.acc);
+  }
+  get deducciones(): NominaElectronicaLinea[] {
+    return lineasDeduccion(this.ded);
+  }
+  get totalDevengado(): number {
+    return totalLineas(this.devengados);
+  }
+  get totalDeducido(): number {
+    return totalLineas(this.deducciones);
   }
 
   get nombreCompleto(): string {
@@ -342,7 +430,7 @@ export class NominaElectronicaComponent implements OnChanges {
     return c ? (this.horaMap[c] ?? c) : '';
   }
 
-  money(v?: string): string {
+  money(v?: string | number): string {
     const n = Number(v ?? 0);
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',

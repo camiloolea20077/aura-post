@@ -20,11 +20,17 @@ import { BodegaService } from '../../../../core/services/bodega.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 import { FormBodegaComponent } from '../form/form-bodega.component';
 
+import { ImportarExcelComponent } from '../../../../shared/components/importar-excel/importar-excel.component';
+import { PLANTILLA_BODEGAS } from '../../../../shared/components/importar-excel/plantillas-catalogo';
+
+import { PuedeDirective } from '../../../../shared/directives/puede.directive';
 @Component({
   selector: 'app-index-bodegas',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    ImportarExcelComponent,
+    PuedeDirective,
     CommonModule,
     FormsModule,
     ButtonModule,
@@ -41,6 +47,14 @@ import { FormBodegaComponent } from '../form/form-bodega.component';
   styleUrls: ['./index-bodegas.component.scss'],
 })
 export class IndexBodegasComponent implements OnInit {
+  // Importar desde Excel (docs/PLAN_EXCEL_IMPORTADORES_MODULOS.md §2c)
+  readonly plantillaImportar = PLANTILLA_BODEGAS;
+  mostrarImportar = false;
+
+  onImportado(): void {
+    void this.load();
+  }
+
   rows: BodegaTableModel[] = [];
   totalRows = 0;
   loading = true;

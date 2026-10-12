@@ -7,7 +7,7 @@
         <div>
           <h1 class="title">Nuevo empleado</h1>
           <p class="subtitle">
-            Primero su identidad y banco. El contrato (salario, ARL) se agrega en la ficha.
+            Primero sus datos personales. Al guardar se habilitan banco, familia e historial laboral.
           </p>
         </div>
       </div>
@@ -17,6 +17,7 @@
       <app-form-tercero-plano
         [embedded]="true"
         [rolesFijos]="['EMPLEADO']"
+        [mostrarBanco]="false"
         (guardado)="onTerceroGuardado($event)"
       />
     </div>

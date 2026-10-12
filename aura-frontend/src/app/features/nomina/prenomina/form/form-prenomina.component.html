@@ -1,0 +1,193 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <button pButton type="button" icon="pi pi-arrow-left" class="p-button-text p-button-rounded" (click)="volver()"></button>
+        <div>
+          <h1 class="title">
+            {{ documento ? pantalla.titulo + ' ' + documento.numeroCompleto : 'Nueva prenómina' }}
+          </h1>
+          <p class="subtitle">
+            @if (documento) {
+              {{ documento.tipoComprobanteNombre }} · {{ documento.empleados }} empleado(s)
+              @if (documento.simulacion) { · Simulación }
+              @if (documento.documentoOrigenNumero) {
+                · De <a class="enlace" (click)="irAPrenomina()">{{ documento.documentoOrigenNumero }}</a>
+              }
+            } @else {
+              Elija el tipo de comprobante y el período; los empleados se agregan al guardar
+            }
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          @if (documento) {
+            @if (pagada(documento)) {
+              <p-tag value="Pagada" severity="success" />
+            } @else {
+              <p-tag [value]="textoEstado(documento.estado)" [severity]="severidad(documento.estado)" />
+            }
+          }
+          @if (documento && (editable || (esNomina && documento.estado !== 'ANULADO'))) {
+            <button *appPuede="pantalla.permiso + ':ELIMINAR'" pButton type="button" label="Anular"
+              icon="pi pi-ban" class="p-button-outlined p-button-danger" (click)="confirmarAnular()"></button>
+          }
+          @if (documento && !esNomina && documento.estado === 'CONFIRMADO') {
+            @if (documento.nominaGeneradaId) {
+              <button pButton type="button" [label]="'Ver nómina ' + documento.nominaGeneradaNumero"
+                icon="pi pi-external-link" class="p-button-outlined" (click)="irANomina()"></button>
+            } @else {
+              <button *appPuede="'recursos-humanos.prenomina:EDITAR'" pButton type="button" label="Reabrir"
+                icon="pi pi-replay" class="p-button-outlined" [loading]="procesando === 'reabrir'"
+                [disabled]="!!procesando" (click)="reabrir()"></button>
+              <button *appPuede="'recursos-humanos.nomina-documento:CREAR'" pButton type="button"
+                label="Generar nómina" icon="pi pi-file-export" class="btn-aura"
+                [loading]="procesando === 'generar'" [disabled]="!!procesando" (click)="generarNomina()"></button>
+            }
+          }
+          @if (documento && editable) {
+            <button *appPuede="'recursos-humanos.prenomina:EDITAR'" pButton type="button" label="Confirmar prenómina"
+              icon="pi pi-check-circle" class="p-button-outlined" [loading]="procesando === 'confirmar'"
+              [disabled]="!!procesando || documento.empleados === 0" (click)="confirmarPrenomina()"></button>
+          }
+          @if (esCesantiasConfirmada) {
+            <button pButton type="button" label="Consignación de cesantías" icon="pi pi-file-excel"
+              class="p-button-outlined" [loading]="procesando === 'cesantias'" [disabled]="!!procesando"
+              pTooltip="Excel por fondo para consignar" (click)="descargarCesantias()"></button>
+          }
+          @if (documento && esNomina && documento.estado === 'PRELIMINAR') {
+            <button *appPuede="'recursos-humanos.nomina-documento:EDITAR'" pButton type="button"
+              label="Confirmar nómina" icon="pi pi-check-circle" class="btn-aura"
+              [loading]="procesando === 'confirmar'" [disabled]="!!procesando" (click)="confirmarNomina()"></button>
+          }
+          @if (editable) {
+            <button pButton type="button" [label]="esEdicion ? 'Guardar cambios' : 'Crear prenómina'"
+              icon="pi pi-check" class="btn-aura" [loading]="guardando" [disabled]="cargando" (click)="guardar()"></button>
+          }
+        </div>
+      </div>
+    </div>
+
+    @if (cargando) {
+      <div class="page-loading"><i class="pi pi-spin pi-spinner"></i><span>Cargando...</span></div>
+    } @else {
+      <div [formGroup]="form" class="form-body">
+        <div class="seccion">Documento</div>
+        <div class="grid">
+          <div class="field span-2">
+            <label class="field-label">Tipo de comprobante <span class="required">*</span></label>
+            <p-select formControlName="tipoComprobanteId" [options]="opcionesTipos" optionLabel="label"
+              optionValue="value" placeholder="Seleccione" styleClass="w-full" />
+            @if (claseTipo) {
+              <small class="field-hint">{{ claseTipo }}</small>
+            }
+            <small class="field-error" *ngIf="invalido('tipoComprobanteId')">Elija el tipo de comprobante</small>
+          </div>
+          <div class="field">
+            <label class="field-label">Fecha del documento <span class="required">*</span></label>
+            <p-calendar formControlName="fecha" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full" />
+          </div>
+          <div class="field">
+            <label class="field-label">¿Simulación?</label>
+            <p-select formControlName="simulacion" [options]="opcionesSiNo" optionLabel="label"
+              optionValue="value" styleClass="w-full" />
+            <small class="field-hint">Una simulación se liquida pero nunca se confirma</small>
+          </div>
+        </div>
+
+        <div class="seccion">Período de días trabajados</div>
+        <div class="grid">
+          <div class="field">
+            <label class="field-label">Desde <span class="required">*</span></label>
+            <p-calendar formControlName="fechaDesde" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full" />
+          </div>
+          <div class="field">
+            <label class="field-label">Hasta <span class="required">*</span></label>
+            <p-calendar formControlName="fechaHasta" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
+              (onSelect)="onFechaHasta()" />
+          </div>
+          <div class="field">
+            <label class="field-label">Fecha de liquidación</label>
+            <p-calendar formControlName="fechaLiquidacion" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full" />
+            <small class="field-hint">Con ella se toman los conceptos y tarifas vigentes</small>
+          </div>
+          <div class="field">
+            <label class="field-label">Fecha de pago</label>
+            <p-calendar formControlName="fechaPago" dateFormat="yy-mm-dd" [showIcon]="true" [showClear]="true"
+              styleClass="w-full" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field-label">Descripción</label>
+          <textarea pTextarea formControlName="descripcion" rows="2" class="w-full"
+            placeholder="Ej. Nómina administrativa de octubre"></textarea>
+        </div>
+      </div>
+
+      <!-- Las pestañas aparecen al guardar el encabezado. -->
+      @if (documento) {
+        <div class="form-body tabs-body">
+          <p-tabView [(activeIndex)]="tabActiva" [scrollable]="true" styleClass="aura-tabs">
+            <p-tabPanel>
+              <ng-template pTemplate="header">
+                <span class="tab-label"><i class="pi pi-users"></i> Empleados</span>
+              </ng-template>
+              <app-empleados-prenomina [documento]="documento" [editable]="editable" (cambio)="recargar()" />
+            </p-tabPanel>
+            <p-tabPanel>
+              <ng-template pTemplate="header">
+                <span class="tab-label"><i class="pi pi-bolt"></i> Novedades</span>
+              </ng-template>
+              <app-novedades-prenomina [documento]="documento" [editable]="editable" (cambio)="onNovedad()" />
+            </p-tabPanel>
+            <p-tabPanel>
+              <ng-template pTemplate="header">
+                <span class="tab-label"><i class="pi pi-calculator"></i> Liquidación</span>
+              </ng-template>
+              <app-liquidacion-prenomina [documento]="documento" [editable]="editable" [version]="version"
+                (liquidado)="onLiquidado()" />
+            </p-tabPanel>
+            @for (tab of pestanasVacias.slice(0, 1); track tab.titulo) {
+              <p-tabPanel>
+                <ng-template pTemplate="header">
+                  <span class="tab-label"><i [class]="tab.icono"></i> {{ tab.titulo }}</span>
+                </ng-template>
+                <div class="empty-state">
+                  <i [class]="tab.icono"></i>
+                  <p>{{ tab.vacio }}</p>
+                </div>
+              </p-tabPanel>
+            }
+            <p-tabPanel>
+              <ng-template pTemplate="header">
+                <span class="tab-label"><i class="pi pi-book"></i> Contabilidad</span>
+              </ng-template>
+              <app-contabilidad-prenomina [documentoId]="documento.id" [version]="version" />
+            </p-tabPanel>
+            <p-tabPanel>
+              <ng-template pTemplate="header">
+                <span class="tab-label"><i class="pi pi-history"></i> Traza</span>
+              </ng-template>
+              <app-traza-prenomina [documentoId]="documento.id" [version]="version" />
+            </p-tabPanel>
+            @for (tab of pestanasVacias.slice(1); track tab.titulo) {
+              <p-tabPanel>
+                <ng-template pTemplate="header">
+                  <span class="tab-label"><i [class]="tab.icono"></i> {{ tab.titulo }}</span>
+                </ng-template>
+                <div class="empty-state">
+                  <i [class]="tab.icono"></i>
+                  <p>{{ tab.vacio }}</p>
+                </div>
+              </p-tabPanel>
+            }
+          </p-tabView>
+        </div>
+      }
+    }
+  </div>
+</div>
+
+<p-confirmDialog />

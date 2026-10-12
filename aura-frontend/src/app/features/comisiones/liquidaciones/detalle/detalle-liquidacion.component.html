@@ -35,6 +35,15 @@
           pTooltip="Genera un comprobante para firmas"
           tooltipPosition="bottom"
         ></button>
+        <button
+          pButton
+          icon="pi pi-file-excel"
+          label="Excel"
+          class="p-button-outlined p-button-sm"
+          [loading]="exportandoExcel"
+          [disabled]="!data"
+          (click)="descargarExcel()"
+        ></button>
       </div>
     </div>
   </ng-template>

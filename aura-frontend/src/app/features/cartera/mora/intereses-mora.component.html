@@ -1,0 +1,317 @@
+<div class="mc">
+  <!-- ══ Cabecera ══════════════════════════════════════════════════ -->
+  <div class="mc-head">
+    <div>
+      <h2>Intereses de mora</h2>
+      <p *ngIf="calculo">
+        <ng-container *ngIf="calculo.interesActivo; else apagado">
+          {{ calculo.tasaMensual }} % mensual · {{ calculo.diasGracia }} días de gracia · calculado al
+          {{ calculo.fecha | fechaEs }}
+        </ng-container>
+        <ng-template #apagado>La empresa no cobra intereses de mora</ng-template>
+      </p>
+    </div>
+    <div class="mc-head__btns">
+      <button
+        pButton
+        type="button"
+        icon="pi pi-cog"
+        label="Política"
+        class="p-button-outlined p-button-sm"
+        (click)="politicaVisible = true"
+      ></button>
+    </div>
+  </div>
+
+  <div class="mc-aviso" *ngIf="calculo && !calculo.interesActivo">
+    <i class="pi pi-info-circle"></i>
+    <span>
+      Para cobrar intereses actívelos en la <a class="cell-link" (click)="politicaVisible = true">política de cartera</a>
+      con la tasa pactada y la usura vigente. Muchos negocios no los cobran: es opcional.
+    </span>
+  </div>
+
+  <div class="mc-aviso mc-aviso--warn" *ngFor="let a of calculo?.avisos ?? []">
+    <i class="pi pi-exclamation-triangle"></i>
+    <span>{{ a }}</span>
+  </div>
+
+  <ng-container *ngIf="calculo?.interesActivo">
+    <!-- ══ Cifras ══════════════════════════════════════════════════ -->
+    <div class="mc-stats">
+      <div class="mc-stat mc-stat--primary">
+        <span class="mc-stat__label">Interés causado a hoy</span>
+        <span class="mc-stat__valor">{{ formatCOP(calculo?.total) }}</span>
+        <span class="mc-stat__meta">Sin facturar, no es ingreso todavía</span>
+      </div>
+      <div class="mc-stat">
+        <span class="mc-stat__label">Clientes en mora</span>
+        <span class="mc-stat__valor">{{ calculo?.clientes?.length ?? 0 }}</span>
+        <span class="mc-stat__meta">con interés por cobrar</span>
+      </div>
+      <div class="mc-stat">
+        <span class="mc-stat__label">Tasa que se cobra</span>
+        <span class="mc-stat__valor">{{ calculo?.tasaMensual }} %</span>
+        <span class="mc-stat__meta">mensual, sin pasar la usura</span>
+      </div>
+      <div class="mc-stat">
+        <span class="mc-stat__label">Cobros facturados</span>
+        <span class="mc-stat__valor">{{ totalCobros }}</span>
+        <span class="mc-stat__meta">histórico</span>
+      </div>
+    </div>
+
+    <!-- ══ Por facturar ════════════════════════════════════════════ -->
+    <section class="mc-seccion">
+      <div class="mc-seccion__head">
+        <h3>Por facturar</h3>
+        <span class="cell-sub">El siguiente cobro empieza donde terminó el anterior</span>
+      </div>
+      <div class="mc-tabla">
+        <p-table
+          [value]="calculo?.clientes ?? []"
+          [loading]="cargandoCalculo"
+          styleClass="p-datatable-sm p-datatable-striped"
+          showGridlines
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="min-width: 200px">Cliente</th>
+              <th class="text-right">Saldo vencido</th>
+              <th class="text-center">Facturas</th>
+              <th class="text-right">Interés</th>
+              <th class="text-center">Acciones</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-c>
+            <tr>
+              <td>
+                <a class="cell-link" (click)="verFicha(c.terceroId)">{{ c.terceroNombre }}</a>
+                <div class="cell-sub">{{ c.documento }}</div>
+              </td>
+              <td class="text-right mono">{{ formatCOP(c.saldoVencido) }}</td>
+              <td class="text-center">
+                <a class="cell-link" (click)="toggleCliente(c.terceroId)">
+                  {{ c.cuentas.length }}
+                  <i class="pi" [ngClass]="abiertos.has(c.terceroId) ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                </a>
+              </td>
+              <td class="text-right mono font-bold">{{ formatCOP(c.valor) }}</td>
+              <td class="text-center">
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-file-plus"
+                  label="Facturar"
+                  class="p-button-sm p-button-outlined"
+                  [disabled]="!c.valor"
+                  (click)="abrirFacturar(c)"
+                ></button>
+              </td>
+            </tr>
+            <ng-container *ngIf="abiertos.has(c.terceroId)">
+              <tr *ngFor="let f of c.cuentas">
+                <td class="cell-sub">↳ {{ f.referencia || f.numeroCuenta }} · venció {{ f.fechaVencimiento | fechaEs }}</td>
+                <td class="text-right mono cell-sub">{{ formatCOP(f.saldo) }}</td>
+                <td class="text-center cell-sub">{{ f.dias }} d ({{ f.desde | fechaEs }} → {{ f.hasta | fechaEs }})</td>
+                <td class="text-right mono cell-sub">{{ formatCOP(f.valor) }}</td>
+                <td></td>
+              </tr>
+            </ng-container>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="5" class="mc-vacio">Nadie debe intereses a la fecha.</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </section>
+  </ng-container>
+
+  <!-- ══ Facturados ════════════════════════════════════════════════ -->
+  <section class="mc-seccion">
+    <div class="mc-seccion__head">
+      <h3>Cobros facturados</h3>
+      <span class="p-input-icon-left search-wrap">
+        <i class="pi pi-search"></i>
+        <input
+          type="text"
+          pInputText
+          class="search-input"
+          placeholder="Número, cliente o documento..."
+          [(ngModel)]="search"
+          (input)="onSearch()"
+        />
+      </span>
+    </div>
+    <div class="mc-tabla">
+      <p-table
+        [value]="cobros"
+        [loading]="cargandoCobros"
+        [lazy]="true"
+        [totalRecords]="totalCobros"
+        [rows]="rowsCobros"
+        [paginator]="true"
+        (onLazyLoad)="onPage($event)"
+        styleClass="p-datatable-sm p-datatable-striped"
+        showGridlines
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Cobro</th>
+            <th style="min-width: 190px">Cliente</th>
+            <th class="text-right">Valor</th>
+            <th>Cuenta por cobrar</th>
+            <th class="text-center">Estado</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-i>
+          <tr [class.fila-anulada]="i.estado === 'ANULADO'">
+            <td>
+              <div class="font-bold">{{ i.numero }}</div>
+              <div class="cell-sub">{{ i.fecha | fechaEs }} · {{ i.tasaMensual }} %</div>
+            </td>
+            <td>
+              <a class="cell-link" (click)="verFicha(i.terceroId)">{{ i.terceroNombre }}</a>
+              <div class="cell-sub">{{ i.documento }}</div>
+            </td>
+            <td class="text-right mono font-bold">{{ formatCOP(i.valor) }}</td>
+            <td>
+              <div>{{ i.numeroCuenta || '—' }}</div>
+              <div class="cell-sub" *ngIf="i.saldoCuenta != null">saldo {{ formatCOP(i.saldoCuenta) }}</div>
+            </td>
+            <td class="text-center">
+              <span class="mc-chip" [class.mc-chip--anulado]="i.estado === 'ANULADO'"
+                    [pTooltip]="i.motivoAnulacion || ''">
+                {{ i.estado === 'ANULADO' ? 'Anulado' : 'Facturado' }}
+              </span>
+            </td>
+            <td class="text-center">
+              <button
+                *ngIf="i.estado === 'FACTURADO'"
+                pButton
+                type="button"
+                icon="pi pi-ban"
+                class="p-button-text p-button-danger p-button-sm"
+                pTooltip="Anular cobro"
+                (click)="abrirAnular(i)"
+              ></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="mc-vacio">Todavía no se han facturado intereses.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </section>
+</div>
+
+<!-- ══ Diálogo: facturar ═══════════════════════════════════════════ -->
+<p-dialog
+  [(visible)]="facturarVisible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '640px', maxWidth: '96vw' }"
+  [contentStyle]="{ padding: 0 }"
+  styleClass="aura-dialog"
+  header="Facturar intereses de mora"
+>
+  <div class="mc mc--dialog" *ngIf="cliente">
+    <div class="mc-aviso">
+      <i class="pi pi-info-circle"></i>
+      <span>
+        Se crea una cuenta por cobrar a <strong>{{ cliente.terceroNombre }}</strong> por los intereses, con su asiento
+        (débito 1305 · crédito 4210).
+      </span>
+    </div>
+
+    <div class="mc-tabla">
+      <table class="p-datatable-table w-full">
+        <tbody>
+          <tr *ngFor="let f of cliente.cuentas">
+            <td>
+              <p-checkbox
+                [binary]="true"
+                [ngModel]="seleccion.has(f.cuentaCobrarId)"
+                (onChange)="toggleCuenta(f.cuentaCobrarId)"
+                [disabled]="!f.valor"
+              />
+            </td>
+            <td>
+              {{ f.referencia || f.numeroCuenta }}
+              <div class="cell-sub">{{ f.dias }} días sobre {{ formatCOP(f.saldo) }}</div>
+            </td>
+            <td class="text-right mono">{{ formatCOP(f.valor) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mc-grid">
+      <div class="mc-field">
+        <label>Fecha del cobro</label>
+        <p-calendar [(ngModel)]="fecha" dateFormat="dd/mm/yy" [maxDate]="hoy" appendTo="body" styleClass="w-full" />
+      </div>
+      <div class="mc-field">
+        <label>Plazo para pagarlo</label>
+        <p-inputNumber [(ngModel)]="plazoDias" [min]="0" [max]="365" suffix=" días" styleClass="w-full" />
+      </div>
+      <div class="mc-field mc-field--full">
+        <label>Observaciones</label>
+        <textarea pTextarea rows="2" [(ngModel)]="observaciones" maxlength="500" class="w-full"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <span class="mc-ayuda">Total: <strong>{{ formatCOP(totalSeleccion) }}</strong></span>
+    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="facturarVisible = false"></button>
+    <button
+      pButton
+      type="button"
+      label="Facturar"
+      icon="pi pi-check"
+      [loading]="facturando"
+      [disabled]="!seleccion.size"
+      (click)="facturar()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ══ Diálogo: anular ═════════════════════════════════════════════ -->
+<p-dialog
+  [(visible)]="anularVisible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '460px', maxWidth: '96vw' }"
+  styleClass="aura-dialog"
+  [header]="'Anular ' + (anularCobro?.numero ?? '')"
+>
+  <div class="mc-field">
+    <label>Motivo de la anulación</label>
+    <textarea pTextarea rows="3" [(ngModel)]="motivo" maxlength="300" class="w-full"></textarea>
+    <span class="mc-ayuda">Se anula la cuenta por cobrar de los intereses y se reversa su asiento.</span>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="anularVisible = false"></button>
+    <button
+      pButton
+      type="button"
+      label="Anular"
+      icon="pi pi-ban"
+      class="p-button-danger"
+      [loading]="anulando"
+      [disabled]="!motivo.trim()"
+      (click)="anular()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<app-politica-cartera-dialog [(visible)]="politicaVisible" (guardada)="onPoliticaGuardada($event)" />

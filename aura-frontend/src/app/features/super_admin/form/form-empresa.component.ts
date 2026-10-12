@@ -19,6 +19,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { DropdownModule } from 'primeng/dropdown';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
 import { lastValueFrom } from 'rxjs';
@@ -55,6 +56,7 @@ import { ArbolModulosComponent } from '../shared/arbol-modulos/arbol-modulos.com
     PasswordModule,
     ToggleSwitchModule,
     DropdownModule,
+    InputNumberModule,
     SkeletonModule,
     TooltipModule,
     ArbolModulosComponent,
@@ -94,6 +96,64 @@ export class FormEmpresaComponent implements OnInit {
       desc: 'Los asientos nacen en BORRADOR y el contador los aprueba en la bandeja de revisión antes de impactar los reportes.',
     },
   ];
+
+  // ── Firma contable (docs/PLAN_FIRMA_CONTABLE.md) ────────
+  readonly tipoEmpresaOpts = [
+    {
+      value: false,
+      titulo: 'Empresa',
+      icon: 'pi pi-building',
+      desc: 'Paga su licencia. Puede tener una firma contable que le lleve la contabilidad.',
+    },
+    {
+      value: true,
+      titulo: 'Firma contable',
+      icon: 'pi pi-briefcase',
+      desc: 'Gratis. Sus usuarios atienden la contabilidad de las empresas cliente que se le asignen.',
+    },
+  ];
+  esFirma = false;
+  private esFirmaOriginal = false;
+  totalClientesFirma = 0;
+  totalGestionados = 0;
+  cupoGestionados = 10;
+  private cupoOriginal = 10;
+  firmaContableId: number | null = null;
+  firmaContableOriginal: number | null = null;
+  firmaOpts: { label: string; value: number }[] = [];
+  firmaLoading = false;
+  private firmaTimer: any;
+
+  seleccionarTipoEmpresa(esFirma: boolean): void {
+    this.esFirma = esFirma;
+    if (esFirma) this.firmaContableId = null;
+    this.cdr.markForCheck();
+  }
+
+  onFirmaFilter(event: { filter: string }): void {
+    if (this.firmaTimer) clearTimeout(this.firmaTimer);
+    this.firmaTimer = setTimeout(() => this.cargarFirmas(event.filter ?? ''), 250);
+  }
+
+  private async cargarFirmas(texto: string): Promise<void> {
+    this.firmaLoading = true;
+    this.cdr.markForCheck();
+    try {
+      const res = await lastValueFrom(this.service.firmasContables(texto));
+      const opts = (res?.data ?? [])
+        .filter((f) => f.id !== this.empresaId)
+        .map((f) => ({ label: `${f.razonSocial} · NIT ${f.nit}${f.dv ? '-' + f.dv : ''}`, value: f.id }));
+      // Conserva la elegida aunque no venga en el filtro.
+      const actual = this.firmaOpts.find((o) => o.value === this.firmaContableId);
+      if (actual && !opts.some((o) => o.value === actual.value)) opts.unshift(actual);
+      this.firmaOpts = opts;
+    } catch {
+      this.firmaOpts = [];
+    } finally {
+      this.firmaLoading = false;
+      this.cdr.markForCheck();
+    }
+  }
 
   // ── Líneas de uso (para qué usará Aura) ─────────────────
   lineasCatalogo: LineaUsoModel[] = [];
@@ -191,6 +251,7 @@ export class FormEmpresaComponent implements OnInit {
   ngOnInit(): void {
     this.cargarMunicipios('');
     this.cargarLineas();
+    this.cargarFirmas('');
     const idParam = this.route.snapshot.paramMap.get('id');
     if (idParam) {
       this.empresaId = +idParam;
@@ -348,6 +409,15 @@ export class FormEmpresaComponent implements OnInit {
         ];
       }
       this.logoPreview = empresa.logoUrl ?? null;
+      this.esFirma = this.esFirmaOriginal = !!empresa.esFirmaContable;
+      this.totalClientesFirma = empresa.totalClientesFirma ?? 0;
+      this.totalGestionados = empresa.totalGestionadosFirma ?? 0;
+      this.cupoGestionados = this.cupoOriginal = empresa.cupoGestionados ?? 10;
+      this.firmaContableId = this.firmaContableOriginal = empresa.firmaContableId ?? null;
+      if (empresa.firmaContableId && empresa.firmaContableNombre
+          && !this.firmaOpts.some((o) => o.value === empresa.firmaContableId)) {
+        this.firmaOpts = [{ label: empresa.firmaContableNombre, value: empresa.firmaContableId }, ...this.firmaOpts];
+      }
       this.frmEmpresa.patchValue({
         razonSocial: empresa.razonSocial,
         nombreComercial: empresa.nombreComercial,
@@ -397,6 +467,11 @@ export class FormEmpresaComponent implements OnInit {
       const municipioLabel =
         this.municipioOpts.find((o) => o.value === v.municipioId)?.label ?? null;
       if (this.isEdit) {
+        // Pasar a firma contable exige que no tenga firma: se le quita antes.
+        if (this.esFirma && !this.esFirmaOriginal && this.firmaContableOriginal) {
+          await lastValueFrom(this.service.asignarFirmaContable(this.empresaId!, null));
+          this.firmaContableOriginal = null;
+        }
         await lastValueFrom(
           this.service.actualizar(this.empresaId!, {
             razonSocial: v.razonSocial,
@@ -415,8 +490,14 @@ export class FormEmpresaComponent implements OnInit {
             factusPassword: v.factusPassword,
             factusNumberingRangeId: v.factusNumberingRangeId,
             factusPrefijo: v.factusPrefijo,
+            esFirmaContable: this.esFirma !== this.esFirmaOriginal ? this.esFirma : undefined,
+            cupoGestionados: this.esFirma && this.cupoGestionados !== this.cupoOriginal ? this.cupoGestionados : undefined,
           }),
         );
+        // Firma contable que la atiende: solo si cambió (cambiarla quita el acceso a la anterior).
+        if (!this.esFirma && this.firmaContableId !== this.firmaContableOriginal) {
+          await lastValueFrom(this.service.asignarFirmaContable(this.empresaId!, this.firmaContableId));
+        }
         // Líneas: solo si cambiaron. Se completan los módulos que pidan (no se apaga nada).
         if (this.lineasElegidas.length && this.firmaLineas() !== this.lineasOriginales) {
           await lastValueFrom(
@@ -463,6 +544,8 @@ export class FormEmpresaComponent implements OnInit {
             factusPassword: v.factusPassword,
             factusNumberingRangeId: v.factusNumberingRangeId,
             factusPrefijo: v.factusPrefijo,
+            esFirmaContable: this.esFirma,
+            firmaContableId: this.esFirma ? null : this.firmaContableId,
           }),
         );
         // Muestra las credenciales del admin creado (pantalla de éxito).

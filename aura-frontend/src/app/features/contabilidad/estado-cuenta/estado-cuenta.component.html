@@ -80,6 +80,17 @@
           <button
             pButton
             type="button"
+            label="Excel"
+            icon="pi pi-file-excel"
+            class="p-button-outlined"
+            pTooltip="Descargar estado de cuenta en Excel"
+            (click)="descargarExcel()"
+            [disabled]="!estado"
+            [loading]="exportandoExcel"
+          ></button>
+          <button
+            pButton
+            type="button"
             icon="pi pi-times"
             class="p-button-text p-button-sm"
             pTooltip="Limpiar fechas"

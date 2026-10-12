@@ -1,0 +1,167 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-file-edit"></i></span>
+        <div>
+          <h1 class="title">Vinculaciones</h1>
+          <p class="subtitle">
+            El contrato completo de cada empleado: tipo, cargo, jornada, prueba
+            y soportes
+          </p>
+        </div>
+      </div>
+
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button
+            *appPuede="'recursos-humanos.vinculaciones:CREAR'"
+            pButton
+            type="button"
+            label="Nueva vinculación"
+            icon="pi pi-plus"
+            class="btn-aura"
+            (click)="nueva()"
+          ></button>
+        </div>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              class="search-input"
+              placeholder="Buscar código, empleado, documento o cargo..."
+              [(ngModel)]="busqueda"
+              (input)="buscar()"
+              (keydown.escape)="limpiarBusqueda()"
+            />
+            <button
+              *ngIf="busqueda"
+              class="clear-btn"
+              (click)="limpiarBusqueda()"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <p-table
+      [value]="filas"
+      [lazy]="true"
+      [loading]="cargando"
+      [totalRecords]="totalFilas"
+      [rows]="tamano"
+      [paginator]="true"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      (onPage)="onPagina($event)"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords} registros"
+      [scrollable]="true"
+      [tableStyle]="{ 'min-width': '60rem' }"
+      showGridlines
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 110px">Código</th>
+          <th>Empleado</th>
+          <th style="width: 200px">Tipo / cargo</th>
+          <th style="width: 140px" class="text-right">Salario</th>
+          <th style="width: 170px">Vigencia</th>
+          <th style="width: 120px">Estado</th>
+          <th style="width: 140px">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-v>
+        <tr [class.row-inactiva]="v.estado === 'TERMINADO'">
+          <td>
+            <code class="codigo">{{ v.codigo ?? "—" }}</code>
+          </td>
+          <td>
+            <div class="nombre">{{ v.empleadoNombre }}</div>
+            <div class="meta">
+              {{ v.empleadoDocumento }}
+              @if (v.esPrincipal) {
+                · Principal
+              }
+            </div>
+          </td>
+          <td>
+            <div>{{ v.tipoVinculacionNombre ?? "Sin tipo" }}</div>
+            <div class="meta">{{ v.cargoNombre ?? "Sin cargo" }}</div>
+          </td>
+          <td class="text-right mono">
+            {{ v.salarioBase | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+          </td>
+          <td>
+            <div>{{ v.fechaInicio }} → {{ v.fechaFin ?? "Indefinido" }}</div>
+            @if (avisoPrueba(v); as aviso) {
+              <p-tag [value]="aviso" severity="warn" styleClass="tag-mini" />
+            }
+          </td>
+          <td>
+            <p-tag
+              [value]="textoEstado(v.estado)"
+              [severity]="severidadEstado(v.estado)"
+              styleClass="tag-mini"
+            />
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button
+                pButton
+                icon="pi pi-eye"
+                class="p-button-text p-button-sm action-edit"
+                pTooltip="Abrir"
+                (click)="abrir(v)"
+              ></button>
+              @if (v.estado !== "TERMINADO") {
+                <button
+                  *appPuede="'recursos-humanos.vinculaciones:EDITAR'"
+                  pButton
+                  icon="pi pi-dollar"
+                  class="p-button-text p-button-sm"
+                  pTooltip="Cambiar salario"
+                  (click)="cambiarSalario(v)"
+                ></button>
+                <button
+                  *appPuede="'recursos-humanos.vinculaciones:EDITAR'"
+                  pButton
+                  icon="pi pi-sign-out"
+                  class="p-button-text p-button-danger p-button-sm"
+                  pTooltip="Retirar"
+                  (click)="retirar(v)"
+                ></button>
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              <i class="pi pi-file-edit"></i>
+              <p>No hay vinculaciones con estos filtros.</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<app-historial-salario
+  [(visible)]="mostrarSalario"
+  [contrato]="contratoSel"
+  (guardado)="cargar()"
+/>
+<app-terminar-contrato
+  [(visible)]="mostrarRetiro"
+  [contrato]="contratoSel"
+  (guardado)="cargar()"
+/>

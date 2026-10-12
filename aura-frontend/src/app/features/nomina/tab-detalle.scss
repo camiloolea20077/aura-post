@@ -1,0 +1,107 @@
+// Estilos comunes de las pestañas de detalle de nómina (vinculación y hoja de vida del empleado).
+
+:host {
+  display: block;
+  container-type: inline-size;
+}
+
+.tab-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.9rem;
+
+  p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #64748b;
+    max-width: 46rem;
+  }
+}
+
+.mono {
+  font-variant-numeric: tabular-nums;
+}
+
+.meta {
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.total {
+  font-weight: 700;
+
+  &--mal {
+    color: #b91c1c;
+  }
+
+  &--bien {
+    color: #15803d;
+  }
+}
+
+.vacio {
+  text-align: center;
+  color: #94a3b8;
+  padding: 1rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+
+  @container (max-width: 420px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+
+  label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #475569;
+  }
+
+  small {
+    font-size: 0.72rem;
+    color: #94a3b8;
+  }
+}
+
+.span-2 {
+  grid-column: 1 / -1;
+}
+
+.dialog-form {
+  container-type: inline-size;
+}
+
+:host ::ng-deep {
+  .p-inputnumber,
+  .p-select,
+  .p-datepicker {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+.subtitulo {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 1.25rem 0 0.6rem;
+
+  &:first-child {
+    margin-top: 0;
+  }
+}

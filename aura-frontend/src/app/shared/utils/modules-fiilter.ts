@@ -46,6 +46,7 @@ export const filtrarMenuPorPermisos = (
 
 const puedeVer = (item: SidebarMenuItem, p: PermisosUsuario, rol: string): boolean => {
   if (item.tipos && rol !== 'PLATFORM_ADMIN' && !item.tipos.includes(rol)) return false;
+  if (item.soloFirma && !p.adminDeFirma) return false;
   if (!item.codigo) return false;
   return (p.permisos[item.codigo] ?? []).includes('VER');
 };
@@ -60,5 +61,5 @@ const visiblePorEmpresa = (modulos: any[]) => {
       .map((s: any) => normalize(s.submoduloCodigo)),
   );
   return (item: SidebarMenuItem) =>
-    !!item.codigo && submodulosActivos.has(item.codigo.split('.')[1]);
+    !item.soloFirma && !!item.codigo && submodulosActivos.has(item.codigo.split('.')[1]);
 };

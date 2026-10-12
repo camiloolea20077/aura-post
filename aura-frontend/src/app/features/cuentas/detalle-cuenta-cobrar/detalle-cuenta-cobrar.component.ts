@@ -295,6 +295,7 @@ export class DetalleCuentaCobrarComponent implements OnInit {
       pagada: 'success',
       activa: 'info',
       vencida: 'danger',
+      castigada: 'contrast',
     };
     return map[estado] ?? 'secondary';
   }
@@ -304,6 +305,7 @@ export class DetalleCuentaCobrarComponent implements OnInit {
       pagada: 'Pagada',
       activa: 'Activa',
       vencida: 'Vencida',
+      castigada: 'Castigada',
     };
     return map[estado] ?? estado;
   }

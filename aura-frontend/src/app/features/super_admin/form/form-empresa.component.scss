@@ -401,3 +401,15 @@ $green: #10b981;
   font-size: 0.85rem;
   span { color: #64748b; overflow-wrap: anywhere; }
 }
+
+.firma-nota {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.85rem;
+
+  i {
+    color: var(--aura-blue);
+  }
+}

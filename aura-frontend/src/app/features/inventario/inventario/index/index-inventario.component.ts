@@ -27,10 +27,14 @@ import { SedeActualService } from '../../../../core/services/sede-actual.service
 import { BodegaService } from '../../../../core/services/bodega.service';
 
 import { PuedeDirective } from '../../../../shared/directives/puede.directive';
+import { ImportarExcelComponent } from '../../../../shared/components/importar-excel/importar-excel.component';
+import { PLANTILLA_SALDOS_INVENTARIO } from '../../../../shared/components/importar-excel/plantillas-catalogo';
+
 @Component({
   selector: 'app-index-inventario',
   standalone: true,
   imports: [
+    ImportarExcelComponent,
     PuedeDirective,
     StockPresentacionPipe,
     CommonModule,
@@ -53,6 +57,14 @@ import { PuedeDirective } from '../../../../shared/directives/puede.directive';
   styleUrls: ['./index-inventario.component.scss'],
 })
 export class IndexInventarioComponent implements OnInit {
+  // Importar desde Excel (docs/PLAN_EXCEL_IMPORTADORES_MODULOS.md §2c)
+  readonly plantillaImportar = PLANTILLA_SALDOS_INVENTARIO;
+  mostrarImportar = false;
+
+  onImportado(): void {
+    this.reloadTable();
+  }
+
   public showModal = false;
   public selectedId: number | null = null;
   public modalSlug = 'create';

@@ -310,6 +310,34 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'compras/causaciones',
+        loadComponent: () =>
+          import('./features/compras/causaciones/index/index-causaciones.component').then(
+            (m) => m.IndexCausacionesComponent,
+          ),
+      },
+      {
+        path: 'compras/causaciones/nueva',
+        loadComponent: () =>
+          import('./features/compras/causaciones/form/form-causacion.component').then(
+            (m) => m.FormCausacionComponent,
+          ),
+      },
+      {
+        path: 'compras/causaciones/:id',
+        loadComponent: () =>
+          import('./features/compras/causaciones/detalle/detalle-causacion.component').then(
+            (m) => m.DetalleCausacionComponent,
+          ),
+      },
+      {
+        path: 'compras/devoluciones',
+        loadComponent: () =>
+          import('./features/compras/devoluciones/index-devoluciones-compra.component').then(
+            (m) => m.IndexDevolucionesCompraComponent,
+          ),
+      },
+      {
         path: 'compras/sugerido',
         loadComponent: () =>
           import('./features/compras/sugerido/sugerido-compra.component').then(
@@ -646,6 +674,20 @@ export const routes: Routes = [
           ),
       },
 
+      // Firma contable: sus clientes, solicitudes y clientes gestionados (PLAN_FIRMA_CONTABLE §9)
+      {
+        path: 'firma/clientes',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/firma/clientes/firma-clientes.component').then((m) => m.FirmaClientesComponent),
+      },
+      {
+        path: 'firma/clientes/nuevo',
+        canActivate: [rolGuard(['SUPER_ADMIN', 'ADMIN'])],
+        loadComponent: () =>
+          import('./features/firma/nuevo/gestionado-nuevo.component').then((m) => m.GestionadoNuevoComponent),
+      },
+
       // Configuración
       {
         path: 'configuracion/tipos-empleado',
@@ -705,13 +747,18 @@ export const routes: Routes = [
           ),
       },
       {
-        // Ficha del empleado (maestro-detalle): identidad + tabs de contratos,
-        // afiliaciones, retenciones y embargos.
-        path: 'nomina/empleados/:id/ficha',
+        // Editar empleado: solo sus datos personales. Lo laboral está en la
+        // vinculación, que reemplazó la ficha.
+        path: 'nomina/empleados/:id/editar',
         loadComponent: () =>
-          import('./features/nomina/empleados/detalle/empleado-detalle.component').then(
-            (m) => m.EmpleadoDetalleComponent,
+          import('./features/nomina/empleados/editar/empleado-editar.component').then(
+            (m) => m.EmpleadoEditarComponent,
           ),
+      },
+      {
+        // La ficha se reemplazó por la vinculación: los enlaces viejos caen en editar.
+        path: 'nomina/empleados/:id/ficha',
+        redirectTo: 'nomina/empleados/:id/editar',
       },
       {
         // Contratos de un empleado (Fase 2). Se entra desde el listado de
@@ -721,6 +768,139 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/nomina/contratos/index/index-contratos.component').then(
             (m) => m.IndexContratosComponent,
+          ),
+      },
+      {
+        // Rediseño de nómina R2: vinculaciones (contrato ampliado).
+        path: 'nomina/vinculaciones',
+        loadComponent: () =>
+          import('./features/nomina/vinculaciones/index/index-vinculaciones.component').then(
+            (m) => m.IndexVinculacionesComponent,
+          ),
+      },
+      {
+        path: 'nomina/vinculaciones/nueva',
+        loadComponent: () =>
+          import('./features/nomina/vinculaciones/form/form-vinculacion.component').then(
+            (m) => m.FormVinculacionComponent,
+          ),
+      },
+      {
+        path: 'nomina/vinculaciones/:id',
+        loadComponent: () =>
+          import('./features/nomina/vinculaciones/form/form-vinculacion.component').then(
+            (m) => m.FormVinculacionComponent,
+          ),
+      },
+      {
+        // Rediseño de nómina R1: cargos (módulo aparte).
+        path: 'nomina/cargos',
+        loadComponent: () =>
+          import('./features/nomina/parametros/cargos/index-cargos.component').then(
+            (m) => m.IndexCargosComponent,
+          ),
+      },
+      {
+        path: 'nomina/tipos-vinculacion',
+        loadComponent: () =>
+          import('./features/nomina/parametros/tipos-vinculacion/index-tipos-vinculacion.component').then(
+            (m) => m.IndexTiposVinculacionComponent,
+          ),
+      },
+      {
+        // Rediseño de nómina R3/R4: prenómina y nómina por documento (misma
+        // pantalla; la clase viene en la data de la ruta).
+        path: 'nomina/prenomina',
+        data: { clase: 'PRENOMINA' },
+        loadComponent: () =>
+          import('./features/nomina/prenomina/index/index-prenomina.component').then(
+            (m) => m.IndexPrenominaComponent,
+          ),
+      },
+      {
+        path: 'nomina/prenomina/nueva',
+        data: { clase: 'PRENOMINA' },
+        loadComponent: () =>
+          import('./features/nomina/prenomina/form/form-prenomina.component').then(
+            (m) => m.FormPrenominaComponent,
+          ),
+      },
+      {
+        path: 'nomina/prenomina/:id',
+        data: { clase: 'PRENOMINA' },
+        loadComponent: () =>
+          import('./features/nomina/prenomina/form/form-prenomina.component').then(
+            (m) => m.FormPrenominaComponent,
+          ),
+      },
+      {
+        path: 'nomina/nominas',
+        data: { clase: 'NOMINA' },
+        loadComponent: () =>
+          import('./features/nomina/prenomina/index/index-prenomina.component').then(
+            (m) => m.IndexPrenominaComponent,
+          ),
+      },
+      {
+        path: 'nomina/nominas/:id',
+        data: { clase: 'NOMINA' },
+        loadComponent: () =>
+          import('./features/nomina/prenomina/form/form-prenomina.component').then(
+            (m) => m.FormPrenominaComponent,
+          ),
+      },
+      {
+        // Rediseño de nómina R5: retiros.
+        path: 'nomina/retiros',
+        loadComponent: () =>
+          import('./features/nomina/retiros/index-retiros.component').then((m) => m.IndexRetirosComponent),
+      },
+      {
+        // Rediseño de nómina R7: vacaciones.
+        path: 'nomina/vacaciones',
+        loadComponent: () =>
+          import('./features/nomina/vacaciones/index-vacaciones.component').then((m) => m.IndexVacacionesComponent),
+      },
+      {
+        // Rediseño de nómina R8: incremento salarial y retroactivo.
+        path: 'nomina/incrementos',
+        loadComponent: () =>
+          import('./features/nomina/incrementos/index/index-incrementos.component').then(
+            (m) => m.IndexIncrementosComponent,
+          ),
+      },
+      {
+        path: 'nomina/incrementos/nuevo',
+        loadComponent: () =>
+          import('./features/nomina/incrementos/form/form-incremento.component').then((m) => m.FormIncrementoComponent),
+      },
+      {
+        path: 'nomina/incrementos/:id',
+        loadComponent: () =>
+          import('./features/nomina/incrementos/form/form-incremento.component').then((m) => m.FormIncrementoComponent),
+      },
+      {
+        // Rediseño de nómina R4c-2: cuenta y tercero por concepto.
+        path: 'nomina/cuentas-contables',
+        loadComponent: () =>
+          import('./features/nomina/parametros/cuentas-nomina/index-cuentas-nomina.component').then(
+            (m) => m.IndexCuentasNominaComponent,
+          ),
+      },
+      {
+        path: 'nomina/tipos-comprobante',
+        loadComponent: () =>
+          import('./features/nomina/parametros/tipos-comprobante/index-tipos-comprobante.component').then(
+            (m) => m.IndexTiposComprobanteComponent,
+          ),
+      },
+      {
+        // Catálogos simples de nómina: una pantalla para todos, el catálogo va
+        // en la URL y cada uno tiene su ítem de menú y su permiso.
+        path: 'nomina/parametros/:catalogo',
+        loadComponent: () =>
+          import('./features/nomina/parametros/catalogo/index-catalogo-nomina.component').then(
+            (m) => m.IndexCatalogoNominaComponent,
           ),
       },
       {
@@ -961,6 +1141,20 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'contabilidad/conciliacion-fiscal',
+        loadComponent: () =>
+          import('./features/contabilidad/conciliacion-fiscal/index/index-conciliacion-fiscal.component').then(
+            (m) => m.IndexConciliacionFiscalComponent,
+          ),
+      },
+      {
+        path: 'contabilidad/conciliacion-fiscal/:id',
+        loadComponent: () =>
+          import('./features/contabilidad/conciliacion-fiscal/detalle/detalle-conciliacion-fiscal.component').then(
+            (m) => m.DetalleConciliacionFiscalComponent,
+          ),
+      },
+      {
         path: 'contabilidad/declaraciones',
         loadComponent: () =>
           import('./features/contabilidad/declaraciones/declaraciones.component').then(
@@ -1109,6 +1303,13 @@ export const routes: Routes = [
       // Comprobante contable (formulario plano)
       {
         path: 'comprobantes/contable/nuevo',
+        loadComponent: () =>
+          import('./features/comprobantes/contable/form/form-comprobante-contable.component').then(
+            (m) => m.FormComprobanteContableComponent,
+          ),
+      },
+      {
+        path: 'comprobantes/contable/:id/editar',
         loadComponent: () =>
           import('./features/comprobantes/contable/form/form-comprobante-contable.component').then(
             (m) => m.FormComprobanteContableComponent,

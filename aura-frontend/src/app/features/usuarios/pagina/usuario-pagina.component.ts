@@ -38,6 +38,8 @@ import {
 import { PermisosService } from '../../../core/services/permisos.service';
 import { SucursalService } from '../../../core/services/sucursal.service';
 import { UsuarioService } from '../../../core/services/usuario.service';
+import { ClienteFirma, FirmaContableService } from '../../../core/services/firma-contable.service';
+import { IndexDBService } from '../../../core/services/index-db.service';
 import { StateStore } from '../../../core/store/state';
 import { AccionesEspecialesComponent } from '../../../shared/components/acciones-especiales/acciones-especiales.component';
 import { MatrizPermisosComponent } from '../../../shared/components/matriz-permisos/matriz-permisos.component';
@@ -93,6 +95,8 @@ export class UsuarioPaginaComponent implements OnInit {
   private readonly usuarioService = inject(UsuarioService);
   private readonly permisosService = inject(PermisosService);
   private readonly sucursalService = inject(SucursalService);
+  private readonly firmaService = inject(FirmaContableService);
+  private readonly indexDB = inject(IndexDBService);
   private readonly alert = inject(AlertService);
   private readonly cdr = inject(ChangeDetectorRef);
   readonly store = inject(StateStore);
@@ -135,7 +139,19 @@ export class UsuarioPaginaComponent implements OnInit {
   descuentoMaxPct: number | null = null;
   rebajaPrecioMaxPct: number | null = null;
 
+  // ── Firma contable: clientes que atiende (PLAN_FIRMA_CONTABLE F4) ──
+  /** Clientes de la firma; vacío si la empresa no es firma (la pestaña no aparece). */
+  clientesFirma: ClienteFirma[] = [];
+  clientesAsignados: number[] = [];
+
   readonly rolesOpts = ROLES_OPTIONS;
+
+  /** Asignar clientes de la firma lo hace un administrador (el back lo exige igual). */
+  private async esAdministrador(): Promise<boolean> {
+    const auth = await this.indexDB.loadDataAuthDB();
+    const r = (auth?.rol || '').toUpperCase();
+    return r === 'ADMIN' || r === 'SUPER_ADMIN';
+  }
 
   get esNuevo(): boolean {
     return this.id === null;
@@ -178,12 +194,23 @@ export class UsuarioPaginaComponent implements OnInit {
       this.perfiles = perfiles?.data ?? [];
       this.arbol = arbol?.data ?? [];
       this.catalogo = catalogo?.data ?? [];
+      // Solo una firma contable tiene clientes; a las demás empresas no les aparece nada.
+      if (await this.esAdministrador()) {
+        this.clientesFirma = await lastValueFrom(this.firmaService.clientes())
+          .then((r) => r?.data ?? [])
+          .catch(() => []);
+      }
 
       if (this.id) {
         const u = (await lastValueFrom(this.usuarioService.getById(this.id)))?.data;
         if (u) this.cargarUsuario(u);
         const d = (await lastValueFrom(this.permisosService.permisosDeUsuario(this.id)))?.data;
         this.aplicarPermisos(d ?? null);
+        if (this.clientesFirma.length) {
+          this.clientesAsignados = await lastValueFrom(this.firmaService.clientesDeUsuario(this.id))
+            .then((r) => r?.data ?? [])
+            .catch(() => []);
+        }
       } else {
         this.perfilPorRol();
       }
@@ -299,6 +326,21 @@ export class UsuarioPaginaComponent implements OnInit {
       : this.sedes.filter((s) => s !== id);
     if (marcada && this.sedes.length === 1) this.sedeDefault = id;
     if (!marcada && this.sedeDefault === id) this.sedeDefault = this.sedes[0] ?? null;
+  }
+
+  // ── Clientes de la firma ───────────────────────────────────
+  atiende(vinculoId: number): boolean {
+    return this.clientesAsignados.includes(vinculoId);
+  }
+
+  toggleCliente(vinculoId: number, marcado: boolean): void {
+    this.clientesAsignados = marcado
+      ? [...this.clientesAsignados, vinculoId]
+      : this.clientesAsignados.filter((x) => x !== vinculoId);
+  }
+
+  todosLosClientes(marcar: boolean): void {
+    this.clientesAsignados = marcar ? this.clientesFirma.map((c) => c.id) : [];
   }
 
   // ── Permisos y especiales ─────────────────────────────────
@@ -421,6 +463,12 @@ export class UsuarioPaginaComponent implements OnInit {
           }),
         );
         this.aplicarPermisos(res?.data ?? null);
+      }
+
+      // Clientes que atiende (firma contable): quitarle uno corta su sesión en ese cliente.
+      if (id && this.clientesFirma.length) {
+        const r = await lastValueFrom(this.firmaService.asignarClientes(id, this.clientesAsignados));
+        this.clientesAsignados = r?.data ?? this.clientesAsignados;
       }
 
       this.alert.showSuccess(

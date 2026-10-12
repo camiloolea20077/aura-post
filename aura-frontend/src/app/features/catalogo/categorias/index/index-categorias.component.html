@@ -13,14 +13,25 @@
         </div>
       </div>
       <div class="card-head__actions">
-        <button *appPuede="'catalogo.categorias:CREAR'"
-          pButton
-          type="button"
-          label="Nueva categoría"
-          icon="pi pi-plus"
-          class="btn-verde"
-          (click)="openCreate()"
-        ></button>
+        <div class="card-head__btns">
+          <button *appPuede="'catalogo.categorias:CREAR'"
+            pButton
+            type="button"
+            label="Nueva categoría"
+            icon="pi pi-plus"
+            class="btn-verde"
+            (click)="openCreate()"
+          ></button>
+          <button *appPuede="'catalogo.categorias:CREAR'"
+            pButton
+            type="button"
+            label="Importar"
+            icon="pi pi-file-import"
+            class="p-button-outlined"
+            pTooltip="Cargar desde un Excel"
+            (click)="mostrarImportar = true"
+          ></button>
+        </div>
         <div class="card-head__search">
           <span class="search-wrap">
             <i class="pi pi-search"></i>
@@ -205,3 +216,9 @@
 
 <p-toast />
 <p-confirmDialog />
+
+<app-importar-excel
+  [(visible)]="mostrarImportar"
+  [plantilla]="plantillaImportar"
+  (importado)="onImportado()"
+/>

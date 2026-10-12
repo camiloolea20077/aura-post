@@ -1,0 +1,188 @@
+// Una sola card con secciones; responsivo (teléfono, tablet, PC).
+.seccion {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--aura-border);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.seccion-titulo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--aura-text-muted);
+}
+
+.contador {
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  background: var(--aura-blue);
+  color: #fff;
+  font-size: 0.7rem;
+}
+
+.solicitud,
+.cliente {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--aura-border);
+  border-radius: 10px;
+  margin-bottom: 0.6rem;
+  min-width: 0;
+}
+
+.solicitud {
+  border-color: var(--aura-blue);
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.solicitud__texto,
+.cliente__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.solicitud__nombre,
+.cliente__nombre {
+  font-weight: 600;
+  color: var(--aura-text);
+  word-break: break-word;
+}
+
+.solicitud__meta,
+.cliente__meta {
+  font-size: 0.78rem;
+  color: var(--aura-text-muted);
+}
+
+.solicitud__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.solicitud__rechazo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1 1 100%;
+
+  input {
+    width: 100%;
+  }
+
+  .solicitud__acciones {
+    justify-content: flex-end;
+  }
+}
+
+.vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.5rem 0;
+  color: var(--aura-text-muted);
+  text-align: center;
+
+  i {
+    font-size: 1.6rem;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+.nota {
+  margin: 0.75rem 0 0;
+  font-size: 0.76rem;
+  color: var(--aura-text-muted);
+
+  &--arriba {
+    margin: 0 0 0.85rem;
+  }
+}
+
+.paquetes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.paquete {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--aura-border);
+  border-radius: 10px;
+  cursor: pointer;
+
+  &--activo {
+    border-color: var(--aura-blue);
+    background: rgba(37, 99, 235, 0.04);
+  }
+}
+
+.paquete__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.paquete__nombre {
+  font-weight: 600;
+  color: var(--aura-text);
+
+  small {
+    font-weight: 400;
+    color: var(--aura-text-muted);
+  }
+}
+
+.paquete__desc {
+  font-size: 0.78rem;
+  color: var(--aura-text-muted);
+}
+
+.dialogo-pie {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding: 1rem;
+  }
+
+  .seccion {
+    padding: 1rem;
+  }
+
+  .cliente__btn,
+  .solicitud__acciones {
+    width: 100%;
+  }
+
+  .solicitud__acciones button {
+    flex: 1 1 0;
+  }
+}

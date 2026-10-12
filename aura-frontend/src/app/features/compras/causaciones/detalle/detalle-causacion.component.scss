@@ -1,0 +1,188 @@
+// Ficha en UNA card con secciones divididas (estándar de pantallas de detalle).
+
+:host {
+  display: block;
+}
+
+.title p-tag {
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+.cargando {
+  padding: 2rem;
+  text-align: center;
+  color: #94a3b8;
+}
+
+.seccion {
+  padding: 1rem 0;
+  border-top: 1px solid #f1f5f9;
+}
+
+.seccion-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.75rem;
+
+  i {
+    color: #2563eb;
+  }
+}
+
+.datos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr));
+  gap: 0.9rem 1.25rem;
+}
+
+.dato {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+
+  &--ancho {
+    grid-column: 1 / -1;
+  }
+}
+
+.dato-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+}
+
+.dato-val {
+  font-weight: 600;
+  color: #1e293b;
+  overflow-wrap: anywhere;
+}
+
+.dato-sub {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.tabla-scroll {
+  overflow-x: auto;
+}
+
+.tabla {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+
+  th {
+    text-align: left;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    padding: 0.5rem;
+    border-bottom: 2px solid #e2e8f0;
+  }
+
+  td {
+    padding: 0.55rem 0.5rem;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: top;
+  }
+
+  .num {
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .cuenta {
+    font-family: "JetBrains Mono", monospace;
+    font-weight: 700;
+    color: #2563eb;
+  }
+
+  .sub {
+    font-size: 0.75rem;
+    color: #94a3b8;
+  }
+}
+
+.totales {
+  max-width: 420px;
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: #334155;
+
+  &.resta span:last-child {
+    color: #b45309;
+  }
+
+  &.final {
+    border-top: 2px solid #e2e8f0;
+    padding-top: 0.5rem;
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: #1e293b;
+  }
+}
+
+.anular-box {
+  margin: 0.5rem 0 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #7f1d1d;
+
+  p {
+    margin: 0 0 0.6rem;
+    font-size: 0.85rem;
+  }
+
+  .alerta {
+    font-weight: 700;
+  }
+}
+
+.anular-fila {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+
+  input {
+    flex: 1 1 240px;
+    min-width: 0;
+  }
+}
+
+.anulada-box {
+  margin: 0.5rem 0 0.5rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+// La .card no trae relleno: el cuerpo lleva el mismo margen lateral que el .card-head.
+.card-body {
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .card-body {
+    padding: 1rem;
+  }
+}

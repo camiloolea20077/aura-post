@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
@@ -8,7 +8,9 @@ import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { TabViewModule } from 'primeng/tabview';
 import { ConfirmationService } from 'primeng/api';
+import { ActivatedRoute } from '@angular/router';
 import { lastValueFrom } from 'rxjs';
 
 import { NominaElectronicaService } from '../../../core/services/nomina-electronica.service';
@@ -16,6 +18,7 @@ import { NominaElectronicaEstado } from '../../../core/models/nomina-electronica
 import { AlertService } from '../../../shared/pipes/alert.service';
 
 import { PuedeDirective } from '../../../shared/directives/puede.directive';
+import { MesNominaElectronicaComponent } from './mes/mes-nomina-electronica.component';
 type TagSeverity =
   | 'success'
   | 'secondary'
@@ -44,6 +47,8 @@ type TagSeverity =
     TooltipModule,
     SkeletonModule,
     ConfirmDialogModule,
+    TabViewModule,
+    MesNominaElectronicaComponent,
   ],
   providers: [ConfirmationService],
   templateUrl: './index-nomina-electronica.component.html',
@@ -54,6 +59,24 @@ export class IndexNominaElectronicaComponent implements OnInit {
   public loading = true;
   public procesando: number | null = null;
   public searchQuery = '';
+  /** 0 = Por mes (envío), 1 = Documentos emitidos. */
+  public pestana = 0;
+
+  @ViewChild('mesTab') mesTab?: MesNominaElectronicaComponent;
+
+  /** Mes pedido por la URL (?anio=&mes=), p. ej. al venir desde una nómina. */
+  public readonly mesInicial: Date | null = (() => {
+    const q = this.route.snapshot.queryParamMap;
+    const anio = Number(q.get('anio'));
+    const mes = Number(q.get('mes'));
+    return anio && mes ? new Date(anio, mes - 1, 1) : null;
+  })();
+
+  /** Actualiza la pestaña visible. */
+  actualizar(): void {
+    if (this.pestana === 0) void this.mesTab?.cargar();
+    else void this.cargar();
+  }
 
   /** Filtro cliente por empleado / CUNE / documento. */
   get filtrados(): NominaElectronicaEstado[] {
@@ -76,6 +99,7 @@ export class IndexNominaElectronicaComponent implements OnInit {
     private readonly service: NominaElectronicaService,
     private readonly alert: AlertService,
     private readonly confirm: ConfirmationService,
+    private readonly route: ActivatedRoute,
   ) {}
 
   ngOnInit(): void {
@@ -137,6 +161,78 @@ export class IndexNominaElectronicaComponent implements OnInit {
       this.alert.showError('Error', 'No se pudo descargar el XML');
     } finally {
       this.procesando = null;
+    }
+  }
+
+  async descargarPdf(n: NominaElectronicaEstado): Promise<void> {
+    this.procesando = n.id;
+    try {
+      const blob = await lastValueFrom(this.service.descargarPdf(n.nominaId));
+      this.guardar(blob, `nomina-${this.documento(n) || n.nominaId}.pdf`);
+    } catch (err: any) {
+      this.alert.showError('Error', (await this.mensajeDeBlob(err)) ?? 'No se pudo descargar el PDF');
+    } finally {
+      this.procesando = null;
+    }
+  }
+
+  /** XML o PDF de una nota de ajuste, por su número. */
+  async descargarAjuste(n: NominaElectronicaEstado, tipo: 'xml' | 'pdf'): Promise<void> {
+    if (!n.numero) return;
+    this.procesando = n.id;
+    try {
+      const blob = await lastValueFrom(
+        tipo === 'xml' ? this.service.descargarXmlAjuste(n.numero) : this.service.descargarPdfAjuste(n.numero),
+      );
+      this.guardar(blob, `nota-ajuste-${n.numero}.${tipo}`);
+    } catch (err: any) {
+      this.alert.showError('Error', (await this.mensajeDeBlob(err)) ?? 'No se pudo descargar el archivo');
+    } finally {
+      this.procesando = null;
+    }
+  }
+
+  /** Elimina en Factus una nota de ajuste que la DIAN no validó; la nómina vuelve a aceptada. */
+  eliminarAjuste(n: NominaElectronicaEstado): void {
+    if (!n.referenceCode) return;
+    this.confirm.confirm({
+      message: `¿Eliminar en Factus la nota de ajuste ${n.numero ?? n.referenceCode}? Solo se puede si la DIAN no la validó; la nómina vuelve a quedar aceptada.`,
+      header: 'Eliminar nota de ajuste',
+      icon: 'pi pi-trash',
+      acceptLabel: 'Sí, eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: async () => {
+        this.procesando = n.id;
+        try {
+          await lastValueFrom(this.service.eliminarAjuste(n.referenceCode!));
+          this.alert.showSuccess('Eliminada', 'Nota de ajuste eliminada en Factus');
+          await this.cargar();
+        } catch (err: any) {
+          this.alert.showError('Error', err?.error?.message ?? 'No se pudo eliminar la nota');
+        } finally {
+          this.procesando = null;
+        }
+      },
+    });
+  }
+
+  private guardar(blob: Blob, nombre: string): void {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombre;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  /** Las descargas piden blob: el error del backend llega como Blob con el JSON adentro. */
+  private async mensajeDeBlob(err: any): Promise<string | null> {
+    try {
+      if (err?.error instanceof Blob) return JSON.parse(await err.error.text())?.message ?? null;
+      return err?.error?.message ?? null;
+    } catch {
+      return null;
     }
   }
 

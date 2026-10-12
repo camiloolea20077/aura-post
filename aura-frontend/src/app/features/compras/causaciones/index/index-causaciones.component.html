@@ -1,0 +1,191 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-file-edit"></i></span>
+        <div>
+          <h1 class="title">Causaciones</h1>
+          <p class="subtitle">
+            Facturas de gastos y servicios — IVA, retenciones y cuenta por pagar
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button
+            *appPuede="'compras.compras:CREAR'"
+            pButton
+            type="button"
+            label="Nueva causación"
+            icon="pi pi-plus"
+            class="btn-aura"
+            (click)="nueva()"
+          ></button>
+          <button
+            pButton
+            type="button"
+            label="Excel"
+            icon="pi pi-file-excel"
+            class="p-button-outlined"
+            [loading]="exportando"
+            (click)="exportarExcel()"
+          ></button>
+        </div>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              class="search-input"
+              placeholder="Buscar por número, factura, proveedor o descripción..."
+              [(ngModel)]="searchQuery"
+              (input)="onSearch()"
+              (keydown.escape)="clearSearch()"
+            />
+            <button *ngIf="searchQuery" class="clear-btn" (click)="clearSearch()">
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body">
+
+    <div class="filtros">
+      <div class="filtro">
+        <label for="cg-estado">Estado</label>
+        <p-dropdown
+          inputId="cg-estado"
+          [options]="estadoOpts"
+          [(ngModel)]="estado"
+          optionLabel="label"
+          optionValue="value"
+          (onChange)="recargar()"
+        />
+      </div>
+      <div class="filtro">
+        <label for="cg-desde">Desde</label>
+        <p-calendar
+          inputId="cg-desde"
+          [(ngModel)]="desde"
+          dateFormat="yy-mm-dd"
+          [showIcon]="true"
+          [showClear]="true"
+          (onSelect)="recargar()"
+          (onClear)="recargar()"
+        />
+      </div>
+      <div class="filtro">
+        <label for="cg-hasta">Hasta</label>
+        <p-calendar
+          inputId="cg-hasta"
+          [(ngModel)]="hasta"
+          dateFormat="yy-mm-dd"
+          [showIcon]="true"
+          [showClear]="true"
+          (onSelect)="recargar()"
+          (onClear)="recargar()"
+        />
+      </div>
+    </div>
+
+    <p-table
+      [value]="items"
+      [lazy]="true"
+      (onLazyLoad)="loadTable($event)"
+      [paginator]="true"
+      [rows]="rowSize"
+      showGridlines
+      [totalRecords]="totalRecords"
+      [loading]="loading"
+      [rowsPerPageOptions]="[10, 15, 25, 50]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords}"
+      [tableStyle]="{ 'min-width': '820px' }"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 80px">Número</th>
+          <th style="width: 105px">Fecha</th>
+          <th style="min-width: 200px">Proveedor</th>
+          <th style="min-width: 160px">Soporte</th>
+          <th style="width: 120px" class="text-right">Subtotal</th>
+          <th style="width: 120px" class="text-right">Retenciones</th>
+          <th style="width: 130px" class="text-right">A pagar</th>
+          <th style="width: 120px" class="text-right">Saldo</th>
+          <th style="width: 92px" class="text-center">Estado</th>
+          <th style="width: 60px" class="text-center">Ver</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item>
+        <tr [class.row-anulada]="item.estado === 'ANULADA'" class="fila-click" (click)="ver(item)">
+          <td><span class="num">CG-{{ item.consecutivo }}</span></td>
+          <td>{{ item.fecha | date: "dd/MM/yyyy" }}</td>
+          <td>
+            <div class="cell-prov">
+              <span class="prov-nombre">{{ item.terceroNombre }}</span>
+              <span class="prov-sub" *ngIf="item.descripcion">{{ item.descripcion }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="cell-prov">
+              <span>{{ etiquetaSoporte(item.tipoSoporte) }}</span>
+              <span class="prov-sub" *ngIf="item.numeroSoporte">{{ item.numeroSoporte }}</span>
+            </div>
+          </td>
+          <td class="text-right">{{ item.subtotal | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+          <td class="text-right">{{ item.retenciones | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+          <td class="text-right">
+            <span class="valor">{{ item.totalPagar | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span>
+          </td>
+          <td class="text-right">
+            <span [class.saldo-cero]="!item.saldoPendiente">{{
+              item.saldoPendiente | currency: "COP" : "symbol-narrow" : "1.0-0"
+            }}</span>
+          </td>
+          <td class="text-center">
+            <p-tag
+              [value]="item.estado === 'ANULADA' ? 'Anulada' : 'Causada'"
+              [severity]="item.estado === 'ANULADA' ? 'danger' : 'success'"
+              [rounded]="true"
+            />
+          </td>
+          <td class="text-center">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-eye"
+              class="p-button-text p-button-sm"
+              pTooltip="Ver detalle"
+              tooltipPosition="top"
+              (click)="ver(item); $event.stopPropagation()"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="10">
+            <div class="empty-state">
+              <i class="pi pi-file-edit"></i>
+              <p>
+                {{ searchQuery ? 'Sin resultados para "' + searchQuery + '"' : "No hay causaciones con estos filtros" }}
+              </p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        <tr *ngFor="let s of [1, 2, 3, 4, 5]">
+          <td *ngFor="let c of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"><p-skeleton /></td>
+        </tr>
+      </ng-template>
+    </p-table>
+    </div>
+  </div>
+</div>

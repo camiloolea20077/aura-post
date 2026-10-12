@@ -1129,3 +1129,17 @@
     min-width: 170px;
   }
 }
+
+// Retención con % pero sin concepto (compra anterior a V203 o borrador viejo).
+.ret-sin-concepto {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #b45309;
+
+  i {
+    font-size: 0.7rem;
+  }
+}

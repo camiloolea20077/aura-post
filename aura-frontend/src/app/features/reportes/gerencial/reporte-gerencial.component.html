@@ -11,7 +11,7 @@
           </p>
         </div>
       </div>
-      <div class="card-head__actions">
+      <div class="card-head__actions card-head__btns">
         <button
           pButton
           type="button"
@@ -20,6 +20,16 @@
           [loading]="descargando"
           [disabled]="!resultado"
           (click)="descargarPdf()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          icon="pi pi-file-excel"
+          label="Excel"
+          class="p-button-outlined"
+          [loading]="exportandoExcel"
+          [disabled]="!resultado"
+          (click)="descargarExcel()"
         ></button>
       </div>
     </div>

@@ -6,12 +6,18 @@ import pdfFonts from 'pdfmake/build/vfs_fonts';
 
 import { EmpresaConfig } from './empresa.service';
 import { FacturaVentaDetalle } from '../models/factura-venta.model';
+import {
+  PDF_COLOR,
+  pdfBloqueDatos,
+  pdfCajaDocumento,
+  pdfEmpresa,
+  pdfLayoutZebra,
+  pdfRecuadro,
+  pdfTablaTotales,
+  pdfTd,
+  pdfTh,
+} from '../../shared/utils/pdf-estilo';
 
-const AZUL = '#2563eb';
-const GRIS = '#64748b';
-const OSCURO = '#1e293b';
-const BORDE = '#e2e8f0';
-const FONDO = '#f8fafc';
 
 /** Datos del cliente para la factura (los del tercero, ya resueltos). */
 export interface ClienteFacturaPdf {
@@ -102,45 +108,34 @@ export class FacturaVentaPdfService {
   }
 
   /**
-   * El QR de la FE. Factus devuelve en `qr` una URL o la imagen en base64;
-   * si no hay, se arma la consulta pública de la DIAN con el CUFE.
+   * El QR de la FE, igual al del PDF de ventas: imagen generada con margen
+   * mínimo y 90 pt. Se prefiere el texto (URL de Factus o consulta DIAN con el
+   * CUFE): la imagen que devuelve Factus trae mucho borde y se ve pequeña.
    */
-  private qr(f: FacturaVentaDetalle, tamano: number): any {
+  private async qr(f: FacturaVentaDetalle): Promise<any> {
     const q = (f.qrData ?? '').trim();
-    if (q.startsWith('data:image')) return { image: q, fit: [tamano, tamano] };
-    if (/^[A-Za-z0-9+/=\s]{200,}$/.test(q)) return { image: 'data:image/png;base64,' + q.replace(/\s/g, ''), fit: [tamano, tamano] };
+    const esImagen = q.startsWith('data:image') || /^[A-Za-z0-9+/=\s]{200,}$/.test(q);
     const texto =
-      q ||
+      (!esImagen && q) ||
       f.factusUrl ||
       (f.cufe ? `https://catalogo-vpfe.dian.gov.co/document/searchqr?documentkey=${f.cufe}` : '');
-    return texto ? { qr: texto, fit: tamano, eccLevel: 'M' } : null;
-  }
-
-  private etiqueta(e: string, v: string | null | undefined): any {
-    return {
-      text: [{ text: `${e}: `, bold: true }, { text: v || '—' }],
-      fontSize: 7.8,
-      color: OSCURO,
-      margin: [0, 0.5, 0, 0.5],
-    };
-  }
-
-  private banda(texto: string): any {
-    return {
-      table: { widths: ['*'], body: [[{ text: texto, bold: true, fontSize: 7.8, color: AZUL, alignment: 'center', margin: [0, 1.5, 0, 1.5] }]] },
-      layout: { fillColor: () => '#eff6ff', hLineColor: () => BORDE, vLineColor: () => BORDE, hLineWidth: () => 0.5, vLineWidth: () => 0.5 },
-      margin: [0, 6, 0, 4],
-    };
-  }
-
-  private caja(titulo: string, contenido: any[]): any {
-    return {
-      table: {
-        widths: ['*'],
-        body: [[{ stack: [{ text: titulo, bold: true, fontSize: 7.8, color: AZUL, margin: [0, 0, 0, 2] }, ...contenido], margin: [4, 3, 4, 3] }]],
-      },
-      layout: { hLineColor: () => BORDE, vLineColor: () => BORDE, hLineWidth: () => 0.5, vLineWidth: () => 0.5 },
-    };
+    if (texto) {
+      try {
+        // qrcode no trae tipos propios; se usa en runtime (como en ventas).
+        // @ts-ignore
+        const mod: any = await import('qrcode');
+        const toDataURL = mod.toDataURL || mod.default?.toDataURL;
+        const img = await toDataURL(texto, { margin: 1, width: 150 });
+        return { image: img, fit: [90, 90], alignment: 'right' };
+      } catch {
+        return { qr: texto, fit: 90, eccLevel: 'M', alignment: 'right' };
+      }
+    }
+    if (esImagen) {
+      const img = q.startsWith('data:image') ? q : 'data:image/png;base64,' + q.replace(/\s/g, '');
+      return { image: img, fit: [90, 90], alignment: 'right' };
+    }
+    return null;
   }
 
   private medio(m: string | null): string {
@@ -167,163 +162,190 @@ export class FacturaVentaPdfService {
     const emision = borrador ? new Date().toISOString() : (f.fechaEmision ?? f.emitidaAt ?? f.createdAt);
     const titulo = borrador ? 'BORRADOR DE FACTURA' : electronica ? 'FACTURA ELECTRÓNICA DE VENTA' : 'FACTURA DE VENTA';
     const empresaNombre = empresa.razonSocial || empresa.nombreComercial || 'Empresa';
-    const qr = electronica ? this.qr(f, 105) : null;
+    const qr = electronica ? await this.qr(f) : null;
 
-    // ── Encabezado: empresa · título y fechas · QR ─────────────────
+    // ── Encabezado: empresa · caja del documento · QR ─────────────
+    const cajaDoc = {
+      width: 180,
+      stack: [
+        pdfCajaDocumento(titulo, `No. ${numero}`, [
+          ['Emisión', `${this.fecha(emision)} ${borrador ? '' : this.hora(emision)}`.trim()],
+          ['Vence', f.formaPago === 'CREDITO' ? this.fecha(f.fechaVencimiento) : this.fecha(emision)],
+          ['Moneda', 'COP'],
+        ]),
+        f.estado === 'ANULADA'
+          ? { text: 'ANULADA', bold: true, color: PDF_COLOR.rojo, fontSize: 10, alignment: 'center', margin: [0, 3, 0, 0] }
+          : {},
+      ],
+    };
     const empresaCol = {
       width: '*',
-      stack: [
-        logo ? { image: logo, fit: [120, 46], margin: [0, 0, 0, 3] } : {},
-        { text: empresaNombre.toUpperCase(), bold: true, fontSize: 9.5, color: OSCURO },
-        { text: `NIT: ${this.nit(empresa.nit, empresa.dv)}`, fontSize: 7.8, color: OSCURO },
-        { text: [empresa.direccion, empresa.municipio].filter(Boolean).join(' · '), fontSize: 7.3, color: GRIS, margin: [0, 2, 0, 0] },
-        { text: [empresa.telefono ? `Tel: ${empresa.telefono}` : '', empresa.correo].filter(Boolean).join(' · '), fontSize: 7.3, color: GRIS },
-      ],
-    };
-    const tituloCol = {
-      width: 190,
-      stack: [
-        { text: titulo, bold: true, fontSize: 10.5, color: borrador ? GRIS : AZUL, alignment: 'right' },
-        { text: `No. ${numero}`, bold: true, fontSize: 10, color: OSCURO, alignment: 'right', margin: [0, 1, 0, 4] },
-        { ...this.etiqueta('Fecha emisión', `${this.fecha(emision)}  ${borrador ? '' : this.hora(emision)}`), alignment: 'right' },
-        {
-          ...this.etiqueta('Vencimiento', f.formaPago === 'CREDITO' ? this.fecha(f.fechaVencimiento) : this.fecha(emision)),
-          alignment: 'right',
-        },
-        { ...this.etiqueta('Moneda', 'COP'), alignment: 'right' },
-        f.estado === 'ANULADA' ? { text: 'ANULADA', bold: true, color: '#dc2626', fontSize: 10, alignment: 'right' } : {},
-      ],
+      ...pdfEmpresa(logo, empresaNombre, `NIT: ${this.nit(empresa.nit, empresa.dv)}`, [
+        [empresa.direccion, empresa.municipio].filter(Boolean).join(' · '),
+        [empresa.telefono ? `Tel: ${empresa.telefono}` : '', empresa.correo].filter(Boolean).join(' · '),
+      ]),
     };
     const encabezado: any = {
-      columns: qr ? [empresaCol, tituloCol, { width: 110, stack: [qr], margin: [5, 0, 0, 0] }] : [empresaCol, tituloCol],
-      columnGap: 8,
+      columns: qr
+        ? [
+            empresaCol,
+            cajaDoc,
+            {
+              width: 95,
+              stack: [
+                qr,
+                { text: 'Factura electrónica', fontSize: 6.5, color: PDF_COLOR.gris, alignment: 'center', margin: [0, 2, 0, 0] },
+              ],
+            },
+          ]
+        : [empresaCol, cajaDoc],
+      columnGap: 10,
     };
     const cufe = electronica
       ? {
-          text: [{ text: 'CUFE: ', bold: true, color: OSCURO }, { text: f.cufe!, color: GRIS }],
+          text: [{ text: 'CUFE: ', bold: true, color: PDF_COLOR.texto }, { text: f.cufe!, color: PDF_COLOR.gris }],
           fontSize: 6.5,
-          margin: [0, 4, 0, 0],
+          margin: [0, 5, 0, 0],
         }
       : {};
 
-    // ── Cliente ────────────────────────────────────────────────────
+    // ── Cliente y fechas ───────────────────────────────────────────
     const clienteBloque = {
       columns: [
         {
           width: '*',
-          stack: [
-            this.etiqueta('Razón social', cliente.nombre),
-            this.etiqueta(cliente.tipoDocumento || 'Documento', this.nit(cliente.numeroDocumento, cliente.dv)),
-            this.etiqueta('Dirección', cliente.direccion),
-            this.etiqueta('Correo', cliente.email),
-          ],
+          ...pdfBloqueDatos([
+            [cliente.tipoDocumento && cliente.tipoDocumento !== 'NIT' ? cliente.tipoDocumento : 'CC/NIT', this.nit(cliente.numeroDocumento, cliente.dv)],
+            ['Cliente', cliente.nombre],
+            ['País', 'Colombia'],
+            ['Municipio', cliente.ciudad],
+            ['Dirección', cliente.direccion],
+            ['Email', cliente.email],
+          ]),
         },
         {
-          width: 190,
-          stack: [
-            this.etiqueta('Teléfono', cliente.telefono),
-            this.etiqueta('Ciudad', cliente.ciudad),
-            this.etiqueta('Responsabilidad', cliente.responsabilidad),
-            this.etiqueta('Vendedor', f.vendedorNombre),
-          ],
+          width: 210,
+          ...pdfBloqueDatos(
+            [
+              ['Fecha generación', `${this.fecha(f.createdAt)} ${this.hora(f.createdAt)}`.trim()],
+              ['Fecha de validación', electronica ? `${this.fecha(f.emitidaAt ?? emision)} ${this.hora(f.emitidaAt ?? emision)}`.trim() : '—'],
+              ['Teléfono', cliente.telefono],
+              ['Responsabilidad', cliente.responsabilidad],
+              ['Vendedor', f.vendedorNombre],
+              ['Orden de compra', f.ordenCompra],
+            ],
+            92,
+          ),
         },
       ],
-      columnGap: 8,
+      columnGap: 10,
+      margin: [0, 8, 0, 0],
     };
 
-    // ── Detalle (una fila por línea, compacta) ─────────────────────
-    const th = (t: string, a: 'left' | 'right' | 'center' = 'left') => ({ text: t, bold: true, fontSize: 7.3, color: AZUL, alignment: a });
+    // ── Detalle ────────────────────────────────────────────────────
     const body: any[] = [
-      [th('#', 'center'), th('Producto / servicio'), th('Cant.', 'right'), th('V. Unitario', 'right'), th('Desc.', 'right'), th('IVA', 'right'), th('Total', 'right')],
+      [
+        pdfTh('#', 'center'),
+        pdfTh('Código'),
+        pdfTh('Descripción'),
+        pdfTh('Val. Unit', 'right'),
+        pdfTh('Cantidad', 'right'),
+        pdfTh('Descuento', 'right'),
+        pdfTh('IVA', 'right'),
+        pdfTh('Val. Item', 'right'),
+      ],
     ];
     f.lineas.forEach((l, i) => {
-      const extra = [
-        l.descripcion && l.descripcion !== l.productoNombre ? l.productoNombre : null,
-        l.productoSku ? `Cód. ${l.productoSku}` : null,
-      ]
-        .filter(Boolean)
-        .join(' · ');
+      const nombre = l.descripcion || l.productoNombre;
+      const extra = l.descripcion && l.descripcion !== l.productoNombre ? l.productoNombre : null;
       body.push([
-        { text: `${i + 1}`, fontSize: 7.5, alignment: 'center' },
+        pdfTd(i + 1, 'center'),
+        pdfTd(l.productoSku),
         {
-          text: [
-            { text: l.descripcion || l.productoNombre, color: OSCURO },
-            extra ? { text: `  ${extra}`, fontSize: 6.5, color: GRIS } : '',
-          ],
-          fontSize: 7.5,
+          text: [{ text: nombre }, extra ? { text: `  ${extra}`, fontSize: 6.5, color: PDF_COLOR.gris } : ''],
+          fontSize: 7.6,
+          color: PDF_COLOR.texto,
         },
-        {
-          text: `${this.num(l.cantidad, Number(l.cantidad) % 1 === 0 ? 0 : 2)}${l.unidadAbreviatura ? ' ' + l.unidadAbreviatura : ''}`,
-          fontSize: 7.5,
-          alignment: 'right',
-        },
-        { text: this.num(l.precioUnitario), fontSize: 7.5, alignment: 'right' },
-        { text: Number(l.descuentoValor) ? this.num(l.descuentoValor) : '—', fontSize: 7.5, alignment: 'right' },
-        { text: `${this.num(l.impuestoPorcentaje, 0)}%`, fontSize: 7.5, alignment: 'right' },
-        { text: this.num(l.subtotalLinea), fontSize: 7.5, alignment: 'right', bold: true },
+        pdfTd(this.num(l.precioUnitario), 'right'),
+        pdfTd(
+          `${this.num(l.cantidad, Number(l.cantidad) % 1 === 0 ? 0 : 2)}${l.unidadAbreviatura ? ' ' + l.unidadAbreviatura : ''}`,
+          'right',
+        ),
+        pdfTd(this.num(l.descuentoValor), 'right'),
+        pdfTd(this.num(l.impuestoPorcentaje), 'right'),
+        pdfTd(this.num(l.subtotalLinea), 'right', { bold: true }),
       ]);
     });
 
     // ── Totales ────────────────────────────────────────────────────
     const ivas = new Map<number, number>();
+    let baseImponible = 0;
     for (const l of f.lineas) {
       const t = Number(l.impuestoPorcentaje);
-      if (t > 0) ivas.set(t, (ivas.get(t) ?? 0) + Number(l.impuestoValor));
+      if (t > 0) {
+        ivas.set(t, (ivas.get(t) ?? 0) + Number(l.impuestoValor));
+        baseImponible += Number(l.cantidad) * Number(l.precioUnitario) - Number(l.descuentoValor);
+      }
     }
     const bruto = f.lineas.reduce((s, l) => s + Number(l.cantidad) * Number(l.precioUnitario), 0);
-    const fila = (a: string, b: string) => [
-      { text: a, fontSize: 7.8, color: GRIS },
-      { text: b, fontSize: 7.8, alignment: 'right', color: OSCURO },
-    ];
-    const totales: any[] = [fila('Subtotal', this.cop(bruto)), fila('Descuento', this.cop(f.descuentoTotal))];
+    const totales: [string, string][] = [];
     if (f.aiu) {
       // Costo directo = la obra (sin A, I ni U), que es la base del AIU.
       const costoDirecto = f.lineas
         .filter((l) => !l.aiuTipo)
         .reduce((s, l) => s + Number(l.cantidad) * Number(l.precioUnitario) - Number(l.descuentoValor), 0);
-      totales.splice(0, 0, fila('Costo directo', this.cop(costoDirecto)));
+      totales.push(['Costo directo', this.cop(costoDirecto)]);
     }
-    [...ivas.entries()].sort((a, b) => b[0] - a[0]).forEach(([t, v]) => totales.push(fila(`IVA ${this.num(t, 0)}%`, this.cop(v))));
-    if (!ivas.size) totales.push(fila('IVA', this.cop(0)));
-    totales.push([
-      { text: 'TOTAL', bold: true, fontSize: 9.5, color: '#fff', fillColor: AZUL, margin: [3, 2, 3, 2] },
-      { text: this.cop(f.total), bold: true, fontSize: 9.5, color: '#fff', fillColor: AZUL, alignment: 'right', margin: [3, 2, 3, 2] },
-    ]);
+    totales.push(['Valor Bruto', this.cop(bruto)]);
+    totales.push(['Base Imponible', this.cop(baseImponible)]);
+    [...ivas.entries()].sort((a, b) => b[0] - a[0]).forEach(([t, v]) => totales.push([`IVA ${this.num(t, 0)}%`, this.cop(v)]));
+    if (!ivas.size) totales.push(['IVA', this.cop(0)]);
+    totales.push(['Descuento global(-)', this.cop(f.descuentoTotal)]);
+    totales.push(['Recargo global(+)', this.cop(0)]);
 
-    // ── Pago y observaciones, lado a lado con los totales ──────────
-    const pago: any[] = [
-      this.etiqueta('Condición', f.formaPago === 'CREDITO' ? `Crédito${f.condicionPagoNombre ? ' · ' + f.condicionPagoNombre : ''}` : 'Contado'),
-    ];
-    if (f.formaPago === 'CONTADO') {
-      pago.push(this.etiqueta('Medio de pago', this.medio(f.metodoPago)));
-      if (f.cuentaBancariaId) {
-        pago.push(
-          this.etiqueta(
-            'Banco / Cuenta',
-            [f.cuentaBancariaBanco || f.cuentaBancariaNombre, f.cuentaBancariaTipo ? this.tipoCuenta(f.cuentaBancariaTipo) : null]
-              .filter(Boolean)
-              .join(' - '),
-          ),
-        );
-      }
-    } else {
-      pago.push(this.etiqueta('Vence', this.fecha(f.fechaVencimiento)));
-    }
-    if (f.ordenCompra) pago.push(this.etiqueta('Orden de compra', f.ordenCompra));
+    // ── Pie izquierdo: observaciones, tipo de operación y pago ─────
+    const medio =
+      f.formaPago === 'CONTADO'
+        ? [this.medio(f.metodoPago), f.cuentaBancariaId
+            ? [f.cuentaBancariaBanco || f.cuentaBancariaNombre, f.cuentaBancariaTipo ? this.tipoCuenta(f.cuentaBancariaTipo) : null]
+                .filter(Boolean)
+                .join(' - ')
+            : null]
+            .filter(Boolean)
+            .join(' · ')
+        : `Vence ${this.fecha(f.fechaVencimiento)}`;
+    const detallePago = {
+      table: {
+        widths: ['*', '*', 'auto'],
+        body: [
+          [pdfTh('Forma de pago'), pdfTh('Medio de pago'), pdfTh('Monto', 'right')],
+          [
+            pdfTd(f.formaPago === 'CREDITO' ? `Crédito${f.condicionPagoNombre ? ' · ' + f.condicionPagoNombre : ''}` : 'Pago de contado'),
+            pdfTd(medio),
+            pdfTd(this.cop(f.total), 'right'),
+          ],
+        ],
+      },
+      layout: pdfLayoutZebra(1),
+      margin: [0, 6, 0, 0],
+    };
+    const izquierdaPie: any[] = [pdfRecuadro('Observaciones', f.notas ? [{ text: f.notas, fontSize: 7.5, color: PDF_COLOR.texto }] : [])];
     if (f.aiu) {
       const p = (v: number) => this.num(v, Number(v) % 1 === 0 ? 0 : 2);
-      pago.push(
-        this.etiqueta(
-          'Contrato AIU',
-          `Administración ${p(f.aiuAdministracionPct)}% · Imprevistos ${p(f.aiuImprevistosPct)}% · ` +
-            `Utilidad ${p(f.aiuUtilidadPct)}% · IVA ${p(f.aiuIvaPct)}% sobre la utilidad`,
-        ),
-      );
+      izquierdaPie.push({
+        text:
+          `Contrato AIU: Administración ${p(f.aiuAdministracionPct)}% · Imprevistos ${p(f.aiuImprevistosPct)}% · ` +
+          `Utilidad ${p(f.aiuUtilidadPct)}% · IVA ${p(f.aiuIvaPct)}% sobre la utilidad`,
+        fontSize: 7.3,
+        color: PDF_COLOR.texto,
+        margin: [0, 4, 0, 0],
+      });
     }
-    const izquierdaPie: any[] = [this.caja('FORMA Y CONDICIÓN DE PAGO', pago)];
-    if (f.notas) {
-      izquierdaPie.push({ ...this.caja('OBSERVACIONES', [{ text: f.notas, fontSize: 7.5, color: OSCURO }]), margin: [0, 4, 0, 0] });
-    }
+    izquierdaPie.push({
+      ...pdfBloqueDatos([['Tipo de operación', f.aiu ? 'AIU' : 'Estándar']], 92),
+      margin: [0, 6, 0, 0],
+    });
+    izquierdaPie.push(detallePago);
 
     // ── Resolución y proveedor, en letra pequeña ───────────────────
     const legal: any[] = [];
@@ -337,10 +359,10 @@ export class FacturaVentaPdfService {
           ? `vigencia ${this.fecha(empresa.resolucionFechaDesde)} a ${this.fecha(empresa.resolucionFechaHasta)}`
           : null,
       ].filter(Boolean);
-      legal.push({ text: partes.join(', ') + '.', fontSize: 6.8, color: GRIS });
+      legal.push({ text: partes.join(', ') + '.', fontSize: 6.8, color: PDF_COLOR.gris });
     }
     if (electronica) {
-      legal.push({ text: 'Software: Aura · Proveedor tecnológico: Factus.', fontSize: 6.8, color: GRIS });
+      legal.push({ text: 'Software: Aura · Proveedor tecnológico: Factus.', fontSize: 6.8, color: PDF_COLOR.gris });
     }
 
     const doc: any = {
@@ -351,37 +373,23 @@ export class FacturaVentaPdfService {
         : f.estado === 'ANULADA'
           ? { text: 'ANULADA', color: '#dc2626', opacity: 0.1, bold: true }
           : undefined,
+      defaultStyle: { color: PDF_COLOR.texto },
       content: [
         encabezado,
         cufe,
-        this.banda('CLIENTE / ADQUIRENTE'),
         clienteBloque,
-        this.banda('DETALLE DE LA FACTURA'),
         {
-          table: { headerRows: 1, widths: [14, '*', 46, 62, 46, 30, 66], body },
-          layout: {
-            fillColor: (row: number) => (row === 0 ? '#eff6ff' : row % 2 === 0 ? FONDO : null),
-            hLineColor: () => BORDE,
-            vLineColor: () => BORDE,
-            hLineWidth: () => 0.4,
-            vLineWidth: () => 0.4,
-            paddingTop: () => 1.5,
-            paddingBottom: () => 1.5,
-            paddingLeft: () => 3,
-            paddingRight: () => 3,
-          },
+          table: { headerRows: 1, widths: [14, 46, '*', 54, 44, 46, 30, 62], body },
+          layout: pdfLayoutZebra(1),
+          margin: [0, 8, 0, 0],
         },
         {
           columns: [
             { width: '*', stack: izquierdaPie },
-            {
-              width: 200,
-              table: { widths: ['*', 'auto'], body: totales },
-              layout: { hLineColor: () => BORDE, vLineColor: () => BORDE, hLineWidth: () => 0.4, vLineWidth: () => 0.4 },
-            },
+            { width: 210, ...pdfTablaTotales(totales, ['Total', this.cop(f.total)]) },
           ],
           columnGap: 10,
-          margin: [0, 6, 0, 0],
+          margin: [0, 8, 0, 0],
           unbreakable: true,
         },
         legal.length ? { stack: legal, margin: [0, 8, 0, 0], unbreakable: true } : {},
@@ -395,9 +403,9 @@ export class FacturaVentaPdfService {
                 ? 'Representación gráfica de la factura electrónica de venta. Consulte el documento electrónico con el código QR.'
                 : 'Factura de venta. Aún no ha sido enviada a la DIAN como factura electrónica.',
             fontSize: 6.5,
-            color: GRIS,
+            color: PDF_COLOR.gris,
           },
-          { text: `Página ${page} de ${count}`, fontSize: 6.5, color: GRIS, alignment: 'right', width: 70 },
+          { text: `Página ${page} de ${count}`, fontSize: 6.5, color: PDF_COLOR.gris, alignment: 'right', width: 70 },
         ],
         margin: [28, 10, 28, 0],
       }),

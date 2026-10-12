@@ -113,6 +113,34 @@
       </div>
     </div>
 
+    <!-- Devoluciones hechas sobre esta compra (notas crédito) -->
+    <ng-container *ngIf="devoluciones.length">
+      <p-divider align="left"
+        ><span class="section-label">Devoluciones</span></p-divider
+      >
+      <div class="devoluciones-list">
+        <div
+          class="devolucion-item"
+          *ngFor="let d of devoluciones"
+          [class.anulada]="d.estado === 'ANULADA'"
+        >
+          <div class="dev-info">
+            <span class="dev-num">
+              {{ d.numeroCompra || "NC #" + d.id }}
+              <span class="dev-anulada" *ngIf="d.estado === 'ANULADA'">anulada</span>
+            </span>
+            <span class="dev-meta">
+              {{ d.fecha | date: "dd/MM/yyyy" }} · {{ d.unidades | number: "1.0-4" }} u.
+              <ng-container *ngIf="d.observaciones"> · {{ d.observaciones }}</ng-container>
+            </span>
+          </div>
+          <span class="dev-valor">
+            −{{ d.total | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+          </span>
+        </div>
+      </div>
+    </ng-container>
+
     <p-divider />
 
     <!-- Totales -->
@@ -135,6 +163,12 @@
           compra.total | currency: "COP" : "symbol-narrow" : "1.0-0"
         }}</span>
       </div>
+      <div class="total-row" *ngIf="totalDevuelto > 0">
+        <span>Devuelto</span>
+        <span class="devuelto">−{{
+          totalDevuelto | currency: "COP" : "symbol-narrow" : "1.0-0"
+        }}</span>
+      </div>
     </div>
   </div>
 
@@ -154,16 +188,37 @@
           (click)="close()"
         ></button>
         <button
-          *ngIf="compra.formaPago === 'CONTADO' && compra.estado === 'RECIBIDA'"
           pButton
           type="button"
           label="Ver PDF"
           icon="pi pi-file-pdf"
           class="btn-pdf"
-          [loading]="generandoPDF"
-          pTooltip="Generar documento de compra en PDF"
+          [disabled]="generandoPDF"
+          pTooltip="Abrir el documento de la compra en PDF"
           tooltipPosition="top"
-          (click)="generarPDF()"
+          (click)="pdf('ver')"
+        ></button>
+        <button
+          pButton
+          type="button"
+          label="Descargar"
+          icon="pi pi-download"
+          class="p-button-outlined"
+          [disabled]="generandoPDF"
+          pTooltip="Descargar el PDF de la compra"
+          tooltipPosition="top"
+          (click)="pdf('descargar')"
+        ></button>
+        <button
+          *ngIf="compra.estado === 'RECIBIDA' && !esNotaCredito"
+          pButton
+          type="button"
+          label="Devolver mercancía"
+          icon="pi pi-replay"
+          class="p-button-outlined"
+          pTooltip="Registrar una devolución al proveedor sobre esta compra"
+          tooltipPosition="top"
+          (click)="devolverMercancia()"
         ></button>
         <button
           *ngIf="compra.estado === 'RECIBIDA'"
@@ -182,3 +237,4 @@
 
 <p-toast />
 <p-confirmDialog />
+

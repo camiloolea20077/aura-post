@@ -33,6 +33,11 @@ export class TarifaRetencionService {
     return this.http.put<ResponseModel<TarifaRetencionModel>>(`${this.apiUrl}/${id}`, dto);
   }
 
+  /** Municipio nuevo de reteICA: cuenta 236805xx y tarifas a nombre de su secretaría de hacienda. */
+  agregarMunicipioReteica(dto: { terceroAcreedorId: number; municipio: string }): Observable<ResponseModel<TarifaRetencionModel[]>> {
+    return this.http.post<ResponseModel<TarifaRetencionModel[]>>(`${this.apiUrl}/reteica-municipio`, dto);
+  }
+
   delete(id: number): Observable<ResponseModel<void>> {
     return this.http.delete<ResponseModel<void>>(`${this.apiUrl}/${id}`);
   }

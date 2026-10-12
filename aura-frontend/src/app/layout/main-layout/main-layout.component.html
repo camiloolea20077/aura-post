@@ -12,6 +12,13 @@
     (click)="closeDrawer()"
   ></div>
 
+  <!-- Tablet: el menú abierto va encima del contenido; tocar afuera lo cierra -->
+  <div
+    class="sidebar-backdrop"
+    *ngIf="menuTabletAbierto"
+    (click)="sidebarCollapsed = true"
+  ></div>
+
   <!-- Sidebar: siempre visible para roles normales; drawer overlay para cajero -->
   @if (!state.isMobile()) {
     <app-sidebar

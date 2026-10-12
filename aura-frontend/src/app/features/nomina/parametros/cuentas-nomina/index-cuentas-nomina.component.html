@@ -1,0 +1,144 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-book"></i></span>
+        <div>
+          <h1 class="title">Cuentas contables de nómina</h1>
+          <p class="subtitle">
+            Cómo se contabiliza cada concepto en el asiento de la nómina. Por defecto sale de la
+            parametrización contable; aquí se cambia la cuenta o el tercero de un concepto
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input type="text" pInputText class="search-input" placeholder="Buscar por código o nombre..."
+              [(ngModel)]="busqueda" (keydown.escape)="busqueda = ''" />
+            @if (busqueda) {
+              <button class="clear-btn" (click)="busqueda = ''"><i class="pi pi-times"></i></button>
+            }
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <p-table [value]="filtrados" [loading]="cargando" [scrollable]="true" [tableStyle]="{ 'min-width': '64rem' }"
+      showGridlines>
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Concepto</th>
+          <th style="width: 250px">Débito</th>
+          <th style="width: 250px">Crédito</th>
+          <th style="width: 200px">Tercero del crédito</th>
+          <th style="width: 100px">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-c>
+        <tr>
+          <td>
+            <div class="nombre"><code class="codigo">{{ c.codigo }}</code> {{ c.nombre }}</div>
+            <div class="meta">
+              {{ textoClase[c.clase] }}
+              @if (c.personalizado) {
+                · <span class="cambiado">Personalizado</span>
+              }
+            </div>
+          </td>
+          <td>
+            @if (!c.aplicaDebito) {
+              <span class="sin-dato">—</span>
+            } @else if (c.cuentaDebito) {
+              <span class="cambiado">{{ c.cuentaDebito }}</span>
+            } @else {
+              {{ c.debitoDefecto }}
+            }
+          </td>
+          <td>
+            @if (c.cuentaCredito) {
+              <span class="cambiado">{{ c.cuentaCredito }}</span>
+            } @else {
+              <span [class.sin-dato]="!c.aplicaCredito">{{ c.creditoDefecto }}</span>
+            }
+          </td>
+          <td>
+            <span [class.cambiado]="!!c.terceroCredito">{{ tercero(c) }}</span>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button *appPuede="'recursos-humanos.cuentas-nomina:EDITAR'" pButton icon="pi pi-pencil"
+                class="p-button-text p-button-sm action-edit" pTooltip="Cambiar" (click)="editar(c)"></button>
+              @if (c.personalizado) {
+                <button *appPuede="'recursos-humanos.cuentas-nomina:EDITAR'" pButton icon="pi pi-replay"
+                  class="p-button-text p-button-sm" pTooltip="Restablecer" (click)="confirmarRestablecer(c)"></button>
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5">
+            <div class="empty-state">
+              <i class="pi pi-book"></i>
+              <p>No hay conceptos que coincidan.</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<p-dialog [header]="seleccionado ? 'Contabilización de ' + seleccionado.codigo : ''" [(visible)]="mostrarForm"
+  [modal]="true" [style]="{ width: '640px' }" [breakpoints]="{ '680px': '95vw' }" [draggable]="false">
+  @if (seleccionado) {
+    <div class="form-cambio">
+      <p class="nota">{{ seleccionado.nombre }} · {{ textoClase[seleccionado.clase] }}. Deje un campo vacío para usar el valor por defecto.</p>
+
+      @if (seleccionado.aplicaDebito) {
+        <div class="campo">
+          <label>Cuenta del débito (gasto)</label>
+          <app-cuenta-autocomplete [(ngModel)]="form.cuentaDebitoId" [prefijos]="prefijosDebito" appendTo="body"
+            placeholder="Por defecto: {{ seleccionado.debitoDefecto }}" />
+          <small>Por defecto: {{ seleccionado.debitoDefecto }}</small>
+        </div>
+      }
+
+      @if (seleccionado.aplicaCredito) {
+        <div class="campo">
+          <label>Cuenta del crédito (pasivo)</label>
+          <app-cuenta-autocomplete [(ngModel)]="form.cuentaCreditoId" [prefijos]="prefijosCredito" appendTo="body"
+            placeholder="Por defecto: {{ seleccionado.creditoDefecto }}" />
+          <small>Por defecto: {{ seleccionado.creditoDefecto }}</small>
+        </div>
+        <div class="campo">
+          <label>A nombre de quién va el crédito</label>
+          <p-select [options]="opcionesTercero" [(ngModel)]="form.terceroCredito" optionLabel="label"
+            optionValue="value" styleClass="w-full" appendTo="body" />
+          <small>Por defecto: {{ seleccionado.terceroDefecto }}</small>
+        </div>
+        @if (form.terceroCredito === 'FIJO') {
+          <div class="campo">
+            <label>Tercero fijo *</label>
+            <app-tercero-autocomplete [(ngModel)]="form.terceroFijoId" [label]="seleccionado.terceroFijo"
+              appendTo="body" placeholder="Nombre o documento del tercero…" />
+          </div>
+        }
+      } @else {
+        <p class="nota">Lo devengado no tiene crédito propio: va al neto por pagar del empleado (2505).</p>
+      }
+    </div>
+  }
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancelar" icon="pi pi-times" class="btn-amarillo" (click)="mostrarForm = false"></button>
+    <button pButton label="Guardar" icon="pi pi-check" class="btn-verde" [loading]="guardando" (click)="guardar()"></button>
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog />

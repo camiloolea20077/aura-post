@@ -3,6 +3,7 @@ import {
   ChangeDetectorRef,
   Component,
   OnInit,
+  inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -33,6 +34,8 @@ const MORADO = '#7e22ce';
 const OSCURO = '#0f172a';
 const GRIS = '#64748b';
 
+import { ExcelReporteService } from '../../../shared/services/excel-reporte.service';
+
 @Component({
   selector: 'app-balance-general',
   standalone: true,
@@ -51,6 +54,9 @@ const GRIS = '#64748b';
   styleUrls: ['./balance-general.component.scss'],
 })
 export class BalanceGeneralComponent implements OnInit {
+  private readonly excel = inject(ExcelReporteService);
+  exportandoExcel = false;
+
   balance: BalanceGeneralDetalladoModel | null = null;
   loading = false;
   fechaCorte: Date = new Date();
@@ -221,5 +227,54 @@ export class BalanceGeneralComponent implements OnInit {
       { text: label, bold: true, fontSize: 8.5, color: '#fff', fillColor: color, margin: [4, 4, 4, 4] },
       { text: this.formatCOP(valor), bold: true, fontSize: 8.5, color: '#fff', fillColor: color, alignment: 'right', margin: [4, 4, 4, 4] },
     ];
+  }
+
+  // ── Excel (docs/PLAN_EXCEL_IMPORTADORES_MODULOS.md §1) ──────────────
+  async descargarExcel(): Promise<void> {
+    const b = this.balance;
+    if (!b) return;
+    const filas: any[] = [];
+    const seccion = (titulo: string, grupos: any[], total: number) => {
+      filas.push({ valores: [titulo.toUpperCase(), '', null], estilo: 'grupo' });
+      for (const g of grupos) {
+        filas.push({ valores: [g.codigo, g.nombre, g.saldo], estilo: 'grupo' });
+        for (const c of g.cuentas ?? []) filas.push([c.codigo, '    ' + c.nombre, c.saldo]);
+      }
+      filas.push({ valores: ['', 'Total ' + titulo.toLowerCase(), total], estilo: 'total' });
+    };
+    seccion('Activo corriente', b.activoCorriente, b.totalActivoCorriente);
+    seccion('Activo no corriente', b.activoNoCorriente, b.totalActivoNoCorriente);
+    filas.push({ valores: ['', 'TOTAL ACTIVO', b.totalActivo], estilo: 'total' });
+    seccion('Pasivo corriente', b.pasivoCorriente, b.totalPasivoCorriente);
+    seccion('Pasivo no corriente', b.pasivoNoCorriente, b.totalPasivoNoCorriente);
+    filas.push({ valores: ['', 'TOTAL PASIVO', b.totalPasivo], estilo: 'total' });
+    seccion('Patrimonio', b.patrimonio, b.totalPatrimonio);
+    filas.push({ valores: ['', 'Resultado del ejercicio', b.resultadoEjercicio] });
+    filas.push({ valores: ['', 'TOTAL PASIVO Y PATRIMONIO', b.totalPasivoPatrimonio], estilo: 'total' });
+    if (!b.cuadra) filas.push({ valores: ['', 'Diferencia (no cuadra)', b.diferencia], estilo: 'total' });
+    await this.conExcel(() =>
+      this.excel.descargar({
+        titulo: 'Estado de situación financiera',
+        subtitulo: `Corte a ${b.fechaCorte}`,
+        archivo: `balance_general_${b.fechaCorte}`,
+        hojas: [{
+          nombre: 'Balance general',
+          columnas: [{ titulo: 'Código', ancho: 12 }, { titulo: 'Cuenta', ancho: 50 }, { titulo: 'Saldo', tipo: 'pesos' }],
+          filas,
+        }],
+      }),
+    );
+    this.cdr.markForCheck();
+  }
+
+  private async conExcel(fn: () => Promise<void>): Promise<void> {
+    this.exportandoExcel = true;
+    try {
+      await fn();
+    } catch {
+      // El servicio ya escribió lo que pudo; si falla, que no quede cargando.
+    } finally {
+      this.exportandoExcel = false;
+    }
   }
 }

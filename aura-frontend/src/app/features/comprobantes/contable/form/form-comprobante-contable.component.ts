@@ -13,7 +13,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { TableModule, TableLazyLoadEvent } from 'primeng/table';
 import { TabViewModule } from 'primeng/tabview';
@@ -74,6 +74,13 @@ export class FormComprobanteContableComponent implements OnInit {
   frm: FormGroup;
   saving = false;
   consecutivoPreview = '';
+
+  // ── Corrección de un comprobante ya hecho ──
+  /** Id del asiento que se corrige; null al crear. */
+  editId: number | null = null;
+  /** Por qué no se puede corregir (mes cerrado, turno cerrado…). */
+  motivoNoEditable: string | null = null;
+  cargandoEdicion = false;
 
   cuentas: PlanCuentaModel[] = [];
   cuentasAuxOpts: { label: string; value: number }[] = [];
@@ -167,6 +174,7 @@ export class FormComprobanteContableComponent implements OnInit {
     private readonly indexDB: IndexDBService,
     private readonly alert: AlertService,
     private readonly router: Router,
+    private readonly route: ActivatedRoute,
     private readonly cdr: ChangeDetectorRef,
   ) {
     this.frm = this.fb.group({
@@ -189,10 +197,91 @@ export class FormComprobanteContableComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {
-    this.cargarCuentas();
-    this.cargarSelectores();
-    this.cargarConsecutivo();
+  async ngOnInit(): Promise<void> {
+    const id = Number(this.route.snapshot.paramMap.get('id')) || null;
+    if (id) this.cargandoEdicion = true;
+    // Las cuentas van primero: las líneas de cartera se arman con la 1305/2205.
+    await Promise.all([this.cargarCuentas(), this.cargarSelectores()]);
+    if (id) await this.cargarEdicion(id);
+    else this.cargarConsecutivo();
+  }
+
+  get modoEdicion(): boolean {
+    return this.editId !== null;
+  }
+
+  /**
+   * Deja el formulario como quedó el comprobante: cabecera, origen de fondos,
+   * líneas y la cartera que cruzó. Las líneas de cartera y la contrapartida se
+   * vuelven a armar desde lo aplicado, igual que al crearlo.
+   */
+  private async cargarEdicion(id: number): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.service.obtenerComprobante(id));
+      const c = res?.data;
+      if (!c) throw new Error();
+      this.editId = id;
+      this.consecutivoPreview = c.numeroComprobante;
+      this.motivoNoEditable = c.editable ? null : c.motivoNoEditable;
+      this.beneficiarioLabel = c.beneficiarioNombre ?? '';
+      this.frm.patchValue({
+        tipoComprobante: c.tipoComprobante,
+        fecha: c.fecha,
+        fechaVencimiento: c.fechaVencimiento,
+        beneficiarioTerceroId: c.beneficiarioTerceroId,
+        beneficiarioNombre: c.beneficiarioNombre,
+        beneficiarioDireccion: c.beneficiarioDireccion,
+        beneficiarioTelefono: c.beneficiarioTelefono,
+        ciudad: c.ciudad,
+        concepto: c.concepto,
+        origenFondos: c.origenFondos,
+        metodoPago: c.origenFondos === 'BANCO' && c.metodoPago ? c.metodoPago : 'TRANSFERENCIA',
+        cuentaBancariaId: c.cuentaBancariaId,
+        cuentaContableId: c.cuentaContableId,
+        sucursalId: c.sucursalId ?? this.frm.get('sucursalId')!.value,
+      });
+      // El tipo define la serie del número: no se cambia al corregir.
+      this.frm.get('tipoComprobante')!.disable({ emitEvent: false });
+
+      const generada = (d: string | null) =>
+        !!d && (/^Abono Cx[PC] /.test(d) || d === 'Pago a proveedores' || d === 'Recaudo de clientes');
+      const manuales = c.aplicaciones.length ? c.lineas.filter((l) => !generada(l.descripcion)) : c.lineas;
+      this.lineas.clear();
+      for (const l of manuales) {
+        const g = this.nuevaLinea();
+        g.patchValue({
+          cuentaId: l.cuentaId,
+          descripcion: l.descripcion,
+          debito: Number(l.debito) || 0,
+          credito: Number(l.credito) || 0,
+          terceroId: l.terceroId,
+          terceroLabel: l.terceroNombre ?? '',
+          centroCostoId: l.centroCostoId,
+          origen: 'MANUAL',
+        });
+        this.lineas.push(g);
+      }
+      this.sel = {};
+      for (const a of c.aplicaciones) {
+        this.sel[a.cuentaId] = {
+          aplicado: Number(a.monto),
+          saldo: Number(a.saldoDisponible),
+          nombre: a.nombre,
+          numero: a.numeroCuenta,
+          terceroId: a.terceroId,
+        };
+      }
+      this.sincronizarCartera();
+      if (this.esCartera && c.beneficiarioTerceroId) {
+        this.cargarCartera({ first: 0, rows: this.carteraRows });
+      }
+    } catch {
+      this.alert.showError('Error', 'No se pudo cargar el comprobante.');
+      this.router.navigate(['/comprobantes']);
+    } finally {
+      this.cargandoEdicion = false;
+      this.cdr.markForCheck();
+    }
   }
 
   // ── FormArray de líneas ──────────────────────────────────────────
@@ -626,7 +715,8 @@ export class FormComprobanteContableComponent implements OnInit {
       }
     }
 
-    const v = this.frm.value;
+    // getRawValue: al corregir, el tipo va deshabilitado y frm.value lo omitiría.
+    const v = this.frm.getRawValue();
     // Ignora líneas totalmente vacías (sin cuenta ni valores).
     const lineasValidas = (v.lineas as any[]).filter(
       (l) =>
@@ -696,13 +786,18 @@ export class FormComprobanteContableComponent implements OnInit {
     this.saving = true;
     this.cdr.markForCheck();
     try {
-      await lastValueFrom(this.service.crearComprobante(dto));
-      this.alert.showSuccess('Comprobante creado', 'Quedó contabilizado.');
+      if (this.editId) {
+        await lastValueFrom(this.service.actualizarComprobante(this.editId, dto));
+        this.alert.showSuccess('Comprobante corregido', `${this.consecutivoPreview} quedó con los valores nuevos.`);
+      } else {
+        await lastValueFrom(this.service.crearComprobante(dto));
+        this.alert.showSuccess('Comprobante creado', 'Quedó contabilizado.');
+      }
       this.router.navigate(['/comprobantes']);
     } catch (e: any) {
       this.alert.showError(
         'Error',
-        e?.error?.message ?? 'No se pudo crear el comprobante',
+        e?.error?.message ?? (this.editId ? 'No se pudo corregir el comprobante' : 'No se pudo crear el comprobante'),
       );
     } finally {
       this.saving = false;

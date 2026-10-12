@@ -1,0 +1,99 @@
+// Estilos compartidos de los editores de listas (teléfonos, correos).
+
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.entrada {
+  display: flex;
+  gap: 0.35rem;
+  min-width: 0;
+
+  &__texto {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  &__ext {
+    flex: 0 0 4.5rem;
+    min-width: 0;
+  }
+
+  &__mas {
+    flex: 0 0 auto;
+    width: 2.5rem;
+    border: 1px solid #2563eb;
+    border-radius: 6px;
+    background: #fff;
+    color: #2563eb;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+  }
+}
+
+:host ::ng-deep .entrada__tipo {
+  flex: 0 0 7.5rem;
+  min-width: 0;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 100%;
+  padding: 0.2rem 0.35rem 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+
+  i {
+    font-size: 0.75rem;
+  }
+
+  &__tipo {
+    font-weight: 600;
+  }
+
+  &__extra {
+    color: #64748b;
+  }
+
+  &__quitar {
+    border: none;
+    background: transparent;
+    color: #64748b;
+    cursor: pointer;
+    padding: 0.1rem 0.25rem;
+    border-radius: 999px;
+
+    &:hover {
+      background: #dbeafe;
+      color: #b91c1c;
+    }
+  }
+}
+
+.vacio {
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.error {
+  font-size: 0.72rem;
+  color: #ef4444;
+}

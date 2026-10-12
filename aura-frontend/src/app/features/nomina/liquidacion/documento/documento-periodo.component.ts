@@ -5,6 +5,7 @@ import {
   OnChanges,
   Output,
   SimpleChanges,
+  inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -44,6 +45,8 @@ type TagSeverity =
   | 'contrast'
   | undefined;
 
+import { ExcelReporteService } from '../../../../shared/services/excel-reporte.service';
+
 @Component({
   selector: 'app-documento-periodo',
   standalone: true,
@@ -67,6 +70,9 @@ type TagSeverity =
   styleUrls: ['./documento-periodo.component.scss'],
 })
 export class DocumentoPeriodoComponent implements OnChanges {
+  private readonly excel = inject(ExcelReporteService);
+  exportandoExcel = false;
+
   @Input() visible = false;
   @Input() periodoId: number | null = null;
 
@@ -293,5 +299,49 @@ export class DocumentoPeriodoComponent implements OnChanges {
       LIQUIDADO: 'info',
     };
     return m[e];
+  }
+
+  // ── Excel (docs/PLAN_EXCEL_IMPORTADORES_MODULOS.md §1) ──────────────
+  async descargarExcel(): Promise<void> {
+    const d = this.data;
+    if (!d) return;
+    this.exportandoExcel = true;
+    try {
+      await this.excel.descargar({
+        titulo: `Nómina ${d.documento}`,
+        subtitulo: `Del ${d.fechaInicio} al ${d.fechaFin} — ${d.cantidadEmpleados} empleado(s)`,
+        archivo: `nomina_${d.documento}`,
+        hojas: [
+          {
+            nombre: 'Empleados',
+            columnas: [
+              { titulo: 'Documento', ancho: 14 }, { titulo: 'Empleado', ancho: 34 }, { titulo: 'Cargo', ancho: 22 },
+              { titulo: 'Días', tipo: 'numero' }, { titulo: 'Devengado', tipo: 'pesos' }, { titulo: 'Deducciones', tipo: 'pesos' },
+              { titulo: 'Neto a pagar', tipo: 'pesos' }, { titulo: 'Banco', ancho: 20 }, { titulo: 'Cuenta', ancho: 18 },
+              { titulo: 'Estado', ancho: 12 },
+            ],
+            filas: [
+              ...d.empleados.map((e) => [e.empleadoDocumento, e.empleadoNombre, e.cargo, e.diasTrabajados,
+                e.totalDevengado, e.totalDeducciones, e.netoPagar, e.banco, e.numeroCuenta, e.estado]),
+              { valores: ['', 'TOTALES', '', null, d.totalDevengado, d.totalDeducciones, d.totalNeto], estilo: 'total' },
+            ],
+          },
+          {
+            nombre: 'Novedades',
+            columnas: [
+              { titulo: 'Empleado', ancho: 34 }, { titulo: 'Concepto', ancho: 24 }, { titulo: 'Descripción', ancho: 36 },
+              { titulo: 'Cantidad', tipo: 'numero' }, { titulo: 'Valor unitario', tipo: 'pesos' },
+              { titulo: 'Valor total', tipo: 'pesos' }, { titulo: 'Tipo', ancho: 12 }, { titulo: 'Origen', ancho: 14 },
+            ],
+            filas: (d.novedades ?? []).map((n) => [n.empleadoNombre, n.tipo, n.descripcion, n.cantidad,
+              n.valorUnitario, n.valorTotal, n.esDeduccion ? 'Deducción' : 'Devengado', n.origen]),
+          },
+        ],
+      });
+    } catch {
+      this.alertService.showError('Error', 'No se pudo generar el Excel');
+    } finally {
+      this.exportandoExcel = false;
+    }
   }
 }

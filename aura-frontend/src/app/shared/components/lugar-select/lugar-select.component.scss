@@ -1,0 +1,24 @@
+// El host no ocupa caja: sus tres campos se acomodan en la grilla del padre.
+:host {
+  display: contents;
+}
+
+// Mismo aspecto que los campos de los formularios planos (los estilos del
+// padre están encapsulados y no llegan aquí).
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+
+  label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #475569;
+  }
+}
+
+:host ::ng-deep .field .p-select {
+  width: 100%;
+  min-width: 0;
+}

@@ -1,0 +1,139 @@
+:host {
+  display: block;
+}
+
+.nueva {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
+  gap: 0.75rem 1rem;
+  align-items: end;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+
+  &--ancho {
+    grid-column: span 2;
+  }
+
+  &--todo {
+    grid-column: 1 / -1;
+  }
+
+  label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #475569;
+  }
+
+  ::ng-deep .p-dropdown,
+  ::ng-deep .p-inputnumber,
+  ::ng-deep .p-inputnumber input {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .campo--ancho {
+    grid-column: auto;
+  }
+}
+
+.ayuda {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.cargando,
+.vacio {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: #94a3b8;
+
+  i {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &:hover {
+    border-color: #2563eb;
+    box-shadow: 0 2px 10px rgba(37, 99, 235, 0.1);
+  }
+}
+
+.item-anio {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #2563eb;
+  min-width: 3.5rem;
+}
+
+.item-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.item-titulo {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.item-sub {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.item-flecha {
+  color: #94a3b8;
+}
+
+@media (max-width: 520px) {
+  .item {
+    flex-wrap: wrap;
+  }
+}
+
+// La .card no trae relleno: el cuerpo lleva el mismo margen lateral que el .card-head.
+.card-body {
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .card-body {
+    padding: 1rem;
+  }
+}

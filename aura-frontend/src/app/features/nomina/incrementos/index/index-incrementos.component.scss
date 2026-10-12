@@ -1,0 +1,59 @@
+// Estructura (.page, .card, .card-head, .search-wrap) global en styles.scss.
+
+.nombre {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.85rem;
+}
+
+.meta {
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.num {
+  text-align: right;
+}
+
+.fila-click {
+  cursor: pointer;
+}
+
+.row-inactiva td {
+  opacity: 0.6;
+}
+
+.enlace {
+  color: #2563eb;
+  cursor: pointer;
+  font-weight: 600;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.pendiente {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #b45309;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem 1rem;
+  color: #94a3b8;
+
+  i {
+    font-size: 1.6rem;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+  }
+}

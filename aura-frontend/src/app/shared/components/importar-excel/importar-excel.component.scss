@@ -1,0 +1,189 @@
+// Importar desde Excel: responsivo; la tabla de resultados hace scroll dentro del diálogo.
+.imp {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.imp-paso {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--aura-border);
+  border-radius: 10px;
+}
+
+.imp-num {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--aura-blue);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.imp-paso__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1 1 220px;
+  min-width: 0;
+
+  span {
+    font-size: 0.8rem;
+    color: var(--aura-text-muted);
+    word-break: break-word;
+  }
+}
+
+.imp-subir {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: 8px;
+  background: var(--aura-blue);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.imp-alerta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  background: rgba(220, 38, 38, 0.08);
+  color: var(--aura-danger);
+  font-size: 0.82rem;
+}
+
+.imp-cargando {
+  font-size: 0.85rem;
+  color: var(--aura-text-muted);
+}
+
+.imp-resumen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.imp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: var(--aura-border);
+  font-size: 0.78rem;
+  font-weight: 600;
+
+  &--ok {
+    background: rgba(22, 163, 74, 0.12);
+    color: #15803d;
+  }
+
+  &--info {
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--aura-blue);
+  }
+
+  &--error {
+    background: rgba(220, 38, 38, 0.1);
+    color: var(--aura-danger);
+  }
+}
+
+.imp-aviso {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--aura-text-muted);
+}
+
+.imp-filtro {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.imp-tabla {
+  max-height: min(45vh, 360px);
+  overflow: auto;
+  border: 1px solid var(--aura-border);
+  border-radius: 8px;
+}
+
+.imp-fila {
+  display: grid;
+  grid-template-columns: 52px 110px minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.45rem 0.65rem;
+  border-bottom: 1px solid var(--aura-border);
+  font-size: 0.8rem;
+  min-width: 0;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &--cab {
+    position: sticky;
+    top: 0;
+    background: var(--aura-surface, #fff);
+    font-weight: 700;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    color: var(--aura-text-muted);
+  }
+}
+
+.imp-detalle,
+.imp-mensaje {
+  word-break: break-word;
+  min-width: 0;
+}
+
+.imp-mensaje {
+  color: var(--aura-text-muted);
+}
+
+.imp-mono {
+  font-family: "JetBrains Mono", monospace;
+}
+
+.imp-pie {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+// Teléfono: cada resultado en dos líneas.
+@media (max-width: 560px) {
+  .imp-fila {
+    grid-template-columns: 44px minmax(0, 1fr);
+
+    .imp-detalle,
+    .imp-mensaje {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .imp-fila--cab {
+    display: none;
+  }
+}

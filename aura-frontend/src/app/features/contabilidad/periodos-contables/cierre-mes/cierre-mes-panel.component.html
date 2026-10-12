@@ -1,0 +1,159 @@
+<div class="cm">
+  <!-- ══ Cabecera ══════════════════════════════════════════════════ -->
+  <div class="cm-head">
+    <div class="cm-head__sel">
+      <label>Mes</label>
+      <p-dropdown
+        [(ngModel)]="periodoId"
+        [options]="opciones"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Elija un mes"
+        appendTo="body"
+        styleClass="w-full"
+        (onChange)="cargar()"
+      />
+    </div>
+    <div class="cm-head__btns">
+      <button
+        pButton
+        type="button"
+        icon="pi pi-refresh"
+        class="p-button-text p-button-rounded"
+        pTooltip="Volver a revisar"
+        [disabled]="!periodoId || cargando"
+        (click)="cargar()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-file-pdf"
+        [label]="periodo?.estado === 'CERRADO' ? 'Acta de cierre' : 'Acta (borrador)'"
+        class="p-button-outlined p-button-sm"
+        [loading]="generandoActa"
+        [disabled]="!periodoId"
+        (click)="acta()"
+      ></button>
+      <button
+        *ngIf="periodo?.estado === 'ABIERTO'"
+        pButton
+        type="button"
+        icon="pi pi-lock"
+        [label]="'Cerrar ' + (chequeo?.periodo ?? '')"
+        class="btn-rojo p-button-sm"
+        [disabled]="!chequeo?.puedeCerrar || !esSiguiente"
+        [pTooltip]="!esSiguiente ? 'Primero se cierran los meses anteriores' : (chequeo?.bloqueos ? 'Resuelva lo que bloquea el cierre' : '')"
+        (click)="pedirCierre()"
+      ></button>
+    </div>
+  </div>
+
+  <div class="cm-vacio" *ngIf="!periodoId">No hay períodos contables todavía.</div>
+
+  <ng-container *ngIf="chequeo">
+    <!-- ══ Resumen ═══════════════════════════════════════════════ -->
+    <div class="cm-resumen">
+      <span class="cm-pill cm-pill--bloquea" *ngIf="chequeo.bloqueos">
+        <i class="pi pi-times-circle"></i> {{ chequeo.bloqueos }} bloquea{{ chequeo.bloqueos === 1 ? '' : 'n' }} el cierre
+      </span>
+      <span class="cm-pill cm-pill--advertencia" *ngIf="chequeo.advertencias">
+        <i class="pi pi-exclamation-triangle"></i> {{ chequeo.advertencias }} por revisar
+      </span>
+      <span class="cm-pill cm-pill--ok"><i class="pi pi-check-circle"></i> {{ oks }} en orden</span>
+      <span class="cm-sub" *ngIf="periodo?.estado === 'CERRADO'">
+        Mes cerrado: el acta imprime la revisión guardada al cerrar.
+      </span>
+    </div>
+
+    <!-- ══ Lista de chequeo ══════════════════════════════════════ -->
+    <section class="cm-grupo" *ngFor="let g of grupos">
+      <h3>{{ g.nombre }}</h3>
+      <div class="cm-fila" *ngFor="let c of g.chequeos" [ngClass]="'cm-fila--' + c.estado">
+        <span class="cm-dot" [pTooltip]="estadoTexto(c.estado)"></span>
+        <div class="cm-fila__main">
+          <div class="cm-fila__titulo">
+            {{ c.titulo }}
+            <span class="cm-estado">{{ estadoTexto(c.estado) }}</span>
+          </div>
+          <div class="cm-sub">{{ c.detalle }}</div>
+          <div class="cm-cruce" *ngIf="c.valorAuxiliar != null && c.diferencia != null">
+            <span>Módulo <strong>{{ cop(c.valorAuxiliar) }}</strong></span>
+            <span>Mayor <strong>{{ cop(c.valorMayor) }}</strong></span>
+            <span [class.cm-dif]="c.estado === 'ADVERTENCIA'">Diferencia <strong>{{ cop(c.diferencia) }}</strong></span>
+          </div>
+          <ng-container *ngIf="c.ejemplos?.length">
+            <a class="cm-link" (click)="toggle(c.codigo)">
+              {{ abiertos.has(c.codigo) ? 'Ocultar' : 'Ver' }} {{ c.ejemplos.length }}
+              {{ c.ejemplos.length === 1 ? 'caso' : 'casos' }}
+            </a>
+            <ul class="cm-ejemplos" *ngIf="abiertos.has(c.codigo)">
+              <li *ngFor="let e of c.ejemplos">{{ e }}</li>
+            </ul>
+          </ng-container>
+        </div>
+        <button
+          *ngIf="c.accionTipo && c.estado !== 'OK' && periodo?.estado === 'ABIERTO'"
+          pButton
+          type="button"
+          [label]="c.accionTexto ?? 'Resolver'"
+          [icon]="c.accionTipo === 'AJUSTE' ? 'pi pi-bolt' : 'pi pi-arrow-right'"
+          [iconPos]="c.accionTipo === 'AJUSTE' ? 'left' : 'right'"
+          class="p-button-sm"
+          [class.p-button-outlined]="c.accionTipo === 'RUTA'"
+          [loading]="ajustando === c.codigo"
+          (click)="accion(c)"
+        ></button>
+      </div>
+    </section>
+  </ng-container>
+
+  <!-- ══ Comparativo ═══════════════════════════════════════════════ -->
+  <section class="cm-grupo" *ngIf="comparativo">
+    <h3>Resultados comparados</h3>
+    <div class="cm-tabla">
+      <table>
+        <thead>
+          <tr>
+            <th>Grupo</th>
+            <th class="num">{{ comparativo.periodo }}</th>
+            <th class="num">{{ comparativo.mesAnterior }}</th>
+            <th class="num">Var.</th>
+            <th class="num">{{ comparativo.anioAnterior }}</th>
+            <th class="num">Var.</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let s of secciones">
+            <tr *ngFor="let l of s.lineas">
+              <td>{{ l.codigo }} · {{ l.nombre }}</td>
+              <td class="num">{{ cop(l.actual) }}</td>
+              <td class="num">{{ cop(l.mesAnterior) }}</td>
+              <td class="num cm-var">{{ variacion(l.actual, l.mesAnterior) }}</td>
+              <td class="num">{{ cop(l.anioAnterior) }}</td>
+              <td class="num cm-var">{{ variacion(l.actual, l.anioAnterior) }}</td>
+            </tr>
+            <tr class="cm-subtotal">
+              <td>Total {{ s.titulo.toLowerCase() }}</td>
+              <td class="num">{{ cop(s.total.actual) }}</td>
+              <td class="num">{{ cop(s.total.mesAnterior) }}</td>
+              <td class="num cm-var">{{ variacion(s.total.actual, s.total.mesAnterior) }}</td>
+              <td class="num">{{ cop(s.total.anioAnterior) }}</td>
+              <td class="num cm-var">{{ variacion(s.total.actual, s.total.anioAnterior) }}</td>
+            </tr>
+          </ng-container>
+          <tr class="cm-total">
+            <td>Utilidad (pérdida)</td>
+            <td class="num">{{ cop(utilidad.actual) }}</td>
+            <td class="num">{{ cop(utilidad.mesAnterior) }}</td>
+            <td class="num cm-var">{{ variacion(utilidad.actual, utilidad.mesAnterior) }}</td>
+            <td class="num">{{ cop(utilidad.anioAnterior) }}</td>
+            <td class="num cm-var">{{ variacion(utilidad.actual, utilidad.anioAnterior) }}</td>
+          </tr>
+          <tr *ngIf="!secciones.length">
+            <td colspan="6" class="cm-vacio">Sin movimientos de resultados en estos meses.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

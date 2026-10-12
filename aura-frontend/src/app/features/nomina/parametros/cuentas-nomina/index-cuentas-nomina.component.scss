@@ -1,0 +1,88 @@
+// Estructura (.page, .card, .card-head, .search-wrap) global en styles.scss.
+
+.codigo {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.72rem;
+  background: #f1f5f9;
+  border-radius: 5px;
+  padding: 0.05rem 0.35rem;
+  margin-right: 0.3rem;
+}
+
+.nombre {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.85rem;
+}
+
+.meta {
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.cambiado {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.sin-dato {
+  color: #94a3b8;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem 1rem;
+  color: #94a3b8;
+
+  i {
+    font-size: 1.6rem;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+  }
+}
+
+.form-cambio {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+
+  .nota {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #64748b;
+  }
+
+  .campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+
+    label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    small {
+      font-size: 0.72rem;
+      color: #94a3b8;
+    }
+  }
+}
+
+:host ::ng-deep .form-cambio .p-select {
+  width: 100%;
+  min-width: 0;
+}
+
+.w-full {
+  width: 100%;
+}

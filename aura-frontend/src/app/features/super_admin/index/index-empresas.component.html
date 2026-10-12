@@ -51,6 +51,14 @@
             <span class="lista-titulo">{{ e.razonSocial }}</span>
             <span class="lista-sub" *ngIf="e.nombreComercial">{{ e.nombreComercial }}</span>
             <span class="lista-sub">Desde {{ e.createdAt | date: 'dd/MM/yyyy' }}</span>
+            <span class="lista-sub firma-sub" *ngIf="e.esFirmaContable">
+              <i class="pi pi-briefcase"></i> Firma contable · {{ e.totalClientesFirma ?? 0 }}
+              {{ e.totalClientesFirma === 1 ? 'cliente' : 'clientes' }} · {{ e.totalGestionadosFirma ?? 0 }}/{{ e.cupoGestionados ?? 10 }} gestionados
+            </span>
+            <span class="lista-sub firma-sub" *ngIf="!e.esFirmaContable && e.firmaContableNombre">
+              <i class="pi pi-briefcase"></i>
+              {{ e.firmaModalidad === 'GESTIONADO' ? 'Gestionada (la paga)' : 'Atendida por' }} {{ e.firmaContableNombre }}
+            </span>
           </div>
           <div class="lista-celda">
             <span class="lista-etiqueta">NIT</span>

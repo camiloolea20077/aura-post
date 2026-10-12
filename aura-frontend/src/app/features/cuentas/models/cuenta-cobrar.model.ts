@@ -1,4 +1,4 @@
-export type EstadoCuentaCobrar = 'activa' | 'parcial' | 'pagada' | 'vencida';
+export type EstadoCuentaCobrar = 'activa' | 'parcial' | 'pagada' | 'vencida' | 'castigada';
 export type MetodoPago = 'efectivo' | 'transferencia' | 'consignacion' | 'cheque';
 
 export interface AbonoCobrarModel {

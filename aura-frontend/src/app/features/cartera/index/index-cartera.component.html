@@ -92,7 +92,28 @@
     >
       <i class="pi pi-file-edit"></i> Acuerdos de pago
     </button>
+    <button
+      *ngIf="interesActivo"
+      class="ctab"
+      [class.active]="tab === 'intereses'"
+      (click)="setTab('intereses')"
+    >
+      <i class="pi pi-percentage"></i> Intereses de mora
+    </button>
+    <button
+      class="ctab"
+      [class.active]="tab === 'castigos'"
+      (click)="setTab('castigos')"
+    >
+      <i class="pi pi-times-circle"></i> Deterioro y castigo
+    </button>
   </div>
+
+  <!-- ══ TAB: INTERESES DE MORA (C5) ════════════════════════════════════ -->
+  <app-intereses-mora *ngIf="tab === 'intereses'" (politicaCambiada)="onPoliticaInteres($event)" />
+
+  <!-- ══ TAB: DETERIORO Y CASTIGO (C9) ══════════════════════════════════ -->
+  <app-castigo-cartera *ngIf="tab === 'castigos'" (politicaCambiada)="onPoliticaInteres($event)" />
 
   <!-- ══ TAB: TABLERO ═══════════════════════════════════════════════════ -->
   <app-tablero-cartera *ngIf="tab === 'dashboard'" />
@@ -121,7 +142,7 @@
       >
         <ng-template pTemplate="header">
           <tr>
-            <th>Cliente</th>
+            <th style="min-width: 190px">Cliente</th>
             <th>Documento</th>
             <th class="text-right">Saldo</th>
             <th class="text-center">Vencimiento</th>
@@ -237,7 +258,7 @@
       >
         <ng-template pTemplate="header">
           <tr>
-            <th>Cliente</th>
+            <th style="min-width: 190px">Cliente</th>
             <th class="text-right">Cupo</th>
             <th class="text-right">Saldo Cartera</th>
             <th class="text-right">Disponible</th>
@@ -398,7 +419,7 @@
         <ng-template pTemplate="header">
           <tr>
             <th>Recibo</th>
-            <th>Cliente</th>
+            <th style="min-width: 190px">Cliente</th>
             <th class="text-center">Fecha</th>
             <th class="text-center">Medio</th>
             <th class="text-right">Recibido</th>
@@ -498,7 +519,7 @@
         <ng-template pTemplate="header">
           <tr>
             <th>Acuerdo</th>
-            <th>Cliente</th>
+            <th style="min-width: 190px">Cliente</th>
             <th class="text-right">Acordado</th>
             <th class="text-center">Avance</th>
             <th class="text-center">Próxima cuota</th>
@@ -596,7 +617,7 @@
       >
         <ng-template pTemplate="header">
           <tr>
-            <th>Cliente</th>
+            <th style="min-width: 190px">Cliente</th>
             <th class="text-right edad-col corriente-col">Corriente (0-30)</th>
             <th class="text-right edad-col">31 – 60 días</th>
             <th class="text-right edad-col">61 – 90 días</th>
