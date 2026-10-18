@@ -644,6 +644,15 @@
 
             <!-- Acciones -->
             <td class="text-center td-acc">
+              <button *ngIf="l.productoId"
+                pButton
+                type="button"
+                icon="pi pi-history"
+                class="p-button-text p-button-sm p-button-secondary"
+                pTooltip="Historial de costos"
+                tooltipPosition="top"
+                (click)="verHistorialCosto(l.productoId)"
+              ></button>
               <button
                 pButton
                 type="button"
@@ -937,6 +946,10 @@
   [cantidad]="lineaSeriales ? unidadesSerial(lineaSeriales) : 0"
   [seriales]="lineaSeriales?.seriales || []"
   (confirmar)="onSerialesEscritos($event)"
+/>
+<app-historial-costo-producto
+  [(visible)]="historialCostoVisible"
+  [productoId]="historialCostoProductoId"
 />
 <app-serial-picker
   [(visible)]="pickerSerialesVisible"

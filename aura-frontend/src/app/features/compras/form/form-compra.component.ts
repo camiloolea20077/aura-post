@@ -14,6 +14,7 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { CalendarModule } from 'primeng/calendar';
+import { HistorialCostoProductoComponent } from '../../../shared/components/historial-costo-producto/historial-costo-producto.component';
 import { SerialEntradaComponent } from '../../../shared/components/serial-entrada/serial-entrada.component';
 import {
   SerialPickerComponent,
@@ -106,6 +107,7 @@ import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-a
     InputNumberModule,
     CalendarModule,
     SerialEntradaComponent,
+    HistorialCostoProductoComponent,
     SerialPickerComponent,
     DropdownModule,
     RadioButtonModule,
@@ -1762,6 +1764,16 @@ export class FormCompraComponent implements OnInit {
 
   // ─── Seriales de la línea ─────────────────────────────────────────
   serialesIdx: number | null = null;
+
+  // Historial de costos del producto de una línea (V226)
+  historialCostoVisible = false;
+  historialCostoProductoId: number | null = null;
+
+  /** Abre el historial de costos: a cuánto se ha comprado y cómo ha cambiado el promedio. */
+  verHistorialCosto(productoId: number): void {
+    this.historialCostoProductoId = productoId;
+    this.historialCostoVisible = true;
+  }
 
   get lineaSeriales(): CompraLineaUI | null {
     return this.serialesIdx !== null ? (this.lineas()[this.serialesIdx] ?? null) : null;

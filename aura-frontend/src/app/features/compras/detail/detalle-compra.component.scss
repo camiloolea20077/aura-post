@@ -383,3 +383,16 @@
   color: #b45309;
   font-weight: 600;
 }
+
+.det-historial {
+  border: none;
+  background: none;
+  padding: 0;
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  color: #2563eb;
+  cursor: pointer;
+
+  i { font-size: 0.75rem; }
+  &:hover { text-decoration: underline; }
+}
