@@ -72,6 +72,13 @@
             <span class="det-sku" *ngIf="d.productoSku">{{
               d.productoSku
             }}</span>
+            <button *ngIf="d.productoId"
+              type="button"
+              class="det-historial"
+              pTooltip="Historial de costos"
+              tooltipPosition="top"
+              (click)="verHistorialCosto(d.productoId)"
+            ><i class="pi pi-history"></i> Costos</button>
           </div>
           <div class="det-lotes" *ngIf="d.lotes?.length">
             <span class="det-lote" *ngFor="let x of d.lotes">
@@ -234,6 +241,11 @@
     </div>
   </ng-template>
 </p-dialog>
+
+<app-historial-costo-producto
+  [(visible)]="historialCostoVisible"
+  [productoId]="historialCostoProductoId"
+/>
 
 <p-toast />
 <p-confirmDialog />

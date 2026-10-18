@@ -412,14 +412,6 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         route: '/admin/usuarios',
       },
       {
-        // Firma contable: clientes, solicitudes y gestionados (PLAN_FIRMA_CONTABLE §9).
-        label: 'Clientes de la firma',
-        codigo: 'caja.usuarios',
-        icon: 'pi pi-briefcase',
-        route: '/firma/clientes',
-        soloFirma: true,
-      },
-      {
         label: 'Perfiles y Permisos',
         codigo: 'caja.perfiles',
         icon: 'pi pi-lock',
@@ -962,6 +954,15 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         codigo: 'terceros-y-sucursales.sucursales',
         icon: 'pi pi-building',
         route: '/admin/sucursales',
+      },
+      {
+        // Firma contable: clientes, solicitudes y gestionados (PLAN_FIRMA_CONTABLE §9).
+        // Son empresas cliente, no usuarios: van con los terceros, no en Caja.
+        label: 'Clientes de la firma',
+        codigo: 'terceros-y-sucursales.terceros',
+        icon: 'pi pi-briefcase',
+        route: '/firma/clientes',
+        soloFirma: true,
       },
     ],
   },

@@ -29,6 +29,7 @@ import { ProductoService } from '../../../../core/services/producto.service';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 
 import { PuedeDirective } from '../../../../shared/directives/puede.directive';
+import { HistorialCostoProductoComponent } from '../../../../shared/components/historial-costo-producto/historial-costo-producto.component';
 import { ImportarExcelComponent } from '../../../../shared/components/importar-excel/importar-excel.component';
 import { PLANTILLA_PRODUCTOS } from '../../../../shared/components/importar-excel/plantillas-catalogo';
 
@@ -36,6 +37,7 @@ import { PLANTILLA_PRODUCTOS } from '../../../../shared/components/importar-exce
   selector: 'app-index-productos',
   standalone: true,
   imports: [
+    HistorialCostoProductoComponent,
     ImportarExcelComponent,
     PuedeDirective,
     CommonModule,
@@ -62,6 +64,16 @@ export class IndexProductosComponent implements OnInit {
 
   onImportado(): void {
     this.reloadTable();
+  }
+
+  // Historial de costos del producto (V226)
+  historialCostoVisible = false;
+  historialCostoProductoId: number | null = null;
+
+  /** Abre el historial de costos del producto de la fila. */
+  verHistorialCosto(item: ProductoTableModel): void {
+    this.historialCostoProductoId = item.id;
+    this.historialCostoVisible = true;
   }
 
   // ─── Tabla ───────────────────────────────────────────────

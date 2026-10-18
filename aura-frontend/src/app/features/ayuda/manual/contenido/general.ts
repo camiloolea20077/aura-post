@@ -147,7 +147,7 @@ export const GENERAL: ManualModulo[] = [
           'En un cliente gestionado los administradores de la firma entran como administradores: eligen sus módulos, crean usuarios y ajustan perfiles. Los auxiliares entran con "Contador externo".',
         ],
         pasos: [
-          'Menú de usuario (arriba a la derecha) → "Clientes de la firma" → "Nuevo cliente gestionado".',
+          'Menú Terceros y Sucursales (o el menú de usuario, arriba a la derecha) → "Clientes de la firma" → "Nuevo cliente gestionado".',
           'Llene razón social, NIT y contacto, y marque los módulos: Contabilidad (siempre), Facturación de venta, Compras y gastos, Nómina. Punto de venta, caja e inventario no están disponibles.',
           'Si quiere que el cliente mire el estado de su empresa, elija "Sí, crear un usuario de consulta" y escriba sus datos: ve todo y no puede cambiar nada.',
           'Crear cliente. Se carga su plan de cuentas y ya aparece en "Cambiar empresa".',

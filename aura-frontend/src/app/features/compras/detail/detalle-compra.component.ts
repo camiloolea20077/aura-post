@@ -22,6 +22,7 @@ import {
   CompraModel,
   DevolucionCompraModel,
 } from '../../../core/models/compra.model';
+import { HistorialCostoProductoComponent } from '../../../shared/components/historial-costo-producto/historial-costo-producto.component';
 import { CompraService } from '../../../core/services/compra.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
 import { CompraPdfService } from '../../../core/services/compra-pdf.service';
@@ -38,6 +39,7 @@ import { CompraPdfService } from '../../../core/services/compra-pdf.service';
     TooltipModule,
     ToastModule,
     ConfirmDialogModule,
+    HistorialCostoProductoComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './detalle-compra.component.html',
@@ -56,6 +58,16 @@ export class DetalleCompraComponent implements OnChanges {
   public generandoPDF = false;
   /** Devoluciones (notas crédito) hechas sobre esta compra. */
   public devoluciones: DevolucionCompraModel[] = [];
+
+  // Historial de costos del producto de una línea (V226)
+  public historialCostoVisible = false;
+  public historialCostoProductoId: number | null = null;
+
+  /** Abre el historial de costos del producto. */
+  verHistorialCosto(productoId: number): void {
+    this.historialCostoProductoId = productoId;
+    this.historialCostoVisible = true;
+  }
 
   constructor(
     private readonly compraService: CompraService,
