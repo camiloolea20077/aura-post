@@ -7,6 +7,7 @@ import pdfFonts from 'pdfmake/build/vfs_fonts';
 import { DesprendibleModel, LineaDesprendible } from '../models/desprendible.model';
 import { DocumentoNominaModel } from '../models/nomina-documento.model';
 import { EmpresaConfig } from './empresa.service';
+import { PdfAdjunto, pdfABase64 } from '../../shared/utils/pdf-adjunto';
 import {
   PDF_COLOR,
   pdfBloqueDatos,
@@ -178,6 +179,24 @@ export class NominaPagoPdfService {
     empresa: EmpresaConfig,
     nombreArchivo: string,
   ): Promise<void> {
+    pdfMake.createPdf(await this.docComprobantes(desprendibles, doc, empresa)).download(`${nombreArchivo}.pdf`);
+  }
+
+  /** Comprobante de un solo empleado en base64, para enviárselo por correo. */
+  async comprobanteAdjunto(
+    d: DesprendibleModel,
+    doc: DocumentoNominaModel,
+    empresa: EmpresaConfig,
+    nombreArchivo: string,
+  ): Promise<PdfAdjunto> {
+    return { nombre: `${nombreArchivo}.pdf`, base64: await pdfABase64(await this.docComprobantes([d], doc, empresa)) };
+  }
+
+  private async docComprobantes(
+    desprendibles: DesprendibleModel[],
+    doc: DocumentoNominaModel,
+    empresa: EmpresaConfig,
+  ): Promise<any> {
     const logo = await this.logo(empresa.logoUrl);
     const content: any[] = [];
     desprendibles.forEach((d, i) => {
@@ -185,9 +204,7 @@ export class NominaPagoPdfService {
       if (i > 0) pagina[0] = { ...pagina[0], pageBreak: 'before' };
       content.push(...pagina);
     });
-    pdfMake
-      .createPdf({ pageSize: 'LETTER', pageMargins: [36, 36, 36, 46], content, footer: this.pie() } as any)
-      .download(`${nombreArchivo}.pdf`);
+    return { pageSize: 'LETTER', pageMargins: [36, 36, 36, 46], content, footer: this.pie() };
   }
 
   /** Planilla para el banco: a quién consignar, en qué cuenta y cuánto. */

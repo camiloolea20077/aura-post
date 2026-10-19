@@ -89,6 +89,12 @@
   }
 }
 
+.cliente__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .vacio {
   display: flex;
   flex-direction: column;
@@ -177,11 +183,12 @@
     padding: 1rem;
   }
 
-  .cliente__btn,
+  .cliente__acciones,
   .solicitud__acciones {
     width: 100%;
   }
 
+  .cliente__acciones button,
   .solicitud__acciones button {
     flex: 1 1 0;
   }

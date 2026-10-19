@@ -45,11 +45,18 @@ export class FacturaVentaService {
   }
 
   /** Emite; a crédito puede cruzar anticipos del cliente. */
+  /** @param numero cuenta de cobro: el número elegido (null = el siguiente). */
   emitir(
     id: number,
     anticipos: { anticipoId: number; monto: number }[] = [],
+    numero: number | null = null,
   ): Observable<ResponseModel<FacturaVentaDetalle>> {
-    return this.http.post<ResponseModel<FacturaVentaDetalle>>(`${this.apiUrl}/${id}/emitir`, { anticipos });
+    return this.http.post<ResponseModel<FacturaVentaDetalle>>(`${this.apiUrl}/${id}/emitir`, { anticipos, numero });
+  }
+
+  /** Número que se le propone a la próxima cuenta de cobro (el último + 1). */
+  siguienteCuentaCobro(): Observable<ResponseModel<number>> {
+    return this.http.get<ResponseModel<number>>(`${this.apiUrl}/cuenta-cobro/siguiente`);
   }
 
   /** Borrador con lo pendiente de una cotización. */

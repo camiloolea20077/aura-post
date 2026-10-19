@@ -139,27 +139,54 @@
             [severity]="c.modalidad === 'GESTIONADO' ? 'info' : 'secondary'"
             styleClass="tag-mini"
           />
-          <button
-            *ngIf="c.modalidad === 'GESTIONADO'"
-            pButton
-            type="button"
-            icon="pi pi-th-large"
-            label="Módulos"
-            class="p-button-sm p-button-outlined cliente__btn"
-            (click)="abrirModulos(c)"
-          ></button>
+          <div class="cliente__acciones" *ngIf="c.modalidad === 'GESTIONADO'">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-id-card"
+              label="Datos"
+              class="p-button-sm p-button-outlined"
+              (click)="abrirIdentidad(c)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-send"
+              label="Electrónica"
+              class="p-button-sm p-button-outlined"
+              (click)="abrirElectronica(c)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-th-large"
+              label="Módulos"
+              class="p-button-sm p-button-outlined"
+              (click)="abrirModulos(c)"
+            ></button>
+          </div>
         </div>
 
         <p class="nota">
           Los administradores de la firma entran a todos los clientes; a los
           auxiliares se les asignan en Caja → Usuarios → "Clientes que atiende".
           En un cliente gestionado, el administrador de la firma entra como
-          administrador.
+          administrador: desde "Mi perfil" del cliente cambia el logo, el
+          contacto, la resolución y los rangos de numeración. Las credenciales
+          de Factus las configura Aura cuando usted pide la activación en
+          "Electrónica".
         </p>
       </div>
     </ng-container>
   </div>
 </div>
+
+<app-identidad-gestionado
+  [(visible)]="dialogoIdentidad"
+  [cliente]="clienteSeleccionado"
+  (guardado)="cargar()"
+/>
+<app-electronica-gestionado [(visible)]="dialogoElectronica" [cliente]="clienteSeleccionado" />
 
 <!-- ── Módulos de un cliente gestionado ─────────────────────── -->
 <p-dialog

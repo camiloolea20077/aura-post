@@ -1,0 +1,77 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-send"></i></span>
+        <div>
+          <h1 class="title">Activación electrónica</h1>
+          <p class="subtitle">Las firmas contables piden la factura electrónica, la nómina electrónica o el documento soporte de sus clientes</p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button pButton type="button" icon="pi pi-refresh" label="Actualizar" class="p-button-sm p-button-outlined" [loading]="cargando" (click)="cargar()"></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="seccion">
+      <p class="nota nota--arriba">
+        Cargue las credenciales de Factus en la empresa y guárdela con la facturación electrónica activa: la solicitud
+        queda atendida sola y la firma recibe el aviso. La resolución y los rangos los digita la firma en "Mi perfil" del
+        cliente.
+      </p>
+
+      <div class="vacio" *ngIf="!cargando && !solicitudes.length">
+        <i class="pi pi-inbox"></i>
+        <p>No hay solicitudes pendientes.</p>
+      </div>
+
+      <div class="solicitud" *ngFor="let s of solicitudes">
+        <div class="solicitud__texto">
+          <span class="solicitud__nombre">{{ s.clienteNombre }}</span>
+          <span class="solicitud__meta">NIT {{ s.clienteNit }} · firma {{ s.firmaNombre }}</span>
+          <span class="solicitud__meta">
+            Pedida el {{ s.solicitadoAt | fechaEs }}<span *ngIf="s.solicitadoPorNombre"> por {{ s.solicitadoPorNombre }}</span>
+          </span>
+          <span class="solicitud__servicios">{{ serviciosTexto(s.servicios) }}</span>
+          <span class="solicitud__obs" *ngIf="s.observacion">"{{ s.observacion }}"</span>
+        </div>
+        <p-tag
+          [value]="s.facturaElectronicaActiva ? 'FE ya activa' : 'Sin credenciales'"
+          [severity]="s.facturaElectronicaActiva ? 'success' : 'warn'"
+          styleClass="tag-mini"
+        />
+        <div class="solicitud__acciones" *ngIf="rechazando !== s.id">
+          <button pButton type="button" icon="pi pi-times" label="Rechazar" class="p-button-sm p-button-text p-button-danger" (click)="empezarRechazo(s)"></button>
+          <button
+            *ngIf="s.facturaElectronicaActiva"
+            pButton
+            type="button"
+            icon="pi pi-check"
+            label="Marcar atendida"
+            class="p-button-sm p-button-outlined"
+            [loading]="respondiendo === s.id"
+            (click)="atender(s)"
+          ></button>
+          <button pButton type="button" icon="pi pi-key" label="Configurar credenciales" class="p-button-sm btn-aura" (click)="configurar(s)"></button>
+        </div>
+        <div class="solicitud__rechazo" *ngIf="rechazando === s.id">
+          <input pInputText [(ngModel)]="motivo" maxlength="300" placeholder="Motivo (la firma lo verá en su campana)" />
+          <div class="solicitud__acciones">
+            <button pButton type="button" label="Cancelar" class="p-button-sm p-button-text" (click)="rechazando = null"></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-times"
+              label="Rechazar"
+              class="p-button-sm p-button-danger"
+              [loading]="respondiendo === s.id"
+              (click)="confirmarRechazo(s)"
+            ></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

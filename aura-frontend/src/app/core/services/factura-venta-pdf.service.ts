@@ -6,6 +6,7 @@ import pdfFonts from 'pdfmake/build/vfs_fonts';
 
 import { EmpresaConfig } from './empresa.service';
 import { FacturaVentaDetalle } from '../models/factura-venta.model';
+import { PdfAdjunto, pdfABase64 } from '../../shared/utils/pdf-adjunto';
 import {
   PDF_COLOR,
   pdfBloqueDatos,
@@ -39,6 +40,8 @@ export interface ClienteFacturaPdf {
  * - Con CUFE: "Factura electrónica de venta", QR arriba junto al título.
  * - Emitida sin enviar a la DIAN: "Factura de venta", sin QR ni CUFE.
  * - Borrador: "Borrador de factura" con marca de agua, sin número.
+ * - Cuenta de cobro (persona natural no responsable de IVA): sin IVA ni DIAN, con
+ *   la condición de IVA del emisor y la declaración del art. 383 ET.
  */
 @Injectable({ providedIn: 'root' })
 export class FacturaVentaPdfService {
@@ -154,13 +157,32 @@ export class FacturaVentaPdfService {
     return m[t.toUpperCase()] ?? t;
   }
 
+  /** Descarga el PDF de la factura o cuenta de cobro. */
   async generar(f: FacturaVentaDetalle, empresa: EmpresaConfig, cliente: ClienteFacturaPdf): Promise<void> {
+    const { doc, nombre } = await this.documento(f, empresa, cliente);
+    pdfMake.createPdf(doc).download(nombre);
+  }
+
+  /** El mismo PDF en base64, para adjuntarlo al correo. */
+  async adjunto(f: FacturaVentaDetalle, empresa: EmpresaConfig, cliente: ClienteFacturaPdf): Promise<PdfAdjunto> {
+    const { doc, nombre } = await this.documento(f, empresa, cliente);
+    return { nombre, base64: await pdfABase64(doc) };
+  }
+
+  private async documento(
+    f: FacturaVentaDetalle,
+    empresa: EmpresaConfig,
+    cliente: ClienteFacturaPdf,
+  ): Promise<{ doc: any; nombre: string }> {
     const logo = await this.logoDataUrl(empresa.logoUrl);
     const borrador = f.estado === 'BORRADOR';
-    const electronica = !!f.cufe;
+    const cuentaCobro = f.tipo === 'CUENTA_COBRO';
+    const electronica = !!f.cufe && !cuentaCobro;
     const numero = borrador ? `Borrador ${f.id}` : f.factusNumero || f.numero || `${f.id}`;
     const emision = borrador ? new Date().toISOString() : (f.fechaEmision ?? f.emitidaAt ?? f.createdAt);
-    const titulo = borrador ? 'BORRADOR DE FACTURA' : electronica ? 'FACTURA ELECTRÓNICA DE VENTA' : 'FACTURA DE VENTA';
+    const titulo = cuentaCobro
+      ? borrador ? 'BORRADOR DE CUENTA DE COBRO' : 'CUENTA DE COBRO'
+      : borrador ? 'BORRADOR DE FACTURA' : electronica ? 'FACTURA ELECTRÓNICA DE VENTA' : 'FACTURA DE VENTA';
     const empresaNombre = empresa.razonSocial || empresa.nombreComercial || 'Empresa';
     const qr = electronica ? await this.qr(f) : null;
 
@@ -180,10 +202,12 @@ export class FacturaVentaPdfService {
     };
     const empresaCol = {
       width: '*',
-      ...pdfEmpresa(logo, empresaNombre, `NIT: ${this.nit(empresa.nit, empresa.dv)}`, [
+      ...pdfEmpresa(logo, empresaNombre, `${cuentaCobro ? 'Identificación' : 'NIT'}: ${this.nit(empresa.nit, empresa.dv)}`, [
         [empresa.direccion, empresa.municipio].filter(Boolean).join(' · '),
         [empresa.telefono ? `Tel: ${empresa.telefono}` : '', empresa.correo].filter(Boolean).join(' · '),
-      ]),
+        // La cuenta de cobro dice por qué no lleva IVA ni es factura electrónica.
+        cuentaCobro ? 'Condición IVA: No responsable de IVA · Responsabilidad fiscal: No aplica - Otros' : '',
+      ].filter(Boolean)),
     };
     const encabezado: any = {
       columns: qr
@@ -297,11 +321,16 @@ export class FacturaVentaPdfService {
       totales.push(['Costo directo', this.cop(costoDirecto)]);
     }
     totales.push(['Valor Bruto', this.cop(bruto)]);
-    totales.push(['Base Imponible', this.cop(baseImponible)]);
-    [...ivas.entries()].sort((a, b) => b[0] - a[0]).forEach(([t, v]) => totales.push([`IVA ${this.num(t, 0)}%`, this.cop(v)]));
-    if (!ivas.size) totales.push(['IVA', this.cop(0)]);
-    totales.push(['Descuento global(-)', this.cop(f.descuentoTotal)]);
-    totales.push(['Recargo global(+)', this.cop(0)]);
+    if (cuentaCobro) {
+      totales.push(['IVA', 'No aplica']);
+      totales.push(['Descuento(-)', this.cop(f.descuentoTotal)]);
+    } else {
+      totales.push(['Base Imponible', this.cop(baseImponible)]);
+      [...ivas.entries()].sort((a, b) => b[0] - a[0]).forEach(([t, v]) => totales.push([`IVA ${this.num(t, 0)}%`, this.cop(v)]));
+      if (!ivas.size) totales.push(['IVA', this.cop(0)]);
+      totales.push(['Descuento global(-)', this.cop(f.descuentoTotal)]);
+      totales.push(['Recargo global(+)', this.cop(0)]);
+    }
 
     // ── Pie izquierdo: observaciones, tipo de operación y pago ─────
     const medio =
@@ -341,15 +370,19 @@ export class FacturaVentaPdfService {
         margin: [0, 4, 0, 0],
       });
     }
-    izquierdaPie.push({
-      ...pdfBloqueDatos([['Tipo de operación', f.aiu ? 'AIU' : 'Estándar']], 92),
-      margin: [0, 6, 0, 0],
-    });
+    if (cuentaCobro) {
+      izquierdaPie.push(...this.declaracionCuentaCobro(f.contratoDosTrabajadores));
+    } else {
+      izquierdaPie.push({
+        ...pdfBloqueDatos([['Tipo de operación', f.aiu ? 'AIU' : 'Estándar']], 92),
+        margin: [0, 6, 0, 0],
+      });
+    }
     izquierdaPie.push(detallePago);
 
     // ── Resolución y proveedor, en letra pequeña ───────────────────
     const legal: any[] = [];
-    if (empresa.resolucionNumero && !borrador) {
+    if (empresa.resolucionNumero && !borrador && !cuentaCobro) {
       const pref = empresa.resolucionPrefijo ?? '';
       const partes = [
         `Resolución DIAN No. ${empresa.resolucionNumero}`,
@@ -399,7 +432,9 @@ export class FacturaVentaPdfService {
           {
             text: borrador
               ? 'Borrador: no es una factura y no tiene validez.'
-              : electronica
+              : cuentaCobro
+                ? 'Cuenta de cobro de persona natural no responsable de IVA, no obligada a expedir factura electrónica.'
+                : electronica
                 ? 'Representación gráfica de la factura electrónica de venta. Consulte el documento electrónico con el código QR.'
                 : 'Factura de venta. Aún no ha sido enviada a la DIAN como factura electrónica.',
             fontSize: 6.5,
@@ -409,9 +444,39 @@ export class FacturaVentaPdfService {
         ],
         margin: [28, 10, 28, 0],
       }),
-      info: { title: `Factura ${numero}` },
+      info: { title: `${cuentaCobro ? 'Cuenta de cobro' : 'Factura'} ${numero}` },
     };
 
-    pdfMake.createPdf(doc).download(`${borrador ? 'Borrador' : 'Factura'}-${numero}.pdf`);
+    const prefijo = borrador ? 'Borrador' : cuentaCobro ? 'Cuenta-de-cobro' : 'Factura';
+    return { doc, nombre: `${prefijo}-${numero}.pdf`.replace(/\s+/g, '-') };
+  }
+
+  /**
+   * Declaraciones de la cuenta de cobro: no responsable de IVA y, si la hizo, la del
+   * parágrafo 2 del art. 383 ET (con dos o más trabajadores el cliente le retiene
+   * por tabla de honorarios; si no, por la tabla del art. 383).
+   */
+  private declaracionCuentaCobro(dosTrabajadores: boolean | null): any[] {
+    const texto: string[] = ['Declaro que no soy responsable del impuesto sobre las ventas (IVA).'];
+    if (dosTrabajadores === true) {
+      texto.push(
+        'Para efectos del parágrafo 2 del artículo 383 del Estatuto Tributario, declaro que contraté o vinculé ' +
+          'dos (2) o más trabajadores asociados a mi actividad por un término igual o superior a noventa (90) días.',
+      );
+    } else if (dosTrabajadores === false) {
+      texto.push(
+        'Para efectos del parágrafo 2 del artículo 383 del Estatuto Tributario, declaro que no he contratado ni ' +
+          'vinculado dos (2) o más trabajadores asociados a mi actividad.',
+      );
+    }
+    return [
+      {
+        ...pdfRecuadro(
+          'Declaración',
+          texto.map((t) => ({ text: t, fontSize: 7.2, color: PDF_COLOR.texto, margin: [0, 0, 0, 2] })),
+        ),
+        margin: [0, 6, 0, 0],
+      },
+    ];
   }
 }

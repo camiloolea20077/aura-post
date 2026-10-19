@@ -13,8 +13,10 @@ import {
   ActualizarConfiguracionDto,
   EmpresaPlataformaModel,
   FirmaContableOpcion,
+  EnvioAcceso,
 } from '../models/platform.model';
 import { ResponseModel } from '../../shared/utils/responde.models';
+import { SolicitudActivacion } from './firma-contable.service';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -41,6 +43,11 @@ export class PlatformService {
 
   actualizar(id: number, dto: UpdateEmpresaDto): Observable<any> {
     return this.http.put<any>(`${this.base}/empresas/${id}`, dto);
+  }
+
+  /** Nuevo enlace para que el administrador cree su contraseña, enviado a su correo. */
+  reenviarAcceso(id: number): Observable<ResponseModel<EnvioAcceso>> {
+    return this.http.post<ResponseModel<EnvioAcceso>>(`${this.base}/empresas/${id}/reenviar-acceso`, {});
   }
 
   suspender(id: number): Observable<any> {
@@ -100,5 +107,26 @@ export class PlatformService {
 
   errorLogsPorGrupo(grupoHash: string, page: number, rows: number): Observable<any> {
     return this.http.post<any>(`${this.base}/error-logs/page`, { grupoHash, page, rows });
+  }
+
+  // ── Activación electrónica de gestionados (las firmas la piden) ──
+
+  /** Solicitudes de las firmas que esperan las credenciales de Factus. */
+  solicitudesElectronica(): Observable<ResponseModel<SolicitudActivacion[]>> {
+    return this.http.get<ResponseModel<SolicitudActivacion[]>>(`${this.base}/solicitudes-electronica`);
+  }
+
+  /** Cuántas hay pendientes (campana del panel). */
+  pendientesElectronica(): Observable<ResponseModel<number>> {
+    return this.http.get<ResponseModel<number>>(`${this.base}/solicitudes-electronica/pendientes`);
+  }
+
+  /** Marca atendida a mano; la empresa ya debe tener la FE activa. */
+  atenderSolicitudElectronica(id: number): Observable<ResponseModel<boolean>> {
+    return this.http.post<ResponseModel<boolean>>(`${this.base}/solicitudes-electronica/${id}/atender`, {});
+  }
+
+  rechazarSolicitudElectronica(id: number, motivo: string): Observable<ResponseModel<boolean>> {
+    return this.http.post<ResponseModel<boolean>>(`${this.base}/solicitudes-electronica/${id}/rechazar`, { motivo });
   }
 }

@@ -580,8 +580,47 @@ export const COMPRAS_VENTAS: ManualModulo[] = [
           'Hoy se factura en la unidad base del producto; los productos que solo se venden por presentación se facturan desde el POS.',
         ],
       },
+      {
+        titulo: 'Cuenta de cobro',
+        texto: [
+          'Para cobrar sin factura (por ejemplo, la persona natural no responsable de IVA, que no está obligada a facturar electrónicamente). Cualquier empresa la puede hacer.',
+        ],
+        pasos: [
+          '"Nueva factura" → en Datos de la factura, "Documento": elija "Cuenta de cobro". Si la empresa es persona natural y no factura electrónicamente, ya viene elegida.',
+          'Elija en "Declaración art. 383 E.T." si contrató o no dos o más trabajadores: le dice al cliente qué retención en la fuente aplicar.',
+          'Llene cliente, pago y líneas como en una factura. No lleva IVA (queda en 0 % y "No aplica").',
+          '"Guardar preliminar": queda como preliminar, sin número ni cartera; se puede corregir o eliminar.',
+          'Cuando esté bien, "Confirmar cuenta de cobro": toma su número (CC1, CC2…), entra a cartera y a contabilidad, y se abre "Enviar por correo" para mandársela al cliente.',
+        ],
+        notas: [
+          'La cuenta de cobro no se envía a la DIAN ni lleva AIU.',
+          'El PDF dice "Cuenta de cobro", la condición "No responsable de IVA" y la declaración elegida.',
+        ],
+      },
+      {
+        titulo: 'Enviar por correo',
+        pasos: [
+          'En la factura o cuenta de cobro emitida: botón "Enviar por correo".',
+          'Trae el correo del cliente, un asunto y un mensaje; cámbielos si quiere. Para agregar un correo escríbalo y presione Enter.',
+          '"Enviar": el PDF va adjunto (el mismo que se descarga). Abajo se ve a quién se le envió antes y si falló.',
+        ],
+        notas: [
+          'El correo sale con el nombre de su empresa; si el cliente responde, la respuesta le llega al correo de la empresa (Mi perfil).',
+          'La factura electrónica también la envía Factus al correo del cliente cuando la DIAN la valida.',
+        ],
+      },
     ],
     errores: [
+      {
+        mensaje: 'Una cuenta de cobro no se envía a la DIAN',
+        causa: 'La persona natural no responsable de IVA no factura electrónicamente.',
+        solucion: 'Entréguela en PDF o envíela con "Enviar por correo".',
+      },
+      {
+        mensaje: 'El envío de correos no está configurado',
+        causa: 'El servidor no tiene la llave de correo.',
+        solucion: 'Comuníquese con Aura.',
+      },
       {
         mensaje: 'Elija la cuenta bancaria donde entró el pago',
         causa: 'Factura de contado por transferencia, consignación o tarjeta sin cuenta bancaria.',
@@ -625,6 +664,7 @@ export const COMPRAS_VENTAS: ManualModulo[] = [
           'Si se anula una venta que salió de una cotización, lo vendido vuelve a quedar pendiente en ella.',
           'En el detalle de la cotización y de la venta, "Documentos relacionados" muestra de qué cotización salió cada venta y a qué ventas fue cada cotización.',
           'Una cotización vencida se puede "Reactivar (mantiene los precios)" una sola vez. Una Parcial también vence: lo que falta se cotizó a un precio que ya no rige.',
+          '"Enviar por correo" (en el detalle) le manda el PDF al cliente con el asunto y el mensaje que usted escriba.',
         ],
       },
     ],

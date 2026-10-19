@@ -27,6 +27,8 @@ import { EmpresaService } from '../../../core/services/empresa.service';
 import { CotizacionPdfService } from '../../../core/services/cotizacion-pdf.service';
 import { ModalTirillaCotizacionComponent } from '../../pos/components/modal-tirilla-cotizacion/modal-tirilla-cotizacion.component';
 import { DocumentosRelacionadosComponent } from '../../../shared/components/documentos-relacionados/documentos-relacionados.component';
+import { EnviarCorreoComponent } from '../../../shared/components/enviar-correo/enviar-correo.component';
+import { PdfAdjunto } from '../../../shared/utils/pdf-adjunto';
 
 @Component({
   selector: 'app-detalle-cotizacion',
@@ -42,6 +44,7 @@ import { DocumentosRelacionadosComponent } from '../../../shared/components/docu
     SkeletonModule,
     ModalTirillaCotizacionComponent,
     DocumentosRelacionadosComponent,
+    EnviarCorreoComponent,
   ],
   providers: [MessageService, ConfirmationService],
   templateUrl: './detalle-cotizacion.component.html',
@@ -68,6 +71,9 @@ export class DetalleCotizacionComponent implements OnChanges {
   public municipio = '';
   public logoUrl = '';
   public isDescargandoPdf = false;
+  /** Envío de la cotización por correo al cliente. */
+  public dialogoCorreo = false;
+  readonly adjuntoCorreo = (): Promise<PdfAdjunto> => this.generarAdjunto();
 
   constructor(
     private readonly cotizacionService: CotizacionService,
@@ -179,6 +185,13 @@ export class DetalleCotizacionComponent implements OnChanges {
     } finally {
       this.isDescargandoPdf = false;
     }
+  }
+
+  /** El PDF de la cotización para adjuntarlo al correo (el mismo que se descarga). */
+  private async generarAdjunto(): Promise<PdfAdjunto> {
+    if (!this.cotizacion) throw new Error('Sin cotización');
+    const res = await lastValueFrom(this.empresaService.getConfig());
+    return this.cotizacionPdf.adjunto(this.cotizacion, res?.data ?? {});
   }
 
   closePanel(): void {

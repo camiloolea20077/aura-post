@@ -1,0 +1,116 @@
+// Una sola card con la lista de solicitudes; responsivo (teléfono, tablet, PC).
+.page {
+  container-type: inline-size;
+}
+
+.seccion {
+  padding: 1.25rem 1.5rem;
+}
+
+.nota {
+  margin: 0.75rem 0 0;
+  font-size: 0.76rem;
+  color: var(--aura-text-muted);
+
+  &--arriba {
+    margin: 0 0 1rem;
+  }
+}
+
+.vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.5rem 0;
+  color: var(--aura-text-muted);
+  text-align: center;
+
+  i {
+    font-size: 1.6rem;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+.solicitud {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--aura-blue);
+  border-radius: 10px;
+  background: rgba(37, 99, 235, 0.04);
+  margin-bottom: 0.6rem;
+  min-width: 0;
+}
+
+.solicitud__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.solicitud__nombre {
+  font-weight: 600;
+  color: var(--aura-text);
+  word-break: break-word;
+}
+
+.solicitud__meta {
+  font-size: 0.78rem;
+  color: var(--aura-text-muted);
+}
+
+.solicitud__servicios {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--aura-blue);
+}
+
+.solicitud__obs {
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--aura-text);
+  word-break: break-word;
+}
+
+.solicitud__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.solicitud__rechazo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1 1 100%;
+
+  input {
+    width: 100%;
+  }
+
+  .solicitud__acciones {
+    justify-content: flex-end;
+  }
+}
+
+@container (max-width: 600px) {
+  .seccion {
+    padding: 1rem;
+  }
+
+  .solicitud__acciones {
+    width: 100%;
+
+    button {
+      flex: 1 1 0;
+    }
+  }
+}

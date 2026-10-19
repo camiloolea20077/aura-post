@@ -108,8 +108,10 @@ export class IndexFacturasVentaComponent {
     );
   }
 
-  etiqueta(e: EstadoFacturaVenta): string {
-    return e === 'BORRADOR' ? 'Borrador' : e === 'EMITIDA' ? 'Emitida' : 'Anulada';
+  /** La cuenta de cobro va como Preliminar → Confirmada (no se "emite"). */
+  etiqueta(e: EstadoFacturaVenta, tipo?: string): string {
+    const cc = tipo === 'CUENTA_COBRO';
+    return e === 'BORRADOR' ? (cc ? 'Preliminar' : 'Borrador') : e === 'EMITIDA' ? (cc ? 'Confirmada' : 'Emitida') : 'Anulada';
   }
 
   severidad(e: EstadoFacturaVenta): Severidad {

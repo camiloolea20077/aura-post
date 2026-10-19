@@ -1,0 +1,94 @@
+<p-dialog
+  [(visible)]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [header]="'Datos de ' + (cliente?.clienteNombre ?? '')"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '620px', maxWidth: '96vw' }"
+  styleClass="aura-dialog"
+  (onShow)="alAbrir()"
+>
+  <div class="cargando" *ngIf="cargando">
+    <i class="pi pi-spin pi-spinner"></i> Cargando…
+  </div>
+
+  <div class="cuerpo" *ngIf="datos && !cargando">
+    <p class="nota nota--arriba">
+      El NIT no se puede cambiar. El logo, el contacto, la resolución y los
+      rangos de numeración se editan en "Mi perfil" dentro del cliente.
+    </p>
+
+    <div class="grid">
+      <div class="campo">
+        <label>Tipo de persona *</label>
+        <p-dropdown
+          [ngModel]="datos.tipoPersona"
+          (ngModelChange)="cambiarTipo($event)"
+          [options]="tipoPersonaOpts"
+          optionLabel="label"
+          optionValue="value"
+          appendTo="body"
+          styleClass="w-full"
+        />
+      </div>
+      <div class="campo">
+        <label>Tipo de documento *</label>
+        <p-dropdown
+          [(ngModel)]="datos.tipoDocumento"
+          [options]="tipoDocOpts"
+          optionLabel="label"
+          optionValue="value"
+          appendTo="body"
+          styleClass="w-full"
+        />
+      </div>
+
+      <div class="campo campo--ancho" *ngIf="!esNatural">
+        <label>Razón social *</label>
+        <input pInputText [(ngModel)]="datos.razonSocial" placeholder="Como aparece en el RUT" />
+      </div>
+      <ng-container *ngIf="esNatural">
+        <div class="campo">
+          <label>Nombres *</label>
+          <input pInputText [(ngModel)]="datos.nombres" />
+        </div>
+        <div class="campo">
+          <label>Apellidos *</label>
+          <input pInputText [(ngModel)]="datos.apellidos" />
+        </div>
+      </ng-container>
+
+      <div class="campo">
+        <label>Nombre comercial</label>
+        <input pInputText [(ngModel)]="datos.nombreComercial" />
+      </div>
+      <div class="campo">
+        <label>{{ conDv ? 'NIT' : 'Número de documento' }}</label>
+        <div class="nit">
+          <input pInputText [value]="datos.nit ?? ''" disabled />
+          <ng-container *ngIf="conDv">
+            <span>-</span>
+            <input pInputText [(ngModel)]="datos.dv" class="dv" maxlength="2" inputmode="numeric" placeholder="DV" />
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
+    <small class="error" *ngIf="intento && faltante">{{ faltante }}</small>
+  </div>
+
+  <div class="dialogo-pie">
+    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="cerrar()"></button>
+    <button
+      pButton
+      type="button"
+      icon="pi pi-check"
+      label="Guardar"
+      class="btn-aura"
+      [disabled]="!datos"
+      [loading]="guardando"
+      (click)="guardar()"
+    ></button>
+  </div>
+</p-dialog>

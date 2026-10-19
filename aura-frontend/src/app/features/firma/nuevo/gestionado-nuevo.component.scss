@@ -102,6 +102,11 @@
   color: var(--aura-danger);
 }
 
+.ayuda-campo {
+  font-size: 0.72rem;
+  color: var(--aura-text-muted);
+}
+
 .paquetes {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

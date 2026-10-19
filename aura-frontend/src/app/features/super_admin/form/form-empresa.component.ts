@@ -73,6 +73,8 @@ export class FormEmpresaComponent implements OnInit {
 
   empresaId: number | null = null;
   credenciales: CreateEmpresaResponseDto | null = null;
+  /** "Reenviar acceso" en curso. */
+  reenviando = false;
 
   municipioOpts: { label: string; value: number }[] = [];
   municipioLoading = false;
@@ -561,6 +563,23 @@ export class FormEmpresaComponent implements OnInit {
 
   volver(): void {
     this.router.navigate(['/platform/empresas']);
+  }
+
+  /** Le envía al administrador un enlace nuevo para crear su contraseña. */
+  async reenviarAcceso(): Promise<void> {
+    if (!this.empresaId) return;
+    this.reenviando = true;
+    this.cdr.markForCheck();
+    try {
+      const r = (await lastValueFrom(this.service.reenviarAcceso(this.empresaId)))?.data;
+      if (r?.enviado) this.alert.showSuccess('Acceso enviado', `Se le envió el enlace a ${r.email}.`);
+      else this.alert.showError('No se pudo enviar', r?.error ?? 'Intente de nuevo.');
+    } catch (err: any) {
+      this.alert.showError('No se pudo enviar', err?.error?.message ?? 'Intente de nuevo.');
+    } finally {
+      this.reenviando = false;
+      this.cdr.markForCheck();
+    }
   }
 
   copiar(texto: string): void {

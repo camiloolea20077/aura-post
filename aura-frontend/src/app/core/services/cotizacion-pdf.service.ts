@@ -6,6 +6,7 @@ import pdfFonts from 'pdfmake/build/vfs_fonts';
 
 import { EmpresaConfig } from './empresa.service';
 import { CotizacionModel } from '../models/cotizacion.model';
+import { PdfAdjunto, pdfABase64 } from '../../shared/utils/pdf-adjunto';
 
 const AZUL = '#2563eb';
 const GRIS = '#64748b';
@@ -78,7 +79,17 @@ export class CotizacionPdfService {
     };
   }
 
+  /** Descarga el PDF de la cotización. */
   async cotizacion(c: CotizacionModel, empresa: EmpresaConfig): Promise<void> {
+    pdfMake.createPdf(await this.documento(c, empresa)).download(`Cotizacion-${c.numero}.pdf`);
+  }
+
+  /** El mismo PDF en base64, para adjuntarlo al correo. */
+  async adjunto(c: CotizacionModel, empresa: EmpresaConfig): Promise<PdfAdjunto> {
+    return { nombre: `Cotizacion-${c.numero}.pdf`, base64: await pdfABase64(await this.documento(c, empresa)) };
+  }
+
+  private async documento(c: CotizacionModel, empresa: EmpresaConfig): Promise<any> {
     const logo = await this.logoDataUrl(empresa.logoUrl);
 
     // Tabla de ítems
@@ -221,6 +232,6 @@ export class CotizacionPdfService {
       }),
     };
 
-    pdfMake.createPdf(doc).download(`Cotizacion-${c.numero}.pdf`);
+    return doc;
   }
 }

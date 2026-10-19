@@ -148,13 +148,31 @@ export const GENERAL: ManualModulo[] = [
         ],
         pasos: [
           'Menú Terceros y Sucursales (o el menú de usuario, arriba a la derecha) → "Clientes de la firma" → "Nuevo cliente gestionado".',
-          'Llene razón social, NIT y contacto, y marque los módulos: Contabilidad (siempre), Facturación de venta, Compras y gastos, Nómina. Punto de venta, caja e inventario no están disponibles.',
+          'Elija si es persona jurídica o persona natural. Jurídica: razón social y NIT. Natural: nombres, apellidos y su NIT (cédula con RUT) o su cédula. Si deja el DV vacío, se calcula solo.',
+          'Llene el contacto y marque los módulos: Contabilidad (siempre), Facturación de venta, Compras y gastos, Nómina. Punto de venta, caja e inventario no están disponibles.',
           'Si quiere que el cliente mire el estado de su empresa, elija "Sí, crear un usuario de consulta" y escriba sus datos: ve todo y no puede cambiar nada.',
           'Crear cliente. Se carga su plan de cuentas y ya aparece en "Cambiar empresa".',
           'Para cambiar sus módulos después: "Clientes de la firma" → botón "Módulos" del cliente.',
+          'Para pasarlo de jurídica a natural (o corregir el nombre o el DV): botón "Datos" del cliente. El NIT no se cambia.',
         ],
         notas: [
-          'Facturación electrónica: la resolución, los rangos y el prefijo los pone la firma desde Mi perfil, dentro del cliente. El usuario, la clave y las credenciales de Factus los configura Aura por seguridad.',
+          'El logo, el contacto, la resolución DIAN y los rangos de numeración (factura y nómina) los cambia el administrador de la firma desde Mi perfil, dentro del cliente.',
+        ],
+      },
+      {
+        titulo: 'Factura electrónica, nómina electrónica y documento soporte de un gestionado',
+        texto: [
+          'Factus le entrega las credenciales a Aura, así que la firma no las digita: las pide y Aura las configura.',
+        ],
+        pasos: [
+          '"Clientes de la firma" → botón "Electrónica" del cliente.',
+          'Marque lo que necesita (factura electrónica de venta, nómina electrónica, documento soporte), escriba una observación si quiere y "Solicitar a Aura".',
+          'Cuando Aura active la cuenta le llega el aviso en la campana. Si la rechaza, el aviso trae el motivo.',
+          'Entre al cliente → Mi perfil y digite la resolución DIAN y los rangos de numeración. En "Electrónica" se ve qué falta.',
+        ],
+        notas: [
+          'Solo hay una solicitud pendiente por cliente; se puede cancelar mientras Aura no responda.',
+          'Si el cliente ya factura electrónicamente y ahora necesita la nómina electrónica, haga otra solicitud con ese documento.',
         ],
       },
       {
@@ -223,6 +241,26 @@ export const GENERAL: ManualModulo[] = [
         mensaje: 'Ya existe una empresa en Aura con ese NIT',
         causa: 'Al crear un cliente gestionado, ese NIT ya es una empresa en Aura.',
         solucion: 'Si es la misma empresa, pídale que le envíe una solicitud desde Caja → Usuarios.',
+      },
+      {
+        mensaje: 'Ya hay una solicitud pendiente para este cliente',
+        causa: 'Ya se le pidió a Aura la activación electrónica de ese cliente y todavía no responde.',
+        solucion: 'Espere el aviso en la campana, o cancele la solicitud en "Electrónica" y envíe una nueva.',
+      },
+      {
+        mensaje: 'Esta empresa no tiene habilitada la facturación electrónica',
+        causa: 'Aura todavía no ha configurado la cuenta de Factus de la empresa.',
+        solucion: 'Si es un cliente gestionado, pídala en "Clientes de la firma" → "Electrónica". Si no, comuníquese con Aura.',
+      },
+      {
+        mensaje: 'Para una persona natural escriba los nombres y los apellidos',
+        causa: 'Se eligió persona natural sin nombres o sin apellidos.',
+        solucion: 'Escriba los nombres y los apellidos como aparecen en el RUT o en la cédula.',
+      },
+      {
+        mensaje: 'Una persona jurídica se identifica con NIT',
+        causa: 'Se eligió persona jurídica con cédula u otro documento.',
+        solucion: 'Cambie el tipo de documento a NIT, o elija persona natural.',
       },
       {
         mensaje: 'Solo un administrador de la empresa puede hacer esto',

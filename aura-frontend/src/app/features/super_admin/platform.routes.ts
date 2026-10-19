@@ -43,6 +43,13 @@ export const PLATFORM_ROUTES: Routes = [
           ),
       },
       {
+        path: 'solicitudes-electronica',
+        loadComponent: () =>
+          import('./solicitudes-electronica/solicitudes-electronica.component').then(
+            (m) => m.SolicitudesElectronicaComponent,
+          ),
+      },
+      {
         path: 'errores',
         loadComponent: () =>
           import('./monitor-errores/monitor-errores.component').then(
