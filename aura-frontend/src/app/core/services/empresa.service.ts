@@ -27,6 +27,10 @@ export interface EmpresaConfig {
   puedeEditar?: boolean;
   /** La empresa es una firma contable. */
   esFirmaContable?: boolean;
+  /** NATURAL | JURIDICA. */
+  tipoPersona?: string;
+  /** Persona natural no responsable de IVA: puede emitir cuentas de cobro. */
+  puedeCuentaCobro?: boolean;
   sucursalId?: number;
   sucursalNombre?: string;
   sucursalDireccion?: string;

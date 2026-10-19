@@ -1,0 +1,111 @@
+<p-dialog
+  [(visible)]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [header]="'Documentos electrónicos de ' + (cliente?.clienteNombre ?? '')"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '580px', maxWidth: '96vw' }"
+  styleClass="aura-dialog"
+  (onShow)="alAbrir()"
+>
+  <div class="cargando" *ngIf="cargando">
+    <i class="pi pi-spin pi-spinner"></i> Cargando…
+  </div>
+
+  <div class="cuerpo" *ngIf="estado && !cargando">
+    <!-- Qué tiene hoy: lo de Aura (credenciales) y lo de la firma (resolución y rangos). -->
+    <div class="estado">
+      <span class="estado__fila">
+        <i class="pi" [ngClass]="estado.activa ? 'pi-check-circle' : pendiente ? 'pi-clock' : 'pi-minus-circle'"></i>
+        {{
+          estado.activa
+            ? 'Cuenta de Factus activa (la configuró Aura)'
+            : pendiente
+              ? 'Aura está revisando la solicitud'
+              : 'Sin documentos electrónicos'
+        }}
+      </span>
+      <ng-container *ngIf="estado.activa">
+        <span class="estado__fila">
+          <i class="pi" [ngClass]="estado.resolucion ? 'pi-check-circle' : 'pi-minus-circle'"></i>
+          Resolución DIAN {{ estado.resolucion ? 'registrada' : 'pendiente: digítela en Mi perfil del cliente' }}
+        </span>
+        <span class="estado__fila">
+          <i class="pi" [ngClass]="estado.rangoFactura ? 'pi-check-circle' : 'pi-minus-circle'"></i>
+          Rango de facturación {{ estado.rangoFactura ? 'registrado' : 'pendiente: digítelo en Mi perfil del cliente' }}
+        </span>
+        <span class="estado__fila">
+          <i class="pi" [ngClass]="estado.rangoNomina ? 'pi-check-circle' : 'pi-minus-circle'"></i>
+          Rango de nómina electrónica {{ estado.rangoNomina ? 'registrado' : 'sin registrar (solo si lleva nómina)' }}
+        </span>
+      </ng-container>
+    </div>
+
+    <!-- Pendiente: lo que pidió y la opción de cancelar. -->
+    <div class="pendiente" *ngIf="pendiente && estado.ultima as s">
+      <p>
+        Pedida el {{ s.solicitadoAt | fechaEs }}<span *ngIf="s.solicitadoPorNombre"> por {{ s.solicitadoPorNombre }}</span>:
+      </p>
+      <p><strong>{{ serviciosTexto(s.servicios) }}</strong></p>
+      <p *ngIf="s.observacion">"{{ s.observacion }}"</p>
+    </div>
+
+    <!-- Sin pendiente: pedir (también para sumar un documento a una cuenta activa). -->
+    <ng-container *ngIf="!pendiente">
+      <div class="rechazo" *ngIf="rechazada && estado.ultima as s">
+        Aura rechazó la última solicitud el {{ s.respondidoAt | fechaEs }}.
+        <span *ngIf="s.motivo"> Motivo: {{ s.motivo }}</span>
+      </div>
+
+      <p class="nota nota--arriba">
+        Las credenciales de Factus las configura Aura. Elija qué necesita el
+        cliente y le avisamos por la campana cuando quede activo.
+      </p>
+      <div class="servicios">
+        <label class="servicio" *ngFor="let s of catalogo" [class.servicio--activo]="elegido(s.codigo)">
+          <p-checkbox [ngModel]="elegido(s.codigo)" [binary]="true" (ngModelChange)="toggle(s.codigo, $event)" />
+          <span class="servicio__texto">
+            <span class="servicio__nombre">{{ s.nombre }}</span>
+            <span class="servicio__desc">{{ s.descripcion }}</span>
+          </span>
+        </label>
+      </div>
+      <div class="campo">
+        <label>Observación para Aura</label>
+        <textarea
+          pTextarea
+          [(ngModel)]="observacion"
+          rows="2"
+          maxlength="300"
+          placeholder="Ej.: ya tiene la resolución DIAN; empieza a facturar el lunes"
+        ></textarea>
+      </div>
+    </ng-container>
+  </div>
+
+  <div class="dialogo-pie">
+    <button pButton type="button" label="Cerrar" class="p-button-text" (click)="cerrar()"></button>
+    <button
+      *ngIf="pendiente"
+      pButton
+      type="button"
+      icon="pi pi-times"
+      label="Cancelar solicitud"
+      class="p-button-outlined p-button-danger"
+      [loading]="enviando"
+      (click)="cancelar()"
+    ></button>
+    <button
+      *ngIf="estado && !pendiente"
+      pButton
+      type="button"
+      icon="pi pi-send"
+      label="Solicitar a Aura"
+      class="btn-aura"
+      [disabled]="!elegidos.length"
+      [loading]="enviando"
+      (click)="solicitar()"
+    ></button>
+  </div>
+</p-dialog>

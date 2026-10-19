@@ -19,6 +19,8 @@ import {
 } from '../../../core/services/firma-contable.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
 import { FechaEsPipe } from '../../../shared/pipes/fecha-es.pipe';
+import { ElectronicaGestionadoComponent } from './electronica-gestionado/electronica-gestionado.component';
+import { IdentidadGestionadoComponent } from './identidad-gestionado/identidad-gestionado.component';
 
 /**
  * Clientes de una firma contable (docs/PLAN_FIRMA_CONTABLE.md §9): solicitudes de
@@ -39,6 +41,8 @@ import { FechaEsPipe } from '../../../shared/pipes/fecha-es.pipe';
     SkeletonModule,
     TagModule,
     FechaEsPipe,
+    IdentidadGestionadoComponent,
+    ElectronicaGestionadoComponent,
   ],
   templateUrl: './firma-clientes.component.html',
   styleUrls: ['./firma-clientes.component.scss'],
@@ -63,6 +67,11 @@ export class FirmaClientesComponent implements OnInit {
   clienteModulos: ClienteFirma | null = null;
   paquetesElegidos: string[] = [];
   guardandoModulos = false;
+
+  // ── Datos y documentos electrónicos de un gestionado ──
+  dialogoIdentidad = false;
+  dialogoElectronica = false;
+  clienteSeleccionado: ClienteFirma | null = null;
 
   get cupoLleno(): boolean {
     return !!this.resumen && this.resumen.gestionados >= this.resumen.cupo;
@@ -135,6 +144,16 @@ export class FirmaClientesComponent implements OnInit {
       this.respondiendo = null;
       this.cdr.markForCheck();
     }
+  }
+
+  abrirIdentidad(c: ClienteFirma): void {
+    this.clienteSeleccionado = c;
+    this.dialogoIdentidad = true;
+  }
+
+  abrirElectronica(c: ClienteFirma): void {
+    this.clienteSeleccionado = c;
+    this.dialogoElectronica = true;
   }
 
   // ── Módulos de un gestionado ─────────────────────────────

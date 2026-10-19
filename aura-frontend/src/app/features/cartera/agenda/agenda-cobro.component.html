@@ -20,6 +20,9 @@
       >
         {{ d }} días
       </button>
+      <button type="button" class="ag-btn ag-btn--primary" (click)="envioCobros = true">
+        <i class="pi pi-envelope"></i> Recordar a vencidos
+      </button>
       <button type="button" class="ag-icon" pTooltip="Actualizar" (click)="cargar()">
         <i class="pi pi-refresh" [class.pi-spin]="cargando"></i>
       </button>
@@ -226,3 +229,5 @@
     </div>
   </ng-template>
 </div>
+
+<app-envio-cobros [(visible)]="envioCobros" />

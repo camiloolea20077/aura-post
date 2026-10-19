@@ -413,3 +413,34 @@ $green: #10b981;
     color: var(--aura-blue);
   }
 }
+
+// Aviso del correo de acceso tras crear la empresa.
+.cred-correo {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0 0 0.85rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+  background: rgba(37, 99, 235, 0.06);
+  font-size: 0.82rem;
+  color: var(--aura-text, #1e293b);
+
+  i {
+    margin-top: 2px;
+    color: #2563eb;
+  }
+
+  &--error {
+    background: rgba(245, 158, 11, 0.1);
+
+    i {
+      color: #d97706;
+    }
+  }
+}
+
+.fe-reenviar {
+  margin-left: 0.75rem;
+  vertical-align: middle;
+}

@@ -17,6 +17,16 @@
         <p>Comparte estas credenciales con el administrador. La contraseña no se volverá a mostrar.</p>
       </div>
     </div>
+    <div class="cred-correo" [class.cred-correo--error]="!credenciales.correoEnviado">
+      <i class="pi" [class.pi-envelope]="credenciales.correoEnviado" [class.pi-exclamation-triangle]="!credenciales.correoEnviado"></i>
+      <span *ngIf="credenciales.correoEnviado">
+        Se le envió el acceso por correo a <strong>{{ credenciales.emailAdmin }}</strong> (usuario, clave temporal y enlace).
+      </span>
+      <span *ngIf="!credenciales.correoEnviado">
+        No se pudo enviar el correo{{ credenciales.correoError ? ': ' + credenciales.correoError : '' }}. Comparta los datos a
+        mano o use "Reenviar acceso" al editar la empresa.
+      </span>
+    </div>
     <div class="cred-row">
       <span class="cred-label">Email</span>
       <span class="cred-val">{{ credenciales.emailAdmin }}</span>
@@ -44,7 +54,20 @@
       <div class="fe-head">
         <button pButton type="button" icon="pi pi-arrow-left" class="p-button-text p-button-secondary" pTooltip="Volver" (click)="volver()"></button>
         <div class="fe-head-titles">
-          <h1 class="fe-title">{{ isEdit ? "Editar empresa" : "Nueva empresa" }}</h1>
+          <h1 class="fe-title">
+            {{ isEdit ? "Editar empresa" : "Nueva empresa" }}
+            <button
+              *ngIf="isEdit"
+              pButton
+              type="button"
+              icon="pi pi-envelope"
+              label="Reenviar acceso"
+              class="p-button-outlined p-button-sm fe-reenviar"
+              pTooltip="Le envía al administrador un enlace nuevo para crear su contraseña"
+              [loading]="reenviando"
+              (click)="reenviarAcceso()"
+            ></button>
+          </h1>
           <p class="fe-subtitle">
             {{ isEdit ? "Actualiza los datos y la configuración contable de la empresa" : "Crea la empresa, su administrador y define cómo se contabiliza" }}
           </p>

@@ -3,6 +3,11 @@
 export type EstadoFacturaVenta = 'BORRADOR' | 'EMITIDA' | 'ANULADA';
 export type FormaPagoFactura = 'CREDITO' | 'CONTADO';
 export type MetodoContado = 'EFECTIVO' | 'TRANSFERENCIA' | 'CONSIGNACION' | 'TARJETA' | 'CHEQUE';
+/**
+ * Factura de venta o cuenta de cobro. La cuenta de cobro la emite la persona natural
+ * no responsable de IVA: sin IVA, sin DIAN y con consecutivo propio (CC).
+ */
+export type TipoDocumentoVenta = 'FACTURA' | 'CUENTA_COBRO';
 
 export interface FacturaVentaLinea {
   productoId: number | null;
@@ -18,6 +23,9 @@ export interface FacturaVentaLinea {
 }
 
 export interface GuardarFacturaVenta {
+  tipo?: TipoDocumentoVenta;
+  /** Cuenta de cobro: declaración del art. 383 ET; null = no declara. */
+  contratoDosTrabajadores?: boolean | null;
   sucursalId: number | null;
   bodegaId?: number | null;
   clienteId: number | null;
@@ -56,6 +64,8 @@ export interface FacturaVentaLineaDto extends FacturaVentaLinea {
 export interface FacturaVentaDetalle {
   id: number;
   estado: EstadoFacturaVenta;
+  tipo: TipoDocumentoVenta;
+  contratoDosTrabajadores: boolean | null;
   sucursalId: number;
   sucursalNombre: string;
   bodegaId: number | null;
@@ -112,6 +122,7 @@ export interface FacturaVentaDetalle {
 export interface FacturaVentaFila {
   id: number;
   estado: EstadoFacturaVenta;
+  tipo: TipoDocumentoVenta;
   numero: string | null;
   fecha: string;
   clienteNombre: string;

@@ -1,0 +1,94 @@
+<p-dialog
+  [(visible)]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  header="Enviar comprobantes de pago por correo"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="fase !== 'encolando'"
+  [style]="{ width: '620px', maxWidth: '96vw' }"
+  styleClass="aura-dialog"
+  appendTo="body"
+  (onShow)="alAbrir()"
+>
+  <div class="cargando" *ngIf="cargando"><i class="pi pi-spin pi-spinner"></i> Preparando el envío…</div>
+
+  <div class="cuerpo" *ngIf="!cargando">
+    <div class="aviso" *ngIf="!disponible">
+      <i class="pi pi-exclamation-triangle"></i>
+      El envío de correos no está configurado en el servidor. Comuníquese con Aura.
+    </div>
+
+    <ng-container *ngIf="fase === 'preparar'">
+      <p class="nota">
+        Se le envía a cada uno de los <strong>{{ filas.length }}</strong> empleados su comprobante de pago en PDF, al
+        correo que tiene registrado. Los que no tengan correo se le muestran al final.
+      </p>
+      <div class="campo">
+        <label>Asunto *</label>
+        <input pInputText [(ngModel)]="asunto" maxlength="200" />
+      </div>
+      <div class="campo">
+        <label>Mensaje</label>
+        <textarea pTextarea [(ngModel)]="mensaje" rows="5" maxlength="5000"></textarea>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="fase !== 'preparar'">
+      <div class="avance">
+        <span class="avance__texto">
+          @switch (fase) {
+            @case ('encolando') { Armando comprobantes: {{ armados }} de {{ filas.length }}… }
+            @case ('enviando') { Enviando: {{ (resumen?.enviados ?? 0) + (resumen?.fallidos ?? 0) }} de {{ resumen?.total ?? '…' }} }
+            @case ('listo') { Envío terminado }
+          }
+        </span>
+        <p-progressBar [value]="progreso" [showValue]="false" styleClass="barra" />
+        <p class="nota" *ngIf="fase === 'enviando'">
+          Puede cerrar esta ventana: el servidor sigue enviando los correos.
+        </p>
+      </div>
+
+      <div class="resumen" *ngIf="resumen">
+        <p-tag [value]="resumen.enviados + ' enviados'" severity="success" styleClass="tag-mini" />
+        <p-tag *ngIf="resumen.pendientes" [value]="resumen.pendientes + ' en cola'" severity="warn" styleClass="tag-mini" />
+        <p-tag *ngIf="resumen.fallidos" [value]="resumen.fallidos + ' fallidos'" severity="danger" styleClass="tag-mini" />
+      </div>
+
+      <div class="lista" *ngIf="sinCorreo.length">
+        <span class="lista__titulo">Sin correo registrado ({{ sinCorreo.length }})</span>
+        <span class="lista__fila" *ngFor="let n of sinCorreo">{{ n }}</span>
+        <small class="nota">Agregue el correo en la hoja de vida del empleado y vuelva a enviar.</small>
+      </div>
+
+      <div class="lista" *ngIf="fallidos.length">
+        <span class="lista__titulo">No se pudieron enviar ({{ fallidos.length }})</span>
+        <span class="lista__fila" *ngFor="let f of fallidos">
+          {{ f.empleadoNombre ?? f.destinatario }} · {{ f.destinatario }}
+          <small class="lista__error">{{ f.error }}</small>
+        </span>
+      </div>
+    </ng-container>
+  </div>
+
+  <div class="dialogo-pie">
+    <button
+      pButton
+      type="button"
+      [label]="fase === 'preparar' ? 'Cancelar' : 'Cerrar'"
+      class="p-button-text"
+      [disabled]="fase === 'encolando'"
+      (click)="cerrar()"
+    ></button>
+    <button
+      *ngIf="fase === 'preparar'"
+      pButton
+      type="button"
+      icon="pi pi-send"
+      [label]="'Enviar a ' + filas.length + ' empleado(s)'"
+      class="btn-aura"
+      [disabled]="!disponible || !filas.length || !asunto.trim()"
+      (click)="enviar()"
+    ></button>
+  </div>
+</p-dialog>

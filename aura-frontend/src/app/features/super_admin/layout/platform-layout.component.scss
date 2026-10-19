@@ -123,6 +123,61 @@ $barra-h: 56px;
   }
 }
 
+.logo-texto {
+  flex: 1;
+  min-width: 0;
+}
+
+// ── Campana: solicitudes de activación electrónica de las firmas ──
+.campana {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: $texto-claro;
+  cursor: pointer;
+
+  i {
+    font-size: 1rem;
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  &--barra {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+.campana__contador,
+.nav-contador {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: center;
+}
+
+.campana__contador {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+}
+
+.nav-contador {
+  margin-left: auto;
+}
+
 .salir {
   display: flex;
   align-items: center;

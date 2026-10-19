@@ -56,6 +56,8 @@
         <button pButton type="button" icon="pi pi-file-excel" label="Excel"
           class="p-button-outlined p-button-secondary p-button-sm" [loading]="exportandoExcel"
           (click)="estadoCuentaExcel()"></button>
+        <button pButton type="button" icon="pi pi-envelope" label="Enviar cobro"
+          class="p-button-outlined p-button-sm" (click)="cobroCorreoVisible = true"></button>
         <button pButton type="button" icon="pi pi-phone" label="Gestión de cobro"
           class="p-button-outlined p-button-sm" (click)="abrirGestion()"></button>
         <button pButton type="button" icon="pi pi-file-edit" label="Acuerdo de pago"
@@ -731,3 +733,10 @@
     ></button>
   </ng-template>
 </p-dialog>
+
+<app-enviar-correo
+  [(visible)]="cobroCorreoVisible"
+  grupo="cartera"
+  [documentoId]="terceroId || null"
+  titulo="cobro"
+/>

@@ -14,9 +14,11 @@ import {
   CrearGestionado,
   FirmaContableService,
   PaqueteGestionado,
+  TipoPersona,
 } from '../../../core/services/firma-contable.service';
 import { TerceroService } from '../../../core/services/tercero.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
+import { TIPO_PERSONA_OPTS, llevaDv, tiposDocumentoPara } from '../identidad-opciones';
 
 /**
  * Nuevo cliente gestionado (docs/PLAN_FIRMA_CONTABLE.md §9): la firma crea la empresa
@@ -49,6 +51,7 @@ export class GestionadoNuevoComponent implements OnInit {
   private readonly cdr = inject(ChangeDetectorRef);
 
   readonly tipoDocOpts = TIPO_DOCUMENTO_OPTIONS;
+  readonly tipoPersonaOpts = TIPO_PERSONA_OPTS;
   readonly consultaOpts = [
     { label: 'No, solo la firma entra', value: false },
     { label: 'Sí, crear un usuario de consulta', value: true },
@@ -66,7 +69,11 @@ export class GestionadoNuevoComponent implements OnInit {
 
   constructor() {
     this.form = this.fb.group({
+      tipoPersona: ['JURIDICA' as TipoPersona],
+      tipoDocumento: ['NIT'],
       razonSocial: ['', [Validators.required, Validators.maxLength(200)]],
+      nombres: ['', Validators.maxLength(120)],
+      apellidos: ['', Validators.maxLength(120)],
       nombreComercial: [''],
       nit: ['', [Validators.required, Validators.maxLength(20)]],
       dv: ['', Validators.maxLength(2)],
@@ -83,6 +90,29 @@ export class GestionadoNuevoComponent implements OnInit {
       cPassword: [''],
     });
     this.form.get('crearConsulta')?.valueChanges.subscribe((v) => this.validadoresConsulta(!!v));
+    this.form.get('tipoPersona')?.valueChanges.subscribe((v) => this.validadoresPersona(v));
+  }
+
+  get esNatural(): boolean {
+    return this.form.value.tipoPersona === 'NATURAL';
+  }
+
+  get tipoDocEmpresaOpts(): { label: string; value: string }[] {
+    return tiposDocumentoPara(this.form.value.tipoPersona);
+  }
+
+  get conDv(): boolean {
+    return llevaDv(this.form.value.tipoDocumento);
+  }
+
+  /** Jurídica: razón social y NIT. Natural: nombres y apellidos, con NIT o cédula. */
+  private validadoresPersona(tipo: TipoPersona): void {
+    const natural = tipo === 'NATURAL';
+    this.form.get('razonSocial')?.setValidators(natural ? [Validators.maxLength(200)] : [Validators.required, Validators.maxLength(200)]);
+    this.form.get('nombres')?.setValidators(natural ? [Validators.required, Validators.maxLength(120)] : [Validators.maxLength(120)]);
+    this.form.get('apellidos')?.setValidators(natural ? [Validators.required, Validators.maxLength(120)] : [Validators.maxLength(120)]);
+    if (!natural) this.form.get('tipoDocumento')?.setValue('NIT');
+    ['razonSocial', 'nombres', 'apellidos'].forEach((c) => this.form.get(c)?.updateValueAndValidity());
   }
 
   get crearConsulta(): boolean {
@@ -133,11 +163,16 @@ export class GestionadoNuevoComponent implements OnInit {
     }
     const v = this.form.value;
     const municipio = this.municipioOpts.find((o) => o.value === v.municipioId)?.label ?? null;
+    const natural = v.tipoPersona === 'NATURAL';
     const dto: CrearGestionado = {
-      razonSocial: v.razonSocial.trim(),
+      tipoPersona: v.tipoPersona,
+      tipoDocumento: v.tipoDocumento,
+      razonSocial: natural ? null : this.texto(v.razonSocial),
+      nombres: natural ? this.texto(v.nombres) : null,
+      apellidos: natural ? this.texto(v.apellidos) : null,
       nombreComercial: this.texto(v.nombreComercial),
       nit: v.nit.trim(),
-      dv: this.texto(v.dv),
+      dv: llevaDv(v.tipoDocumento) ? this.texto(v.dv) : null,
       telefono: this.texto(v.telefono),
       correo: this.texto(v.correo),
       direccion: this.texto(v.direccion),
@@ -161,7 +196,7 @@ export class GestionadoNuevoComponent implements OnInit {
       await lastValueFrom(this.service.crearGestionado(dto));
       this.alert.showSuccess(
         'Cliente creado',
-        `${dto.razonSocial} ya aparece en "Cambiar empresa". Se cargó su plan de cuentas.`,
+        `${natural ? `${dto.nombres} ${dto.apellidos}` : dto.razonSocial} ya aparece en "Cambiar empresa". Se cargó su plan de cuentas.`,
       );
       this.router.navigate(['/firma/clientes']);
     } catch (err: any) {

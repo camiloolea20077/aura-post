@@ -120,6 +120,13 @@
         [loading]="isDescargandoPdf"
         (click)="descargarPdf()"
       ></button>
+      <button
+        pButton
+        label="Enviar por correo"
+        icon="pi pi-envelope"
+        class="p-button-outlined p-button-sm"
+        (click)="dialogoCorreo = true"
+      ></button>
     </div>
 
     <!-- Acciones -->
@@ -184,6 +191,14 @@
   [municipio]="municipio"
   [logoUrl]="logoUrl"
   (modalClosed)="showTirilla = false"
+/>
+
+<app-enviar-correo
+  [(visible)]="dialogoCorreo"
+  grupo="cotizaciones"
+  [documentoId]="cotizacion?.id ?? null"
+  [titulo]="'cotización ' + (cotizacion?.numero ?? '')"
+  [generarAdjunto]="adjuntoCorreo"
 />
 
 <p-toast />

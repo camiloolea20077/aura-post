@@ -50,12 +50,14 @@ type TabFicha = 'facturas' | 'pagos' | 'recibos' | 'gestiones' | 'anticipos' | '
 /** Ficha del cliente: lo que debe, cómo paga y qué se ha hecho para cobrarle. */
 import { ExcelReporteService } from '../../../shared/services/excel-reporte.service';
 
+import { EnviarCorreoComponent } from '../../../shared/components/enviar-correo/enviar-correo.component';
 @Component({
   selector: 'app-ficha-cliente',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     PuedeDirective,
+    EnviarCorreoComponent,
     CommonModule,
     FormsModule,
     RouterModule,
@@ -97,6 +99,8 @@ export class FichaClienteComponent implements OnInit {
 
   // Gestión de cobro
   gestionVisible = false;
+  /** Recordatorio de pago por correo con el estado de cuenta adjunto. */
+  cobroCorreoVisible = false;
   guardandoGestion = false;
   gestion: CreateGestionCobroDto = this.gestionVacia();
   fechaPromesa: Date | null = null;

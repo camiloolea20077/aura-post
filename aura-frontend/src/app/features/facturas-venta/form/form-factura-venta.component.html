@@ -10,20 +10,26 @@
             {{ titulo }}
             <p-tag
               *ngIf="factura && factura.estado !== 'BORRADOR'"
-              [value]="factura.estado === 'EMITIDA' ? 'Emitida' : 'Anulada'"
+              [value]="etiquetaEstado"
               [severity]="factura.estado === 'EMITIDA' ? 'success' : 'danger'"
               [rounded]="true"
             />
             <p-tag *ngIf="factura?.cufe" value="Electrónica" severity="info" [rounded]="true" />
           </h1>
-          <p class="subtitle" *ngIf="!soloLectura">El borrador no toma consecutivo ni mueve inventario: eso pasa al emitir.</p>
+          <p class="subtitle" *ngIf="!soloLectura">
+            {{
+              esCuentaCobro
+                ? 'La cuenta de cobro preliminar no toma número ni va a cartera: eso pasa al confirmarla.'
+                : 'El borrador no toma consecutivo ni mueve inventario: eso pasa al emitir.'
+            }}
+          </p>
           <p class="origen" *ngIf="factura?.cotizacionNumero || factura?.pedidoNumero">
             <i class="pi pi-link"></i>
             <ng-container *ngIf="factura?.cotizacionNumero">Desde la cotización <strong>{{ factura?.cotizacionNumero }}</strong></ng-container>
             <ng-container *ngIf="factura?.pedidoNumero">Desde el pedido <strong>{{ factura?.pedidoNumero }}</strong></ng-container>
           </p>
           <p class="subtitle" *ngIf="soloLectura && factura">
-            Emitida el {{ (factura.fechaEmision ?? factura.emitidaAt) | date: "dd/MM/yyyy HH:mm" }}
+            {{ esCuentaCobro ? 'Confirmada' : 'Emitida' }} el {{ (factura.fechaEmision ?? factura.emitidaAt) | date: "dd/MM/yyyy HH:mm" }}
             <ng-container *ngIf="factura.formaPago === 'CREDITO' && factura.estado === 'EMITIDA'">
               · Saldo en cartera {{ cop(factura.saldoPendiente ?? 0) }}
             </ng-container>
@@ -255,6 +261,39 @@
         </div>
 
         <div class="aiu">
+          <div class="campo campo--sel">
+            <label>Documento</label>
+            <p-dropdown
+              [options]="tiposDocumento"
+              [(ngModel)]="tipo"
+              optionLabel="label"
+              optionValue="value"
+              [disabled]="soloLectura"
+              styleClass="w-full"
+              appendTo="body"
+              (onChange)="onTipoDocumento()"
+            />
+          </div>
+          <div class="campo campo--sel" *ngIf="esCuentaCobro">
+            <label>Declaración art. 383 E.T.</label>
+            <p-dropdown
+              [options]="declaraciones"
+              [(ngModel)]="contratoDosTrabajadores"
+              optionLabel="label"
+              optionValue="value"
+              [disabled]="soloLectura"
+              styleClass="w-full"
+              appendTo="body"
+            />
+          </div>
+        </div>
+        <p class="nota" *ngIf="esCuentaCobro">
+          <i class="pi pi-info-circle"></i>
+          Cuenta de cobro: no lleva IVA, no se envía a la DIAN y tiene su propio consecutivo (CC). Entra a cartera
+          y a contabilidad igual que una factura.
+        </p>
+
+        <div class="aiu" *ngIf="!esCuentaCobro">
           <div class="campo campo--sel">
             <label>Tipo de factura</label>
             <p-dropdown
@@ -503,7 +542,7 @@
                   </td>
                   <td>
                     <p-inputNumber
-              [disabled]="soloLectura || esAiu" [(ngModel)]="l.impuestoPorcentaje" [min]="0" [max]="100" [maxFractionDigits]="2" suffix=" %" inputStyleClass="num" />
+              [disabled]="soloLectura || esAiu || esCuentaCobro" [(ngModel)]="l.impuestoPorcentaje" [min]="0" [max]="100" [maxFractionDigits]="2" suffix=" %" inputStyleClass="num" />
                   </td>
                   <td class="text-right total-linea">{{ cop(totalLinea(l)) }}</td>
                   <td>
@@ -533,7 +572,8 @@
           </header>
           <div class="totales__fila"><span>Subtotal</span><strong>{{ cop(subtotal) }}</strong></div>
           <div class="totales__fila"><span>Descuentos</span><strong>{{ cop(descuentos) }}</strong></div>
-          <ng-container *ngIf="!esAiu">
+          <div class="totales__fila" *ngIf="esCuentaCobro"><span>IVA</span><strong>No aplica</strong></div>
+          <ng-container *ngIf="!esAiu && !esCuentaCobro">
             <div class="totales__fila" *ngFor="let iva of ivas">
               <span>IVA {{ iva.tarifa }}%</span><strong>{{ cop(iva.valor) }}</strong>
             </div>
@@ -589,8 +629,17 @@
           ></button>
         </ng-container>
         <span class="espacio"></span>
-        <button pButton type="button" icon="pi pi-copy" label="Copiar factura" class="p-button-text" (click)="copiar()"></button>
+        <button pButton type="button" icon="pi pi-copy" label="Copiar" class="p-button-text" (click)="copiar()"></button>
         <button pButton type="button" icon="pi pi-file-pdf" label="Descargar PDF" class="p-button-outlined" (click)="descargarPdf()"></button>
+        <button
+          *ngIf="factura.estado === 'EMITIDA'"
+          pButton
+          type="button"
+          icon="pi pi-envelope"
+          label="Enviar por correo"
+          class="p-button-outlined"
+          (click)="dialogoCorreo = true"
+        ></button>
         <button
           *ngIf="puedeEnviarDian"
           pButton
@@ -609,7 +658,7 @@
           pButton
           type="button"
           icon="pi pi-trash"
-          label="Eliminar borrador"
+          [label]="esCuentaCobro ? 'Eliminar preliminar' : 'Eliminar borrador'"
           class="p-button-text p-button-danger"
           [disabled]="guardando"
           (click)="eliminar()"
@@ -617,12 +666,53 @@
         <span class="espacio"></span>
         <button *ngIf="id" pButton type="button" icon="pi pi-copy" label="Copiar" class="p-button-text" (click)="copiar()"></button>
         <button pButton type="button" icon="pi pi-file-pdf" label="Vista previa PDF" class="p-button-text" (click)="descargarPdf()"></button>
-        <button pButton type="button" icon="pi pi-save" label="Guardar borrador" class="p-button-outlined" [disabled]="guardando" (click)="guardar()"></button>
-        <button pButton type="button" icon="pi pi-send" label="Emitir factura" class="btn-aura" [disabled]="guardando" (click)="emitir()"></button>
+        <button pButton type="button" icon="pi pi-save" [label]="esCuentaCobro ? 'Guardar preliminar' : 'Guardar borrador'" class="p-button-outlined" [disabled]="guardando" (click)="guardar()"></button>
+        <button pButton type="button" [icon]="esCuentaCobro ? 'pi pi-check' : 'pi pi-send'" [label]="esCuentaCobro ? 'Confirmar cuenta de cobro' : 'Emitir factura'" class="btn-aura" [disabled]="guardando" (click)="emitir()"></button>
       </div>
     </ng-container>
   </div>
 </div>
+
+<p-dialog
+  [(visible)]="dialogoConfirmarCC"
+  header="Confirmar cuenta de cobro"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '440px', maxWidth: '96vw' }"
+  styleClass="aura-dialog"
+>
+  <div class="confirmar-cc">
+    <p class="confirmar-cc__texto">
+      Se confirma por <strong>{{ cop(total) }}</strong>
+      {{ formaPago === 'CREDITO' ? 'a crédito (queda en cartera)' : 'de contado' }}. Toma el número, genera el
+      asiento y después se envía por correo al cliente.
+    </p>
+    <div class="campo">
+      <label>Número de la cuenta de cobro</label>
+      <div class="confirmar-cc__numero">
+        <span class="confirmar-cc__prefijo">CT-</span>
+        <p-inputNumber [(ngModel)]="numeroCuentaCobro" [min]="1" [useGrouping]="false" inputStyleClass="w-full" />
+      </div>
+      <small class="confirmar-cc__ayuda">
+        Quedará como <strong>{{ numeroCt(numeroCuentaCobro) }}</strong>.
+        <ng-container *ngIf="numeroSugerido">El siguiente es {{ numeroCt(numeroSugerido) }}; puede cambiarlo.</ng-container>
+      </small>
+    </div>
+  </div>
+  <div class="confirmar-cc__pie">
+    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="dialogoConfirmarCC = false"></button>
+    <button pButton type="button" icon="pi pi-check" label="Confirmar" class="btn-aura" [loading]="guardando" (click)="confirmarCuentaCobro()"></button>
+  </div>
+</p-dialog>
+
+<app-enviar-correo
+  [(visible)]="dialogoCorreo"
+  grupo="facturas"
+  [documentoId]="factura?.id ?? null"
+  [titulo]="titulo.toLowerCase()"
+  [generarAdjunto]="adjuntoCorreo"
+/>
 
 @if (mostrarFormTercero) {
   <app-form-tercero

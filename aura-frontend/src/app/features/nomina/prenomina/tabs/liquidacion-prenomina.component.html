@@ -24,8 +24,12 @@
     <button pButton type="button" label="Planilla para el banco" icon="pi pi-building-columns" class="btn-aura"
       [loading]="generandoPdf === 'banco'" [disabled]="generandoPdf !== null"
       (click)="descargarPlanillaBanco()"></button>
+    <button pButton type="button" label="Enviar comprobantes por correo" icon="pi pi-envelope" class="p-button-outlined"
+      [disabled]="generandoPdf !== null" (click)="mostrarEnvioCorreo = true"></button>
   </div>
 }
+
+<app-envio-comprobantes [(visible)]="mostrarEnvioCorreo" [documento]="documento" [filas]="filasPago" />
 
 @if (modoPago) {
   <div class="acciones">

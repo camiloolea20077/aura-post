@@ -455,3 +455,46 @@
 :host ::ng-deep .anticipos .p-inputnumber {
   width: 10rem;
 }
+
+// ── Confirmar cuenta de cobro (número CT editable) ──
+.confirmar-cc {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.confirmar-cc__texto {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--aura-text);
+}
+
+.confirmar-cc__numero {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+
+  p-inputnumber {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+
+.confirmar-cc__pie {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.confirmar-cc__prefijo {
+  font-weight: 700;
+  color: var(--aura-text);
+}
+
+.confirmar-cc__ayuda {
+  font-size: 0.74rem;
+  color: var(--aura-text-muted);
+}

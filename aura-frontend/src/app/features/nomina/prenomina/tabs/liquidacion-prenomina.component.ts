@@ -40,6 +40,7 @@ import { NominaElectronicaComponent } from '../../liquidacion/electronica/nomina
 import { totalesLiquidacion } from '../prenomina.util';
 import { DesprendibleModel } from '../../../../core/models/desprendible.model';
 import { CertificadoService } from '../../../../core/services/certificado.service';
+import { EnvioComprobantesComponent } from './envio-comprobantes/envio-comprobantes.component';
 import { EmpresaService } from '../../../../core/services/empresa.service';
 import { NominaPagoPdfService } from '../../../../core/services/nomina-pago-pdf.service';
 
@@ -73,6 +74,7 @@ const LOTE_PDF = 6;
     PagoNominaDialogComponent,
     NominaElectronicaComponent,
     RouterLink,
+    EnvioComprobantesComponent,
   ],
   templateUrl: './liquidacion-prenomina.component.html',
   styleUrls: ['./prenomina-tabs.scss'],
@@ -153,6 +155,8 @@ export class LiquidacionPrenominaComponent implements OnInit, OnChanges, OnDestr
 
   /** Qué PDF se está armando (para el spinner del botón). */
   generandoPdf: 'banco' | number | null = null;
+  /** Envío de los comprobantes por correo a cada empleado. */
+  mostrarEnvioCorreo = false;
 
   /** Filas de la nómina que se pagan (liquidadas y no anuladas). */
   get filasPago(): LiquidacionEmpleadoModel[] {

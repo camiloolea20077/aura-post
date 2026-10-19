@@ -60,6 +60,17 @@ export interface CreateEmpresaResponseDto {
   emailAdmin: string;
   passwordTemporal: string;
   resetLink: string;
+  /** Se le envió al administrador el correo con su acceso. */
+  correoEnviado?: boolean | null;
+  correoError?: string | null;
+}
+
+/** Resultado de enviar (o reenviar) el acceso del administrador por correo. */
+export interface EnvioAcceso {
+  email: string;
+  enviado: boolean;
+  error: string | null;
+  enlace: string;
 }
 
 export interface CreateEmpresaDto {

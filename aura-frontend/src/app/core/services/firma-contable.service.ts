@@ -33,8 +33,16 @@ export interface PaqueteGestionado {
   descripcion: string;
 }
 
+export type TipoPersona = 'NATURAL' | 'JURIDICA';
+
 export interface CrearGestionado {
-  razonSocial: string;
+  tipoPersona: TipoPersona;
+  /** NIT, o CC para persona natural sin RUT. */
+  tipoDocumento: string;
+  /** Jurídica; la natural la arma el backend con nombres y apellidos. */
+  razonSocial: string | null;
+  nombres: string | null;
+  apellidos: string | null;
   nombreComercial: string | null;
   nit: string;
   dv: string | null;
@@ -53,6 +61,55 @@ export interface CrearGestionado {
     password: string;
   } | null;
 }
+
+/** Identidad tributaria de un gestionado; el NIT no se cambia. */
+export interface IdentidadGestionado {
+  nit?: string;
+  tipoPersona: TipoPersona;
+  tipoDocumento: string;
+  razonSocial: string | null;
+  nombres: string | null;
+  apellidos: string | null;
+  nombreComercial: string | null;
+  /** Vacío = lo calcula el backend con el NIT. */
+  dv: string | null;
+}
+
+export type ServicioElectronico = 'FACTURA_VENTA' | 'NOMINA_ELECTRONICA' | 'DOCUMENTO_SOPORTE';
+
+/** Solicitud de activación de documentos electrónicos de un gestionado (V228). */
+export interface SolicitudActivacion {
+  id: number;
+  clienteEmpresaId: number;
+  clienteNombre: string;
+  clienteNit: string;
+  firmaEmpresaId: number;
+  firmaNombre: string;
+  firmaNit: string;
+  servicios: ServicioElectronico[];
+  observacion: string | null;
+  estado: 'PENDIENTE' | 'ATENDIDA' | 'RECHAZADA' | 'CANCELADA';
+  solicitadoAt: string;
+  respondidoAt: string | null;
+  motivo: string | null;
+  solicitadoPorNombre: string | null;
+  facturaElectronicaActiva: boolean;
+}
+
+/** Estado electrónico del gestionado: lo activa Aura, los rangos los pone la firma en Mi perfil. */
+export interface EstadoElectronica {
+  activa: boolean;
+  resolucion: boolean;
+  rangoFactura: boolean;
+  rangoNomina: boolean;
+  ultima: SolicitudActivacion | null;
+}
+
+export const SERVICIOS_ELECTRONICOS: { codigo: ServicioElectronico; nombre: string; descripcion: string }[] = [
+  { codigo: 'FACTURA_VENTA', nombre: 'Factura electrónica de venta', descripcion: 'Facturas, notas crédito y débito ante la DIAN' },
+  { codigo: 'NOMINA_ELECTRONICA', nombre: 'Nómina electrónica', descripcion: 'Documento de nómina electrónica de cada empleado' },
+  { codigo: 'DOCUMENTO_SOPORTE', nombre: 'Documento soporte', descripcion: 'Compras y gastos a quien no factura' },
+];
 
 export interface FirmaEncontrada {
   id: number;
@@ -135,6 +192,36 @@ export class FirmaContableService {
 
   cambiarPaquetes(clienteId: number, paquetes: string[]): Observable<ResponseModel<string[]>> {
     return this.http.put<ResponseModel<string[]>>(`${this.api}/gestionados/${clienteId}/paquetes`, { paquetes });
+  }
+
+  /** Tipo de persona, nombre, documento y DV del gestionado. */
+  identidad(clienteId: number): Observable<ResponseModel<IdentidadGestionado>> {
+    return this.http.get<ResponseModel<IdentidadGestionado>>(`${this.api}/gestionados/${clienteId}/identidad`);
+  }
+
+  cambiarIdentidad(clienteId: number, dto: IdentidadGestionado): Observable<ResponseModel<IdentidadGestionado>> {
+    return this.http.put<ResponseModel<IdentidadGestionado>>(`${this.api}/gestionados/${clienteId}/identidad`, dto);
+  }
+
+  // ── Documentos electrónicos del gestionado ──────────────────────
+  estadoElectronica(clienteId: number): Observable<ResponseModel<EstadoElectronica>> {
+    return this.http.get<ResponseModel<EstadoElectronica>>(`${this.api}/gestionados/${clienteId}/electronica`);
+  }
+
+  /** Pide a Aura que active los documentos electrónicos; le llega a la campana de la plataforma. */
+  solicitarElectronica(
+    clienteId: number,
+    servicios: ServicioElectronico[],
+    observacion: string | null,
+  ): Observable<ResponseModel<EstadoElectronica>> {
+    return this.http.post<ResponseModel<EstadoElectronica>>(
+      `${this.api}/gestionados/${clienteId}/electronica/solicitud`,
+      { servicios, observacion },
+    );
+  }
+
+  cancelarElectronica(clienteId: number): Observable<ResponseModel<EstadoElectronica>> {
+    return this.http.delete<ResponseModel<EstadoElectronica>>(`${this.api}/gestionados/${clienteId}/electronica/solicitud`);
   }
 
   // ── Solicitudes cliente → firma ─────────────────────────────────

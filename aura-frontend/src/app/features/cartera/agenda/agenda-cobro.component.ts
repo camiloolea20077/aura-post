@@ -20,15 +20,18 @@ import { AgendaCobroModel, RESULTADOS_GESTION } from '../../../core/models/carte
  * "Cobrar hoy": lo que el cobrador tiene que atender, de lo más urgente a lo
  * que puede esperar. Las promesas llegan ya evaluadas contra los pagos.
  */
+import { EnvioCobrosComponent } from './envio-cobros/envio-cobros.component';
 @Component({
   selector: 'app-agenda-cobro',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, TooltipModule, SkeletonModule],
+  imports: [CommonModule, TooltipModule, SkeletonModule, EnvioCobrosComponent],
   templateUrl: './agenda-cobro.component.html',
   styleUrls: ['./agenda-cobro.component.scss'],
 })
 export class AgendaCobroComponent implements OnInit {
+  /** Recordatorio de pago por correo a todos los clientes vencidos. */
+  envioCobros = false;
   /** Pide al padre abrir su modal de gestión. */
   @Output() gestionar = new EventEmitter<{ terceroId: number; cuentaId?: number | null }>();
 
