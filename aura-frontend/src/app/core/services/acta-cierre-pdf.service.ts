@@ -19,6 +19,7 @@ import {
   pdfTh,
   pdfTituloSeccion,
 } from '../../shared/utils/pdf-estilo';
+import { imagenDataUrl } from '../../shared/utils/imagen-data-url';
 
 /**
  * Acta de cierre de mes: lo que el contador archiva. Período, quién cerró y
@@ -257,16 +258,6 @@ export class ActaCierrePdfService {
   }
 
   private async aBase64(url: string): Promise<string | null> {
-    try {
-      const blob = await (await fetch(url)).blob();
-      return await new Promise((resolve) => {
-        const r = new FileReader();
-        r.onloadend = () => resolve(r.result as string);
-        r.onerror = () => resolve(null);
-        r.readAsDataURL(blob);
-      });
-    } catch {
-      return null;
-    }
+    return imagenDataUrl(url);
   }
 }

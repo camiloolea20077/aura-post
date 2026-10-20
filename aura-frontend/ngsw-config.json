@@ -1,43 +1,11 @@
 {
   "$schema": "./node_modules/@angular/service-worker/config/schema.json",
   "appData": {
-    "version": "2026.10.12",
+    "version": "2026.10.20",
     "cambios": [
       {
-        "modulo": "Nómina electrónica",
-        "texto": "Ahora es un solo documento por empleado y mes. Se envía desde Nómina electrónica → Por mes cuando el mes está completo (con quincenas, al confirmar la segunda)."
-      },
-      {
-        "modulo": "Nómina quincenal",
-        "texto": "El fondo de solidaridad, la retención en la fuente y los topes se calculan con todo el mes. Nuevo límite del 40 % para pagos no salariales (Ley 1393)."
-      },
-      {
-        "modulo": "Aprendices SENA",
-        "texto": "Se liquidan con la Ley 2466: 75 % del salario mínimo en etapa lectiva y 100 % en práctica, con salud y pensión. El apoyo se carga solo al hacer la vinculación."
-      },
-      {
-        "modulo": "Incremento salarial",
-        "texto": "El nuevo salario rige desde la fecha pactada, sin retroactivo."
-      },
-      {
-        "modulo": "Pago de nómina",
-        "texto": "Comprobante de pago por empleado y planilla para el banco en PDF, desde la pestaña Liquidación de la nómina."
-      },
-      {
-        "modulo": "Prenómina y  nómina",
-        "texto": "Paginador y buscador en Empleados, Novedades y Liquidación."
-      },
-      {
-        "modulo": "Empleados y terceros",
-        "texto": "La lista de empleados muestra solo los activos (los retiros se hacen desde Retiros). Los buscadores de terceros ya no muestran inactivos."
-      },
-      {
-        "modulo": "Exógena",
-        "texto": "Columnas reales del prevalidador DIAN, persona natural o jurídica, formatos 1003, 1010, 1012 y 2276 desde la nómina, \"Generar todos\" y Excel del año."
-      },
-      {
-        "modulo": "Calendarios",
-        "texto": "La X para borrar la fecha ahora va dentro del campo."
+        "modulo": "PDF de documentos",
+        "texto": "La cuenta de cobro, facturas, cotizaciones, compras, nómina y comprobantes ya no fallan al descargar cuando el logo de la empresa no se puede cargar: el PDF sale igual."
       }
     ]
   },

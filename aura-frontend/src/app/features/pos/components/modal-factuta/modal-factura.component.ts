@@ -30,6 +30,7 @@ import {
 
 import pdfMake from 'pdfmake/build/pdfmake';
 import pdfFonts from 'pdfmake/build/vfs_fonts';
+import { imagenDataUrl } from '../../../../shared/utils/imagen-data-url';
 (pdfMake as any).vfs = (pdfFonts as any).pdfMake?.vfs || pdfFonts;
 
 
@@ -112,19 +113,7 @@ export class ModalFacturaComponent implements OnChanges {
 
   /** Descarga un recurso (logo) como dataURL. Null si falla (CORS / vacío). */
   private async toDataUrl(url?: string | null): Promise<string | null> {
-    if (!url) return null;
-    try {
-      const res = await fetch(url, { mode: 'cors' });
-      const blob = await res.blob();
-      return await new Promise<string>((resolve, reject) => {
-        const r = new FileReader();
-        r.onloadend = () => resolve(r.result as string);
-        r.onerror = reject;
-        r.readAsDataURL(blob);
-      });
-    } catch {
-      return null;
-    }
+    return imagenDataUrl(url);
   }
 
   /** Genera el QR de la factura electrónica como imagen dataURL. */
