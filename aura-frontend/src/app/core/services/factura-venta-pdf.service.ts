@@ -18,6 +18,7 @@ import {
   pdfTd,
   pdfTh,
 } from '../../shared/utils/pdf-estilo';
+import { imagenDataUrl } from '../../shared/utils/imagen-data-url';
 
 
 /** Datos del cliente para la factura (los del tercero, ya resueltos). */
@@ -95,19 +96,7 @@ export class FacturaVentaPdfService {
 
   /** Logo como dataURL; null si no hay o falla (CORS). */
   private async logoDataUrl(url?: string): Promise<string | null> {
-    if (!url) return null;
-    try {
-      const res = await fetch(url, { mode: 'cors' });
-      const blob = await res.blob();
-      return await new Promise<string>((resolve, reject) => {
-        const r = new FileReader();
-        r.onloadend = () => resolve(r.result as string);
-        r.onerror = reject;
-        r.readAsDataURL(blob);
-      });
-    } catch {
-      return null;
-    }
+    return imagenDataUrl(url);
   }
 
   /**

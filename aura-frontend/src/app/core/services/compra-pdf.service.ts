@@ -22,6 +22,7 @@ import {
   pdfTd,
   pdfTh,
 } from '../../shared/utils/pdf-estilo';
+import { imagenDataUrl } from '../../shared/utils/imagen-data-url';
 
 /**
  * PDF de la compra (factura de compra, nota débito/crédito, recibo) con el
@@ -348,17 +349,7 @@ export class CompraPdfService {
   }
 
   private async aBase64(url: string): Promise<string | null> {
-    try {
-      const blob = await (await fetch(url)).blob();
-      return await new Promise((resolve) => {
-        const r = new FileReader();
-        r.onloadend = () => resolve(r.result as string);
-        r.onerror = () => resolve(null);
-        r.readAsDataURL(blob);
-      });
-    } catch {
-      return null;
-    }
+    return imagenDataUrl(url);
   }
 }
 

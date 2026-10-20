@@ -19,6 +19,7 @@ import {
   pdfTh,
   pdfTituloSeccion,
 } from '../../shared/utils/pdf-estilo';
+import { imagenDataUrl } from '../../shared/utils/imagen-data-url';
 
 /**
  * PDF del pago de una nómina (documento NOM-…):
@@ -52,18 +53,7 @@ export class NominaPagoPdfService {
 
   /** Logo como dataURL; null si no hay o el servidor no deja leerlo (CORS). */
   private async logo(url?: string): Promise<string | null> {
-    if (!url) return null;
-    try {
-      const blob = await (await fetch(url, { mode: 'cors' })).blob();
-      return await new Promise<string>((resolve, reject) => {
-        const r = new FileReader();
-        r.onloadend = () => resolve(r.result as string);
-        r.onerror = reject;
-        r.readAsDataURL(blob);
-      });
-    } catch {
-      return null;
-    }
+    return imagenDataUrl(url);
   }
 
   private cabecera(empresa: EmpresaConfig, logo: string | null, titulo: string, doc: DocumentoNominaModel): any {

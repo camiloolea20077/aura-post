@@ -19,6 +19,7 @@ import {
   pdfTh,
   pdfTituloSeccion,
 } from '../utils/pdf-estilo';
+import { imagenDataUrl } from '../utils/imagen-data-url';
 
 (pdfMake as any).vfs = (pdfFonts as any).pdfMake?.vfs || pdfFonts;
 
@@ -219,16 +220,6 @@ export class ComprobanteContablePdfService {
   }
 
   private async aBase64(url: string): Promise<string | null> {
-    try {
-      const blob = await (await fetch(url)).blob();
-      return await new Promise((resolve) => {
-        const r = new FileReader();
-        r.onloadend = () => resolve(r.result as string);
-        r.onerror = () => resolve(null);
-        r.readAsDataURL(blob);
-      });
-    } catch {
-      return null;
-    }
+    return imagenDataUrl(url);
   }
 }
