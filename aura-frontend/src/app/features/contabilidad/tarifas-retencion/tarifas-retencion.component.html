@@ -18,6 +18,15 @@
         <button *appPuede="'contabilidad.tarifas-retencion:CREAR'"
           pButton
           type="button"
+          label="Municipio de ReteICA"
+          icon="pi pi-map-marker"
+          class="p-button-outlined"
+          pTooltip="Crea la cuenta 2368 del municipio y sus tarifas de reteICA a nombre de su secretaría de hacienda"
+          (click)="abrirMunicipio()"
+        ></button>
+        <button *appPuede="'contabilidad.tarifas-retencion:CREAR'"
+          pButton
+          type="button"
           label="Nueva Tarifa"
           icon="pi pi-plus"
           class="btn-verde"
@@ -66,6 +75,8 @@
           <th style="width: 120px">Tipo</th>
           <th>Concepto</th>
           <th style="width: 110px">Código</th>
+          <th style="min-width: 200px">Cuenta</th>
+          <th style="min-width: 180px">Se paga a</th>
           <th style="width: 120px; text-align: right">Tarifa Natural</th>
           <th style="width: 130px; text-align: right">Tarifa Jurídica</th>
           <th style="width: 130px; text-align: right">Base Mínima</th>
@@ -86,6 +97,28 @@
           <td>
             <code *ngIf="t.codigoConcepto">{{ t.codigoConcepto }}</code>
             <span *ngIf="!t.codigoConcepto" class="text-muted">—</span>
+          </td>
+          <td>
+            <span *ngIf="t.cuentaCodigo">
+              <code>{{ t.cuentaCodigo }}</code> {{ t.cuentaNombre }}
+            </span>
+            <span
+              *ngIf="!t.cuentaCodigo"
+              class="text-muted"
+              pTooltip="Sin cuenta propia: la retención va a la cuenta por defecto de la configuración contable"
+              tooltipPosition="top"
+              >Por defecto</span
+            >
+          </td>
+          <td>
+            <span *ngIf="t.terceroAcreedorNombre">{{ t.terceroAcreedorNombre }}</span>
+            <span
+              *ngIf="!t.terceroAcreedorNombre"
+              class="text-warn"
+              pTooltip="Sin entidad no se puede registrar el pago de la declaración"
+              tooltipPosition="top"
+              >Sin asignar</span
+            >
           </td>
           <td style="text-align: right">
             {{ t.tarifaNatural | number: "1.2-4" }}%
@@ -125,7 +158,7 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="8" class="empty-row">
+          <td colspan="10" class="empty-row">
             <i class="pi pi-percentage"></i> No hay tarifas de retención
             configuradas.
           </td>
@@ -156,6 +189,7 @@
         appendTo="body"
         placeholder="Seleccionar tipo"
         styleClass="w-full"
+        (onChange)="onTipoChange()"
       />
     </div>
 
@@ -177,6 +211,36 @@
         [(ngModel)]="form.concepto"
         placeholder="Ej: Honorarios y comisiones"
       />
+    </div>
+
+    <!-- Cuenta contable del concepto -->
+    <div class="form-group full-width">
+      <label>Cuenta contable</label>
+      <app-cuenta-autocomplete
+        [(ngModel)]="form.cuentaContableId"
+        [prefijos]="prefijoCuenta"
+        appendTo="body"
+        placeholder="Ej: 23651502 — Retención honorarios 11%"
+      />
+      <small class="text-muted">
+        Donde se registra esta retención en el asiento. Vacía: la cuenta por
+        defecto de la configuración contable.
+      </small>
+    </div>
+
+    <!-- A quién se le paga -->
+    <div class="form-group full-width">
+      <label>Se paga a</label>
+      <app-tercero-autocomplete
+        [(ngModel)]="form.terceroAcreedorId"
+        [label]="acreedorLabel"
+        placeholder="DIAN o secretaría de hacienda del municipio"
+        appendTo="body"
+      />
+      <small class="text-muted">
+        La DIAN para retefuente y reteIVA; para el reteICA, la secretaría de hacienda del
+        municipio (use una cuenta 2368 por municipio).
+      </small>
     </div>
 
     <!-- Tarifa Natural -->
@@ -250,6 +314,44 @@
       [loading]="saving"
       [disabled]="!form.tipo || !form.concepto"
       (click)="guardar()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Municipio de reteICA: cuenta propia + tarifas a nombre de su secretaría de hacienda -->
+<p-dialog
+  [(visible)]="municipioVisible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '480px', maxWidth: '96vw' }"
+  header="Agregar municipio de ReteICA"
+>
+  <div class="municipio-form">
+    <p class="text-muted">
+      Se crea la cuenta 236805xx "Rete ICA &lt;municipio&gt;" y se copian las tarifas de reteICA que no
+      tienen municipio, a nombre de su secretaría de hacienda. Así la declaración de reteICA sale
+      separada por municipio. Después puede ajustar los porcentajes de cada una.
+    </p>
+    <label>Municipio</label>
+    <input pInputText [(ngModel)]="municipioNombre" placeholder="Ej. Bogotá" class="w-full" />
+    <label>Secretaría de hacienda (a quién se le paga)</label>
+    <app-tercero-autocomplete
+      [(ngModel)]="municipioAcreedorId"
+      placeholder="Busque el tercero de la secretaría"
+      appendTo="body"
+    />
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancelar" icon="pi pi-times" class="btn-amarillo" (click)="municipioVisible = false"></button>
+    <button
+      pButton
+      label="Crear"
+      icon="pi pi-check"
+      class="btn-verde"
+      [loading]="saving"
+      [disabled]="!municipioNombre.trim() || !municipioAcreedorId"
+      (click)="guardarMunicipio()"
     ></button>
   </ng-template>
 </p-dialog>

@@ -14,11 +14,10 @@ import {
   ValidationErrors,
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
 import { lastValueFrom } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { PasswordModule } from 'primeng/password';
-import { environment } from '../../../../../environments/environment';
+import { AuthService } from '../../../../core/services/auth.service';
 
 function passwordsMatch(group: AbstractControl): ValidationErrors | null {
   const pass = group.get('nuevaPassword')?.value;
@@ -46,12 +45,13 @@ export class ResetPasswordComponent implements OnInit {
   token = '';
   estado: 'form' | 'ok' | 'error' = 'form';
   errorMsg = '';
+  readonly currentYear = new Date().getFullYear();
 
   constructor(
     private readonly fb: FormBuilder,
     private readonly route: ActivatedRoute,
     private readonly router: Router,
-    private readonly http: HttpClient,
+    private readonly authService: AuthService,
     private readonly cdr: ChangeDetectorRef,
   ) {
     this.form = this.fb.group(
@@ -67,7 +67,7 @@ export class ResetPasswordComponent implements OnInit {
     this.token = this.route.snapshot.queryParamMap.get('token') ?? '';
     if (!this.token) {
       this.estado = 'error';
-      this.errorMsg = 'El enlace es inválido o ya fue utilizado.';
+      this.errorMsg = 'El enlace es inválido, ya se usó o venció.';
       this.cdr.markForCheck();
     }
   }
@@ -86,16 +86,13 @@ export class ResetPasswordComponent implements OnInit {
     this.cdr.markForCheck();
     try {
       await lastValueFrom(
-        this.http.post(`${environment.apiUrl}auth/reset-password`, {
-          token: this.token,
-          nuevaPassword: this.form.value.nuevaPassword,
-        }),
+        this.authService.restablecerClave(this.token, this.form.value.nuevaPassword),
       );
       this.estado = 'ok';
     } catch (err: any) {
       this.estado = 'error';
-      this.errorMsg =
-        err?.error?.message ?? 'El enlace es inválido o ya expiró.';
+      // El servidor responde "Token inválido o expirado": se dice en palabras del usuario.
+      this.errorMsg = 'El enlace es inválido, ya se usó o venció.';
     } finally {
       this.loading = false;
       this.cdr.markForCheck();

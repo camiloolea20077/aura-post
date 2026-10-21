@@ -1,0 +1,140 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-file"></i></span>
+        <div>
+          <h1 class="title">Tipos de comprobante de nómina</h1>
+          <p class="subtitle">
+            Nómina periódica, prima, cesantías, liquidación definitiva: qué
+            liquida cada documento, su numeración y qué empleados admite
+          </p>
+        </div>
+      </div>
+
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button
+            *appPuede="'recursos-humanos.tipos-comprobante-nomina:CREAR'"
+            pButton
+            type="button"
+            label="Nuevo tipo"
+            icon="pi pi-plus"
+            class="btn-aura"
+            (click)="nuevo()"
+          ></button>
+        </div>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              class="search-input"
+              placeholder="Buscar por código, nombre o prefijo..."
+              [(ngModel)]="busqueda"
+              (input)="buscar()"
+              (keydown.escape)="limpiarBusqueda()"
+            />
+            <button
+              *ngIf="busqueda"
+              class="clear-btn"
+              (click)="limpiarBusqueda()"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <p-table
+      [value]="filas"
+      [lazy]="true"
+      [loading]="cargando"
+      [totalRecords]="totalFilas"
+      [rows]="tamano"
+      [paginator]="true"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      (onPage)="onPagina($event)"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords} registros"
+      [scrollable]="true"
+      [tableStyle]="{ 'min-width': '52rem' }"
+      showGridlines
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Tipo</th>
+          <th style="width: 190px">Clase</th>
+          <th style="width: 90px">Prefijo</th>
+          <th style="width: 110px">Frecuencia</th>
+          <th style="width: 220px">Vinculaciones</th>
+          <th style="width: 100px">Estado</th>
+          <th style="width: 110px">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-t>
+        <tr [class.row-inactiva]="!t.activo">
+          <td>
+            <div class="nombre">{{ t.nombre }}</div>
+            <div class="meta">
+              <code class="codigo">{{ t.codigo }}</code>
+            </div>
+          </td>
+          <td>{{ textoClase(t) }}</td>
+          <td><code class="codigo">{{ t.prefijo }}</code></td>
+          <td>{{ textoFrecuencia(t) }}</td>
+          <td>{{ t.tiposVinculacionNombres || "Todas" }}</td>
+          <td>
+            <p-tag
+              [value]="t.activo ? 'Activo' : 'Inactivo'"
+              [severity]="t.activo ? 'success' : 'secondary'"
+              styleClass="tag-mini"
+            />
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button
+                *appPuede="'recursos-humanos.tipos-comprobante-nomina:EDITAR'"
+                pButton
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm action-edit"
+                pTooltip="Editar"
+                (click)="editar(t)"
+              ></button>
+              <button
+                *appPuede="'recursos-humanos.tipos-comprobante-nomina:ELIMINAR'"
+                pButton
+                icon="pi pi-trash"
+                class="p-button-text p-button-danger p-button-sm action-delete"
+                pTooltip="Eliminar"
+                (click)="confirmarEliminar(t)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              <i class="pi pi-file"></i>
+              <p>No hay tipos de comprobante.</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<app-form-tipo-comprobante
+  [(visible)]="mostrarForm"
+  [tipo]="seleccionado"
+  (guardado)="cargar()"
+/>
+
+<p-confirmDialog />

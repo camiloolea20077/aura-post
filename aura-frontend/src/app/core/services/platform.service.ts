@@ -11,8 +11,12 @@ import {
   LineaUsoModel,
   ConfiguracionEmpresaModel,
   ActualizarConfiguracionDto,
+  EmpresaPlataformaModel,
+  FirmaContableOpcion,
+  EnvioAcceso,
 } from '../models/platform.model';
 import { ResponseModel } from '../../shared/utils/responde.models';
+import { SolicitudActivacion } from './firma-contable.service';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -41,12 +45,31 @@ export class PlatformService {
     return this.http.put<any>(`${this.base}/empresas/${id}`, dto);
   }
 
+  /** Nuevo enlace para que el administrador cree su contraseña, enviado a su correo. */
+  reenviarAcceso(id: number): Observable<ResponseModel<EnvioAcceso>> {
+    return this.http.post<ResponseModel<EnvioAcceso>>(`${this.base}/empresas/${id}/reenviar-acceso`, {});
+  }
+
   suspender(id: number): Observable<any> {
     return this.http.patch<any>(`${this.base}/empresas/${id}/suspender`, {});
   }
 
   activar(id: number): Observable<any> {
     return this.http.patch<any>(`${this.base}/empresas/${id}/activar`, {});
+  }
+
+  // ─── Firma contable (docs/PLAN_FIRMA_CONTABLE.md) ─────────────
+  firmasContables(texto = ''): Observable<ResponseModel<FirmaContableOpcion[]>> {
+    return this.http.get<ResponseModel<FirmaContableOpcion[]>>(`${this.base}/firmas-contables`, {
+      params: { texto },
+    });
+  }
+
+  /** Cambia o quita (null) la firma que atiende a la empresa; la anterior pierde el acceso. */
+  asignarFirmaContable(id: number, firmaEmpresaId: number | null): Observable<ResponseModel<EmpresaPlataformaModel>> {
+    return this.http.put<ResponseModel<EmpresaPlataformaModel>>(`${this.base}/empresas/${id}/firma-contable`, {
+      firmaEmpresaId,
+    });
   }
 
   // ─── Líneas de uso ────────────────────────────────────────────
@@ -84,5 +107,26 @@ export class PlatformService {
 
   errorLogsPorGrupo(grupoHash: string, page: number, rows: number): Observable<any> {
     return this.http.post<any>(`${this.base}/error-logs/page`, { grupoHash, page, rows });
+  }
+
+  // ── Activación electrónica de gestionados (las firmas la piden) ──
+
+  /** Solicitudes de las firmas que esperan las credenciales de Factus. */
+  solicitudesElectronica(): Observable<ResponseModel<SolicitudActivacion[]>> {
+    return this.http.get<ResponseModel<SolicitudActivacion[]>>(`${this.base}/solicitudes-electronica`);
+  }
+
+  /** Cuántas hay pendientes (campana del panel). */
+  pendientesElectronica(): Observable<ResponseModel<number>> {
+    return this.http.get<ResponseModel<number>>(`${this.base}/solicitudes-electronica/pendientes`);
+  }
+
+  /** Marca atendida a mano; la empresa ya debe tener la FE activa. */
+  atenderSolicitudElectronica(id: number): Observable<ResponseModel<boolean>> {
+    return this.http.post<ResponseModel<boolean>>(`${this.base}/solicitudes-electronica/${id}/atender`, {});
+  }
+
+  rechazarSolicitudElectronica(id: number, motivo: string): Observable<ResponseModel<boolean>> {
+    return this.http.post<ResponseModel<boolean>>(`${this.base}/solicitudes-electronica/${id}/rechazar`, { motivo });
   }
 }

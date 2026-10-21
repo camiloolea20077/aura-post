@@ -84,3 +84,40 @@
 
 .codigo { font-family: "JetBrains Mono", monospace; text-transform: uppercase; }
 .req { color: #ef4444; }
+
+// Pestaña Impuestos: ayuda y botón en una fila; la fila nueva se escribe en la tabla.
+.impuestos-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+
+  .ayuda {
+    flex: 1 1 320px;
+    margin: 0;
+  }
+}
+
+.impuesto-nuevo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+
+  input {
+    width: 100%;
+  }
+}
+
+.impuesto-nuevo-fila {
+  display: grid;
+  grid-template-columns: 1fr 90px;
+  gap: 0.35rem;
+
+  ::ng-deep p-inputnumber,
+  ::ng-deep .p-inputnumber,
+  ::ng-deep .p-inputnumber-input {
+    width: 100%;
+    min-width: 0;
+  }
+}

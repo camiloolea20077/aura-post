@@ -78,6 +78,18 @@ export const CATALOGO: ManualModulo[] = [
         ],
       },
       {
+        titulo: 'Historial de costos',
+        texto: [
+          'El reloj (Historial de costos) de cada fila de Productos, de cada línea del formulario de compra y del detalle de una compra abre el historial del producto.',
+          'Arriba: costo promedio actual, existencia, último costo de compra y el mínimo y máximo al que se ha comprado.',
+          '"Evolución del costo": cada cambio del costo promedio con su fecha, el documento que lo movió (compra, nota crédito, anulación, edición, ajuste manual, receta o importación), el costo anterior, el nuevo, la variación y el usuario.',
+          '"Compras": todas las compras y notas crédito del producto con proveedor, cantidad, costo unitario, descuento y costo neto. Incluye las compras anteriores al historial y las anuladas (en gris).',
+        ],
+        notas: [
+          'Sirve para revisar la utilidad de un período o para liquidar entre socios: muestra a qué costo estaba la mercancía en cada fecha.',
+        ],
+      },
+      {
         titulo: 'Cambiar la unidad base ("Pasar a unidad")',
         texto: [
           'Si creó un producto por caja y ahora lo vende por unidad, use "Pasar a …" en la presentación: la presentación pasa a ser la unidad pequeña y la actual queda como presentación.',

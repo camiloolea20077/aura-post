@@ -16,14 +16,25 @@
       </div>
       <div class="card-head__actions">
         <!-- Crear (arriba) -->
-        <button *appPuede="'catalogo.productos:CREAR'"
-          pButton
-          type="button"
-          label="Nuevo producto"
-          icon="pi pi-plus"
-          class="btn-verde"
-          (click)="openCreate()"
-        ></button>
+        <div class="card-head__btns">
+          <button *appPuede="'catalogo.productos:CREAR'"
+            pButton
+            type="button"
+            label="Nuevo producto"
+            icon="pi pi-plus"
+            class="btn-verde"
+            (click)="openCreate()"
+          ></button>
+          <button *appPuede="'catalogo.productos:CREAR'"
+            pButton
+            type="button"
+            label="Importar"
+            icon="pi pi-file-import"
+            class="p-button-outlined"
+            pTooltip="Cargar desde un Excel"
+            (click)="mostrarImportar = true"
+          ></button>
+        </div>
 
         <!-- Filtro por uso + búsqueda (debajo) -->
         <div class="card-head__search">
@@ -272,6 +283,15 @@
           <!-- Acciones -->
           <td class="text-center">
             <div class="action-buttons">
+              <button
+                pButton
+                type="button"
+                icon="pi pi-history"
+                class="p-button-text p-button-sm p-button-secondary"
+                pTooltip="Historial de costos"
+                tooltipPosition="top"
+                (click)="verHistorialCosto(item)"
+              ></button>
               <button *appPuede="'catalogo.productos:EDITAR'"
                 pButton
                 type="button"
@@ -357,3 +377,14 @@
 
 <p-toast />
 <p-confirmDialog />
+
+<app-historial-costo-producto
+  [(visible)]="historialCostoVisible"
+  [productoId]="historialCostoProductoId"
+/>
+
+<app-importar-excel
+  [(visible)]="mostrarImportar"
+  [plantilla]="plantillaImportar"
+  (importado)="onImportado()"
+/>

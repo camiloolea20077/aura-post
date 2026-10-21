@@ -29,6 +29,9 @@
   background: var(--ag-surface);
   color: var(--ag-text);
   overflow: hidden;
+  // Se acomoda a su propio ancho (con o sin menú lateral), no al de la ventana.
+  container-type: inline-size;
+  container-name: agenda;
 }
 
 .ag-sub {
@@ -349,7 +352,7 @@
   }
 }
 
-@media (max-width: 1280px) {
+@container agenda (max-width: 1100px) {
   .ag-stats {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -367,7 +370,7 @@
   }
 }
 
-@media (max-width: 900px) {
+@container agenda (max-width: 760px) {
   .ag-fila {
     grid-template-columns: minmax(0, 1fr) auto;
 
@@ -375,6 +378,37 @@
       grid-column: 1 / -1;
       justify-content: flex-start;
       min-width: 0;
+    }
+  }
+}
+
+// Teléfono: indicadores de a dos y botonera que baja completa.
+@container agenda (max-width: 560px) {
+  .ag-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ag-stat {
+    border-left: none;
+
+    &:nth-child(3n + 1) {
+      border-left: none;
+    }
+
+    &:nth-child(2n) {
+      border-left: 1px solid var(--ag-border);
+    }
+  }
+
+  .ag-head {
+    padding: 0.85rem;
+  }
+
+  .ag-ventana {
+    flex-wrap: wrap;
+
+    button {
+      white-space: nowrap;
     }
   }
 }

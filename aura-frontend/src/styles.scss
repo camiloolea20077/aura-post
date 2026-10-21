@@ -244,6 +244,47 @@ body {
   }
 }
 
+// Calendar — botón de borrar (showClear). PrimeNG 18 no le da estilo y la X queda
+// suelta entre el campo y el botón del calendario: se pone DENTRO del campo, a la
+// derecha, pequeña y gris, como en los selects.
+.p-datepicker {
+  .p-datepicker-clear-icon {
+    position: absolute;
+    top: 50%;
+    inset-inline-end: 0.75rem;
+    width: 0.7rem;
+    height: 0.7rem;
+    margin-top: -0.35rem;
+    color: #94a3b8;
+    cursor: pointer;
+    z-index: 1;
+    transition: color 0.15s;
+
+    &:hover {
+      color: #475569;
+    }
+  }
+
+  // Con el botón del calendario al lado, la X va antes de él.
+  &:has(.p-datepicker-dropdown) .p-datepicker-clear-icon {
+    inset-inline-end: calc(var(--p-datepicker-dropdown-width, 2.5rem) + 0.7rem);
+  }
+
+  // Con el ícono dentro del campo (iconDisplay="input"), la X va a su izquierda.
+  &:has(.p-datepicker-input-icon-container) .p-datepicker-clear-icon {
+    inset-inline-end: 2.4rem;
+  }
+
+  // Espacio para que el texto no quede debajo de la X.
+  &:has(.p-datepicker-clear-icon) .p-datepicker-input {
+    padding-inline-end: 2rem;
+  }
+
+  &:has(.p-datepicker-clear-icon):has(.p-datepicker-input-icon-container) .p-datepicker-input {
+    padding-inline-end: 3.6rem;
+  }
+}
+
 // Password
 .p-password {
   width: 100%;

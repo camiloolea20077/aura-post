@@ -371,141 +371,115 @@
 
     <!-- ── Sección 4: Información tributaria ─────────────────────── -->
     <p-fieldset legend="Información tributaria" styleClass="fs-section">
-      <div class="p-grid p-fluid">
-        <!-- IVA -->
-        <div class="col-12 sm:col-12 md:col-4 lg:col-4 py-0 px-1">
-          <label>Base IVA</label>
-          <div class="field mt-1">
-            <p-inputNumber
-              formControlName="baseIva"
-              mode="currency"
-              currency="COP"
-              locale="es-CO"
-              [maxFractionDigits]="0"
-              styleClass="w-full"
-              (onChange)="recalcularIva()"
-            />
-          </div>
+      <p class="trib-ayuda">
+        Elija la tarifa o el concepto y el valor se calcula solo. La base arranca en el monto del gasto;
+        cámbiela solo si el impuesto aplica sobre otro valor.
+      </p>
+
+      <!-- IVA -->
+      <div class="trib-fila">
+        <span class="trib-nombre">IVA</span>
+        <div class="trib-campo trib-campo--concepto">
+          <label>Tarifa</label>
+          <p-dropdown
+            formControlName="tarifaIva"
+            [options]="tarifasIvaOpts"
+            optionLabel="label"
+            optionValue="value"
+            appendTo="body"
+            styleClass="w-full"
+          />
         </div>
-        <div class="col-12 sm:col-12 md:col-2 lg:col-4 py-0 px-1">
-          <label>Tarifa %</label>
-          <div class="field mt-1">
-            <p-inputNumber
-              formControlName="tarifaIva"
-              [min]="0"
-              [max]="100"
-              [maxFractionDigits]="2"
-              suffix="%"
-              styleClass="w-full"
-              (onChange)="recalcularIva()"
-            />
-          </div>
+        <div class="trib-campo">
+          <label>Base</label>
+          <p-inputNumber formControlName="baseIva" mode="currency" currency="COP" locale="es-CO"
+            [maxFractionDigits]="0" [min]="0" styleClass="w-full" />
         </div>
-        <div class="col-12 sm:col-12 md:col-4 lg:col-4 py-0 px-1">
+        <div class="trib-campo">
           <label>Valor IVA</label>
-          <div class="field mt-1">
-            <p-inputNumber
-              formControlName="valorIva"
-              mode="currency"
-              currency="COP"
-              locale="es-CO"
-              [maxFractionDigits]="0"
-              styleClass="w-full"
-            />
-          </div>
+          <p-inputNumber formControlName="valorIva" mode="currency" currency="COP" locale="es-CO"
+            [maxFractionDigits]="0" styleClass="w-full" />
         </div>
+      </div>
 
-        <div class="col-12 py-0"><div class="sep-retencion"></div></div>
+      <!-- Retefuente -->
+      <div class="trib-fila">
+        <span class="trib-nombre">Retención en la fuente</span>
+        <div class="trib-campo trib-campo--concepto">
+          <label>Concepto</label>
+          <p-dropdown
+            formControlName="retefuenteTarifaId"
+            [options]="conceptosRetefuente"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Sin retención"
+            [showClear]="true"
+            [filter]="conceptosRetefuente.length > 8"
+            appendTo="body"
+            styleClass="w-full"
+          />
+        </div>
+        <div class="trib-campo">
+          <label>Base</label>
+          <p-inputNumber formControlName="baseRetefuente" mode="currency" currency="COP" locale="es-CO"
+            [maxFractionDigits]="0" [min]="0" styleClass="w-full" />
+        </div>
+        <div class="trib-campo trib-campo--tarifa">
+          <label>Tarifa</label>
+          <p-inputNumber formControlName="tarifaRetefuente" [min]="0" [max]="100" [maxFractionDigits]="2"
+            suffix=" %" styleClass="w-full" />
+        </div>
+        <div class="trib-campo">
+          <label>Valor retención</label>
+          <p-inputNumber formControlName="valorRetefuente" mode="currency" currency="COP" locale="es-CO"
+            [maxFractionDigits]="0" styleClass="w-full" />
+        </div>
+      </div>
 
-        <!-- Retefuente -->
-        <div class="col-12 sm:col-12 md:col-4 lg:col-4 py-0 px-1">
-          <label>Base Retefuente</label>
-          <div class="field mt-1">
-            <p-inputNumber
-              formControlName="baseRetefuente"
-              mode="currency"
-              currency="COP"
-              locale="es-CO"
-              [maxFractionDigits]="0"
-              styleClass="w-full"
-              (onChange)="recalcularRetefuente()"
-            />
-          </div>
+      <!-- ReteICA -->
+      <div class="trib-fila">
+        <span class="trib-nombre">ReteICA</span>
+        <div class="trib-campo trib-campo--concepto">
+          <label>Concepto</label>
+          <p-dropdown
+            formControlName="reteicaTarifaId"
+            [options]="conceptosReteica"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Sin reteICA"
+            [showClear]="true"
+            [filter]="conceptosReteica.length > 8"
+            appendTo="body"
+            styleClass="w-full"
+          />
         </div>
-        <div class="col-12 sm:col-12 md:col-2 lg:col-4 py-0 px-1">
-          <label>Tarifa %</label>
-          <div class="field mt-1">
-            <p-inputNumber
-              formControlName="tarifaRetefuente"
-              [min]="0"
-              [max]="100"
-              [maxFractionDigits]="2"
-              suffix="%"
-              styleClass="w-full"
-              (onChange)="recalcularRetefuente()"
-            />
-          </div>
+        <div class="trib-campo">
+          <label>Base</label>
+          <p-inputNumber formControlName="baseReteica" mode="currency" currency="COP" locale="es-CO"
+            [maxFractionDigits]="0" [min]="0" styleClass="w-full" />
         </div>
-        <div class="col-12 sm:col-12 md:col-4 lg:col-4 py-0 px-1">
-          <label>Valor Retefuente</label>
-          <div class="field mt-1">
-            <p-inputNumber
-              formControlName="valorRetefuente"
-              mode="currency"
-              currency="COP"
-              locale="es-CO"
-              [maxFractionDigits]="0"
-              styleClass="w-full"
-            />
-          </div>
+        <div class="trib-campo trib-campo--tarifa">
+          <label>Tarifa</label>
+          <p-inputNumber formControlName="tarifaReteica" [min]="0" [max]="100" [maxFractionDigits]="3"
+            suffix=" ‰" styleClass="w-full" />
         </div>
-
-        <div class="col-12 py-0"><div class="sep-retencion"></div></div>
-
-        <!-- ReteICA -->
-        <div class="col-12 sm:col-12 md:col-4 lg:col-4 py-0 px-1">
-          <label>Base ReteICA</label>
-          <div class="field mt-1">
-            <p-inputNumber
-              formControlName="baseReteica"
-              mode="currency"
-              currency="COP"
-              locale="es-CO"
-              [maxFractionDigits]="0"
-              styleClass="w-full"
-              (onChange)="recalcularReteica()"
-            />
-          </div>
-        </div>
-        <div class="col-12 sm:col-12 md:col-2 lg:col-4 py-0 px-1">
-          <label>Tarifa ‰</label>
-          <div class="field mt-1">
-            <p-inputNumber
-              formControlName="tarifaReteica"
-              [min]="0"
-              [max]="100"
-              [maxFractionDigits]="2"
-              suffix="‰"
-              styleClass="w-full"
-              (onChange)="recalcularReteica()"
-            />
-          </div>
-        </div>
-        <div class="col-12 sm:col-12 md:col-4 lg:col-4 py-0 px-1">
-          <label>Valor ReteICA</label>
-          <div class="field mt-1">
-            <p-inputNumber
-              formControlName="valorReteica"
-              mode="currency"
-              currency="COP"
-              locale="es-CO"
-              [maxFractionDigits]="0"
-              styleClass="w-full"
-            />
-          </div>
+        <div class="trib-campo">
+          <label>Valor reteICA</label>
+          <p-inputNumber formControlName="valorReteica" mode="currency" currency="COP" locale="es-CO"
+            [maxFractionDigits]="0" styleClass="w-full" />
         </div>
       </div>
     </p-fieldset>
+
+    <!-- Lo que sale de la caja o se le queda debiendo al tercero -->
+    <div class="total-pagar">
+      <span>
+        Valor {{ cop(frm.value.monto) }}
+        <ng-container *ngIf="frm.value.valorIva > 0"> + IVA {{ cop(frm.value.valorIva) }}</ng-container>
+        <ng-container *ngIf="totalRetenciones > 0"> − retenciones {{ cop(totalRetenciones) }}</ng-container>
+      </span>
+      <strong>{{ esCredito ? 'Queda debiendo' : 'Total a pagar' }}: {{ cop(totalAPagar) }}</strong>
+    </div>
 
     <!-- Page Footer -->
     <div class="page-footer">

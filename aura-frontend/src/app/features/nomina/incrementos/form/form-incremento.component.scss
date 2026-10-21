@@ -1,0 +1,148 @@
+// .page, .card y .card-head son globales; aquí va lo propio de la página.
+
+$text: #1e293b;
+$muted: #94a3b8;
+$red: #ef4444;
+
+.form-body {
+  padding: 1.25rem 1.5rem;
+  container-type: inline-size;
+}
+
+.page-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  color: #64748b;
+}
+
+.seccion {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 1.25rem 0 0.9rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid #f1f5f9;
+
+  &:first-child {
+    margin-top: 0.25rem;
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+
+  @container (max-width: 900px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @container (max-width: 520px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.span-3 {
+  grid-column: span 3;
+
+  @container (max-width: 900px) {
+    grid-column: span 2;
+  }
+
+  @container (max-width: 520px) {
+    grid-column: span 1;
+  }
+}
+
+.span-4 {
+  grid-column: 1 / -1;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.field-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: $text;
+}
+
+.required {
+  color: $red;
+}
+
+.field-hint {
+  font-size: 0.72rem;
+  color: $muted;
+  line-height: 1.3;
+
+  &.todos {
+    font-size: 0.8rem;
+    padding-top: 0.55rem;
+  }
+}
+
+.nombre {
+  font-weight: 600;
+  color: $text;
+  font-size: 0.85rem;
+}
+
+.meta {
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: $muted;
+}
+
+.num {
+  text-align: right;
+}
+
+.nuevo {
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.pendiente {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #b45309;
+}
+
+.vacio {
+  text-align: center;
+  color: $muted;
+  padding: 1.5rem;
+}
+
+.enlace {
+  color: #2563eb;
+  cursor: pointer;
+  font-weight: 600;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.w-full {
+  width: 100%;
+}
+
+:host ::ng-deep {
+  .p-inputnumber,
+  .p-select,
+  .p-multiselect,
+  .p-datepicker {
+    width: 100%;
+    min-width: 0;
+  }
+}

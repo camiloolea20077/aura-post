@@ -4,6 +4,7 @@ import {
   OnDestroy,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
+  inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -40,6 +41,8 @@ type TagSeverity =
   | 'contrast'
   | undefined;
 
+import { ExcelReporteService } from '../../../../shared/services/excel-reporte.service';
+
 @Component({
   selector: 'app-index-turnos',
   standalone: true,
@@ -64,6 +67,9 @@ type TagSeverity =
   styleUrls: ['./index-turnos.component.scss'],
 })
 export class IndexTurnosComponent implements OnInit, OnDestroy {
+  private readonly excel = inject(ExcelReporteService);
+  exportandoExcel = false;
+
   showAbrir = false;
   showCerrar = false;
 
@@ -1002,5 +1008,61 @@ export class IndexTurnosComponent implements OnInit, OnDestroy {
       paddingTop: () => 4,
       paddingBottom: () => 4,
     };
+  }
+
+  // ── Excel del cierre (docs/PLAN_EXCEL_IMPORTADORES_MODULOS.md §1) ───
+  exportandoExcelId: number | null = null;
+
+  async descargarExcel(item: TurnoCajaTableModel): Promise<void> {
+    if (this.exportandoExcelId) return;
+    this.exportandoExcelId = item.id;
+    this.cdr.markForCheck();
+    try {
+      const res = await lastValueFrom(this.turnoCajaService.resumen(item.id));
+      const d = res?.data;
+      if (!d) {
+        this.alertService.showError('Error', 'No se pudo obtener el resumen del turno');
+        return;
+      }
+      const resumen: any[] = [
+        ['Caja', d.cajaNombre], ['Cajero', d.usuarioNombre], ['Apertura', d.fechaApertura], ['Estado', d.estado],
+        ['Base inicial', d.baseInicial], ['Ventas brutas', d.totalVentasBruto], ['Descuentos', d.totalDescuentos],
+        ['Impuestos', d.totalImpuestos], ['Ventas netas', d.totalNeto], ['Transacciones', d.totalTransacciones],
+        ['Ingresos manuales', d.totalIngresos], ['Egresos manuales', d.totalEgresos],
+        ['Efectivo esperado', d.totalEfectivoSistema], ['Efectivo contado', d.totalEfectivoReal],
+        { valores: ['Diferencia', d.diferencia], estilo: 'total' },
+      ];
+      await this.excel.descargar({
+        titulo: 'Cierre de caja',
+        subtitulo: `${d.cajaNombre} — turno #${d.turnoId}`,
+        archivo: `cierre_turno_${d.turnoId}`,
+        hojas: [
+          { nombre: 'Resumen', columnas: [{ titulo: 'Concepto', ancho: 26 }, { titulo: 'Valor', tipo: 'pesos' }], filas: resumen },
+          {
+            nombre: 'Por categoría',
+            columnas: [{ titulo: 'Categoría', ancho: 30 }, { titulo: 'Unidades', tipo: 'numero' }, { titulo: 'Bruto', tipo: 'pesos' },
+              { titulo: 'Descuentos', tipo: 'pesos' }, { titulo: 'Neto', tipo: 'pesos' }],
+            filas: (d.ventasPorCategoria ?? []).map((c) => [c.categoriaNombre, c.totalProductosVendidos, c.totalBruto,
+              c.totalDescuentos, c.totalNeto]),
+          },
+          {
+            nombre: 'Por medio de pago',
+            columnas: [{ titulo: 'Medio', ancho: 20 }, { titulo: 'Pagos', tipo: 'numero' }, { titulo: 'Monto', tipo: 'pesos' }],
+            filas: (d.ventasPorMetodoPago ?? []).map((m) => [m.metodoPago, m.totalPagos, m.totalMonto]),
+          },
+          {
+            nombre: 'Movimientos',
+            columnas: [{ titulo: 'Fecha', ancho: 12 }, { titulo: 'Tipo', ancho: 12 }, { titulo: 'Concepto', ancho: 40 },
+              { titulo: 'Monto', tipo: 'pesos' }],
+            filas: (d.movimientos ?? []).map((m) => [m.fecha, m.tipo, m.concepto, m.monto]),
+          },
+        ],
+      });
+    } catch {
+      this.alertService.showError('Error', 'No se pudo generar el Excel');
+    } finally {
+      this.exportandoExcelId = null;
+      this.cdr.markForCheck();
+    }
   }
 }

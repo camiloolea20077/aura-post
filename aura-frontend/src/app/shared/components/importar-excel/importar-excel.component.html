@@ -1,0 +1,87 @@
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="$event ? null : cerrar()"
+  [header]="'Importar ' + plantilla.titulo.toLowerCase() + ' desde Excel'"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '760px', maxWidth: '96vw' }"
+  [breakpoints]="{ '640px': '100vw' }"
+  styleClass="aura-dialog"
+>
+  <div class="imp">
+    <!-- Paso 1 -->
+    <div class="imp-paso">
+      <span class="imp-num">1</span>
+      <div class="imp-paso__texto">
+        <strong>Descargue la plantilla</strong>
+        <span>{{ plantilla.descripcion }}</span>
+      </div>
+      <button pButton type="button" icon="pi pi-download" label="Plantilla" class="p-button-sm p-button-outlined" (click)="descargarPlantilla()"></button>
+    </div>
+
+    <!-- Paso 2 -->
+    <div class="imp-paso">
+      <span class="imp-num">2</span>
+      <div class="imp-paso__texto">
+        <strong>Suba su archivo</strong>
+        <span *ngIf="!archivo">Formato .xlsx. Se valida al subirlo; todavía no se guarda nada.</span>
+        <span *ngIf="archivo">{{ archivo }} · {{ filas.length }} fila(s) con datos</span>
+      </div>
+      <label class="imp-subir">
+        <i class="pi pi-upload"></i> {{ archivo ? 'Cambiar archivo' : 'Subir Excel' }}
+        <input type="file" accept=".xlsx" hidden (change)="onArchivo($event)" />
+      </label>
+    </div>
+
+    <div class="imp-alerta" *ngIf="faltantes.length">
+      <i class="pi pi-exclamation-triangle"></i>
+      Faltan columnas obligatorias: {{ faltantes.join(', ') }}. Use la plantilla.
+    </div>
+
+    <div class="imp-cargando" *ngIf="validando"><i class="pi pi-spin pi-spinner"></i> Validando…</div>
+
+    <!-- Resultado -->
+    <ng-container *ngIf="resultado as r">
+      <div class="imp-resumen">
+        <span class="imp-chip imp-chip--ok" *ngIf="r.nuevos">{{ r.nuevos }} nuevo(s)</span>
+        <span class="imp-chip imp-chip--info" *ngIf="r.actualizados">{{ r.actualizados }} se actualiza(n)</span>
+        <span class="imp-chip" *ngIf="r.existentes">{{ r.existentes }} ya existe(n)</span>
+        <span class="imp-chip imp-chip--error" *ngIf="r.errores">{{ r.errores }} con error</span>
+        <span class="imp-chip imp-chip--ok" *ngIf="r.confirmado"><i class="pi pi-check"></i> Importado</span>
+      </div>
+      <p class="imp-aviso" *ngFor="let a of r.avisos">{{ a }}</p>
+      <p class="imp-aviso" *ngIf="r.errores && !r.confirmado">Corrija las filas con error en su archivo y vuelva a subirlo: no se guarda nada mientras haya errores.</p>
+
+      <label class="imp-filtro" *ngIf="r.errores">
+        <input type="checkbox" [checked]="soloErrores" (change)="soloErrores = !soloErrores" /> Ver solo los errores
+      </label>
+
+      <div class="imp-tabla">
+        <div class="imp-fila imp-fila--cab">
+          <span>Fila</span><span>Estado</span><span>Registro</span><span>Detalle</span>
+        </div>
+        <div class="imp-fila" *ngFor="let f of filasVisibles">
+          <span class="imp-mono">{{ f.fila }}</span>
+          <span><p-tag [value]="etiqueta(f.estado)" [severity]="severidad(f.estado)" styleClass="tag-mini" /></span>
+          <span class="imp-detalle">{{ f.detalle }}</span>
+          <span class="imp-mensaje">{{ f.mensaje }}</span>
+        </div>
+      </div>
+    </ng-container>
+
+    <div class="imp-pie">
+      <button pButton type="button" label="Cerrar" class="p-button-text" (click)="cerrar()"></button>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-check"
+        label="Importar"
+        class="btn-aura"
+        [disabled]="!puedeImportar"
+        [loading]="importando"
+        (click)="importar()"
+      ></button>
+    </div>
+  </div>
+</p-dialog>

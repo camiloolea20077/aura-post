@@ -12,17 +12,25 @@
         <span class="header-icon"><i class="pi pi-shopping-bag"></i></span>
         <div>
           <h1 class="title">
-            {{ modoEdicion ? "Editar compra" : "Registrar compra" }}
+            {{
+              esNotaCredito
+                ? (modoEdicion ? "Editar devolución" : "Devolución en compra")
+                : (modoEdicion ? "Editar compra" : "Registrar compra")
+            }}
           </h1>
           <p class="subtitle">
-            Compra a proveedor — actualiza stock y kardex automáticamente
+            {{
+              esNotaCredito
+                ? "Mercancía que se le devuelve al proveedor — descuenta stock, kardex y la deuda"
+                : "Compra a proveedor — actualiza stock y kardex automáticamente"
+            }}
           </p>
         </div>
       </div>
       <button
         pButton
         type="button"
-        [label]="modoEdicion ? 'Actualizar compra' : 'Registrar compra'"
+        [label]="esNotaCredito ? (modoEdicion ? 'Actualizar devolución' : 'Registrar devolución') : (modoEdicion ? 'Actualizar compra' : 'Registrar compra')"
         [icon]="isSubmitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
         class="btn-verde"
         [disabled]="isSubmitting() || lineasArray.length === 0"
@@ -214,13 +222,13 @@
           </div>
         </ng-container>
         <div class="campo-row">
-          <label>N° Documento <span class="optional">(opc.)</span></label>
+          <label>{{ esNotaCredito ? "N° nota crédito del proveedor" : "N° Documento" }} <span class="optional">(opc.)</span></label>
           <div class="campo-control">
             <input
               type="text"
               pInputText
               [(ngModel)]="numeroCompra"
-              placeholder="FC-001-2025"
+              [placeholder]="esNotaCredito ? 'NC-001' : 'FC-001-2025'"
               maxlength="50"
               autocomplete="off"
               class="w-full"
@@ -394,13 +402,13 @@
         </div>
 
         <div class="campo-row campo-row--full">
-          <label>Observaciones <span class="optional">(opc.)</span></label>
+          <label>{{ esNotaCredito ? "Motivo de la devolución" : "Observaciones" }} <span class="optional">(opc.)</span></label>
           <div class="campo-control">
             <input
               type="text"
               pInputText
               [(ngModel)]="observaciones"
-              placeholder="Notas internas..."
+              [placeholder]="esNotaCredito ? 'Producto vencido, averiado, no se pidió...' : 'Notas internas...'"
               maxlength="500"
               autocomplete="off"
               class="w-full"
@@ -636,6 +644,15 @@
 
             <!-- Acciones -->
             <td class="text-center td-acc">
+              <button *ngIf="l.productoId"
+                pButton
+                type="button"
+                icon="pi pi-history"
+                class="p-button-text p-button-sm p-button-secondary"
+                pTooltip="Historial de costos"
+                tooltipPosition="top"
+                (click)="verHistorialCosto(l.productoId)"
+              ></button>
               <button
                 pButton
                 type="button"
@@ -712,6 +729,9 @@
                       | currency: "COP" : "symbol-narrow" : "1.0-0"
                   }}
                 </small>
+                <small *ngIf="retefuentePct > 0 && !retefuenteSel" class="ret-sin-concepto">
+                  <i class="pi pi-exclamation-triangle"></i> Elige el concepto
+                </small>
               </div>
               <div class="ret-item">
                 <label>ReteIVA</label>
@@ -723,6 +743,7 @@
                   optionValue="value"
                   placeholder="Sin retención"
                   [showClear]="true"
+                  [filter]="true"
                   appendTo="body"
                   styleClass="w-full"
                 />
@@ -732,6 +753,9 @@
                     reteivaValorValue
                       | currency: "COP" : "symbol-narrow" : "1.0-0"
                   }}
+                </small>
+                <small *ngIf="reteivaPct > 0 && !reteivaSel" class="ret-sin-concepto">
+                  <i class="pi pi-exclamation-triangle"></i> Elige el concepto
                 </small>
               </div>
               <div class="ret-item">
@@ -744,6 +768,7 @@
                   optionValue="value"
                   placeholder="Sin retención"
                   [showClear]="true"
+                  [filter]="true"
                   appendTo="body"
                   styleClass="w-full"
                 />
@@ -753,6 +778,9 @@
                     reteicaValorValue
                       | currency: "COP" : "symbol-narrow" : "1.0-0"
                   }}
+                </small>
+                <small *ngIf="reteicaPct > 0 && !reteicaSel" class="ret-sin-concepto">
+                  <i class="pi pi-exclamation-triangle"></i> Elige el concepto
                 </small>
               </div>
             </div>
@@ -856,7 +884,7 @@
       <button
         pButton
         type="button"
-        [label]="modoEdicion ? 'Actualizar compra' : 'Registrar compra'"
+        [label]="esNotaCredito ? (modoEdicion ? 'Actualizar devolución' : 'Registrar devolución') : (modoEdicion ? 'Actualizar compra' : 'Registrar compra')"
         [icon]="isSubmitting() ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
         class="btn-verde"
         [disabled]="isSubmitting() || lineasArray.length === 0"
@@ -918,6 +946,10 @@
   [cantidad]="lineaSeriales ? unidadesSerial(lineaSeriales) : 0"
   [seriales]="lineaSeriales?.seriales || []"
   (confirmar)="onSerialesEscritos($event)"
+/>
+<app-historial-costo-producto
+  [(visible)]="historialCostoVisible"
+  [productoId]="historialCostoProductoId"
 />
 <app-serial-picker
   [(visible)]="pickerSerialesVisible"

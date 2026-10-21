@@ -1,0 +1,286 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" (onClick)="cancelar()" />
+        <span class="header-icon"><i class="pi pi-file-edit"></i></span>
+        <div>
+          <h1 class="title">Nueva causación</h1>
+          <p class="subtitle">Factura de un gasto o servicio: queda la cuenta por pagar y el asiento</p>
+        </div>
+      </div>
+      <button
+        pButton
+        type="button"
+        label="Causar"
+        [icon]="guardando ? 'pi pi-spin pi-spinner' : 'pi pi-check'"
+        class="btn-aura"
+        [disabled]="guardando || !calculo"
+        (click)="guardar()"
+      ></button>
+    </div>
+
+    <div class="card-body">
+
+    <!-- ═══ Datos de la factura ═══ -->
+    <div class="seccion">
+      <div class="seccion-title"><i class="pi pi-file"></i> Factura del proveedor</div>
+      <div class="grid-campos">
+        <div class="campo campo--ancho">
+          <label>Proveedor</label>
+          <app-tercero-autocomplete
+            [terceroId]="proveedor?.id ?? null"
+            [label]="proveedor?.nombreCompleto ?? null"
+            rol="PROVEEDOR"
+            [rolFijo]="false"
+            placeholder="Buscar por nombre o NIT..."
+            (seleccionado)="onProveedor($event)"
+          />
+          <small class="ayuda" *ngIf="calculo">
+            Persona {{ calculo.tipoPersona === "JURIDICA" ? "jurídica" : "natural" }}: se usa esa tarifa de retención.
+          </small>
+        </div>
+        <div class="campo">
+          <label for="cg-tipo">Soporte</label>
+          <p-dropdown
+            inputId="cg-tipo"
+            [options]="tiposSoporte"
+            [(ngModel)]="tipoSoporte"
+            optionLabel="label"
+            optionValue="value"
+          />
+        </div>
+        <div class="campo">
+          <label for="cg-num">N° de la factura <span class="opcional">(opc.)</span></label>
+          <input id="cg-num" type="text" pInputText [(ngModel)]="numeroSoporte" maxlength="50" placeholder="FE-1234" />
+        </div>
+        <div class="campo">
+          <label for="cg-fecha">Fecha</label>
+          <p-calendar
+            inputId="cg-fecha"
+            [(ngModel)]="fecha"
+            dateFormat="yy-mm-dd"
+            [showIcon]="true"
+            (onSelect)="recalcular()"
+          />
+        </div>
+        <div class="campo">
+          <label for="cg-vence">Vence <span class="opcional">(30 días si no)</span></label>
+          <p-calendar
+            inputId="cg-vence"
+            [(ngModel)]="fechaVencimiento"
+            dateFormat="yy-mm-dd"
+            [showIcon]="true"
+            [showClear]="true"
+          />
+        </div>
+        <div class="campo" *ngIf="sedesOpts.length > 1">
+          <label for="cg-sede">Sede</label>
+          <p-dropdown
+            inputId="cg-sede"
+            [options]="sedesOpts"
+            [(ngModel)]="sucursalId"
+            optionLabel="label"
+            optionValue="value"
+          />
+        </div>
+        <div class="campo">
+          <label>Cuenta por pagar <span class="opcional">(opc.)</span></label>
+          <app-cuenta-autocomplete
+            [(ngModel)]="cuentaPagarContableId"
+            [prefijos]="['2']"
+            placeholder="La de proveedores"
+            [showClear]="true"
+          />
+        </div>
+        <div class="campo campo--ancho">
+          <label for="cg-desc">Descripción <span class="opcional">(opc.)</span></label>
+          <input
+            id="cg-desc"
+            type="text"
+            pInputText
+            [(ngModel)]="descripcion"
+            maxlength="500"
+            placeholder="Arriendo de octubre, honorarios contables..."
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Líneas ═══ -->
+    <div class="seccion">
+      <div class="seccion-title">
+        <i class="pi pi-list"></i> Conceptos
+        <span class="seccion-title__extra" *ngIf="calculando"><i class="pi pi-spin pi-spinner"></i> calculando…</span>
+      </div>
+
+      <div class="linea" *ngFor="let l of lineas; let i = index; trackBy: trackByIndex">
+        <div class="linea-head">
+          <span class="linea-num">{{ i + 1 }}</span>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-trash"
+            class="p-button-text p-button-danger p-button-sm"
+            pTooltip="Quitar línea"
+            tooltipPosition="left"
+            (click)="quitarLinea(i)"
+          ></button>
+        </div>
+        <div class="grid-linea">
+          <div class="campo campo--ancho">
+            <label>Cuenta de gasto</label>
+            <app-cuenta-autocomplete
+              [(ngModel)]="l.cuentaId"
+              [prefijos]="prefijosGasto"
+              placeholder="5120 arriendos, 5110 honorarios..."
+              (ngModelChange)="recalcular()"
+            />
+          </div>
+          <div class="campo campo--ancho">
+            <label>Detalle <span class="opcional">(opc.)</span></label>
+            <input type="text" pInputText [(ngModel)]="l.descripcion" maxlength="300" placeholder="Qué se paga" />
+          </div>
+          <div class="campo">
+            <label>Valor antes de IVA</label>
+            <p-inputNumber
+              [(ngModel)]="l.base"
+              mode="currency"
+              currency="COP"
+              locale="es-CO"
+              [minFractionDigits]="0"
+              [maxFractionDigits]="2"
+              (ngModelChange)="recalcular()"
+            />
+          </div>
+          <div class="campo" *ngIf="centrosOpts.length">
+            <label>Centro de costo</label>
+            <p-dropdown
+              [options]="centrosOpts"
+              [(ngModel)]="l.centroCostoId"
+              optionLabel="label"
+              optionValue="value"
+              [showClear]="true"
+              [filter]="true"
+              placeholder="Ninguno"
+            />
+          </div>
+          <div class="campo">
+            <label>IVA</label>
+            <p-dropdown
+              [options]="ivaOpts"
+              [(ngModel)]="l.tarifaIva"
+              optionLabel="label"
+              optionValue="value"
+              (onChange)="recalcular()"
+            />
+            <small class="valor" *ngIf="valorLinea(i, 'valorIva')">{{
+              valorLinea(i, "valorIva") | currency: "COP" : "symbol-narrow" : "1.0-0"
+            }}</small>
+          </div>
+          <div class="campo" *ngIf="l.tarifaIva">
+            <label>El IVA</label>
+            <p-dropdown
+              [options]="descontableOpts"
+              [(ngModel)]="l.ivaDescontable"
+              optionLabel="label"
+              optionValue="value"
+              (onChange)="recalcular()"
+            />
+          </div>
+          <div class="campo campo--ancho">
+            <label>Retención en la fuente</label>
+            <p-dropdown
+              [options]="conceptosOpts"
+              [(ngModel)]="l.tarifaRetencionId"
+              optionLabel="label"
+              optionValue="value"
+              [showClear]="true"
+              [filter]="true"
+              placeholder="No retiene"
+              emptyMessage="No hay conceptos: créelos en Tarifas de retención"
+              (onChange)="recalcular()"
+            />
+            <small class="valor" *ngIf="valorLinea(i, 'valorRetefuente')">
+              {{ tarifaRetefuenteLinea(i) }} % ·
+              {{ valorLinea(i, "valorRetefuente") | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+            </small>
+          </div>
+          <div class="campo">
+            <label>Tarifa a mano <span class="opcional">(opc.)</span></label>
+            <p-inputNumber
+              [(ngModel)]="l.tarifaRetefuente"
+              suffix=" %"
+              [min]="0"
+              [max]="100"
+              [minFractionDigits]="0"
+              [maxFractionDigits]="3"
+              placeholder="La del concepto"
+              (ngModelChange)="recalcular()"
+            />
+          </div>
+          <div class="campo" *ngIf="l.tarifaIva">
+            <label>ReteIVA</label>
+            <p-dropdown
+              [options]="reteivaOpts"
+              [(ngModel)]="l.tarifaReteiva"
+              optionLabel="label"
+              optionValue="value"
+              (onChange)="recalcular()"
+            />
+            <small class="valor" *ngIf="valorLinea(i, 'valorReteiva')">{{
+              valorLinea(i, "valorReteiva") | currency: "COP" : "symbol-narrow" : "1.0-0"
+            }}</small>
+          </div>
+          <div class="campo">
+            <label>ReteICA</label>
+            <p-inputNumber
+              [(ngModel)]="l.tarifaReteica"
+              suffix=" %"
+              [min]="0"
+              [max]="100"
+              [minFractionDigits]="0"
+              [maxFractionDigits]="3"
+              placeholder="0,966 = 9,66 por mil"
+              (ngModelChange)="recalcular()"
+            />
+            <small class="valor" *ngIf="valorLinea(i, 'valorReteica')">{{
+              valorLinea(i, "valorReteica") | currency: "COP" : "symbol-narrow" : "1.0-0"
+            }}</small>
+          </div>
+        </div>
+      </div>
+
+      <button
+        pButton
+        type="button"
+        label="Agregar concepto"
+        icon="pi pi-plus"
+        class="p-button-outlined p-button-sm"
+        (click)="agregarLinea()"
+      ></button>
+    </div>
+
+    <!-- ═══ Totales ═══ -->
+    <div class="seccion">
+      <div class="error-calculo" *ngIf="errorCalculo">
+        <i class="pi pi-exclamation-circle"></i> {{ errorCalculo }}
+      </div>
+      <div class="avisos" *ngIf="calculo?.avisos?.length">
+        <div *ngFor="let a of calculo!.avisos"><i class="pi pi-info-circle"></i> {{ a }}</div>
+      </div>
+      <div class="totales" *ngIf="calculo">
+        <div class="total-row"><span>Subtotal</span><span>{{ calculo.subtotal | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span></div>
+        <div class="total-row" *ngIf="calculo.iva"><span>IVA</span><span>{{ calculo.iva | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span></div>
+        <div class="total-row resta" *ngIf="calculo.retefuente"><span>Retención en la fuente</span><span>−{{ calculo.retefuente | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span></div>
+        <div class="total-row resta" *ngIf="calculo.reteiva"><span>ReteIVA</span><span>−{{ calculo.reteiva | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span></div>
+        <div class="total-row resta" *ngIf="calculo.reteica"><span>ReteICA</span><span>−{{ calculo.reteica | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span></div>
+        <div class="total-row final"><span>A pagar al proveedor</span><span>{{ calculo.totalPagar | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span></div>
+      </div>
+      <p class="ayuda" *ngIf="!calculo && !errorCalculo">
+        Escriba la cuenta y el valor de cada concepto para ver el IVA, las retenciones y el neto.
+      </p>
+    </div>
+    </div>
+  </div>
+</div>

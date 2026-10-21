@@ -1,0 +1,166 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <p-button icon="pi pi-arrow-left" [rounded]="true" [text]="true" (onClick)="volver()" />
+        <span class="header-icon"><i class="pi pi-file-edit"></i></span>
+        <div>
+          <h1 class="title">
+            {{ c ? "Causación " + c.numero : "Causación" }}
+            <p-tag
+              *ngIf="c"
+              [value]="c.estado === 'ANULADA' ? 'Anulada' : 'Causada'"
+              [severity]="c.estado === 'ANULADA' ? 'danger' : 'success'"
+              [rounded]="true"
+            />
+          </h1>
+          <p class="subtitle" *ngIf="c">
+            {{ c.terceroNombre }} · {{ c.fecha | date: "dd/MM/yyyy" }}
+          </p>
+        </div>
+      </div>
+      <ng-container *appPuede="'compras.compras:ANULAR'">
+        <button
+          *ngIf="c?.estado === 'CAUSADA' && !pidiendoMotivo"
+          pButton
+          type="button"
+          label="Anular"
+          icon="pi pi-ban"
+          class="p-button-outlined p-button-danger"
+          (click)="pidiendoMotivo = true"
+        ></button>
+      </ng-container>
+    </div>
+
+    <div class="card-body">
+
+    <div class="cargando" *ngIf="cargando"><i class="pi pi-spin pi-spinner"></i> Cargando…</div>
+
+    <ng-container *ngIf="c && !cargando">
+      <!-- Anulación -->
+      <div class="anular-box" *ngIf="pidiendoMotivo">
+        <p *ngIf="!tienePagos">
+          Se reversa el asiento (con fecha de hoy) y se anula la cuenta por pagar. Para volver a causar la
+          factura, regístrela de nuevo.
+        </p>
+        <p *ngIf="tienePagos" class="alerta">
+          La cuenta por pagar ya tiene pagos: anule primero los abonos.
+        </p>
+        <div class="anular-fila">
+          <input type="text" pInputText [(ngModel)]="motivo" maxlength="300" placeholder="Motivo de la anulación" />
+          <button pButton type="button" label="Cancelar" class="p-button-text" (click)="pidiendoMotivo = false"></button>
+          <button
+            pButton
+            type="button"
+            label="Anular causación"
+            icon="pi pi-ban"
+            class="p-button-danger"
+            [loading]="anulando"
+            (click)="anular()"
+          ></button>
+        </div>
+      </div>
+
+      <div class="anulada-box" *ngIf="c.estado === 'ANULADA'">
+        <i class="pi pi-ban"></i> Anulada<ng-container *ngIf="c.motivoAnulacion">: {{ c.motivoAnulacion }}</ng-container>
+      </div>
+
+      <!-- Datos -->
+      <div class="seccion">
+        <div class="datos">
+          <div class="dato">
+            <span class="dato-label">Proveedor</span>
+            <span class="dato-val">{{ c.terceroNombre }}</span>
+            <span class="dato-sub" *ngIf="c.terceroDocumento">{{ c.terceroDocumento }}</span>
+          </div>
+          <div class="dato">
+            <span class="dato-label">Soporte</span>
+            <span class="dato-val">{{ etiquetaSoporte(c.tipoSoporte) }}</span>
+            <span class="dato-sub" *ngIf="c.numeroSoporte">{{ c.numeroSoporte }}</span>
+          </div>
+          <div class="dato">
+            <span class="dato-label">Fecha · vence</span>
+            <span class="dato-val">
+              {{ c.fecha | date: "dd/MM/yyyy" }}
+              <ng-container *ngIf="c.fechaVencimiento"> · {{ c.fechaVencimiento | date: "dd/MM/yyyy" }}</ng-container>
+            </span>
+          </div>
+          <div class="dato">
+            <span class="dato-label">Cuenta por pagar</span>
+            <span class="dato-val">{{ c.cuentaPagarCodigo ? c.cuentaPagarCodigo + " " + c.cuentaPagarNombre : "Proveedores" }}</span>
+            <span class="dato-sub" *ngIf="c.estado === 'CAUSADA'">
+              Saldo {{ c.saldoPendiente ?? 0 | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+            </span>
+          </div>
+          <div class="dato" *ngIf="c.sucursalNombre">
+            <span class="dato-label">Sede</span>
+            <span class="dato-val">{{ c.sucursalNombre }}</span>
+          </div>
+          <div class="dato">
+            <span class="dato-label">Asiento</span>
+            <span class="dato-val">{{ c.comprobante ?? "En proceso" }}</span>
+          </div>
+          <div class="dato dato--ancho" *ngIf="c.descripcion">
+            <span class="dato-label">Descripción</span>
+            <span class="dato-val">{{ c.descripcion }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Conceptos -->
+      <div class="seccion">
+        <div class="seccion-title"><i class="pi pi-list"></i> Conceptos</div>
+        <div class="tabla-scroll">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Cuenta</th>
+                <th>Centro de costo</th>
+                <th class="num">Base</th>
+                <th class="num">IVA</th>
+                <th>Retención</th>
+                <th class="num">Retefuente</th>
+                <th class="num">ReteIVA</th>
+                <th class="num">ReteICA</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let l of c.lineas">
+                <td>
+                  <span class="cuenta">{{ l.cuentaCodigo }}</span> {{ l.cuentaNombre }}
+                  <div class="sub" *ngIf="l.descripcion">{{ l.descripcion }}</div>
+                </td>
+                <td>{{ l.centroCostoNombre ?? "—" }}</td>
+                <td class="num">{{ l.base | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+                <td class="num">
+                  {{ l.valorIva | currency: "COP" : "symbol-narrow" : "1.0-0" }}
+                  <div class="sub" *ngIf="l.valorIva && !l.ivaDescontable">al gasto</div>
+                </td>
+                <td>
+                  {{ l.conceptoRetencion ?? (l.tarifaRetefuente ? "Tarifa a mano" : "—") }}
+                  <div class="sub" *ngIf="l.tarifaRetefuente">{{ l.tarifaRetefuente }} %</div>
+                </td>
+                <td class="num">{{ l.valorRetefuente | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+                <td class="num">{{ l.valorReteiva | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+                <td class="num">{{ l.valorReteica | currency: "COP" : "symbol-narrow" : "1.0-0" }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Totales -->
+      <div class="seccion">
+        <div class="totales">
+          <div class="total-row"><span>Subtotal</span><span>{{ c.subtotal | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span></div>
+          <div class="total-row" *ngIf="c.iva"><span>IVA</span><span>{{ c.iva | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span></div>
+          <div class="total-row resta" *ngIf="c.retefuente"><span>Retención en la fuente</span><span>−{{ c.retefuente | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span></div>
+          <div class="total-row resta" *ngIf="c.reteiva"><span>ReteIVA</span><span>−{{ c.reteiva | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span></div>
+          <div class="total-row resta" *ngIf="c.reteica"><span>ReteICA</span><span>−{{ c.reteica | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span></div>
+          <div class="total-row final"><span>A pagar al proveedor</span><span>{{ c.totalPagar | currency: "COP" : "symbol-narrow" : "1.0-0" }}</span></div>
+        </div>
+      </div>
+    </ng-container>
+    </div>
+  </div>
+</div>

@@ -389,3 +389,80 @@ export interface CategoriaContableProductoModel {
   mesesDiferido?: number | null;
   activo: boolean;
 }
+
+// ─── Historial de costos (V226) ──────────────────────────────────────────────
+
+/** Un cambio del costo promedio del producto, con el documento que lo movió. */
+export interface CostoHistorialModel {
+  id: number;
+  fecha: string;
+  origen: string;
+  documentoId: number | null;
+  documentoNumero: string | null;
+  terceroNombre: string | null;
+  /** Unidades base, con signo. */
+  cantidad: number | null;
+  costoEntrada: number | null;
+  stockAntes: number | null;
+  stockDespues: number | null;
+  costoAnterior: number | null;
+  costoNuevo: number;
+  usuarioNombre: string | null;
+  observacion: string | null;
+}
+
+/** Una línea de compra o nota crédito del producto (incluye las anteriores al historial). */
+export interface CompraProductoHistorialModel {
+  compraId: number;
+  numeroCompra: string | null;
+  fecha: string;
+  tipoDocumento: string | null;
+  estado: string | null;
+  proveedorNombre: string | null;
+  cantidad: number;
+  costoUnitario: number;
+  descuentoPct: number | null;
+  /** Costo unitario neto de descuento, sin fletes ni IVA. */
+  costoNeto: number;
+  subtotalLinea: number;
+  presentacionNombre: string | null;
+  cantidadPresentacion: number | null;
+  costoPresentacion: number | null;
+}
+
+export interface HistorialCostoProductoModel {
+  productoId: number;
+  productoNombre: string;
+  productoSku: string | null;
+  unidadAbreviatura: string | null;
+  costoActual: number;
+  stockActual: number;
+  ultimoCostoCompra: number | null;
+  costoCompraMinimo: number | null;
+  costoCompraMaximo: number | null;
+  cambios: CostoHistorialModel[];
+  compras: CompraProductoHistorialModel[];
+}
+
+type Severidad = 'success' | 'danger' | 'warn' | 'info' | 'secondary' | 'contrast';
+
+/** Etiqueta y color de cada origen del historial de costos. */
+export const ORIGEN_COSTO: Record<string, { label: string; severity: Severidad }> = {
+  COMPRA: { label: 'Compra', severity: 'success' },
+  NOTA_CREDITO_COMPRA: { label: 'Nota crédito', severity: 'warn' },
+  ANULACION_COMPRA: { label: 'Anulación compra', severity: 'danger' },
+  ANULACION_NOTA_CREDITO: { label: 'Anulación NC', severity: 'danger' },
+  EDICION_COMPRA_REVERSION: { label: 'Edición (reverso)', severity: 'secondary' },
+  EDICION_COMPRA: { label: 'Edición compra', severity: 'info' },
+  SALDO_INICIAL: { label: 'Saldo inicial', severity: 'info' },
+  CREACION: { label: 'Creación', severity: 'secondary' },
+  AJUSTE_MANUAL: { label: 'Ajuste manual', severity: 'contrast' },
+  RECETA: { label: 'Receta', severity: 'info' },
+  IMPORTACION: { label: 'Importación', severity: 'secondary' },
+};
+
+/** Variación porcentual del costo; null si no hay costo anterior con qué comparar. */
+export function variacionCosto(anterior: number | null, nuevo: number | null): number | null {
+  if (anterior == null || nuevo == null || Number(anterior) === 0) return null;
+  return ((Number(nuevo) - Number(anterior)) / Number(anterior)) * 100;
+}

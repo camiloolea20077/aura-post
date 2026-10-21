@@ -39,11 +39,15 @@ type TagSeverity =
   | 'contrast'
   | undefined;
 
+import { ImportarExcelComponent } from '../../../../shared/components/importar-excel/importar-excel.component';
+import { PLANTILLA_CONTEO } from '../../../../shared/components/importar-excel/plantillas-catalogo';
+
 @Component({
   selector: 'app-detalle-reconteo',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
+    ImportarExcelComponent,
     CommonModule,
     FormsModule,
     ButtonModule,
@@ -61,6 +65,14 @@ type TagSeverity =
   styleUrls: ['./detalle-reconteo.component.scss'],
 })
 export class DetalleReconteoComponent {
+  // Importar desde Excel (docs/PLAN_EXCEL_IMPORTADORES_MODULOS.md §2c)
+  readonly plantillaImportar = PLANTILLA_CONTEO;
+  mostrarImportar = false;
+
+  onImportado(): void {
+    void this.recargarReconteo();
+  }
+
   /** Acciones especiales del perfil (PLAN_PERMISOS P6). */
   private readonly permisosStore = inject(StateStore);
 
@@ -259,5 +271,16 @@ export class DetalleReconteoComponent {
 
   trackById(_: number, d: ReconteoDetalleModel): number {
     return d.id;
+  }
+
+  /** Después de cargar el conteo desde Excel: trae el reconteo con las cantidades nuevas. */
+  private async recargarReconteo(): Promise<void> {
+    if (!this.reconteo) return;
+    try {
+      const res = await lastValueFrom(this.service.getById(this.reconteo.id));
+      this.reconteo = res?.data ?? this.reconteo;
+    } finally {
+      this.cdr.markForCheck();
+    }
   }
 }

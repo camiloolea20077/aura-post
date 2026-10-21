@@ -7,7 +7,10 @@
       <i class="pi" [class.pi-bars]="!menuAbierto" [class.pi-times]="menuAbierto"></i>
     </button>
     <span class="barra-titulo">{{ titulo }}</span>
-    <span class="logo-icono logo-icono--chico">CT</span>
+    <button type="button" class="campana campana--barra" (click)="irASolicitudes()" aria-label="Solicitudes pendientes">
+      <i class="pi pi-bell"></i>
+      <span class="campana__contador" *ngIf="pendientes">{{ pendientes }}</span>
+    </button>
   </header>
 
   <!-- Fondo oscuro detrás del cajón -->
@@ -16,10 +19,15 @@
   <aside class="lateral">
     <div class="logo">
       <span class="logo-icono">CT</span>
-      <div>
+      <div class="logo-texto">
         <span class="logo-titulo">Platform</span>
         <span class="logo-sub">Panel de administración</span>
       </div>
+      <button type="button" class="campana" (click)="irASolicitudes()" aria-label="Solicitudes pendientes"
+        [title]="pendientes ? pendientes + ' solicitudes de activación electrónica' : 'Sin solicitudes pendientes'">
+        <i class="pi pi-bell"></i>
+        <span class="campana__contador" *ngIf="pendientes">{{ pendientes }}</span>
+      </button>
     </div>
 
     <nav class="nav">
@@ -32,6 +40,7 @@
       >
         <i [class]="i.icon"></i>
         <span>{{ i.label }}</span>
+        <span class="nav-contador" *ngIf="i.conPendientes && pendientes">{{ pendientes }}</span>
       </a>
 
       <span class="nav-seccion">Soporte</span>

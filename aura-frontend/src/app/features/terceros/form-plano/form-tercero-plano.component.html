@@ -17,7 +17,7 @@
               <h1 class="title">
                 {{ isEdit ? "Editar tercero" : "Nuevo tercero" }}
               </h1>
-              <p class="subtitle">Clientes, proveedores, empleados y bancos</p>
+              <p class="subtitle">Clientes, proveedores, bancos y entidades</p>
             </div>
           </div>
         </div>
@@ -27,6 +27,8 @@
         <!-- ── Clasificación ──────────────────────────────────── -->
         <h3 class="section">Clasificación</h3>
         <div class="grid-3">
+          <!-- Con roles fijos (Empleados → Nuevo) el tipo va por defecto y no se elige. -->
+          @if (!rolesFijos?.length) {
           <div class="field">
             <label for="roles">Tipo de tercero <span class="req">*</span></label>
             <p-multiSelect
@@ -37,13 +39,14 @@
               (onChange)="onRolesChange()"
               optionLabel="label"
               optionValue="value"
-              placeholder="Cliente, Proveedor, Empleado…"
+              placeholder="Cliente, Proveedor…"
               [maxSelectedLabels]="2"
               selectedItemsLabel="{0} tipos"
               [showHeader]="false"
               styleClass="w-full"
             />
           </div>
+          }
 
           <div class="field">
             <label for="tipoPersona">Tipo de persona</label>
@@ -85,6 +88,18 @@
           }
         </div>
 
+        <!-- ── Fotos y firma (persona natural) ──────────────────── -->
+        @if (esPersona) {
+          <div class="imagenes">
+            <app-imagen-redonda titulo="Foto oficial" [url]="imagenes.urls['foto-oficial']"
+              (elegido)="onImagen('foto-oficial', $event)" (quitado)="quitarImagen('foto-oficial')" />
+            <app-imagen-redonda titulo="Foto perfil" [url]="imagenes.urls['foto-perfil']"
+              (elegido)="onImagen('foto-perfil', $event)" (quitado)="quitarImagen('foto-perfil')" />
+            <app-imagen-redonda titulo="Firma" icono="pi pi-pencil" [url]="imagenes.urls.firma"
+              (elegido)="onImagen('firma', $event)" (quitado)="quitarImagen('firma')" />
+          </div>
+        }
+
         <!-- ── Identificación ─────────────────────────────────── -->
         <h3 class="section">Identificación</h3>
         <div class="grid-3">
@@ -106,6 +121,12 @@
             <label for="dv">Dígito de verificación</label>
             <input id="dv" pInputText formControlName="dv" class="w-full" placeholder="DV" maxlength="2" />
           </div>
+          @if (esPersona) {
+            <div class="field">
+              <label for="rut">RUT</label>
+              <input id="rut" pInputText formControlName="rut" class="w-full" placeholder="Si es distinto al documento" />
+            </div>
+          }
           @if (esJuridica) {
             <div class="field">
               <label for="razonSocial">Razón social <span class="req">*</span></label>
@@ -151,54 +172,62 @@
               <input id="apellido2" pInputText formControlName="apellido2" class="w-full" />
             </div>
 
-            @if (!esBanco) {
+            <div class="field">
+              <label for="sexo">Género</label>
+              <p-dropdown inputId="sexo" formControlName="sexo" [options]="sexoOpts" optionLabel="label"
+                optionValue="value" placeholder="Seleccionar" styleClass="w-full" [showClear]="true" />
+            </div>
+            @if (!esPersona && !esBanco) {
               <div class="field">
                 <label for="fechaNacimiento">Fecha de nacimiento</label>
-                <p-calendar
-                  inputId="fechaNacimiento"
-                  formControlName="fechaNacimiento"
-                  dateFormat="yy-mm-dd"
-                  [showIcon]="true"
-                  [maxDate]="hoy"
-                  styleClass="w-full"
-                  placeholder="AAAA-MM-DD"
-                ></p-calendar>
-              </div>
-              <div class="field">
-                <label for="sexo">Sexo</label>
-                <p-dropdown
-                  inputId="sexo"
-                  formControlName="sexo"
-                  [options]="sexoOpts"
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="Seleccionar"
-                  styleClass="w-full"
-                  [showClear]="true"
-                ></p-dropdown>
+                <p-calendar inputId="fechaNacimiento" formControlName="fechaNacimiento" dateFormat="yy-mm-dd"
+                  [showIcon]="true" [maxDate]="hoy" styleClass="w-full" placeholder="AAAA-MM-DD"></p-calendar>
               </div>
               <div class="field">
                 <label for="fechaExpedicion">Fecha de expedición</label>
-                <p-calendar
-                  inputId="fechaExpedicion"
-                  formControlName="fechaExpedicionDocumento"
-                  dateFormat="yy-mm-dd"
-                  [showIcon]="true"
-                  [maxDate]="hoy"
-                  styleClass="w-full"
-                  placeholder="AAAA-MM-DD"
-                ></p-calendar>
+                <p-calendar inputId="fechaExpedicion" formControlName="fechaExpedicionDocumento" dateFormat="yy-mm-dd"
+                  [showIcon]="true" [maxDate]="hoy" styleClass="w-full" placeholder="AAAA-MM-DD"></p-calendar>
+              </div>
+            }
+            @if (esPersona) {
+              <div class="field">
+                <label for="estadoCivil">Estado civil</label>
+                <p-dropdown inputId="estadoCivil" formControlName="estadoCivil" [options]="estadoCivilOpts"
+                  optionLabel="label" optionValue="value" placeholder="Seleccionar" styleClass="w-full" [showClear]="true" />
+              </div>
+              <div class="field">
+                <label for="rh">RH</label>
+                <p-dropdown inputId="rh" formControlName="rh" [options]="rhOpts" optionLabel="label"
+                  optionValue="value" placeholder="Seleccionar" styleClass="w-full" [showClear]="true" />
               </div>
             }
           }
-
-          @if (!esBanco) {
-            <div class="field">
-              <label for="telefono">Teléfono</label>
-              <input id="telefono" pInputText formControlName="telefono" class="w-full" />
-            </div>
-          }
         </div>
+
+        <!-- ── Expedición y nacimiento (persona natural) ─────────── -->
+        @if (esPersona) {
+          <h3 class="section">Expedición del documento</h3>
+          <div class="grid-3">
+            <div class="field">
+              <label for="fechaExpedicion">Fecha de expedición</label>
+              <p-calendar inputId="fechaExpedicion" formControlName="fechaExpedicionDocumento" dateFormat="yy-mm-dd"
+                [showIcon]="true" [maxDate]="hoy" styleClass="w-full" placeholder="AAAA-MM-DD"></p-calendar>
+            </div>
+            <app-lugar-select [grupo]="frm" paisControl="codigoPaisExpedicion"
+              municipioControl="municipioExpedicionId" titulo="de expedición" />
+          </div>
+
+          <h3 class="section">Nacimiento</h3>
+          <div class="grid-3">
+            <div class="field">
+              <label for="fechaNacimiento">Fecha de nacimiento</label>
+              <p-calendar inputId="fechaNacimiento" formControlName="fechaNacimiento" dateFormat="yy-mm-dd"
+                [showIcon]="true" [maxDate]="hoy" styleClass="w-full" placeholder="AAAA-MM-DD"></p-calendar>
+            </div>
+            <app-lugar-select [grupo]="frm" paisControl="codigoPaisNacimiento"
+              municipioControl="municipioNacimientoId" titulo="de nacimiento" />
+          </div>
+        }
 
         <!-- ── Representante legal (jurídica, no entidad simple) ── -->
         @if (esJuridica && !esEntidadSimple) {
@@ -227,58 +256,39 @@
           </div>
         }
 
-        <!-- ── Contacto ───────────────────────────────────────── -->
+        <!-- ── Residencia y contacto ──────────────────────────── -->
         @if (!esBanco) {
-          <h3 class="section">Contacto</h3>
+          <h3 class="section">{{ esPersona ? 'Residencia y contacto' : 'Ubicación y contacto' }}</h3>
           <div class="grid-3">
-            <div class="field">
-              <label for="email">Correo</label>
-              <input id="email" pInputText formControlName="email" class="w-full" />
-              @if (invalido("email")) {
-                <small class="field-error">Correo no válido.</small>
-              }
-            </div>
-            <div class="field">
+            <app-lugar-select [grupo]="frm" paisControl="codigoPais" municipioControl="municipioId"
+              [titulo]="esPersona ? 'de residencia' : ''" (municipioNombre)="municipioNombre = $event" />
+            @if (esPersona) {
+              <div class="field">
+                <label for="zona">Zona</label>
+                <p-dropdown inputId="zona" formControlName="zona" [options]="zonaOpts" optionLabel="label"
+                  optionValue="value" placeholder="Seleccionar" styleClass="w-full" [showClear]="true" />
+              </div>
+              <div class="field">
+                <label for="comuna">Comuna / corregimiento</label>
+                <input id="comuna" pInputText formControlName="comuna" class="w-full" />
+              </div>
+              <div class="field">
+                <label for="barrio">Barrio / vereda</label>
+                <input id="barrio" pInputText formControlName="barrio" class="w-full" />
+              </div>
+            }
+            <div class="field" [class.span-2]="!esPersona">
               <label for="direccion">Dirección</label>
               <input id="direccion" pInputText formControlName="direccion" class="w-full" />
             </div>
-            <div class="field">
-              <label for="pais">País</label>
-              <p-dropdown
-                inputId="pais"
-                formControlName="codigoPais"
-                [options]="paisOpts"
-                optionLabel="label"
-                optionValue="value"
-                [filter]="true"
-                filterBy="label"
-                (onChange)="onPaisChange()"
-                styleClass="w-full"
-              />
+            <div class="field span-2">
+              <label>Teléfonos</label>
+              <app-telefonos-input formControlName="telefonos" />
             </div>
-
-            @if (esColombia) {
-              <div class="field">
-                <label for="municipio">Municipio</label>
-                <p-dropdown
-                  inputId="municipio"
-                  formControlName="municipioId"
-                  [options]="municipioOpts"
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="Buscar municipio..."
-                  [filter]="true"
-                  (onFilter)="onMunicipioFilter($event)"
-                  [virtualScroll]="true"
-                  [virtualScrollItemSize]="38"
-                  [showClear]="true"
-                  [loading]="municipioLoading"
-                  filterPlaceholder="Escribe para buscar..."
-                  emptyFilterMessage="Escribe para buscar municipios"
-                  styleClass="w-full"
-                />
-              </div>
-            }
+            <div class="field">
+              <label>Correos</label>
+              <app-correos-input formControlName="correos" />
+            </div>
 
             @if (!esEntidadSimple) {
               <div class="field">
@@ -307,10 +317,29 @@
               </div>
             }
           </div>
+
+          <!-- ── Persona de contacto (empleado) ───────────────── -->
+          @if (esPersona) {
+          <h3 class="section">Persona de contacto</h3>
+          <div class="grid-3">
+            <div class="field">
+              <label for="contactoNombre">Nombre</label>
+              <input id="contactoNombre" pInputText formControlName="contactoNombre" class="w-full" />
+            </div>
+            <div class="field">
+              <label>Teléfonos</label>
+              <app-telefonos-input formControlName="contactoTelefonos" />
+            </div>
+            <div class="field">
+              <label>Correos</label>
+              <app-correos-input formControlName="contactoCorreos" />
+            </div>
+          </div>
+          }
         }
 
         <!-- ── Datos bancarios (empleado: ahí se le paga la nómina) ── -->
-        @if (esEmpleado) {
+        @if (esEmpleado && mostrarBanco) {
           <h3 class="section">Datos bancarios</h3>
           <div class="grid-3">
             <div class="field">

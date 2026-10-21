@@ -1,0 +1,17 @@
+<div class="imagen">
+  <label class="imagen__circulo" [class.imagen__circulo--vacio]="!url" [class.imagen__circulo--bloqueado]="disabled">
+    @if (url) {
+      <img [src]="url" [alt]="titulo" />
+    } @else {
+      <i [class]="icono"></i>
+    }
+    @if (!disabled) {
+      <span class="imagen__cambiar"><i class="pi pi-camera"></i></span>
+      <input type="file" hidden accept="image/*" (change)="onArchivo($event)" />
+    }
+  </label>
+  <span class="imagen__titulo">{{ titulo }}</span>
+  @if (url && !disabled) {
+    <button type="button" class="imagen__quitar" (click)="quitado.emit()">Quitar</button>
+  }
+</div>

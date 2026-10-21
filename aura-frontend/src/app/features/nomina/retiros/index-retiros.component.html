@@ -1,0 +1,142 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-sign-out"></i></span>
+        <div>
+          <h1 class="title">Retiros</h1>
+          <p class="subtitle">
+            Registre el retiro de una vinculación: se termina en esa fecha, PILA reporta el retiro
+            y queda pendiente su liquidación definitiva
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button *appPuede="'recursos-humanos.retiros:CREAR'" pButton type="button" label="Nuevo retiro"
+            icon="pi pi-plus" class="btn-aura" (click)="nuevo()"></button>
+        </div>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input type="text" pInputText class="search-input" placeholder="Buscar empleado, documento o vinculación..."
+              [(ngModel)]="busqueda" (input)="buscar()" (keydown.escape)="limpiarBusqueda()" />
+            @if (busqueda) {
+              <button class="clear-btn" (click)="limpiarBusqueda()"><i class="pi pi-times"></i></button>
+            }
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <p-table [value]="filas" [lazy]="true" [loading]="cargando" [totalRecords]="totalFilas" [rows]="tamano"
+      [paginator]="true" [rowsPerPageOptions]="[10, 25, 50]" (onPage)="onPagina($event)"
+      [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} de {totalRecords} registros"
+      [scrollable]="true" [tableStyle]="{ 'min-width': '60rem' }" showGridlines>
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Empleado</th>
+          <th style="width: 120px">Retiro</th>
+          <th style="width: 220px">Motivo</th>
+          <th style="width: 170px">Estado</th>
+          <th style="width: 150px">Liquidación</th>
+          <th style="width: 110px">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-r>
+        <tr [class.row-inactiva]="r.estado === 'ANULADO'">
+          <td>
+            <div class="nombre">{{ r.empleadoDocumento }} - {{ r.empleadoNombre }}</div>
+            <div class="meta">{{ r.codigoVinculacion ?? 'Sin código' }} · {{ r.cargo ?? 'Sin cargo' }}</div>
+          </td>
+          <td>{{ r.fechaRetiro | fechaEs }}</td>
+          <td>
+            {{ r.motivo }}
+            @if (r.indemniza) {
+              <div class="meta">Con indemnización</div>
+            }
+          </td>
+          <td><p-tag [value]="textoEstado(r)" [severity]="severidad(r.estado)" styleClass="tag-mini" /></td>
+          <td>
+            @if (r.documentoNumero) {
+              <a class="enlace" (click)="abrirLiquidacion(r)">{{ r.documentoNumero }}</a>
+              @if (r.nominaNumero) {
+                <div class="meta">Nómina {{ r.nominaNumero }}</div>
+              }
+            } @else {
+              <span class="meta">—</span>
+            }
+          </td>
+          <td>
+            <div class="action-buttons">
+              @if (r.estado === 'PENDIENTE') {
+                <button *appPuede="'recursos-humanos.prenomina:CREAR'" pButton icon="pi pi-calculator"
+                  class="p-button-text p-button-sm" pTooltip="Generar liquidación definitiva"
+                  [loading]="generando === r.id" [disabled]="generando !== null"
+                  (click)="generarLiquidacion(r)"></button>
+                <button *appPuede="'recursos-humanos.retiros:ELIMINAR'" pButton icon="pi pi-ban"
+                  class="p-button-text p-button-danger p-button-sm" pTooltip="Anular retiro"
+                  (click)="confirmarAnular(r)"></button>
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6">
+            <div class="empty-state">
+              <i class="pi pi-sign-out"></i>
+              <p>No hay retiros registrados.</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<p-dialog header="Registrar retiro" [(visible)]="mostrarForm" [modal]="true" [style]="{ width: '620px' }"
+  [breakpoints]="{ '680px': '95vw' }" [draggable]="false">
+  <div class="form-retiro">
+    <div class="campo ancho">
+      <label>Vinculación *</label>
+      <p-select [options]="vinculaciones" [(ngModel)]="form.contratoId" optionLabel="label" optionValue="value"
+        [filter]="true" filterBy="label" placeholder="Empleado o código de vinculación" styleClass="w-full"
+        appendTo="body" />
+    </div>
+    <div class="campo">
+      <label>Fecha de retiro *</label>
+      <p-calendar [(ngModel)]="form.fechaRetiro" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
+        appendTo="body" />
+    </div>
+    <div class="campo">
+      <label>Motivo *</label>
+      <p-select [options]="motivos" [(ngModel)]="form.motivoId" optionLabel="label" optionValue="value"
+        placeholder="Seleccione" styleClass="w-full" appendTo="body" />
+    </div>
+    <div class="campo">
+      <label>Cesantías consignadas hasta</label>
+      <p-calendar [(ngModel)]="form.cesantiasCorteHasta" dateFormat="yy-mm-dd" [showIcon]="true" [showClear]="true"
+        styleClass="w-full" appendTo="body" />
+      <small>Solo si se consignaron al fondo fuera del sistema; la liquidación no las vuelve a pagar</small>
+    </div>
+    <div class="campo ancho">
+      <label>Observación</label>
+      <input pInputText [(ngModel)]="form.observacion" class="w-full" />
+    </div>
+    <p class="nota ancho">
+      Al registrarlo, la vinculación queda terminada en la fecha de retiro. Después genere su liquidación definitiva.
+    </p>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancelar" icon="pi pi-times" class="btn-amarillo" (click)="mostrarForm = false"></button>
+    <button pButton label="Registrar retiro" icon="pi pi-check" class="btn-verde" [loading]="guardando"
+      (click)="guardar()"></button>
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog />

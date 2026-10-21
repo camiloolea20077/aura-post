@@ -7,3 +7,30 @@
 }
 
 <p-confirmDialog></p-confirmDialog>
+
+<!-- Aviso de versión nueva con lo que cambia -->
+<p-dialog
+  [visible]="mostrarActualizacion()"
+  (visibleChange)="mostrarActualizacion.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '560px', maxWidth: '94vw' }"
+  header="Nueva versión disponible"
+>
+  <p class="act-intro">Hay una actualización del sistema. Se recargará la página para aplicarla.</p>
+  @if (cambiosVersion().length) {
+    <div class="act-titulo">Qué cambia</div>
+    <ul class="act-lista">
+      @for (c of cambiosVersion(); track c.modulo + c.texto) {
+        <li><b>{{ c.modulo }}:</b> {{ c.texto }}</li>
+      }
+    </ul>
+  }
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Más tarde" icon="pi pi-clock" class="btn-amarillo"
+      (click)="mostrarActualizacion.set(false)"></button>
+    <button pButton type="button" label="Actualizar ahora" icon="pi pi-refresh" class="btn-aura"
+      (click)="applyUpdate()"></button>
+  </ng-template>
+</p-dialog>

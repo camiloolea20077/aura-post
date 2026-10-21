@@ -174,7 +174,10 @@ export class TerceroAutocompleteComponent implements ControlValueAccessor, OnCha
       case 'BANCO':
         return (await lastValueFrom(this.service.bancos(q))).data ?? [];
       default: {
-        const res = await lastValueFrom(this.service.page({ page: 0, rows: 15, search: q || null }));
+        // Solo activos: un tercero inactivo no se ofrece para escoger.
+        const res = await lastValueFrom(
+          this.service.page({ page: 0, rows: 15, search: q || null, params: { soloActivos: true } }),
+        );
         const items: TerceroTableModel[] = res?.data?.content ?? [];
         return this.rol === 'EMPLEADO' ? items.filter((t) => t.esEmpleado) : items;
       }

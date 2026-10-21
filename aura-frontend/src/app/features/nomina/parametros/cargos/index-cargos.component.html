@@ -1,0 +1,175 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-briefcase"></i></span>
+        <div>
+          <h1 class="title">Cargos</h1>
+          <p class="subtitle">
+            Nivel, tipo, plazas y rango salarial de cada cargo
+          </p>
+        </div>
+      </div>
+
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button
+            *appPuede="'recursos-humanos.cargos:CREAR'"
+            pButton
+            type="button"
+            label="Nuevo cargo"
+            icon="pi pi-plus"
+            class="btn-aura"
+            (click)="nuevo()"
+          ></button>
+        </div>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              class="search-input"
+              placeholder="Buscar cargo, código, nivel o tipo..."
+              [(ngModel)]="busqueda"
+              (input)="buscar()"
+              (keydown.escape)="limpiarBusqueda()"
+            />
+            <button
+              *ngIf="busqueda"
+              class="clear-btn"
+              (click)="limpiarBusqueda()"
+            >
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <p-table
+      [value]="filas"
+      [lazy]="true"
+      [loading]="cargando"
+      [totalRecords]="totalFilas"
+      [rows]="tamano"
+      [paginator]="true"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      (onPage)="onPagina($event)"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first}-{last} de {totalRecords} registros"
+      [scrollable]="true"
+      [tableStyle]="{ 'min-width': '52rem' }"
+      showGridlines
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Cargo</th>
+          <th style="width: 150px">Nivel</th>
+          <th style="width: 150px">Tipo</th>
+          <th style="width: 90px" class="text-right">Plazas</th>
+          <th style="width: 220px" class="text-right">Rango salarial</th>
+          <th style="width: 100px">Estado</th>
+          <th style="width: 110px">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-c>
+        <tr [class.row-inactiva]="!c.activo">
+          <td>
+            <div class="nombre">{{ c.nombre }}</div>
+            <div class="meta">
+              <code class="codigo">{{ c.codigo }}</code>
+            </div>
+          </td>
+          <td>{{ c.nivelNombre ?? "—" }}</td>
+          <td>{{ c.tipoCargoNombre ?? "—" }}</td>
+          <td class="text-right mono">{{ c.plazas ?? "Sin límite" }}</td>
+          <td class="text-right mono">
+            @if (c.salarioReferencia != null) {
+              <div>
+                {{
+                  c.salarioReferencia
+                    | currency: "COP" : "symbol-narrow" : "1.0-0"
+                }}
+              </div>
+            }
+            @if (c.salarioMinimo != null || c.salarioMaximo != null) {
+              <div class="meta">
+                {{
+                  c.salarioMinimo != null
+                    ? (c.salarioMinimo
+                      | currency: "COP" : "symbol-narrow" : "1.0-0")
+                    : "…"
+                }}
+                –
+                {{
+                  c.salarioMaximo != null
+                    ? (c.salarioMaximo
+                      | currency: "COP" : "symbol-narrow" : "1.0-0")
+                    : "…"
+                }}
+              </div>
+            }
+            @if (
+              c.salarioReferencia == null &&
+              c.salarioMinimo == null &&
+              c.salarioMaximo == null
+            ) {
+              <span class="sin-dato">—</span>
+            }
+          </td>
+          <td>
+            <p-tag
+              [value]="c.activo ? 'Activo' : 'Inactivo'"
+              [severity]="c.activo ? 'success' : 'secondary'"
+              styleClass="tag-mini"
+            />
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button
+                *appPuede="'recursos-humanos.cargos:EDITAR'"
+                pButton
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm action-edit"
+                pTooltip="Editar"
+                (click)="editar(c)"
+              ></button>
+              <button
+                *appPuede="'recursos-humanos.cargos:ELIMINAR'"
+                pButton
+                icon="pi pi-trash"
+                class="p-button-text p-button-danger p-button-sm action-delete"
+                pTooltip="Eliminar"
+                (click)="confirmarEliminar(c)"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              <i class="pi pi-briefcase"></i>
+              <p>
+                No hay cargos registrados.<br />Créelos aquí y luego asígnelos
+                al vincular empleados.
+              </p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<app-form-cargo
+  [(visible)]="mostrarForm"
+  [cargo]="seleccionado"
+  (guardado)="cargar()"
+/>
+
+<p-confirmDialog />

@@ -44,6 +44,9 @@ export interface ImpuestoModel {
   cuentaGenerado?: string | null;
   cuentaDescontableId: number | null;
   cuentaDescontable?: string | null;
+  /** A quién se le paga (DIAN para IVA e INC). */
+  terceroAcreedorId?: number | null;
+  terceroAcreedor?: string | null;
   vigenteDesde?: string | null;
   vigenteHasta?: string | null;
   activo?: boolean;
@@ -73,6 +76,9 @@ export interface VistaPreviaCompraRequest {
   retefuentePct?: number | null;
   reteivaPct?: number | null;
   reteicaPct?: number | null;
+  retefuenteTarifaId?: number | null;
+  reteivaTarifaId?: number | null;
+  reteicaTarifaId?: number | null;
   formaPago?: string | null;
   lineas: { productoId: number; neto: number; iva: number }[];
   pagos?: { metodoPago: string; cuentaBancariaId?: number | null; cuentaContableId?: number | null; monto: number }[];

@@ -1,0 +1,245 @@
+@if (mostrarLiquidar) {
+  <div class="acciones" *appPuede="'recursos-humanos.prenomina:EDITAR'">
+    <span class="nota">
+      {{ pendientes }} empleado(s) sin liquidar. Se liquidan con la fecha de liquidación del encabezado.
+    </span>
+    <button pButton type="button" label="Liquidar" icon="pi pi-calculator" class="btn-aura"
+      [loading]="lanzando" [disabled]="!!proceso" (click)="liquidar()"></button>
+  </div>
+} @else if (editable && !cargando && documento.empleados === 0) {
+  <div class="acciones"><span class="nota">Agregue empleados en la pestaña Empleados para poder liquidar.</span></div>
+}
+
+@if (modoPago && pendientesPago.length > 0) {
+  <div class="acciones" *appPuede="'recursos-humanos.nomina-documento:EDITAR'">
+    <span class="nota">{{ pendientesPago.length }} empleado(s) pendiente(s) de pago.</span>
+    <button pButton type="button" label="Pagar todos" icon="pi pi-wallet" class="btn-aura"
+      [disabled]="pagando" (click)="abrirPago(null)"></button>
+  </div>
+}
+
+@if (modoPago && filasPago.length > 0) {
+  <div class="acciones">
+    <span class="nota">Documentos de pago de {{ filasPago.length }} empleado(s).</span>
+    <button pButton type="button" label="Planilla para el banco" icon="pi pi-building-columns" class="btn-aura"
+      [loading]="generandoPdf === 'banco'" [disabled]="generandoPdf !== null"
+      (click)="descargarPlanillaBanco()"></button>
+    <button pButton type="button" label="Enviar comprobantes por correo" icon="pi pi-envelope" class="p-button-outlined"
+      [disabled]="generandoPdf !== null" (click)="mostrarEnvioCorreo = true"></button>
+  </div>
+}
+
+<app-envio-comprobantes [(visible)]="mostrarEnvioCorreo" [documento]="documento" [filas]="filasPago" />
+
+@if (modoPago) {
+  <div class="acciones">
+    <span class="nota">
+      <i class="pi pi-info-circle"></i>
+      La nómina electrónica es un documento por empleado y mes: se envía desde
+      <a class="enlace" [routerLink]="['/nomina/electronica']" [queryParams]="mesElectronica">Nómina electrónica → Por mes</a>
+      cuando el mes está completo.
+    </span>
+  </div>
+}
+
+@if (proceso) {
+  <div class="progreso">
+    <div class="progreso__texto">
+      <span><i class="pi pi-spin pi-spinner"></i> {{ proceso.mensaje ?? 'Liquidando…' }}</span>
+      <span>{{ proceso.itemsOk + proceso.itemsError }} / {{ proceso.totalItems }}</span>
+    </div>
+    <p-progressBar [value]="proceso.progreso" [showValue]="false" styleClass="barra" />
+  </div>
+}
+
+<div class="buscar-fila">
+  <span class="search-wrap buscar-tab">
+    <i class="pi pi-search"></i>
+    <input type="text" pInputText class="search-input" placeholder="Buscar empleado, documento o vinculación..."
+      [(ngModel)]="busqueda" (ngModelChange)="tabla.filterGlobal($event, 'contains')"
+      (keydown.escape)="busqueda = ''; tabla.filterGlobal('', 'contains')" />
+    @if (busqueda) {
+      <button type="button" class="clear-btn" (click)="busqueda = ''; tabla.filterGlobal('', 'contains')">
+        <i class="pi pi-times"></i>
+      </button>
+    }
+  </span>
+</div>
+
+<p-table #tabla [value]="filas" [globalFilterFields]="['empleadoNombre', 'empleadoDocumento', 'codigoVinculacion']" [loading]="cargando" dataKey="nominaId" [scrollable]="true"
+  [tableStyle]="{ 'min-width': '64rem' }" showGridlines [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50, 100]" [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} de {totalRecords} registros">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Empleado</th>
+      <th style="width: 70px" class="text-right">Días</th>
+      <th style="width: 140px" class="text-right">Devengado</th>
+      <th style="width: 140px" class="text-right">Deducido</th>
+      <th style="width: 140px" class="text-right">Neto a pagar</th>
+      <th style="width: 140px" class="text-right">Aporte empleador</th>
+      <th style="width: 120px">Estado</th>
+      @if (modoPago) {
+        <th style="width: 120px">Pago</th>
+      }
+      <th style="width: 100px">Acciones</th>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="body" let-f>
+    <tr>
+      <td>
+        <div class="nombre">{{ f.empleadoDocumento }} - {{ f.empleadoNombre }}</div>
+        @if (f.error) {
+          <div class="causa"><i class="pi pi-exclamation-circle"></i> {{ f.error }}</div>
+        }
+      </td>
+      @if (f.liquidada) {
+        <td class="text-right mono">{{ f.diasTrabajados }}</td>
+        <td class="text-right mono">{{ f.devengado | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+        <td class="text-right mono">{{ f.deducido | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+        <td class="text-right mono fuerte">{{ f.neto | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+        <td class="text-right mono">{{ f.aportes | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+      } @else {
+        <td colspan="5" class="sin-dato">—</td>
+      }
+      <td>
+        @if (f.liquidada) {
+          <p-tag value="Liquidado" severity="success" styleClass="tag-mini" />
+        } @else {
+          <p-tag value="No liquidado" severity="danger" styleClass="tag-mini" />
+        }
+      </td>
+      @if (modoPago) {
+        <td>
+          @if (f.estado === 'PAGADO') {
+            <p-tag value="Pagado" severity="success" styleClass="tag-mini"
+              [pTooltip]="(f.medioPago === 'TRANSFERENCIA' ? 'Transferencia' : 'Efectivo') + (f.fechaPago ? ' · ' + (f.fechaPago | date: 'dd/MM/yyyy') : '')" />
+          } @else {
+            <p-tag value="Pendiente" severity="warn" styleClass="tag-mini" />
+          }
+        </td>
+      }
+      <td>
+        <div class="action-buttons">
+          @if (f.liquidada) {
+            <button type="button" pButton icon="pi pi-eye" class="p-button-text p-button-sm"
+              pTooltip="Ver conceptos" (click)="verConceptos(f)"></button>
+          }
+          @if (modoPago && f.liquidada && f.estado !== 'ANULADO') {
+            <button type="button" pButton icon="pi pi-file-pdf" class="p-button-text p-button-sm"
+              pTooltip="Comprobante de pago" [loading]="generandoPdf === f.nominaId"
+              [disabled]="generandoPdf !== null" (click)="descargarComprobantes(f)"></button>
+          }
+          @if (modoPago && (f.estado === 'APROBADO' || f.estado === 'PAGADO')) {
+            <button type="button" pButton icon="pi pi-file-check" class="p-button-text p-button-sm"
+              pTooltip="Nómina electrónica del mes" (click)="abrirElectronica(f)"></button>
+          }
+          @if (modoPago && f.estado === 'APROBADO') {
+            <button *appPuede="'recursos-humanos.nomina-documento:EDITAR'" type="button" pButton icon="pi pi-wallet"
+              class="p-button-text p-button-sm" pTooltip="Pagar" [disabled]="pagando" (click)="abrirPago(f)"></button>
+          }
+          @if (editable) {
+            <button *appPuede="'recursos-humanos.prenomina:EDITAR'" type="button" pButton icon="pi pi-refresh"
+              class="p-button-text p-button-sm" pTooltip="Reliquidar" [disabled]="!!proceso || lanzando"
+              (click)="reliquidar(f)"></button>
+          }
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    @if (filas.length > 0) {
+      <tr class="totales">
+        <td colspan="2">{{ totales.liquidados }} de {{ filas.length }} liquidado(s)</td>
+        <td class="text-right mono">{{ totales.devengado | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+        <td class="text-right mono">{{ totales.deducido | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+        <td class="text-right mono">{{ totales.neto | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+        <td class="text-right mono">{{ totales.aportes | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+        <td [attr.colspan]="modoPago ? 3 : 2"></td>
+      </tr>
+    }
+  </ng-template>
+
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td [attr.colspan]="modoPago ? 9 : 8">
+        <div class="empty-state">
+          <i class="pi pi-calculator"></i>
+          <p>Aún no se ha liquidado. Al liquidar aparecen aquí los empleados con su devengado, deducido y neto.</p>
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<p-dialog [header]="filaConceptos ? 'Conceptos de ' + filaConceptos.empleadoDocumento + ' - ' + filaConceptos.empleadoNombre : 'Conceptos'"
+  [(visible)]="mostrarConceptos" [modal]="true" [style]="{ width: '960px' }" [breakpoints]="{ '1000px': '95vw' }"
+  [draggable]="false" (onHide)="cerrarConceptos()">
+  @if (cargandoDetalle) {
+    <div class="nota"><i class="pi pi-spin pi-spinner"></i> Cargando conceptos…</div>
+  } @else {
+    <div class="tabla-scroll">
+      <table class="detalle">
+        <thead>
+          <tr>
+            <th>Concepto</th>
+            <th class="text-right">Cantidad</th>
+            <th class="text-right">Base</th>
+            <th class="text-right">%</th>
+            <th class="text-right">Devengado</th>
+            <th class="text-right">Deducido</th>
+            <th class="text-right">Aporte / provisión</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (l of detalle; track l.id) {
+            <tr>
+              <td><code class="codigo">{{ l.conceptoCodigo }}</code> {{ l.conceptoNombre }}</td>
+              <td class="text-right mono">{{ l.cantidad ?? '' }}</td>
+              <td class="text-right mono">{{ l.base | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+              <td class="text-right mono">{{ l.porcentaje ?? '' }}</td>
+              <td class="text-right mono">{{ valorEn(l, 'DEVENGADO') | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+              <td class="text-right mono">{{ valorEn(l, 'DEDUCCION') | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+              <td class="text-right mono">{{ valorEn(l, 'APORTE') | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+              <td>
+                @if (pasos(l).length > 0) {
+                  <button type="button" pButton icon="pi pi-list" class="p-button-text p-button-sm"
+                    pTooltip="Ver cómo se calculó" (click)="alternarTraza(l.id)"></button>
+                }
+              </td>
+            </tr>
+            @if (trazaAbierta === l.id) {
+              <tr class="traza-fila">
+                <td colspan="8">
+                  <ol class="traza">
+                    @for (p of pasos(l); track $index) {
+                      <li><span>{{ p.paso }}</span><strong>{{ p.valor }}</strong></li>
+                    }
+                  </ol>
+                </td>
+              </tr>
+            }
+          } @empty {
+            <tr><td colspan="8" class="sin-dato">Sin líneas de detalle.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</p-dialog>
+
+<app-pago-nomina-dialog
+  [(visible)]="mostrarPago"
+  [titulo]="filaAPagar ? 'Pagar a ' + filaAPagar.empleadoNombre : 'Pagar empleados pendientes de la nómina'"
+  [total]="filaAPagar ? filaAPagar.neto : totalPendientePago"
+  [pagando]="pagando"
+  (confirmar)="confirmarPago($event)"
+/>
+
+<app-nomina-electronica
+  [visible]="mostrarElectronica"
+  [nominaId]="electronicaNominaId"
+  [soloConsulta]="true"
+  (closed)="mostrarElectronica = false"
+/>

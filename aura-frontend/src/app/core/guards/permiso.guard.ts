@@ -40,6 +40,7 @@ const puedeVer = (
 ): boolean => {
   if (item.tipos && rol !== 'PLATFORM_ADMIN' && !item.tipos.includes(rol ?? ''))
     return false;
+  if (item.soloFirma && !p.adminDeFirma) return false;
   return !!item.codigo && (p.permisos[item.codigo] ?? []).includes('VER');
 };
 

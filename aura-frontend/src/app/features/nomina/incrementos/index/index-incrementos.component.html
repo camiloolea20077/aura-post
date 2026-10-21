@@ -1,0 +1,75 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-arrow-up-right"></i></span>
+        <div>
+          <h1 class="title">Incrementos salariales</h1>
+          <p class="subtitle">
+            Calcule el incremento con vista previa y aplíquelo desde la fecha negociada
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button *appPuede="'recursos-humanos.incrementos:CREAR'" pButton type="button" label="Nuevo incremento"
+            icon="pi pi-plus" class="btn-aura" (click)="nuevo()"></button>
+        </div>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input type="text" pInputText class="search-input" placeholder="Buscar número o descripción..."
+              [(ngModel)]="busqueda" (input)="buscar()" (keydown.escape)="limpiarBusqueda()" />
+            @if (busqueda) {
+              <button class="clear-btn" (click)="limpiarBusqueda()"><i class="pi pi-times"></i></button>
+            }
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <p-table [value]="filas" [lazy]="true" [loading]="cargando" [totalRecords]="totalFilas" [rows]="tamano"
+      [paginator]="true" [rowsPerPageOptions]="[10, 25, 50]" (onPage)="onPagina($event)"
+      [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} de {totalRecords} registros"
+      [scrollable]="true" [tableStyle]="{ 'min-width': '62rem' }" showGridlines>
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 120px">Número</th>
+          <th>Descripción</th>
+          <th style="width: 170px">Incremento</th>
+          <th style="width: 100px" class="num">Empleados</th>
+          <th style="width: 150px" class="num">Nómina mensual</th>
+          <th style="width: 120px">Estado</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-i>
+        <tr class="fila-click" [class.row-inactiva]="i.estado === 'ANULADO'" (click)="abrir(i)">
+          <td class="nombre">{{ i.numeroCompleto }}</td>
+          <td>
+            {{ i.descripcion ?? 'Sin descripción' }}
+            <div class="meta">Rige desde el {{ i.fechaAplicacion | fechaEs }}</div>
+          </td>
+          <td>{{ textoIncremento(i) }}</td>
+          <td class="num">{{ i.empleados }}</td>
+          <td class="num">
+            {{ i.totalNuevo | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}
+            <div class="meta">antes {{ i.totalAnterior | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</div>
+          </td>
+          <td><p-tag [value]="textoEstado(i)" [severity]="severidad(i.estado)" styleClass="tag-mini" /></td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6">
+            <div class="empty-state">
+              <i class="pi pi-arrow-up-right"></i>
+              <p>No hay incrementos salariales.</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

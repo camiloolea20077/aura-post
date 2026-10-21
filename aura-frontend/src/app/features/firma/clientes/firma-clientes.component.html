@@ -1,0 +1,244 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-briefcase"></i></span>
+        <div>
+          <h1 class="title">Clientes de la firma</h1>
+          <p class="subtitle" *ngIf="resumen">
+            {{ resumen.gestionados }} de {{ resumen.cupo }} clientes gestionados
+            · {{ resumen.clientes.length }}
+            {{ resumen.clientes.length === 1 ? "cliente" : "clientes" }} en
+            total
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button
+            pButton
+            type="button"
+            icon="pi pi-plus"
+            label="Nuevo cliente gestionado"
+            class="btn-aura"
+            [disabled]="cargando || cupoLleno"
+            (click)="nuevo()"
+          ></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="seccion" *ngIf="cargando">
+      <p-skeleton *ngFor="let i of [1, 2, 3]" height="3rem" styleClass="mb-2" />
+    </div>
+
+    <ng-container *ngIf="!cargando">
+      <!-- ── Solicitudes pendientes ──────────────────────────── -->
+      <div class="seccion" *ngIf="solicitudes.length">
+        <h2 class="seccion-titulo">
+          Solicitudes de empresas
+          <span class="contador">{{ solicitudes.length }}</span>
+        </h2>
+        <div class="solicitud" *ngFor="let s of solicitudes">
+          <div class="solicitud__texto">
+            <span class="solicitud__nombre">{{ s.clienteNombre }}</span>
+            <span class="solicitud__meta"
+              >NIT {{ s.clienteNit }} · pidió el
+              {{ s.solicitadoAt | fechaEs: "fechaHora" }}</span
+            >
+            <span class="solicitud__meta"
+              >Quiere que su firma le lleve la contabilidad. La empresa paga su
+              licencia.</span
+            >
+          </div>
+
+          <div class="solicitud__acciones" *ngIf="rechazando !== s.id">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-times"
+              label="Rechazar"
+              class="p-button-sm p-button-outlined p-button-danger"
+              [disabled]="respondiendo !== null"
+              (click)="empezarRechazo(s)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-check"
+              label="Aceptar"
+              class="p-button-sm btn-verde"
+              [loading]="respondiendo === s.id"
+              [disabled]="respondiendo !== null"
+              (click)="aceptar(s)"
+            ></button>
+          </div>
+
+          <div class="solicitud__rechazo" *ngIf="rechazando === s.id">
+            <input
+              pInputText
+              type="text"
+              [(ngModel)]="motivo"
+              placeholder="Motivo (opcional): lo verá la empresa"
+            />
+            <div class="solicitud__acciones">
+              <button
+                pButton
+                type="button"
+                label="Volver"
+                class="p-button-sm p-button-text"
+                (click)="rechazando = null"
+              ></button>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-times"
+                label="Rechazar"
+                class="p-button-sm p-button-danger"
+                [loading]="respondiendo === s.id"
+                (click)="confirmarRechazo(s)"
+              ></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Clientes ────────────────────────────────────────── -->
+      <div class="seccion">
+        <h2 class="seccion-titulo">Clientes</h2>
+
+        <div class="vacio" *ngIf="!resumen?.clientes?.length">
+          <i class="pi pi-briefcase"></i>
+          <p>
+            Todavía no tiene clientes. Cree un cliente gestionado o espere la
+            solicitud de una empresa.
+          </p>
+        </div>
+
+        <div class="cliente" *ngFor="let c of resumen?.clientes">
+          <div class="cliente__texto">
+            <span class="cliente__nombre">{{ c.clienteNombre }}</span>
+            <span class="cliente__meta">
+              NIT {{ c.clienteNit }} · desde {{ c.desde | fechaEs }}
+              <ng-container *ngIf="c.usuarios">
+                · {{ c.usuarios }}
+                {{
+                  c.usuarios === 1
+                    ? "auxiliar asignado"
+                    : "auxiliares asignados"
+                }}</ng-container
+              >
+            </span>
+          </div>
+          <p-tag
+            [value]="
+              c.modalidad === 'GESTIONADO'
+                ? 'Gestionado por la firma'
+                : 'Paga el cliente'
+            "
+            [severity]="c.modalidad === 'GESTIONADO' ? 'info' : 'secondary'"
+            styleClass="tag-mini"
+          />
+          <div class="cliente__acciones" *ngIf="c.modalidad === 'GESTIONADO'">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-id-card"
+              label="Datos"
+              class="p-button-sm p-button-outlined"
+              (click)="abrirIdentidad(c)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-send"
+              label="Electrónica"
+              class="p-button-sm p-button-outlined"
+              (click)="abrirElectronica(c)"
+            ></button>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-th-large"
+              label="Módulos"
+              class="p-button-sm p-button-outlined"
+              (click)="abrirModulos(c)"
+            ></button>
+          </div>
+        </div>
+
+        <p class="nota">
+          Los administradores de la firma entran a todos los clientes; a los
+          auxiliares se les asignan en Caja → Usuarios → "Clientes que atiende".
+          En un cliente gestionado, el administrador de la firma entra como
+          administrador: desde "Mi perfil" del cliente cambia el logo, el
+          contacto, la resolución y los rangos de numeración. Las credenciales
+          de Factus las configura Aura cuando usted pide la activación en
+          "Electrónica".
+        </p>
+      </div>
+    </ng-container>
+  </div>
+</div>
+
+<app-identidad-gestionado
+  [(visible)]="dialogoIdentidad"
+  [cliente]="clienteSeleccionado"
+  (guardado)="cargar()"
+/>
+<app-electronica-gestionado [(visible)]="dialogoElectronica" [cliente]="clienteSeleccionado" />
+
+<!-- ── Módulos de un cliente gestionado ─────────────────────── -->
+<p-dialog
+  [(visible)]="dialogoModulos"
+  [header]="'Módulos de ' + (clienteModulos?.clienteNombre ?? '')"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '560px', maxWidth: '96vw' }"
+  styleClass="aura-dialog"
+>
+  <p class="nota nota--arriba">
+    Punto de venta, caja e inventario no están disponibles para un cliente
+    gestionado.
+  </p>
+  <div class="paquetes">
+    <label
+      class="paquete"
+      *ngFor="let p of catalogo"
+      [class.paquete--activo]="elegido(p.codigo)"
+    >
+      <p-checkbox
+        [ngModel]="elegido(p.codigo)"
+        [binary]="true"
+        [disabled]="p.codigo === 'CONTABILIDAD'"
+        (ngModelChange)="toggle(p.codigo, $event)"
+      />
+      <span class="paquete__texto">
+        <span class="paquete__nombre"
+          >{{ p.nombre
+          }}<small *ngIf="p.codigo === 'CONTABILIDAD'"> · siempre</small></span
+        >
+        <span class="paquete__desc">{{ p.descripcion }}</span>
+      </span>
+    </label>
+  </div>
+  <div class="dialogo-pie">
+    <button
+      pButton
+      type="button"
+      label="Cancelar"
+      class="p-button-text"
+      (click)="dialogoModulos = false"
+    ></button>
+    <button
+      pButton
+      type="button"
+      icon="pi pi-check"
+      label="Guardar"
+      class="btn-aura"
+      [loading]="guardandoModulos"
+      (click)="guardarModulos()"
+    ></button>
+  </div>
+</p-dialog>

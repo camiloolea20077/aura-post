@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CalendarModule } from 'primeng/calendar';
+import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
@@ -24,6 +25,7 @@ import {
   FormaPagoFactura,
   GuardarFacturaVenta,
   MetodoContado,
+  TipoDocumentoVenta,
 } from '../../../core/models/factura-venta.model';
 import { ProductoTableModel } from '../../../core/models/producto.model';
 import { SucursalDto } from '../../../core/models/sucursal.model';
@@ -45,6 +47,9 @@ import { FormTerceroComponent } from '../../terceros/form/form-tercero.component
 import { ProductoAutocompleteComponent } from '../../../shared/components/producto-autocomplete/producto-autocomplete.component';
 import { TerceroAutocompleteComponent } from '../../../shared/components/tercero-autocomplete/tercero-autocomplete.component';
 import { AlertService } from '../../../shared/pipes/alert.service';
+import { EnviarCorreoComponent } from '../../../shared/components/enviar-correo/enviar-correo.component';
+import { PdfAdjunto } from '../../../shared/utils/pdf-adjunto';
+import { ClienteFacturaPdf } from '../../../core/services/factura-venta-pdf.service';
 import { PuedeDirective } from '../../../shared/directives/puede.directive';
 import { aFechaLocal } from '../../../shared/utils/fecha.util';
 
@@ -109,9 +114,11 @@ interface DatosTercero {
     TooltipModule,
     PuedeDirective,
     ConfirmDialog,
+    DialogModule,
     ProductoAutocompleteComponent,
     TerceroAutocompleteComponent,
     FormTerceroComponent,
+    EnviarCorreoComponent,
   ],
   providers: [ConfirmationService],
   templateUrl: './form-factura-venta.component.html',
@@ -193,6 +200,34 @@ export class FormFacturaVentaComponent implements OnInit {
     { label: 'AIU (construcción)', value: true },
   ];
 
+  // Cuenta de cobro: cualquier empresa la puede emitir (sin IVA y sin DIAN).
+  tipo: TipoDocumentoVenta = 'FACTURA';
+  puedeCuentaCobro = false;
+  contratoDosTrabajadores: boolean | null = null;
+  readonly tiposDocumento = [
+    { label: 'Factura de venta', value: 'FACTURA' },
+    { label: 'Cuenta de cobro', value: 'CUENTA_COBRO' },
+  ];
+  /**
+   * Art. 9 del Decreto 2231 de 2023 (num. 10 art. 206 ET): le dice al cliente qué
+   * retención aplicar. false = no toma costos ni deducciones → tabla del art. 383;
+   * true = sí los toma → tarifa de honorarios o servicios.
+   */
+  readonly declaraciones = [
+    { label: 'No declarar', value: null },
+    { label: 'No tomaré costos ni deducciones (art. 383)', value: false },
+    { label: 'Tomaré costos y deducciones', value: true },
+  ];
+
+  /** Envío por correo del documento emitido. */
+  dialogoCorreo = false;
+
+  /** Confirmación de la cuenta de cobro con su número (propuesto, editable). */
+  dialogoConfirmarCC = false;
+  numeroCuentaCobro: number | null = null;
+  numeroSugerido: number | null = null;
+  readonly adjuntoCorreo = (): Promise<PdfAdjunto> => this.generarAdjunto();
+
   constructor(
     private readonly service: FacturaVentaService,
     private readonly sucursalService: SucursalService,
@@ -229,6 +264,8 @@ export class FormFacturaVentaComponent implements OnInit {
     this.clienteLabel = null;
     this.lineas = [];
     this.esAiu = false;
+    this.tipo = 'FACTURA';
+    this.contratoDosTrabajadores = null;
     this.ordenCompra = '';
     this.notas = '';
     this.vendedorId = null;
@@ -251,6 +288,8 @@ export class FormFacturaVentaComponent implements OnInit {
         ),
         this.sede.id(),
       ]);
+      const empresa = (await lastValueFrom(this.empresaService.getConfig()).catch(() => null))?.data;
+      this.puedeCuentaCobro = !!empresa?.puedeCuentaCobro;
       const centros = await lastValueFrom(
         this.centroCostoService.page({ page: 0, rows: 500, search: null } as any),
       ).catch(() => null);
@@ -281,6 +320,8 @@ export class FormFacturaVentaComponent implements OnInit {
         await this.cargarAnticipos();
       } else {
         this.sucursalId = sedeId ?? this.sucursales[0]?.id ?? null;
+        // Persona natural sin factura electrónica: nace como cuenta de cobro (se puede cambiar).
+        if (empresa?.tipoPersona === 'NATURAL' && !empresa?.facturaElectronica) this.tipo = 'CUENTA_COBRO';
         this.condicionPagoId = this.condiciones.find((c) => c.dias === 30)?.id ?? null;
         this.onCondicion();
         this.agregarLinea();
@@ -308,6 +349,8 @@ export class FormFacturaVentaComponent implements OnInit {
     this.cuentaBancariaId = f.cuentaBancariaId;
     this.ordenCompra = f.ordenCompra ?? '';
     this.notas = f.notas ?? '';
+    this.tipo = f.tipo ?? 'FACTURA';
+    this.contratoDosTrabajadores = f.contratoDosTrabajadores ?? null;
     this.esAiu = !!f.aiu;
     if (f.aiu) {
       this.aiuAdministracionPct = Number(f.aiuAdministracionPct);
@@ -632,8 +675,8 @@ export class FormFacturaVentaComponent implements OnInit {
   }
 
   impuesto(l: LineaForm): number {
-    // En AIU la obra no lleva IVA: va solo sobre la Utilidad.
-    if (this.esAiu) return 0;
+    // En AIU la obra no lleva IVA (va solo sobre la Utilidad); la cuenta de cobro no lleva IVA.
+    if (this.esAiu || this.esCuentaCobro) return 0;
     return Math.round(this.base(l) * (l.impuestoPorcentaje || 0)) / 100;
   }
 
@@ -695,6 +738,27 @@ export class FormFacturaVentaComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
+  get esCuentaCobro(): boolean {
+    return this.tipo === 'CUENTA_COBRO';
+  }
+
+  /** La cuenta de cobro no lleva IVA ni AIU. */
+  onTipoDocumento(): void {
+    if (this.esCuentaCobro) this.esAiu = false;
+    this.cdr.markForCheck();
+  }
+
+  /** Etiqueta del estado: la cuenta de cobro no se "emite", se confirma. */
+  get etiquetaEstado(): string {
+    if (this.factura?.estado === 'ANULADA') return 'Anulada';
+    return this.esCuentaCobro ? 'Confirmada' : 'Emitida';
+  }
+
+  /** "factura" o "cuenta de cobro", para los textos de la pantalla. */
+  get nombreDoc(): string {
+    return this.esCuentaCobro ? 'cuenta de cobro' : 'factura';
+  }
+
   // ── Guardar / emitir ────────────────────────────────────────────────
   private dto(): GuardarFacturaVenta | null {
     if (!this.clienteId) {
@@ -719,6 +783,8 @@ export class FormFacturaVentaComponent implements OnInit {
       return null;
     }
     return {
+      tipo: this.tipo,
+      contratoDosTrabajadores: this.esCuentaCobro ? this.contratoDosTrabajadores : null,
       sucursalId: this.sucursalId,
       bodegaId: this.bodegaId,
       clienteId: this.clienteId,
@@ -744,7 +810,7 @@ export class FormFacturaVentaComponent implements OnInit {
         cantidad: l.cantidad,
         precioUnitario: l.precioUnitario,
         descuentoValor: this.descuento(l),
-        impuestoPorcentaje: l.impuestoPorcentaje || 0,
+        impuestoPorcentaje: this.esCuentaCobro ? 0 : l.impuestoPorcentaje || 0,
       })),
     };
   }
@@ -786,6 +852,11 @@ export class FormFacturaVentaComponent implements OnInit {
       this.alert.showWarn('Anticipos', 'No se puede aplicar más del saldo de un anticipo.');
       return;
     }
+    // La cuenta de cobro se confirma en su propio diálogo: ahí se ve y se cambia el número CT.
+    if (this.esCuentaCobro) {
+      void this.abrirConfirmarCuentaCobro();
+      return;
+    }
     this.confirm.confirm({
       header: 'Emitir factura',
       message:
@@ -795,28 +866,66 @@ export class FormFacturaVentaComponent implements OnInit {
         '. Toma el consecutivo, descuenta el inventario y genera el asiento. ¿Continuar?',
       acceptLabel: 'Emitir',
       rejectLabel: 'Cancelar',
-      accept: async () => {
-        this.guardando = true;
-        this.cdr.markForCheck();
-        try {
-          const id = await this.guardarBorrador();
-          if (!id) return;
-          const anticipos =
-            this.formaPago === 'CREDITO'
-              ? this.anticipos.filter((a) => a.aplicar > 0).map((a) => ({ anticipoId: a.id, monto: a.aplicar }))
-              : [];
-          const res = await lastValueFrom(this.service.emitir(id, anticipos));
-          this.alert.showSuccess('Factura emitida', res?.message ?? '');
-          this.router.navigate(['/ventas/facturas', id], { replaceUrl: true });
-          await this.recargar();
-        } catch (e: any) {
-          this.alert.showError('No se pudo emitir', e?.error?.message ?? 'Revise la factura e intente de nuevo');
-        } finally {
-          this.guardando = false;
-          this.cdr.markForCheck();
-        }
-      },
+      accept: () => this.ejecutarEmision(null),
     });
+  }
+
+  /** Propone el siguiente número de cuenta de cobro (el último + 1) y abre la confirmación. */
+  private async abrirConfirmarCuentaCobro(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.service.siguienteCuentaCobro());
+      this.numeroCuentaCobro = res?.data ?? 1;
+    } catch {
+      this.numeroCuentaCobro = null;
+    }
+    this.numeroSugerido = this.numeroCuentaCobro;
+    this.dialogoConfirmarCC = true;
+    this.cdr.markForCheck();
+  }
+
+  /** CT-001: el número con tres dígitos como mínimo, como lo muestra el sistema. */
+  numeroCt(n: number | null): string {
+    return n ? `CT-${String(n).padStart(3, '0')}` : 'CT-…';
+  }
+
+  confirmarCuentaCobro(): void {
+    if (!this.numeroCuentaCobro || this.numeroCuentaCobro < 1) {
+      this.alert.showWarn('Número', 'Escriba un número mayor que cero.');
+      return;
+    }
+    this.dialogoConfirmarCC = false;
+    void this.ejecutarEmision(this.numeroCuentaCobro);
+  }
+
+  /**
+   * Guarda y emite (o confirma la cuenta de cobro con el número elegido). La cuenta
+   * de cobro confirmada abre de una vez el envío por correo.
+   */
+  private async ejecutarEmision(numero: number | null): Promise<void> {
+    const cc = this.esCuentaCobro;
+    this.guardando = true;
+    this.cdr.markForCheck();
+    try {
+      const id = await this.guardarBorrador();
+      if (!id) return;
+      const anticipos =
+        this.formaPago === 'CREDITO'
+          ? this.anticipos.filter((a) => a.aplicar > 0).map((a) => ({ anticipoId: a.id, monto: a.aplicar }))
+          : [];
+      const res = await lastValueFrom(this.service.emitir(id, anticipos, cc ? numero : null));
+      this.alert.showSuccess(cc ? 'Cuenta de cobro confirmada' : 'Factura emitida', res?.message ?? '');
+      this.router.navigate(['/ventas/facturas', id], { replaceUrl: true });
+      await this.recargar();
+      if (cc) this.dialogoCorreo = true;
+    } catch (e: any) {
+      this.alert.showError(
+        cc ? 'No se pudo confirmar' : 'No se pudo emitir',
+        e?.error?.message ?? 'Revise el documento e intente de nuevo',
+      );
+    } finally {
+      this.guardando = false;
+      this.cdr.markForCheck();
+    }
   }
 
   eliminar(): void {
@@ -840,14 +949,16 @@ export class FormFacturaVentaComponent implements OnInit {
 
   // ── Factura emitida ─────────────────────────────────────────────────
   get titulo(): string {
-    if (!this.id) return 'Nueva factura';
-    if (!this.factura || this.factura.estado === 'BORRADOR') return `Borrador #${this.id}`;
-    return `Factura ${this.factura.numero ?? ''}`;
+    if (!this.id) return this.esCuentaCobro ? 'Nueva cuenta de cobro' : 'Nueva factura';
+    if (!this.factura || this.factura.estado === 'BORRADOR')
+      return `${this.esCuentaCobro ? 'Cuenta de cobro preliminar' : 'Borrador'} #${this.id}`;
+    return `${this.esCuentaCobro ? 'Cuenta de cobro' : 'Factura'} ${this.factura.numero ?? ''}`;
   }
 
+  /** La cuenta de cobro nunca va a la DIAN. */
   get puedeEnviarDian(): boolean {
     const f = this.factura;
-    return !!f && f.estado === 'EMITIDA' && !f.cufe && f.estadoDian !== 'EMITIDA';
+    return !!f && f.tipo !== 'CUENTA_COBRO' && f.estado === 'EMITIDA' && !f.cufe && f.estadoDian !== 'EMITIDA';
   }
 
   private async recargar(): Promise<void> {
@@ -869,21 +980,32 @@ export class FormFacturaVentaComponent implements OnInit {
     if (!f) return;
     try {
       const empresa = (await lastValueFrom(this.empresaService.getConfig()))?.data ?? {};
-      const t = this.tercero;
-      await this.pdf.generar(f, empresa, {
-        nombre: t?.nombre ?? f.clienteNombre,
-        tipoDocumento: t?.tipoDocumento ?? 'NIT',
-        numeroDocumento: t?.numeroDocumento ?? f.clienteDocumento ?? '',
-        dv: t?.dv ?? null,
-        telefono: t?.telefono ?? null,
-        direccion: t?.direccion ?? null,
-        ciudad: t?.ciudad ?? null,
-        email: t?.email ?? null,
-        responsabilidad: t?.responsabilidad ?? null,
-      });
+      await this.pdf.generar(f, empresa, this.clientePdf(f));
     } catch {
       this.alert.showError('Error', 'No se pudo generar el PDF');
     }
+  }
+
+  /** El PDF del documento emitido para adjuntarlo al correo (el mismo que se descarga). */
+  private async generarAdjunto(): Promise<PdfAdjunto> {
+    if (!this.factura) throw new Error('Sin documento');
+    const empresa = (await lastValueFrom(this.empresaService.getConfig()))?.data ?? {};
+    return this.pdf.adjunto(this.factura, empresa, this.clientePdf(this.factura));
+  }
+
+  private clientePdf(f: FacturaVentaDetalle): ClienteFacturaPdf {
+    const t = this.tercero;
+    return {
+      nombre: t?.nombre ?? f.clienteNombre,
+      tipoDocumento: t?.tipoDocumento ?? 'NIT',
+      numeroDocumento: t?.numeroDocumento ?? f.clienteDocumento ?? '',
+      dv: t?.dv ?? null,
+      telefono: t?.telefono ?? null,
+      direccion: t?.direccion ?? null,
+      ciudad: t?.ciudad ?? null,
+      email: t?.email ?? null,
+      responsabilidad: t?.responsabilidad ?? null,
+    };
   }
 
   /** El borrador tal como está en pantalla, con la forma de la factura guardada. */
@@ -905,7 +1027,7 @@ export class FormFacturaVentaComponent implements OnInit {
       cantidad: l.cantidad,
       precioUnitario: l.precioUnitario,
       descuentoValor: this.descuento(l),
-      impuestoPorcentaje: this.esAiu ? 0 : l.impuestoPorcentaje,
+      impuestoPorcentaje: this.esAiu || this.esCuentaCobro ? 0 : l.impuestoPorcentaje,
       impuestoValor: this.impuesto(l),
       subtotalLinea: this.totalLinea(l),
       aiuTipo: null,
@@ -934,6 +1056,8 @@ export class FormFacturaVentaComponent implements OnInit {
       ...(this.factura ?? ({} as FacturaVentaDetalle)),
       id: this.id ?? 0,
       estado: 'BORRADOR',
+      tipo: this.tipo,
+      contratoDosTrabajadores: this.esCuentaCobro ? this.contratoDosTrabajadores : null,
       clienteNombre: this.tercero.nombre,
       clienteDocumento: this.tercero.numeroDocumento,
       vendedorNombre: this.vendedoresOpts.find((v) => v.value === this.vendedorId)?.label ?? null,

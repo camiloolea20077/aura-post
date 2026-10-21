@@ -28,6 +28,7 @@ import {
 } from '../../../core/services/comprobante-caja.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
 import { TicketComprobanteCajaComponent } from '../ticket/ticket-comprobante-caja.component';
+import { ComprobanteContablePdfService } from '../../../shared/services/comprobante-contable-pdf.service';
 
 import { PuedeDirective } from '../../../shared/directives/puede.directive';
 type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contrast' | undefined;
@@ -82,6 +83,7 @@ export class IndexComprobantesComponent implements OnInit {
     private readonly comprobanteService: ComprobanteCajaService,
     private readonly alertService: AlertService,
     private readonly router: Router,
+    private readonly pdfService: ComprobanteContablePdfService,
   ) {}
 
   ngOnInit(): void {
@@ -136,6 +138,31 @@ export class IndexComprobantesComponent implements OnInit {
     const page = event.first != null && event.rows ? Math.floor(event.first / event.rows) : 0;
     this.rowSize = event.rows ?? this.rowSize;
     this.cargar(page);
+  }
+
+  /** Recibo de caja / egreso en PDF con las cuentas contables que movió. */
+  pdfGenerando: number | null = null;
+
+  async pdfContable(item: ComprobanteCajaModel): Promise<void> {
+    this.pdfGenerando = item.id;
+    this.cdr.markForCheck();
+    try {
+      await this.pdfService.abrir(item);
+    } catch {
+      this.alertService.showError('Error', 'No se pudo generar el PDF del comprobante.');
+    } finally {
+      this.pdfGenerando = null;
+      this.cdr.markForCheck();
+    }
+  }
+
+  /** Solo el comprobante contable manual se corrige aquí; los demás, desde su documento. */
+  esEditable(item: ComprobanteCajaModel): boolean {
+    return item.origen === 'COMPROBANTE' && !item.anulado && !!item.origenId;
+  }
+
+  editar(item: ComprobanteCajaModel): void {
+    this.router.navigate(['/comprobantes/contable', item.origenId, 'editar']);
   }
 
   verComprobante(item: ComprobanteCajaModel): void {

@@ -1,0 +1,71 @@
+<div class="filtros">
+  <div class="filtro filtro--ancho">
+    <label>Certificado</label>
+    <p-dropdown [options]="tipos" [(ngModel)]="tipo" optionLabel="label" optionValue="value" appendTo="body" />
+  </div>
+  <div class="filtro">
+    <label>Desde</label>
+    <p-calendar [(ngModel)]="desde" dateFormat="dd/mm/yy" appendTo="body" />
+  </div>
+  <div class="filtro">
+    <label>Hasta</label>
+    <p-calendar [(ngModel)]="hasta" dateFormat="dd/mm/yy" appendTo="body" />
+  </div>
+  <div class="filtro filtro--ancho">
+    <label>Tercero (opcional)</label>
+    <app-tercero-autocomplete [(ngModel)]="terceroId" placeholder="Todos a los que se les retuvo" appendTo="body" />
+  </div>
+  <div class="acciones">
+    <button pButton type="button" label="Generar" icon="pi pi-search" class="btn-aura"
+      [loading]="cargando" (click)="generar()"></button>
+    <button pButton type="button" label="Descargar todos" icon="pi pi-download" class="p-button-outlined"
+      [disabled]="!datos?.certificados?.length" [loading]="generandoPdf" (click)="descargarTodos()"></button>
+  </div>
+</div>
+
+<ng-container *ngIf="datos">
+  <div class="advertencias" *ngIf="datos.advertencias.length">
+    <div *ngFor="let a of datos.advertencias">
+      <i class="pi pi-exclamation-triangle"></i> {{ a }}
+    </div>
+  </div>
+
+  <div class="tabla-wrap" *ngIf="datos.certificados.length; else vacio">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>Tercero</th>
+          <th>Conceptos</th>
+          <th class="num">Base</th>
+          <th class="num">Retenido</th>
+          <th style="width: 110px"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of datos.certificados">
+          <td>
+            {{ c.terceroNombre }}
+            <div class="sub" *ngIf="documento(c)">{{ documento(c) }}</div>
+          </td>
+          <td>
+            <div *ngFor="let l of c.lineas" class="sub">
+              {{ l.concepto }}<ng-container *ngIf="l.tarifa != null"> · {{ l.tarifa }} %</ng-container>
+              <span class="sin-base" *ngIf="l.base == null"> · sin base</span>
+            </div>
+          </td>
+          <td class="num">{{ formatCOP(c.totalBase) }}</td>
+          <td class="num"><b>{{ formatCOP(c.totalRetenido) }}</b></td>
+          <td class="acciones-fila">
+            <button pButton type="button" icon="pi pi-eye" class="p-button-sm p-button-text"
+              pTooltip="Ver" [disabled]="generandoPdf" (click)="ver(c)"></button>
+            <button pButton type="button" icon="pi pi-download" class="p-button-sm p-button-text"
+              pTooltip="Descargar" [disabled]="generandoPdf" (click)="descargar(c)"></button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <ng-template #vacio>
+    <p class="sub">No hay retenciones practicadas a terceros en el período.</p>
+  </ng-template>
+</ng-container>

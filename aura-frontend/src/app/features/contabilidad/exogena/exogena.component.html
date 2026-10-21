@@ -9,12 +9,20 @@
         <div>
           <h1 class="title">Información Exógena DIAN</h1>
           <p class="subtitle">
-            Validar → generar → revisar → aprobar → exportar el Excel del
-            prevalidador — sin ediciones manuales
+            Validar → generar → revisar → aprobar → exportar el Excel con las columnas del
+            prevalidador DIAN — sin ediciones manuales
           </p>
         </div>
       </div>
       <div class="filtros-head">
+        <div class="filtro-inline persona">
+          <label>Informante</label>
+          <p-dropdown
+            [(ngModel)]="tipoPersona" [options]="tipoPersonaOpts"
+            optionLabel="label" optionValue="value" styleClass="w-full"
+            (onChange)="cambiarTipoPersona()"
+          />
+        </div>
         <div class="filtro-inline">
           <label>Año gravable</label>
           <p-dropdown
@@ -43,6 +51,57 @@
   <p-tabView>
     <!-- ══ TAB 1: WIZARD ═══════════════════════════════════════════ -->
     <p-tabPanel header="Generación" leftIcon="pi pi-play">
+      <!-- Todo el año de una vez -->
+      <div class="paso-card">
+        <div class="paso-head">
+          <span class="paso-num"><i class="pi pi-bolt"></i></span>
+          <div>
+            <h3>Todo el año {{ anio }}</h3>
+            <p>
+              Genera en borrador todos los formatos que reporta
+              {{ tipoPersona === 'NATURAL' ? 'una persona natural' : 'una sociedad' }}
+              ({{ formatos.length }}) y descarga un solo Excel con una hoja por formato, listo para pasar
+              al prevalidador de la DIAN. Revise y apruebe cada formato abajo.
+            </p>
+          </div>
+          <div class="generar-controles">
+            <button pButton label="Generar todos" icon="pi pi-cog" class="btn-aura"
+              [loading]="generandoTodos" (click)="generarTodos()"></button>
+            <button pButton label="Excel del año" icon="pi pi-download" class="p-button-outlined"
+              [loading]="descargandoAnio" (click)="exportarAnio()"></button>
+          </div>
+        </div>
+        @if (resumenTodos.length) {
+          <p-table [value]="resumenTodos" styleClass="p-datatable-sm" showGridlines>
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="width: 90px">Formato</th>
+                <th>Nombre</th>
+                <th style="width: 110px" class="num-cell">Líneas</th>
+                <th style="width: 110px" class="num-cell">Hallazgos</th>
+                <th style="width: 260px">Estado</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-r>
+              <tr>
+                <td><code>{{ r.formato }}</code></td>
+                <td>{{ r.nombre }}</td>
+                <td class="num-cell">{{ r.generado ? r.lineas : '—' }}</td>
+                <td class="num-cell">{{ r.generado ? r.hallazgos : '—' }}</td>
+                <td>
+                  @if (r.generado) {
+                    <p-tag [severity]="r.hallazgos ? 'warn' : 'success'"
+                      [value]="'v' + r.version + (r.hallazgos ? ' · revisar hallazgos' : ' · sin hallazgos')" />
+                  } @else {
+                    <span class="ayuda">{{ r.motivo }}</span>
+                  }
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        }
+      </div>
+
       <!-- Paso 1: validar -->
       <div class="paso-card">
         <div class="paso-head">
@@ -51,7 +110,8 @@
             <h3>Validador previo</h3>
             <p>
               Períodos abiertos, comprobantes en borrador, cuentas sin mapeo y
-              terceros incompletos (documento, DV, dirección, municipio).
+              terceros incompletos (documento, nombre, dirección, municipio). El DV
+              se calcula si falta.
             </p>
           </div>
           <button
@@ -91,13 +151,19 @@
           <div>
             <h3>Generar lote</h3>
             <p>
-              Agrupa los movimientos del año por tercero × concepto. Terceros
-              bajo el umbral van como cuantías menores (NIT 222222222). Un
-              borrador se regenera; sobre un aprobado se crea otra versión.
+              @if (esNomina) {
+                Sale de la nómina del año: lo pagado a cada empleado por columna (salarios,
+                prestaciones, cesantías, aportes, retención). Un borrador se regenera; sobre un
+                aprobado se crea otra versión.
+              } @else {
+                Agrupa los movimientos del año por tercero × concepto en las columnas del formato.
+                Terceros bajo el umbral van como cuantías menores (NIT 222222222; 0 = no agrupa). Un
+                borrador se regenera; sobre un aprobado se crea otra versión.
+              }
             </p>
           </div>
           <div class="generar-controles">
-            <div class="filtro-inline">
+            <div class="filtro-inline" *ngIf="!esNomina">
               <label>Umbral cuantías menores</label>
               <p-inputNumber
                 [(ngModel)]="cuantiaMenorUmbral"
@@ -153,7 +219,7 @@
                 Revisión — lote v{{ loteActivo.version }}
                 <p-tag [severity]="estadoLoteSeverity(loteActivo.estado)" [value]="loteActivo.estado" styleClass="ml-2" />
               </h3>
-              <p>{{ lineas.length }} líneas · total {{ formatCOP(totalLote) }} · {{ erroresLote.length }} hallazgos</p>
+              <p>{{ lineas.length }} líneas · {{ erroresLote.length }} hallazgos</p>
             </div>
             <div class="generar-controles">
               <button
@@ -174,16 +240,20 @@
           </div>
 
           <p-table
-            [value]="lineas" [loading]="loadingLote"
+            [value]="lineas" [loading]="loadingLote" [scrollable]="true"
+            [tableStyle]="{ 'min-width': (28 + columnas.length * 11) + 'rem' }"
             styleClass="p-datatable-sm" [rowHover]="true" showGridlines
-            [paginator]="lineas.length > 15" [rows]="15"
+            [paginator]="true" [rows]="15" [rowsPerPageOptions]="[15, 50, 100]"
+            [showCurrentPageReport]="true" currentPageReportTemplate="{first}-{last} de {totalRecords} registros"
           >
             <ng-template pTemplate="header">
               <tr>
                 <th style="width: 100px">Concepto</th>
                 <th style="width: 130px">Documento</th>
-                <th>Tercero</th>
-                <th style="text-align: right; width: 150px">Valor</th>
+                <th style="min-width: 220px">Tercero</th>
+                @for (c of columnas; track c.codigo) {
+                  <th class="num-cell col-valor" [pTooltip]="c.nombre">{{ c.nombre }}</th>
+                }
               </tr>
             </ng-template>
             <ng-template pTemplate="body" let-l>
@@ -194,11 +264,25 @@
                   {{ l.tercero }}
                   <p-tag *ngIf="l.cuantiaMenor" severity="info" value="CUANTÍAS MENORES" styleClass="ml-2" />
                 </td>
-                <td class="num-cell">{{ formatCOP(l.valor) }}</td>
+                @for (c of columnas; track c.codigo) {
+                  <td class="num-cell">{{ formatoValor(c, valorColumna(l, c)) }}</td>
+                }
               </tr>
             </ng-template>
+            <ng-template pTemplate="footer">
+              @if (lineas.length) {
+                <tr class="fila-total">
+                  <td colspan="3">Totales</td>
+                  @for (c of columnas; track c.codigo) {
+                    <td class="num-cell">{{ c.codigo === 'PORCENTAJE' ? '' : formatCOP(totalColumna(c)) }}</td>
+                  }
+                </tr>
+              }
+            </ng-template>
             <ng-template pTemplate="emptymessage">
-              <tr><td colspan="4" class="empty-row">El lote no tiene líneas (¿hay movimientos del año en las cuentas mapeadas?).</td></tr>
+              <tr><td [attr.colspan]="3 + columnas.length" class="empty-row">
+                {{ esNomina ? 'No hay nóminas confirmadas en el año.' : 'El lote no tiene líneas (¿hay movimientos del año en las cuentas mapeadas?).' }}
+              </td></tr>
             </ng-template>
           </p-table>
         </div>
@@ -207,6 +291,15 @@
 
     <!-- ══ TAB 2: MAPEOS ═══════════════════════════════════════════ -->
     <p-tabPanel header="Mapeos de cuentas" leftIcon="pi pi-sitemap">
+      @if (esNomina) {
+        <div class="table-card">
+          <p class="ayuda">
+            El formato {{ formatoActivo?.codigo }} no usa mapeos de cuentas: se calcula desde la nómina del año
+            (nóminas confirmadas), por empleado. Cada concepto de nómina va a su columna según su código DIAN
+            (salarios, comisiones, prestaciones, cesantías, aportes a salud y pensión, retención).
+          </p>
+        </div>
+      } @else {
       <div class="table-card">
         <div class="mapeos-head">
           <p class="ayuda">
@@ -225,7 +318,8 @@
               <th>Concepto</th>
               <th style="width: 130px">Desde (prefijo)</th>
               <th style="width: 130px">Hasta</th>
-              <th style="width: 220px">Tipo de valor</th>
+              <th style="width: 200px">Tipo de valor</th>
+              <th style="width: 240px">Columna</th>
               <th style="width: 70px"></th>
             </tr>
           </ng-template>
@@ -235,6 +329,7 @@
               <td><code>{{ m.cuentaDesde }}</code></td>
               <td><code>{{ m.cuentaHasta || "—" }}</code></td>
               <td>{{ m.tipoValor }}</td>
+              <td>{{ columnaLabel(m.columna) }}</td>
               <td>
                 <button pButton icon="pi pi-trash" class="p-button-text p-button-sm p-button-danger" (click)="eliminarMapeo(m)"></button>
               </td>
@@ -242,13 +337,14 @@
           </ng-template>
           <ng-template pTemplate="emptymessage">
             <tr>
-              <td colspan="5" class="empty-row">
+              <td colspan="6" class="empty-row">
                 Sin mapeos para este formato — use <strong>Restaurar defaults</strong>.
               </td>
             </tr>
           </ng-template>
         </p-table>
       </div>
+      }
     </p-tabPanel>
   </p-tabView>
 </div>
@@ -279,6 +375,13 @@
       <p-dropdown
         [(ngModel)]="nuevoTipoValor" [options]="tipoValorOpts"
         optionLabel="label" optionValue="value" appendTo="body" styleClass="w-full"
+      />
+    </div>
+    <div class="form-group full-width">
+      <label>Columna del formato</label>
+      <p-dropdown
+        [(ngModel)]="nuevoColumna" [options]="columnas" optionLabel="nombre" optionValue="codigo"
+        [showClear]="true" placeholder="La principal" appendTo="body" styleClass="w-full"
       />
     </div>
   </div>

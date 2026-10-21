@@ -14,6 +14,7 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { CalendarModule } from 'primeng/calendar';
+import { HistorialCostoProductoComponent } from '../../../shared/components/historial-costo-producto/historial-costo-producto.component';
 import { SerialEntradaComponent } from '../../../shared/components/serial-entrada/serial-entrada.component';
 import {
   SerialPickerComponent,
@@ -70,10 +71,11 @@ import { CuentaBancariaModel } from '../../../core/models/cuenta-bancaria.model'
 import { ContabilidadService } from '../../../core/services/contabilidad.service';
 import { PlanCuentaModel } from '../../../core/models/contabilidad.model';
 import { TarifaRetencionService } from '../../../core/services/tarifa-retencion.service';
-import { TipoRetencion } from '../../../core/models/tarifa-retencion.model';
+import { TarifaRetencionModel, TipoRetencion } from '../../../core/models/tarifa-retencion.model';
 
 interface RetencionOpcion {
-  value: string;
+  /** id de la tarifa de retención */
+  value: number;
   label: string;
   pct: number;
 }
@@ -105,6 +107,7 @@ import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-a
     InputNumberModule,
     CalendarModule,
     SerialEntradaComponent,
+    HistorialCostoProductoComponent,
     SerialPickerComponent,
     DropdownModule,
     RadioButtonModule,
@@ -155,6 +158,9 @@ export class FormCompraComponent implements OnInit {
           retefuentePct: this.retefuentePct || null,
           reteivaPct: this.reteivaPct || null,
           reteicaPct: this.reteicaPct || null,
+          retefuenteTarifaId: this.retefuentePct ? this.retefuenteSel : null,
+          reteivaTarifaId: this.reteivaPct ? this.reteivaSel : null,
+          reteicaTarifaId: this.reteicaPct ? this.reteicaSel : null,
           formaPago: this.esCredito || (this.esNotaCredito && !this.notaCreditoMuevePlata) ? 'CREDITO' : 'CONTADO',
           lineas: lineas.map((l) => ({
             productoId: l.productoId!,
@@ -807,111 +813,60 @@ export class FormCompraComponent implements OnInit {
   public fletes: number = 0;
 
   // ─── Retenciones ─────────────────────────────────────────────────
+  //
+  // Cada retención se elige por CONCEPTO (tarifa de la empresa en
+  // Contabilidad → Tarifas de retención), no solo por porcentaje: del concepto
+  // sale la cuenta del asiento. Con solo el % una retefuente por honorarios
+  // terminaba en la cuenta de retención por compras y se declaraba como tal.
   public retefuentePct: number = 0;
   public reteivaPct: number = 0;
   public reteicaPct: number = 0;
 
-  // Opción seleccionada por tipo
-  public retefuenteSel: string | null = null;
-  public reteivaSel: string | null = null;
-  public reteicaSel: string | null = null;
+  // Tarifa (concepto) elegida por tipo
+  public retefuenteSel: number | null = null;
+  public reteivaSel: number | null = null;
+  public reteicaSel: number | null = null;
 
-  // ── Catálogo fijo de retenciones (definido por nosotros) ──────────
-  // Retefuente — tarifas nacionales aproximadas
-  readonly retefuenteOpts: RetencionOpcion[] = [
-    {
-      value: 'compras_generales',
-      label: 'Compras generales (mercancías) — 2.5%',
-      pct: 2.5,
-    },
-    {
-      value: 'compras_no_declarantes',
-      label: 'Compras a no declarantes — 3.5%',
-      pct: 3.5,
-    },
-    { value: 'servicios_general', label: 'Servicios en general — 4%', pct: 4 },
-    {
-      value: 'servicios_declarantes',
-      label: 'Servicios a declarantes — 4%',
-      pct: 4,
-    },
-    { value: 'honorarios_11', label: 'Honorarios — 11%', pct: 11 },
-    {
-      value: 'honorarios_10',
-      label: 'Honorarios (no declarante) — 10%',
-      pct: 10,
-    },
-    { value: 'comisiones_11', label: 'Comisiones — 11%', pct: 11 },
-    {
-      value: 'comisiones_10',
-      label: 'Comisiones (no declarante) — 10%',
-      pct: 10,
-    },
-    {
-      value: 'arr_inmuebles',
-      label: 'Arrendamiento bienes inmuebles — 3.5%',
-      pct: 3.5,
-    },
-    {
-      value: 'arr_muebles',
-      label: 'Arrendamiento bienes muebles — 4%',
-      pct: 4,
-    },
-    { value: 'transporte_carga', label: 'Transporte de carga — 1%', pct: 1 },
-    {
-      value: 'transporte_pasajeros',
-      label: 'Transporte de pasajeros — 3.5%',
-      pct: 3.5,
-    },
-    {
-      value: 'servicios_temporales',
-      label: 'Servicios temporales — 2%',
-      pct: 2,
-    },
-    { value: 'hoteles', label: 'Hoteles / hospedaje — 3.5%', pct: 3.5 },
-    {
-      value: 'construccion',
-      label: 'Construcción / obra material — 2%',
-      pct: 2,
-    },
-  ];
+  /** Catálogo de tarifas activas de la empresa. */
+  private tarifasRetencion: TarifaRetencionModel[] = [];
+  public retefuenteOpts: RetencionOpcion[] = [];
+  public reteivaOpts: RetencionOpcion[] = [];
+  public reteicaOpts: RetencionOpcion[] = [];
 
-  // ReteIVA — 15% del IVA generado
-  readonly reteivaOpts: RetencionOpcion[] = [
-    {
-      value: 'reteiva_general',
-      label: 'ReteIVA general — 15% del IVA',
-      pct: 15,
-    },
-  ];
+  /** % de la tarifa según el proveedor sea persona natural o jurídica. */
+  private pctTarifa(t: TarifaRetencionModel | undefined): number {
+    if (!t) return 0;
+    return Number(this.esJuridica ? t.tarifaJuridica : t.tarifaNatural) || 0;
+  }
 
-  // ReteICA — Montelíbano (Córdoba). ⚠ Verificar tarifas oficiales del municipio.
-  readonly reteicaOpts: RetencionOpcion[] = [
-    {
-      value: 'ica_comercial',
-      label: 'Montelíbano · Comercial — 10‰ (1%)',
-      pct: 1,
-    },
-    {
-      value: 'ica_servicios',
-      label: 'Montelíbano · Servicios — 10‰ (1%)',
-      pct: 1,
-    },
-    {
-      value: 'ica_industrial',
-      label: 'Montelíbano · Industrial — 7‰ (0.7%)',
-      pct: 0.7,
-    },
-  ];
+  /**
+   * Arma las opciones de cada tipo con el % que aplica al proveedor. Se llama
+   * al cargar el catálogo y al conocer el proveedor (natural / jurídica).
+   */
+  private armarOpcionesRetencion(): void {
+    const opciones = (tipo: TipoRetencion): RetencionOpcion[] =>
+      this.tarifasRetencion
+        .filter((t) => t.tipo === tipo)
+        .map((t) => {
+          const pct = this.pctTarifa(t);
+          return { value: t.id, label: `${t.concepto} — ${pct}%`, pct };
+        });
+    this.retefuenteOpts = opciones('RETEFUENTE');
+    this.reteivaOpts = opciones('RETEIVA');
+    this.reteicaOpts = opciones('RETEICA');
+    // El % de lo ya elegido sigue al tipo de persona del proveedor.
+    if (this.retefuenteSel) this.retefuentePct = this.pctTarifa(this.tarifa(this.retefuenteSel));
+    if (this.reteivaSel) this.reteivaPct = this.pctTarifa(this.tarifa(this.reteivaSel));
+    if (this.reteicaSel) this.reteicaPct = this.pctTarifa(this.tarifa(this.reteicaSel));
+    this.cdr.markForCheck();
+  }
 
-  onTarifaRetencion(tipo: TipoRetencion, value: string | null): void {
-    const lista =
-      tipo === 'RETEFUENTE'
-        ? this.retefuenteOpts
-        : tipo === 'RETEIVA'
-          ? this.reteivaOpts
-          : this.reteicaOpts;
-    const pct = lista.find((o) => o.value === value)?.pct ?? 0;
+  private tarifa(id: number | null): TarifaRetencionModel | undefined {
+    return id == null ? undefined : this.tarifasRetencion.find((t) => t.id === id);
+  }
+
+  onTarifaRetencion(tipo: TipoRetencion, value: number | null): void {
+    const pct = this.pctTarifa(this.tarifa(value));
     if (tipo === 'RETEFUENTE') {
       this.retefuenteSel = value;
       this.retefuentePct = pct;
@@ -924,6 +879,18 @@ export class FormCompraComponent implements OnInit {
     }
     this.guardarDraft();
     this.cdr.markForCheck();
+  }
+
+  /**
+   * Retenciones con % pero sin concepto: compras anteriores a V203 o un
+   * borrador viejo. Hay que elegir el concepto antes de guardar.
+   */
+  get retencionesSinConcepto(): string[] {
+    const faltan: string[] = [];
+    if (this.retefuentePct > 0 && !this.retefuenteSel) faltan.push('Retefuente');
+    if (this.reteivaPct > 0 && !this.reteivaSel) faltan.push('ReteIVA');
+    if (this.reteicaPct > 0 && !this.reteicaSel) faltan.push('ReteICA');
+    return faltan;
   }
 
   // ─── Estado ───────────────────────────────────────────────────────
@@ -995,8 +962,68 @@ export class FormCompraComponent implements OnInit {
     } else {
       const fromOC = (history.state?.['fromOC'] ??
         null) as PrefilledCompraOC | null;
+      const qp = this.route.snapshot.queryParamMap;
+      const devolverCompra = Number(qp.get('devolucion')) || null;
       if (fromOC) this.cargarDesdeOC(fromOC);
-      else this.cargarDraft();
+      else if (devolverCompra) await this.cargarDevolucionDe(devolverCompra);
+      else if (qp.get('tipo') === 'NOTA_CREDITO') {
+        // "Nueva devolución": formulario limpio en modo nota crédito, sin el
+        // borrador de una compra a medias.
+        this.tipoDocumento = 'NOTA_CREDITO';
+        this.onTipoDocumentoChange();
+      } else this.cargarDraft();
+    }
+  }
+
+  /**
+   * "Devolver mercancía" desde una compra: deja el formulario en nota crédito
+   * con el proveedor, la sede, la factura y lo que queda por devolver ya
+   * puestos (docs/PLAN_EXCEL_IMPORTADORES_MODULOS.md §3).
+   */
+  private async cargarDevolucionDe(compraId: number): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.compraService.getById(compraId));
+      const compra = res?.data;
+      if (!compra) throw new Error();
+      this.proveedorSeleccionado = {
+        id: compra.proveedorId,
+        nombreCompleto: compra.proveedorNombre,
+        tipoDocumento: '',
+        numeroDocumento: '',
+        tipoTercero: '',
+      } as any;
+      this.proveedorQuery = compra.proveedorNombre;
+      this.cargarTerceroFull(compra.proveedorId);
+      this.sucursalId = compra.sucursalId;
+      this.tipoDocumento = 'NOTA_CREDITO';
+      this.onTipoDocumentoChange();
+
+      // La factura con su saldo pendiente sale del mismo listado del selector.
+      const page = await lastValueFrom(
+        this.compraService.acreditablesPage({
+          page: 0,
+          rows: 1,
+          search: null,
+          params: {
+            proveedorId: compra.proveedorId,
+            sucursalId: compra.sucursalId,
+            compraId: compra.id,
+          },
+        }),
+      );
+      const factura = (page?.data?.content ?? []).find((f) => f.id === compra.id);
+      if (!factura) {
+        this.alertService.showWarn(
+          'No se puede devolver',
+          'Esa compra está anulada o ya no admite devoluciones.',
+        );
+        return;
+      }
+      await this.seleccionarFacturaOrigen(factura);
+    } catch {
+      this.alertService.showError('Error', 'No se pudo cargar la compra a devolver.');
+    } finally {
+      this.cdr.markForCheck();
     }
   }
 
@@ -1042,9 +1069,12 @@ export class FormCompraComponent implements OnInit {
       this.retefuentePct = draft.retefuentePct || 0;
       this.reteivaPct = draft.reteivaPct || 0;
       this.reteicaPct = draft.reteicaPct || 0;
-      this.retefuenteSel = draft.retefuenteSel ?? null;
-      this.reteivaSel = draft.reteivaSel ?? null;
-      this.reteicaSel = draft.reteicaSel ?? null;
+      // Los borradores viejos guardaban un texto ('honorarios_11'), no el id
+      // de la tarifa: se descarta y queda el aviso de elegir el concepto.
+      const idTarifa = (v: unknown): number | null => (typeof v === 'number' ? v : null);
+      this.retefuenteSel = idTarifa(draft.retefuenteSel);
+      this.reteivaSel = idTarifa(draft.reteivaSel);
+      this.reteicaSel = idTarifa(draft.reteicaSel);
 
       this.alertService.showInfo(
         'Borrador recuperado',
@@ -1204,6 +1234,14 @@ export class FormCompraComponent implements OnInit {
     );
     this.tipoDocumento = compra.tipoDocumento ?? 'FACTURA_COMPRA';
     this.fletes = compra.fletes ?? 0;
+    // Retenciones: antes no se cargaban y guardar la edición las borraba. Una
+    // compra anterior a V203 trae el % sin concepto: queda el aviso.
+    this.retefuentePct = Number(compra.retefuentePct) || 0;
+    this.reteivaPct = Number(compra.reteivaPct) || 0;
+    this.reteicaPct = Number(compra.reteicaPct) || 0;
+    this.retefuenteSel = compra.retefuenteTarifaId ?? null;
+    this.reteivaSel = compra.reteivaTarifaId ?? null;
+    this.reteicaSel = compra.reteicaTarifaId ?? null;
     this.cdr.markForCheck();
   }
 
@@ -1244,14 +1282,17 @@ export class FormCompraComponent implements OnInit {
   // ─── Carga datos ──────────────────────────────────────────────────
   private async loadDropdowns(): Promise<void> {
     try {
-      const [sucursales, defaultId, cuentasRes, planRes] = await Promise.all([
+      const [sucursales, defaultId, cuentasRes, planRes, tarifasRes] = await Promise.all([
         this.indexDBService.getSucursales(),
         this.indexDBService.getSucursalDefault(),
         lastValueFrom(this.cuentaBancariaService.list()).catch(() => null),
         lastValueFrom(this.contabilidadService.listarMediosPago()).catch(
           () => null,
         ),
+        lastValueFrom(this.tarifaRetencionService.todas()).catch(() => null),
       ]);
+      this.tarifasRetencion = tarifasRes?.data ?? [];
+      this.armarOpcionesRetencion();
       this.cuentasBancarias = (cuentasRes?.data ?? []).filter((c) => c.activa);
       // Solo cuentas habilitadas como medio de pago: aquí está la CAJA MENOR.
       // La lista la decide el contador con el flag del plan de cuentas, no un
@@ -1324,25 +1365,11 @@ export class FormCompraComponent implements OnInit {
     try {
       const res = await lastValueFrom(this.terceroService.getById(terceroId));
       this.terceroFull = res?.data ?? null;
+      // El % de cada tarifa depende de si el proveedor es natural o jurídica.
+      this.armarOpcionesRetencion();
       this.cdr.markForCheck();
     } catch {
       this.terceroFull = null;
-    }
-  }
-
-  private async cargarRetencionesSugeridas(terceroId: number): Promise<void> {
-    try {
-      const res = await lastValueFrom(
-        this.tarifaRetencionService.sugeridas(terceroId),
-      );
-      const s = res?.data;
-      if (!s) return;
-      if (s.retefuentePct != null) this.retefuentePct = Number(s.retefuentePct);
-      if (s.reteivaPct != null) this.reteivaPct = Number(s.reteivaPct);
-      if (s.reteicaPct != null) this.reteicaPct = Number(s.reteicaPct);
-      this.cdr.markForCheck();
-    } catch {
-      // no bloqueante — el usuario puede ingresar los valores manualmente
     }
   }
 
@@ -1738,6 +1765,16 @@ export class FormCompraComponent implements OnInit {
   // ─── Seriales de la línea ─────────────────────────────────────────
   serialesIdx: number | null = null;
 
+  // Historial de costos del producto de una línea (V226)
+  historialCostoVisible = false;
+  historialCostoProductoId: number | null = null;
+
+  /** Abre el historial de costos: a cuánto se ha comprado y cómo ha cambiado el promedio. */
+  verHistorialCosto(productoId: number): void {
+    this.historialCostoProductoId = productoId;
+    this.historialCostoVisible = true;
+  }
+
   get lineaSeriales(): CompraLineaUI | null {
     return this.serialesIdx !== null ? (this.lineas()[this.serialesIdx] ?? null) : null;
   }
@@ -1914,6 +1951,11 @@ export class FormCompraComponent implements OnInit {
       }
     }
 
+    // El concepto define la cuenta de la retención y cómo se declara.
+    const sinConcepto = this.retencionesSinConcepto;
+    if (sinConcepto.length)
+      return `Elige el concepto de ${sinConcepto.join(', ')} (honorarios, servicios, compras…).`;
+
     if (this.esNotaCredito) {
       if (!this.compraOrigenId)
         return 'Elige la factura de compra que corrige la nota crédito.';
@@ -1996,6 +2038,9 @@ export class FormCompraComponent implements OnInit {
         retefuentePct: this.retefuentePct || null,
         reteivaPct: this.reteivaPct || null,
         reteicaPct: this.reteicaPct || null,
+        retefuenteTarifaId: this.retefuentePct ? this.retefuenteSel : null,
+        reteivaTarifaId: this.reteivaPct ? this.reteivaSel : null,
+        reteicaTarifaId: this.reteicaPct ? this.reteicaSel : null,
         formaPago: this.esCredito ? 'CREDITO' : 'CONTADO',
         // El backend resuelve la cuenta de CAJA por su cuenta: aqui solo se
         // afirma el hecho, no se elige contra que cuenta va.
@@ -2054,9 +2099,11 @@ export class FormCompraComponent implements OnInit {
               ? `Nota crédito #${res.data?.id} creada. Stock descontado.`
               : `Compra #${res.data?.id} creada. Stock actualizado.`,
           );
-          this.router.navigate(['/compras'], {
-            state: { savedCompra: res.data },
-          });
+          if (this.esNotaCredito) this.router.navigate(['/compras/devoluciones']);
+          else
+            this.router.navigate(['/compras'], {
+              state: { savedCompra: res.data },
+            });
         }
       }
     } catch (err: any) {

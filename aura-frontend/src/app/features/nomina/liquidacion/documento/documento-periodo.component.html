@@ -109,6 +109,16 @@
             [disabled]="!data"
             (click)="descargarDispersion()"
           ></button>
+          <button
+            pButton
+            type="button"
+            label="Excel"
+            icon="pi pi-file-excel"
+            class="p-button-outlined"
+            [loading]="exportandoExcel"
+            [disabled]="!data"
+            (click)="descargarExcel()"
+          ></button>
         </div>
 
         <!-- ══ Tabs debajo del formulario ══ -->

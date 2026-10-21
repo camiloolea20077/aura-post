@@ -20,6 +20,8 @@ export interface PermisosUsuario {
   rebajaPrecioMaxPct: number | null;
   todasLasSedes: boolean;
   sucursales: number[];
+  /** Administrador en su propia firma contable: ve "Clientes de la firma". */
+  adminDeFirma?: boolean;
 }
 
 /** Acción especial del catálogo (V192): su clave es "clave:codigo". */

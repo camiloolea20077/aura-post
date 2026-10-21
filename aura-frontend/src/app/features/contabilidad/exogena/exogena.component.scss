@@ -167,3 +167,17 @@
 .req {
   color: #ef4444;
 }
+
+.filtro-inline.persona {
+  min-width: 230px;
+}
+
+.col-valor {
+  min-width: 9rem;
+  white-space: normal;
+  line-height: 1.2;
+}
+
+.fila-total td {
+  font-weight: 700;
+}

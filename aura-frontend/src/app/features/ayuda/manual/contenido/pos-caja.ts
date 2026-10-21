@@ -290,7 +290,7 @@ export const POS_CAJA: ManualModulo[] = [
     grupo: 'Caja',
     titulo: 'Comprobantes de egreso y recibos de caja',
     icono: 'pi pi-file',
-    rutas: ['/comprobantes', '/comprobantes/contable/nuevo'],
+    rutas: ['/comprobantes', '/comprobantes/contable/nuevo', '/comprobantes/contable/:id/editar'],
     resumen:
       'Comprobantes de Egreso (CE, sale dinero) y Recibos de Caja (RC, entra dinero) con sus líneas contables, beneficiario e impresión en tirilla.',
     secciones: [
@@ -309,6 +309,26 @@ export const POS_CAJA: ManualModulo[] = [
           'Agregue las líneas contables: cuenta, tercero, centro de costo, descripción, débito o crédito.',
           'Para pagar o cobrar facturas, use la sección "Estados de cuenta": marca las cuentas por pagar (CE) o por cobrar (RC) del tercero y escribe el valor a aplicar; el sistema arma las líneas.',
           'Guardar y contabilizar. Débitos y créditos deben ser iguales.',
+        ],
+      },
+      {
+        titulo: 'Corregir un comprobante',
+        pasos: [
+          'En la lista, el lápiz aparece en los comprobantes contables manuales (no anulados).',
+          'Corrija valores, líneas, cuentas, beneficiario o cartera aplicada y pulse "Guardar corrección".',
+          'Conserva su número: el sistema deshace los abonos y el movimiento de caja que hizo, rehace el asiento y vuelve a aplicar todo con los valores nuevos.',
+        ],
+        notas: [
+          'No se puede cambiar el tipo (CE ↔ RC): anúlelo y haga uno nuevo.',
+          'Si el mes está cerrado o el turno de caja que afectó ya se cerró, no se corrige: reabra el período o use un ajuste retroactivo de caja.',
+          'Los comprobantes que vienen de otro documento (compra, gasto, abono) se corrigen desde ese documento.',
+        ],
+      },
+      {
+        titulo: 'PDF con cuentas contables',
+        texto: [
+          'El botón rojo de PDF imprime el Recibo de Caja o el Comprobante de Egreso en hoja carta: empresa, número, fecha, a quién, concepto, valor en números y en letras, forma de pago, la imputación contable (código, cuenta, tercero, débito y crédito, con sumas iguales) y las firmas.',
+          'Sirve para cualquier comprobante de la lista: las cuentas salen del asiento del documento que movió la plata. Si ese documento no tiene asiento, el PDF lo dice.',
         ],
       },
     ],
@@ -341,7 +361,7 @@ export const POS_CAJA: ManualModulo[] = [
       {
         titulo: 'Crear un usuario',
         pasos: [
-          'Caja → Usuarios → Nuevo usuario. Se abre una página con cuatro pestañas y un solo botón Guardar.',
+          'Caja → Usuarios → Nuevo usuario. Se abre una página con cuatro pestañas (cinco en una firma contable: "Clientes que atiende") y un solo botón Guardar.',
           'Datos y acceso: busque el tercero de la persona (empleado, vendedor…). Es obligatorio. Si no existe, use "Nuevo tercero". Nombre, documento y correo salen del tercero.',
           'Usuario de acceso: si lo deja vacío, se usa el correo del tercero. Contraseña de mínimo 6 caracteres, tipo de usuario y perfil de permisos (por defecto, el de su tipo).',
           'Sedes: marque al menos una y la principal (estrella).',

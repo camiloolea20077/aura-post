@@ -11,3 +11,15 @@
 tr.row-off td {
   opacity: 0.55;
 }
+
+.nota-ajuste {
+  font-size: 0.72rem;
+  color: #b45309;
+  font-weight: 600;
+}
+
+.tab-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}

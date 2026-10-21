@@ -1,0 +1,342 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <button pButton type="button" icon="pi pi-arrow-left" class="p-button-text p-button-rounded" (click)="volver()"></button>
+        <div>
+          <h1 class="title">
+            {{ esEdicion ? 'Vinculación ' + (vinculacion?.codigo ?? '') : 'Nueva vinculación' }}
+          </h1>
+          <p class="subtitle">
+            @if (vinculacion) {
+              {{ vinculacion.empleadoNombre }} · {{ vinculacion.empleadoDocumento }}
+            } @else {
+              El contrato completo del empleado con la empresa
+            }
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          @if (vinculacion) {
+            <p-tag [value]="textoEstado(vinculacion.estado)" [severity]="severidadEstado(vinculacion.estado)" />
+          }
+          @if (vinculacion?.estado !== 'TERMINADO') {
+            <button pButton type="button" [label]="esEdicion ? 'Guardar cambios' : 'Crear vinculación'"
+              icon="pi pi-check" class="btn-aura" [loading]="guardando" [disabled]="cargando" (click)="guardar()"></button>
+          }
+        </div>
+      </div>
+    </div>
+
+    @if (cargando) {
+      <div class="page-loading"><i class="pi pi-spin pi-spinner"></i><span>Cargando...</span></div>
+    } @else {
+      <!-- div y no form: las pestañas de detalle traen sus propios formularios. -->
+      <div [formGroup]="form" class="form-body">
+        <p-tabView [(activeIndex)]="tabActiva" [scrollable]="true" styleClass="aura-tabs">
+          <!-- ─── General ───────────────────────────────────────── -->
+          <p-tabPanel>
+            <ng-template pTemplate="header"><span class="tab-label"><i class="pi pi-id-card"></i> General</span></ng-template>
+
+            <div class="seccion">Empleado y tipo</div>
+            <div class="grid">
+              <div class="field span-2">
+                <label class="field-label">Empleado <span class="required">*</span></label>
+                <app-tercero-autocomplete formControlName="terceroId" rol="EMPLEADO" [label]="empleadoLabel"
+                  placeholder="Nombre o documento del empleado…" [showClear]="!esEdicion" />
+                <small class="field-error" *ngIf="invalido('terceroId')">Elija el empleado</small>
+                @if (!esEdicion) {
+                  <small class="field-hint">Debe tener ficha en Empleados</small>
+                }
+              </div>
+              <div class="field">
+                <label class="field-label">Tipo de vinculación <span class="required">*</span></label>
+                <p-select formControlName="tipoVinculacionId" [options]="opcionesTipos" optionLabel="label"
+                  optionValue="value" placeholder="Seleccione" styleClass="w-full" />
+                <small class="field-hint">Propone contrato, remuneración y frecuencia</small>
+              </div>
+              <div class="field">
+                <label class="field-label">Tipo de contrato <span class="required">*</span></label>
+                <p-select formControlName="tipoContrato" [options]="opcionesContrato" optionLabel="label"
+                  optionValue="value" styleClass="w-full" />
+              </div>
+              <div class="field">
+                <label class="field-label">Cargo <span class="required">*</span></label>
+                <p-select formControlName="cargoId" [options]="opcionesCargos" optionLabel="label" optionValue="value"
+                  [filter]="true" filterBy="label" placeholder="Seleccione" styleClass="w-full" />
+                <small class="field-error" *ngIf="invalido('cargoId')">Elija el cargo</small>
+              </div>
+              <div class="field">
+                <label class="field-label">Grupo de nómina</label>
+                <p-select formControlName="grupoNominaId" [options]="grupos" optionLabel="label" optionValue="value"
+                  placeholder="Sin grupo" [showClear]="true" styleClass="w-full" />
+              </div>
+              <div class="field">
+                <label class="field-label">¿Temporal?</label>
+                <p-select formControlName="temporal" [options]="opcionesSiNo" optionLabel="label" optionValue="value" styleClass="w-full" />
+              </div>
+              <div class="field">
+                <label class="field-label">¿Vinculación principal?</label>
+                <p-select formControlName="esPrincipal" [options]="opcionesSiNo" optionLabel="label" optionValue="value" styleClass="w-full" />
+                <small class="field-hint">La que manda en reportes si tiene varias</small>
+              </div>
+              @if (esAprendiz) {
+                <div class="field">
+                  <label class="field-label">Etapa del aprendiz <span class="required">*</span></label>
+                  <p-select formControlName="fase" [options]="opcionesFase" optionLabel="label" optionValue="value"
+                    placeholder="Seleccione" styleClass="w-full" />
+                </div>
+              }
+            </div>
+
+            <div class="seccion">Remuneración y jornada</div>
+            <div class="grid">
+              <div class="field">
+                <label class="field-label">Tipo de remuneración <span class="required">*</span></label>
+                <p-select formControlName="tipoRemuneracion" [options]="opcionesRemuneracion" optionLabel="label"
+                  optionValue="value" styleClass="w-full" />
+              </div>
+              <div class="field">
+                <label class="field-label">Salario <span class="required">*</span></label>
+                <div class="con-boton">
+                  <p-inputNumber formControlName="salarioBase" mode="currency" currency="COP" locale="es-CO"
+                    [maxFractionDigits]="0" [min]="0" styleClass="w-full" inputStyleClass="w-full" />
+                  @if (esEdicion && vinculacion?.estado !== 'TERMINADO') {
+                    <button pButton type="button" icon="pi pi-pencil" class="p-button-outlined"
+                      pTooltip="Cambiar salario (con historial)" (click)="abrirSalario()"></button>
+                  }
+                </div>
+                @if (ayudaApoyoAprendiz) { <small class="field-hint">{{ ayudaApoyoAprendiz }}</small> }
+                @else if (rangoCargo) { <small class="field-hint">{{ rangoCargo }}</small> }
+                @if (esEdicion) { <small class="field-hint">El salario cambia con historial (lápiz)</small> }
+              </div>
+              <div class="field">
+                <label class="field-label">Frecuencia de pago <span class="required">*</span></label>
+                <p-select formControlName="frecuenciaPago" [options]="opcionesFrecuencia" optionLabel="label"
+                  optionValue="value" styleClass="w-full" />
+              </div>
+              <div class="field">
+                <label class="field-label">Horas por semana</label>
+                <p-inputNumber formControlName="horasSemana" [min]="1" [max]="48" [maxFractionDigits]="1"
+                  placeholder="Jornada legal" styleClass="w-full" inputStyleClass="w-full" />
+                <small class="field-hint">Vacío = jornada máxima legal vigente</small>
+              </div>
+              <div class="field">
+                <label class="field-label">Calendario laboral</label>
+                <p-select formControlName="calendarioId" [options]="calendarios" optionLabel="label" optionValue="value"
+                  placeholder="El de la empresa" [showClear]="true" styleClass="w-full" />
+              </div>
+            </div>
+
+            <div class="seccion">Vigencia</div>
+            <div class="grid">
+              <div class="field">
+                <label class="field-label">Fecha de inicio <span class="required">*</span></label>
+                <p-calendar formControlName="fechaInicio" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full" />
+                <small class="field-error" *ngIf="invalido('fechaInicio')">La fecha de inicio es obligatoria</small>
+              </div>
+              <div class="field">
+                <label class="field-label">Fecha de terminación @if (exigeFechaFin) { <span class="required">*</span> }</label>
+                <p-calendar formControlName="fechaFin" dateFormat="yy-mm-dd" [showIcon]="true" [showClear]="true" styleClass="w-full" />
+                <small class="field-hint">{{ exigeFechaFin ? 'Este contrato la exige' : 'Vacío = indefinido' }}</small>
+              </div>
+              <div class="field">
+                <label class="field-label">Período de prueba</label>
+                <p-select formControlName="tienePrueba" [options]="opcionesSiNo" optionLabel="label" optionValue="value"
+                  styleClass="w-full" />
+              </div>
+              @if (form.get('tienePrueba')?.value) {
+              <div class="field">
+                <label class="field-label">Fin del período de prueba</label>
+                <div class="con-boton">
+                  <p-calendar formControlName="fechaFinPrueba" dateFormat="yy-mm-dd" [showIcon]="true" [showClear]="true" styleClass="w-full" />
+                  <button pButton type="button" icon="pi pi-calculator" class="p-button-outlined"
+                    pTooltip="Proponer el máximo legal" [disabled]="form.disabled" (click)="sugerirPrueba()"></button>
+                </div>
+                <small class="field-hint">Máx. 2 meses (1/5 del término si es fijo de menos de un año)</small>
+              </div>
+              }
+              <div class="field">
+                <label class="field-label">¿Primer empleo?</label>
+                <p-select formControlName="primerEmpleo" [options]="opcionesSiNo" optionLabel="label" optionValue="value" styleClass="w-full" />
+                <small class="field-hint">Informativo para el beneficio tributario</small>
+              </div>
+            </div>
+          </p-tabPanel>
+
+          <!-- ─── Ubicación y jerarquía ─────────────────────────── -->
+          <p-tabPanel>
+            <ng-template pTemplate="header"><span class="tab-label"><i class="pi pi-sitemap"></i> Ubicación y jerarquía</span></ng-template>
+
+            <div class="seccion">Lugar de trabajo</div>
+            <div class="grid">
+              <div class="field">
+                <label class="field-label">Sede</label>
+                <p-select formControlName="sucursalId" [options]="sucursales" optionLabel="label" optionValue="value"
+                  placeholder="Sin sede" [showClear]="true" styleClass="w-full" />
+              </div>
+              <div class="field">
+                <label class="field-label">Área o dependencia</label>
+                <input type="text" pInputText formControlName="area" class="w-full" />
+              </div>
+              <app-lugar-select [grupo]="form" paisControl="codigoPaisTrabajo" municipioControl="municipioTrabajoId" />
+              <div class="field">
+                <label class="field-label">Dirección</label>
+                <input type="text" pInputText formControlName="direccionTrabajo" class="w-full" />
+              </div>
+              <div class="field">
+                <label class="field-label">Teléfono</label>
+                <input type="text" pInputText formControlName="telefonoTrabajo" class="w-full" />
+              </div>
+            </div>
+
+            <div class="seccion">Jerarquía</div>
+            <div class="grid">
+              <div class="field">
+                <label class="field-label">Jefe directo</label>
+                <app-tercero-autocomplete formControlName="jefeDirectoTerceroId" rol="EMPLEADO" [label]="jefeLabel"
+                  header="Buscar jefe directo" placeholder="Nombre o documento…" />
+                <small class="field-hint">Autoriza sus novedades y vacaciones</small>
+              </div>
+              <div class="field">
+                <label class="field-label">Evaluador</label>
+                <app-tercero-autocomplete formControlName="evaluadorTerceroId" rol="EMPLEADO" [label]="evaluadorLabel"
+                  header="Buscar evaluador" placeholder="Nombre o documento…" />
+              </div>
+            </div>
+          </p-tabPanel>
+
+          <!-- ─── Seguridad social ──────────────────────────────── -->
+          <p-tabPanel>
+            <ng-template pTemplate="header"><span class="tab-label"><i class="pi pi-shield"></i> Seguridad social</span></ng-template>
+
+            <div class="grid">
+              <div class="field">
+                <label class="field-label">Tipo de cotizante</label>
+                <p-select formControlName="tipoCotizante" [options]="opcionesCotizante" optionLabel="label"
+                  optionValue="value" styleClass="w-full" />
+              </div>
+              <div class="field">
+                <label class="field-label">Subtipo de cotizante</label>
+                <p-select formControlName="subtipoCotizante" [options]="opcionesSubtipo" optionLabel="label"
+                  optionValue="value" styleClass="w-full" />
+              </div>
+              <div class="field">
+                <label class="field-label">Riesgo ARL</label>
+                <p-select formControlName="riesgoArlId" [options]="riesgos" optionLabel="label" optionValue="value"
+                  placeholder="Sin definir" [showClear]="true" styleClass="w-full" />
+                <small class="field-hint">Fija la clase y la tarifa que usan la nómina y PILA</small>
+              </div>
+              <div class="field">
+                <label class="field-label">¿Trabaja en el exterior?</label>
+                <p-select formControlName="enExtranjero" [options]="opcionesSiNo" optionLabel="label" optionValue="value" styleClass="w-full" />
+                <small class="field-hint">Sí: no cotiza salud ni pensión en Colombia</small>
+              </div>
+            </div>
+
+            @if (!vinculacion) {
+              <p class="nota">Los aportes (EPS, pensión, ARL, caja, cesantías), los centros de costo, los conceptos y
+                las novedades permitidas se configuran después de crear la vinculación.</p>
+            }
+          </p-tabPanel>
+
+          <!-- ─── Soporte ───────────────────────────────────────── -->
+          <p-tabPanel>
+            <ng-template pTemplate="header"><span class="tab-label"><i class="pi pi-paperclip"></i> Soporte</span></ng-template>
+
+            <div class="seccion">Acto administrativo o documento interno</div>
+            <div class="grid">
+              <div class="field">
+                <label class="field-label">Tipo</label>
+                <p-select formControlName="docInternoTipo" [options]="opcionesActo" optionLabel="label"
+                  optionValue="value" placeholder="Seleccione" [showClear]="true" styleClass="w-full" />
+              </div>
+              <div class="field">
+                <label class="field-label">Número</label>
+                <input type="text" pInputText formControlName="docInternoNumero" class="w-full" />
+              </div>
+              <div class="field">
+                <label class="field-label">Fecha</label>
+                <p-calendar formControlName="docInternoFecha" dateFormat="yy-mm-dd" [showIcon]="true" [showClear]="true" styleClass="w-full" />
+              </div>
+            </div>
+
+            @if (vinculacion) {
+              <div class="soportes">
+                <div class="soporte">
+                  <span class="soporte__titulo">Documento interno</span>
+                  @if (vinculacion.docInternoUrl) {
+                    <a [href]="vinculacion.docInternoUrl" target="_blank" rel="noopener"><i class="pi pi-file"></i> Ver archivo</a>
+                  } @else { <span class="sin-dato">Sin archivo</span> }
+                  <label class="p-button p-button-outlined p-button-sm subir">
+                    <i class="pi" [class.pi-upload]="subiendo !== 'interno'" [class.pi-spin]="subiendo === 'interno'"
+                      [class.pi-spinner]="subiendo === 'interno'"></i>
+                    {{ vinculacion.docInternoUrl ? 'Reemplazar' : 'Subir' }}
+                    <input type="file" hidden accept=".pdf,image/*" (change)="subir('interno', $event)" />
+                  </label>
+                </div>
+                <div class="soporte">
+                  <span class="soporte__titulo">Contrato firmado</span>
+                  @if (vinculacion.docExternoUrl) {
+                    <a [href]="vinculacion.docExternoUrl" target="_blank" rel="noopener"><i class="pi pi-file"></i> Ver archivo</a>
+                  } @else { <span class="sin-dato">Sin archivo</span> }
+                  <label class="p-button p-button-outlined p-button-sm subir">
+                    <i class="pi" [class.pi-upload]="subiendo !== 'externo'" [class.pi-spin]="subiendo === 'externo'"
+                      [class.pi-spinner]="subiendo === 'externo'"></i>
+                    {{ vinculacion.docExternoUrl ? 'Reemplazar' : 'Subir' }}
+                    <input type="file" hidden accept=".pdf,image/*" (change)="subir('externo', $event)" />
+                  </label>
+                </div>
+              </div>
+            } @else {
+              <p class="nota">Los archivos se adjuntan después de crear la vinculación.</p>
+            }
+
+            <div class="field">
+              <label class="field-label">Observación</label>
+              <textarea pTextarea formControlName="observacion" rows="3" class="w-full"></textarea>
+            </div>
+          </p-tabPanel>
+
+          @if (vinculacion) {
+            <p-tabPanel>
+              <ng-template pTemplate="header"><span class="tab-label"><i class="pi pi-sitemap"></i> Centros de costo</span></ng-template>
+              <app-centros-costo-vinculacion [vinculacionId]="vinculacion.id" [soloLectura]="retirada" />
+            </p-tabPanel>
+            <p-tabPanel>
+              <ng-template pTemplate="header"><span class="tab-label"><i class="pi pi-list"></i> Conceptos</span></ng-template>
+              <app-conceptos-vinculacion [vinculacionId]="vinculacion.id" [fechaInicio]="vinculacion.fechaInicio"
+                [soloLectura]="retirada" />
+            </p-tabPanel>
+            <p-tabPanel>
+              <ng-template pTemplate="header"><span class="tab-label"><i class="pi pi-bolt"></i> Novedades permitidas</span></ng-template>
+              <app-novedades-permitidas-vinculacion [vinculacionId]="vinculacion.id" [soloLectura]="retirada" />
+            </p-tabPanel>
+            <p-tabPanel>
+              <ng-template pTemplate="header"><span class="tab-label"><i class="pi pi-shield"></i> Aportes</span></ng-template>
+              <app-afiliaciones [inline]="true" [visible]="true" [contratoId]="vinculacion.id"
+                [contratoLabel]="vinculacion.codigo ?? ''" />
+            </p-tabPanel>
+            <p-tabPanel>
+              <ng-template pTemplate="header"><span class="tab-label"><i class="pi pi-percentage"></i> Retención</span></ng-template>
+              <app-retefuente [inline]="true" [visible]="true" [contratoId]="vinculacion.id"
+                [contratoLabel]="vinculacion.codigo ?? ''" />
+            </p-tabPanel>
+            <p-tabPanel>
+              <ng-template pTemplate="header"><span class="tab-label"><i class="pi pi-lock"></i> Embargos</span></ng-template>
+              <app-embargos [inline]="true" [visible]="true" [contratoId]="vinculacion.id"
+                [contratoLabel]="vinculacion.codigo ?? ''" />
+            </p-tabPanel>
+            <p-tabPanel>
+              <ng-template pTemplate="header"><span class="tab-label"><i class="pi pi-history"></i> Historial</span></ng-template>
+              <app-historial-vinculacion [vinculacionId]="vinculacion.id" [empleadoId]="vinculacion.empleadoId" />
+            </p-tabPanel>
+          }
+        </p-tabView>
+      </div>
+    }
+  </div>
+</div>
+
+<app-historial-salario [(visible)]="mostrarSalario" [contrato]="contratoSalario" (guardado)="onSalarioCambiado()" />

@@ -8,14 +8,14 @@
         <div>
           <h1 class="title">Borradores de Declaraciones</h1>
           <p class="subtitle">
-            IVA (300) y retención en la fuente (350) leídos de la contabilidad,
-            para trasladarlos al formulario de la DIAN
+            IVA (300), retención en la fuente (350) e ICA leídos de la contabilidad,
+            y los certificados de retención para sus proveedores
           </p>
         </div>
       </div>
     </div>
 
-    <ng-template #borrador let-b let-verCuentas="verCuentas" let-toggle="toggle">
+    <ng-template #borrador let-b let-verCuentas="verCuentas" let-toggle="toggle" let-pagar="pagar" let-anular="anular">
       <div class="advertencias" *ngIf="b.advertencias.length">
         <div *ngFor="let a of b.advertencias">
           <i class="pi pi-exclamation-triangle"></i> {{ a }}
@@ -42,6 +42,57 @@
       <div class="resultado" [class.resultado--favor]="b.resultado < 0">
         <span>{{ b.resultadoEtiqueta }}</span>
         <b>{{ formatCOP(b.resultado < 0 ? -b.resultado : b.resultado) }}</b>
+      </div>
+
+      <!-- A quién se le paga (V204) -->
+      <div class="bloque" *ngIf="b.porPagar?.length">
+        <h3>A quién se le paga</h3>
+        <div class="tabla-wrap">
+          <table class="tabla">
+            <thead>
+              <tr>
+                <th>Entidad</th>
+                <th>Declaración</th>
+                <th class="num">Valor</th>
+                <th>Pago</th>
+                <th style="width: 150px"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let g of b.porPagar">
+                <td>
+                  <span [class.sin-entidad]="g.terceroId == null">{{ g.terceroNombre }}</span>
+                  <div class="sub" *ngIf="g.terceroDocumento">NIT {{ g.terceroDocumento }}</div>
+                </td>
+                <td>{{ tipoPagoLabel(g.tipo) }}</td>
+                <td class="num" [class.negativo]="g.valor < 0">
+                  {{ formatCOP(g.valor < 0 ? -g.valor : g.valor) }}
+                  <div class="sub" *ngIf="g.valor < 0">saldo a favor</div>
+                </td>
+                <td>
+                  <ng-container *ngIf="g.pagoId; else sinPago">
+                    <span class="pagado"><i class="pi pi-check-circle"></i> {{ g.pagoNumero }}</span>
+                    <div class="sub">
+                      {{ g.pagoFecha }}
+                      <ng-container *ngIf="g.pagoFormulario"> · form. {{ g.pagoFormulario }}</ng-container>
+                    </div>
+                    <div class="sub" *ngIf="g.pagoAsiento">Asiento {{ g.pagoAsiento }}</div>
+                    <div class="sub sin-entidad" *ngIf="!g.pagoAsiento">Sin asiento: revise el log de contabilización</div>
+                  </ng-container>
+                  <ng-template #sinPago><span class="sub">Pendiente</span></ng-template>
+                </td>
+                <td class="acciones-pago">
+                  <button *ngIf="!g.pagoId && g.valor > 0 && g.terceroId != null" pButton type="button"
+                    class="btn-aura p-button-sm" icon="pi pi-wallet" label="Registrar pago"
+                    (click)="pagar(b, g)"></button>
+                  <button *ngIf="g.pagoId" pButton type="button"
+                    class="p-button-sm p-button-outlined p-button-danger" icon="pi pi-ban" label="Anular"
+                    (click)="anular(b, g)"></button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div class="bloque" *ngIf="b.basesPorTarifa.length">
@@ -123,7 +174,8 @@
         </div>
         <ng-container *ngIf="iva">
           <ng-container *ngTemplateOutlet="borrador; context: {
-            $implicit: iva, verCuentas: verCuentasIva, toggle: toggleCuentasIva }"></ng-container>
+            $implicit: iva, verCuentas: verCuentasIva, toggle: toggleCuentasIva,
+            pagar: abrirPago, anular: abrirAnular }"></ng-container>
         </ng-container>
       </p-tabPanel>
 
@@ -147,9 +199,136 @@
         </div>
         <ng-container *ngIf="ret">
           <ng-container *ngTemplateOutlet="borrador; context: {
-            $implicit: ret, verCuentas: verCuentasRet, toggle: toggleCuentasRet }"></ng-container>
+            $implicit: ret, verCuentas: verCuentasRet, toggle: toggleCuentasRet,
+            pagar: abrirPago, anular: abrirAnular }"></ng-container>
         </ng-container>
+      </p-tabPanel>
+
+      <!-- ── ICA (municipal) ──────────────────────────────────────────── -->
+      <p-tabPanel header="Industria y comercio (ICA)" leftIcon="pi pi-building">
+        <div class="filtros filtros--ica">
+          <div class="filtro">
+            <label>Desde</label>
+            <p-calendar [(ngModel)]="icaDesde" dateFormat="dd/mm/yy" appendTo="body" />
+          </div>
+          <div class="filtro">
+            <label>Hasta</label>
+            <p-calendar [(ngModel)]="icaHasta" dateFormat="dd/mm/yy" appendTo="body" />
+          </div>
+          <div class="filtro">
+            <label>Tarifa de la actividad</label>
+            <p-inputNumber [(ngModel)]="icaTarifa" [min]="0" [max]="50" [maxFractionDigits]="3" suffix=" por mil" />
+          </div>
+          <div class="filtro">
+            <label>Avisos y tableros</label>
+            <p-dropdown [options]="opcionesAvisos" [(ngModel)]="icaAvisos" optionLabel="label" optionValue="value" appendTo="body" />
+          </div>
+          <div class="filtro">
+            <label>Sobretasa bomberil</label>
+            <p-inputNumber [(ngModel)]="icaBomberil" [min]="0" [max]="100" [maxFractionDigits]="2" suffix=" %" />
+          </div>
+          <div class="filtro">
+            <label>Exentos y otros municipios</label>
+            <p-inputNumber [(ngModel)]="icaDeducciones" mode="currency" currency="COP" locale="es-CO" [maxFractionDigits]="0" [min]="0" />
+          </div>
+          <div class="filtro filtro--ancho">
+            <label>Secretaría de hacienda (municipio)</label>
+            <app-tercero-autocomplete [(ngModel)]="icaMunicipio" placeholder="A quién se le paga el ICA" appendTo="body" />
+          </div>
+          <div class="acciones">
+            <button pButton type="button" label="Generar" icon="pi pi-search" class="btn-aura"
+              [loading]="cargandoIca" (click)="generarIca()"></button>
+            <button pButton type="button" label="Causar ICA" icon="pi pi-bolt" class="p-button-outlined"
+              pTooltip="Registra el gasto (511505) y la cuenta por pagar (2412) a nombre del municipio"
+              [disabled]="!ica || !icaMunicipio" [loading]="causandoIca" (click)="causarIca()"></button>
+            <button pButton type="button" label="Excel" icon="pi pi-file-excel" class="p-button-outlined"
+              [disabled]="!ica" (click)="exportar(ica!)"></button>
+          </div>
+        </div>
+        <ng-container *ngIf="ica">
+          <ng-container *ngTemplateOutlet="borrador; context: {
+            $implicit: ica, verCuentas: verCuentasIca, toggle: toggleCuentasIca,
+            pagar: abrirPago, anular: abrirAnular }"></ng-container>
+        </ng-container>
+      </p-tabPanel>
+
+      <!-- ── Certificados de retención ────────────────────────────────── -->
+      <p-tabPanel header="Certificados de retención" leftIcon="pi pi-verified">
+        <app-certificados-retencion />
       </p-tabPanel>
     </p-tabView>
   </div>
 </div>
+
+<!-- Registrar el pago de la declaración -->
+<p-dialog [(visible)]="pagoVisible" [modal]="true" [draggable]="false" [resizable]="false"
+  [style]="{ width: '480px' }" header="Registrar pago de la declaración">
+  <div class="pago-form" *ngIf="pagoGrupo">
+    <div class="pago-resumen">
+      <div><b>{{ pagoGrupo.terceroNombre }}</b></div>
+      <div class="sub">{{ tipoPagoLabel(pagoGrupo.tipo) }} · {{ pagoBorrador?.desde }} a {{ pagoBorrador?.hasta }}</div>
+      <div class="pago-valor">{{ formatCOP(pagoGrupo.valor) }}</div>
+      <small class="sub">
+        Cierra el saldo del período de {{ pagoGrupo.cuentas.length }} cuenta(s) del impuesto contra la
+        cuenta de donde sale la plata, a nombre de la entidad.
+      </small>
+    </div>
+    <div class="pago-campo">
+      <label>Fecha del pago</label>
+      <p-calendar [(ngModel)]="pagoFecha" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" />
+    </div>
+    <div class="pago-campo">
+      <label>Sale de</label>
+      <p-dropdown [options]="origenesPago" [(ngModel)]="pagoOrigen" optionLabel="label" optionValue="value"
+        [filter]="origenesPago.length > 6" appendTo="body" styleClass="w-full" />
+    </div>
+    <div class="pago-campo">
+      <label>Número del formulario (opcional)</label>
+      <input pInputText [(ngModel)]="pagoFormulario" placeholder="Ej. 3507612345678" />
+    </div>
+    <div class="pago-campo">
+      <label>Aproximar a miles</label>
+      <p-dropdown [options]="opcionesRedondeo" [(ngModel)]="pagoRedondear" optionLabel="label" optionValue="value"
+        appendTo="body" styleClass="w-full" />
+    </div>
+    <div class="pago-campo">
+      <label>Intereses de mora (si presenta tarde)</label>
+      <p-inputNumber [(ngModel)]="pagoIntereses" mode="currency" currency="COP" locale="es-CO"
+        [maxFractionDigits]="0" [min]="0" styleClass="w-full" />
+    </div>
+    <div class="pago-campo">
+      <label>Sanción (extemporaneidad u otra)</label>
+      <p-inputNumber [(ngModel)]="pagoSancion" mode="currency" currency="COP" locale="es-CO"
+        [maxFractionDigits]="0" [min]="0" styleClass="w-full" />
+    </div>
+    <div class="pago-total">
+      <span class="sub" *ngIf="pagoAjuste !== 0">Ajuste al peso {{ formatCOP(pagoAjuste) }}</span>
+      <b>Total a pagar: {{ formatCOP(pagoTotal) }}</b>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="pagoVisible = false"></button>
+    <button pButton type="button" label="Registrar pago" icon="pi pi-check" class="btn-aura"
+      [loading]="guardandoPago" (click)="registrarPago()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Anular el pago -->
+<p-dialog [(visible)]="anularVisible" [modal]="true" [draggable]="false" [resizable]="false"
+  [style]="{ width: '440px' }" header="Anular pago de la declaración">
+  <div class="pago-form" *ngIf="anularGrupo">
+    <p class="sub">
+      Se anula {{ anularGrupo.pagoNumero }} a {{ anularGrupo.terceroNombre }}: el contraasiento sale con
+      fecha de hoy y la declaración queda otra vez pendiente.
+    </p>
+    <div class="pago-campo">
+      <label>Motivo</label>
+      <input pInputText [(ngModel)]="anularMotivo" placeholder="Ej. se registró con la cuenta equivocada" />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="anularVisible = false"></button>
+    <button pButton type="button" label="Anular pago" icon="pi pi-ban" class="p-button-danger"
+      [loading]="anulando" (click)="anularPago()"></button>
+  </ng-template>
+</p-dialog>

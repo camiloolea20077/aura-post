@@ -3,6 +3,7 @@ import {
   ChangeDetectorRef,
   Component,
   OnInit,
+  inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -18,6 +19,8 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { lastValueFrom } from 'rxjs';
 
 import { CarteraService } from '../../../core/services/cartera.service';
+import { CarteraMoraService } from '../../../core/services/cartera-mora.service';
+import { ResumenInteresClienteModel } from '../../../core/models/cartera-mora.model';
 import { TerceroService } from '../../../core/services/tercero.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
 import { aFechaLocal } from '../../../shared/utils/fecha.util';
@@ -45,12 +48,16 @@ import { PuedeDirective } from '../../../shared/directives/puede.directive';
 type TabFicha = 'facturas' | 'pagos' | 'recibos' | 'gestiones' | 'anticipos' | 'credito' | 'acuerdos';
 
 /** Ficha del cliente: lo que debe, cómo paga y qué se ha hecho para cobrarle. */
+import { ExcelReporteService } from '../../../shared/services/excel-reporte.service';
+
+import { EnviarCorreoComponent } from '../../../shared/components/enviar-correo/enviar-correo.component';
 @Component({
   selector: 'app-ficha-cliente',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     PuedeDirective,
+    EnviarCorreoComponent,
     CommonModule,
     FormsModule,
     RouterModule,
@@ -70,6 +77,12 @@ type TabFicha = 'facturas' | 'pagos' | 'recibos' | 'gestiones' | 'anticipos' | '
   styleUrls: ['./ficha-cliente.component.scss'],
 })
 export class FichaClienteComponent implements OnInit {
+  private readonly excel = inject(ExcelReporteService);
+  private readonly mora = inject(CarteraMoraService);
+  exportandoExcel = false;
+  /** Interés de mora causado y facturado (C5); null si no se pudo leer. */
+  interesMora: ResumenInteresClienteModel | null = null;
+
   terceroId = 0;
   ficha: FichaClienteCarteraModel | null = null;
   cargando = false;
@@ -86,6 +99,8 @@ export class FichaClienteComponent implements OnInit {
 
   // Gestión de cobro
   gestionVisible = false;
+  /** Recordatorio de pago por correo con el estado de cuenta adjunto. */
+  cobroCorreoVisible = false;
   guardandoGestion = false;
   gestion: CreateGestionCobroDto = this.gestionVacia();
   fechaPromesa: Date | null = null;
@@ -126,12 +141,24 @@ export class FichaClienteComponent implements OnInit {
     try {
       const res = await lastValueFrom(this.carteraService.ficha(this.terceroId));
       this.ficha = res.data;
+      this.cargarInteresMora();
     } catch (err: any) {
       this.alert.showError('Error', err?.error?.message ?? 'No se pudo cargar la ficha del cliente');
     } finally {
       this.cargando = false;
       this.cdr.markForCheck();
     }
+  }
+
+  /** Aparte de la ficha: si falla, la ficha se ve igual, sin el aviso de intereses. */
+  private async cargarInteresMora(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.mora.resumenInteresCliente(this.terceroId));
+      this.interesMora = res.data;
+    } catch {
+      this.interesMora = null;
+    }
+    this.cdr.markForCheck();
   }
 
   setTab(t: TabFicha): void {
@@ -454,5 +481,67 @@ export class FichaClienteComponent implements OnInit {
       currency: 'COP',
       maximumFractionDigits: 0,
     }).format(v ?? 0);
+  }
+
+  // ── Excel (docs/PLAN_EXCEL_IMPORTADORES_MODULOS.md §1) ──────────────
+  /** Estado de cuenta y facturas abiertas del cliente en Excel. */
+  async estadoCuentaExcel(): Promise<void> {
+    const f = this.ficha;
+    if (!f) return;
+    await this.conExcel(async () => {
+      const res = await lastValueFrom(this.terceroService.getEstadoCuenta(this.terceroId));
+      const e = res?.data;
+      const hojas: any[] = [];
+      if (e) hojas.push(this.hojaEstadoCuenta(e));
+      hojas.push({
+        nombre: 'Facturas abiertas',
+        columnas: [
+          { titulo: 'Cuenta', ancho: 14 }, { titulo: 'Venta', ancho: 14 }, { titulo: 'Emisión', ancho: 12 },
+          { titulo: 'Vence', ancho: 12 }, { titulo: 'Días vencida', tipo: 'numero' }, { titulo: 'Deuda', tipo: 'pesos' },
+          { titulo: 'Abonado', tipo: 'pesos' }, { titulo: 'Saldo', tipo: 'pesos' }, { titulo: 'Acuerdo', ancho: 14 },
+        ],
+        filas: [
+          ...f.facturas.map((x) => [x.numeroCuenta, x.numeroVenta, x.fechaEmision, x.fechaVencimiento,
+            x.diasVencida, x.totalDeuda, x.totalAbonado, x.saldoPendiente, x.acuerdoNumero]),
+          { valores: ['', '', '', '', 'Total', null, null, f.resumen.saldoTotal], estilo: 'total' },
+        ],
+      });
+      await this.excel.descargar({
+        titulo: 'Estado de cuenta',
+        subtitulo: (e?.nombreCliente ?? '') + (e ? ` — ${e.tipoDocumento} ${e.numeroDocumento}` : ''),
+        archivo: `estado_cuenta_${e?.numeroDocumento ?? this.terceroId}`,
+        hojas,
+      });
+    });
+    this.cdr.markForCheck();
+  }
+
+  private hojaEstadoCuenta(e: any): any {
+    const signo: Record<string, string> = { VENTA: 'Venta', ABONO: 'Abono', NOTA_CREDITO: 'Nota crédito', NOTA_DEBITO: 'Nota débito' };
+    return {
+      nombre: 'Estado de cuenta',
+      columnas: [
+        { titulo: 'Fecha', ancho: 12 }, { titulo: 'Tipo', ancho: 14 }, { titulo: 'Referencia', ancho: 18 },
+        { titulo: 'Descripción', ancho: 44 }, { titulo: 'Cargo', tipo: 'pesos' }, { titulo: 'Abono', tipo: 'pesos' },
+        { titulo: 'Saldo', tipo: 'pesos' },
+      ],
+      filas: [
+        { valores: [`${e.nombreCliente} — ${e.tipoDocumento} ${e.numeroDocumento}`], estilo: 'grupo' },
+        ...(e.movimientos ?? []).map((m: any) => [m.fecha, signo[m.tipo] ?? m.tipo, m.referencia, m.descripcion,
+          m.cargo, m.abono, m.saldoAcumulado]),
+        { valores: ['', '', '', 'Total deuda', e.totalDeuda, e.totalAbonado, e.saldoPendiente], estilo: 'total' },
+      ],
+    };
+  }
+
+  private async conExcel(fn: () => Promise<void>): Promise<void> {
+    this.exportandoExcel = true;
+    try {
+      await fn();
+    } catch {
+      // El servicio ya escribió lo que pudo; si falla, que no quede cargando.
+    } finally {
+      this.exportandoExcel = false;
+    }
   }
 }

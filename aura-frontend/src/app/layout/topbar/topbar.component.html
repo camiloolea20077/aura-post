@@ -37,6 +37,21 @@
       <span class="clock-date">{{ currentDate }}</span>
     </div>
 
+    <!-- Empresa de trabajo (firma contable, PLAN_FIRMA_CONTABLE F6) -->
+    <button
+      *ngIf="puedeCambiarEmpresa"
+      type="button"
+      class="empresa-chip"
+      [class.empresa-chip--cliente]="!!firmaNombre"
+      (click)="abrirCambioEmpresa()"
+      [pTooltip]="firmaNombre ? 'Trabajando en ' + empresaNombre + ' desde ' + firmaNombre + '. Clic para cambiar de empresa' : 'Cambiar de empresa'"
+      tooltipPosition="bottom"
+    >
+      <i class="pi pi-building"></i>
+      <span class="empresa-chip__nombre">{{ empresaNombre }}</span>
+      <i class="pi pi-sort-alt empresa-chip__cambiar"></i>
+    </button>
+
     <!-- Selector de sucursal (con formControlName en lugar de ngModel) -->
     <form [formGroup]="frmTopbar" class="sucursal-form">
       <div class="sucursal-selector">
@@ -163,9 +178,27 @@
           <div class="user-avatar-lg">{{ userName | slice: 0 : 1 }}</div>
           <div>
             <p class="user-full-name">{{ userName }}</p>
+            <p class="user-empresa" *ngIf="empresaNombre">
+              {{ empresaNombre }}<ng-container *ngIf="firmaNombre"> · desde {{ firmaNombre }}</ng-container>
+            </p>
           </div>
         </div>
         <div class="user-menu-divider"></div>
+        <a
+          *ngIf="puedeCambiarEmpresa"
+          class="user-menu-item"
+          (click)="userPanel.hide(); abrirCambioEmpresa()"
+        >
+          <i class="pi pi-building"></i> Cambiar empresa
+        </a>
+        <a
+          *ngIf="adminDeFirma"
+          routerLink="/firma/clientes"
+          class="user-menu-item"
+          (click)="userPanel.hide()"
+        >
+          <i class="pi pi-briefcase"></i> Clientes de la firma
+        </a>
         <a
           routerLink="/perfil"
           class="user-menu-item"
@@ -193,3 +226,11 @@
     }
   </div>
 </header>
+
+<app-selector-empresa
+  [(visible)]="selectorEmpresaVisible"
+  [empresas]="empresasDisponibles"
+  [actualId]="empresaId"
+  [cargandoId]="cambiandoEmpresaId"
+  (elegir)="cambiarEmpresa($event)"
+/>

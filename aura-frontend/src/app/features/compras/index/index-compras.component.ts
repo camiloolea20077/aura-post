@@ -20,6 +20,7 @@ import {
   TipoDocumentoCompra,
 } from '../../../core/models/compra.model';
 import { CompraService } from '../../../core/services/compra.service';
+import { CompraPdfService } from '../../../core/services/compra-pdf.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
 import { DetalleCompraComponent } from '../detail/detalle-compra.component';
 import { ComprobanteEgresoComponent } from '../comprobante-egreso/comprobante-egreso.component';
@@ -85,6 +86,7 @@ export class IndexComprasComponent implements OnInit {
 
   constructor(
     private readonly compraService: CompraService,
+    private readonly compraPdf: CompraPdfService,
     private readonly alertService: AlertService,
     private readonly router: Router,
   ) {}
@@ -171,6 +173,20 @@ export class IndexComprasComponent implements OnInit {
     });
   }
 
+  // ─── PDF ──────────────────────────────────────────────────
+  public descargandoPdfId: number | null = null;
+
+  async descargarPdf(item: CompraTableModel): Promise<void> {
+    this.descargandoPdfId = item.id;
+    try {
+      await this.compraPdf.descargar(item.id);
+    } catch {
+      this.alertService.showError('Error', 'No se pudo generar el PDF de la compra.');
+    } finally {
+      this.descargandoPdfId = null;
+    }
+  }
+
   // ─── Detalle ──────────────────────────────────────────────
   verDetalle(item: CompraTableModel): void {
     this.selectedCompraId = item.id;
@@ -239,3 +255,4 @@ export class IndexComprasComponent implements OnInit {
     return item.tipoDocumento === 'NOTA_CREDITO';
   }
 }
+

@@ -37,6 +37,15 @@
       [disabled]="!balance || loading || sinDatos"
       (click)="descargarPdf()"
     ></button>
+    <button
+      pButton
+      label="Excel"
+      icon="pi pi-file-excel"
+      class="p-button-outlined p-button-secondary"
+      [loading]="exportandoExcel"
+      [disabled]="!balance || loading || sinDatos"
+      (click)="descargarExcel()"
+    ></button>
   </div>
 </div>
 

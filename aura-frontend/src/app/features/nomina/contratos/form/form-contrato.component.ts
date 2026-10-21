@@ -22,6 +22,7 @@ import {
 } from '../../../../core/models/contrato.model';
 import { AlertService } from '../../../../shared/pipes/alert.service';
 import { aDate, aFechaLocal } from '../../../../shared/utils/fecha.util';
+import { apoyoAprendiz } from '../../vinculaciones/vinculacion.util';
 
 @Component({
   selector: 'app-form-contrato',
@@ -183,19 +184,15 @@ export class FormContratoComponent {
   }
 
   /**
-   * Sugiere el salario del aprendiz según la fase: SMMLV × % (lectiva 50 / práctica
-   * 75, parametrizable en config). Así nadie tiene que sacar la cuenta. Solo en alta
-   * (en edición el salario se cambia por "Salario e historial") y el usuario puede
-   * ajustarlo manualmente después.
+   * Sugiere el salario del aprendiz según la fase (lectiva 75 % / práctica 100 % del
+   * SMMLV, Ley 2466, parametrizable en config). Así nadie tiene que sacar la cuenta.
+   * Solo en alta (en edición el salario se cambia por "Salario e historial") y el
+   * usuario puede ajustarlo manualmente después.
    */
   private aplicarApoyoAprendiz(): void {
-    if (this.esEdicion || !this.esAprendiz || !this.config || !this.form.fase) return;
-    const pct =
-      this.form.fase === 'PRACTICA'
-        ? this.config.aprendizPctPractica
-        : this.config.aprendizPctLectiva;
-    if (pct == null || !this.config.smmlv) return;
-    this.form.salarioBase = Math.round((this.config.smmlv * pct) / 100);
+    if (this.esEdicion || !this.esAprendiz) return;
+    const apoyo = apoyoAprendiz(this.config, this.form.fase);
+    if (apoyo != null) this.form.salarioBase = apoyo;
   }
 
   onHide(): void {

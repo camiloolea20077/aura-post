@@ -23,10 +23,14 @@ import { AlertService } from '../../../../shared/pipes/alert.service';
 import { IFilterTable } from '../../../../shared/utils/filter-table';
 
 import { PuedeDirective } from '../../../../shared/directives/puede.directive';
+import { ImportarExcelComponent } from '../../../../shared/components/importar-excel/importar-excel.component';
+import { PLANTILLA_PRECIOS } from '../../../../shared/components/importar-excel/plantillas-catalogo';
+
 @Component({
   selector: 'app-index-producto-precio',
   standalone: true,
   imports: [
+    ImportarExcelComponent,
     PuedeDirective,
     CommonModule,
     FormsModule,
@@ -46,6 +50,14 @@ import { PuedeDirective } from '../../../../shared/directives/puede.directive';
   styleUrls: ['./index-producto-precio.component.scss'],
 })
 export class IndexProductoPrecioComponent implements OnInit {
+  // Importar desde Excel (docs/PLAN_EXCEL_IMPORTADORES_MODULOS.md §2b)
+  readonly plantillaImportar = PLANTILLA_PRECIOS;
+  mostrarImportar = false;
+
+  onImportado(): void {
+    this.reloadTable();
+  }
+
   public showModal = false;
   public selectedId: number | null = null;
   public modalSlug = 'create';

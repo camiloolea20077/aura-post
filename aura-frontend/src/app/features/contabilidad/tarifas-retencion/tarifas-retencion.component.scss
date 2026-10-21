@@ -27,3 +27,26 @@
 
   &.full-width { grid-column: 1 / -1; }
 }
+
+.text-warn {
+  color: #b45309;
+  font-weight: 600;
+  font-size: 0.85em;
+}
+
+.municipio-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+
+  label {
+    margin-top: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0 0 0.25rem;
+    font-size: 0.82rem;
+  }
+}

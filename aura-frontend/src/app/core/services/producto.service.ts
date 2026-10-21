@@ -13,6 +13,7 @@ import {
   UsoProducto,
   CambioUnidadPreviewModel,
   CambioUnidadRequest,
+  HistorialCostoProductoModel,
 } from '../models/producto.model';
 import { environment } from '../../../environments/environment';
 import { ResponseTableModel } from '../../shared/utils/response-table.model';
@@ -131,6 +132,13 @@ export class ProductoService {
     return this.http.post<ResponseModel<CambioUnidadPreviewModel>>(
       `${this.apiUrl}/${productoId}/cambio-unidad`,
       dto,
+    );
+  }
+
+  /** Historial de costos: cambios del costo promedio y líneas de compra del producto. */
+  historialCostos(id: number): Observable<ResponseModel<HistorialCostoProductoModel>> {
+    return this.http.get<ResponseModel<HistorialCostoProductoModel>>(
+      `${this.apiUrl}/${id}/historial-costos`,
     );
   }
 

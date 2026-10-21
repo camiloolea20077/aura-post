@@ -3,6 +3,7 @@ import {
   OnInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
+  inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -35,6 +36,8 @@ type TagSeverity =
   | 'contrast'
   | undefined;
 
+import { ExcelReporteService } from '../../../shared/services/excel-reporte.service';
+
 @Component({
   selector: 'app-estado-cuenta',
   standalone: true,
@@ -55,6 +58,9 @@ type TagSeverity =
   styleUrls: ['./estado-cuenta.component.scss'],
 })
 export class EstadoCuentaComponent implements OnInit {
+  private readonly excel = inject(ExcelReporteService);
+  exportandoExcel = false;
+
   // ── Selector de cliente ─────────────────────────────────────
   clienteSeleccionado: TerceroTableModel | null = null;
 
@@ -197,5 +203,49 @@ export class EstadoCuentaComponent implements OnInit {
 
   getClienteLabel(c: TerceroTableModel): string {
     return `${c.nombreCompleto} · ${c.tipoDocumento} ${c.numeroDocumento}`;
+  }
+
+  // ── Excel (docs/PLAN_EXCEL_IMPORTADORES_MODULOS.md §1) ──────────────
+  async descargarExcel(): Promise<void> {
+    const e = this.estado;
+    if (!e) return;
+    await this.conExcel(() =>
+      this.excel.descargar({
+        titulo: 'Estado de cuenta',
+        subtitulo: e.nombreCliente,
+        archivo: `estado_cuenta_${e.numeroDocumento}`,
+        hojas: [this.hojaEstadoCuenta(e)],
+      }),
+    );
+    this.cdr.markForCheck();
+  }
+
+  private hojaEstadoCuenta(e: any): any {
+    const signo: Record<string, string> = { VENTA: 'Venta', ABONO: 'Abono', NOTA_CREDITO: 'Nota crédito', NOTA_DEBITO: 'Nota débito' };
+    return {
+      nombre: 'Estado de cuenta',
+      columnas: [
+        { titulo: 'Fecha', ancho: 12 }, { titulo: 'Tipo', ancho: 14 }, { titulo: 'Referencia', ancho: 18 },
+        { titulo: 'Descripción', ancho: 44 }, { titulo: 'Cargo', tipo: 'pesos' }, { titulo: 'Abono', tipo: 'pesos' },
+        { titulo: 'Saldo', tipo: 'pesos' },
+      ],
+      filas: [
+        { valores: [`${e.nombreCliente} — ${e.tipoDocumento} ${e.numeroDocumento}`], estilo: 'grupo' },
+        ...(e.movimientos ?? []).map((m: any) => [m.fecha, signo[m.tipo] ?? m.tipo, m.referencia, m.descripcion,
+          m.cargo, m.abono, m.saldoAcumulado]),
+        { valores: ['', '', '', 'Total deuda', e.totalDeuda, e.totalAbonado, e.saldoPendiente], estilo: 'total' },
+      ],
+    };
+  }
+
+  private async conExcel(fn: () => Promise<void>): Promise<void> {
+    this.exportandoExcel = true;
+    try {
+      await fn();
+    } catch {
+      // El servicio ya escribió lo que pudo; si falla, que no quede cargando.
+    } finally {
+      this.exportandoExcel = false;
+    }
   }
 }

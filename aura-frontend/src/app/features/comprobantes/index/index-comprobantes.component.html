@@ -85,7 +85,7 @@
           <th style="min-width: 140px">Entregado a</th>
           <th style="width: 110px">Origen</th>
           <th style="min-width: 140px">Fecha</th>
-          <th style="width: 80px" class="text-center">Acciones</th>
+          <th style="width: 130px" class="text-center">Acciones</th>
         </tr>
       </ng-template>
 
@@ -143,14 +143,36 @@
             <span class="fecha-val">{{ formatFecha(item.createdAt) }}</span>
           </td>
           <td class="text-center" (click)="$event.stopPropagation()">
-            <button
-              pButton
-              icon="pi pi-print"
-              class="p-button-text p-button-sm action-view"
-              pTooltip="Ver comprobante"
-              tooltipPosition="left"
-              (click)="verComprobante(item)"
-            ></button>
+            <div class="acciones-fila">
+              <button
+                pButton
+                icon="pi pi-print"
+                class="p-button-text p-button-sm action-view"
+                pTooltip="Ver comprobante"
+                tooltipPosition="left"
+                (click)="verComprobante(item)"
+              ></button>
+              <button
+                pButton
+                [icon]="pdfGenerando === item.id ? 'pi pi-spin pi-spinner' : 'pi pi-file-pdf'"
+                class="p-button-text p-button-sm p-button-danger"
+                pTooltip="PDF con cuentas contables"
+                tooltipPosition="left"
+                [disabled]="pdfGenerando !== null"
+                (click)="pdfContable(item)"
+              ></button>
+              <ng-container *appPuede="'contabilidad.asientos-contables:EDITAR'">
+                <button
+                  *ngIf="esEditable(item)"
+                  pButton
+                  icon="pi pi-pencil"
+                  class="p-button-text p-button-sm p-button-secondary"
+                  pTooltip="Corregir comprobante"
+                  tooltipPosition="left"
+                  (click)="editar(item)"
+                ></button>
+              </ng-container>
+            </div>
           </td>
         </tr>
       </ng-template>

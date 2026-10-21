@@ -18,7 +18,7 @@
             type="button"
             icon="pi pi-pencil"
             label="Editar empresa"
-            class="p-button-sm p-button-outlined"
+            class="p-button-sm btn-aura"
             (click)="editar()"
           ></button>
 
@@ -29,6 +29,7 @@
               icon="pi pi-times"
               label="Cancelar"
               class="p-button-sm btn-amarillo"
+              [disabled]="guardando"
               (click)="cancelar()"
             ></button>
             <button
@@ -38,6 +39,7 @@
               label="Guardar"
               class="p-button-sm btn-verde"
               [loading]="guardando"
+              [disabled]="subiendoLogo"
               (click)="guardar()"
             ></button>
           </ng-container>
@@ -79,104 +81,184 @@
         </div>
       </div>
 
-      <!-- ── Empresa ──────────────────────────────────────────── -->
-      <div class="seccion" *ngIf="empresa">
-        <h2 class="seccion-titulo">Empresa actual</h2>
+      <form *ngIf="empresa" [formGroup]="form" (ngSubmit)="guardar()">
+        <!-- ── Empresa ──────────────────────────────────────────── -->
+        <div class="seccion">
+          <h2 class="seccion-titulo">Empresa</h2>
 
-        <!-- Identidad: no se edita desde aquí -->
-        <div class="datos-grid">
-          <div class="dato">
-            <span class="dato-label">Razón social</span>
-            <span class="dato-valor">{{ empresa.razonSocial || "—" }}</span>
-          </div>
-          <div class="dato" *ngIf="empresa.nombreComercial">
-            <span class="dato-label">Nombre comercial</span>
-            <span class="dato-valor">{{ empresa.nombreComercial }}</span>
-          </div>
-          <div class="dato">
-            <span class="dato-label">NIT</span>
-            <span class="dato-valor mono">
-              {{ empresa.nit }}<span *ngIf="empresa.dv">-{{ empresa.dv }}</span>
-            </span>
+          <div class="empresa-identidad">
+            <!-- Logo -->
+            <div class="logo-box">
+              <div class="logo-marco" [class.logo-marco--vacio]="!logoVisible">
+                <img *ngIf="logoVisible" [src]="logoVisible" alt="Logo de la empresa" />
+                <i *ngIf="!logoVisible" class="pi pi-image" aria-hidden="true"></i>
+              </div>
+              <div class="logo-acciones" *ngIf="editando">
+                <label class="logo-subir" [class.logo-subir--ocupado]="subiendoLogo">
+                  <i class="pi" [class.pi-upload]="!subiendoLogo" [class.pi-spin]="subiendoLogo"
+                     [class.pi-spinner]="subiendoLogo"></i>
+                  {{ subiendoLogo ? "Subiendo..." : logoVisible ? "Cambiar logo" : "Subir logo" }}
+                  <input type="file" accept="image/*" hidden [disabled]="subiendoLogo"
+                         (change)="elegirLogo($event)" />
+                </label>
+                <button *ngIf="logoVisible" type="button" class="logo-quitar" (click)="quitarLogo()">
+                  Quitar
+                </button>
+              </div>
+              <small class="dato-ayuda" *ngIf="editando">PNG, JPG o SVG, máximo 2 MB. Sale en facturas y PDF.</small>
+            </div>
+
+            <div class="datos-grid empresa-datos">
+              <div class="dato">
+                <span class="dato-label">Razón social</span>
+                <span class="dato-valor" *ngIf="!editando">{{ empresa.razonSocial || "—" }}</span>
+                <ng-container *ngIf="editando">
+                  <input type="text" pInputText formControlName="razonSocial"
+                         placeholder="Tal como aparece en el RUT" class="w-full"
+                         [class.ng-invalid]="isInvalid('razonSocial')" />
+                  <small class="dato-error" *ngIf="isInvalid('razonSocial')">La razón social es obligatoria</small>
+                </ng-container>
+              </div>
+              <div class="dato">
+                <span class="dato-label">NIT</span>
+                <span class="dato-valor mono">
+                  {{ empresa.nit }}<span *ngIf="empresa.dv">-{{ empresa.dv }}</span>
+                </span>
+              </div>
+              <div class="dato">
+                <span class="dato-label">Nombre comercial</span>
+                <span class="dato-valor" *ngIf="!editando">{{ empresa.nombreComercial || "—" }}</span>
+                <input *ngIf="editando" type="text" pInputText formControlName="nombreComercial"
+                       placeholder="Como la conocen sus clientes" class="w-full" />
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Contacto: lo que sí se edita -->
-        <form [formGroup]="form" class="datos-grid">
-          <div class="dato">
-            <span class="dato-label">Teléfono</span>
-            <span class="dato-valor" *ngIf="!editando">
-              {{ empresa.telefono || "—" }}
-            </span>
-            <input
-              *ngIf="editando"
-              type="text"
-              pInputText
-              formControlName="telefono"
-              placeholder="3001234567"
-              class="w-full"
-            />
-          </div>
+        <!-- ── Contacto ─────────────────────────────────────────── -->
+        <div class="seccion">
+          <h2 class="seccion-titulo">Contacto</h2>
+          <div class="datos-grid">
+            <div class="dato">
+              <span class="dato-label">Teléfono</span>
+              <span class="dato-valor" *ngIf="!editando">{{ empresa.telefono || "—" }}</span>
+              <input *ngIf="editando" type="text" pInputText formControlName="telefono"
+                     placeholder="3001234567" class="w-full" inputmode="tel" />
+            </div>
 
-          <div class="dato">
-            <span class="dato-label">Correo</span>
-            <span class="dato-valor" *ngIf="!editando">
-              {{ empresa.correo || "—" }}
-            </span>
-            <ng-container *ngIf="editando">
-              <input
-                type="email"
-                pInputText
-                formControlName="correo"
-                placeholder="contacto@empresa.com"
-                class="w-full"
-                [class.ng-invalid]="isInvalid('correo')"
-              />
-              <small class="dato-error" *ngIf="isInvalid('correo')">
-                El correo no tiene un formato válido
-              </small>
+            <div class="dato">
+              <span class="dato-label">Correo</span>
+              <span class="dato-valor" *ngIf="!editando">{{ empresa.correo || "—" }}</span>
+              <ng-container *ngIf="editando">
+                <input type="email" pInputText formControlName="correo" placeholder="contacto@empresa.com"
+                       class="w-full" [class.ng-invalid]="isInvalid('correo')" />
+                <small class="dato-error" *ngIf="isInvalid('correo')">El correo no tiene un formato válido</small>
+              </ng-container>
+            </div>
+
+            <div class="dato">
+              <span class="dato-label">Dirección</span>
+              <span class="dato-valor" *ngIf="!editando">{{ empresa.direccion || "—" }}</span>
+              <input *ngIf="editando" type="text" pInputText formControlName="direccion"
+                     placeholder="Calle 1 # 2-3" class="w-full" />
+            </div>
+
+            <div class="dato">
+              <span class="dato-label">Municipio</span>
+              <span class="dato-valor" *ngIf="!editando">{{ empresa.municipio || "—" }}</span>
+              <input *ngIf="editando" type="text" pInputText formControlName="municipio"
+                     placeholder="Montería" class="w-full" />
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Facturación ──────────────────────────────────────── -->
+        <div class="seccion">
+          <div class="seccion-cabecera">
+            <h2 class="seccion-titulo">Resolución de facturación</h2>
+            <ng-container *ngIf="!editando && diasResolucion !== null">
+              <p-tag *ngIf="diasResolucion < 0" value="Vencida" severity="danger" styleClass="tag-mini" />
+              <p-tag *ngIf="diasResolucion >= 0 && diasResolucion <= 30"
+                     [value]="'Vence en ' + diasResolucion + (diasResolucion === 1 ? ' día' : ' días')"
+                     severity="warn" styleClass="tag-mini" />
+              <p-tag *ngIf="diasResolucion > 30" value="Vigente" severity="success" styleClass="tag-mini" />
             </ng-container>
           </div>
 
-          <div class="dato">
-            <span class="dato-label">Dirección</span>
-            <span class="dato-valor" *ngIf="!editando">
-              {{ empresa.direccion || "—" }}
-            </span>
-            <input
-              *ngIf="editando"
-              type="text"
-              pInputText
-              formControlName="direccion"
-              placeholder="Calle 1 # 2-3"
-              class="w-full"
-            />
+          <div class="datos-grid">
+            <div class="dato">
+              <span class="dato-label">Número de resolución</span>
+              <span class="dato-valor mono" *ngIf="!editando">{{ empresa.resolucionNumero || "—" }}</span>
+              <input *ngIf="editando" type="text" pInputText formControlName="resolucionNumero"
+                     placeholder="18764000000000" class="w-full" />
+            </div>
+
+            <div class="dato">
+              <span class="dato-label">Prefijo</span>
+              <span class="dato-valor mono" *ngIf="!editando">{{ empresa.resolucionPrefijo || "—" }}</span>
+              <input *ngIf="editando" type="text" pInputText formControlName="resolucionPrefijo"
+                     placeholder="FE" class="w-full mayus" />
+            </div>
+
+            <div class="dato">
+              <span class="dato-label">Consecutivo desde</span>
+              <span class="dato-valor mono" *ngIf="!editando">{{ empresa.resolucionDesde ?? "—" }}</span>
+              <p-inputNumber *ngIf="editando" formControlName="resolucionDesde" [min]="0"
+                             [useGrouping]="false" placeholder="1" />
+            </div>
+
+            <div class="dato">
+              <span class="dato-label">Consecutivo hasta</span>
+              <span class="dato-valor mono" *ngIf="!editando">{{ empresa.resolucionHasta ?? "—" }}</span>
+              <p-inputNumber *ngIf="editando" formControlName="resolucionHasta" [min]="0"
+                             [useGrouping]="false" placeholder="5000" />
+            </div>
+
+            <div class="dato">
+              <span class="dato-label">Vigente desde</span>
+              <span class="dato-valor" *ngIf="!editando">
+                {{ (empresa.resolucionFechaDesde | fechaEs) || "—" }}
+              </span>
+              <p-calendar *ngIf="editando" formControlName="resolucionFechaDesde" dateFormat="dd/mm/yy"
+                          [showIcon]="true" placeholder="dd/mm/aaaa" />
+            </div>
+
+            <div class="dato">
+              <span class="dato-label">Vigente hasta</span>
+              <span class="dato-valor" *ngIf="!editando">
+                {{ (empresa.resolucionFechaHasta | fechaEs) || "—" }}
+              </span>
+              <p-calendar *ngIf="editando" formControlName="resolucionFechaHasta" dateFormat="dd/mm/yy"
+                          [showIcon]="true" placeholder="dd/mm/aaaa" />
+            </div>
           </div>
 
-          <div class="dato">
-            <span class="dato-label">Municipio</span>
-            <span class="dato-valor" *ngIf="!editando">
-              {{ empresa.municipio || "—" }}
-            </span>
-            <input
-              *ngIf="editando"
-              type="text"
-              pInputText
-              formControlName="municipio"
-              placeholder="Montería"
-              class="w-full"
-            />
-          </div>
-        </form>
+          <div class="datos-grid">
+            <div class="dato">
+              <span class="dato-label">ID del rango en Factus (facturas)</span>
+              <span class="dato-valor mono" *ngIf="!editando">{{ empresa.factusNumberingRangeId ?? "—" }}</span>
+              <p-inputNumber *ngIf="editando" formControlName="factusNumberingRangeId" [min]="1"
+                             [useGrouping]="false" placeholder="Ej. 123" />
+            </div>
 
-        <p class="nota" *ngIf="editando">
-          Este contacto es el que sale en la factura. La razón social y el NIT
-          no se cambian desde aquí.
+            <div class="dato">
+              <span class="dato-label">ID del rango en Factus (nómina)</span>
+              <span class="dato-valor mono" *ngIf="!editando">{{ empresa.factusNominaNumberingRangeId || "—" }}</span>
+              <input *ngIf="editando" type="text" pInputText formControlName="factusNominaNumberingRangeId"
+                     placeholder="Solo si emite nómina electrónica" class="w-full mono" />
+            </div>
+          </div>
+
+          <p class="nota" *ngIf="editando">
+            Copie estos datos tal como aparecen en la resolución de la DIAN y en el rango que creó en Factus.
+            Si el ID del rango no coincide, Factus rechaza las facturas.
+          </p>
+        </div>
+
+        <p class="nota seccion" *ngIf="!puedeEditar">
+          Solo un administrador puede cambiar los datos de la empresa. El NIT no se cambia desde aquí.
         </p>
-        <p class="nota" *ngIf="!editando && !puedeEditar">
-          Solo un administrador puede cambiar estos datos.
-        </p>
-      </div>
+      </form>
 
       <!-- ── Sucursal / facturación ───────────────────────────── -->
       <div class="seccion" *ngIf="empresa?.sucursalNombre">

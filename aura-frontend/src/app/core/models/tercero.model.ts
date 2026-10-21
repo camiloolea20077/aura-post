@@ -81,8 +81,75 @@ export interface TerceroCamposFase1 {
   numeroCuenta: string | null;
 }
 
+// ─── Persona natural ampliada (backend V211) ─────────────────
+
+export type TipoTelefono = 'CELULAR' | 'CASA' | 'OFICINA' | 'OTRO';
+
+/** Un teléfono del tercero o de su persona de contacto. */
+export interface TerceroTelefono {
+  deContacto: boolean;
+  tipo: TipoTelefono;
+  numero: string;
+  extension: string | null;
+}
+
+/** Un correo del tercero o de su persona de contacto. */
+export interface TerceroCorreo {
+  deContacto: boolean;
+  correo: string;
+}
+
+/**
+ * Identidad completa de la persona natural (cliente, proveedor o empleado):
+ * expedición, nacimiento, residencia, contacto, varios teléfonos y correos.
+ * `telefono` y `email` siguen llegando con el primero propio.
+ */
+export interface TerceroCamposPersona {
+  rut: string | null;
+  codigoPaisExpedicion: string | null;
+  estadoCivil: string | null;
+  rh: string | null;
+  codigoPaisNacimiento: string | null;
+  municipioNacimientoId: number | null;
+  zona: string | null;
+  comuna: string | null;
+  barrio: string | null;
+  contactoNombre: string | null;
+  telefonos: TerceroTelefono[];
+  correos: TerceroCorreo[];
+}
+
+export const ESTADO_CIVIL_OPTS = [
+  { label: 'Soltero(a)', value: 'SOLTERO' },
+  { label: 'Casado(a)', value: 'CASADO' },
+  { label: 'Unión libre', value: 'UNION_LIBRE' },
+  { label: 'Separado(a)', value: 'SEPARADO' },
+  { label: 'Divorciado(a)', value: 'DIVORCIADO' },
+  { label: 'Viudo(a)', value: 'VIUDO' },
+];
+
+export const RH_OPTS = ['O+', 'O-', 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-'].map((v) => ({ label: v, value: v }));
+
+export const ZONA_OPTS = [
+  { label: 'Urbana', value: 'URBANA' },
+  { label: 'Rural', value: 'RURAL' },
+];
+
+export const TIPO_TELEFONO_OPTS: { label: string; value: TipoTelefono }[] = [
+  { label: 'Celular', value: 'CELULAR' },
+  { label: 'Casa', value: 'CASA' },
+  { label: 'Oficina', value: 'OFICINA' },
+  { label: 'Otro', value: 'OTRO' },
+];
+
+/** Imágenes del tercero persona natural (segmento de la URL del back). */
+export type TipoImagenTercero = 'foto-oficial' | 'foto-perfil' | 'firma';
+
 // ─── Detalle ─────────────────────────────────────────────────
-export interface TerceroModel extends TerceroCamposFase1 {
+export interface TerceroModel extends TerceroCamposFase1, Partial<TerceroCamposPersona> {
+  fotoOficialUrl?: string | null;
+  fotoPerfilUrl?: string | null;
+  firmaUrl?: string | null;
   id: number;
   empresaId: number;
   tipoDocumento: TipoDocumento;
@@ -149,7 +216,7 @@ export interface TerceroTableModel {
  * nacimiento ni representante legal. Los exige quien los necesita —el formulario
  * completo— y PILA valida su presencia al liquidar, no al crear el tercero.
  */
-export interface CreateTerceroDto extends Partial<TerceroCamposFase1> {
+export interface CreateTerceroDto extends Partial<TerceroCamposFase1>, Partial<TerceroCamposPersona> {
   tipoDocumento: TipoDocumento;
   numeroDocumento: string;
   dv: string | null;
@@ -195,6 +262,8 @@ export interface TerceroPageableDto {
   page: number;
   rows: number;
   search?: string | null;
+  /** soloActivos: los buscadores no muestran terceros inactivos (la pantalla de Terceros sí). */
+  params?: { soloActivos?: boolean } | null;
   order_by?: string | null;
   order?: string | null;
 }
@@ -208,6 +277,7 @@ export function esPersonaJuridica(tipo: TipoDocumento): boolean {
 export interface MunicipioDto {
   id: number;
   nombre: string;
+  departamento?: string | null;
   label: string;
   codigoDane: string | null;
 }

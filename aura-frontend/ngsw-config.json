@@ -1,5 +1,14 @@
 {
   "$schema": "./node_modules/@angular/service-worker/config/schema.json",
+  "appData": {
+    "version": "2026.10.20",
+    "cambios": [
+      {
+        "modulo": "PDF de documentos",
+        "texto": "La cuenta de cobro, facturas, cotizaciones, compras, nómina y comprobantes ya no fallan al descargar cuando el logo de la empresa no se puede cargar: el PDF sale igual."
+      }
+    ]
+  },
   "index": "/index.html",
   "assetGroups": [
     {

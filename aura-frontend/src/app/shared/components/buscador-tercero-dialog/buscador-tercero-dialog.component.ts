@@ -26,7 +26,6 @@ import {
 } from '../../../core/models/tercero.model';
 
 export type RolTercero = 'CLIENTE' | 'PROVEEDOR' | 'EMPLEADO' | 'BANCO';
-export type EstadoTercero = 'ACTIVOS' | 'INACTIVOS' | 'TODOS';
 
 /** Lo que el usuario escribe en el panel de criterios. */
 export interface CriteriosTercero {
@@ -37,7 +36,6 @@ export interface CriteriosTercero {
   telefono: string;
   tipoDocumento: TipoDocumento | null;
   tipoTercero: RolTercero | null;
-  estado: EstadoTercero;
 }
 
 const CRITERIOS_VACIOS: CriteriosTercero = {
@@ -48,11 +46,6 @@ const CRITERIOS_VACIOS: CriteriosTercero = {
   telefono: '',
   tipoDocumento: null,
   tipoTercero: null,
-  // 'TODOS' a propósito: el backend no filtra por activo, así que cualquier otro
-  // valor por defecto metería al diálogo en modo local desde que abre —bajando
-  // el conjunto acotado sin que nadie lo haya pedido—. Los inactivos se listan
-  // con su tag y el usuario los excluye si quiere.
-  estado: 'TODOS',
 };
 
 /** Quita tildes y pasa a minusculas: "GOMEZ" debe encontrarse escribiendo "gomez". */
@@ -150,11 +143,6 @@ export class BuscadorTerceroDialogComponent implements OnDestroy {
     { label: 'Empleado', value: 'EMPLEADO' },
     { label: 'Banco', value: 'BANCO' },
   ];
-  readonly estadoOpts: { label: string; value: EstadoTercero }[] = [
-    { label: 'Todos', value: 'TODOS' },
-    { label: 'Solo activos', value: 'ACTIVOS' },
-    { label: 'Solo inactivos', value: 'INACTIVOS' },
-  ];
 
   // ── Resultados ──────────────────────────────────────────────────
   items: TerceroTableModel[] = [];
@@ -207,7 +195,6 @@ export class BuscadorTerceroDialogComponent implements OnDestroy {
     if (c.telefono.trim()) n++;
     if (c.tipoDocumento) n++;
     if (c.tipoTercero) n++;
-    if (c.estado !== 'TODOS') n++;
     return n;
   }
 
@@ -280,8 +267,6 @@ export class BuscadorTerceroDialogComponent implements OnDestroy {
   private necesitaModoLocal(): boolean {
     const c = this.aplicados;
     if (c.tipoDocumento || c.tipoTercero) return true;
-    // El backend no filtra por activo: trae borrados fuera, activos e inactivos.
-    if (c.estado !== 'TODOS') return true;
     // Dos o más términos de texto: el backend solo acepta uno.
     const textos = [c.texto, c.documento, c.nombre, c.email, c.telefono].filter(
       (t) => t.trim(),
@@ -309,6 +294,8 @@ export class BuscadorTerceroDialogComponent implements OnDestroy {
       page: Math.floor(first / rows),
       rows,
       search: this.terminoServidor(),
+      // Los inactivos no se ofrecen en el buscador.
+      params: { soloActivos: true },
     };
     const res = await lastValueFrom(this.terceroService.page(dto));
     this.items = res?.data?.content ?? [];
@@ -356,7 +343,7 @@ export class BuscadorTerceroDialogComponent implements OnDestroy {
 
     while (filas.length < this.TOPE_LOCAL) {
       const res = await lastValueFrom(
-        this.terceroService.page({ page, rows: this.TANDA, search: termino }),
+        this.terceroService.page({ page, rows: this.TANDA, search: termino, params: { soloActivos: true } }),
       );
       const content = res?.data?.content ?? [];
       total = res?.data?.totalElements ?? 0;
@@ -371,8 +358,8 @@ export class BuscadorTerceroDialogComponent implements OnDestroy {
   private pasaFiltros(t: TerceroTableModel, rolYaFiltrado: boolean): boolean {
     const c = this.aplicados;
 
-    if (c.estado === 'ACTIVOS' && !t.activo) return false;
-    if (c.estado === 'INACTIVOS' && t.activo) return false;
+    // Los endpoints por rol ya traen solo activos; esto cubre cualquier otro caso.
+    if (!t.activo) return false;
     if (c.tipoDocumento && t.tipoDocumento !== c.tipoDocumento) return false;
     if (!rolYaFiltrado && c.tipoTercero && !this.tieneRol(t, c.tipoTercero)) {
       return false;

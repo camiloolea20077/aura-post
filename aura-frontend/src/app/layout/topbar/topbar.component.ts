@@ -23,6 +23,9 @@ import { NotificacionService } from '../../core/services/notificacion.service';
 import { NotificacionModel } from '../../core/models/notificacion.model';
 import { AlertService } from '../../shared/pipes/alert.service';
 import { AuthService } from '../../core/services/auth.service';
+import { EmpresaService } from '../../core/services/empresa.service';
+import { EmpresaOpcion } from '../../core/models/auth.model';
+import { SelectorEmpresaComponent } from '../../shared/components/selector-empresa/selector-empresa.component';
 
 interface BreadcrumbItem {
   label: string;
@@ -46,6 +49,7 @@ interface Sucursal {
     DropdownModule,
     BadgeModule,
     MobileMenuComponent,
+    SelectorEmpresaComponent,
   ],
   templateUrl: './topbar.component.html',
   styleUrls: ['./topbar.component.scss'],
@@ -56,6 +60,7 @@ export class TopbarComponent implements OnInit {
 
   public readonly state = inject(StateStore);
   private readonly authService = inject(AuthService);
+  private readonly empresaService = inject(EmpresaService);
   public breadcrumbs: BreadcrumbItem[] = [];
   public userName = '';
   public userRole = '';
@@ -64,6 +69,16 @@ export class TopbarComponent implements OnInit {
   public notifCount = 0;
   public notificaciones: NotificacionModel[] = [];
   private notifTimer: ReturnType<typeof setInterval> | null = null;
+  // ── Empresa de trabajo (firma contable) ──
+  public empresaId: number | null = null;
+  public empresaNombre = '';
+  public firmaNombre: string | null = null;
+  public puedeCambiarEmpresa = false;
+  /** Administrador en su firma contable: ve "Clientes de la firma". */
+  public adminDeFirma = false;
+  public selectorEmpresaVisible = false;
+  public empresasDisponibles: EmpresaOpcion[] = [];
+  public cambiandoEmpresaId: number | null = null;
   public currentTime = '';
   public currentDate = '';
   public menuGroups: {
@@ -186,6 +201,14 @@ export class TopbarComponent implements OnInit {
     if (auth) {
       this.userName = auth.nombreCompleto;
       this.userRole = auth.rol;
+      this.empresaId = auth.empresaId ?? null;
+      this.empresaNombre = auth.empresaNombre ?? '';
+      this.firmaNombre = auth.firmaNombre ?? null;
+      this.puedeCambiarEmpresa = !!auth.puedeCambiarEmpresa;
+      const esAdmin = ['ADMIN', 'SUPER_ADMIN'].includes((auth.rol || '').toUpperCase());
+      this.adminDeFirma = !!auth.esFirmaContable && esAdmin;
+      // Sesión abierta antes de existir el dato: se pregunta una vez y se guarda.
+      if (auth.esFirmaContable == null && esAdmin && !auth.firmaNombre) void this.refrescarEsFirma();
 
       // Cargar sucursales desde el array
       this.sucursales = auth.sucursales.map((s: any) => ({
@@ -241,6 +264,49 @@ export class TopbarComponent implements OnInit {
         this.frmTopbar.patchValue({ sucursalId: actual }, { emitEvent: false });
       }
     });
+  }
+
+  private async refrescarEsFirma(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.empresaService.getConfig());
+      const esFirma = !!res?.data?.esFirmaContable;
+      this.adminDeFirma = esFirma;
+      const auth = await this.indexDBService.loadDataAuthDB();
+      if (auth) await this.indexDBService.saveAuthData({ ...auth, esFirmaContable: esFirma });
+    } catch {
+      /* sin el dato no se muestra la opción */
+    }
+  }
+
+  /** "Cambiar empresa": su firma y sus clientes (PLAN_FIRMA_CONTABLE F6). */
+  async abrirCambioEmpresa(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.authService.empresas());
+      this.empresasDisponibles = res?.data ?? [];
+      this.selectorEmpresaVisible = true;
+    } catch (err: any) {
+      this.alertService.showError('No se pudo cargar sus empresas', err?.error?.message ?? 'Intente de nuevo.');
+    }
+  }
+
+  /**
+   * Cambia de empresa: token nuevo y sesión nueva. Se guarda la respuesta completa
+   * (sedes, líneas, logo de la otra empresa) y se recarga para que nada de la
+   * empresa anterior quede en memoria.
+   */
+  async cambiarEmpresa(empresa: EmpresaOpcion): Promise<void> {
+    this.cambiandoEmpresaId = empresa.id;
+    try {
+      const res = await lastValueFrom(this.authService.seleccionarEmpresa(empresa.id));
+      if (res?.data?.token) {
+        await this.indexDBService.saveAuthData({ ...res.data, sucursalActualId: null });
+        sessionStorage.clear();
+        window.location.href = '/';
+      }
+    } catch (err: any) {
+      this.alertService.showError('No se pudo cambiar de empresa', err?.error?.message ?? 'Intente de nuevo.');
+      this.cambiandoEmpresaId = null;
+    }
   }
 
   /** El menú ya filtrado por el perfil del usuario (StateStore), aplanado. */

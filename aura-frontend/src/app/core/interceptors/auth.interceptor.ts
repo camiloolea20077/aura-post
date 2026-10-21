@@ -14,9 +14,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return from(indexDBService.getToken()).pipe(
     switchMap((token) => {
-      // Adjuntar token si existe y no está expirado
+      // Adjuntar token si existe y no está expirado. Si la petición ya trae uno
+      // (el token de paso para elegir empresa tras el login), se respeta.
       const cloned =
-        token && !authService.isTokenExpired(token)
+        token && !req.headers.has('Authorization') && !authService.isTokenExpired(token)
           ? req.clone({
               setHeaders: {
                 Authorization: `Bearer ${token}`,

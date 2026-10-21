@@ -30,6 +30,8 @@ export interface CompraAcreditableModel {
 export interface CompraAcreditableFiltroDto {
   proveedorId: number;
   sucursalId?: number | null;
+  /** Solo esa factura (devolver desde el detalle de la compra). */
+  compraId?: number | null;
 }
 
 /** Lo que queda por acreditar de un producto de una factura de compra. */
@@ -136,6 +138,10 @@ export interface CompraModel {
   reteivaValor: number | null;
   reteicaPct: number | null;
   reteicaValor: number | null;
+  /** Tarifa (concepto) de cada retención; null en compras anteriores a V203. */
+  retefuenteTarifaId?: number | null;
+  reteivaTarifaId?: number | null;
+  reteicaTarifaId?: number | null;
   totalRetenciones: number | null;
   netaAPagar: number | null;
   detalles: CompraDetalleModel[];
@@ -205,6 +211,10 @@ export interface CreateCompraDto {
   retefuentePct?: number | null;
   reteivaPct?: number | null;
   reteicaPct?: number | null;
+  /** Tarifa (concepto) de cada retención: obligatoria si su % es mayor que 0. */
+  retefuenteTarifaId?: number | null;
+  reteivaTarifaId?: number | null;
+  reteicaTarifaId?: number | null;
   formaPago?: FormaPago | null;
   /**
    * Por qué un documento de fecha anterior se carga a la caja de hoy. El
@@ -313,4 +323,31 @@ export interface ProductoOpcion {
   manejaSerial?: boolean;
   /** Qué es el ítem (catálogo unificado): decide qué hace la compra con la línea. */
   clasificacion?: string | null;
+}
+
+// ─── Devoluciones en compras (docs/PLAN_EXCEL_IMPORTADORES_MODULOS.md §3) ──
+/** Una nota crédito de compra vista como devolución; importes en positivo. */
+export interface DevolucionCompraModel {
+  id: number;
+  /** Número de la nota crédito que entregó el proveedor. */
+  numeroCompra: string | null;
+  fecha: string;
+  proveedorNombre: string;
+  sucursalNombre: string;
+  bodegaNombre: string | null;
+  compraOrigenId: number;
+  compraOrigenNumero: string;
+  destinoNotaCredito: DestinoNotaCredito | null;
+  /** Motivo de la devolución. */
+  observaciones: string | null;
+  estado: EstadoCompra;
+  unidades: number;
+  total: number;
+}
+
+/** Filtros del listado de devoluciones (van en `params`). */
+export interface DevolucionCompraFiltroDto {
+  estado?: 'VIGENTE' | 'ANULADA' | null;
+  desde?: string | null;
+  hasta?: string | null;
 }

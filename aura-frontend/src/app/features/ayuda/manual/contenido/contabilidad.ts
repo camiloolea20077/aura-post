@@ -428,8 +428,25 @@ export const CONTABILIDAD: ManualModulo[] = [
     titulo: 'Períodos contables (cierre de mes)',
     icono: 'pi pi-lock',
     rutas: ['/contabilidad/periodos'],
-    resumen: 'Cerrar y reabrir meses, y generar el balance de comprobación.',
+    resumen: 'Revisar el mes con la lista de chequeo, ajustar, cerrar, imprimir el acta y reabrir; balance de comprobación.',
     secciones: [
+      {
+        titulo: 'Cierre del mes (lista de chequeo)',
+        pasos: [
+          'Pestaña "Cierre del mes": elija el mes (por defecto el siguiente que toca cerrar).',
+          'Rojo = bloquea el cierre (meses anteriores abiertos, borradores, descuadres, extractos sin conciliar). Amarillo = revisar: deja cerrar, pero queda escrito en el acta.',
+          'Ajustes del mes con un clic: "Calcular depreciación", "Amortizar diferidos" y "Proponer deterioro" (este queda en borrador para aprobar). Nómina y conciliación bancaria llevan a su pantalla.',
+          'Calidad: movimientos sin tercero en deudores, proveedores, retenciones y anticipos; cuentas con saldo contrario a su naturaleza.',
+          'Cruces a hoy: cartera contra clientes (1305), cuentas por pagar contra proveedores (2205), inventario valorizado contra la 14, fichas de activos y su depreciación, cada banco (tesorería contra mayor) y caja sin saldo negativo.',
+          'Abajo, los resultados comparados contra el mes anterior y el mismo mes del año anterior.',
+          '"Cerrar <mes>" abre el cierre; al cerrar se guarda la foto de la lista de chequeo.',
+          '"Acta de cierre" (PDF): período, quién cerró, cada chequeo, resultado del mes, balance de comprobación y el asiento de cierre, con firmas.',
+        ],
+        notas: [
+          'Los cruces se hacen a hoy porque cartera, proveedores e inventario no guardan su saldo por fecha.',
+          'Con el mes abierto el acta sale como BORRADOR con la revisión del momento.',
+        ],
+      },
       {
         titulo: 'Cerrar un mes',
         pasos: [
@@ -605,13 +622,83 @@ export const CONTABILIDAD: ManualModulo[] = [
     ],
   },
   {
+    id: 'conciliacion-fiscal',
+    grupo: 'Contabilidad',
+    titulo: 'Conciliación fiscal (2516 y 2517)',
+    icono: 'pi pi-sliders-h',
+    rutas: ['/contabilidad/conciliacion-fiscal'],
+    resumen:
+      'Del balance contable al fiscal: el sistema clasifica cada cuenta en su renglón, propone los ajustes típicos y calcula la renta líquida y el impuesto diferido.',
+    secciones: [
+      {
+        titulo: 'Paso a paso',
+        pasos: [
+          '"Nueva conciliación": año gravable, formato (2516 personas jurídicas, 2517 personas naturales) y tarifa de renta.',
+          'Cargue el balance de prueba del año ANTES del cierre: "Subir balance (Excel)" (de cualquier programa: Cuenta y Saldo, o Débito y Crédito) o "Traer de la contabilidad" (los asientos de Aura, sin el cierre anual).',
+          'Pestaña Análisis: revise que el balance cuadre y aplique los ajustes que el sistema propone (impuesto de renta, 50 % del GMF, multas, donaciones, valorizaciones, provisiones…). Los marcados "Revisar" necesitan su criterio.',
+          'Pestaña Balance: clasifique las cuentas que quedaron sin renglón.',
+          'Pestaña Ajustes: registre las demás diferencias (depreciación fiscal, deterioro, ingresos no gravados…), como permanentes o temporarias.',
+          'Revise ESF, ERI e Impuesto diferido; descargue el Excel y cierre la conciliación.',
+        ],
+      },
+      {
+        titulo: 'Borrador del formulario 110',
+        pasos: [
+          'Pestaña "Formulario 110" (solo formato 2516, personas jurídicas).',
+          'Escriba lo que la contabilidad no sabe: ingresos no constitutivos, compensaciones, descuentos tributarios, saldo a favor del año anterior y anticipo del año siguiente.',
+          'Calcular: patrimonio, ingresos, costos y deducciones, renta líquida gravable, impuesto, anticipos y retenciones (135505 y 135515 del balance), y el saldo a pagar o a favor, redondeados a miles.',
+        ],
+        notas: [
+          'El gasto de impuesto de renta (54) no entra en las deducciones. La renta presuntiva va en cero (tarifa 0 % desde 2021).',
+          'No numera los renglones: verifique con el formulario vigente de la DIAN.',
+        ],
+      },
+      {
+        titulo: 'Cómo se calcula',
+        texto: [
+          'Valor fiscal = contable − menor valor fiscal + mayor valor fiscal, por renglón.',
+          'Renta líquida = ingresos fiscales − costos fiscales − gastos fiscales.',
+          'Las diferencias temporarias sobre activos y pasivos generan impuesto diferido a la tarifa de renta: activo contable mayor que el fiscal (o pasivo menor) es imponible; al revés, deducible.',
+        ],
+        notas: [
+          'Los renglones agrupan las hojas ESF y ERI del formato a nivel de rubro: lleve los valores al prevalidador de la DIAN.',
+          'Si el archivo trae todos los niveles del PUC se toman solo las cuentas auxiliares. El signo del saldo se detecta solo.',
+          'Para personas naturales (2517) la renta se liquida con la tabla del art. 241 E.T.; la tarifa de la pantalla es referencia y base del impuesto diferido.',
+          'La conciliación es una foto del año: si corrige asientos después, vuelva a cargar el balance (los ajustes se conservan).',
+        ],
+      },
+    ],
+    errores: [
+      {
+        mensaje: 'El balance no cuadra: activos − pasivos − patrimonio … da $…',
+        causa: 'Faltan cuentas en el archivo o los saldos no traen su signo.',
+        solucion: 'Exporte el balance de prueba completo, a nivel auxiliar, con saldo final.',
+      },
+      {
+        mensaje: 'El estado de resultados viene en cero',
+        causa: 'El balance es de después del cierre del año.',
+        solucion: 'Use el balance de prueba antes del cierre, o "Traer de la contabilidad".',
+      },
+      {
+        mensaje: 'Ya existe la conciliación … del año …',
+        causa: 'Solo hay una por año y formato.',
+        solucion: 'Ábrala desde el listado.',
+      },
+      {
+        mensaje: 'La conciliación está cerrada. Reábrala para cambiarla.',
+        causa: 'Se intenta cambiar una conciliación cerrada.',
+        solucion: 'Use "Reabrir".',
+      },
+    ],
+  },
+  {
     id: 'declaraciones',
     grupo: 'Contabilidad',
     titulo: 'Borradores de declaraciones',
     icono: 'pi pi-file-export',
     rutas: ['/contabilidad/declaraciones'],
     resumen:
-      'IVA (formulario 300) y retención en la fuente (350) leídos de la contabilidad, para trasladarlos al formulario de la DIAN.',
+      'IVA (formulario 300), retención en la fuente (350) e industria y comercio (ICA) leídos de la contabilidad, para trasladarlos al formulario, y los certificados de retención en la fuente, ReteIVA y ReteICA para los proveedores.',
     secciones: [
       {
         titulo: 'Generar',
@@ -626,8 +713,84 @@ export const CONTABILIDAD: ManualModulo[] = [
           'Las retenciones que le hicieron los clientes (registradas al recibir el pago) salen como anticipos a favor.',
         ],
       },
+      {
+        titulo: 'Industria y comercio (ICA)',
+        pasos: [
+          'Pestaña "Industria y comercio (ICA)": desde y hasta (por defecto el año anterior), tarifa por mil de la actividad, avisos y tableros (15 %), sobretasa bomberil (%) y lo exento o de otros municipios.',
+          'Elija la secretaría de hacienda del municipio y Generar: base gravable (ingresos 41 y 42 menos devoluciones y deducciones), impuesto a cargo y retenciones que le practicaron (135518).',
+          '"Causar ICA" registra la nota contable: gasto 511505 contra ICA por pagar 2412, a nombre del municipio.',
+          'Con el ICA causado, "A quién se le paga" muestra el neto (2412 menos 135518) y se registra el pago como las demás declaraciones.',
+        ],
+        notas: [
+          'Si la empresa tiene ingresos en varios municipios, declare cada uno aparte restando lo que no le corresponde.',
+        ],
+      },
+      {
+        titulo: 'Certificados de retención (fuente, IVA e ICA)',
+        pasos: [
+          'Pestaña "Certificados de retención": elija el certificado (retención en la fuente, ReteIVA o ReteICA), desde y hasta (por defecto el año anterior) y, si quiere, un solo tercero.',
+          'Generar: sale cada tercero al que se le retuvo con sus conceptos, la base y el valor retenido.',
+          'El ojo abre el PDF del tercero; la flecha lo descarga. "Descargar todos" arma un solo PDF con un certificado por página.',
+        ],
+        notas: [
+          'El valor retenido sale de la contabilidad (cuentas 2365, 2367 y 2368 a nombre del tercero); la base y la tarifa, de la compra o el gasto que la originó. Un documento anulado no aparece.',
+          'Si la retención se registró en una nota o un comprobante contable, el sistema no conoce la base: el certificado dice "Sin base registrada".',
+          'La retención a empleados no sale aquí: se certifica con el formulario 220 desde Nómina.',
+          'El lugar de expedición es el municipio de la empresa (Mi perfil).',
+        ],
+      },
+      {
+        titulo: 'A quién se le paga y registrar el pago',
+        pasos: [
+          'Debajo del resultado, "A quién se le paga" muestra cada entidad con su valor: la DIAN por el IVA o la retención, y cada municipio por su reteICA.',
+          'Registrar pago → fecha, de dónde sale la plata (caja, cuenta bancaria o medio de pago) y, si quiere, el número del formulario.',
+          'El sistema genera el asiento (PD-…): cierra el saldo del período de las cuentas del impuesto (2408, 135517, 2365, 2367, 2368) contra la cuenta de pago, a nombre de la entidad.',
+          'Anular → escriba el motivo: sale el contraasiento con fecha de hoy y la declaración queda otra vez pendiente.',
+          'Al pagar puede aproximar a miles (como el formulario; la diferencia va al ajuste al peso 539540/4295) y agregar intereses de mora (530520) y sanción (539520). El total a pagar se ve antes de registrar.',
+        ],
+        notas: [
+          'La entidad sale de Contabilidad → Parametrización → Impuestos (IVA, INC) y de Tarifas de retención (columna "Se paga a").',
+          'Para pagar el reteICA de varios municipios, cada tarifa de reteICA necesita su municipio y su propia cuenta 2368.',
+          'Las líneas de IVA y retención de cada factura siguen a nombre del cliente o proveedor: así salen bien los certificados de retención y la exógena.',
+        ],
+      },
     ],
     errores: [
+      {
+        mensaje: 'Hay … retenidos en la 2365 sin tercero: no se pueden certificar',
+        causa: 'Una retención quedó en un asiento sin tercero (normalmente una nota contable).',
+        solucion: 'Corrija el asiento con el tercero al que se le retuvo y genere de nuevo.',
+      },
+      {
+        mensaje: 'Tipo de certificado no válido: use FUENTE, IVA o ICA',
+        causa: 'Se pidió un certificado que no existe.',
+        solucion: 'Elija el certificado en la lista.',
+      },
+      {
+        mensaje: 'El ICA del período ya está causado en la 2412',
+        causa: 'Ya se causó el ICA de ese período.',
+        solucion: 'Si quedó mal, anule esa nota en Notas contables y cause de nuevo.',
+      },
+      {
+        mensaje: 'Elija la secretaría de hacienda del municipio para poder registrar el pago del ICA',
+        causa: 'El borrador de ICA no tiene municipio.',
+        solucion: 'Elija el tercero de la secretaría y genere de nuevo.',
+      },
+      {
+        mensaje: 'Esta declaración ya tiene el pago PD-…',
+        causa: 'Ya se registró el pago de ese período a esa entidad.',
+        solucion: 'Si quedó mal, anúlelo y regístrelo de nuevo.',
+      },
+      {
+        mensaje: 'El resultado del período es saldo a favor: no hay nada que pagar.',
+        causa: 'El IVA descontable y las retenciones superan al generado.',
+        solucion: 'No se registra pago; el saldo a favor se lleva al siguiente período en el formulario.',
+      },
+      {
+        mensaje: 'Hay reteICA sin municipio asignado…',
+        causa: 'La tarifa de reteICA no tiene entidad, o dos municipios comparten la misma cuenta 2368.',
+        solucion: 'En Tarifas de retención asigne la secretaría de hacienda de cada municipio y una cuenta 2368 propia.',
+      },
       {
         mensaje: 'Indique el período (desde y hasta)',
         causa: 'Falta el período.',
@@ -739,6 +902,7 @@ export const CONTABILIDAD: ManualModulo[] = [
           'Cuenta contable del gasto.',
           '¿De dónde sale la plata? "No se ha pagado" (crea una cuenta por pagar; el tercero es obligatorio), Caja, Banco, Otra cuenta (caja menor) o "Ya salió de la caja".',
           'IVA (base, tarifa, valor), Retefuente y ReteICA (tarifa por mil) si aplican.',
+          'Revise "Total a pagar" (valor + IVA − retenciones): es lo que sale de la caja o el banco, o lo que queda debiendo si es a crédito.',
           'Guarde.',
         ],
         notas: [
@@ -748,13 +912,23 @@ export const CONTABILIDAD: ManualModulo[] = [
       {
         titulo: 'Editar y anular',
         texto: [
-          'Editar sirve para corregir datos contables: cuenta del gasto, centro de costo, IVA, retenciones, categoría o descripción. El asiento se rehace solo.',
-          'El valor, la fecha y la forma de pago no se editan, porque ya movieron dinero: anule el gasto y regístrelo de nuevo.',
+          'Editar sirve para corregir datos contables: cuenta del gasto, centro de costo, categoría o descripción. El asiento se rehace solo.',
+          'El valor, la fecha, la forma de pago, el IVA y las retenciones no se editan, porque cambian lo que salió o lo que se debe: anule el gasto y regístrelo de nuevo.',
           'Anular devuelve el dinero a la caja (en el turno abierto de hoy) o al banco, anula la cuenta por pagar si era a crédito y reversa el asiento.',
         ],
       },
     ],
     errores: [
+      {
+        mensaje: 'Cambiar el IVA o las retenciones cambia el valor pagado: anule el gasto y regístrelo de nuevo',
+        causa: 'Se editó el IVA o una retención de un gasto ya registrado.',
+        solucion: 'Anule el gasto y regístrelo con los valores correctos.',
+      },
+      {
+        mensaje: 'Las retenciones no pueden superar el valor del gasto más el IVA',
+        causa: 'Retenciones mayores que el total.',
+        solucion: 'Revise la base y la tarifa de las retenciones.',
+      },
       {
         mensaje: 'Un gasto a crédito necesita el tercero al que se le queda debiendo',
         causa: 'Gasto sin pagar y sin tercero.',
@@ -917,7 +1091,7 @@ export const CONTABILIDAD: ManualModulo[] = [
           'Conceptos: cada operación automática (clientes, inventario, IVA, depreciación, nómina…) con su cuenta. Solo se ofrecen cuentas auxiliares de la clase que el concepto admite. "Por defecto" = usa la del PUC.',
           'Formas de pago: la cuenta de cada una. "Nueva forma de pago" crea otra (p. ej. ADDI): nombre, código y cuenta. Aparece de inmediato en el POS al cobrar. Si la plata entra ya, cuenta de caja o banco (11); si la paga después un financiador como ADDI o Sistecrédito, una cuenta de cartera (13), p. ej. 130510 Por cobrar ADDI creada antes en el Plan de Cuentas. "Copiar a…" aplica la cuenta de una forma a otras.',
           'Recargo: si el cliente paga un recargo al usar la forma (p. ej. Sistecrédito 5 %), escríbalo al crearla o en la columna Recargo y guarde con ✓. En el POS, al pagar $100.000 con esa forma el cliente paga $105.000: el recargo se ve en el cobro y queda en la venta y en la factura como la línea "Recargo por forma de pago" (servicio sin IVA que el sistema crea solo, SKU RECARGO-FP; su IVA o su cuenta de ingreso se cambian en Productos).',
-          'Impuestos: cuenta del generado (ventas) y del descontable (compras) por tarifa.',
+          'Impuestos: cuenta del generado (ventas) y del descontable (compras) por tarifa, y "Se paga a" (la DIAN para IVA e INC; viene asignada). "Nuevo impuesto" agrega una fila: nombre, tipo, porcentaje, cuentas y entidad; guarde con ✓.',
           'Modo: automático (se contabiliza al guardar) o revisión (queda en borrador hasta que el contador lo aprueba).',
           'Historial: quién cambió qué cuenta y cuándo.',
         ],
@@ -1022,8 +1196,22 @@ export const CONTABILIDAD: ManualModulo[] = [
         titulo: 'Crear',
         pasos: [
           'Nueva Tarifa → tipo, código y concepto (Honorarios y comisiones).',
+          'Cuenta contable: donde se registra la retención en el asiento (2365 retefuente, 2367 reteIVA, 2368 reteICA). Vacía: la cuenta por defecto.',
+          'Se paga a: la DIAN para retefuente y reteIVA; la secretaría de hacienda del municipio para el reteICA.',
           'Tarifa para persona natural y jurídica (%) y base mínima en pesos.',
           'Activa y guardar.',
+        ],
+        notas: [
+          'Cada empresa trae un catálogo inicial (compras, servicios, honorarios, arriendos, reteIVA, reteICA…) con su cuenta. Ajuste el reteICA a las tarifas de su municipio.',
+          'En una compra la retención se elige por concepto: de él salen la cuenta y la entidad a la que se le paga en la declaración.',
+        ],
+      },
+      {
+        titulo: 'Municipio de ReteICA',
+        pasos: [
+          '"Municipio de ReteICA" → nombre del municipio y su secretaría de hacienda (tercero).',
+          'Se crea la cuenta 236805xx "Rete ICA <municipio>" y se copian las tarifas de reteICA que no tienen municipio, a nombre de esa secretaría y en esa cuenta.',
+          'Ajuste después los porcentajes de cada tarifa nueva. La declaración de reteICA sale separada por municipio.',
         ],
       },
     ],

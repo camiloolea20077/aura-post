@@ -5,7 +5,7 @@
         <span class="header-icon"><i class="pi pi-file"></i></span>
         <div>
           <h1 class="title">Facturas</h1>
-          <p class="subtitle">Facturas de venta fuera del punto de venta: crédito o contado, productos y servicios</p>
+          <p class="subtitle">Facturas de venta y cuentas de cobro fuera del punto de venta: crédito o contado, productos y servicios</p>
         </div>
       </div>
       <div class="card-head__actions">
@@ -85,7 +85,8 @@
         <tr class="fila" (click)="abrir(f)">
           <td>
             <span *ngIf="f.numero" class="numero">{{ f.numero }}</span>
-            <span *ngIf="!f.numero" class="borrador">Borrador #{{ f.id }}</span>
+            <span *ngIf="!f.numero" class="borrador">{{ f.tipo === 'CUENTA_COBRO' ? 'Preliminar' : 'Borrador' }} #{{ f.id }}</span>
+            <small *ngIf="f.tipo === 'CUENTA_COBRO'" class="tipo-cc">Cuenta de cobro</small>
           </td>
           <td>{{ f.fecha | date: "dd/MM/yyyy" }}</td>
           <td>
@@ -100,7 +101,7 @@
           <td class="text-right monto">{{ cop(f.total) }}</td>
           <td class="text-right">{{ f.estado === "EMITIDA" ? cop(f.saldoPendiente) : "—" }}</td>
           <td class="text-center">
-            <p-tag [value]="etiqueta(f.estado)" [severity]="severidad(f.estado)" [rounded]="true" />
+            <p-tag [value]="etiqueta(f.estado, f.tipo)" [severity]="severidad(f.estado)" [rounded]="true" />
           </td>
         </tr>
       </ng-template>

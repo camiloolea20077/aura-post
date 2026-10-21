@@ -29,6 +29,10 @@
   background: var(--tb-surface);
   color: var(--tb-text);
   overflow: hidden;
+  // El tablero se acomoda a su propio ancho, no al de la ventana: con el menú
+  // lateral abierto quedan 260px menos y las media queries no se enteraban.
+  container-type: inline-size;
+  container-name: tablero;
 }
 
 .tb-sub {
@@ -460,7 +464,7 @@
 }
 
 // ── Responsive ────────────────────────────────────────────────────
-@media (max-width: 1280px) {
+@container tablero (max-width: 1100px) {
   .tb-stats {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     border-bottom: none;
@@ -479,7 +483,7 @@
   }
 }
 
-@media (max-width: 1024px) {
+@container tablero (max-width: 860px) {
   .tb-seccion--dos,
   .tb-seccion--deudores {
     grid-template-columns: minmax(0, 1fr);
@@ -491,7 +495,7 @@
   }
 }
 
-@media (max-width: 640px) {
+@container tablero (max-width: 560px) {
   .tb-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -502,5 +506,24 @@
     &:nth-child(2n) {
       border-left: 1px solid var(--tb-border);
     }
+  }
+
+  .tb-head,
+  .tb-bloque,
+  .tb-stat {
+    padding-left: 0.85rem;
+    padding-right: 0.85rem;
+  }
+
+  .tb-tabla-wrap {
+    margin: 0 -0.85rem;
+  }
+
+  .tb-periodo {
+    flex-wrap: wrap;
+  }
+
+  .tb-chart {
+    height: 220px;
   }
 }

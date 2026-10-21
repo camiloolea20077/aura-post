@@ -1,0 +1,168 @@
+// Formulario plano en una card; responsivo con container queries (el sidebar abre y cierra).
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.seccion {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--aura-border);
+  container-type: inline-size;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.seccion-titulo {
+  margin: 0 0 1rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--aura-text-muted);
+}
+
+.ayuda {
+  margin: -0.4rem 0 1rem;
+  font-size: 0.8rem;
+  color: var(--aura-text-muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem 1.25rem;
+}
+
+@container (max-width: 760px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 480px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .campo--ancho {
+    grid-column: auto;
+  }
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+
+  label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--aura-text);
+  }
+
+  input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  ::ng-deep .p-dropdown,
+  ::ng-deep .p-password,
+  ::ng-deep .p-password-input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  &--ancho {
+    grid-column: span 2;
+  }
+}
+
+.nit {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+
+  input:first-child {
+    flex: 1;
+  }
+
+  .dv {
+    width: 3.2rem;
+    flex: 0 0 3.2rem;
+    text-align: center;
+  }
+}
+
+.error {
+  font-size: 0.72rem;
+  color: var(--aura-danger);
+}
+
+.ayuda-campo {
+  font-size: 0.72rem;
+  color: var(--aura-text-muted);
+}
+
+.paquetes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+@container (max-width: 560px) {
+  .paquetes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.paquete {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--aura-border);
+  border-radius: 10px;
+  cursor: pointer;
+  min-width: 0;
+
+  &--activo {
+    border-color: var(--aura-blue);
+    background: rgba(37, 99, 235, 0.04);
+  }
+}
+
+.paquete__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.paquete__nombre {
+  font-weight: 600;
+  color: var(--aura-text);
+
+  small {
+    font-weight: 400;
+    color: var(--aura-text-muted);
+  }
+}
+
+.paquete__desc {
+  font-size: 0.78rem;
+  color: var(--aura-text-muted);
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding: 1rem;
+  }
+
+  .seccion {
+    padding: 1rem;
+  }
+}

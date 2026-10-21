@@ -1,0 +1,84 @@
+<p-dialog
+  [visible]="visible"
+  (visibleChange)="$event ? null : cerrar()"
+  header="¿Dónde vas a trabajar?"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="cerrable"
+  [closeOnEscape]="cerrable"
+  [style]="{ width: '560px', maxWidth: '96vw' }"
+  [breakpoints]="{ '640px': '100vw' }"
+  styleClass="aura-dialog sel-empresa-dialog"
+>
+  <div class="sel-empresa">
+    <!-- Su firma -->
+    <ng-container *ngIf="propia as p">
+      <div class="sel-grupo">Tu firma</div>
+      <button
+        type="button"
+        class="sel-item"
+        [class.sel-item--actual]="p.id === actualId"
+        [disabled]="cargandoId != null"
+        (click)="click(p)"
+      >
+        <span class="sel-logo">
+          <img *ngIf="p.logoUrl" [src]="p.logoUrl" alt="" />
+          <span *ngIf="!p.logoUrl">{{ iniciales(p) }}</span>
+        </span>
+        <span class="sel-texto">
+          <span class="sel-nombre">{{ p.razonSocial }}</span>
+          <span class="sel-nit">NIT {{ nit(p) }}</span>
+        </span>
+        <i *ngIf="cargandoId === p.id" class="pi pi-spin pi-spinner sel-fin"></i>
+        <span *ngIf="p.id === actualId && cargandoId !== p.id" class="sel-actual">Actual</span>
+        <i *ngIf="p.id !== actualId && cargandoId !== p.id" class="pi pi-chevron-right sel-fin"></i>
+      </button>
+    </ng-container>
+
+    <!-- Clientes -->
+    <div class="sel-grupo">
+      Clientes que atiendes <span class="sel-cuenta">{{ empresas.length - (propia ? 1 : 0) }}</span>
+    </div>
+
+    <div class="sel-buscar" *ngIf="conBuscador">
+      <i class="pi pi-search"></i>
+      <input pInputText type="text" [(ngModel)]="filtro" placeholder="Buscar por nombre o NIT" />
+    </div>
+
+    <div class="sel-lista">
+      <button
+        type="button"
+        class="sel-item"
+        *ngFor="let c of clientes"
+        [class.sel-item--actual]="c.id === actualId"
+        [disabled]="cargandoId != null"
+        (click)="click(c)"
+      >
+        <span class="sel-logo">
+          <img *ngIf="c.logoUrl" [src]="c.logoUrl" alt="" />
+          <span *ngIf="!c.logoUrl">{{ iniciales(c) }}</span>
+        </span>
+        <span class="sel-texto">
+          <span class="sel-nombre">{{ c.razonSocial }}</span>
+          <span class="sel-nit">
+            NIT {{ nit(c) }}<ng-container *ngIf="c.nombreComercial"> · {{ c.nombreComercial }}</ng-container>
+          </span>
+        </span>
+        <i *ngIf="cargandoId === c.id" class="pi pi-spin pi-spinner sel-fin"></i>
+        <span *ngIf="c.id === actualId && cargandoId !== c.id" class="sel-actual">Actual</span>
+        <i *ngIf="c.id !== actualId && cargandoId !== c.id" class="pi pi-chevron-right sel-fin"></i>
+      </button>
+
+      <p class="sel-vacio" *ngIf="clientes.length === 0">
+        {{ filtro ? 'Ningún cliente coincide con "' + filtro + '".' : 'No tienes clientes asignados.' }}
+      </p>
+    </div>
+
+    <div class="sel-pie" *ngIf="!cerrable">
+      <button type="button" class="sel-salir" (click)="salir.emit()">
+        <i class="pi pi-sign-out"></i> Salir
+      </button>
+    </div>
+  </div>
+</p-dialog>

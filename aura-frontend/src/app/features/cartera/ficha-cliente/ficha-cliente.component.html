@@ -53,6 +53,11 @@
       <div class="card-head__btns" *ngIf="ficha">
         <button pButton type="button" icon="pi pi-file-pdf" label="Estado de cuenta"
           class="p-button-outlined p-button-secondary p-button-sm" (click)="estadoCuenta()"></button>
+        <button pButton type="button" icon="pi pi-file-excel" label="Excel"
+          class="p-button-outlined p-button-secondary p-button-sm" [loading]="exportandoExcel"
+          (click)="estadoCuentaExcel()"></button>
+        <button pButton type="button" icon="pi pi-envelope" label="Enviar cobro"
+          class="p-button-outlined p-button-sm" (click)="cobroCorreoVisible = true"></button>
         <button pButton type="button" icon="pi pi-phone" label="Gestión de cobro"
           class="p-button-outlined p-button-sm" (click)="abrirGestion()"></button>
         <button pButton type="button" icon="pi pi-file-edit" label="Acuerdo de pago"
@@ -122,6 +127,18 @@
           <span class="f-stat__meta">{{ formatCOP(ficha.resumen.recaudado90Dias) }} recaudado en 90 días</span>
         </div>
       </div>
+
+      <!-- ══ Intereses de mora (C5) ════════════════════════════════ -->
+      <p class="f-aviso f-aviso--mora"
+         *ngIf="interesMora?.interesActivo && (interesMora!.causado > 0 || interesMora!.facturadoPendiente > 0)">
+        <i class="pi pi-percentage"></i>
+        Intereses de mora al {{ interesMora!.tasaMensual }} % mensual:
+        <strong>{{ formatCOP(interesMora!.causado) }}</strong> causados a hoy sin facturar
+        <ng-container *ngIf="interesMora!.facturadoPendiente > 0">
+          · <strong>{{ formatCOP(interesMora!.facturadoPendiente) }}</strong> facturados pendientes de pago
+        </ng-container>.
+        Se facturan en Cartera → Intereses de mora.
+      </p>
 
       <!-- ══ Edades + crédito ═══════════════════════════════════════ -->
       <div class="f-seccion">
@@ -716,3 +733,10 @@
     ></button>
   </ng-template>
 </p-dialog>
+
+<app-enviar-correo
+  [(visible)]="cobroCorreoVisible"
+  grupo="cartera"
+  [documentoId]="terceroId || null"
+  titulo="cobro"
+/>

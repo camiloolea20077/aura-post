@@ -1,0 +1,248 @@
+// Estilos compartidos por las pestañas de la prenómina (Liquidación, Traza).
+
+:host {
+  display: block;
+  container-type: inline-size;
+}
+
+.codigo {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.72rem;
+  background: #f1f5f9;
+  border-radius: 5px;
+  padding: 0.05rem 0.35rem;
+  margin-right: 0.3rem;
+}
+
+.nombre {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.85rem;
+}
+
+.meta {
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.causa {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #b91c1c;
+
+  i {
+    margin-right: 0.25rem;
+  }
+}
+
+.mono {
+  font-variant-numeric: tabular-nums;
+}
+
+.fuerte {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.sin-dato {
+  color: #94a3b8;
+  text-align: center;
+}
+
+.nota {
+  font-size: 0.8rem;
+  color: #64748b;
+  padding: 0.5rem;
+}
+
+.totales td {
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.tabla-scroll {
+  overflow-x: auto;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.15rem;
+}
+
+table.detalle {
+  width: 100%;
+  min-width: 52rem;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+
+  th {
+    text-align: left;
+    font-weight: 600;
+    color: #64748b;
+    padding: 0.35rem 0.5rem;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  td {
+    padding: 0.35rem 0.5rem;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .text-right {
+    text-align: right;
+  }
+}
+
+.traza-fila td {
+  background: #ffffff;
+}
+
+ol.traza {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+
+  li span {
+    color: #64748b;
+    margin-right: 0.5rem;
+  }
+
+  li strong {
+    font-variant-numeric: tabular-nums;
+    color: #1e293b;
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem 1rem;
+  color: #94a3b8;
+
+  i {
+    font-size: 1.6rem;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+  }
+}
+
+.acciones {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+
+  // La nota ocupa el espacio libre: los botones quedan juntos a la derecha
+  // (con space-between, dos botones quedaban separados entre sí).
+  .nota {
+    flex: 1 1 16rem;
+    padding: 0;
+  }
+}
+
+.progreso {
+  margin-bottom: 0.75rem;
+
+  &__texto {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #475569;
+    margin-bottom: 0.35rem;
+
+    i {
+      margin-right: 0.35rem;
+    }
+  }
+}
+
+:host ::ng-deep .barra {
+  height: 6px;
+}
+
+.avisos {
+  border: 1px solid #fde68a;
+  background: #fffbeb;
+  border-radius: 8px;
+  padding: 0.5rem 0.85rem 0.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.8rem;
+  color: #78350f;
+
+  &__head {
+    font-weight: 600;
+
+    i {
+      margin-right: 0.35rem;
+    }
+  }
+
+  ul {
+    margin: 0.25rem 0 0;
+    padding-left: 1.1rem;
+  }
+}
+
+.form-novedad {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem 1rem;
+  container-type: inline-size;
+
+  @container (max-width: 480px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+
+    label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    small {
+      font-size: 0.72rem;
+      color: #94a3b8;
+    }
+  }
+
+  .ancho {
+    grid-column: 1 / -1;
+  }
+}
+
+:host ::ng-deep .form-novedad {
+  .p-select,
+  .p-inputnumber,
+  .p-datepicker {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+.w-full {
+  width: 100%;
+}
+
+
+/* Buscador sobre la tabla de la pestaña (filtro global de p-table). */
+.buscar-fila {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.6rem;
+}

@@ -1,0 +1,155 @@
+<p-dialog
+  [(visible)]="visible"
+  header="Historial de costos"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  appendTo="body"
+  [style]="{ width: '1000px', maxWidth: '96vw' }"
+  [contentStyle]="{ padding: '0' }"
+  styleClass="aura-dialog"
+  (onHide)="close()"
+>
+  <div class="hc-loading" *ngIf="loading">
+    <i class="pi pi-spin pi-spinner"></i>
+    <span>Cargando historial...</span>
+  </div>
+
+  <div class="hc-vacio" *ngIf="!loading && error">
+    <i class="pi pi-exclamation-circle"></i>
+    <p>No se pudo cargar el historial de costos.</p>
+  </div>
+
+  <ng-container *ngIf="!loading && historial as h">
+    <div class="hc-head">
+      <div class="hc-prod">
+        <span class="hc-nombre">{{ h.productoNombre }}</span>
+        <span class="hc-sku" *ngIf="h.productoSku">SKU: {{ h.productoSku }}</span>
+      </div>
+      <div class="hc-kpis">
+        <div class="hc-kpi">
+          <span class="hc-kpi__label">Costo promedio actual</span>
+          <span class="hc-kpi__valor principal">{{ formatCOP(h.costoActual) }}</span>
+        </div>
+        <div class="hc-kpi">
+          <span class="hc-kpi__label">Existencia</span>
+          <span class="hc-kpi__valor">{{ h.stockActual | number: '1.0-4' }} {{ h.unidadAbreviatura }}</span>
+        </div>
+        <div class="hc-kpi">
+          <span class="hc-kpi__label">Última compra</span>
+          <span class="hc-kpi__valor">{{ formatCOP(h.ultimoCostoCompra) }}</span>
+        </div>
+        <div class="hc-kpi">
+          <span class="hc-kpi__label">Mín. / máx. de compra</span>
+          <span class="hc-kpi__valor">{{ formatCOP(h.costoCompraMinimo) }} / {{ formatCOP(h.costoCompraMaximo) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <p-tabView>
+      <!-- Evolución del costo promedio -->
+      <p-tabPanel header="Evolución del costo ({{ h.cambios.length }})">
+        <div class="hc-vacio" *ngIf="h.cambios.length === 0">
+          <i class="pi pi-history"></i>
+          <p>Aún no hay cambios registrados. Desde ahora cada compra, nota crédito, anulación o ajuste
+            del costo queda aquí; las compras anteriores están en la pestaña «Compras».</p>
+        </div>
+        <div class="hc-tabla" *ngIf="h.cambios.length > 0">
+          <p-table [value]="h.cambios" styleClass="p-datatable-sm hc-table">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Fecha</th>
+                <th>Origen</th>
+                <th>Documento</th>
+                <th class="text-right">Cantidad</th>
+                <th class="text-right">Costo entrada</th>
+                <th class="text-right">Costo anterior</th>
+                <th class="text-right">Costo nuevo</th>
+                <th class="text-right">Var.</th>
+                <th>Usuario</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-c>
+              <tr>
+                <td class="hc-fecha">{{ c.fecha | fechaEs: 'fechaHora' }}</td>
+                <td>
+                  <p-tag [value]="origenLabel(c.origen)" [severity]="origenSeverity(c.origen)" styleClass="hc-tag" />
+                </td>
+                <td>
+                  <div class="hc-doc" *ngIf="c.documentoNumero">{{ c.documentoNumero }}</div>
+                  <div class="hc-sub" *ngIf="c.terceroNombre">{{ c.terceroNombre }}</div>
+                  <div class="hc-sub" *ngIf="!c.documentoNumero && c.observacion">{{ c.observacion }}</div>
+                </td>
+                <td class="text-right mono" [class.negativo]="c.cantidad < 0">
+                  {{ c.cantidad != null ? (c.cantidad | number: '1.0-4') : '—' }}
+                </td>
+                <td class="text-right mono">{{ formatCOP(c.costoEntrada) }}</td>
+                <td class="text-right mono hc-muted">{{ formatCOP(c.costoAnterior) }}</td>
+                <td class="text-right mono hc-fuerte">{{ formatCOP(c.costoNuevo) }}</td>
+                <td class="text-right mono">
+                  <ng-container *ngIf="variacion(c.costoAnterior, c.costoNuevo) as v; else sinVar">
+                    <span [class.sube]="v > 0" [class.baja]="v < 0">{{ v > 0 ? '+' : '' }}{{ v | number: '1.1-1' }}%</span>
+                  </ng-container>
+                  <ng-template #sinVar><span class="hc-muted">—</span></ng-template>
+                </td>
+                <td class="hc-sub">{{ c.usuarioNombre || '—' }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </p-tabPanel>
+
+      <!-- Compras del producto -->
+      <p-tabPanel header="Compras ({{ h.compras.length }})">
+        <div class="hc-vacio" *ngIf="h.compras.length === 0">
+          <i class="pi pi-shopping-cart"></i>
+          <p>Este producto no tiene compras registradas.</p>
+        </div>
+        <div class="hc-tabla" *ngIf="h.compras.length > 0">
+          <p-table [value]="h.compras" styleClass="p-datatable-sm hc-table">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Fecha</th>
+                <th>Documento</th>
+                <th>Proveedor</th>
+                <th class="text-right">Cantidad</th>
+                <th class="text-right">Costo unit.</th>
+                <th class="text-right">Desc.</th>
+                <th class="text-right">Costo neto</th>
+                <th class="text-right">Subtotal</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-c>
+              <tr [class.anulada]="esAnulada(c.estado)">
+                <td class="hc-fecha">{{ c.fecha | fechaEs }}</td>
+                <td>
+                  <div class="hc-doc">{{ c.numeroCompra || '#' + c.compraId }}</div>
+                  <div class="hc-badges">
+                    <p-tag *ngIf="esNotaCredito(c.tipoDocumento)" value="Nota crédito" severity="warn" styleClass="hc-tag" />
+                    <p-tag *ngIf="esAnulada(c.estado)" value="Anulada" severity="danger" styleClass="hc-tag" />
+                  </div>
+                </td>
+                <td class="hc-sub">{{ c.proveedorNombre || '—' }}</td>
+                <td class="text-right mono">
+                  {{ c.cantidad | number: '1.0-4' }}
+                  <div class="hc-sub" *ngIf="c.presentacionNombre">
+                    {{ c.cantidadPresentacion | number: '1.0-4' }} {{ c.presentacionNombre }}
+                  </div>
+                </td>
+                <td class="text-right mono">{{ formatCOP(c.costoUnitario) }}</td>
+                <td class="text-right mono hc-muted">
+                  {{ c.descuentoPct ? (c.descuentoPct | number: '1.0-2') + '%' : '—' }}
+                </td>
+                <td class="text-right mono hc-fuerte"
+                    pTooltip="Costo unitario sin descuento, antes de fletes e IVA" tooltipPosition="top">
+                  {{ formatCOP(c.costoNeto) }}
+                </td>
+                <td class="text-right mono">{{ formatCOP(c.subtotalLinea) }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </p-tabPanel>
+    </p-tabView>
+  </ng-container>
+</p-dialog>

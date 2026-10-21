@@ -1,0 +1,43 @@
+<h4 class="subtitulo">Historial de salario</h4>
+<p-table [value]="salarios" styleClass="p-datatable-sm" [tableStyle]="{ 'min-width': '36rem' }" [scrollable]="true">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Vigencia</th>
+      <th style="width: 10rem" class="text-right">Salario</th>
+      <th style="width: 7rem" class="text-right">Variación</th>
+      <th>Motivo</th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-h>
+    <tr>
+      <td>{{ h.fechaDesde }} → {{ h.fechaHasta ?? 'Vigente' }}</td>
+      <td class="text-right mono">{{ h.salario | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
+      <td class="text-right mono">{{ h.variacionPorcentaje != null ? (h.variacionPorcentaje | number: '1.0-2') + ' %' : '—' }}</td>
+      <td>{{ h.motivo ?? '—' }}</td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="emptymessage">
+    <tr><td colspan="4" class="vacio">Sin historial.</td></tr>
+  </ng-template>
+</p-table>
+
+@if (renovaciones.length) {
+  <h4 class="subtitulo">Renovaciones</h4>
+  <p-table [value]="renovaciones" styleClass="p-datatable-sm" [tableStyle]="{ 'min-width': '30rem' }" [scrollable]="true">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Período</th>
+        <th>Descripción</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-r>
+      <tr>
+        <td>{{ r.fechaInicial }} → {{ r.fechaFinal }}</td>
+        <td>{{ r.descripcion ?? '—' }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+}
+
+<h4 class="subtitulo">Pagos de nómina</h4>
+<app-historial-pagos [empleadoId]="empleadoId" />

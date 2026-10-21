@@ -1,0 +1,21 @@
+<div class="entrada">
+  <input pInputText type="email" class="entrada__texto" [(ngModel)]="texto" [placeholder]="placeholder"
+    [disabled]="disabled" (keydown.enter)="agregar($event)" (input)="error = null" />
+  <button type="button" class="entrada__mas" [disabled]="disabled || !texto.trim()" (click)="agregar()"
+    aria-label="Agregar correo"><i class="pi pi-plus"></i></button>
+</div>
+@if (error) { <small class="error">{{ error }}</small> }
+@if (correos.length) {
+  <div class="chips">
+    @for (c of correos; track c) {
+      <span class="chip">
+        <i class="pi pi-envelope"></i> {{ c }}
+        @if (!disabled) {
+          <button type="button" class="chip__quitar" (click)="quitar($index)" aria-label="Quitar"><i class="pi pi-times"></i></button>
+        }
+      </span>
+    }
+  </div>
+} @else {
+  <small class="vacio">Agregue un correo</small>
+}

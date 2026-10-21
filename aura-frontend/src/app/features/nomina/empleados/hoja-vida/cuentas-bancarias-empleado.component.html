@@ -1,0 +1,75 @@
+<div class="tab-head">
+  <p>Cuentas del empleado. La <b>principal</b> es donde se le paga la nómina.</p>
+  <button pButton type="button" label="Agregar cuenta" icon="pi pi-plus" class="btn-aura p-button-sm"
+    (click)="nueva()"></button>
+</div>
+
+<p-table [value]="filas" styleClass="p-datatable-sm" [tableStyle]="{ 'min-width': '36rem' }" [scrollable]="true">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Banco</th>
+      <th style="width: 11rem">Tipo</th>
+      <th style="width: 12rem">Número</th>
+      <th style="width: 9rem">Estado</th>
+      <th style="width: 6rem"></th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-c>
+    <tr>
+      <td>{{ c.bancoNombre ?? '—' }}</td>
+      <td>{{ textoTipo(c.tipoCuenta) }}</td>
+      <td class="mono">{{ c.numeroCuenta }}</td>
+      <td>
+        @if (c.principal) { <p-tag value="Principal" severity="info" styleClass="tag-mini" /> }
+        @if (!c.activa) { <p-tag value="Inactiva" severity="secondary" styleClass="tag-mini" /> }
+      </td>
+      <td>
+        <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-sm" pTooltip="Editar"
+          (click)="editar(c)"></button>
+        <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm"
+          pTooltip="Quitar" (click)="confirmarEliminar(c)"></button>
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="emptymessage">
+    <tr><td colspan="5" class="vacio">Sin cuentas bancarias.</td></tr>
+  </ng-template>
+</p-table>
+
+<p-dialog [header]="editando ? 'Editar cuenta' : 'Agregar cuenta'" [(visible)]="mostrarForm" [modal]="true"
+  [style]="{ width: '520px' }" [breakpoints]="{ '600px': '95vw' }" [draggable]="false">
+  <form [formGroup]="form" class="dialog-form">
+    <div class="grid">
+      <div class="field span-2">
+        <label>Banco *</label>
+        <app-tercero-autocomplete formControlName="bancoTerceroId" rol="BANCO" [label]="bancoLabel"
+          placeholder="Buscar banco…" />
+      </div>
+      <div class="field">
+        <label>Tipo de cuenta *</label>
+        <p-select formControlName="tipoCuenta" [options]="tiposCuenta" optionLabel="label" optionValue="value"
+          styleClass="w-full" />
+      </div>
+      <div class="field">
+        <label>Número de cuenta *</label>
+        <input pInputText formControlName="numeroCuenta" class="w-full" />
+      </div>
+      <div class="field">
+        <label>¿Principal (pago de nómina)?</label>
+        <p-select formControlName="principal" [options]="opcionesSiNo" optionLabel="label" optionValue="value"
+          styleClass="w-full" />
+      </div>
+      <div class="field">
+        <label>¿Activa?</label>
+        <p-select formControlName="activa" [options]="opcionesSiNo" optionLabel="label" optionValue="value"
+          styleClass="w-full" />
+      </div>
+    </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancelar" icon="pi pi-times" class="btn-amarillo" (click)="mostrarForm = false"></button>
+    <button pButton label="Guardar" icon="pi pi-check" class="btn-verde" [loading]="guardando" (click)="guardar()"></button>
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog />

@@ -8,6 +8,7 @@ import {
   BalanceGeneralDetalladoModel,
   CreateAsientoDto,
   CreateComprobanteDto,
+  ComprobanteEdicionModel,
   CreatePlanCuentaDto,
   PlanCuentaModel,
   CreateSaldosInicialesDto,
@@ -226,6 +227,16 @@ export class ContabilidadService {
     );
   }
 
+  /** Comprobante manual cargado para corregirlo (dice si se puede y por qué no). */
+  obtenerComprobante(id: number): Observable<ResponseModel<ComprobanteEdicionModel>> {
+    return this.http.get<ResponseModel<ComprobanteEdicionModel>>(`${this.api}/comprobantes/${id}`);
+  }
+
+  /** Corrige un comprobante manual conservando su número. */
+  actualizarComprobante(id: number, dto: CreateComprobanteDto): Observable<ResponseModel<AsientoContableModel>> {
+    return this.http.put<ResponseModel<AsientoContableModel>>(`${this.api}/comprobantes/${id}`, dto);
+  }
+
   siguienteConsecutivo(tipo: string): Observable<ResponseModel<string>> {
     const params = new HttpParams().set('tipo', tipo);
     return this.http.get<ResponseModel<string>>(
@@ -407,6 +418,10 @@ export class ContabilidadService {
 
   listarImpuestos(): Observable<ResponseModel<ImpuestoModel[]>> {
     return this.http.get<ResponseModel<ImpuestoModel[]>>(`${this.api}/impuestos`);
+  }
+
+  crearImpuesto(dto: ImpuestoModel): Observable<ResponseModel<ImpuestoModel>> {
+    return this.http.post<ResponseModel<ImpuestoModel>>(`${this.api}/impuestos`, dto);
   }
 
   actualizarImpuesto(id: number, dto: ImpuestoModel): Observable<ResponseModel<ImpuestoModel>> {
