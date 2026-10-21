@@ -27,6 +27,7 @@ import {
 import { TerceroAutocompleteComponent } from '../../../shared/components/tercero-autocomplete/tercero-autocomplete.component';
 import { CuentaBancariaService } from '../../../core/services/cuenta-bancaria.service';
 import { ContabilidadService } from '../../../core/services/contabilidad.service';
+import { CertificadosRetencionComponent } from './certificados-retencion/certificados-retencion.component';
 
 /** De dónde sale la plata del pago: caja, una cuenta bancaria o un medio de pago. */
 interface OrigenPago {
@@ -67,6 +68,7 @@ const MESES = [
     CalendarModule,
     TooltipModule,
     TerceroAutocompleteComponent,
+    CertificadosRetencionComponent,
   ],
   templateUrl: './declaraciones.component.html',
   styleUrls: ['./declaraciones.component.scss'],

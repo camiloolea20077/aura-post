@@ -698,7 +698,7 @@ export const CONTABILIDAD: ManualModulo[] = [
     icono: 'pi pi-file-export',
     rutas: ['/contabilidad/declaraciones'],
     resumen:
-      'IVA (formulario 300), retención en la fuente (350) e industria y comercio (ICA) leídos de la contabilidad, para trasladarlos al formulario.',
+      'IVA (formulario 300), retención en la fuente (350) e industria y comercio (ICA) leídos de la contabilidad, para trasladarlos al formulario, y los certificados de retención en la fuente, ReteIVA y ReteICA para los proveedores.',
     secciones: [
       {
         titulo: 'Generar',
@@ -726,6 +726,20 @@ export const CONTABILIDAD: ManualModulo[] = [
         ],
       },
       {
+        titulo: 'Certificados de retención (fuente, IVA e ICA)',
+        pasos: [
+          'Pestaña "Certificados de retención": elija el certificado (retención en la fuente, ReteIVA o ReteICA), desde y hasta (por defecto el año anterior) y, si quiere, un solo tercero.',
+          'Generar: sale cada tercero al que se le retuvo con sus conceptos, la base y el valor retenido.',
+          'El ojo abre el PDF del tercero; la flecha lo descarga. "Descargar todos" arma un solo PDF con un certificado por página.',
+        ],
+        notas: [
+          'El valor retenido sale de la contabilidad (cuentas 2365, 2367 y 2368 a nombre del tercero); la base y la tarifa, de la compra o el gasto que la originó. Un documento anulado no aparece.',
+          'Si la retención se registró en una nota o un comprobante contable, el sistema no conoce la base: el certificado dice "Sin base registrada".',
+          'La retención a empleados no sale aquí: se certifica con el formulario 220 desde Nómina.',
+          'El lugar de expedición es el municipio de la empresa (Mi perfil).',
+        ],
+      },
+      {
         titulo: 'A quién se le paga y registrar el pago',
         pasos: [
           'Debajo del resultado, "A quién se le paga" muestra cada entidad con su valor: la DIAN por el IVA o la retención, y cada municipio por su reteICA.',
@@ -742,6 +756,16 @@ export const CONTABILIDAD: ManualModulo[] = [
       },
     ],
     errores: [
+      {
+        mensaje: 'Hay … retenidos en la 2365 sin tercero: no se pueden certificar',
+        causa: 'Una retención quedó en un asiento sin tercero (normalmente una nota contable).',
+        solucion: 'Corrija el asiento con el tercero al que se le retuvo y genere de nuevo.',
+      },
+      {
+        mensaje: 'Tipo de certificado no válido: use FUENTE, IVA o ICA',
+        causa: 'Se pidió un certificado que no existe.',
+        solucion: 'Elija el certificado en la lista.',
+      },
       {
         mensaje: 'El ICA del período ya está causado en la 2412',
         causa: 'Ya se causó el ICA de ese período.',

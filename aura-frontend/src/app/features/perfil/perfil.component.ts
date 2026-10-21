@@ -104,6 +104,7 @@ export class PerfilComponent implements OnInit {
     private readonly cdr: ChangeDetectorRef,
   ) {
     this.form = this.fb.group({
+      razonSocial: ['', [Validators.required, Validators.maxLength(255)]],
       nombreComercial: ['', Validators.maxLength(255)],
       logoUrl: [''],
       telefono: ['', Validators.maxLength(30)],
@@ -153,6 +154,7 @@ export class PerfilComponent implements OnInit {
   private volcarAlFormulario(): void {
     const e = this.empresa;
     this.form.reset({
+      razonSocial: e?.razonSocial ?? '',
       nombreComercial: e?.nombreComercial ?? '',
       logoUrl: e?.logoUrl ?? '',
       telefono: e?.telefono ?? '',
@@ -225,6 +227,7 @@ export class PerfilComponent implements OnInit {
     }
 
     const dto: EmpresaDatosUpdate = {
+      razonSocial: this.texto(v.razonSocial),
       nombreComercial: this.texto(v.nombreComercial),
       logoUrl: this.texto(v.logoUrl),
       telefono: this.texto(v.telefono),

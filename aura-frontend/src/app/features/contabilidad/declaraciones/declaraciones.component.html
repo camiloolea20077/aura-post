@@ -8,8 +8,8 @@
         <div>
           <h1 class="title">Borradores de Declaraciones</h1>
           <p class="subtitle">
-            IVA (300) y retención en la fuente (350) leídos de la contabilidad,
-            para trasladarlos al formulario de la DIAN
+            IVA (300), retención en la fuente (350) e ICA leídos de la contabilidad,
+            y los certificados de retención para sus proveedores
           </p>
         </div>
       </div>
@@ -250,6 +250,11 @@
             $implicit: ica, verCuentas: verCuentasIca, toggle: toggleCuentasIca,
             pagar: abrirPago, anular: abrirAnular }"></ng-container>
         </ng-container>
+      </p-tabPanel>
+
+      <!-- ── Certificados de retención ────────────────────────────────── -->
+      <p-tabPanel header="Certificados de retención" leftIcon="pi pi-verified">
+        <app-certificados-retencion />
       </p-tabPanel>
     </p-tabView>
   </div>
