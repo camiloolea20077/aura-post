@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 import { ResponseModel } from '../../shared/utils/responde.models';
 import {
   BorradorDeclaracionModel,
+  CertificadosRetencionModel,
   ParametrosIca,
   PorPagarDeclaracion,
   RegistrarPagoDeclaracionDto,
@@ -42,6 +43,18 @@ export class DeclaracionesService {
   /** Pago de la declaración a un acreedor: el valor y las cuentas los calcula el servidor. */
   registrarPago(dto: RegistrarPagoDeclaracionDto): Observable<ResponseModel<PorPagarDeclaracion>> {
     return this.http.post<ResponseModel<PorPagarDeclaracion>>(`${this.api}/pagos`, dto);
+  }
+
+  /** Certificados de retención por tercero; sin terceroId trae a todos. */
+  certificados(
+    tipo: string,
+    desde: string,
+    hasta: string,
+    terceroId: number | null,
+  ): Observable<ResponseModel<CertificadosRetencionModel>> {
+    let params = new HttpParams().set('tipo', tipo).set('desde', desde).set('hasta', hasta);
+    if (terceroId != null) params = params.set('terceroId', terceroId);
+    return this.http.get<ResponseModel<CertificadosRetencionModel>>(`${this.api}/certificados`, { params });
   }
 
   anularPago(id: number, motivo: string): Observable<ResponseModel<void>> {

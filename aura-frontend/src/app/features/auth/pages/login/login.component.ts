@@ -51,6 +51,11 @@ export class LoginComponent implements OnInit {
   public recordar = false;
   public currentYear = new Date().getFullYear();
 
+  // ── Recuperar contraseña por correo ──
+  public modo: 'login' | 'recuperar' | 'enviado' = 'login';
+  public correoRecuperar = '';
+  public enviandoRecuperacion = false;
+
   // ── Firma contable: elegir empresa tras el login (PLAN_FIRMA_CONTABLE F6) ──
   public selectorVisible = false;
   public empresas: EmpresaOpcion[] = [];
@@ -84,12 +89,37 @@ export class LoginComponent implements OnInit {
     return !!(ctrl?.invalid && ctrl?.touched);
   }
 
+  /** Pasa al modo "recuperar" con el correo que ya escribió. */
   olvidePassword(): void {
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Recuperación de contraseña',
-      detail: 'Contacta al administrador de tu empresa para restablecerla.',
-    });
+    this.correoRecuperar = (this.frmLogin.get('email')?.value ?? '').trim();
+    this.modo = 'recuperar';
+  }
+
+  volverAlLogin(): void {
+    this.modo = 'login';
+  }
+
+  get correoRecuperarValido(): boolean {
+    return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(this.correoRecuperar.trim());
+  }
+
+  /** Pide el enlace: la respuesta es la misma exista o no el usuario. */
+  async enviarRecuperacion(): Promise<void> {
+    if (!this.correoRecuperarValido || this.enviandoRecuperacion) return;
+    this.enviandoRecuperacion = true;
+    try {
+      await lastValueFrom(this.authService.solicitarCambioClave(this.correoRecuperar.trim()));
+      this.modo = 'enviado';
+    } catch (err: any) {
+      this.alertService.showError(
+        'Recuperar contraseña',
+        err?.status === 429
+          ? 'Demasiados intentos. Espere unos minutos y vuelva a intentarlo.'
+          : err?.error?.message ?? 'No se pudo enviar el enlace. Intente de nuevo.',
+      );
+    } finally {
+      this.enviandoRecuperacion = false;
+    }
   }
 
   async login(): Promise<void> {

@@ -93,3 +93,43 @@ export interface RegistrarPagoDeclaracionDto {
   intereses: number | null;
   sancion: number | null;
 }
+
+/** FUENTE (2365) | IVA (2367) | ICA (2368) */
+export type TipoCertificadoRetencion = 'FUENTE' | 'IVA' | 'ICA';
+
+/** Lo retenido a un tercero por concepto y tarifa. */
+export interface LineaCertificadoRetencion {
+  concepto: string;
+  cuentaCodigo: string;
+  /** Porcentaje; null si la retención no viene de un documento con tarifa. */
+  tarifa: number | null;
+  /** null si ningún documento aporta la base (notas contables). */
+  base: number | null;
+  retenido: number;
+}
+
+export interface CertificadoRetencion {
+  terceroId: number;
+  terceroNombre: string;
+  tipoDocumento: string | null;
+  numeroDocumento: string | null;
+  dv: string | null;
+  direccion: string | null;
+  municipio: string | null;
+  correo: string | null;
+  lineas: LineaCertificadoRetencion[];
+  totalBase: number;
+  totalRetenido: number;
+}
+
+/** Certificados de retención del período, uno por tercero (GET /certificados). */
+export interface CertificadosRetencionModel {
+  tipo: TipoCertificadoRetencion;
+  empresaNombre: string | null;
+  nit: string | null;
+  dv: string | null;
+  desde: string;
+  hasta: string;
+  certificados: CertificadoRetencion[];
+  advertencias: string[];
+}

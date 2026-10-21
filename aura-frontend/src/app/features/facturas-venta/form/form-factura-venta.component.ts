@@ -208,11 +208,15 @@ export class FormFacturaVentaComponent implements OnInit {
     { label: 'Factura de venta', value: 'FACTURA' },
     { label: 'Cuenta de cobro', value: 'CUENTA_COBRO' },
   ];
-  /** Parágrafo 2 del art. 383 ET: le dice al cliente qué retención aplicar. */
+  /**
+   * Art. 9 del Decreto 2231 de 2023 (num. 10 art. 206 ET): le dice al cliente qué
+   * retención aplicar. false = no toma costos ni deducciones → tabla del art. 383;
+   * true = sí los toma → tarifa de honorarios o servicios.
+   */
   readonly declaraciones = [
     { label: 'No declarar', value: null },
-    { label: 'No he contratado 2 o más trabajadores', value: false },
-    { label: 'Contraté 2 o más trabajadores (90 días o más)', value: true },
+    { label: 'No tomaré costos ni deducciones (art. 383)', value: false },
+    { label: 'Tomaré costos y deducciones', value: true },
   ];
 
   /** Envío por correo del documento emitido. */

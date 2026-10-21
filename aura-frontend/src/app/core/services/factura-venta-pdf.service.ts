@@ -442,20 +442,25 @@ export class FacturaVentaPdfService {
 
   /**
    * Declaraciones de la cuenta de cobro: no responsable de IVA y, si la hizo, la del
-   * parágrafo 2 del art. 383 ET (con dos o más trabajadores el cliente le retiene
-   * por tabla de honorarios; si no, por la tabla del art. 383).
+   * art. 9 del Decreto 2231 de 2023. Sin costos ni deducciones el cliente le retiene
+   * por la tabla del art. 383 ET; con ellos, por la tarifa de honorarios o servicios.
+   * El campo se sigue llamando contratoDosTrabajadores: era el criterio anterior.
    */
   private declaracionCuentaCobro(dosTrabajadores: boolean | null): any[] {
     const texto: string[] = ['Declaro que no soy responsable del impuesto sobre las ventas (IVA).'];
     if (dosTrabajadores === true) {
       texto.push(
-        'Para efectos del parágrafo 2 del artículo 383 del Estatuto Tributario, declaro que contraté o vinculé ' +
-          'dos (2) o más trabajadores asociados a mi actividad por un término igual o superior a noventa (90) días.',
+        'De conformidad con lo establecido en el artículo 9 del Decreto 2231 de 2023, para la aplicación de lo ' +
+          'señalado en el numeral 10 del artículo 206 del Estatuto Tributario, manifiesto bajo la gravedad del ' +
+          'juramento que: Tomaré costos y deducciones asociados a los ingresos. Por lo tanto, no se me aplica el ' +
+          'procedimiento de retención en la fuente previsto en el Art. 383 del E.T.',
       );
     } else if (dosTrabajadores === false) {
       texto.push(
-        'Para efectos del parágrafo 2 del artículo 383 del Estatuto Tributario, declaro que no he contratado ni ' +
-          'vinculado dos (2) o más trabajadores asociados a mi actividad.',
+        'De conformidad con lo establecido en el artículo 9 del Decreto 2231 de 2023, para la aplicación de lo ' +
+          'señalado en el numeral 10 del artículo 206 del Estatuto Tributario, manifiesto bajo la gravedad del ' +
+          'juramento que: No tomaré costos o deducciones asociados a los ingresos. Por lo tanto, aplíqueseme el ' +
+          'procedimiento para la retención en la fuente prevista en el Art. 383 del E.T.',
       );
     }
     return [

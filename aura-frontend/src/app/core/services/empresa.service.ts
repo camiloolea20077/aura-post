@@ -40,6 +40,7 @@ export interface EmpresaConfig {
 }
 /** Todo lo que el administrador edita desde "Mi perfil" (PUT /empresa/datos). */
 export interface EmpresaDatosUpdate {
+  razonSocial: string | null;
   nombreComercial: string | null;
   logoUrl: string | null;
   telefono: string | null;

@@ -111,7 +111,13 @@
             <div class="datos-grid empresa-datos">
               <div class="dato">
                 <span class="dato-label">Razón social</span>
-                <span class="dato-valor">{{ empresa.razonSocial || "—" }}</span>
+                <span class="dato-valor" *ngIf="!editando">{{ empresa.razonSocial || "—" }}</span>
+                <ng-container *ngIf="editando">
+                  <input type="text" pInputText formControlName="razonSocial"
+                         placeholder="Tal como aparece en el RUT" class="w-full"
+                         [class.ng-invalid]="isInvalid('razonSocial')" />
+                  <small class="dato-error" *ngIf="isInvalid('razonSocial')">La razón social es obligatoria</small>
+                </ng-container>
               </div>
               <div class="dato">
                 <span class="dato-label">NIT</span>
@@ -250,7 +256,7 @@
         </div>
 
         <p class="nota seccion" *ngIf="!puedeEditar">
-          Solo un administrador puede cambiar los datos de la empresa. La razón social y el NIT no se cambian desde aquí.
+          Solo un administrador puede cambiar los datos de la empresa. El NIT no se cambia desde aquí.
         </p>
       </form>
 

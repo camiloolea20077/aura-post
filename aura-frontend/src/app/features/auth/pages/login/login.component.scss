@@ -432,6 +432,23 @@ $muted: #64748b;
   }
 }
 
+/* recuperar contraseña */
+.volver {
+  align-self: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: $brand;
+  cursor: pointer;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.login-header .nota-correo {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+}
+
 /* botón */
 ::ng-deep .btn-login.p-button {
   background: $brand;

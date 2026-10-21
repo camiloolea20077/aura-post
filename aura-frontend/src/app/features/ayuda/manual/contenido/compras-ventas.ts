@@ -587,7 +587,7 @@ export const COMPRAS_VENTAS: ManualModulo[] = [
         ],
         pasos: [
           '"Nueva factura" → en Datos de la factura, "Documento": elija "Cuenta de cobro". Si la empresa es persona natural y no factura electrónicamente, ya viene elegida.',
-          'Elija en "Declaración art. 383 E.T." si contrató o no dos o más trabajadores: le dice al cliente qué retención en la fuente aplicar.',
+          'Elija en "Declaración art. 383 E.T." si tomará o no costos y deducciones (art. 9 del Decreto 2231 de 2023): sale en el PDF bajo la gravedad del juramento y le dice al cliente qué retención en la fuente aplicar. Si no los toma, le retienen por la tabla del art. 383.',
           'Llene cliente, pago y líneas como en una factura. No lleva IVA (queda en 0 % y "No aplica").',
           '"Guardar preliminar": queda como preliminar, sin número ni cartera; se puede corregir o eliminar.',
           'Cuando esté bien, "Confirmar cuenta de cobro": toma su número (CC1, CC2…), entra a cartera y a contabilidad, y se abre "Enviar por correo" para mandársela al cliente.',

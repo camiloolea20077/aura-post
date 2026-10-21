@@ -14,7 +14,8 @@ export const GENERAL: ManualModulo[] = [
         titulo: 'Entrar al sistema',
         pasos: [
           'Escriba su usuario y contraseña en la pantalla de inicio y presione Ingresar.',
-          'Si olvidó la contraseña, use "¿Olvidaste tu contraseña?" y siga el enlace que llega al correo registrado.',
+          'Si olvidó la contraseña, use "¿Olvidaste tu contraseña?", escriba su correo (el usuario con el que entra) y presione Enviar enlace. Abra el correo de Aura, presione "Cambiar mi contraseña" y escriba la nueva dos veces.',
+          'El enlace vence en 60 minutos y sirve una sola vez; si pide otro, el anterior deja de servir. Al cambiarla se cierran sus sesiones abiertas y le llega un aviso al correo.',
           'Al entrar, el sistema abre el Inicio con el tablero de lo que usa su empresa (punto de venta, comercial, contabilidad o nómina). Si su perfil no tiene el Inicio, abre la primera pantalla que sí puede ver.',
         ],
         notas: [

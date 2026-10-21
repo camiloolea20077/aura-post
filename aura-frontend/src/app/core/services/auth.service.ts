@@ -18,6 +18,16 @@ export class AuthService {
   ) {}
 
   // ─── Login ──────────────────────────────────────────────────
+  /** "¿Olvidaste tu contraseña?": el servidor responde igual exista o no el usuario. */
+  solicitarCambioClave(usuario: string): Observable<ResponseModel<void>> {
+    return this.http.post<ResponseModel<void>>(`${this.apiUrl}/forgot-password`, { usuario });
+  }
+
+  /** Cambia la contraseña con el token del enlace que llegó al correo. */
+  restablecerClave(token: string, nuevaPassword: string): Observable<ResponseModel<void>> {
+    return this.http.post<ResponseModel<void>>(`${this.apiUrl}/reset-password`, { token, nuevaPassword });
+  }
+
   login(dto: LoginDto): Observable<ResponseModel<AuthResponse>> {
     return this.http.post<ResponseModel<AuthResponse>>(
       `${this.apiUrl}/login`,
