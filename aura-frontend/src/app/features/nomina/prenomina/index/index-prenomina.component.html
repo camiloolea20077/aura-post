@@ -79,7 +79,7 @@
           <th style="width: 100px" class="text-right">Empleados</th>
           <th style="width: 150px" class="text-right">Neto a pagar</th>
           <th style="width: 120px">Estado</th>
-          <th style="width: 80px">Abrir</th>
+          <th style="width: 100px">Acciones</th>
         </tr>
       </ng-template>
 
@@ -129,6 +129,17 @@
                 pTooltip="Abrir"
                 (click)="abrir(d)"
               ></button>
+              @if (pantalla.clase === 'NOMINA' && d.estado !== 'ANULADO' && d.empleados > 0) {
+                <button
+                  pButton
+                  icon="pi pi-download"
+                  class="p-button-text p-button-sm"
+                  pTooltip="Descargar comprobantes de pago"
+                  [loading]="descargando === d.id"
+                  [disabled]="descargando !== null"
+                  (click)="descargarComprobantes(d)"
+                ></button>
+              }
             </div>
           </td>
         </tr>
