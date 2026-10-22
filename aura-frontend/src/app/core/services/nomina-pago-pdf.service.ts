@@ -189,10 +189,13 @@ export class NominaPagoPdfService {
   ): Promise<any> {
     const logo = await this.logo(empresa.logoUrl);
     const content: any[] = [];
+    // Una hoja por empleado: cada comprobante va en su propia página y no se parte.
     desprendibles.forEach((d, i) => {
-      const pagina = [this.cabecera(empresa, logo, 'Comprobante de pago de nómina', doc), ...this.comprobante(d)];
-      if (i > 0) pagina[0] = { ...pagina[0], pageBreak: 'before' };
-      content.push(...pagina);
+      content.push({
+        stack: [this.cabecera(empresa, logo, 'Comprobante de pago de nómina', doc), ...this.comprobante(d)],
+        unbreakable: true,
+        ...(i > 0 ? { pageBreak: 'before' } : {}),
+      });
     });
     return { pageSize: 'LETTER', pageMargins: [36, 36, 36, 46], content, footer: this.pie() };
   }

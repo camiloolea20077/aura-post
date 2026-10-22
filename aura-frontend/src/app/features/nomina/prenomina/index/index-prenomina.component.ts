@@ -21,7 +21,9 @@ import {
   textoEstadoDocumento,
 } from '../../../../core/models/nomina-documento.model';
 import { NominaDocumentoService } from '../../../../core/services/nomina-documento.service';
+import { NominaComprobantesService } from '../../../../core/services/nomina-comprobantes.service';
 import { PuedeDirective } from '../../../../shared/directives/puede.directive';
+import { AlertService } from '../../../../shared/pipes/alert.service';
 import { FechaEsPipe } from '../../../../shared/pipes/fecha-es.pipe';
 import { PantallaDocumento, pantallaDocumento } from '../prenomina.util';
 
@@ -63,6 +65,8 @@ export class IndexPrenominaComponent implements OnInit {
 
   constructor(
     private readonly service: NominaDocumentoService,
+    private readonly comprobantes: NominaComprobantesService,
+    private readonly alert: AlertService,
     private readonly router: Router,
     route: ActivatedRoute,
     private readonly cdr: ChangeDetectorRef,
@@ -120,5 +124,23 @@ export class IndexPrenominaComponent implements OnInit {
 
   abrir(d: DocumentoNominaModel): void {
     void this.router.navigate([this.pantalla.ruta, d.id]);
+  }
+
+  /** Documento cuyos comprobantes se están armando (spinner del botón). */
+  descargando: number | null = null;
+
+  /** Comprobantes de pago de todos los empleados de la nómina, uno por hoja. */
+  async descargarComprobantes(d: DocumentoNominaModel): Promise<void> {
+    this.descargando = d.id;
+    this.cdr.markForCheck();
+    try {
+      const total = await this.comprobantes.descargarTodos(d);
+      if (!total) this.alert.showWarn('Comprobantes', 'La nómina no tiene empleados liquidados.');
+    } catch (err: any) {
+      this.alert.showError('Comprobantes', err?.error?.message ?? 'No se pudieron generar los comprobantes.');
+    } finally {
+      this.descargando = null;
+      this.cdr.markForCheck();
+    }
   }
 }
