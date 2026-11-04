@@ -160,6 +160,8 @@ export type ClaseConceptoNomina = 'DEVENGADO' | 'DEDUCCION' | 'APORTE_EMPLEADOR'
 export interface DetalleLiquidacionModel {
   id: number;
   conceptoCodigo: string;
+  /** Código visible del concepto. */
+  conceptoNumero: number | null;
   conceptoNombre: string;
   clase: ClaseConceptoNomina;
   cantidad: number | null;

@@ -1,119 +1,193 @@
 <div class="page">
   <div class="card">
-    <!-- ── Header dentro de la card ─────────────────────────── -->
     <div class="card-head">
       <div class="card-head__title">
         <span class="header-icon"><i class="pi pi-percentage"></i></span>
         <div>
           <h1 class="title">Conceptos de nómina</h1>
-          <p class="subtitle">Tarifas y conceptos vigentes, sin recompilar</p>
+          <p class="subtitle">
+            Devengados, deducciones, aportes y provisiones con su código
+          </p>
         </div>
       </div>
       <div class="card-head__actions">
-        <div class="field-inline">
-          <label>Vigentes al</label>
-          <p-calendar
-            [(ngModel)]="fecha"
-            dateFormat="yy-mm-dd"
-            [showIcon]="true"
-            (onSelect)="cargar()"
-            styleClass="cal-inline"
-            placeholder="AAAA-MM-DD"
-          />
+        <div class="card-head__btns">
+          <button
+            *appPuede="'recursos-humanos.conceptos:CREAR'"
+            pButton
+            type="button"
+            label="Nuevo concepto"
+            icon="pi pi-plus"
+            class="btn-verde"
+            (click)="nuevo()"
+          ></button>
         </div>
-        <button *appPuede="'recursos-humanos.conceptos:CREAR'"
-          pButton
-          type="button"
-          label="Nuevo concepto"
-          icon="pi pi-plus"
-          class="btn-verde"
-          (click)="nuevo()"
-        ></button>
+        <div class="card-head__search">
+          <p-select
+            [(ngModel)]="filtroClase"
+            [options]="claseOpts"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Clase"
+            [showClear]="true"
+            styleClass="filtro"
+            (onChange)="filtrar()"
+          />
+          <p-select
+            [(ngModel)]="filtroTipo"
+            [options]="tipoOpts"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Tipo"
+            [filter]="true"
+            filterBy="label"
+            [showClear]="true"
+            styleClass="filtro"
+            (onChange)="filtrar()"
+          />
+          <p-select
+            [(ngModel)]="filtroGrupo"
+            [options]="grupoOpts"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Grupo"
+            [showClear]="true"
+            styleClass="filtro"
+            (onChange)="filtrar()"
+          />
+          <p-select
+            [(ngModel)]="verInactivos"
+            [options]="estadoOpts"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="filtro"
+            (onChange)="filtrar()"
+          />
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              type="text"
+              pInputText
+              class="search-input"
+              placeholder="Código, nombre o tipo..."
+              [(ngModel)]="busqueda"
+              (input)="buscarConPausa()"
+              (keydown.escape)="limpiarBusqueda()"
+            />
+            @if (busqueda) {
+              <button class="clear-btn" (click)="limpiarBusqueda()">
+                <i class="pi pi-times"></i>
+              </button>
+            }
+          </span>
+        </div>
       </div>
     </div>
 
-    <p-table
-      [value]="items"
-      [paginator]="true"
-      [rows]="10"
-      [rowsPerPageOptions]="[10, 25, 50]"
-      [loading]="loading"
-      dataKey="id"
-      styleClass="p-datatable-sm"
-      [tableStyle]="{ 'min-width': '64rem' }"
-    >
-      <ng-template pTemplate="header">
-        <tr>
-          <th>Código</th>
-          <th>Nombre</th>
-          <th>Clase</th>
-          <th>Base</th>
-          <th class="text-right">Tarifa</th>
-          <th class="text-center">IBC</th>
-          <th>Vigencia</th>
-          <th>Origen</th>
-          <th style="width: 8rem"></th>
-        </tr>
-      </ng-template>
+    <div class="tabla">
+      <p-table
+        [value]="items"
+        [lazy]="true"
+        (onLazyLoad)="cargar($event)"
+        [paginator]="true"
+        [rows]="rowSize"
+        [totalRecords]="totalRecords"
+        [loading]="loading"
+        [rowsPerPageOptions]="[10, 25, 50]"
+        [showCurrentPageReport]="true"
+        currentPageReportTemplate="{first}-{last} de {totalRecords} conceptos"
+        dataKey="id"
+        styleClass="p-datatable-sm"
+        [tableStyle]="{ 'min-width': '62rem' }"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 6rem">Código</th>
+            <th>Nombre</th>
+            <th>Clase</th>
+            <th>Tipo</th>
+            <th>Entrada</th>
+            <th>Redondeo</th>
+            <th class="text-right">Cálculo</th>
+            <th>Origen</th>
+            <th style="width: 7rem"></th>
+          </tr>
+        </ng-template>
 
-      <ng-template pTemplate="body" let-c>
-        <tr>
-          <td><code>{{ c.codigo }}</code></td>
-          <td>{{ c.nombre }}</td>
-          <td><p-tag [value]="c.clase" [severity]="severidadClase(c.clase)" /></td>
-          <td class="text-muted">{{ c.base }}</td>
-          <td class="text-right">{{ textoTarifa(c) }}</td>
-          <td class="text-center">
-            @if (c.constituyeIbc) {
-              <i class="pi pi-check text-ok" pTooltip="Constituye IBC"></i>
-            } @else {
-              <span class="text-muted">—</span>
-            }
-          </td>
-          <td class="text-muted">{{ textoVigencia(c) }}</td>
-          <td>
-            <!-- De ley (global) vs. propio de la empresa. Un global que la
-                 empresa personalizó llega marcado como propio por el backend. -->
-            @if (c.esGlobal) {
-              <p-tag value="De ley" severity="info" />
-            } @else {
-              <p-tag value="Empresa" severity="success" />
-            }
-          </td>
-          <td class="text-right">
-            <!-- Tanto un concepto de ley como uno propio se "cambian" creando
-                 una versión nueva: el botón abre el form precargado. -->
-            <button
-              pButton
-              type="button"
-              icon="pi pi-clone"
-              class="p-button-text p-button-sm"
-              pTooltip="Nueva vigencia (cambiar tarifa)"
-              (click)="nuevaVersion(c)"
-            ></button>
-          </td>
-        </tr>
-      </ng-template>
+        <ng-template pTemplate="body" let-c>
+          <tr [class.inactivo]="!c.activo">
+            <td class="mono">{{ c.numero }}</td>
+            <td>
+              <div>{{ c.nombre }}</div>
+              @if (c.grupoNombre) {
+                <div class="meta">{{ c.grupoNombre }}</div>
+              }
+            </td>
+            <td>
+              <p-tag
+                [value]="textoClase(c)"
+                [severity]="severidadClase(c.clase)"
+              />
+            </td>
+            <td class="text-muted">{{ c.tipoNombre ?? "—" }}</td>
+            <td class="text-muted">{{ textoEntrada(c) }}</td>
+            <td class="text-muted">{{ textoRedondeo(c) }}</td>
+            <td class="text-right">{{ textoCalculo(c) }}</td>
+            <td>
+              @if (c.deLey) {
+                <p-tag
+                  [value]="c.esGlobal ? 'De ley' : 'De ley (ajustado)'"
+                  severity="info"
+                />
+              } @else {
+                <p-tag value="Empresa" severity="success" />
+              }
+              @if (!c.activo) {
+                <p-tag
+                  value="Inactivo"
+                  severity="secondary"
+                  styleClass="ml-tag"
+                />
+              }
+            </td>
+            <td class="text-right acciones">
+              <button
+                pButton
+                type="button"
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm"
+                pTooltip="Ver y editar"
+                (click)="editar(c)"
+              ></button>
+              @if (puedeNuevaVigencia(c)) {
+                <button
+                  *appPuede="'recursos-humanos.conceptos:CREAR'"
+                  pButton
+                  type="button"
+                  icon="pi pi-clone"
+                  class="p-button-text p-button-sm"
+                  pTooltip="Nueva vigencia (cambiar tarifa)"
+                  (click)="nuevaVigencia(c)"
+                ></button>
+              }
+            </td>
+          </tr>
+        </ng-template>
 
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="9" class="text-center p-4">
-            <span class="text-muted">No hay conceptos vigentes en esta fecha.</span>
-          </td>
-        </tr>
-      </ng-template>
-
-      <ng-template pTemplate="loadingbody">
-        <tr>
-          <td colspan="9"><p-skeleton height="2rem" /></td>
-        </tr>
-      </ng-template>
-    </p-table>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="9" class="text-center p-4">
+              <span class="text-muted">No hay conceptos con esos filtros.</span>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
   </div>
 </div>
 
 <app-form-concepto
-  [(visible)]="showForm"
-  [base]="baseSeleccionada"
-  (guardado)="onGuardado()"
+  [(visible)]="showVigencia"
+  [concepto]="seleccionado"
+  (guardado)="onVigenciaGuardada()"
 />

@@ -801,6 +801,21 @@ export const routes: Routes = [
           ),
       },
       {
+        // Página del cargo con su plantilla de nómina (PLAN_CONCEPTOS_CARGOS_NOMINA, F5).
+        path: 'nomina/cargos/nuevo',
+        loadComponent: () =>
+          import('./features/nomina/parametros/cargos/pagina/cargo-pagina.component').then(
+            (m) => m.CargoPaginaComponent,
+          ),
+      },
+      {
+        path: 'nomina/cargos/:id',
+        loadComponent: () =>
+          import('./features/nomina/parametros/cargos/pagina/cargo-pagina.component').then(
+            (m) => m.CargoPaginaComponent,
+          ),
+      },
+      {
         path: 'nomina/tipos-vinculacion',
         loadComponent: () =>
           import('./features/nomina/parametros/tipos-vinculacion/index-tipos-vinculacion.component').then(
@@ -910,6 +925,21 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/nomina/conceptos/index/index-conceptos.component').then(
             (m) => m.IndexConceptosComponent,
+          ),
+      },
+      {
+        // Página del concepto con pestañas (docs/PLAN_CONCEPTOS_CARGOS_NOMINA.md, F4).
+        path: 'nomina/conceptos/nuevo',
+        loadComponent: () =>
+          import('./features/nomina/conceptos/pagina/concepto-pagina.component').then(
+            (m) => m.ConceptoPaginaComponent,
+          ),
+      },
+      {
+        path: 'nomina/conceptos/:id',
+        loadComponent: () =>
+          import('./features/nomina/conceptos/pagina/concepto-pagina.component').then(
+            (m) => m.ConceptoPaginaComponent,
           ),
       },
       {

@@ -88,6 +88,13 @@ export class VinculacionService {
     return this.http.delete<ResponseModel<VinculacionConcepto[]>>(`${this.base}/${id}/conceptos/${conceptoId}`);
   }
 
+  /** Excluye para este empleado un concepto que hereda del cargo. */
+  excluirConcepto(id: number, conceptoCodigo: string): Observable<ResponseModel<VinculacionConcepto[]>> {
+    return this.http.post<ResponseModel<VinculacionConcepto[]>>(`${this.base}/${id}/conceptos/excluir`, {
+      conceptoCodigo,
+    });
+  }
+
   // ── Novedades permitidas ──────────────────────────────────────────────
 
   novedadesPermitidas(id: number): Observable<ResponseModel<NovedadPermitida[]>> {
@@ -100,6 +107,13 @@ export class VinculacionService {
 
   actualizarNovedad(id: number, novedadId: number, dto: CreateNovedadPermitidaDto): Observable<ResponseModel<NovedadPermitida[]>> {
     return this.http.put<ResponseModel<NovedadPermitida[]>>(`${this.base}/${id}/novedades-permitidas/${novedadId}`, dto);
+  }
+
+  /** Excluye para este empleado una novedad que hereda del cargo. */
+  excluirNovedad(id: number, conceptoCodigo: string): Observable<ResponseModel<NovedadPermitida[]>> {
+    return this.http.post<ResponseModel<NovedadPermitida[]>>(`${this.base}/${id}/novedades-permitidas/excluir`, {
+      conceptoCodigo,
+    });
   }
 
   eliminarNovedad(id: number, novedadId: number): Observable<ResponseModel<NovedadPermitida[]>> {

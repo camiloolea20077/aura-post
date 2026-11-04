@@ -1,0 +1,173 @@
+<div class="tab-head">
+  <p>
+    Conceptos que se le pueden reportar como novedad a quien tenga este cargo
+    (incapacidades, licencias, libranzas, embargos, auxilios…), con tope por
+    período y si necesitan autorización.
+  </p>
+  @if (!soloLectura) {
+    <button
+      pButton
+      type="button"
+      label="Agregar novedades"
+      icon="pi pi-search-plus"
+      class="btn-aura p-button-sm"
+      (click)="mostrarBuscador = true"
+    ></button>
+  }
+</div>
+
+<p-table
+  [value]="filas"
+  styleClass="p-datatable-sm"
+  [tableStyle]="{ 'min-width': '50rem' }"
+  [scrollable]="true"
+>
+  <ng-template pTemplate="header">
+    <tr>
+      <th style="width: 5.5rem">Código</th>
+      <th>Nombre</th>
+      <th style="width: 9rem">Clase</th>
+      <th style="width: 9rem">Entrada</th>
+      <th style="width: 8rem" class="text-right">Tope cantidad</th>
+      <th style="width: 9rem" class="text-right">Tope valor</th>
+      <th style="width: 7rem">Autorización</th>
+      <th style="width: 7rem"></th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-f>
+    <tr>
+      <td class="mono">
+        <b>{{ f.conceptoNumero }}</b>
+      </td>
+      <td>
+        <div>{{ f.conceptoNombre ?? "Concepto no disponible" }}</div>
+        @if (f.tipoNombre) {
+          <div class="meta">{{ f.tipoNombre }}</div>
+        }
+      </td>
+      <td>
+        @if (f.clase) {
+          <p-tag [value]="textoClase(f)" [severity]="severidadClase(f.clase)" />
+        }
+      </td>
+      <td>{{ textoEntrada(f) }}</td>
+      <td class="text-right mono">{{ f.topeCantidad ?? "Sin tope" }}</td>
+      <td class="text-right mono">
+        {{
+          f.topeValor != null
+            ? (f.topeValor | currency: "COP" : "symbol-narrow" : "1.0-0")
+            : "Sin tope"
+        }}
+      </td>
+      <td>{{ f.requiereAutorizacion ? "Requiere" : "No" }}</td>
+      <td class="acciones" style="white-space: nowrap">
+        @if (!soloLectura) {
+          <button
+            pButton
+            type="button"
+            icon="pi pi-pencil"
+            class="p-button-text p-button-sm"
+            pTooltip="Topes"
+            (click)="editar(f)"
+          ></button>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-trash"
+            class="p-button-text p-button-danger p-button-sm"
+            pTooltip="Quitar"
+            (click)="confirmarQuitar(f)"
+          ></button>
+        }
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td colspan="8" class="vacio">
+        El cargo no tiene novedades permitidas. Usa "Agregar novedades".
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<app-concepto-buscador
+  [(visible)]="mostrarBuscador"
+  header="Agregar novedades permitidas"
+  [yaAgregados]="numeros"
+  (agregar)="onAgregar($event)"
+/>
+
+<p-dialog
+  [header]="
+    editando
+      ? editando.conceptoNumero + ' - ' + (editando.conceptoNombre ?? '')
+      : ''
+  "
+  [(visible)]="mostrarForm"
+  [modal]="true"
+  [style]="{ width: '520px' }"
+  [breakpoints]="{ '600px': '95vw' }"
+  [draggable]="false"
+>
+  <form [formGroup]="form" class="dialog-form">
+    <div class="grid">
+      <div class="field">
+        <label>Tope de cantidad por período</label>
+        <p-inputNumber
+          formControlName="topeCantidad"
+          [min]="0"
+          [maxFractionDigits]="2"
+          placeholder="Sin tope"
+        />
+        <small>Horas, días o unidades</small>
+      </div>
+      <div class="field">
+        <label>Tope de valor por período</label>
+        <p-inputNumber
+          formControlName="topeValor"
+          mode="currency"
+          currency="COP"
+          locale="es-CO"
+          [maxFractionDigits]="0"
+          [min]="0"
+          placeholder="Sin tope"
+        />
+      </div>
+      <div class="field span-2">
+        <label>¿Requiere autorización?</label>
+        <p-select
+          formControlName="requiereAutorizacion"
+          [options]="siNoOpts"
+          optionLabel="label"
+          optionValue="value"
+          appendTo="body"
+          styleClass="w-full"
+        />
+        <small
+          >Sí: la novedad queda pendiente hasta que la autoricen. Si no y pasa
+          el tope, se rechaza.</small
+        >
+      </div>
+    </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="btn-amarillo"
+      (click)="mostrarForm = false"
+    ></button>
+    <button
+      pButton
+      label="Guardar"
+      icon="pi pi-check"
+      class="btn-verde"
+      [loading]="guardando"
+      (click)="guardar()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog />

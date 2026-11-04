@@ -195,7 +195,7 @@
         <tbody>
           @for (l of detalle; track l.id) {
             <tr>
-              <td><code class="codigo">{{ l.conceptoCodigo }}</code> {{ l.conceptoNombre }}</td>
+              <td><code class="codigo">{{ l.conceptoNumero ?? '—' }}</code> {{ l.conceptoNombre }}</td>
               <td class="text-right mono">{{ l.cantidad ?? '' }}</td>
               <td class="text-right mono">{{ l.base | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</td>
               <td class="text-right mono">{{ l.porcentaje ?? '' }}</td>

@@ -1,0 +1,42 @@
+<div class="tab-head">
+  <p>Manual de funciones, acto administrativo y demás documentos del cargo. PDF, imagen, Excel o Word de hasta 10 MB.</p>
+  @if (!soloLectura) {
+    <label class="p-button p-button-sm btn-aura subir" [class.p-disabled]="subiendo">
+      <i class="pi" [class.pi-upload]="!subiendo" [class.pi-spin]="subiendo" [class.pi-spinner]="subiendo"></i>
+      <span>{{ subiendo ? 'Cargando…' : 'Adjuntar archivo' }}</span>
+      <input type="file" hidden [disabled]="subiendo"
+        accept=".pdf,.jpg,.jpeg,.png,.webp,.xls,.xlsx,.csv,.doc,.docx" (change)="onArchivo($event)" />
+    </label>
+  }
+</div>
+
+<p-table [value]="filas" styleClass="p-datatable-sm" [tableStyle]="{ 'min-width': '34rem' }" [scrollable]="true">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Archivo</th>
+      <th style="width: 7rem" class="text-right">Tamaño</th>
+      <th style="width: 9rem">Cargado</th>
+      <th style="width: 6rem"></th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-a>
+    <tr>
+      <td><a [href]="a.archivoUrl" target="_blank" rel="noopener">{{ a.nombreArchivo }}</a></td>
+      <td class="text-right mono">{{ tamano(a) }}</td>
+      <td>{{ a.createdAt | fechaEs: 'corta' }}</td>
+      <td>
+        <a pButton icon="pi pi-download" class="p-button-text p-button-sm" pTooltip="Abrir" [href]="a.archivoUrl"
+          target="_blank" rel="noopener"></a>
+        @if (!soloLectura) {
+          <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm"
+            pTooltip="Quitar" (click)="confirmarEliminar(a)"></button>
+        }
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="emptymessage">
+    <tr><td colspan="4" class="vacio">El cargo no tiene adjuntos.</td></tr>
+  </ng-template>
+</p-table>
+
+<p-confirmDialog />

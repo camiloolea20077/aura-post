@@ -3,32 +3,29 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { CalendarModule } from 'primeng/calendar';
-import { ToggleSwitchModule } from 'primeng/toggleswitch';
+import { TextareaModule } from 'primeng/textarea';
 import { lastValueFrom } from 'rxjs';
 
 import { ConceptoService } from '../../../../core/services/concepto.service';
 import {
   BASE_CONCEPTO_OPTS,
   BaseConcepto,
-  CLASE_CONCEPTO_OPTS,
-  ClaseConcepto,
   ConceptoModel,
-  CreateConceptoDto,
+  NuevaVigenciaDto,
+  SI_NO_OPTS,
 } from '../../../../core/models/concepto.model';
 import { AlertService } from '../../../../shared/pipes/alert.service';
-import { aFechaLocal } from '../../../../shared/utils/fecha.util';
+import { aFechaLocal, aDate } from '../../../../shared/utils/fecha.util';
 
 /**
- * Alta de un concepto de nómina, o de una nueva vigencia de uno existente.
+ * Nueva vigencia de un concepto propio.
  *
- * **Cambiar una tarifa no edita el concepto: crea una versión nueva.** Cuando se
- * abre desde una fila (`base` presente), se precargan código, nombre y clase, y
- * el usuario solo indica desde cuándo rige la tarifa nueva. El backend rechaza
- * (409) si la vigencia se solapa con otra versión del mismo código.
+ * **Cambiar una tarifa no edita el concepto: crea una versión nueva.** La versión
+ * actual se cierra el día antes de la nueva fecha, así un período viejo se
+ * reliquida con la tarifa que regía entonces. Número, nombre y clase no cambian.
  */
 @Component({
   selector: 'app-form-concepto',
@@ -38,11 +35,9 @@ import { aFechaLocal } from '../../../../shared/utils/fecha.util';
     FormsModule,
     DialogModule,
     ButtonModule,
-    InputTextModule,
     InputNumberModule,
-    DropdownModule,
-    CalendarModule,
-    ToggleSwitchModule,
+    SelectModule,
+    CalendarModule, TextareaModule,
   ],
   templateUrl: './form-concepto.component.html',
 })
@@ -50,104 +45,86 @@ export class FormConceptoComponent {
   @Input() visible = false;
   @Output() visibleChange = new EventEmitter<boolean>();
 
-  /**
-   * Concepto del que se crea una nueva vigencia. Si viene, el formulario entra
-   * en modo "nueva versión": código/nombre/clase quedan fijos y solo se pide la
-   * tarifa nueva y desde cuándo rige.
-   */
-  @Input() base: ConceptoModel | null = null;
+  /** Versión vigente de la que se parte. */
+  @Input() concepto: ConceptoModel | null = null;
 
   @Output() guardado = new EventEmitter<void>();
 
-  readonly claseOpts = CLASE_CONCEPTO_OPTS;
   readonly baseOpts = BASE_CONCEPTO_OPTS;
+  readonly siNoOpts = SI_NO_OPTS;
 
   saving = false;
 
   form: {
-    codigo: string;
-    nombre: string;
-    clase: ClaseConcepto;
     base: BaseConcepto;
     constituyeIbc: boolean;
     porcentaje: number | null;
     valorFijo: number | null;
+    formula: string | null;
     vigenteDesde: Date | null;
-    vigenteHasta: Date | null;
-    codigoDian: string | null;
-    orden: number | null;
   } = this.vacio();
+
+  constructor(
+    private readonly service: ConceptoService,
+    private readonly alert: AlertService,
+  ) {}
 
   private vacio() {
     return {
-      codigo: '',
-      nombre: '',
-      clase: 'DEVENGADO' as ClaseConcepto,
       base: 'SALARIO' as BaseConcepto,
       constituyeIbc: true,
       porcentaje: null,
       valorFijo: null,
+      formula: null,
       vigenteDesde: null,
-      vigenteHasta: null,
-      codigoDian: null,
-      orden: 100,
     };
   }
 
-  /** Modo "nueva vigencia": el código ya existe y no se puede cambiar. */
-  get esNuevaVersion(): boolean {
-    return this.base !== null;
-  }
-
   get titulo(): string {
-    return this.esNuevaVersion
-      ? `Nueva vigencia de ${this.base!.codigo}`
-      : 'Nuevo concepto';
+    return this.concepto
+      ? `Nueva vigencia de ${this.concepto.numero} - ${this.concepto.nombre}`
+      : 'Nueva vigencia';
   }
 
-  /** FIJO exige valor; MANUAL no lleva ni porcentaje ni valor. */
+  /** La nueva vigencia debe empezar después de la actual. */
+  /**
+   * La nueva vigencia debe empezar después de la actual. Se calcula una vez al
+   * abrir: un getter que crea un Date nuevo en cada ciclo deja al p-calendar
+   * recalculando sin fin y congela la página.
+   */
+  fechaMinima: Date | null = null;
+
+  get esFormula(): boolean {
+    return this.form.base === 'FORMULA';
+  }
+
   get esFijo(): boolean {
     return this.form.base === 'FIJO';
   }
 
-  get esManual(): boolean {
-    return this.form.base === 'MANUAL';
-  }
-
-  /** Los porcentuales exigen porcentaje; FIJO y MANUAL no. */
+  /** FIJO lleva valor; MANUAL y NOVEDAD no llevan ni porcentaje ni valor. */
   get esPorcentual(): boolean {
-    return !this.esFijo && !this.esManual;
+    return !['FIJO', 'MANUAL', 'NOVEDAD', 'FORMULA'].includes(this.form.base);
   }
 
   onShow(): void {
-    // p-dialog dispara onShow al hacerse visible; aquí se precarga el estado.
-    if (this.esNuevaVersion) {
-      const b = this.base!;
-      this.form = {
-        codigo: b.codigo,
-        nombre: b.nombre,
-        clase: b.clase,
-        base: b.base,
-        constituyeIbc: b.constituyeIbc,
-        // La tarifa se re-digita a propósito: la nueva vigencia suele cambiarla.
-        porcentaje: b.porcentaje,
-        valorFijo: b.valorFijo,
-        vigenteDesde: null,
-        vigenteHasta: null,
-        codigoDian: b.codigoDian,
-        orden: b.orden,
-      };
-    } else {
-      this.form = this.vacio();
-    }
+    const c = this.concepto;
+    if (!c) return;
+    const desde = aDate(c.vigenteDesde);
+    if (desde) desde.setDate(desde.getDate() + 1);
+    this.fechaMinima = desde;
+    this.form = {
+      base: c.base,
+      constituyeIbc: c.constituyeIbc,
+      porcentaje: c.porcentaje,
+      valorFijo: c.valorFijo,
+      formula: c.formula,
+      vigenteDesde: null,
+    };
   }
 
   onBaseChange(): void {
-    if (this.esFijo) this.form.porcentaje = null;
-    if (this.esManual) {
-      this.form.porcentaje = null;
-      this.form.valorFijo = null;
-    }
+    if (!this.esPorcentual) this.form.porcentaje = null;
     if (!this.esFijo) this.form.valorFijo = null;
   }
 
@@ -157,65 +134,62 @@ export class FormConceptoComponent {
   }
 
   async guardar(): Promise<void> {
-    if (!this.form.codigo.trim() || !this.form.nombre.trim()) {
-      this.alert.showWarn('Datos incompletos', 'Indica código y nombre.');
-      return;
-    }
+    if (!this.concepto) return;
     if (!this.form.vigenteDesde) {
-      this.alert.showWarn('Datos incompletos', 'Indica desde cuándo rige.');
-      return;
-    }
-    if (
-      this.form.vigenteHasta &&
-      this.form.vigenteHasta < this.form.vigenteDesde
-    ) {
       this.alert.showWarn(
-        'Fechas inválidas',
-        'La vigencia final no puede ser anterior a la inicial.',
+        'Datos incompletos',
+        'Indica desde cuándo rige la tarifa nueva.',
       );
       return;
     }
-    if (this.esFijo && (this.form.valorFijo == null || this.form.valorFijo <= 0)) {
-      this.alert.showWarn('Datos incompletos', 'Un concepto de valor fijo exige un valor.');
+    if (
+      this.esFijo &&
+      (this.form.valorFijo == null || this.form.valorFijo <= 0)
+    ) {
+      this.alert.showWarn(
+        'Datos incompletos',
+        'Un concepto de valor fijo exige un valor.',
+      );
       return;
     }
     if (this.esPorcentual && this.form.porcentaje == null) {
-      this.alert.showWarn('Datos incompletos', 'Este concepto exige un porcentaje.');
+      this.alert.showWarn(
+        'Datos incompletos',
+        'Este concepto exige un porcentaje.',
+      );
       return;
     }
 
-    const dto: CreateConceptoDto = {
-      codigo: this.form.codigo.trim(),
-      nombre: this.form.nombre.trim(),
-      clase: this.form.clase,
-      constituyeIbc: this.form.constituyeIbc,
+    if (this.esFormula && !this.form.formula?.trim()) {
+      this.alert.showWarn('Datos incompletos', 'Escriba la fórmula.');
+      return;
+    }
+
+    const dto: NuevaVigenciaDto = {
       base: this.form.base,
+      constituyeIbc: this.form.constituyeIbc,
       porcentaje: this.esPorcentual ? this.form.porcentaje : null,
       valorFijo: this.esFijo ? this.form.valorFijo : null,
+      formula: this.esFormula ? this.form.formula : null,
       vigenteDesde: aFechaLocal(this.form.vigenteDesde)!,
-      vigenteHasta: aFechaLocal(this.form.vigenteHasta),
-      codigoDian: this.form.codigoDian?.trim() || null,
-      orden: this.form.orden ?? 100,
     };
 
     this.saving = true;
     try {
-      await lastValueFrom(this.service.crear(dto));
-      this.alert.showSuccess('Concepto guardado', '');
+      await lastValueFrom(this.service.nuevaVigencia(this.concepto.id, dto));
+      this.alert.showSuccess(
+        'Nueva vigencia creada',
+        'La tarifa anterior quedó cerrada el día antes.',
+      );
       this.guardado.emit();
       this.onHide();
     } catch (err: any) {
-      // 409 = la vigencia se solapa con otra versión del mismo código. El
-      // mensaje del backend dice qué vigencia cerrar; se muestra tal cual.
-      const msg = err?.error?.message ?? 'No se pudo guardar el concepto.';
-      this.alert.showError('Error', msg);
+      this.alert.showError(
+        'Error',
+        err?.error?.message ?? 'No se pudo crear la vigencia.',
+      );
     } finally {
       this.saving = false;
     }
   }
-
-  constructor(
-    private readonly service: ConceptoService,
-    private readonly alert: AlertService,
-  ) {}
 }

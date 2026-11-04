@@ -1,0 +1,169 @@
+<div class="tab-head">
+  <p>
+    Conceptos que se liquidan siempre a quien tenga este cargo: sueldo,
+    seguridad social, provisiones, primas… Las vinculaciones del cargo los
+    heredan.
+  </p>
+  @if (!soloLectura) {
+    <button
+      pButton
+      type="button"
+      label="Agregar conceptos"
+      icon="pi pi-search-plus"
+      class="btn-aura p-button-sm"
+      (click)="mostrarBuscador = true"
+    ></button>
+  }
+</div>
+
+<p-table
+  [value]="filas"
+  styleClass="p-datatable-sm"
+  [tableStyle]="{ 'min-width': '48rem' }"
+  [scrollable]="true"
+>
+  <ng-template pTemplate="header">
+    <tr>
+      <th style="width: 5.5rem">Código</th>
+      <th>Nombre</th>
+      <th style="width: 9rem">Clase</th>
+      <th style="width: 9rem">Entrada</th>
+      <th style="width: 10rem">Redondeo</th>
+      <th style="width: 9rem" class="text-right">Valor del cargo</th>
+      <th style="width: 7rem"></th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-f>
+    <tr>
+      <td class="mono">
+        <b>{{ f.conceptoNumero }}</b>
+      </td>
+      <td>
+        <div>{{ f.conceptoNombre ?? "Concepto no disponible" }}</div>
+        @if (f.tipoNombre) {
+          <div class="meta">{{ f.tipoNombre }}</div>
+        }
+      </td>
+      <td>
+        @if (f.clase) {
+          <p-tag [value]="textoClase(f)" [severity]="severidadClase(f.clase)" />
+        }
+      </td>
+      <td>{{ textoEntrada(f) }}</td>
+      <td>{{ textoRedondeo(f) }}</td>
+      <td class="text-right mono">{{ textoPropio(f) }}</td>
+      <td class="acciones" style="white-space: nowrap">
+        @if (!soloLectura) {
+          <button
+            pButton
+            type="button"
+            icon="pi pi-pencil"
+            class="p-button-text p-button-sm"
+            pTooltip="Valor propio"
+            (click)="editar(f)"
+          ></button>
+          <button
+            pButton
+            type="button"
+            icon="pi pi-trash"
+            class="p-button-text p-button-danger p-button-sm"
+            pTooltip="Quitar"
+            (click)="confirmarQuitar(f)"
+          ></button>
+        }
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td colspan="7" class="vacio">
+        El cargo no tiene conceptos. Usa "Agregar conceptos".
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<app-concepto-buscador
+  [(visible)]="mostrarBuscador"
+  header="Agregar conceptos al cargo"
+  [yaAgregados]="numeros"
+  entradaInicial="NINGUNA"
+  (agregar)="onAgregar($event)"
+/>
+
+<p-dialog
+  [header]="
+    editando
+      ? editando.conceptoNumero + ' - ' + (editando.conceptoNombre ?? '')
+      : ''
+  "
+  [(visible)]="mostrarForm"
+  [modal]="true"
+  [style]="{ width: '520px' }"
+  [breakpoints]="{ '600px': '95vw' }"
+  [draggable]="false"
+>
+  <form [formGroup]="form" class="dialog-form">
+    <p class="meta">
+      Déjalos vacíos para usar los del concepto. Con un valor, el cargo lo fija
+      para todos sus empleados.
+    </p>
+    <div class="grid">
+      <div class="field">
+        <label>Valor</label>
+        <p-inputNumber
+          formControlName="valor"
+          mode="currency"
+          currency="COP"
+          locale="es-CO"
+          [maxFractionDigits]="0"
+          [min]="0"
+          placeholder="Del concepto"
+        />
+      </div>
+      <div class="field">
+        <label>Porcentaje</label>
+        <p-inputNumber
+          formControlName="porcentaje"
+          suffix=" %"
+          [min]="0"
+          [maxFractionDigits]="4"
+          placeholder="Del concepto"
+        />
+      </div>
+      <div class="field">
+        <label>Cantidad</label>
+        <p-inputNumber
+          formControlName="cantidad"
+          [min]="0"
+          [maxFractionDigits]="2"
+          placeholder="Del concepto"
+        />
+        <small>Horas, días o unidades</small>
+      </div>
+      <div class="field span-2">
+        <label>Observación</label>
+        <input pInputText formControlName="observacion" maxlength="300" />
+      </div>
+    </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancelar"
+      icon="pi pi-times"
+      class="btn-amarillo"
+      (click)="mostrarForm = false"
+    ></button>
+    <button
+      pButton
+      label="Guardar"
+      icon="pi pi-check"
+      class="btn-verde"
+      [loading]="guardando"
+      (click)="guardar()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog />

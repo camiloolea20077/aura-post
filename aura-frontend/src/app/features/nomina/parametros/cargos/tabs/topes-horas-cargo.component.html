@@ -1,0 +1,49 @@
+<div class="tab-head">
+  <p>Máximo de horas extra y recargos que se le pueden reportar a quien tenga este cargo. Vacío = sin tope. La ley
+    permite máximo {{ maxDia }} horas extra al día y {{ maxSemana }} a la semana.
+    @if (esDirectivo) {
+      <b>Este cargo es de nivel directivo: no tiene horas extra (art. 162 del CST). Al guardar, sus topes de horas
+        extra quedan vacíos.</b>
+    }
+  </p>
+  @if (!soloLectura) {
+    <button pButton type="button" label="Guardar topes" icon="pi pi-check" class="btn-aura p-button-sm"
+      [loading]="guardando" (click)="guardar()"></button>
+  }
+</div>
+
+<p-table [value]="filas" styleClass="p-datatable-sm" [tableStyle]="{ 'min-width': '40rem' }" [scrollable]="true">
+  <ng-template pTemplate="header">
+    <tr>
+      <th>Tipo de hora</th>
+      <th style="width: 9rem">Horas al día</th>
+      <th style="width: 9rem">Horas a la semana</th>
+      <th style="width: 9rem">Horas al mes</th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-f>
+    <tr>
+      <td>
+        <div>{{ f.tipoNombre }}</div>
+        <div class="meta">{{ f.esHoraExtra ? 'Hora extra' : 'Recargo' }}</div>
+      </td>
+      @if (bloqueada(f)) {
+        <!-- Sin campos deshabilitados: p-inputNumber + ngModel + [disabled] congelaba la página. -->
+        <td class="meta" colspan="3">{{ soloLectura ? (f.topeDia ?? 'Sin tope') : 'No aplica' }}</td>
+      } @else {
+        <td>
+          <p-inputNumber [(ngModel)]="f.topeDia" [min]="0" [max]="f.esHoraExtra ? maxDia : 24" [maxFractionDigits]="2"
+            placeholder="Sin tope" inputStyleClass="w-full" />
+        </td>
+        <td>
+          <p-inputNumber [(ngModel)]="f.topeSemana" [min]="0" [max]="f.esHoraExtra ? maxSemana : 168"
+            [maxFractionDigits]="2" placeholder="Sin tope" inputStyleClass="w-full" />
+        </td>
+        <td>
+          <p-inputNumber [(ngModel)]="f.topeMes" [min]="0" [maxFractionDigits]="2" placeholder="Sin tope"
+            inputStyleClass="w-full" />
+        </td>
+      }
+    </tr>
+  </ng-template>
+</p-table>

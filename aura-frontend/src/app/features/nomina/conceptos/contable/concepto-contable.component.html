@@ -1,0 +1,57 @@
+@if (cargando) {
+  <p class="meta"><i class="pi pi-spin pi-spinner"></i> Cargando…</p>
+} @else if (!fila) {
+  <p class="vacio">Este concepto no lleva contabilización propia (no genera movimiento en el asiento de nómina).</p>
+} @else {
+  <div class="tab-head">
+    <p>Cuentas del asiento de nómina para este concepto. Deje un campo vacío para usar el valor por defecto.
+      @if (fila.personalizado) {
+        <p-tag value="Personalizado" severity="info" styleClass="tag-mini" />
+      }
+    </p>
+    @if (!soloLectura) {
+      <div class="botones">
+        @if (fila.personalizado) {
+          <button pButton type="button" label="Restablecer" icon="pi pi-replay" class="p-button-sm p-button-text"
+            (click)="restablecer()"></button>
+        }
+        <button pButton type="button" label="Guardar contabilización" icon="pi pi-check" class="btn-aura p-button-sm"
+          [loading]="guardando" (click)="guardar()"></button>
+      </div>
+    }
+  </div>
+
+  <div class="grid">
+    @if (fila.aplicaDebito) {
+      <div class="field span-2">
+        <label>Cuenta del débito (gasto)</label>
+        <app-cuenta-autocomplete [(ngModel)]="form.cuentaDebitoId" [prefijos]="prefijosDebito"
+          [placeholder]="'Por defecto: ' + (fila.debitoDefecto ?? '—')" [disabled]="soloLectura" />
+        <small>Por defecto: {{ fila.debitoDefecto ?? '—' }}</small>
+      </div>
+    }
+    @if (fila.aplicaCredito) {
+      <div class="field span-2">
+        <label>Cuenta del crédito (pasivo)</label>
+        <app-cuenta-autocomplete [(ngModel)]="form.cuentaCreditoId" [prefijos]="prefijosCredito"
+          [placeholder]="'Por defecto: ' + (fila.creditoDefecto ?? '—')" [disabled]="soloLectura" />
+        <small>Por defecto: {{ fila.creditoDefecto ?? '—' }}</small>
+      </div>
+      <div class="field">
+        <label>A nombre de quién va el crédito</label>
+        <p-select [options]="opcionesTercero" [(ngModel)]="form.terceroCredito" optionLabel="label" optionValue="value"
+          styleClass="w-full" [disabled]="soloLectura" />
+        <small>Por defecto: {{ fila.terceroDefecto ?? '—' }}</small>
+      </div>
+      @if (form.terceroCredito === 'FIJO') {
+        <div class="field">
+          <label>Tercero fijo *</label>
+          <app-tercero-autocomplete [(ngModel)]="form.terceroFijoId" [label]="fila.terceroFijo"
+            placeholder="Nombre o documento del tercero…" />
+        </div>
+      }
+    } @else {
+      <p class="meta span-2">Lo devengado no tiene crédito propio: va al neto por pagar del empleado (2505).</p>
+    }
+  </div>
+}

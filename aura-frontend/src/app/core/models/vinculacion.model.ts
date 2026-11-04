@@ -4,7 +4,11 @@
  * Backend: `VinculacionController` → `/api/nomina/vinculaciones`. El cambio de
  * salario y la terminación siguen en `/api/contrato` (ContratoService).
  */
-import { FrecuenciaPago, TipoContrato, TipoRemuneracion } from './nomina-parametros.model';
+import {
+  FrecuenciaPago,
+  TipoContrato,
+  TipoRemuneracion,
+} from './nomina-parametros.model';
 
 export type EstadoVinculacion = 'ACTIVO' | 'SUSPENDIDO' | 'TERMINADO';
 export type FaseAprendiz = 'LECTIVA' | 'PRACTICA';
@@ -147,18 +151,27 @@ export interface CentroCostoVinculacion {
   porcentaje: number;
 }
 
-/** Concepto propio de la vinculación (bonificación fija, auxilio…). */
+/**
+ * Concepto de la vinculación: propio (bonificación fija, auxilio…), excluido, o
+ * heredado del cargo (origen CARGO, sin id).
+ */
 export interface VinculacionConcepto {
-  id: number;
+  /** null = heredado del cargo. */
+  id: number | null;
   conceptoCodigo: string;
   conceptoNombre: string | null;
+  /** Código visible del concepto. */
+  conceptoNumero: number | null;
   clase: string | null;
   cantidad: number | null;
   valor: number | null;
   porcentaje: number | null;
-  fechaDesde: string;
+  fechaDesde: string | null;
   fechaHasta: string | null;
   observacion: string | null;
+  /** Excluye para este empleado lo que hereda del cargo. */
+  excluido: boolean;
+  origen: 'VINCULACION' | 'CARGO';
 }
 
 export interface CreateVinculacionConceptoDto {
@@ -173,13 +186,19 @@ export interface CreateVinculacionConceptoDto {
 
 /** Concepto que se le puede registrar como novedad, con tope por período. */
 export interface NovedadPermitida {
-  id: number;
+  /** null = heredada del cargo. */
+  id: number | null;
   conceptoCodigo: string;
   conceptoNombre: string | null;
+  /** Código visible del concepto. */
+  conceptoNumero: number | null;
   clase: string | null;
   topeCantidad: number | null;
   topeValor: number | null;
   requiereAutorizacion: boolean;
+  /** Excluye para este empleado lo que hereda del cargo. */
+  excluido: boolean;
+  origen: 'VINCULACION' | 'CARGO';
 }
 
 export interface CreateNovedadPermitidaDto {

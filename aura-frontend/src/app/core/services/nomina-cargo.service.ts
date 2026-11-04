@@ -31,6 +31,11 @@ export class NominaCargoService {
     return this.http.get<ResponseModel<NominaCargoModel[]>>(`${this.base}/list`);
   }
 
+  /** Un cargo con los nombres de nivel y tipo. */
+  obtener(id: number): Observable<ResponseModel<NominaCargoModel>> {
+    return this.http.get<ResponseModel<NominaCargoModel>>(`${this.base}/${id}`);
+  }
+
   /** Crea un cargo; 400 si el código existe o el rango salarial no cuadra. */
   crear(dto: CreateNominaCargoDto): Observable<ResponseModel<NominaCargoModel>> {
     return this.http.post<ResponseModel<NominaCargoModel>>(this.base, dto);

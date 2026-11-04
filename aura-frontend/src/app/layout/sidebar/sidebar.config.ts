@@ -841,6 +841,12 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         route: '/nomina/parametros/tipos-cargo',
       },
       {
+        label: 'Grupos de conceptos',
+        codigo: 'recursos-humanos.grupos-concepto',
+        icon: 'pi pi-th-large',
+        route: '/nomina/parametros/grupos-concepto',
+      },
+      {
         label: 'Tipos de embargo',
         codigo: 'recursos-humanos.tipos-embargo',
         icon: 'pi pi-lock',

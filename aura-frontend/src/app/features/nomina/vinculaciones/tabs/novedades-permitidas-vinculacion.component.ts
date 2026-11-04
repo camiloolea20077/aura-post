@@ -120,7 +120,7 @@ export class NovedadesPermitidasVinculacionComponent implements OnChanges {
     try {
       const res = await lastValueFrom(
         this.editando
-          ? this.service.actualizarNovedad(this.vinculacionId, this.editando.id, dto)
+          ? this.service.actualizarNovedad(this.vinculacionId, this.editando.id!, dto)
           : this.service.crearNovedad(this.vinculacionId, dto),
       );
       this.filas = res.data ?? [];
@@ -131,6 +131,45 @@ export class NovedadesPermitidasVinculacionComponent implements OnChanges {
     } finally {
       this.guardando = false;
     }
+  }
+
+  /** Novedad heredada del cargo: crea la fila propia del empleado con los topes del cargo. */
+  personalizar(n: NovedadPermitida): void {
+    this.editando = null;
+    this.form.reset({
+      conceptoCodigo: n.conceptoCodigo,
+      topeCantidad: n.topeCantidad,
+      topeValor: n.topeValor,
+      requiereAutorizacion: n.requiereAutorizacion,
+    });
+    this.form.get('conceptoCodigo')?.enable();
+    this.mostrarForm = true;
+  }
+
+  confirmarExcluir(n: NovedadPermitida): void {
+    this.confirm.confirm({
+      message: `¿Excluir <b>${n.conceptoNombre ?? n.conceptoCodigo}</b> para este empleado? No se le podrá reportar.`,
+      header: 'Excluir del cargo',
+      icon: 'pi pi-ban',
+      acceptLabel: 'Sí, excluir',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => void this.excluir(n),
+    });
+  }
+
+  private async excluir(n: NovedadPermitida): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.service.excluirNovedad(this.vinculacionId, n.conceptoCodigo));
+      this.filas = res.data ?? [];
+    } catch (err: any) {
+      this.alert.showError('Novedades permitidas', err?.error?.message ?? 'No se pudo excluir.');
+    }
+  }
+
+  /** Quita la exclusión: el empleado vuelve a heredar la novedad del cargo. */
+  restaurar(n: NovedadPermitida): void {
+    void this.eliminar(n);
   }
 
   confirmarEliminar(n: NovedadPermitida): void {
@@ -146,6 +185,7 @@ export class NovedadesPermitidasVinculacionComponent implements OnChanges {
   }
 
   private async eliminar(n: NovedadPermitida): Promise<void> {
+    if (n.id == null) return;
     try {
       const res = await lastValueFrom(this.service.eliminarNovedad(this.vinculacionId, n.id));
       this.filas = res.data ?? [];
