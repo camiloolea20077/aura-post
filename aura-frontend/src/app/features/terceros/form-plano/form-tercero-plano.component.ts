@@ -22,7 +22,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { DropdownModule } from 'primeng/dropdown';
 import { MultiSelectModule } from 'primeng/multiselect';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { TooltipModule } from 'primeng/tooltip';
 import { lastValueFrom } from 'rxjs';
 
@@ -98,7 +98,7 @@ const INDICADORES_FISCALES = [
     DropdownModule,
     MultiSelectModule,
     TooltipModule,
-    CalendarModule,
+    DatePickerModule,
     TerceroAutocompleteComponent,
     LugarSelectComponent,
     TelefonosInputComponent,

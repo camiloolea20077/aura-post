@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { SkeletonModule } from 'primeng/skeleton';
@@ -35,7 +35,7 @@ interface FilaCaptura {
   selector: 'app-marcaje',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, TableModule, ButtonModule, CalendarModule,
+    CommonModule, FormsModule, TableModule, ButtonModule, DatePickerModule,
     TagModule, ToastModule, SkeletonModule,
   ],
   templateUrl: './marcaje.component.html',

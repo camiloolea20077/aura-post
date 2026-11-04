@@ -11,7 +11,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { DropdownModule } from 'primeng/dropdown';
 import { ToastModule } from 'primeng/toast';
 import { IconFieldModule } from 'primeng/iconfield';
@@ -27,7 +27,6 @@ import {
 import { CuentaPagarService } from '../services/cuenta-pagar.service';
 import { FormCuentaPagarComponent } from '../form-cuenta-pagar/form-cuenta-pagar.component';
 import { DetalleCuentaPagarComponent } from '../detalle-cuenta-pagar/detalle-cuenta-pagar.component';
-import { DatePickerModule } from 'primeng/datepicker';
 import { SelectModule } from 'primeng/select';
 
 import { aFechaLocal } from '../../../shared/utils/fecha.util';
@@ -58,7 +57,6 @@ type TagSeverity =
     TableModule,
     TagModule,
     TooltipModule,
-    CalendarModule,
     DropdownModule,
     ToastModule,
     FormCuentaPagarComponent,

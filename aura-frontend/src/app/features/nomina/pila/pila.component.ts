@@ -6,7 +6,7 @@ import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { lastValueFrom } from 'rxjs';
@@ -42,7 +42,7 @@ type TagSeverity =
     TagModule,
     TooltipModule,
     SkeletonModule,
-    CalendarModule,
+    DatePickerModule,
     DialogModule,
     InputTextModule,
   ],

@@ -73,11 +73,11 @@
     <div class="grid">
       <div class="fld">
         <label>Fecha inicio <span class="req">*</span></label>
-        <p-calendar [(ngModel)]="vigInicio" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" />
+        <p-datepicker [(ngModel)]="vigInicio" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" />
       </div>
       <div class="fld">
         <label>Fecha fin (opcional)</label>
-        <p-calendar [(ngModel)]="vigFin" dateFormat="dd/mm/yy" [showIcon]="true" [showClear]="true" appendTo="body" styleClass="w-full" />
+        <p-datepicker [(ngModel)]="vigFin" dateFormat="dd/mm/yy" [showIcon]="true" [showClear]="true" appendTo="body" styleClass="w-full" />
       </div>
       <div class="fld"><label>Jornada semanal (horas)</label><p-inputNumber [(ngModel)]="form.horasSemanalesLegales" [minFractionDigits]="0" [maxFractionDigits]="2" styleClass="w-full" /></div>
       <div class="fld"><label>Horas mensuales base</label><p-inputNumber [(ngModel)]="form.horasMensualesBase" [minFractionDigits]="0" [maxFractionDigits]="2" styleClass="w-full" /></div>

@@ -15,7 +15,7 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { TabViewModule } from 'primeng/tabview';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -43,7 +43,7 @@ import { aFechaLocal } from '../../../shared/utils/fecha.util';
     TooltipModule,
     DialogModule,
     DropdownModule,
-    CalendarModule,
+    DatePickerModule,
     TabViewModule,
     SkeletonModule,
     ConfirmDialogModule,

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { TooltipModule } from 'primeng/tooltip';
 import { lastValueFrom } from 'rxjs';
 
@@ -26,7 +26,7 @@ import { TerceroAutocompleteComponent } from '../../../../shared/components/terc
   selector: 'app-certificados-retencion',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, ButtonModule, DropdownModule, CalendarModule, TooltipModule, TerceroAutocompleteComponent],
+  imports: [CommonModule, FormsModule, ButtonModule, DropdownModule, DatePickerModule, TooltipModule, TerceroAutocompleteComponent],
   templateUrl: './certificados-retencion.component.html',
   styleUrls: ['./certificados-retencion.component.scss'],
 })

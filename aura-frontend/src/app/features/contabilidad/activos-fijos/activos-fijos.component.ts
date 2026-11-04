@@ -13,7 +13,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { DialogModule } from 'primeng/dialog';
 import { BadgeModule } from 'primeng/badge';
 import { TooltipModule } from 'primeng/tooltip';
@@ -62,7 +62,7 @@ import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-a
     InputTextModule,
     InputNumberModule,
     DropdownModule,
-    CalendarModule,
+    DatePickerModule,
     DialogModule,
     BadgeModule,
     TooltipModule,

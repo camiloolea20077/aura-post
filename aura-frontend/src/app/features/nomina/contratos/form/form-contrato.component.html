@@ -39,7 +39,7 @@
 
     <div class="field">
       <label>Fecha de inicio <span class="req">*</span></label>
-      <p-calendar
+      <p-datepicker
         [(ngModel)]="form.fechaInicio"
         dateFormat="yy-mm-dd"
         [showIcon]="true"
@@ -53,7 +53,7 @@
     @if (esFijo) {
       <div class="field">
         <label>Fecha de vencimiento <span class="req">*</span></label>
-        <p-calendar
+        <p-datepicker
           [(ngModel)]="form.fechaFin"
           dateFormat="yy-mm-dd"
           [showIcon]="true"

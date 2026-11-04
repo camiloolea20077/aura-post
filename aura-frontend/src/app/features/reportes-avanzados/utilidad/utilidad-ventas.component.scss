@@ -1,0 +1,298 @@
+// Pestaña Utilidad: misma cuenta y mismos tokens que la página (reportes-avanzados).
+// La tabla toma el estilo .ra-tabla de la página.
+
+:host {
+  display: block;
+  container-type: inline-size;
+
+  --ra-tinta: var(--aura-blue);
+  --ra-grafito: var(--aura-text);
+  --ra-lapiz: var(--aura-text-muted);
+  --ra-renglon: var(--aura-border);
+  --ra-hoja: var(--aura-bg);
+  --ra-perdida: var(--aura-danger);
+  --ra-aviso: var(--aura-warning);
+  --ra-cifras: "JetBrains Mono", ui-monospace, monospace;
+}
+
+.utilidad {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+// ── Filtros ─────────────────────────────────────────────────────────────
+.toolbar {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+
+  .campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+    flex: 0 1 13rem;
+
+    label { font-size: 0.75rem; font-weight: 500; color: var(--ra-lapiz); }
+    ::ng-deep .p-dropdown,
+    ::ng-deep .p-select { width: 100%; min-width: 0; }
+  }
+
+  .btn-excel--solo { margin-left: auto; }
+}
+
+// ── La cuenta ───────────────────────────────────────────────────────────
+.cuenta {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem 1.5rem;
+  flex-wrap: wrap;
+  padding: 1.25rem 0;
+  border-top: 1px solid var(--ra-renglon);
+  border-bottom: 1px solid var(--ra-renglon);
+}
+
+.termino {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+
+  &--total {
+    padding-left: 1.5rem;
+    border-left: 2px solid var(--ra-tinta);
+  }
+}
+
+.rotulo {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ra-lapiz);
+}
+
+.cifra {
+  font-family: var(--ra-cifras);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.375rem;
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--ra-grafito);
+  white-space: nowrap;
+
+  &--tinta { color: var(--ra-tinta); font-size: 1.75rem; font-weight: 700; }
+}
+
+.signo {
+  font-family: var(--ra-cifras);
+  font-size: 1.375rem;
+  line-height: 1.6;
+  color: var(--ra-lapiz);
+  opacity: 0.6;
+  user-select: none;
+}
+
+.nota {
+  font-size: 0.75rem;
+  color: var(--ra-lapiz);
+
+  strong { font-family: var(--ra-cifras); font-weight: 600; color: var(--ra-grafito); }
+}
+
+// Lo de crédito es informativo: queda a la derecha, un tono abajo, y despliega
+// las ventas a crédito.
+.credito {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  padding: 0.375rem 0.625rem;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font: inherit;
+  text-align: right;
+  cursor: pointer;
+  transition: background-color 150ms cubic-bezier(0.23, 1, 0.32, 1);
+
+  &:hover,
+  &.is-abierto { background: var(--aura-gradient-soft); }
+
+  &:focus-visible { outline: 2px solid var(--ra-tinta); outline-offset: 2px; }
+
+  &:active { transform: scale(0.98); }
+
+  &__cifra {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-family: var(--ra-cifras);
+    font-variant-numeric: tabular-nums;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ra-grafito);
+  }
+
+  &__flecha {
+    font-size: 0.6875rem;
+    color: var(--ra-tinta);
+    transition: transform 180ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  &.is-abierto &__flecha { transform: rotate(180deg); }
+
+  .nota { color: var(--ra-tinta); }
+}
+
+// Panel con las ventas a crédito.
+.panel-credito {
+  padding: 1rem 1.25rem 0.5rem;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--ra-tinta) 4%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ra-tinta) 18%, transparent);
+  animation: panel-entra 180ms cubic-bezier(0.23, 1, 0.32, 1);
+
+  &__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+
+    h3 {
+      margin: 0;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--ra-grafito);
+    }
+  }
+}
+
+@keyframes panel-entra {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.estado-cc {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+
+  &--pagada    { color: var(--aura-success); background: color-mix(in srgb, var(--aura-success) 12%, transparent); }
+  &--abono     { color: var(--ra-tinta); background: var(--aura-gradient-soft); }
+  &--pendiente { color: var(--ra-aviso); background: color-mix(in srgb, var(--ra-aviso) 12%, transparent); }
+  &--castigada { color: var(--ra-perdida); background: color-mix(in srgb, var(--ra-perdida) 10%, transparent); }
+  &--sin-cuenta { color: var(--ra-lapiz); background: var(--ra-hoja); }
+}
+
+.negativo { color: var(--ra-perdida) !important; }
+
+// ── Avisos ──────────────────────────────────────────────────────────────
+.avisos { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.aviso {
+  border-radius: 8px;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.8125rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+.aviso-warn {
+  color: var(--ra-grafito);
+  background: color-mix(in srgb, var(--ra-aviso) 10%, transparent);
+  border-left: 3px solid var(--ra-aviso);
+  i { color: var(--ra-aviso); }
+}
+.aviso-danger {
+  color: var(--ra-grafito);
+  background: color-mix(in srgb, var(--ra-perdida) 8%, transparent);
+  border-left: 3px solid var(--ra-perdida);
+  i { color: var(--ra-perdida); }
+}
+
+// ── Tabla (lo propio; el resto lo da .ra-tabla) ─────────────────────────
+.tabla { min-width: 0; }
+
+.icono-warn { color: var(--ra-aviso); margin-left: 0.375rem; font-size: 0.75rem; }
+
+.margen {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3125rem;
+
+  &__valor {
+    font-family: var(--ra-cifras);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+
+  &__regla {
+    height: 3px;
+    border-radius: 2px;
+    background: var(--ra-hoja);
+    overflow: hidden;
+
+    i { display: block; height: 100%; border-radius: 2px; background: currentColor; }
+  }
+
+  &.is-sano    { color: var(--ra-tinta); }
+  &.is-bajo    { color: var(--ra-aviso); }
+  &.is-perdida { color: var(--ra-perdida); }
+}
+
+.col-accion { width: 3rem; text-align: center; }
+
+.vacio {
+  text-align: center;
+  color: var(--ra-lapiz);
+  padding: 2.5rem 1rem;
+  i { margin-right: 0.5rem; }
+}
+
+.nota-pie {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--ra-lapiz);
+  text-wrap: pretty;
+}
+
+// ── Responsive ──────────────────────────────────────────────────────────
+@container (max-width: 760px) {
+  .credito { margin-left: 0; align-items: flex-start; text-align: left; flex-basis: 100%; }
+}
+
+@container (max-width: 520px) {
+  .cuenta { flex-direction: column; align-items: stretch; gap: 0.75rem; }
+  .signo { display: none; }
+  .termino {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "rotulo cifra" "nota cifra";
+    align-items: center;
+    column-gap: 0.75rem;
+
+    .rotulo { grid-area: rotulo; }
+    .cifra  { grid-area: cifra; font-size: 1.125rem; }
+    .nota   { grid-area: nota; }
+  }
+  .termino--total { padding: 0.75rem 0 0; border-left: 0; border-top: 2px solid var(--ra-tinta); }
+  .cifra--tinta { font-size: 1.375rem; }
+  .toolbar .campo { flex: 1 1 100%; }
+  .toolbar .btn-excel { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel-credito { animation: none; }
+  .credito__flecha { transition: none; }
+}

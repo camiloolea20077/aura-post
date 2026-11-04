@@ -12,7 +12,7 @@ import { lastValueFrom } from 'rxjs';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { ToastModule } from 'primeng/toast';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TerceroAutocompleteComponent } from '../../../shared/components/tercero-autocomplete/tercero-autocomplete.component';
@@ -48,7 +48,7 @@ import { ExcelReporteService } from '../../../shared/services/excel-reporte.serv
     TableModule,
     ButtonModule,
     TagModule,
-    CalendarModule,
+    DatePickerModule,
     ToastModule,
     SkeletonModule,
     TerceroAutocompleteComponent,

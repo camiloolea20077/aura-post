@@ -20,7 +20,7 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { TableModule } from 'primeng/table';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -48,7 +48,7 @@ import { aFechaLocal } from '../../../../shared/utils/fecha.util';
     InputTextModule,
     TextareaModule,
     DropdownModule,
-    CalendarModule,
+    DatePickerModule,
     TableModule,
     SelectButtonModule,
     CheckboxModule,

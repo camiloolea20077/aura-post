@@ -6,7 +6,7 @@ import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { lastValueFrom } from 'rxjs';
 
 import { ConceptoService } from '../../../../core/services/concepto.service';
@@ -36,7 +36,7 @@ import { PuedeDirective } from '../../../../shared/directives/puede.directive';
     TagModule,
     TooltipModule,
     SkeletonModule,
-    CalendarModule,
+    DatePickerModule,
     FormConceptoComponent,
   ],
   templateUrl: './index-conceptos.component.html',

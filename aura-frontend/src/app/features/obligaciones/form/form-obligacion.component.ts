@@ -15,7 +15,7 @@ import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { DropdownModule } from 'primeng/dropdown';
 import { lastValueFrom } from 'rxjs';
 
@@ -35,7 +35,7 @@ import { TerceroPickerComponent } from '../../../shared/components/tercero-picke
     ButtonModule,
     InputTextModule,
     InputNumberModule,
-    CalendarModule,
+    DatePickerModule,
     DropdownModule,
     TerceroPickerComponent,
   ],

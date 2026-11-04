@@ -75,7 +75,7 @@
       -->
       <div class="field">
         <label>Fecha de ingreso *</label>
-        <p-calendar
+        <p-datepicker
           [(ngModel)]="fechaIngreso"
           dateFormat="dd/mm/yy"
           placeholder="dd/mm/aaaa"
@@ -113,7 +113,7 @@
       </div>
       <div class="field" *ngIf="form.tipoContrato === 'FIJO'">
         <label>Fecha fin de contrato *</label>
-        <p-calendar
+        <p-datepicker
           [(ngModel)]="fechaFinContrato"
           dateFormat="dd/mm/yy"
           placeholder="dd/mm/aaaa"

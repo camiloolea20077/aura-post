@@ -19,7 +19,7 @@ import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { DropdownModule } from 'primeng/dropdown';
 import { DividerModule } from 'primeng/divider';
 import { ToastModule } from 'primeng/toast';
@@ -49,7 +49,7 @@ import { aFechaHoraLocal } from '../../../../shared/utils/fecha.util';
     InputTextModule,
     InputNumberModule,
     ToggleSwitchModule,
-    CalendarModule,
+    DatePickerModule,
     DropdownModule,
     DividerModule,
     ButtonModule,

@@ -51,7 +51,7 @@
             (onChange)="aplicarFiltros()"
             styleClass="filtro-estado"
           ></p-dropdown>
-          <p-calendar
+          <p-datepicker
             [(ngModel)]="fechaDesde"
             dateFormat="dd/mm/yy"
             placeholder="Desde"
@@ -62,7 +62,7 @@
             (onClear)="aplicarFiltros()"
             styleClass="filtro-fecha"
           />
-          <p-calendar
+          <p-datepicker
             [(ngModel)]="fechaHasta"
             dateFormat="dd/mm/yy"
             placeholder="Hasta"

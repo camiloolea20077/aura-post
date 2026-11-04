@@ -13,7 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TextareaModule } from 'primeng/textarea';
 import { TooltipModule } from 'primeng/tooltip';
@@ -49,7 +49,7 @@ interface CuotaForm {
     DialogModule,
     ButtonModule,
     InputNumberModule,
-    CalendarModule,
+    DatePickerModule,
     CheckboxModule,
     TextareaModule,
     TooltipModule,

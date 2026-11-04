@@ -116,7 +116,7 @@
           </div>
           <div class="field">
             <label>Desde</label
-            ><p-calendar
+            ><p-datepicker
               [(ngModel)]="desde"
               dateFormat="yy-mm-dd"
               [showIcon]="true"
@@ -124,7 +124,7 @@
           </div>
           <div class="field">
             <label>Hasta</label
-            ><p-calendar
+            ><p-datepicker
               [(ngModel)]="hasta"
               dateFormat="yy-mm-dd"
               [showIcon]="true"
@@ -290,7 +290,7 @@
   <div class="form-grid">
     <div class="field">
       <label>Desde</label
-      ><p-calendar
+      ><p-datepicker
         [(ngModel)]="periodoForm.fechaInicio"
         dateFormat="yy-mm-dd"
         appendTo="body"
@@ -299,7 +299,7 @@
     </div>
     <div class="field">
       <label>Hasta</label
-      ><p-calendar
+      ><p-datepicker
         [(ngModel)]="periodoForm.fechaFin"
         dateFormat="yy-mm-dd"
         appendTo="body"

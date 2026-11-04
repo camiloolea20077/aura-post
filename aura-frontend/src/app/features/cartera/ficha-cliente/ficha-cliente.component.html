@@ -599,7 +599,7 @@
     <div class="f-grid2" *ngIf="gestion.resultado === 'PROMESA_PAGO'">
       <div class="f-field">
         <label>¿Cuándo paga? <span class="req">*</span></label>
-        <p-calendar [(ngModel)]="fechaPromesa" dateFormat="dd/mm/yy" [minDate]="hoy" appendTo="body" styleClass="w-full" />
+        <p-datepicker [(ngModel)]="fechaPromesa" dateFormat="dd/mm/yy" [minDate]="hoy" appendTo="body" styleClass="w-full" />
       </div>
       <div class="f-field">
         <label>¿Cuánto? <span class="req">*</span></label>
