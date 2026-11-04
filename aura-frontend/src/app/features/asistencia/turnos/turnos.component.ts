@@ -5,7 +5,7 @@ import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { TagModule } from 'primeng/tag';
@@ -38,7 +38,7 @@ import { PuedeDirective } from '../../../shared/directives/puede.directive';
     ButtonModule,
     DialogModule,
     DropdownModule,
-    CalendarModule,
+    DatePickerModule,
     InputTextModule,
     InputNumberModule,
     TagModule,

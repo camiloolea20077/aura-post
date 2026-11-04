@@ -10,7 +10,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ChartModule } from 'primeng/chart';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
 import { lastValueFrom } from 'rxjs';
@@ -72,7 +72,7 @@ const plano = (s: string): string =>
     FormsModule,
     RouterModule,
     ChartModule,
-    CalendarModule,
+    DatePickerModule,
     SkeletonModule,
     TooltipModule,
   ],

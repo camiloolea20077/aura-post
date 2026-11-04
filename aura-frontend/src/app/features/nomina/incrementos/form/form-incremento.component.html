@@ -103,7 +103,7 @@
           </div>
           <div class="field">
             <label class="field-label">Rige desde <span class="required">*</span></label>
-            <p-calendar [(ngModel)]="form.fechaAplicacion" dateFormat="yy-mm-dd" [showIcon]="true"
+            <p-datepicker [(ngModel)]="form.fechaAplicacion" dateFormat="yy-mm-dd" [showIcon]="true"
               styleClass="w-full" [disabled]="!editable" />
             <small class="field-hint">Es lo negociado: aplica a las nóminas que se liquiden desde esta fecha, sin retroactivo</small>
           </div>

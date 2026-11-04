@@ -6,7 +6,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { InputTextModule } from 'primeng/inputtext';
 import { TabViewModule } from 'primeng/tabview';
 import { TagModule } from 'primeng/tag';
@@ -46,7 +46,7 @@ interface EstadoPaso {
   selector: 'app-importar-datos',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, ButtonModule, CalendarModule, InputTextModule, TabViewModule, TagModule],
+  imports: [CommonModule, FormsModule, ButtonModule, DatePickerModule, InputTextModule, TabViewModule, TagModule],
   templateUrl: './importar-datos.component.html',
   styleUrls: ['./importar-datos.component.scss'],
 })

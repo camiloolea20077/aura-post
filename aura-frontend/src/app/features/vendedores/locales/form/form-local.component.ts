@@ -18,7 +18,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { DropdownModule } from 'primeng/dropdown';
 import { DialogModule } from 'primeng/dialog';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { lastValueFrom } from 'rxjs';
@@ -52,7 +52,7 @@ const PATTERN_DIRECCION =
     InputNumberModule,
     DropdownModule,
     DialogModule,
-    CalendarModule,
+    DatePickerModule,
     AutoCompleteModule,
     ProgressSpinnerModule,
     MapPickerComponent,

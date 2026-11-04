@@ -166,7 +166,7 @@
           <div class="form-linea" *ngIf="vigente">
             <div class="campo">
               <label>Fecha</label>
-              <p-calendar [(ngModel)]="adicionFecha" dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body" />
+              <p-datepicker [(ngModel)]="adicionFecha" dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body" />
             </div>
             <div class="campo campo--ancho">
               <label>Descripción</label>
@@ -244,7 +244,7 @@
           <div class="form-linea">
             <div class="campo">
               <label>Fecha</label>
-              <p-calendar [(ngModel)]="mantFecha" dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body" />
+              <p-datepicker [(ngModel)]="mantFecha" dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body" />
             </div>
             <div class="campo campo--corto">
               <label>Tipo</label>
@@ -264,7 +264,7 @@
             </div>
             <div class="campo">
               <label>Próximo</label>
-              <p-calendar [(ngModel)]="mantProximo" dateFormat="yy-mm-dd" [showIcon]="true" [showClear]="true" appendTo="body" />
+              <p-datepicker [(ngModel)]="mantProximo" dateFormat="yy-mm-dd" [showIcon]="true" [showClear]="true" appendTo="body" />
             </div>
             <button *appPuede="'contabilidad.activos-fijos:CREAR'"
               pButton

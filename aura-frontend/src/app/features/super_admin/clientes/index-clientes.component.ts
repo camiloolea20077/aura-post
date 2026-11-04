@@ -17,7 +17,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { TooltipModule } from 'primeng/tooltip';
 import { ToastModule } from 'primeng/toast';
 import { PaginatorModule, PaginatorState } from 'primeng/paginator';
@@ -54,7 +54,7 @@ type Sev = 'success' | 'info' | 'warn' | 'danger' | 'secondary' | 'contrast';
     InputGroupModule,
     InputGroupAddonModule,
     InputNumberModule,
-    CalendarModule,
+    DatePickerModule,
     TooltipModule,
     ToastModule,
     PaginatorModule,

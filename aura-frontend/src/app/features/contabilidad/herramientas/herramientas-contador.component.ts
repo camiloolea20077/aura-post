@@ -13,7 +13,7 @@ import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { TabViewModule } from 'primeng/tabview';
 import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { InputTextModule } from 'primeng/inputtext';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
@@ -37,7 +37,7 @@ import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-a
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     SelectButtonModule,
-    CuentaAutocompleteComponent,CommonModule, FormsModule, ButtonModule, TableModule, TabViewModule, DropdownModule, CalendarModule,
+    CuentaAutocompleteComponent,CommonModule, FormsModule, ButtonModule, TableModule, TabViewModule, DropdownModule, DatePickerModule,
     InputTextModule, ConfirmDialogModule, TerceroAutocompleteComponent, CheckboxModule],
   providers: [ConfirmationService],
   templateUrl: './herramientas-contador.component.html',

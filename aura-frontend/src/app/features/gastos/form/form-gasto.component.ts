@@ -18,7 +18,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { SelectModule } from 'primeng/select';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { ToastModule } from 'primeng/toast';
 import { TerceroAutocompleteComponent } from '../../../shared/components/tercero-autocomplete/tercero-autocomplete.component';
 import { TooltipModule } from 'primeng/tooltip';
@@ -64,7 +64,7 @@ import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-a
     SelectModule,
     InputNumberModule,
     InputTextModule,
-    CalendarModule,
+    DatePickerModule,
     ToastModule,
     TerceroAutocompleteComponent,
     TooltipModule,

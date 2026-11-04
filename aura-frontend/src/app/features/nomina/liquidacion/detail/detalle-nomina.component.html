@@ -245,7 +245,7 @@
         <div class="nf-row nf-row--dos" *ngIf="requiereFechas(novedad.tipo)">
           <div class="field">
             <label>Desde</label>
-            <p-calendar
+            <p-datepicker
               [(ngModel)]="novedad.fechaInicio"
               dateFormat="dd/mm/yy"
               [showIcon]="true"
@@ -255,7 +255,7 @@
           </div>
           <div class="field">
             <label>Hasta</label>
-            <p-calendar
+            <p-datepicker
               [(ngModel)]="novedad.fechaFin"
               dateFormat="dd/mm/yy"
               [showIcon]="true"

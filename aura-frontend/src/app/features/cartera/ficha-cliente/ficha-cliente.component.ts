@@ -12,13 +12,14 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { TextareaModule } from 'primeng/textarea';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
 import { lastValueFrom } from 'rxjs';
 
 import { CarteraService } from '../../../core/services/cartera.service';
+import { ReciboCajaPdfService } from '../../../core/services/recibo-caja-pdf.service';
 import { CarteraMoraService } from '../../../core/services/cartera-mora.service';
 import { ResumenInteresClienteModel } from '../../../core/models/cartera-mora.model';
 import { TerceroService } from '../../../core/services/tercero.service';
@@ -65,7 +66,7 @@ import { EnviarCorreoComponent } from '../../../shared/components/enviar-correo/
     DialogModule,
     DropdownModule,
     InputNumberModule,
-    CalendarModule,
+    DatePickerModule,
     TextareaModule,
     TooltipModule,
     SkeletonModule,
@@ -77,6 +78,7 @@ import { EnviarCorreoComponent } from '../../../shared/components/enviar-correo/
   styleUrls: ['./ficha-cliente.component.scss'],
 })
 export class FichaClienteComponent implements OnInit {
+  private readonly reciboPdf = inject(ReciboCajaPdfService);
   private readonly excel = inject(ExcelReporteService);
   private readonly mora = inject(CarteraMoraService);
   exportandoExcel = false;
@@ -328,8 +330,8 @@ export class FichaClienteComponent implements OnInit {
 
   async imprimirRecibo(id: number): Promise<void> {
     try {
-      const blob = await lastValueFrom(this.carteraService.reciboPdf(id));
-      window.open(URL.createObjectURL(blob), '_blank');
+      // PDF con el estilo de los documentos, descargado como RC-000006.pdf.
+      await this.reciboPdf.descargar(id);
     } catch {
       this.alert.showError('Error', 'No se pudo generar el PDF del recibo');
     }

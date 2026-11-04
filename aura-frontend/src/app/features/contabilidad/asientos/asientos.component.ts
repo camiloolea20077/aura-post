@@ -5,7 +5,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { DropdownModule } from 'primeng/dropdown';
 import { DialogModule } from 'primeng/dialog';
 import { TabViewModule } from 'primeng/tabview';
@@ -45,7 +45,7 @@ import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-a
     CuentaAutocompleteComponent,
     PuedeDirective,
     CommonModule, FormsModule,
-    ButtonModule, TableModule, CalendarModule, DropdownModule,
+    ButtonModule, TableModule, DatePickerModule, DropdownModule,
     DialogModule, TabViewModule, TagModule, ToastModule, TooltipModule,
     InputTextModule, InputNumberModule, SkeletonModule, ConfirmDialogModule,
     RouterLink,

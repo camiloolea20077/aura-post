@@ -193,19 +193,50 @@ export const REPORTES: ManualModulo[] = [
     titulo: 'Reportes avanzados',
     icono: 'pi pi-chart-pie',
     rutas: ['/reportes/avanzados'],
-    resumen: 'Análisis de ventas, productos, vendedores, caja, márgenes y rotación.',
+    resumen: 'Análisis de ventas, utilidad, productos, vendedores, caja, márgenes y rotación.',
     secciones: [
       {
         titulo: 'Pestañas',
         texto: [
-          'Resumen Ejecutivo: total ventas, margen bruto, transacciones, ticket promedio, clientes nuevos y recurrentes, ventas por día y por método de pago.',
-          'Por Categoría, Top Productos (10 por ingresos) y Por Vendedor.',
+          'Resumen Ejecutivo: total ventas, utilidad bruta, transacciones, ticket promedio, clientes nuevos y recurrentes, ventas por día y por método de pago.',
+          'Utilidad: cuánto le dejaron las ventas del período (ver abajo).',
+          'Por Categoría: ingresos con IVA, venta neta, costo, utilidad y margen de cada categoría. Top Productos (por ingresos) y Por Vendedor.',
           'Movimientos de Caja: ingresos, egresos y saldo neto.',
-          'Márgenes & Rotación: margen por producto y rotación de los últimos 30 días (días sin movimiento).',
+          'Márgenes & Rotación: precio y costo promedio por unidad, margen por producto y rotación de los últimos 30 días (días sin movimiento).',
+          'Todas las cifras de ventas incluyen las ventas a crédito y con abono; solo se excluyen las anuladas.',
+        ],
+      },
+      {
+        titulo: 'Ver la utilidad de las ventas',
+        pasos: [
+          'Elija el período arriba (Desde / Hasta) y pulse Aplicar.',
+          'Abra la pestaña Utilidad.',
+          'En "Agrupar por" elija producto, categoría, vendedor, cliente o mes.',
+          'En "Forma de pago" elija contado y crédito, solo contado o solo crédito.',
+          'Agrupando por producto, el botón del reloj abre el historial de costos de ese producto: ahí ve por qué cambió su costo.',
+          'Exportar Excel descarga lo que está viendo, con los mismos filtros.',
+        ],
+        texto: [
+          'Utilidad = venta sin IVA (ya con descuentos) − costo promedio que tenía el producto en el momento de venderlo. Si el costo cambia después, las ventas viejas conservan el suyo.',
+          '"% s/ venta" es la utilidad sobre lo vendido; "% s/ costo" es lo que le gana sobre lo que le costó ("le gano el 30 %").',
+          'Las ventas a crédito cuentan desde el día de la venta, aunque no se hayan cobrado. "Utilidad a crédito" muestra esa parte y debajo lo que los clientes aún deben.',
+          'Una devolución le quita a la venta tanto el valor como el costo de lo devuelto.',
+          'Es la utilidad bruta: no descuenta gastos ni nómina. Para la utilidad neta use el estado de resultados de Contabilidad.',
         ],
       },
     ],
-    errores: [],
+    errores: [
+      {
+        mensaje: 'líneas vendidas sin costo',
+        causa: 'Se vendieron productos que no tenían costo registrado: su utilidad sale igual al precio, inflada.',
+        solucion: 'Cargue el costo en la ficha del producto o regístrelo con una compra. Las ventas siguientes ya salen con costo.',
+      },
+      {
+        mensaje: 'líneas vendidas por debajo del costo',
+        causa: 'El precio de venta (sin IVA, con descuentos) fue menor que el costo promedio del producto.',
+        solucion: 'Revise el precio del producto o los descuentos dados; agrupe por producto para ver cuáles son.',
+      },
+    ],
   },
 ];
 

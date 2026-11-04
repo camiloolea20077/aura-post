@@ -15,7 +15,7 @@ import { TabViewModule } from 'primeng/tabview';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -58,7 +58,7 @@ import { CuentaAutocompleteComponent } from '../../../../shared/components/cuent
     InputTextModule,
     InputNumberModule,
     DropdownModule,
-    CalendarModule,
+    DatePickerModule,
     TagModule,
     TooltipModule,
     ConfirmDialogModule,

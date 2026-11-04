@@ -1,0 +1,230 @@
+<div class="utilidad">
+  <!-- Filtros de la pestaña: el período viene de la página -->
+  <div class="toolbar">
+    <div class="campo">
+      <label for="ut-agrupar">Agrupar por</label>
+      <p-dropdown
+        inputId="ut-agrupar"
+        [options]="agrupaciones"
+        [(ngModel)]="agrupar"
+        optionLabel="label"
+        optionValue="value"
+        (onChange)="onFiltroChange()"
+      />
+    </div>
+    <div class="campo">
+      <label for="ut-forma">Forma de pago</label>
+      <p-dropdown
+        inputId="ut-forma"
+        [options]="formas"
+        [(ngModel)]="forma"
+        optionLabel="label"
+        optionValue="value"
+        (onChange)="onFiltroChange()"
+      />
+    </div>
+    <button
+      type="button"
+      class="credito"
+      *ngIf="datos && forma !== 'CONTADO'"
+      [class.is-abierto]="creditoAbierto"
+      [attr.aria-expanded]="creditoAbierto"
+      aria-controls="ut-ventas-credito"
+      (click)="alternarCredito()"
+    >
+      <span class="rotulo">Utilidad de ventas a crédito</span>
+      <span class="credito__cifra">
+        {{ cop(datos.utilidadCredito) }}
+        <i class="pi pi-chevron-down credito__flecha" aria-hidden="true"></i>
+      </span>
+      <span class="nota">Por cobrar {{ cop(datos.saldoPorCobrar) }} · {{ creditoAbierto ? "ocultar" : "ver ventas" }}</span>
+    </button>
+    <button
+      pButton
+      label="Exportar Excel"
+      icon="pi pi-file-excel"
+      class="p-button-outlined btn-excel"
+      [class.btn-excel--solo]="!datos || forma === 'CONTADO'"
+      [loading]="exportando"
+      [disabled]="cargando || !filas.length"
+      (click)="exportarExcel()"
+    ></button>
+  </div>
+
+  <!-- Ventas a crédito, desplegadas desde el dato de crédito -->
+  <section
+    id="ut-ventas-credito"
+    class="panel-credito"
+    *ngIf="creditoAbierto && forma !== 'CONTADO'"
+    aria-label="Ventas a crédito del período"
+  >
+    <header class="panel-credito__head">
+      <h3>Ventas a crédito del período</h3>
+      <span class="nota" *ngIf="ventasCredito">{{ ventasCredito.length | number }} ventas · primero las que más deben</span>
+    </header>
+    <p-table
+      [value]="ventasCredito ?? []"
+      [loading]="cargandoCredito"
+      [paginator]="(ventasCredito?.length ?? 0) > 10"
+      [rows]="10"
+      responsiveLayout="scroll"
+      styleClass="p-datatable-sm ra-tabla"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Documento</th>
+          <th>Fecha</th>
+          <th>Cliente</th>
+          <th class="num">Venta neta</th>
+          <th class="num">Utilidad</th>
+          <th class="num">Abonado</th>
+          <th class="num">Por cobrar</th>
+          <th>Estado</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-v>
+        <tr>
+          <td class="nombre">
+            <span class="num-izq">{{ v.documento }}</span>
+            <small *ngIf="v.numeroCuenta">{{ v.numeroCuenta }}</small>
+          </td>
+          <td class="num-izq tenue">{{ v.fecha | date: "dd/MM/yyyy" }}</td>
+          <td class="nombre">
+            {{ v.clienteNombre }}
+            <small *ngIf="v.clienteDocumento">{{ v.clienteDocumento }}</small>
+          </td>
+          <td class="num">{{ cop(v.ventaNeta) }}</td>
+          <td class="num fuerte" [class.negativo]="v.utilidad < 0">{{ cop(v.utilidad) }}</td>
+          <td class="num">{{ cop(v.abonado) }}</td>
+          <td class="num fuerte" [class.tenue]="v.porCobrar <= 0">{{ cop(v.porCobrar) }}</td>
+          <td>
+            <span class="estado-cc" [ngClass]="'estado-cc--' + claseEstado(v)">
+              {{ estadoCartera(v) }}
+            </span>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="8" class="vacio">No hubo ventas a crédito en el período</td></tr>
+      </ng-template>
+    </p-table>
+  </section>
+
+  <!-- La cuenta solo al filtrar contado o crédito: con "todas" ya está arriba -->
+  <div class="cuenta" *ngIf="datos && forma !== 'TODAS'">
+    <div class="termino">
+      <span class="rotulo">Venta neta</span>
+      <span class="cifra">{{ cop(datos.ventaNeta) }}</span>
+      <span class="nota">Sin IVA · {{ datos.ventas | number }} ventas</span>
+    </div>
+    <span class="signo" aria-hidden="true">−</span>
+    <div class="termino">
+      <span class="rotulo">Costo</span>
+      <span class="cifra">{{ cop(datos.costo) }}</span>
+      <span class="nota">Promedio al vender</span>
+    </div>
+    <span class="signo" aria-hidden="true">=</span>
+    <div class="termino termino--total">
+      <span class="rotulo">Utilidad bruta</span>
+      <span class="cifra cifra--tinta" [class.negativo]="datos.utilidad < 0">{{ cop(datos.utilidad) }}</span>
+      <span class="nota">
+        <strong>{{ datos.margenVenta | number: "1.1-1" }} %</strong> s/ venta ·
+        <strong>{{ datos.margenCosto | number: "1.1-1" }} %</strong> s/ costo
+      </span>
+    </div>
+  </div>
+
+  <!-- Avisos -->
+  <div class="avisos" *ngIf="datos && (datos.lineasSinCosto > 0 || datos.lineasBajoCosto > 0)">
+    <div class="aviso aviso-warn" *ngIf="datos.lineasSinCosto > 0">
+      <i class="pi pi-exclamation-triangle"></i>
+      {{ datos.lineasSinCosto | number }} líneas vendidas sin costo: la utilidad de esos
+      productos sale inflada. Revisa el costo en la ficha del producto.
+    </div>
+    <div class="aviso aviso-danger" *ngIf="datos.lineasBajoCosto > 0">
+      <i class="pi pi-arrow-down"></i>
+      {{ datos.lineasBajoCosto | number }} líneas vendidas por debajo del costo.
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="tabla">
+    <p-table
+      [value]="filas"
+      [loading]="cargando"
+      [paginator]="filas.length > 25"
+      [rows]="25"
+      responsiveLayout="scroll"
+      styleClass="p-datatable-sm ra-tabla"
+      [sortField]="'utilidad'"
+      [sortOrder]="-1"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="nombre">{{ tituloGrupo }} <p-sortIcon field="nombre" /></th>
+          <th class="num" pSortableColumn="ventas">Ventas <p-sortIcon field="ventas" /></th>
+          <th class="num" pSortableColumn="cantidad">Cantidad <p-sortIcon field="cantidad" /></th>
+          <th class="num" pSortableColumn="ventaNeta">Venta neta <p-sortIcon field="ventaNeta" /></th>
+          <th class="num" pSortableColumn="costo">Costo <p-sortIcon field="costo" /></th>
+          <th class="num" pSortableColumn="utilidad">Utilidad <p-sortIcon field="utilidad" /></th>
+          <th class="col-margen" pSortableColumn="margenVenta">% s/ venta <p-sortIcon field="margenVenta" /></th>
+          <th class="num" pSortableColumn="margenCosto">% s/ costo <p-sortIcon field="margenCosto" /></th>
+          <th *ngIf="esProducto" class="col-accion"></th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-row>
+        <tr>
+          <td class="nombre">
+            {{ row.nombre }}
+            <i
+              *ngIf="row.lineasSinCosto > 0"
+              class="pi pi-exclamation-triangle icono-warn"
+              pTooltip="Tiene ventas sin costo registrado"
+            ></i>
+            <small *ngIf="row.detalle">{{ row.detalle }}</small>
+          </td>
+          <td class="num">{{ row.ventas | number }}</td>
+          <td class="num">{{ row.cantidad | number: "1.0-2" }}</td>
+          <td class="num">{{ cop(row.ventaNeta) }}</td>
+          <td class="num">{{ cop(row.costo) }}</td>
+          <td class="num fuerte" [class.negativo]="row.utilidad < 0">{{ cop(row.utilidad) }}</td>
+          <td class="col-margen">
+            <div class="margen" [ngClass]="claseMargen(row.margenVenta)">
+              <span class="margen__valor">{{ row.margenVenta | number: "1.1-1" }} %</span>
+              <span class="margen__regla"><i [style.width.%]="barraMargen(row.margenVenta)"></i></span>
+            </div>
+          </td>
+          <td class="num tenue">{{ row.margenCosto | number: "1.1-1" }} %</td>
+          <td *ngIf="esProducto" class="col-accion">
+            <button
+              pButton
+              icon="pi pi-history"
+              class="p-button-text p-button-sm"
+              pTooltip="Historial de costos"
+              tooltipPosition="left"
+              (click)="verHistorial(row)"
+            ></button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td [attr.colspan]="esProducto ? 9 : 8" class="vacio">
+            <i class="pi pi-chart-line"></i> Sin ventas en el período seleccionado
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <p class="nota-pie">
+    Utilidad = venta sin IVA y con descuentos − costo promedio que tenía cada producto
+    cuando se vendió. Incluye ventas a crédito. No descuenta gastos ni nómina: para la
+    utilidad neta mira el estado de resultados.
+  </p>
+</div>
+
+<app-historial-costo-producto
+  [(visible)]="historialVisible"
+  [productoId]="historialProductoId"
+/>

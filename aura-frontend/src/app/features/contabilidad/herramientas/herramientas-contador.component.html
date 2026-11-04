@@ -51,11 +51,11 @@
           </div>
           <div class="campo">
             <label>Desde</label>
-            <p-calendar [(ngModel)]="desde" (ngModelChange)="limpiarResumen()" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" />
+            <p-datepicker [(ngModel)]="desde" (ngModelChange)="limpiarResumen()" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" />
           </div>
           <div class="campo">
             <label>Hasta</label>
-            <p-calendar [(ngModel)]="hasta" (ngModelChange)="limpiarResumen()" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" />
+            <p-datepicker [(ngModel)]="hasta" (ngModelChange)="limpiarResumen()" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" />
           </div>
           <div class="campo campo--ancho">
             <label>Solo de un tercero (opcional)</label>

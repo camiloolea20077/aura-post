@@ -13,7 +13,7 @@ import { Router } from '@angular/router';
 import { DropdownModule } from 'primeng/dropdown';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { CurrencyPipe } from '@angular/common';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -52,7 +52,7 @@ import { PuedeDirective } from '../../../../shared/directives/puede.directive';
     DropdownModule,
     CheckboxModule,
     DialogModule,
-    CalendarModule,
+    DatePickerModule,
     InputNumberModule,
   ],
   providers: [MessageService, ConfirmationService],

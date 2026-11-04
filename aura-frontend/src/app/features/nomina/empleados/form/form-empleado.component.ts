@@ -16,7 +16,7 @@ import { TextareaModule } from 'primeng/textarea';
 import { DialogModule } from 'primeng/dialog';
 import { MessageModule } from 'primeng/message';
 import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { lastValueFrom } from 'rxjs';
 
@@ -44,7 +44,7 @@ import { aFechaLocal } from '../../../../shared/utils/fecha.util';
     TextareaModule,
     InputNumberModule,
     DropdownModule,
-    CalendarModule,
+    DatePickerModule,
     TerceroPickerComponent,
   ],
   templateUrl: './form-empleado.component.html',
