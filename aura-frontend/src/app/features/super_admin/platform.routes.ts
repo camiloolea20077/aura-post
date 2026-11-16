@@ -50,6 +50,13 @@ export const PLATFORM_ROUTES: Routes = [
           ),
       },
       {
+        path: 'solicitudes-espacio',
+        loadComponent: () =>
+          import('./solicitudes-espacio/solicitudes-espacio.component').then(
+            (m) => m.SolicitudesEspacioComponent,
+          ),
+      },
+      {
         path: 'errores',
         loadComponent: () =>
           import('./monitor-errores/monitor-errores.component').then(

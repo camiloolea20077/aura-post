@@ -271,6 +271,131 @@ export const GENERAL: ManualModulo[] = [
     ],
   },
   {
+    id: 'documentos',
+    grupo: 'Empezar',
+    titulo: 'Documentos (nube de la empresa)',
+    icono: 'pi pi-folder-open',
+    rutas: ['/documentos'],
+    resumen:
+      'El espacio de la empresa para guardar sus documentos en carpetas, compartido con su firma contable: archivos de máximo 1 MB, cifrados, con papelera de 30 días y registro de quién hizo qué.',
+    secciones: [
+      {
+        titulo: 'Qué es y quién lo ve',
+        texto: [
+          'Cada empresa tiene su propia nube de documentos (500 MB y hasta 5.000 archivos). Solo la ven los usuarios de la empresa cuyo perfil tiene "Documentos" y la firma contable que la atiende.',
+          'Si su firma contable atiende varias empresas, cada una tiene su espacio aparte: desde una empresa no se ve nada de otra, ni siquiera los nombres.',
+          'Los archivos se guardan cifrados. Aura no los abre ni los usa: la empresa es la responsable de lo que sube.',
+        ],
+        notas: [
+          'La primera vez, un usuario con permiso para subir debe leer y aceptar las condiciones de uso en nombre de la empresa.',
+        ],
+      },
+      {
+        titulo: 'Subir archivos',
+        pasos: [
+          'Abra Principal → Documentos y entre a la carpeta donde quiere guardarlos.',
+          'Presione "Subir archivos" y elija uno o varios, o arrástrelos sobre la pantalla.',
+          'Si ya existe un archivo con el mismo nombre en la carpeta, el nuevo queda como "nombre (2)".',
+        ],
+        notas: [
+          'Cada archivo pesa máximo 1 MB. Se aceptan PDF, JPG, PNG, WebP, Excel (XLSX, XLS), Word (DOCX), CSV, TXT y XML.',
+          'No se aceptan ZIP, ejecutables, páginas web, SVG ni archivos de Office con macros. El sistema revisa el contenido real del archivo, no solo su nombre.',
+          'Para un PDF escaneado muy pesado, escanéelo en blanco y negro o a menor resolución.',
+        ],
+      },
+      {
+        titulo: 'Carpetas',
+        pasos: [
+          'Presione "Nueva carpeta", escriba el nombre y guarde. Se permiten hasta 6 niveles de carpetas.',
+          'Con los botones de cada fila puede renombrar, mover a otra carpeta o eliminar.',
+          'Las migas de arriba ("Documentos > …") lo devuelven a cualquier carpeta anterior.',
+        ],
+      },
+      {
+        titulo: 'Carpetas "Solo firma"',
+        texto: [
+          'La firma contable puede crear carpetas privadas con sus papeles de trabajo. La empresa no las ve ni puede borrarlas; lo que se crea adentro también es privado.',
+          'Si la firma deja de atender a la empresa, esas carpetas pasan a ser compartidas: los documentos son de la empresa.',
+        ],
+      },
+      {
+        titulo: 'Ver y descargar',
+        texto: [
+          'Al tocar un PDF, una imagen o un archivo de texto se abre una vista previa. Los demás se descargan. Cada vista y cada descarga queda registrada.',
+        ],
+      },
+      {
+        titulo: 'Papelera',
+        pasos: [
+          'Lo que elimina va a la Papelera (botón arriba). Allí puede restaurarlo durante 30 días.',
+          'Si la carpeta donde estaba ya no existe, se restaura en la raíz.',
+          'Pasados 30 días se borra para siempre de forma automática. Un administrador puede borrarlo antes con "Eliminar para siempre".',
+        ],
+        notas: ['Lo que está en la papelera sigue ocupando espacio hasta que se borra para siempre.'],
+      },
+      {
+        titulo: 'Espacio lleno y más espacio',
+        texto: [
+          'La barra de arriba muestra cuánto lleva usado. Al llegar al 80 % y al 95 % aparece un aviso, y el administrador lo ve también en la campana.',
+          'Cuando se llena no se borra nada: hay que eliminar archivos y vaciar la papelera, o el administrador presiona "Solicitar más espacio" y elige el tamaño. El espacio adicional tiene costo: Aura lo contacta con el valor y, al aprobarlo, la campana avisa.',
+        ],
+      },
+      {
+        titulo: 'Historial (bitácora)',
+        texto: [
+          'Los administradores ven con el botón de reloj quién subió, vio, descargó, movió o borró cada archivo, con fecha e IP, incluidos los intentos de abrir algo que no existe.',
+        ],
+      },
+    ],
+    errores: [
+      {
+        mensaje: 'El archivo pesa más de 1 MB.',
+        causa: 'El límite por archivo es 1 MB.',
+        solucion: 'Comprima el PDF, escanee a menor resolución o divida el documento en partes.',
+      },
+      {
+        mensaje: 'Tipo de archivo no permitido.',
+        causa: 'La extensión no está entre las aceptadas (por ejemplo .zip, .exe, .html o .svg).',
+        solucion: 'Guárdelo como PDF, imagen, Excel, Word, CSV, TXT o XML.',
+      },
+      {
+        mensaje: 'El contenido del archivo no corresponde a un',
+        causa: 'El archivo tiene una extensión que no coincide con lo que realmente es (por ejemplo, una imagen renombrada a .pdf).',
+        solucion: 'Ábralo en su programa y guárdelo de nuevo en el formato correcto.',
+      },
+      {
+        mensaje: 'El archivo tiene macros.',
+        causa: 'Es un Excel o Word con macros (VBA), que pueden ejecutar código.',
+        solucion: 'Guárdelo como libro normal (.xlsx) o documento normal (.docx) sin macros.',
+      },
+      {
+        mensaje: 'Tu espacio está lleno.',
+        causa: 'Se llegó a la cuota de la empresa (bytes o cantidad de archivos), contando la papelera.',
+        solucion: 'Elimine archivos y bórrelos de la papelera, o pida más espacio con "Solicitar más espacio".',
+      },
+      {
+        mensaje: 'Subiste demasiados archivos en poco tiempo.',
+        causa: 'Hay un límite de 60 archivos por minuto por usuario.',
+        solucion: 'Espere un minuto y siga subiendo.',
+      },
+      {
+        mensaje: 'Esta carpeta tiene documentos privados de tu firma contable.',
+        causa: 'Adentro hay carpetas "Solo firma" que usted no ve.',
+        solucion: 'Pídale a su firma contable que las mueva o las comparta antes de eliminar la carpeta.',
+      },
+      {
+        mensaje: 'Archivo no encontrado',
+        causa: 'El archivo ya no existe, está en la papelera o es de otra empresa.',
+        solucion: 'Actualice la pantalla. Si entró por la firma contable, verifique que está en la empresa correcta.',
+      },
+      {
+        mensaje: 'Antes de subir archivos hay que aceptar los términos de uso de la nube.',
+        causa: 'La empresa aún no ha aceptado las condiciones de uso.',
+        solucion: 'Un usuario con permiso para subir debe abrir Documentos y aceptarlas.',
+      },
+    ],
+  },
+  {
     id: 'errores-generales',
     grupo: 'Empezar',
     titulo: 'Errores que aparecen en cualquier módulo',
