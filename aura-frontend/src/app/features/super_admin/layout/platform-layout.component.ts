@@ -5,14 +5,15 @@ import { ToastModule } from 'primeng/toast';
 import { Subscription, filter, lastValueFrom } from 'rxjs';
 import { IndexDBService } from '../../../core/services/index-db.service';
 import { PlatformService } from '../../../core/services/platform.service';
+import { NubeService } from '../../../core/services/nube.service';
 
 interface ItemMenu {
   label: string;
   icon: string;
   route: string;
   peligro?: boolean;
-  /** Muestra el contador de solicitudes pendientes. */
-  conPendientes?: boolean;
+  /** Muestra el contador de solicitudes pendientes de ese tipo. */
+  conPendientes?: 'electronica' | 'espacio';
 }
 
 /** Cada cuánto se revisa la campana (las firmas piden en cualquier momento). */
@@ -37,7 +38,8 @@ export class PlatformLayoutComponent implements OnInit, OnDestroy {
     { label: 'Empresas', icon: 'pi pi-building', route: '/platform/empresas' },
     { label: 'Clientes', icon: 'pi pi-users', route: '/platform/clientes' },
     { label: 'Módulos', icon: 'pi pi-sitemap', route: '/platform/modulos' },
-    { label: 'Activación electrónica', icon: 'pi pi-send', route: '/platform/solicitudes-electronica', conPendientes: true },
+    { label: 'Activación electrónica', icon: 'pi pi-send', route: '/platform/solicitudes-electronica', conPendientes: 'electronica' },
+    { label: 'Espacio en la nube', icon: 'pi pi-cloud', route: '/platform/solicitudes-espacio', conPendientes: 'espacio' },
   ];
   readonly soporte: ItemMenu[] = [
     { label: 'Monitor de errores', icon: 'pi pi-exclamation-triangle', route: '/platform/errores', peligro: true },
@@ -45,8 +47,9 @@ export class PlatformLayoutComponent implements OnInit, OnDestroy {
 
   menuAbierto = false;
   titulo = 'Plataforma';
-  /** Solicitudes de activación electrónica que esperan credenciales. */
+  /** Solicitudes pendientes (campana): activación electrónica + espacio en la nube. */
   pendientes = 0;
+  pendientesPorTipo: Record<'electronica' | 'espacio', number> = { electronica: 0, espacio: 0 };
   private sub: Subscription;
   private timer: ReturnType<typeof setInterval> | null = null;
 
@@ -55,6 +58,7 @@ export class PlatformLayoutComponent implements OnInit, OnDestroy {
     private readonly indexDB: IndexDBService,
     private readonly cdr: ChangeDetectorRef,
     private readonly platform: PlatformService,
+    private readonly nube: NubeService,
   ) {
     this.actualizarTitulo(this.router.url);
     this.sub = this.router.events.pipe(filter((e) => e instanceof NavigationEnd)).subscribe((e) => {
@@ -75,18 +79,20 @@ export class PlatformLayoutComponent implements OnInit, OnDestroy {
     if (this.timer) clearInterval(this.timer);
   }
 
+  /** La campana lleva a lo que esté esperando (primero la activación electrónica). */
   irASolicitudes(): void {
-    this.router.navigate(['/platform/solicitudes-electronica']);
+    const aEspacio = !this.pendientesPorTipo.electronica && this.pendientesPorTipo.espacio > 0;
+    this.router.navigate([aEspacio ? '/platform/solicitudes-espacio' : '/platform/solicitudes-electronica']);
   }
 
   /** La campana no tumba el panel: si falla, queda en cero hasta la próxima vuelta. */
   private async revisarPendientes(): Promise<void> {
-    try {
-      const res = await lastValueFrom(this.platform.pendientesElectronica());
-      this.pendientes = res?.data ?? 0;
-    } catch {
-      this.pendientes = 0;
-    }
+    const [electronica, espacio] = await Promise.all([
+      lastValueFrom(this.platform.pendientesElectronica()).then((r) => r?.data ?? 0).catch(() => 0),
+      lastValueFrom(this.nube.contarSolicitudesPlataforma()).then((r) => r?.data ?? 0).catch(() => 0),
+    ]);
+    this.pendientesPorTipo = { electronica, espacio };
+    this.pendientes = electronica + espacio;
     this.cdr.markForCheck();
   }
 

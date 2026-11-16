@@ -1,0 +1,402 @@
+<div class="page">
+  <div
+    class="card nube"
+    [class.nube--arrastrando]="arrastrando"
+    (dragover)="alArrastrar($event, true)"
+    (dragleave)="alArrastrar($event, false)"
+    (drop)="alSoltar($event)"
+  >
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-folder-open"></i></span>
+        <div>
+          <h1 class="title">Documentos</h1>
+          <p class="subtitle" *ngIf="uso">
+            {{ formatoBytes(uso.usadoBytes) }} de {{ formatoBytes(uso.cuotaBytes) }} ·
+            {{ uso.archivos }} {{ uso.archivos === 1 ? "archivo" : "archivos" }}
+            <ng-container *ngIf="uso.esFirma"> · entraste como firma contable</ng-container>
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions" *ngIf="uso?.terminosAceptados">
+        <div class="card-head__btns">
+          <ng-container *ngIf="modo === 'archivos'">
+            <button
+              *ngIf="uso?.esAdministrador"
+              pButton
+              type="button"
+              icon="pi pi-history"
+              class="p-button-text p-button-sm"
+              pTooltip="Bitácora"
+              tooltipPosition="bottom"
+              (click)="historial(null)"
+            ></button>
+            <button
+              *ngIf="puedeEliminar"
+              pButton
+              type="button"
+              icon="pi pi-trash"
+              label="Papelera"
+              class="p-button-outlined p-button-sm"
+              (click)="verPapelera()"
+            ></button>
+            <button
+              *ngIf="puedeCrear"
+              pButton
+              type="button"
+              icon="pi pi-folder-plus"
+              label="Nueva carpeta"
+              class="p-button-outlined"
+              [disabled]="ocupado || (contenido?.carpeta?.nivel ?? 0) >= 6"
+              (click)="nuevaCarpeta()"
+            ></button>
+            <button
+              *ngIf="puedeCrear"
+              pButton
+              type="button"
+              icon="pi pi-upload"
+              label="Subir archivos"
+              class="btn-aura"
+              [disabled]="subiendo || lleno"
+              [loading]="subiendo"
+              (click)="selector.click()"
+            ></button>
+            <input
+              #selector
+              type="file"
+              multiple
+              hidden
+              [accept]="aceptaArchivos"
+              (change)="alElegirArchivos($event)"
+            />
+          </ng-container>
+          <button
+            *ngIf="modo === 'papelera'"
+            pButton
+            type="button"
+            icon="pi pi-arrow-left"
+            label="Volver a documentos"
+            class="p-button-outlined"
+            (click)="volverDePapelera()"
+          ></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cargando -->
+    <div class="seccion" *ngIf="cargando">
+      <p-skeleton *ngFor="let i of [1, 2, 3, 4]" height="3rem" styleClass="mb-2" />
+    </div>
+
+    <!-- Sin acceso / sin bucket -->
+    <div class="seccion vacio" *ngIf="!cargando && !uso">
+      <i class="pi pi-lock"></i>
+      <p>No se pudo abrir la nube de documentos.</p>
+    </div>
+
+    <!-- Términos (una vez por empresa) -->
+    <app-terminos-nube
+      *ngIf="!cargando && uso && !uso.terminosAceptados"
+      [puedeAceptar]="puedeCrear"
+      [aceptando]="aceptandoTerminos"
+      (aceptar)="aceptarTerminos()"
+    />
+
+    <ng-container *ngIf="!cargando && uso?.terminosAceptados">
+      <!-- Espacio -->
+      <div class="seccion espacio" [class.espacio--alerta]="uso!.aviso">
+        <div class="espacio__barra">
+          <p-progressBar
+            [value]="uso!.porcentaje"
+            [showValue]="false"
+            [styleClass]="uso!.aviso === 'LLENO' || uso!.aviso === '95' ? 'barra-roja' : uso!.aviso === '80' ? 'barra-ambar' : ''"
+          />
+          <span class="espacio__pct">{{ uso!.porcentaje }} %</span>
+        </div>
+        <div class="espacio__aviso" *ngIf="uso!.aviso || uso!.solicitud">
+          <span *ngIf="lleno">
+            <i class="pi pi-exclamation-circle"></i>
+            Tu espacio está lleno. Elimina archivos (y vacía la papelera) o solicita más espacio.
+          </span>
+          <span *ngIf="uso!.aviso === '95' || uso!.aviso === '80'">
+            <i class="pi pi-info-circle"></i> Vas en el {{ uso!.porcentaje }} % de tu espacio.
+          </span>
+          <span *ngIf="solicitudPendiente" class="espacio__solicitud">
+            <i class="pi pi-clock"></i>
+            Pediste {{ formatoMb(uso!.solicitud!.cuotaSolicitadaMb) }}; Aura está revisando tu solicitud.
+          </span>
+          <span *ngIf="uso!.solicitud?.estado === 'APROBADA'" class="espacio__solicitud">
+            <i class="pi pi-check-circle"></i> Aura amplió tu espacio a
+            {{ formatoMb(uso!.solicitud!.cuotaSolicitadaMb) }}.
+          </span>
+          <span *ngIf="uso!.solicitud?.estado === 'RECHAZADA'" class="espacio__solicitud">
+            <i class="pi pi-times-circle"></i> Aura rechazó la solicitud<ng-container
+              *ngIf="uso!.solicitud!.observacion"
+              >: {{ uso!.solicitud!.observacion }}</ng-container
+            >.
+          </span>
+          <button
+            *ngIf="uso!.esAdministrador && uso!.aviso && !solicitudPendiente && opcionesEspacio.length"
+            pButton
+            type="button"
+            label="Solicitar más espacio"
+            icon="pi pi-plus-circle"
+            class="p-button-sm p-button-outlined"
+            (click)="abrirSolicitudEspacio()"
+          ></button>
+        </div>
+      </div>
+
+      <!-- ── Archivos ─────────────────────────────────────────── -->
+      <ng-container *ngIf="modo === 'archivos' && contenido">
+        <nav class="seccion migas">
+          <button type="button" class="miga" (click)="abrir(null)">
+            <i class="pi pi-home"></i> Documentos
+          </button>
+          <ng-container *ngFor="let t of contenido.ruta">
+            <i class="pi pi-angle-right miga-sep"></i>
+            <button type="button" class="miga" (click)="abrir(t.id)">{{ t.nombre }}</button>
+          </ng-container>
+          <p-tag
+            *ngIf="contenido.carpeta?.visibilidad === 'SOLO_FIRMA'"
+            value="Solo firma"
+            icon="pi pi-lock"
+            severity="warn"
+            styleClass="ml-2"
+          />
+        </nav>
+
+        <div class="seccion lista" [class.lista--ocupada]="ocupado">
+          <div class="vacio" *ngIf="vacio">
+            <i class="pi pi-cloud-upload"></i>
+            <p>
+              Esta carpeta está vacía.
+              <ng-container *ngIf="puedeCrear">Arrastra archivos aquí o usa «Subir archivos» (máximo 1 MB cada uno).</ng-container>
+            </p>
+          </div>
+
+          <!-- Carpetas -->
+          <div class="fila" *ngFor="let c of contenido.carpetas; trackBy: trackId">
+            <button type="button" class="fila__principal" (click)="abrir(c.id)">
+              <i class="pi pi-folder fila__icono fila__icono--carpeta"></i>
+              <span class="fila__texto">
+                <span class="fila__nombre">{{ c.nombre }}</span>
+                <span class="fila__meta">Carpeta · {{ c.createdAt | fechaEs: "fechaHora" }}</span>
+              </span>
+            </button>
+            <span class="fila__tags">
+              <p-tag *ngIf="c.visibilidad === 'SOLO_FIRMA'" value="Solo firma" icon="pi pi-lock" severity="warn" />
+              <p-tag *ngIf="c.creadaPorFirma && c.visibilidad !== 'SOLO_FIRMA'" value="De la firma" severity="info" />
+            </span>
+            <span class="fila__acciones">
+              <button *ngIf="puedeEditar" pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-sm"
+                pTooltip="Renombrar" (click)="renombrar(carpeta(c))"></button>
+              <button *ngIf="puedeEditar" pButton type="button" icon="pi pi-arrows-alt" class="p-button-text p-button-sm"
+                pTooltip="Mover" (click)="mover(carpeta(c))"></button>
+              <button *ngIf="puedeEliminar" pButton type="button" icon="pi pi-trash"
+                class="p-button-text p-button-sm p-button-danger" pTooltip="Eliminar" (click)="eliminar(carpeta(c))"></button>
+            </span>
+          </div>
+
+          <!-- Archivos -->
+          <div class="fila" *ngFor="let a of contenido.archivos; trackBy: trackId">
+            <button type="button" class="fila__principal" (click)="ver(a)">
+              <i class="fila__icono" [ngClass]="iconoArchivo(a.extension)"></i>
+              <span class="fila__texto">
+                <span class="fila__nombre">{{ a.nombre }}</span>
+                <span class="fila__meta">{{ formatoBytes(a.tamanoBytes) }} · {{ a.createdAt | fechaEs: "fechaHora" }}</span>
+              </span>
+            </button>
+            <span class="fila__tags">
+              <p-tag *ngIf="a.subidoPorFirma" value="Subido por la firma" severity="info" />
+            </span>
+            <span class="fila__acciones">
+              <button pButton type="button" icon="pi pi-download" class="p-button-text p-button-sm" pTooltip="Descargar"
+                (click)="descargar(a)"></button>
+              <button *ngIf="uso!.esAdministrador" pButton type="button" icon="pi pi-history"
+                class="p-button-text p-button-sm" pTooltip="Historial" (click)="historial(a)"></button>
+              <button *ngIf="puedeEditar" pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-sm"
+                pTooltip="Renombrar" (click)="renombrar(archivo(a))"></button>
+              <button *ngIf="puedeEditar" pButton type="button" icon="pi pi-arrows-alt" class="p-button-text p-button-sm"
+                pTooltip="Mover" (click)="mover(archivo(a))"></button>
+              <button *ngIf="puedeEliminar" pButton type="button" icon="pi pi-trash"
+                class="p-button-text p-button-sm p-button-danger" pTooltip="Eliminar" (click)="eliminar(archivo(a))"></button>
+            </span>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ── Papelera ─────────────────────────────────────────── -->
+      <ng-container *ngIf="modo === 'papelera' && papelera">
+        <div class="seccion">
+          <h2 class="seccion-titulo">Papelera</h2>
+          <p class="nota">Lo que está aquí se borra solo a los 30 días. Restaurar devuelve el elemento a su carpeta (o a la raíz si su carpeta ya no está).</p>
+        </div>
+        <div class="seccion lista">
+          <div class="vacio" *ngIf="!papelera.carpetas.length && !papelera.archivos.length">
+            <i class="pi pi-trash"></i>
+            <p>La papelera está vacía.</p>
+          </div>
+
+          <div class="fila" *ngFor="let c of papelera.carpetas; trackBy: trackId">
+            <span class="fila__principal">
+              <i class="pi pi-folder fila__icono fila__icono--carpeta"></i>
+              <span class="fila__texto">
+                <span class="fila__nombre">{{ c.nombre }}</span>
+                <span class="fila__meta">Carpeta · se borra en {{ diasRestantes(c.deletedAt) }} días</span>
+              </span>
+            </span>
+            <span class="fila__tags">
+              <p-tag *ngIf="c.visibilidad === 'SOLO_FIRMA'" value="Solo firma" icon="pi pi-lock" severity="warn" />
+            </span>
+            <span class="fila__acciones">
+              <button pButton type="button" icon="pi pi-replay" label="Restaurar" class="p-button-text p-button-sm"
+                (click)="restaurar('carpeta', c.id)"></button>
+              <button *ngIf="uso!.esAdministrador" pButton type="button" icon="pi pi-times"
+                class="p-button-text p-button-sm p-button-danger" pTooltip="Eliminar para siempre"
+                (click)="eliminarDefinitivo('carpeta', c.nombre, c.id)"></button>
+            </span>
+          </div>
+
+          <div class="fila" *ngFor="let a of papelera.archivos; trackBy: trackId">
+            <span class="fila__principal">
+              <i class="fila__icono" [ngClass]="iconoArchivo(a.extension)"></i>
+              <span class="fila__texto">
+                <span class="fila__nombre">{{ a.nombre }}</span>
+                <span class="fila__meta">{{ formatoBytes(a.tamanoBytes) }} · se borra en {{ diasRestantes(a.deletedAt) }} días</span>
+              </span>
+            </span>
+            <span class="fila__tags"></span>
+            <span class="fila__acciones">
+              <button pButton type="button" icon="pi pi-replay" label="Restaurar" class="p-button-text p-button-sm"
+                (click)="restaurar('archivo', a.id)"></button>
+              <button *ngIf="uso!.esAdministrador" pButton type="button" icon="pi pi-times"
+                class="p-button-text p-button-sm p-button-danger" pTooltip="Eliminar para siempre"
+                (click)="eliminarDefinitivo('archivo', a.nombre, a.id)"></button>
+            </span>
+          </div>
+        </div>
+      </ng-container>
+    </ng-container>
+
+    <div class="soltar" *ngIf="arrastrando">
+      <i class="pi pi-cloud-upload"></i>
+      <span>Suelta para subir aquí</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── Nombre (crear carpeta / renombrar) ─────────────────────── -->
+<p-dialog
+  [header]="nombreModo === 'crear' ? 'Nueva carpeta' : 'Renombrar'"
+  [(visible)]="dlgNombre"
+  [modal]="true"
+  [style]="{ width: '28rem' }"
+  [breakpoints]="{ '640px': '95vw' }"
+  [draggable]="false"
+>
+  <div class="form">
+    <label for="nube-nombre">Nombre</label>
+    <input id="nube-nombre" pInputText [(ngModel)]="nombreValor" maxlength="150" (keyup.enter)="guardarNombre()" />
+    <ng-container *ngIf="puedeElegirVisibilidad">
+      <label for="nube-visibilidad">Quién la ve</label>
+      <p-dropdown
+        inputId="nube-visibilidad"
+        [options]="opcionesVisibilidad"
+        [(ngModel)]="nombreVisibilidad"
+        optionLabel="label"
+        optionValue="value"
+        appendTo="body"
+        styleClass="w-full"
+      />
+      <small class="nota" *ngIf="nombreVisibilidad === 'SOLO_FIRMA'">
+        La empresa no verá esta carpeta ni lo que tenga adentro. Si tu firma deja de atenderla, pasará a ser compartida.
+      </small>
+    </ng-container>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="dlgNombre = false"></button>
+    <button pButton type="button" icon="pi pi-check" label="Guardar" class="btn-aura"
+      [disabled]="!nombreValor.trim() || ocupado" [loading]="ocupado" (click)="guardarNombre()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ── Confirmar ─────────────────────────────────────────────── -->
+<p-dialog
+  [header]="confirmarTitulo"
+  [(visible)]="dlgConfirmar"
+  [modal]="true"
+  [style]="{ width: '26rem' }"
+  [breakpoints]="{ '640px': '95vw' }"
+  [draggable]="false"
+>
+  <p class="confirmar">{{ confirmarMensaje }}</p>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="dlgConfirmar = false"></button>
+    <button pButton type="button" icon="pi pi-trash" label="Eliminar" class="p-button-danger"
+      [disabled]="ocupado" [loading]="ocupado" (click)="alConfirmar()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- ── Historial ─────────────────────────────────────────────── -->
+<p-dialog
+  [header]="historialTitulo"
+  [(visible)]="dlgHistorial"
+  [modal]="true"
+  [style]="{ width: '40rem' }"
+  [breakpoints]="{ '760px': '95vw' }"
+  [draggable]="false"
+>
+  <p class="nota" *ngIf="!eventos.length">Sin movimientos.</p>
+  <div class="evento" *ngFor="let e of eventos">
+    <span class="evento__accion" [class.evento__accion--alerta]="e.accion === 'ACCESO_DENEGADO'">{{ textoAccion(e.accion) }}</span>
+    <span class="evento__meta">
+      {{ e.usuario ?? (e.usuarioId === 0 ? "Sistema" : "Usuario " + e.usuarioId) }}
+      <ng-container *ngIf="e.porFirma"> (firma)</ng-container>
+      · {{ e.createdAt | fechaEs: "fechaHora" }}
+      <ng-container *ngIf="e.ip"> · IP {{ e.ip }}</ng-container>
+    </span>
+  </div>
+</p-dialog>
+
+<!-- ── Solicitar más espacio ─────────────────────────────────── -->
+<p-dialog
+  header="Solicitar más espacio"
+  [(visible)]="dlgEspacio"
+  [modal]="true"
+  [style]="{ width: '26rem' }"
+  [breakpoints]="{ '640px': '95vw' }"
+  [draggable]="false"
+>
+  <div class="form">
+    <p class="nota">
+      Hoy tienes {{ formatoBytes(uso?.cuotaBytes ?? 0) }}. El espacio adicional tiene costo: Aura te contactará con el
+      valor antes de ampliarlo.
+    </p>
+    <label for="nube-cuota">Espacio total que necesitas</label>
+    <p-dropdown
+      inputId="nube-cuota"
+      [options]="opcionesEspacio"
+      [(ngModel)]="cuotaPedida"
+      optionLabel="label"
+      optionValue="value"
+      appendTo="body"
+      styleClass="w-full"
+    />
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="dlgEspacio = false"></button>
+    <button pButton type="button" icon="pi pi-send" label="Enviar solicitud" class="btn-aura"
+      [disabled]="!cuotaPedida || ocupado" [loading]="ocupado" (click)="solicitarEspacio()"></button>
+  </ng-template>
+</p-dialog>
+
+<app-mover-nube
+  [(visible)]="dlgMover"
+  [nombre]="moverObjetivo?.item?.nombre ?? ''"
+  [excluirId]="moverObjetivo?.tipo === 'carpeta' ? moverObjetivo!.item.id : null"
+  [origenId]="moverOrigen"
+  (elegir)="alElegirDestino($event)"
+/>
+
+<app-vista-previa-nube [(visible)]="dlgVista" [archivo]="archivoVista" (descargar)="descargar($event)" />

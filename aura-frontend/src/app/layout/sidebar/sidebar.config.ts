@@ -22,6 +22,12 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
         badge: 'POS',
         highlight: true,
       },
+      {
+        label: 'Documentos',
+        codigo: 'principal.documentos',
+        icon: 'pi pi-folder-open',
+        route: '/documentos',
+      },
     ],
   },
 
