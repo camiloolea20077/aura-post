@@ -36,14 +36,9 @@ import { aFechaLocal, aDate } from '../../../../shared/utils/fecha.util';
     DialogModule,
     ButtonModule,
     InputNumberModule,
-<<<<<<< HEAD
     SelectModule,
-    CalendarModule, TextareaModule,
-=======
-    DropdownModule,
-    DatePickerModule,
-    ToggleSwitchModule,
->>>>>>> 0916158bbc6e7cef0aa67c38fe2c021684be4c29
+    CalendarModule,
+    TextareaModule,
   ],
   templateUrl: './form-concepto.component.html',
 })

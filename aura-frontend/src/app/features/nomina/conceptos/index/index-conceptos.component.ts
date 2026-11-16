@@ -8,11 +8,6 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
-<<<<<<< HEAD
-=======
-import { SkeletonModule } from 'primeng/skeleton';
-import { DatePickerModule } from 'primeng/datepicker';
->>>>>>> 0916158bbc6e7cef0aa67c38fe2c021684be4c29
 import { lastValueFrom } from 'rxjs';
 
 import { ConceptoService } from '../../../../core/services/concepto.service';
