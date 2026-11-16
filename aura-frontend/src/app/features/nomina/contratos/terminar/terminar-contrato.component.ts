@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { MessageModule } from 'primeng/message';
 import { lastValueFrom } from 'rxjs';
 
@@ -32,7 +32,7 @@ import { aFechaLocal } from '../../../../shared/utils/fecha.util';
     DialogModule,
     ButtonModule,
     DropdownModule,
-    CalendarModule,
+    DatePickerModule,
     MessageModule,
   ],
   templateUrl: './terminar-contrato.component.html',

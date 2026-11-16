@@ -13,7 +13,7 @@ import { ButtonModule } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TagModule } from 'primeng/tag';
 import { SelectButtonModule } from 'primeng/selectbutton';
@@ -46,7 +46,7 @@ import { aFechaLocal } from '../../../../shared/utils/fecha.util';
     DropdownModule,
     InputNumberModule,
     InputTextModule,
-    CalendarModule,
+    DatePickerModule,
     SkeletonModule,
     TagModule,
     SelectButtonModule,

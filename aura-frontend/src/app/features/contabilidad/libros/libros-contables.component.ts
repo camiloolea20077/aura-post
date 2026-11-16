@@ -6,7 +6,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { InputTextModule } from 'primeng/inputtext';
 import { TabViewModule } from 'primeng/tabview';
 import { TagModule } from 'primeng/tag';
@@ -43,7 +43,7 @@ import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-a
     CommonModule,
     FormsModule,
     ButtonModule,
-    CalendarModule,
+    DatePickerModule,
     InputTextModule,
     TabViewModule,
     TagModule,

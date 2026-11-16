@@ -219,7 +219,7 @@
               <span class="dato-valor" *ngIf="!editando">
                 {{ (empresa.resolucionFechaDesde | fechaEs) || "—" }}
               </span>
-              <p-calendar *ngIf="editando" formControlName="resolucionFechaDesde" dateFormat="dd/mm/yy"
+              <p-datepicker *ngIf="editando" formControlName="resolucionFechaDesde" dateFormat="dd/mm/yy"
                           [showIcon]="true" placeholder="dd/mm/aaaa" />
             </div>
 
@@ -228,7 +228,7 @@
               <span class="dato-valor" *ngIf="!editando">
                 {{ (empresa.resolucionFechaHasta | fechaEs) || "—" }}
               </span>
-              <p-calendar *ngIf="editando" formControlName="resolucionFechaHasta" dateFormat="dd/mm/yy"
+              <p-datepicker *ngIf="editando" formControlName="resolucionFechaHasta" dateFormat="dd/mm/yy"
                           [showIcon]="true" placeholder="dd/mm/aaaa" />
             </div>
           </div>

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
@@ -31,7 +31,7 @@ import { edadEnAnios, etiquetasFamiliar } from './hoja-vida.util';
     CommonModule,
     ReactiveFormsModule,
     ButtonModule,
-    CalendarModule,
+    DatePickerModule,
     ConfirmDialogModule,
     DialogModule,
     InputTextModule,

@@ -6,7 +6,7 @@ import { ButtonModule } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
 import { lastValueFrom } from 'rxjs';
@@ -29,7 +29,7 @@ import { aFechaLocal } from '../../../../shared/utils/fecha.util';
   standalone: true,
   imports: [
     CommonModule, FormsModule, DialogModule, ButtonModule, DropdownModule,
-    InputNumberModule, InputTextModule, CalendarModule, SkeletonModule, TooltipModule,
+    InputNumberModule, InputTextModule, DatePickerModule, SkeletonModule, TooltipModule,
   ],
   templateUrl: './retefuente.component.html',
   styleUrls: ['./retefuente.component.scss'],

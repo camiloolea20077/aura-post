@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { TagModule } from 'primeng/tag';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
@@ -35,7 +35,7 @@ interface VentaResumen {
     CommonModule,
     FormsModule,
     ButtonModule,
-    CalendarModule,
+    DatePickerModule,
     TagModule,
     SkeletonModule,
     TooltipModule,

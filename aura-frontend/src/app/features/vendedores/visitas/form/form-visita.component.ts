@@ -16,7 +16,7 @@ import {
 import { ButtonModule } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
 import { DialogModule } from 'primeng/dialog';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { lastValueFrom } from 'rxjs';
 
 import { AlertService } from '../../../../shared/pipes/alert.service';
@@ -40,7 +40,7 @@ import { formatDate } from '../../../../shared/utils/date.utils';
     ButtonModule,
     DropdownModule,
     DialogModule,
-    CalendarModule,
+    DatePickerModule,
   ],
   templateUrl: './form-visita.component.html',
   styleUrls: ['./form-visita.component.scss'],

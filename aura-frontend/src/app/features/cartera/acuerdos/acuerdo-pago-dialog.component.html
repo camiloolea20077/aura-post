@@ -92,7 +92,7 @@
           </div>
           <div class="ap-field">
             <label>Primera cuota</label>
-            <p-calendar
+            <p-datepicker
               [(ngModel)]="primeraFecha"
               (onSelect)="generar()"
               dateFormat="dd/mm/yy"
@@ -147,7 +147,7 @@
             <tr *ngFor="let c of cuotas; let i = index">
               <td class="n">{{ i + 1 }}</td>
               <td>
-                <p-calendar
+                <p-datepicker
                   [(ngModel)]="c.fecha"
                   (onSelect)="onCuotaEditada()"
                   dateFormat="dd/mm/yy"

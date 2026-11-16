@@ -9,7 +9,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
@@ -80,7 +80,7 @@ const FORM_VACIO = (): FormIncremento => ({
     CommonModule,
     FormsModule,
     ButtonModule,
-    CalendarModule,
+    DatePickerModule,
     ConfirmDialogModule,
     InputNumberModule,
     InputTextModule,

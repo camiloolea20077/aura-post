@@ -24,7 +24,7 @@
           <div class="opciones" *ngIf="p.paso === 'saldos'">
             <div class="campo">
               <label>Fecha de apertura <span class="req">*</span></label>
-              <p-calendar [(ngModel)]="fechaApertura" dateFormat="dd/mm/yy" [showIcon]="true"
+              <p-datepicker [(ngModel)]="fechaApertura" dateFormat="dd/mm/yy" [showIcon]="true"
                 (ngModelChange)="invalidar('saldos')" />
             </div>
             <div class="campo">

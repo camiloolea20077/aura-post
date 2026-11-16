@@ -13,7 +13,7 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TagModule } from 'primeng/tag';
@@ -51,7 +51,7 @@ import { ExcelReporteService } from '../../../shared/services/excel-reporte.serv
     FormsModule,
     ReactiveFormsModule,
     ButtonModule,
-    CalendarModule,
+    DatePickerModule,
     InputNumberModule,
     ToggleSwitchModule,
     TagModule,

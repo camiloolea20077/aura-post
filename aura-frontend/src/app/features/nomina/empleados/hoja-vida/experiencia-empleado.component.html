@@ -55,12 +55,12 @@
       </div>
       <div class="field">
         <label>Fecha de ingreso *</label>
-        <p-calendar formControlName="fechaInicio" dateFormat="yy-mm-dd" [showIcon]="true" [maxDate]="hoy"
+        <p-datepicker formControlName="fechaInicio" dateFormat="yy-mm-dd" [showIcon]="true" [maxDate]="hoy"
           styleClass="w-full" />
       </div>
       <div class="field">
         <label>Fecha de retiro</label>
-        <p-calendar formControlName="fechaFin" dateFormat="yy-mm-dd" [showIcon]="true" [maxDate]="hoy"
+        <p-datepicker formControlName="fechaFin" dateFormat="yy-mm-dd" [showIcon]="true" [maxDate]="hoy"
           [showClear]="true" styleClass="w-full" />
         <small>Vacío = trabaja allí actualmente</small>
       </div>

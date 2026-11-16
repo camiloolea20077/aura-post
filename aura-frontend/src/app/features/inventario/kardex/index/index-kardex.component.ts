@@ -18,7 +18,7 @@ import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { ToastModule } from 'primeng/toast';
 import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
@@ -59,7 +59,7 @@ type TagSeverity =
     TooltipModule,
     ToastModule,
     DropdownModule,
-    CalendarModule,
+    DatePickerModule,
     AutoCompleteModule,
     DetalleKardexComponent,
   ],

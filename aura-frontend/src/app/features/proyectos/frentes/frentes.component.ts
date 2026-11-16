@@ -14,7 +14,7 @@ import { TableModule } from 'primeng/table';
 import { InputTextModule } from 'primeng/inputtext';
 import { DropdownModule } from 'primeng/dropdown';
 import { MultiSelectModule } from 'primeng/multiselect';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
@@ -48,7 +48,7 @@ type Sev = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
     InputTextModule,
     DropdownModule,
     MultiSelectModule,
-    CalendarModule,
+    DatePickerModule,
     TagModule,
     ToastModule,
     TooltipModule,

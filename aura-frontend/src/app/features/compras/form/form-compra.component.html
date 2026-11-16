@@ -238,7 +238,7 @@
         <div class="campo-row">
           <label>Fecha</label>
           <div class="campo-control">
-            <p-calendar
+            <p-datepicker
               [(ngModel)]="fechaCompra"
               [showTime]="true"
               hourFormat="12"
@@ -992,7 +992,7 @@
         maxlength="100"
         autocomplete="off"
       />
-      <p-calendar
+      <p-datepicker
         [(ngModel)]="x.fechaVencimiento"
         dateFormat="dd/mm/yy"
         placeholder="dd/mm/aaaa"

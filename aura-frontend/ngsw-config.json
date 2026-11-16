@@ -1,11 +1,31 @@
 {
   "$schema": "./node_modules/@angular/service-worker/config/schema.json",
   "appData": {
-    "version": "2026.10.20",
+    "version": "2026.11.04",
     "cambios": [
       {
-        "modulo": "PDF de documentos",
-        "texto": "La cuenta de cobro, facturas, cotizaciones, compras, nómina y comprobantes ya no fallan al descargar cuando el logo de la empresa no se puede cargar: el PDF sale igual."
+        "modulo": "Reportes avanzados",
+        "texto": "Nueva pestaña Utilidad: cuánto le dejó cada producto, categoría, vendedor, cliente o mes (venta sin IVA menos el costo), con exportación a Excel."
+      },
+      {
+        "modulo": "Reportes avanzados",
+        "texto": "Las ventas a crédito ya cuentan en la utilidad. Toque \"Utilidad de ventas a crédito\" para ver cada venta, lo abonado y lo que falta por cobrar."
+      },
+      {
+        "modulo": "Reportes avanzados",
+        "texto": "Nuevo diseño: arriba ve de un vistazo Venta neta − Costo = Utilidad del período elegido."
+      },
+      {
+        "modulo": "Utilidad y costos",
+        "texto": "La utilidad usa el costo que tenía el producto el día de la venta, y las devoluciones ya le restan también el costo. Las ventas antiguas sin costo quedaron completadas."
+      },
+      {
+        "modulo": "Cartera",
+        "texto": "El PDF del recibo de caja tiene nuevo diseño (como la factura) y se descarga con su número, por ejemplo RCB-000023.pdf."
+      },
+      {
+        "modulo": "Fechas",
+        "texto": "Los calendarios ya no se esconden al volver a abrirlos después de cambiar de mes."
       }
     ]
   },

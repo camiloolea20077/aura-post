@@ -34,7 +34,7 @@
               placeholder="Buscar por número de cuenta o cliente..."
             />
           </span>
-          <p-calendar
+          <p-datepicker
             [(ngModel)]="fechaDesde"
             placeholder="Fecha desde"
             [showIcon]="true"
@@ -42,7 +42,7 @@
             (onSelect)="onSearch()"
             [showButtonBar]="true"
             (onClearClick)="onSearch()"
-          ></p-calendar>
+          ></p-datepicker>
           <p-date-picker
             [(ngModel)]="fechaHasta"
             placeholder="Fecha hasta"

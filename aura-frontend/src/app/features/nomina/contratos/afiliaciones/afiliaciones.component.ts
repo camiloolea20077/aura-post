@@ -11,7 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { TagModule } from 'primeng/tag';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MessageModule } from 'primeng/message';
@@ -45,7 +45,7 @@ import { aFechaLocal } from '../../../../shared/utils/fecha.util';
     DialogModule,
     ButtonModule,
     DropdownModule,
-    CalendarModule,
+    DatePickerModule,
     TagModule,
     SkeletonModule,
     MessageModule,

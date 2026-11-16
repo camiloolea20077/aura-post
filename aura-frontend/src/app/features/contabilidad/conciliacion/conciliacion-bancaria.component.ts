@@ -17,7 +17,7 @@ import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { TextareaModule } from 'primeng/textarea';
 import { SkeletonModule } from 'primeng/skeleton';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -59,7 +59,7 @@ import { PuedeDirective } from '../../../shared/directives/puede.directive';
     DropdownModule,
     InputTextModule,
     InputNumberModule,
-    CalendarModule,
+    DatePickerModule,
     TextareaModule,
     SkeletonModule,
     ConfirmDialogModule,

@@ -5,7 +5,7 @@ import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { MessageModule } from 'primeng/message';
@@ -39,7 +39,7 @@ import { aFechaLocal } from '../../../../shared/utils/fecha.util';
     ButtonModule,
     InputTextModule,
     InputNumberModule,
-    CalendarModule,
+    DatePickerModule,
     TableModule,
     TagModule,
     MessageModule,

@@ -238,7 +238,7 @@
     </div>
     <div class="fld">
       <label>Fecha de inicio</label>
-      <p-calendar
+      <p-datepicker
         [(ngModel)]="formFechaInicio"
         dateFormat="dd/mm/yy"
         appendTo="body"
@@ -248,7 +248,7 @@
     </div>
     <div class="fld" *ngIf="form.tipoPlan === 'MENSUAL'">
       <label>Próximo pago</label>
-      <p-calendar
+      <p-datepicker
         [(ngModel)]="formProximoPago"
         dateFormat="dd/mm/yy"
         appendTo="body"
@@ -308,7 +308,7 @@
   <div class="form-grid" *ngIf="pagoCliente">
     <div class="fld">
       <label>Fecha de pago</label>
-      <p-calendar
+      <p-datepicker
         [(ngModel)]="pagoFecha"
         dateFormat="dd/mm/yy"
         appendTo="body"
@@ -343,7 +343,7 @@
     </div>
     <div class="fld" *ngIf="pagoCliente.tipoPlan === 'MENSUAL'">
       <label>Período desde</label>
-      <p-calendar
+      <p-datepicker
         [(ngModel)]="pagoDesde"
         dateFormat="dd/mm/yy"
         appendTo="body"
@@ -353,7 +353,7 @@
     </div>
     <div class="fld" *ngIf="pagoCliente.tipoPlan === 'MENSUAL'">
       <label>Período hasta</label>
-      <p-calendar
+      <p-datepicker
         [(ngModel)]="pagoHasta"
         dateFormat="dd/mm/yy"
         appendTo="body"

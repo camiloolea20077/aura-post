@@ -120,7 +120,7 @@
     </div>
     <div class="field">
       <label>Hora inicio</label>
-      <p-calendar
+      <p-datepicker
         [(ngModel)]="horaInicioD"
         [timeOnly]="true"
         hourFormat="24"
@@ -129,7 +129,7 @@
     </div>
     <div class="field">
       <label>Hora fin</label>
-      <p-calendar
+      <p-datepicker
         [(ngModel)]="horaFinD"
         [timeOnly]="true"
         hourFormat="24"
@@ -207,7 +207,7 @@
       </div>
       <div class="field">
         <label>Desde</label>
-        <p-calendar
+        <p-datepicker
           [(ngModel)]="asignForm.fechaInicio"
           dateFormat="yy-mm-dd"
           appendTo="body"
@@ -216,7 +216,7 @@
       </div>
       <div class="field">
         <label>Hasta (opcional)</label>
-        <p-calendar
+        <p-datepicker
           [(ngModel)]="asignForm.fechaFin"
           dateFormat="yy-mm-dd"
           appendTo="body"

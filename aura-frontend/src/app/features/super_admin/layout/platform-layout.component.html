@@ -24,7 +24,7 @@
         <span class="logo-sub">Panel de administración</span>
       </div>
       <button type="button" class="campana" (click)="irASolicitudes()" aria-label="Solicitudes pendientes"
-        [title]="pendientes ? pendientes + ' solicitudes de activación electrónica' : 'Sin solicitudes pendientes'">
+        [title]="pendientes ? pendientes + ' solicitudes pendientes' : 'Sin solicitudes pendientes'">
         <i class="pi pi-bell"></i>
         <span class="campana__contador" *ngIf="pendientes">{{ pendientes }}</span>
       </button>
@@ -40,7 +40,7 @@
       >
         <i [class]="i.icon"></i>
         <span>{{ i.label }}</span>
-        <span class="nav-contador" *ngIf="i.conPendientes && pendientes">{{ pendientes }}</span>
+        <span class="nav-contador" *ngIf="i.conPendientes && pendientesPorTipo[i.conPendientes]">{{ pendientesPorTipo[i.conPendientes] }}</span>
       </a>
 
       <span class="nav-seccion">Soporte</span>

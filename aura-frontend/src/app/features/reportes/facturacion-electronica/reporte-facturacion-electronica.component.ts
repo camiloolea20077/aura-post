@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { TooltipModule } from 'primeng/tooltip';
 import { ReporteService } from '../../../core/services/reporte.service';
@@ -17,7 +17,7 @@ type TipoNota = 'CREDITO' | 'DEBITO' | 'AMBAS';
     CommonModule,
     FormsModule,
     ButtonModule,
-    CalendarModule,
+    DatePickerModule,
     SelectButtonModule,
     TooltipModule,
   ],

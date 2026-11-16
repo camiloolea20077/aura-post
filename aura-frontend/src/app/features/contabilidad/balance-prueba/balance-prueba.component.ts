@@ -11,7 +11,7 @@ import { lastValueFrom } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { InputTextModule } from 'primeng/inputtext';
 
 import { ContabilidadService } from '../../../core/services/contabilidad.service';
@@ -31,7 +31,7 @@ import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-a
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    CuentaAutocompleteComponent, CommonModule, FormsModule, ButtonModule, TableModule, DropdownModule, CalendarModule, InputTextModule,
+    CuentaAutocompleteComponent, CommonModule, FormsModule, ButtonModule, TableModule, DropdownModule, DatePickerModule, InputTextModule,
     TerceroAutocompleteComponent],
   templateUrl: './balance-prueba.component.html',
   styleUrls: ['./balance-prueba.component.scss'],

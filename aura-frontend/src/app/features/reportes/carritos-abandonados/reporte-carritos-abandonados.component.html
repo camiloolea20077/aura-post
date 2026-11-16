@@ -29,12 +29,12 @@
       <div class="ca-campos">
         <div class="field">
           <label>Desde</label>
-          <p-calendar [(ngModel)]="desde" (onSelect)="fechaManual()" dateFormat="dd/mm/yy"
+          <p-datepicker [(ngModel)]="desde" (onSelect)="fechaManual()" dateFormat="dd/mm/yy"
             [showIcon]="true" styleClass="w-full" />
         </div>
         <div class="field">
           <label>Hasta</label>
-          <p-calendar [(ngModel)]="hasta" (onSelect)="fechaManual()" dateFormat="dd/mm/yy"
+          <p-datepicker [(ngModel)]="hasta" (onSelect)="fechaManual()" dateFormat="dd/mm/yy"
             [showIcon]="true" styleClass="w-full" />
         </div>
         <div class="field field--min">

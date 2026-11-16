@@ -5,7 +5,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
@@ -37,7 +37,7 @@ export interface ExtractoLinea {
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule, FormsModule,
-    ButtonModule, DropdownModule, CalendarModule, InputNumberModule,
+    ButtonModule, DropdownModule, DatePickerModule, InputNumberModule,
     TableModule, TagModule, ToastModule, TooltipModule, CheckboxModule, BadgeModule,
   ],
   providers: [MessageService],

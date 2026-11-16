@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -32,7 +32,7 @@ import { OpcionConcepto, opcionesConcepto, severidadClase } from './conceptos.ut
     CommonModule,
     ReactiveFormsModule,
     ButtonModule,
-    CalendarModule,
+    DatePickerModule,
     ConfirmDialogModule,
     DialogModule,
     InputNumberModule,

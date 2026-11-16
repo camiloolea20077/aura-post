@@ -9,7 +9,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { DialogModule } from 'primeng/dialog';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
@@ -41,7 +41,7 @@ import { AlertService } from '../../../../shared/pipes/alert.service';
     CommonModule,
     FormsModule,
     ButtonModule,
-    CalendarModule,
+    DatePickerModule,
     DialogModule,
     InputNumberModule,
     InputTextModule,

@@ -130,7 +130,7 @@
         <div class="grid">
           <div class="campo">
             <label>Fecha</label>
-            <p-calendar [ngModel]="fecha" dateFormat="dd/mm/yy" [showIcon]="true" [disabled]="true" styleClass="w-full" />
+            <p-datepicker [ngModel]="fecha" dateFormat="dd/mm/yy" [showIcon]="true" [disabled]="true" styleClass="w-full" />
           </div>
           <div class="campo">
             <label>Vigencia</label>
@@ -146,7 +146,7 @@
           </div>
           <div class="campo">
             <label>Válida hasta</label>
-            <p-calendar
+            <p-datepicker
               [(ngModel)]="vencimiento"
               dateFormat="dd/mm/yy"
               [showIcon]="true"

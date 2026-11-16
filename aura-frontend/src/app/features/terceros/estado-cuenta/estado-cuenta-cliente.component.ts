@@ -12,7 +12,7 @@ import { lastValueFrom } from 'rxjs';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { TagModule } from 'primeng/tag';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { ToastModule } from 'primeng/toast';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
@@ -45,7 +45,7 @@ type TagSeverity =
     TableModule,
     ButtonModule,
     TagModule,
-    CalendarModule,
+    DatePickerModule,
     ToastModule,
     SkeletonModule,
     TooltipModule,

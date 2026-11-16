@@ -10,6 +10,9 @@ import {
   ReporteRotacionInventarioModel,
   ReporteResumenAvanzadoModel,
   ReporteMovimientosCajaModel,
+  ReporteUtilidadCreditoModel,
+  ReporteUtilidadFiltro,
+  ReporteUtilidadModel,
 } from '../models/reporte-avanzado.model';
 
 @Injectable({ providedIn: 'root' })
@@ -52,6 +55,32 @@ export class ReporteAvanzadoService {
     return this.http.get<any>(`${this.base}/margenes`, {
       params: this.buildParams(desde, hasta),
     });
+  }
+
+  /** Utilidad en ventas (venta sin IVA − costo promedio al vender), contado y crédito. */
+  utilidad(filtro: ReporteUtilidadFiltro): Observable<{ data: ReporteUtilidadModel }> {
+    return this.http.get<{ data: ReporteUtilidadModel }>(`${this.base}/utilidad`, {
+      params: this.utilidadParams(filtro),
+    });
+  }
+
+  /** Las ventas a crédito del período, con utilidad, abonado y por cobrar. */
+  utilidadCredito(filtro: ReporteUtilidadFiltro): Observable<{ data: ReporteUtilidadCreditoModel[] }> {
+    return this.http.get<{ data: ReporteUtilidadCreditoModel[] }>(`${this.base}/utilidad/credito`, {
+      params: this.buildParams(filtro.desde, filtro.hasta),
+    });
+  }
+
+  /** El mismo reporte de utilidad en Excel. */
+  utilidadExcel(filtro: ReporteUtilidadFiltro): Observable<Blob> {
+    return this.http.get(`${this.base}/utilidad/excel`, {
+      params: this.utilidadParams(filtro),
+      responseType: 'blob',
+    });
+  }
+
+  private utilidadParams(f: ReporteUtilidadFiltro): HttpParams {
+    return this.buildParams(f.desde, f.hasta).set('agrupar', f.agrupar).set('forma', f.forma);
   }
 
   rotacionInventario(): Observable<any> {

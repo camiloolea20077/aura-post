@@ -104,12 +104,12 @@
     @if (pideFechas) {
       <div class="campo">
         <label>Desde *</label>
-        <p-calendar [(ngModel)]="form.fechaInicio" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
+        <p-datepicker [(ngModel)]="form.fechaInicio" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
           appendTo="body" />
       </div>
       <div class="campo">
         <label>Hasta *</label>
-        <p-calendar [(ngModel)]="form.fechaFin" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
+        <p-datepicker [(ngModel)]="form.fechaFin" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
           appendTo="body" />
       </div>
       <div class="campo">

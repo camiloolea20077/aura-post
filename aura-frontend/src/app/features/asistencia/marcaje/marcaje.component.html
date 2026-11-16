@@ -13,7 +13,7 @@
       <div class="card-head__actions">
         <div class="field-inline">
           <label>Día</label>
-          <p-calendar
+          <p-datepicker
             [(ngModel)]="fecha"
             dateFormat="yy-mm-dd"
             [showIcon]="true"
@@ -56,7 +56,7 @@
         <tr>
           <td>{{ f.nombre }}</td>
           <td>
-            <p-calendar
+            <p-datepicker
               [(ngModel)]="f.entrada"
               [timeOnly]="true"
               hourFormat="24"
@@ -68,7 +68,7 @@
             />
           </td>
           <td>
-            <p-calendar
+            <p-datepicker
               [(ngModel)]="f.salida"
               [timeOnly]="true"
               hourFormat="24"

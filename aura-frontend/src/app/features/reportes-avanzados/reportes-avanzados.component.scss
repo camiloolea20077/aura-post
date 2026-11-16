@@ -1,160 +1,540 @@
-.module-wrapper {
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+// Reportes avanzados — "libro de cuentas".
+// La página se lee como una cuenta: venta − costo = utilidad. Una sola tinta (el
+// azul de Aura) para lo que importa, grafito para la estructura, rojo solo para
+// pérdida. Cifras en JetBrains Mono con números tabulares. Profundidad: solo
+// líneas de renglón (como el resto de cards de Aura), sin sombras internas.
+
+:host {
+  display: block;
+
+  // Tokens de la página, montados sobre los de Aura (heredan el modo oscuro).
+  --ra-tinta: var(--aura-blue);
+  --ra-tinta-suave: var(--aura-gradient-soft);
+  --ra-grafito: var(--aura-text);
+  --ra-lapiz: var(--aura-text-muted);
+  --ra-renglon: var(--aura-border);
+  --ra-papel: var(--aura-surface);
+  --ra-hoja: var(--aura-bg);
+  --ra-perdida: var(--aura-danger);
+  --ra-aviso: var(--aura-warning);
+  --ra-sano: var(--aura-success);
+  --ra-cifras: "JetBrains Mono", ui-monospace, monospace;
+
+  // Escala 1,25 sobre 14 px; base de espacio 4 px.
+  --ra-pad: 1.5rem; // 24 — igual al card-head de Aura
 }
 
-.module-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
+.ra {
+  container-type: inline-size;
+}
 
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+// ── Período en el card-head ─────────────────────────────────────────────
+.periodo {
+  gap: 0.5rem;
 
-    h2 { margin: 0; font-size: 1.4rem; font-weight: 700; color: #1e293b; }
-    p { margin: 0; color: #64748b; font-size: 0.85rem; }
+  ::ng-deep p-datepicker {
+    width: 9.5rem;
+    min-width: 0;
+  }
+
+  &__a {
+    font-size: 0.8125rem;
+    color: var(--ra-lapiz);
   }
 }
 
-.header-icon {
-  width: 3rem;
-  height: 3rem;
-  background: #6366f1;
-  border-radius: 12px;
+// ── La cuenta (resultado del período) ───────────────────────────────────
+.resultado {
   display: grid;
-  place-items: center;
-  i { color: #fff; font-size: 1.3rem; }
-}
-
-.filtros-wrap {
-  display: flex;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1.5rem 2.5rem;
   align-items: center;
-  gap: 0.75rem;
+  padding: var(--ra-pad);
+  border-bottom: 1px solid var(--ra-renglon);
+}
+
+.cuenta {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem 1.5rem;
   flex-wrap: wrap;
+  min-width: 0;
+
+  &--compacta {
+    padding-bottom: 1.25rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--ra-renglon);
+
+    .cifra { font-size: 1.375rem; }
+  }
 }
 
-// ── KPIs ──────────────────────────────────────────────────────────────
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-
-  @media (max-width: 1024px) { grid-template-columns: repeat(2, 1fr); }
-  @media (max-width: 640px)  { grid-template-columns: 1fr; }
-}
-
-.kpi-card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 1.25rem 1.5rem;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+.termino {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  transition: box-shadow 0.2s;
+  gap: 0.25rem;
+  min-width: 0;
 
-  &:hover { box-shadow: 0 4px 12px rgba(99,102,241,0.15); }
-
-  .kpi-label { font-size: 0.78rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-  .kpi-value { font-size: 1.6rem; font-weight: 800; color: #1e293b; }
-  .kpi-sub   { font-size: 0.78rem; color: #94a3b8; }
+  &--total {
+    padding-left: 1.5rem;
+    border-left: 2px solid var(--ra-tinta);
+  }
 }
 
-.kpi-var {
-  font-size: 0.8rem;
+.rotulo {
+  font-size: 0.6875rem; // 11
   font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ra-lapiz);
+}
+
+.cifra {
+  font-family: var(--ra-cifras);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.375rem; // 22
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--ra-grafito);
+  white-space: nowrap;
+
+  &--hero {
+    font-size: 2.25rem; // 36
+    font-weight: 700;
+    letter-spacing: -0.035em;
+    color: var(--ra-tinta);
+  }
+}
+
+.signo {
+  font-family: var(--ra-cifras);
+  font-size: 1.375rem;
+  line-height: 1.6;
+  color: var(--ra-lapiz);
+  opacity: 0.6;
+  user-select: none;
+}
+
+.nota {
+  font-size: 0.75rem;
+  color: var(--ra-lapiz);
+
+  strong {
+    font-family: var(--ra-cifras);
+    font-weight: 600;
+    color: var(--ra-grafito);
+  }
+}
+
+.is-perdida {
+  color: var(--ra-perdida) !important;
+}
+
+// Pulso: datos de contexto, un escalón por debajo de la cuenta.
+.pulso {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, auto));
+  gap: 0.875rem 2rem;
+  margin: 0;
+
+  div { min-width: 0; }
+
+  dt {
+    font-size: 0.75rem;
+    color: var(--ra-lapiz);
+    margin-bottom: 0.125rem;
+  }
+
+  dd {
+    margin: 0;
+    font-family: var(--ra-cifras);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--ra-grafito);
+    white-space: nowrap;
+  }
+}
+
+.delta {
+  margin-left: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--ra-sano);
+
+  i { font-size: 0.625rem; }
+
+  &.is-baja { color: var(--ra-perdida); }
+}
+
+// ── Pestañas: subrayado en tinta, sin cajas ─────────────────────────────
+:host ::ng-deep .ra-tabs {
+  .p-tablist {
+    padding: 0 var(--ra-pad);
+    border-bottom: 1px solid var(--ra-renglon);
+    background: transparent;
+  }
+
+  .p-tablist-tab-list,
+  .p-tablist-content {
+    background: transparent;
+    border: 0;
+  }
+
+  .p-tab {
+    padding: 0.875rem 0.25rem;
+    margin-right: 1.5rem;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--ra-lapiz);
+    white-space: nowrap;
+    transition: color 150ms cubic-bezier(0.23, 1, 0.32, 1);
+
+    &:hover { color: var(--ra-grafito); }
+  }
+
+  .p-tab-active {
+    color: var(--ra-tinta);
+    font-weight: 600;
+    border-bottom-color: var(--ra-tinta);
+  }
+
+  .p-tablist-active-bar { background: var(--ra-tinta); }
+
+  .p-tabpanels {
+    padding: var(--ra-pad);
+    background: transparent;
+  }
+}
+
+// ── Bloques del resumen ─────────────────────────────────────────────────
+.resumen-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr);
+  gap: 2.5rem;
+}
+
+.bloque {
+  min-width: 0;
+
+  &__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+
+    h2 {
+      margin: 0;
+      font-size: 1rem; // 16
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--ra-grafito);
+    }
+
+    &--sep {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--ra-renglon);
+    }
+  }
+
+  &__meta {
+    font-size: 0.75rem;
+    color: var(--ra-lapiz);
+  }
+}
+
+.grafico {
+  position: relative;
+  height: 15rem;
+  overflow: hidden;
+
+  &--alto { height: 18rem; }
+
+  // p-chart envuelve el canvas en un div sin alto: con maintainAspectRatio en
+  // false, Chart.js caía a su proporción 2:1 del ancho y el canvas se salía
+  // (1076 px en un contenedor de 288) y quedaba encima de la tabla.
+  ::ng-deep p-chart,
+  ::ng-deep p-chart > div {
+    display: block;
+    height: 100%;
+    width: 100%;
+  }
+}
+
+.bloque--grafico + p-table,
+.bloque--grafico {
+  display: block;
+  margin-bottom: 1.5rem;
+}
+
+// Reparto por método de pago: renglón + regla.
+.reparto {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+
+  &__fila {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: 0.8125rem;
+    color: var(--ra-grafito);
+    margin-bottom: 0.375rem;
+  }
+
+  &__barra {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--ra-hoja);
+    overflow: hidden;
+
+    i {
+      display: block;
+      height: 100%;
+      border-radius: 2px;
+      background: var(--ra-tinta);
+    }
+  }
+}
+
+.destacados {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  div {
+    display: grid;
+    grid-template-columns: 6rem minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+
+  dt { font-size: 0.75rem; color: var(--ra-lapiz); padding-top: 0.1rem; }
+  dd {
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--ra-grafito);
+    overflow-wrap: anywhere;
+  }
+}
+
+.barra-herr {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  i { font-size: 0.7rem; }
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
-.variacion-positiva { color: #16a34a; }
-.variacion-negativa { color: #dc2626; }
 
-// ── Top row ───────────────────────────────────────────────────────────
-.top-row {
+// ── Tablas: renglones, sin cuadrícula ───────────────────────────────────
+:host ::ng-deep .ra-tabla {
+  .p-datatable-thead > tr > th {
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--ra-renglon);
+    padding: 0.625rem 0.75rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ra-lapiz);
+    white-space: nowrap;
+  }
+
+  .p-datatable-tbody > tr {
+    background: transparent;
+    transition: background-color 120ms ease-out;
+
+    &:hover { background: var(--ra-tinta-suave); }
+
+    > td {
+      border: 0;
+      border-bottom: 1px solid var(--ra-renglon);
+      padding: 0.6875rem 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--ra-grafito);
+    }
+
+    &:last-child > td { border-bottom: 0; }
+  }
+
+  .p-paginator {
+    border: 0;
+    background: transparent;
+    padding-top: 1rem;
+  }
+}
+
+:host ::ng-deep .ra-tabla {
+  .num {
+    text-align: right !important;
+    font-family: var(--ra-cifras);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .num-izq {
+    font-family: var(--ra-cifras);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .fuerte { font-weight: 600; }
+  .tenue { color: var(--ra-lapiz) !important; }
+
+  .nombre {
+    font-weight: 500;
+
+    small {
+      display: block;
+      font-family: var(--ra-cifras);
+      font-size: 0.6875rem;
+      font-weight: 400;
+      color: var(--ra-lapiz);
+      margin-top: 0.125rem;
+    }
+  }
+
+  .col-pos { width: 2.5rem; }
+  .col-margen { width: 8.5rem; }
+
+  .vacio {
+    text-align: center;
+    padding: 2.5rem 1rem;
+  }
+}
+
+// Celda de margen: valor + regla fina.
+.margen {
   display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-  margin-bottom: 1.5rem;
-}
-.top-badge {
-  background: #f1f5f9;
-  border-radius: 8px;
-  padding: 0.5rem 1rem;
-  font-size: 0.82rem;
-  color: #475569;
-  i { color: #6366f1; margin-right: 0.35rem; }
-}
+  flex-direction: column;
+  gap: 0.3125rem;
 
-// ── Charts ────────────────────────────────────────────────────────────
-.charts-row {
-  display: flex;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-  margin-bottom: 1.5rem;
-}
-.chart-card {
-  background: #fff;
-  border-radius: 12px;
-  padding: 1.25rem;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-  flex: 1;
-  min-width: 300px;
+  &__valor {
+    font-family: var(--ra-cifras);
+    font-variant-numeric: tabular-nums;
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
 
-  h4 { margin: 0 0 1rem; font-size: 0.9rem; color: #334155; font-weight: 600; }
-}
-.chart-wide { flex: 2; min-width: 500px; }
-.chart-container { height: 220px; }
+  &__regla {
+    height: 3px;
+    border-radius: 2px;
+    background: var(--ra-hoja);
+    overflow: hidden;
 
-// ── Tables ────────────────────────────────────────────────────────────
-.table-card {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-  overflow: hidden;
+    i { display: block; height: 100%; border-radius: 2px; background: currentColor; }
+  }
+
+  &.is-sano   { color: var(--ra-tinta); }
+  &.is-bajo   { color: var(--ra-aviso); }
+  &.is-perdida { color: var(--ra-perdida); }
 }
 
-.table-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  padding: 0.75rem 0;
+.tipo {
+  display: inline-block;
+  margin-right: 0.5rem;
+  padding: 0.0625rem 0.4375rem;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--ra-tinta);
+  background: var(--ra-tinta-suave);
+
+  &.is-egreso {
+    color: var(--ra-perdida);
+    background: color-mix(in srgb, var(--ra-perdida) 10%, transparent);
+  }
 }
 
-.section-title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #334155;
-  margin: 0 0 0.75rem;
+.estado {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--ra-lapiz);
+  background: var(--ra-hoja);
+
+  &--critico { color: var(--ra-perdida); background: color-mix(in srgb, var(--ra-perdida) 10%, transparent); }
+  &--bajo    { color: var(--ra-aviso);   background: color-mix(in srgb, var(--ra-aviso) 12%, transparent); }
+  &--alto    { color: var(--ra-tinta);   background: var(--ra-tinta-suave); }
 }
 
-.text-right { text-align: right !important; }
-.text-green  { color: #16a34a; }
-.text-danger { color: #dc2626; }
+.vacio {
+  margin: 0;
+  color: var(--ra-lapiz);
+  font-size: 0.8125rem;
 
-.empty-row {
-  text-align: center;
-  color: #94a3b8;
-  padding: 2rem;
-  i { margin-right: 0.5rem; }
+  i { margin-right: 0.375rem; }
 }
 
-// ── Margen row coloring ───────────────────────────────────────────────
-:host ::ng-deep {
-  tr.margen-bajo  td { background: rgba(220,38,38,0.05) !important; }
-  tr.margen-medio td { background: rgba(234,179,8,0.06) !important; }
-  tr.margen-alto  td { background: rgba(22,163,74,0.05) !important; }
+// ── Responsive por ancho de la card (el menú lateral abre y cierra) ─────
+@container (max-width: 1100px) {
+  .resultado { grid-template-columns: minmax(0, 1fr); }
+  .pulso { grid-template-columns: repeat(4, minmax(0, auto)); justify-content: start; }
 }
 
-// ── Tabs ──────────────────────────────────────────────────────────────
-:host ::ng-deep .aura-tabs .p-tabview-nav li.p-highlight .p-tabview-nav-link {
-  border-color: #6366f1;
-  color: #6366f1;
+@container (max-width: 860px) {
+  .resumen-grid { grid-template-columns: minmax(0, 1fr); gap: 2rem; }
+  .pulso { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@container (max-width: 560px) {
+  :host { --ra-pad: 1rem; }
+
+  // La cuenta se apila: cada término en su renglón, la cifra a la derecha.
+  .cuenta { flex-direction: column; align-items: stretch; gap: 0.75rem; }
+  .signo { display: none; }
+  .termino {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "rotulo cifra" "nota cifra";
+    align-items: center;
+    column-gap: 0.75rem;
+    row-gap: 0.125rem;
+
+    .rotulo { grid-area: rotulo; }
+    .cifra  { grid-area: cifra; font-size: 1.125rem; }
+    .nota   { grid-area: nota; }
+  }
+  .termino--total {
+    padding: 0.75rem 0 0;
+    border-left: 0;
+    border-top: 2px solid var(--ra-tinta);
+  }
+  .cifra--hero { font-size: 1.625rem !important; }
+
+  .pulso {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem 1rem;
+
+    dd { white-space: normal; font-size: 0.8125rem; }
+  }
+  .delta { display: inline-block; margin-left: 0; }
+
+  .periodo {
+    width: 100%;
+    justify-content: stretch;
+
+    ::ng-deep p-datepicker { flex: 1 1 8rem; width: auto; }
+  }
+  .periodo__a { display: none; }
+
+  .destacados div { grid-template-columns: 5rem minmax(0, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host ::ng-deep .ra-tabs .p-tab,
+  :host ::ng-deep .ra-tabla .p-datatable-tbody > tr { transition: none; }
 }

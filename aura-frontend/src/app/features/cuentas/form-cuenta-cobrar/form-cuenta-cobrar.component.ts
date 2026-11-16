@@ -19,7 +19,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { DropdownModule } from 'primeng/dropdown';
 import { lastValueFrom } from 'rxjs';
 
@@ -45,7 +45,7 @@ import { aFechaHoraLocal } from '../../../shared/utils/fecha.util';
     InputNumberModule,
     InputTextModule,
     TextareaModule,
-    CalendarModule,
+    DatePickerModule,
     DropdownModule,
     TerceroAutocompleteComponent,
   ],

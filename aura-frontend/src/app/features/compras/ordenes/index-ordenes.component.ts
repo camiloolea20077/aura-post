@@ -8,7 +8,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
@@ -48,7 +48,7 @@ type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contr
     TerceroAutocompleteComponent,
     CommonModule, FormsModule,
     ButtonModule, InputTextModule, InputNumberModule,
-    DropdownModule, CalendarModule, TableModule, TagModule,
+    DropdownModule, DatePickerModule, TableModule, TagModule,
     ToastModule, TooltipModule, DialogModule, DividerModule, TextareaModule,
   ],
   providers: [MessageService],

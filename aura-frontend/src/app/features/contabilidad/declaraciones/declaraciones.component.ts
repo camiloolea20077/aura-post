@@ -11,7 +11,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { TabViewModule } from 'primeng/tabview';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { TooltipModule } from 'primeng/tooltip';
 import { lastValueFrom } from 'rxjs';
 import { Workbook } from 'exceljs';
@@ -65,7 +65,7 @@ const MESES = [
     TabViewModule,
     DialogModule,
     InputTextModule,
-    CalendarModule,
+    DatePickerModule,
     TooltipModule,
     TerceroAutocompleteComponent,
     CertificadosRetencionComponent,

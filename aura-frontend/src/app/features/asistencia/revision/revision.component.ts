@@ -5,7 +5,7 @@ import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { InputTextModule } from 'primeng/inputtext';
 import { TabViewModule } from 'primeng/tabview';
 import { TagModule } from 'primeng/tag';
@@ -35,7 +35,7 @@ type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contr
   imports: [
     PuedeDirective,
     CommonModule, FormsModule, TableModule, ButtonModule, DialogModule,
-    DropdownModule, CalendarModule, InputTextModule, TabViewModule, TagModule,
+    DropdownModule, DatePickerModule, InputTextModule, TabViewModule, TagModule,
     ToastModule, TooltipModule, ConfirmDialogModule,
   ],
   providers: [MessageService, ConfirmationService],

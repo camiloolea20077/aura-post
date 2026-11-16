@@ -11,7 +11,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { ButtonModule } from 'primeng/button';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 
@@ -32,7 +32,7 @@ import { NotaContableService } from '../services/nota-contable.service';
   selector: 'app-reversar-nota-dialog',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, ButtonModule, CalendarModule, DialogModule, InputTextModule, FechaEsPipe],
+  imports: [CommonModule, FormsModule, ButtonModule, DatePickerModule, DialogModule, InputTextModule, FechaEsPipe],
   templateUrl: './reversar-nota-dialog.component.html',
   styleUrls: ['./reversar-nota-dialog.component.scss'],
 })

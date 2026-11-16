@@ -9,7 +9,7 @@ import {
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { ToastModule } from 'primeng/toast';
@@ -38,7 +38,7 @@ const LOGO_MAX_BYTES = 2 * 1024 * 1024;
     ButtonModule,
     InputTextModule,
     InputNumberModule,
-    CalendarModule,
+    DatePickerModule,
     TagModule,
     TooltipModule,
     ToastModule,

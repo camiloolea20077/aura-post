@@ -6,7 +6,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { TooltipModule } from 'primeng/tooltip';
 import { lastValueFrom } from 'rxjs';
 
@@ -46,7 +46,7 @@ interface Opcion<T> {
     InputTextModule,
     InputNumberModule,
     DropdownModule,
-    CalendarModule,
+    DatePickerModule,
     TooltipModule,
     TerceroAutocompleteComponent,
     CuentaAutocompleteComponent,

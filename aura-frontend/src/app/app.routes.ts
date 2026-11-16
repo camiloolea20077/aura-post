@@ -50,6 +50,15 @@ export const routes: Routes = [
           ),
       },
 
+      // Nube de documentos de la empresa (docs/PLAN_NUBE_DOCUMENTOS.md)
+      {
+        path: 'documentos',
+        loadComponent: () =>
+          import('./features/documentos/documentos.component').then(
+            (m) => m.DocumentosComponent,
+          ),
+      },
+
       // POS
       {
         path: 'pos',

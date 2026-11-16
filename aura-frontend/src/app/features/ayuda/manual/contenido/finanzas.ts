@@ -166,7 +166,7 @@ export const FINANZAS: ManualModulo[] = [
           'Aplicar a facturas: "Repartir (más vieja primero)" o escriba cuánto va a cada factura. "Pagar completa" llena el saldo de una.',
           'Si el cliente retuvo impuestos, use el botón % de la factura: Renta, IVA e ICA. Lo retenido también abona la factura.',
           'Lo que sobre queda como saldo a favor (anticipo), que luego se aplica con "Aplicar saldo a favor".',
-          'Registrar pago e imprimir el recibo.',
+          'Registrar pago e imprimir el recibo: se descarga como PDF con su número (p. ej. RCB-000023.pdf), con los datos del cliente, las facturas abonadas (saldo anterior, abono, retenciones y nuevo saldo), el valor en letras, el total recibido, el anticipo si sobró dinero y las firmas.',
         ],
       },
       {

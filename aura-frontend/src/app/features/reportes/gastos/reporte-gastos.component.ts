@@ -12,7 +12,7 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule, TableLazyLoadEvent } from 'primeng/table';
@@ -55,7 +55,7 @@ import { aFechaLocal } from '../../../shared/utils/fecha.util';
     FormsModule,
     ReactiveFormsModule,
     ButtonModule,
-    CalendarModule,
+    DatePickerModule,
     DropdownModule,
     InputTextModule,
     TerceroAutocompleteComponent,

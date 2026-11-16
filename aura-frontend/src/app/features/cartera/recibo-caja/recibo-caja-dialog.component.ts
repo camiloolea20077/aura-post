@@ -6,8 +6,7 @@ import {
   Input,
   OnChanges,
   Output,
-  SimpleChanges,
-} from '@angular/core';
+  SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
@@ -15,12 +14,13 @@ import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { TextareaModule } from 'primeng/textarea';
 import { TooltipModule } from 'primeng/tooltip';
 import { lastValueFrom } from 'rxjs';
 
 import { CarteraService } from '../../../core/services/cartera.service';
+import { ReciboCajaPdfService } from '../../../core/services/recibo-caja-pdf.service';
 import { TurnoCajaService } from '../../../core/services/caja.service';
 import { ContabilidadService } from '../../../core/services/contabilidad.service';
 import { IndexDBService } from '../../../core/services/index-db.service';
@@ -68,7 +68,7 @@ import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-a
     InputNumberModule,
     InputTextModule,
     DropdownModule,
-    CalendarModule,
+    DatePickerModule,
     TextareaModule,
     TooltipModule,
   ],
@@ -76,6 +76,7 @@ import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-a
   styleUrls: ['./recibo-caja-dialog.component.scss'],
 })
 export class ReciboCajaDialogComponent implements OnChanges {
+  private readonly reciboPdf = inject(ReciboCajaPdfService);
   @Input() visible = false;
   @Output() visibleChange = new EventEmitter<boolean>();
   @Input() terceroId: number | null = null;
@@ -342,8 +343,8 @@ export class ReciboCajaDialogComponent implements OnChanges {
   async imprimir(): Promise<void> {
     if (!this.resultado) return;
     try {
-      const blob = await lastValueFrom(this.carteraService.reciboPdf(this.resultado.id));
-      window.open(URL.createObjectURL(blob), '_blank');
+      // PDF con el estilo de los documentos, descargado como RC-000006.pdf.
+      await this.reciboPdf.descargar(this.resultado.id);
     } catch {
       this.alert.showError('Error', 'No se pudo generar el PDF del recibo');
     }

@@ -15,7 +15,7 @@ import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
 import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
@@ -49,7 +49,7 @@ type TagSeverity = 'success' | 'secondary' | 'info' | 'warn' | 'danger' | 'contr
     TooltipModule,
     SkeletonModule,
     DropdownModule,
-    CalendarModule,
+    DatePickerModule,
     TicketComprobanteCajaComponent,
   ],
   providers: [MessageService],

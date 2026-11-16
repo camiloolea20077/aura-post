@@ -1,7 +1,7 @@
 <div class="mes-barra">
   <div class="mes-filtro">
     <label class="field-label" for="ne-mes">Mes</label>
-    <p-calendar inputId="ne-mes" [ngModel]="mes" (ngModelChange)="cambiarMes($event)" view="month"
+    <p-datepicker inputId="ne-mes" [ngModel]="mes" (ngModelChange)="cambiarMes($event)" view="month"
       dateFormat="MM yy" [maxDate]="maxMes" [readonlyInput]="true" [showIcon]="true" styleClass="mes-cal" />
   </div>
   <div class="mes-resumen">

@@ -60,15 +60,23 @@
     @if (esFormula) {
       <div class="field span-2">
         <label>Fórmula <span class="req">*</span></label>
-        <textarea pTextarea [(ngModel)]="form.formula" rows="3" class="w-full formula"
-          placeholder="Ej.: BASE_IBC * 4%"></textarea>
-        <small class="hint">Se valida al guardar. Para el editor completo, abra el concepto.</small>
+        <textarea
+          pTextarea
+          [(ngModel)]="form.formula"
+          rows="3"
+          class="w-full formula"
+          placeholder="Ej.: BASE_IBC * 4%"
+        ></textarea>
+        <small class="hint"
+          >Se valida al guardar. Para el editor completo, abra el
+          concepto.</small
+        >
       </div>
     }
 
     <div class="field">
       <label>Vigente desde <span class="req">*</span></label>
-      <p-calendar
+      <p-datepicker
         [(ngModel)]="form.vigenteDesde"
         dateFormat="dd/mm/yy"
         [showIcon]="true"

@@ -13,7 +13,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -68,7 +68,7 @@ import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-a
     FormsModule,
     ReactiveFormsModule,
     ButtonModule,
-    CalendarModule,
+    DatePickerModule,
     DialogModule,
     DropdownModule,
     InputNumberModule,

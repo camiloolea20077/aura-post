@@ -9,7 +9,7 @@ import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
 import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { lastValueFrom } from 'rxjs';
 
 import {
@@ -41,7 +41,7 @@ import { ExcelReporteService } from '../../../../shared/services/excel-reporte.s
     TooltipModule,
     SkeletonModule,
     DropdownModule,
-    CalendarModule,
+    DatePickerModule,
     PuedeDirective,
   ],
   templateUrl: './index-causaciones.component.html',

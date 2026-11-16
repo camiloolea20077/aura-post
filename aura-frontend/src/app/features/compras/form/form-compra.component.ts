@@ -13,7 +13,7 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { HistorialCostoProductoComponent } from '../../../shared/components/historial-costo-producto/historial-costo-producto.component';
 import { SerialEntradaComponent } from '../../../shared/components/serial-entrada/serial-entrada.component';
 import {
@@ -105,7 +105,7 @@ import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-a
     DialogModule,
     InputTextModule,
     InputNumberModule,
-    CalendarModule,
+    DatePickerModule,
     SerialEntradaComponent,
     HistorialCostoProductoComponent,
     SerialPickerComponent,

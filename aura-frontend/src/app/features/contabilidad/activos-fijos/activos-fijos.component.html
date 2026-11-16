@@ -224,7 +224,7 @@
         <div class="field-row">
           <div class="field flex-1">
             <label>Fecha adquisición <span class="req">*</span></label>
-            <p-calendar
+            <p-datepicker
               [(ngModel)]="fechaAdquisicion"
               dateFormat="yy-mm-dd"
               [showIcon]="true"
@@ -248,7 +248,7 @@
         <div class="field-row">
           <div class="field flex-1">
             <label>Inicio de la depreciación</label>
-            <p-calendar
+            <p-datepicker
               [(ngModel)]="fechaInicioDep"
               dateFormat="yy-mm-dd"
               [showIcon]="true"
@@ -397,7 +397,7 @@
           </div>
           <div class="field flex-1">
             <label>Póliza vence</label>
-            <p-calendar
+            <p-datepicker
               [(ngModel)]="polizaVence"
               dateFormat="yy-mm-dd"
               [showIcon]="true"
@@ -538,7 +538,7 @@
     </p>
     <div class="field">
       <label>Fecha de la baja</label>
-      <p-calendar
+      <p-datepicker
         [(ngModel)]="bajaFecha"
         dateFormat="yy-mm-dd"
         [showIcon]="true"
@@ -595,7 +595,7 @@
     <div class="field-row">
       <div class="field flex-1">
         <label>Fecha</label>
-        <p-calendar [(ngModel)]="ventaFecha" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full" appendTo="body" />
+        <p-datepicker [(ngModel)]="ventaFecha" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full" appendTo="body" />
       </div>
       <div class="field flex-1">
         <label>Precio sin IVA <span class="req">*</span></label>

@@ -264,7 +264,7 @@
     </div>
     <div class="field">
       <label>Desde</label
-      ><p-calendar
+      ><p-datepicker
         [(ngModel)]="form.fechaDesde"
         appendTo="body"
         dateFormat="yy-mm-dd"
@@ -273,7 +273,7 @@
     </div>
     <div class="field">
       <label>Hasta</label
-      ><p-calendar
+      ><p-datepicker
         [(ngModel)]="form.fechaHasta"
         appendTo="body"
         dateFormat="yy-mm-dd"
@@ -328,7 +328,7 @@
     </div>
     <div class="field">
       <label>Desde</label
-      ><p-calendar
+      ><p-datepicker
         [(ngModel)]="formLote.fechaDesde"
         appendTo="body"
         dateFormat="yy-mm-dd"
@@ -337,7 +337,7 @@
     </div>
     <div class="field">
       <label>Hasta</label
-      ><p-calendar
+      ><p-datepicker
         [(ngModel)]="formLote.fechaHasta"
         appendTo="body"
         dateFormat="yy-mm-dd"
@@ -394,7 +394,7 @@
     </div>
     <div class="field span2">
       <label>Fecha de retiro</label>
-      <p-calendar
+      <p-datepicker
         [(ngModel)]="defFechaRetiro"
         dateFormat="yy-mm-dd"
         [showIcon]="true"
@@ -423,7 +423,7 @@
     </div>
     <div class="field span2">
       <label>Cesantías ya consignadas hasta (opcional)</label>
-      <p-calendar
+      <p-datepicker
         [(ngModel)]="defCesantiasCorte"
         dateFormat="yy-mm-dd"
         [showIcon]="true"

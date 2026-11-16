@@ -141,12 +141,12 @@
     @if (form.tipo === 'TIEMPO') {
       <div class="campo">
         <label>Desde *</label>
-        <p-calendar [(ngModel)]="form.fechaInicio" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
+        <p-datepicker [(ngModel)]="form.fechaInicio" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
           appendTo="body" />
       </div>
       <div class="campo">
         <label>Hasta (último día de descanso) *</label>
-        <p-calendar [(ngModel)]="form.fechaFin" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
+        <p-datepicker [(ngModel)]="form.fechaFin" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
           [minDate]="form.fechaInicio ?? undefined" appendTo="body" />
       </div>
       <p class="nota ancho">
@@ -155,7 +155,7 @@
     } @else {
       <div class="campo">
         <label>Fecha de pago *</label>
-        <p-calendar [(ngModel)]="form.fechaInicio" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
+        <p-datepicker [(ngModel)]="form.fechaInicio" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
           appendTo="body" />
         <small>Entran a la nómina del período de esta fecha</small>
       </div>
@@ -193,12 +193,12 @@
     </div>
     <div class="campo">
       <label>Desde *</label>
-      <p-calendar [(ngModel)]="colectivas.fechaInicio" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
+      <p-datepicker [(ngModel)]="colectivas.fechaInicio" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
         appendTo="body" />
     </div>
     <div class="campo">
       <label>Hasta (último día de descanso) *</label>
-      <p-calendar [(ngModel)]="colectivas.fechaFin" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
+      <p-datepicker [(ngModel)]="colectivas.fechaFin" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
         [minDate]="colectivas.fechaInicio ?? undefined" appendTo="body" />
     </div>
     <div class="campo ancho">
@@ -240,7 +240,7 @@
       </p>
       <div class="campo">
         <label>Volvió a trabajar el *</label>
-        <p-calendar [(ngModel)]="fechaRetorno" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
+        <p-datepicker [(ngModel)]="fechaRetorno" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
           appendTo="body" />
         <small>Los días hábiles desde esa fecha hasta el fin vuelven al saldo</small>
       </div>

@@ -11,7 +11,7 @@ import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { TabViewModule } from 'primeng/tabview';
 import { SkeletonModule } from 'primeng/skeleton';
 import { MessageService } from 'primeng/api';
@@ -40,7 +40,7 @@ import { aFechaLocal } from '../../../shared/utils/fecha.util';
     TableModule,
     TagModule,
     ToastModule,
-    CalendarModule,
+    DatePickerModule,
     TabViewModule,
     SkeletonModule,
   ],

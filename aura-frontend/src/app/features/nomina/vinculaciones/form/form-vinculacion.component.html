@@ -133,12 +133,12 @@
             <div class="grid">
               <div class="field">
                 <label class="field-label">Fecha de inicio <span class="required">*</span></label>
-                <p-calendar formControlName="fechaInicio" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full" />
+                <p-datepicker formControlName="fechaInicio" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full" />
                 <small class="field-error" *ngIf="invalido('fechaInicio')">La fecha de inicio es obligatoria</small>
               </div>
               <div class="field">
                 <label class="field-label">Fecha de terminación @if (exigeFechaFin) { <span class="required">*</span> }</label>
-                <p-calendar formControlName="fechaFin" dateFormat="yy-mm-dd" [showIcon]="true" [showClear]="true" styleClass="w-full" />
+                <p-datepicker formControlName="fechaFin" dateFormat="yy-mm-dd" [showIcon]="true" [showClear]="true" styleClass="w-full" />
                 <small class="field-hint">{{ exigeFechaFin ? 'Este contrato la exige' : 'Vacío = indefinido' }}</small>
               </div>
               <div class="field">
@@ -150,7 +150,7 @@
               <div class="field">
                 <label class="field-label">Fin del período de prueba</label>
                 <div class="con-boton">
-                  <p-calendar formControlName="fechaFinPrueba" dateFormat="yy-mm-dd" [showIcon]="true" [showClear]="true" styleClass="w-full" />
+                  <p-datepicker formControlName="fechaFinPrueba" dateFormat="yy-mm-dd" [showIcon]="true" [showClear]="true" styleClass="w-full" />
                   <button pButton type="button" icon="pi pi-calculator" class="p-button-outlined"
                     pTooltip="Proponer el máximo legal" [disabled]="form.disabled" (click)="sugerirPrueba()"></button>
                 </div>
@@ -258,7 +258,7 @@
               </div>
               <div class="field">
                 <label class="field-label">Fecha</label>
-                <p-calendar formControlName="docInternoFecha" dateFormat="yy-mm-dd" [showIcon]="true" [showClear]="true" styleClass="w-full" />
+                <p-datepicker formControlName="docInternoFecha" dateFormat="yy-mm-dd" [showIcon]="true" [showClear]="true" styleClass="w-full" />
               </div>
             </div>
 

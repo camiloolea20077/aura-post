@@ -10,7 +10,7 @@ import { FormsModule } from '@angular/forms';
 import { lastValueFrom } from 'rxjs';
 
 import { ButtonModule } from 'primeng/button';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { ToastModule } from 'primeng/toast';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TagModule } from 'primeng/tag';
@@ -44,7 +44,7 @@ import { ExcelReporteService } from '../../../shared/services/excel-reporte.serv
     CommonModule,
     FormsModule,
     ButtonModule,
-    CalendarModule,
+    DatePickerModule,
     ToastModule,
     SkeletonModule,
     TagModule,

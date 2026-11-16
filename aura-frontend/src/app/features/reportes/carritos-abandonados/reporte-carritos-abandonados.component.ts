@@ -7,7 +7,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { TooltipModule } from 'primeng/tooltip';
 import { lastValueFrom } from 'rxjs';
@@ -32,7 +32,7 @@ type Rango = 'HOY' | 'SEMANA' | 'MES' | 'MES_ANTERIOR' | null;
   selector: 'app-reporte-carritos-abandonados',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, ButtonModule, CalendarModule, InputNumberModule, TooltipModule],
+  imports: [CommonModule, FormsModule, ButtonModule, DatePickerModule, InputNumberModule, TooltipModule],
   templateUrl: './reporte-carritos-abandonados.component.html',
   styleUrls: ['./reporte-carritos-abandonados.component.scss'],
 })

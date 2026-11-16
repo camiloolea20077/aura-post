@@ -20,7 +20,7 @@
   <form [formGroup]="filtros" class="filtros">
     <div class="filtro">
       <label>Desde</label>
-      <p-calendar
+      <p-datepicker
         formControlName="desde"
         dateFormat="dd/mm/yy"
         [showIcon]="true"
@@ -28,7 +28,7 @@
     </div>
     <div class="filtro">
       <label>Hasta</label>
-      <p-calendar
+      <p-datepicker
         formControlName="hasta"
         dateFormat="dd/mm/yy"
         [showIcon]="true"
@@ -161,7 +161,7 @@
 
       <div class="col-12 md:col-4 px-1">
         <label>Fecha <span class="req">*</span></label>
-        <p-calendar
+        <p-datepicker
           formControlName="fecha"
           dateFormat="dd/mm/yy"
           [showIcon]="true"

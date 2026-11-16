@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TooltipModule } from 'primeng/tooltip';
 import { lastValueFrom } from 'rxjs';
@@ -27,7 +27,7 @@ import { AlertService } from '../../../shared/pipes/alert.service';
     TableModule,
     ButtonModule,
     InputNumberModule,
-    CalendarModule,
+    DatePickerModule,
     SkeletonModule,
     TooltipModule,
   ],

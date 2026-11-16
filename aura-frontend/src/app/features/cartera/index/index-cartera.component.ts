@@ -18,7 +18,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { DropdownModule } from 'primeng/dropdown';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TextareaModule } from 'primeng/textarea';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { Router } from '@angular/router';
 import { aFechaLocal } from '../../../shared/utils/fecha.util';
 import { ViewChild, inject } from '@angular/core';
@@ -33,6 +33,7 @@ import { MessageService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
 
 import { CarteraService } from '../../../core/services/cartera.service';
+import { ReciboCajaPdfService } from '../../../core/services/recibo-caja-pdf.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
 import {
   AcuerdoPagoModel,
@@ -72,7 +73,7 @@ import { PuedeDirective } from '../../../shared/directives/puede.directive';
     DropdownModule,
     CheckboxModule,
     TextareaModule,
-    CalendarModule,
+    DatePickerModule,
     AgendaCobroComponent,
     TableroCarteraComponent,
     AutorizacionesCreditoComponent,
@@ -85,6 +86,7 @@ import { PuedeDirective } from '../../../shared/directives/puede.directive';
   styleUrls: ['./index-cartera.component.scss'],
 })
 export class IndexCarteraComponent implements OnInit {
+  private readonly reciboPdf = inject(ReciboCajaPdfService);
   // ── Tab activo ────────────────────────────────────────────────────
   tab: TabCartera = 'dashboard';
 
@@ -318,8 +320,8 @@ export class IndexCarteraComponent implements OnInit {
 
   async imprimirRecibo(id: number): Promise<void> {
     try {
-      const blob = await lastValueFrom(this.carteraService.reciboPdf(id));
-      window.open(URL.createObjectURL(blob), '_blank');
+      // PDF con el estilo de los documentos, descargado como RC-000006.pdf.
+      await this.reciboPdf.descargar(id);
     } catch {
       this.alertService.showError('Error', 'No se pudo generar el PDF del recibo');
     }

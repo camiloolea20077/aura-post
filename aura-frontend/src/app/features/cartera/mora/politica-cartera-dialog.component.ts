@@ -13,7 +13,7 @@ import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { DropdownModule } from 'primeng/dropdown';
 import { TooltipModule } from 'primeng/tooltip';
 import { lastValueFrom } from 'rxjs';
@@ -43,7 +43,7 @@ interface TramoForm {
     DialogModule,
     ButtonModule,
     InputNumberModule,
-    CalendarModule,
+    DatePickerModule,
     DropdownModule,
     TooltipModule,
   ],

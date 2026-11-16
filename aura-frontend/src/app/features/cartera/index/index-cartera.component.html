@@ -811,7 +811,7 @@
 
     <div class="field" *ngIf="gestionForm.resultado === 'PROMESA_PAGO'">
       <label>Fecha de la promesa</label>
-      <p-calendar
+      <p-datepicker
         [(ngModel)]="fechaPromesa"
         dateFormat="dd/mm/yy"
         [minDate]="hoy"

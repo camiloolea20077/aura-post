@@ -9,7 +9,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { TagModule } from 'primeng/tag';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { lastValueFrom } from 'rxjs';
@@ -55,7 +55,7 @@ import { CuentaAutocompleteComponent } from '../../../shared/components/cuenta-a
     PuedeDirective,
     CommonModule, FormsModule,
     ButtonModule, TableModule, DropdownModule, InputTextModule, InputNumberModule, TagModule,
-    ConfirmDialogModule, CalendarModule,
+    ConfirmDialogModule, DatePickerModule,
   ],
   providers: [ConfirmationService],
   templateUrl: './saldos-iniciales.component.html',

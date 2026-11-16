@@ -180,13 +180,13 @@
             @if (!esPersona && !esBanco) {
               <div class="field">
                 <label for="fechaNacimiento">Fecha de nacimiento</label>
-                <p-calendar inputId="fechaNacimiento" formControlName="fechaNacimiento" dateFormat="yy-mm-dd"
-                  [showIcon]="true" [maxDate]="hoy" styleClass="w-full" placeholder="AAAA-MM-DD"></p-calendar>
+                <p-datepicker inputId="fechaNacimiento" formControlName="fechaNacimiento" dateFormat="yy-mm-dd"
+                  [showIcon]="true" [maxDate]="hoy" styleClass="w-full" placeholder="AAAA-MM-DD"></p-datepicker>
               </div>
               <div class="field">
                 <label for="fechaExpedicion">Fecha de expedición</label>
-                <p-calendar inputId="fechaExpedicion" formControlName="fechaExpedicionDocumento" dateFormat="yy-mm-dd"
-                  [showIcon]="true" [maxDate]="hoy" styleClass="w-full" placeholder="AAAA-MM-DD"></p-calendar>
+                <p-datepicker inputId="fechaExpedicion" formControlName="fechaExpedicionDocumento" dateFormat="yy-mm-dd"
+                  [showIcon]="true" [maxDate]="hoy" styleClass="w-full" placeholder="AAAA-MM-DD"></p-datepicker>
               </div>
             }
             @if (esPersona) {
@@ -210,8 +210,8 @@
           <div class="grid-3">
             <div class="field">
               <label for="fechaExpedicion">Fecha de expedición</label>
-              <p-calendar inputId="fechaExpedicion" formControlName="fechaExpedicionDocumento" dateFormat="yy-mm-dd"
-                [showIcon]="true" [maxDate]="hoy" styleClass="w-full" placeholder="AAAA-MM-DD"></p-calendar>
+              <p-datepicker inputId="fechaExpedicion" formControlName="fechaExpedicionDocumento" dateFormat="yy-mm-dd"
+                [showIcon]="true" [maxDate]="hoy" styleClass="w-full" placeholder="AAAA-MM-DD"></p-datepicker>
             </div>
             <app-lugar-select [grupo]="frm" paisControl="codigoPaisExpedicion"
               municipioControl="municipioExpedicionId" titulo="de expedición" />
@@ -221,8 +221,8 @@
           <div class="grid-3">
             <div class="field">
               <label for="fechaNacimiento">Fecha de nacimiento</label>
-              <p-calendar inputId="fechaNacimiento" formControlName="fechaNacimiento" dateFormat="yy-mm-dd"
-                [showIcon]="true" [maxDate]="hoy" styleClass="w-full" placeholder="AAAA-MM-DD"></p-calendar>
+              <p-datepicker inputId="fechaNacimiento" formControlName="fechaNacimiento" dateFormat="yy-mm-dd"
+                [showIcon]="true" [maxDate]="hoy" styleClass="w-full" placeholder="AAAA-MM-DD"></p-datepicker>
             </div>
             <app-lugar-select [grupo]="frm" paisControl="codigoPaisNacimiento"
               municipioControl="municipioNacimientoId" titulo="de nacimiento" />

@@ -209,11 +209,11 @@
         <div class="filtros filtros--ica">
           <div class="filtro">
             <label>Desde</label>
-            <p-calendar [(ngModel)]="icaDesde" dateFormat="dd/mm/yy" appendTo="body" />
+            <p-datepicker [(ngModel)]="icaDesde" dateFormat="dd/mm/yy" appendTo="body" />
           </div>
           <div class="filtro">
             <label>Hasta</label>
-            <p-calendar [(ngModel)]="icaHasta" dateFormat="dd/mm/yy" appendTo="body" />
+            <p-datepicker [(ngModel)]="icaHasta" dateFormat="dd/mm/yy" appendTo="body" />
           </div>
           <div class="filtro">
             <label>Tarifa de la actividad</label>
@@ -275,7 +275,7 @@
     </div>
     <div class="pago-campo">
       <label>Fecha del pago</label>
-      <p-calendar [(ngModel)]="pagoFecha" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" />
+      <p-datepicker [(ngModel)]="pagoFecha" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" />
     </div>
     <div class="pago-campo">
       <label>Sale de</label>

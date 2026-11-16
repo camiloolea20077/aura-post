@@ -9,7 +9,7 @@ import { TagModule } from 'primeng/tag';
 import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
 import { DropdownModule } from 'primeng/dropdown';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { lastValueFrom } from 'rxjs';
 
 import {
@@ -44,7 +44,7 @@ import { DetalleCompraComponent } from '../detail/detalle-compra.component';
     TooltipModule,
     SkeletonModule,
     DropdownModule,
-    CalendarModule,
+    DatePickerModule,
     PuedeDirective,
     DetalleCompraComponent,
   ],

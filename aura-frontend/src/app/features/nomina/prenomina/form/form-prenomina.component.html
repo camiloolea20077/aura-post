@@ -86,7 +86,7 @@
           </div>
           <div class="field">
             <label class="field-label">Fecha del documento <span class="required">*</span></label>
-            <p-calendar formControlName="fecha" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full" />
+            <p-datepicker formControlName="fecha" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full" />
           </div>
           <div class="field">
             <label class="field-label">¿Simulación?</label>
@@ -100,21 +100,21 @@
         <div class="grid">
           <div class="field">
             <label class="field-label">Desde <span class="required">*</span></label>
-            <p-calendar formControlName="fechaDesde" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full" />
+            <p-datepicker formControlName="fechaDesde" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full" />
           </div>
           <div class="field">
             <label class="field-label">Hasta <span class="required">*</span></label>
-            <p-calendar formControlName="fechaHasta" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
+            <p-datepicker formControlName="fechaHasta" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full"
               (onSelect)="onFechaHasta()" />
           </div>
           <div class="field">
             <label class="field-label">Fecha de liquidación</label>
-            <p-calendar formControlName="fechaLiquidacion" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full" />
+            <p-datepicker formControlName="fechaLiquidacion" dateFormat="yy-mm-dd" [showIcon]="true" styleClass="w-full" />
             <small class="field-hint">Con ella se toman los conceptos y tarifas vigentes</small>
           </div>
           <div class="field">
             <label class="field-label">Fecha de pago</label>
-            <p-calendar formControlName="fechaPago" dateFormat="yy-mm-dd" [showIcon]="true" [showClear]="true"
+            <p-datepicker formControlName="fechaPago" dateFormat="yy-mm-dd" [showIcon]="true" [showClear]="true"
               styleClass="w-full" />
           </div>
         </div>
