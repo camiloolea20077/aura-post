@@ -250,6 +250,10 @@ export interface NovedadDocumentoModel {
   valorTotal: number;
   esDeduccion: boolean;
   origen: string;
+  /** APLICADA | PENDIENTE (pasa un tope: por autorizar) | APROBADA (autorizada). */
+  estado: string;
+  /** Pasó un tope del cargo o la vinculación y necesita autorización. */
+  requiereAprobacion: boolean;
 }
 
 /** Novedad nueva para un empleado de la prenómina (fechas en yyyy-MM-dd). */

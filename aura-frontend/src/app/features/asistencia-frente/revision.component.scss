@@ -374,3 +374,52 @@ tr.cero td {
     grid-template-columns: 1fr;
   }
 }
+
+/* V242 — aprobar varios días a la vez. */
+.bloque {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid #dbeafe;
+  border-radius: 8px;
+  background: #f8fbff;
+  container-type: inline-size;
+}
+
+.bloque__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.85rem;
+
+  span {
+    color: #64748b;
+  }
+}
+
+.bloque__campos {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 0.6rem;
+  align-items: center;
+
+  > * {
+    min-width: 0;
+  }
+}
+
+@container (max-width: 720px) {
+  .bloque__campos {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.bloque__errores {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.8rem;
+  color: #b45309;
+}

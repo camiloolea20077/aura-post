@@ -101,6 +101,25 @@ export class ConceptosCargoComponent implements OnChanges {
     }
   }
 
+  cargandoBase = false;
+
+  /** Precarga los conceptos base de un empleado en la plantilla del cargo. */
+  async cargarBase(): Promise<void> {
+    this.cargandoBase = true;
+    const antes = this.filas.length;
+    try {
+      const res = await lastValueFrom(this.service.cargarConceptosBase(this.cargoId));
+      this.filas = res.data ?? [];
+      const nuevos = this.filas.length - antes;
+      if (nuevos > 0) this.alert.showSuccess('Conceptos del cargo', `${nuevos} concepto(s) base agregado(s).`);
+      else this.alert.showInfo('Conceptos del cargo', 'El cargo ya tenía todos los conceptos base.');
+    } catch (err: any) {
+      this.alert.showError('Conceptos del cargo', err?.error?.message ?? 'No se pudieron cargar.');
+    } finally {
+      this.cargandoBase = false;
+    }
+  }
+
   async onAgregar(conceptos: ConceptoModel[]): Promise<void> {
     if (!conceptos.length) return;
     try {

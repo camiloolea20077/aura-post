@@ -32,6 +32,14 @@ export class NominaCargoPlantillaService {
     return this.http.get<ResponseModel<CargoConceptoModel[]>>(`${this.base}/${cargoId}/conceptos`);
   }
 
+  /**
+   * Precarga los conceptos base de un empleado (sueldo, auxilio, horas extra y
+   * recargos, seguridad social, aportes y provisiones). No repite los que ya están.
+   */
+  cargarConceptosBase(cargoId: number): Observable<ResponseModel<CargoConceptoModel[]>> {
+    return this.http.post<ResponseModel<CargoConceptoModel[]>>(`${this.base}/${cargoId}/conceptos/base`, {});
+  }
+
   /** Agrega varios conceptos por número; los que ya estaban se ignoran. */
   agregarConceptos(cargoId: number, numeros: number[]): Observable<ResponseModel<CargoConceptoModel[]>> {
     return this.http.post<ResponseModel<CargoConceptoModel[]>>(`${this.base}/${cargoId}/conceptos`, { numeros });

@@ -5,14 +5,27 @@
     heredan.
   </p>
   @if (!soloLectura) {
-    <button
-      pButton
-      type="button"
-      label="Agregar conceptos"
-      icon="pi pi-search-plus"
-      class="btn-aura p-button-sm"
-      (click)="mostrarBuscador = true"
-    ></button>
+    <div class="tab-head-acciones" style="display: flex; gap: 0.5rem; flex-wrap: wrap">
+      <button
+        pButton
+        type="button"
+        label="Cargar conceptos base"
+        icon="pi pi-bolt"
+        class="p-button-outlined p-button-sm"
+        pTooltip="Sueldo, auxilio de transporte, horas extra y recargos, salud, pensión, aportes y provisiones"
+        tooltipPosition="bottom"
+        [loading]="cargandoBase"
+        (click)="cargarBase()"
+      ></button>
+      <button
+        pButton
+        type="button"
+        label="Agregar conceptos"
+        icon="pi pi-search-plus"
+        class="btn-aura p-button-sm"
+        (click)="mostrarBuscador = true"
+      ></button>
+    </div>
   }
 </div>
 

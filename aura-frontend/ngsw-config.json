@@ -1,31 +1,31 @@
 {
   "$schema": "./node_modules/@angular/service-worker/config/schema.json",
   "appData": {
-    "version": "2026.11.04",
+    "version": "2026.11.16",
     "cambios": [
       {
-        "modulo": "Reportes avanzados",
-        "texto": "Nueva pestaña Utilidad: cuánto le dejó cada producto, categoría, vendedor, cliente o mes (venta sin IVA menos el costo), con exportación a Excel."
+        "modulo": "Nómina",
+        "texto": "El salario mínimo y el auxilio de transporte se toman por año: cada período se liquida con los valores de ley de su año (ya están los de 2026)."
       },
       {
-        "modulo": "Reportes avanzados",
-        "texto": "Las ventas a crédito ya cuentan en la utilidad. Toque \"Utilidad de ventas a crédito\" para ver cada venta, lo abonado y lo que falta por cobrar."
+        "modulo": "Nómina",
+        "texto": "Una novedad que pasa un tope del cargo queda \"Por autorizar\" en vez de rechazarse. Autorícela con el botón ✓ y reliquide."
       },
       {
-        "modulo": "Reportes avanzados",
-        "texto": "Nuevo diseño: arriba ve de un vistazo Venta neta − Costo = Utilidad del período elegido."
+        "modulo": "Nómina",
+        "texto": "Las horas extra y recargos que llegan de la asistencia por obra ya se liquidan, y si un empleado falla en la liquidación ahora se ve el motivo."
       },
       {
-        "modulo": "Utilidad y costos",
-        "texto": "La utilidad usa el costo que tenía el producto el día de la venta, y las devoluciones ya le restan también el costo. Las ventas antiguas sin costo quedaron completadas."
+        "modulo": "Cargos",
+        "texto": "Nuevo botón \"Cargar conceptos base\" en la plantilla del cargo: sueldo, auxilio, horas extra y recargos, seguridad social, aportes y provisiones."
       },
       {
-        "modulo": "Cartera",
-        "texto": "El PDF del recibo de caja tiene nuevo diseño (como la factura) y se descarga con su número, por ejemplo RCB-000023.pdf."
+        "modulo": "Asistencia por obra",
+        "texto": "Importe el marcaje de todo el mes desde una plantilla de Excel: entrada, salida, descanso y estado por día; el sistema calcula las horas."
       },
       {
-        "modulo": "Fechas",
-        "texto": "Los calendarios ya no se esconden al volver a abrirlos después de cambiar de mes."
+        "modulo": "Asistencia por obra",
+        "texto": "Puede trabajar por proyecto sin crear frentes, registrar el descanso de cada día y aprobar varios días de una vez."
       }
     ]
   },

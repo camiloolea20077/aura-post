@@ -15,11 +15,12 @@
         ></button>
         <span class="header-icon"><i class="pi pi-sitemap"></i></span>
         <div>
-          <h1 class="title">Frentes</h1>
+          <h1 class="title">{{ usaFrentes ? "Frentes" : "Trabajadores del proyecto" }}</h1>
           <p class="subtitle">{{ proyectoNombre || "Frentes del proyecto" }}</p>
         </div>
       </div>
       <div class="card-head__actions">
+        <ng-container *ngIf="usaFrentes">
         <button *appPuede="'recursos-humanos.proyectos-y-frentes:CREAR'"
           pButton
           type="button"
@@ -28,11 +29,16 @@
           class="btn-verde"
           (click)="nuevo()"
         ></button>
+        </ng-container>
       </div>
     </div>
+    <p class="modo-nota" *ngIf="!usaFrentes">
+      La empresa trabaja por proyecto sin frentes (Configuración de nómina → Asistencia por obra).
+      Edite el proyecto completo para asignar sus trabajadores y su turno.
+    </p>
 
     <p-table
-      [value]="frentes"
+      [value]="frentesVisibles"
       [paginator]="true"
       [rows]="10"
       [rowsPerPageOptions]="[10, 25, 50]"
@@ -58,6 +64,8 @@
           </td>
           <td>
             <span class="nom">{{ f.nombre }}</span>
+            <p-tag *ngIf="f.esGeneral" value="Todo el proyecto" severity="info" styleClass="ml-2"
+              pTooltip="Lo crea el sistema: asigne aquí a los trabajadores si no divide la obra en frentes." />
           </td>
           <td>{{ f.liderNombre ?? "— Sin líder —" }}</td>
           <td>{{ f.ubicacion ?? "—" }}</td>
@@ -77,6 +85,7 @@
               pTooltip="Editar / trabajadores"
               (click)="editar(f)"
             ></button>
+            <ng-container *ngIf="!f.esGeneral">
             <button *appPuede="'recursos-humanos.proyectos-y-frentes:ANULAR'"
               pButton
               icon="pi pi-trash"
@@ -84,6 +93,7 @@
               pTooltip="Eliminar"
               (click)="eliminar(f)"
             ></button>
+            </ng-container>
           </td>
         </tr>
       </ng-template>

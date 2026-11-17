@@ -20,6 +20,7 @@ import { CorreoFila, GrupoCorreo } from '../../../core/models/correo.model';
 import { CorreoService } from '../../../core/services/correo.service';
 import { AlertService } from '../../pipes/alert.service';
 import { PdfAdjunto } from '../../utils/pdf-adjunto';
+import { ArchivoAdjunto, leerArchivo, motivoRechazo, tamanoTexto } from '../../utils/archivo-adjunto';
 import { CorreosInputComponent } from '../correos-input/correos-input.component';
 
 /**
@@ -67,12 +68,46 @@ export class EnviarCorreoComponent {
   historial: CorreoFila[] = [];
   cargando = false;
   enviando = false;
+  /** Documentos que el usuario agrega además del PDF del documento (no en el cobro de cartera). */
+  adicionales: ArchivoAdjunto[] = [];
+  readonly tamanoTexto = tamanoTexto;
+
+  /** El cobro de cartera lo arma el servidor: ahí no se adjuntan documentos. */
+  get permiteAdjuntar(): boolean {
+    return this.grupo !== 'cartera';
+  }
+
+  /** Agrega los archivos elegidos; los que no se pueden, se avisan y se saltan. */
+  async onArchivos(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const files = Array.from(input.files ?? []);
+    input.value = '';
+    for (const file of files) {
+      const motivo = motivoRechazo(file, this.adicionales);
+      if (motivo) {
+        this.alert.showWarn('Documento no agregado', motivo);
+        continue;
+      }
+      try {
+        this.adicionales = [...this.adicionales, await leerArchivo(file)];
+      } catch (err: any) {
+        this.alert.showError('Documento no agregado', err?.message ?? 'No se pudo leer el archivo.');
+      }
+    }
+    this.cdr.markForCheck();
+  }
+
+  quitarAdjunto(a: ArchivoAdjunto): void {
+    this.adicionales = this.adicionales.filter((x) => x !== a);
+    this.cdr.markForCheck();
+  }
 
   async alAbrir(): Promise<void> {
     if (!this.documentoId) return;
     this.cargando = true;
     this.para = [];
     this.cc = [];
+    this.adicionales = [];
     this.cdr.markForCheck();
     try {
       const [sug, hist] = await Promise.all([
@@ -115,6 +150,9 @@ export class EnviarCorreoComponent {
           asunto: this.asunto.trim(),
           mensaje: this.mensaje.trim() || null,
           adjunto,
+          adicionales: this.permiteAdjuntar
+            ? this.adicionales.map((a) => ({ nombre: a.nombre, base64: a.base64 }))
+            : [],
         }),
       );
       const fila = res?.data;

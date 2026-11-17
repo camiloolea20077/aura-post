@@ -136,3 +136,15 @@
   color: #6b7280;
   max-width: 620px;
 }
+
+/* V239 — valores de ley del año, como texto. */
+.valor-ley {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1f2937;
+  padding: 0.5rem 0;
+}
+
+.ley-nota {
+  grid-column: 1 / -1;
+}

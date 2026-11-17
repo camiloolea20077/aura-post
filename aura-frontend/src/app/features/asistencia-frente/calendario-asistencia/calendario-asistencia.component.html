@@ -1,0 +1,72 @@
+<div class="cal">
+  <div class="cal-scroll">
+    <table class="cal-tabla">
+      <thead>
+        <tr>
+          <th class="cal-nombre">Trabajador</th>
+          <th
+            *ngFor="let d of dias"
+            class="cal-dia"
+            [class.dom]="d.domingo"
+            [class.fes]="d.festivo"
+            [class.clic]="clicable"
+            [pTooltip]="d.festivo ? 'Festivo' : d.domingo ? 'Domingo' : ''"
+            tooltipPosition="top"
+            (click)="abrir(d.fecha)"
+          >
+            <span class="cal-letra">{{ d.letra }}</span>
+            <span>{{ d.dia }}</span>
+          </th>
+          <th class="cal-tot" pTooltip="Días con asistencia" tooltipPosition="top">Días</th>
+          <th class="cal-tot" pTooltip="Faltas (no asistió)" tooltipPosition="top">Faltas</th>
+          <th class="cal-tot">Horas</th>
+          <th class="cal-tot">Extra</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let f of filas; trackBy: trackFila">
+          <td class="cal-nombre">
+            <span class="cal-n">{{ f.nombre }}</span>
+            <span class="cal-doc">{{ f.documento }}</span>
+          </td>
+          <td
+            *ngFor="let d of dias"
+            class="cal-celda"
+            [class.dom]="d.domingo"
+            [class.fes]="d.festivo"
+            [class.clic]="clicable"
+            (click)="abrir(d.fecha)"
+          >
+            <span
+              *ngIf="f.celdas[d.fecha] as c; else vacio"
+              class="cal-marca"
+              [ngClass]="'m-' + c.tipo"
+              [class.con-extra]="c.extra > 0"
+              [pTooltip]="c.titulo"
+              tooltipPosition="top"
+              >{{ c.texto }}</span
+            >
+            <ng-template #vacio><span class="cal-marca m-vacio"></span></ng-template>
+          </td>
+          <td class="cal-tot num">{{ f.diasAsistidos }}</td>
+          <td class="cal-tot num" [class.rojo]="f.faltas > 0">{{ f.faltas }}</td>
+          <td class="cal-tot num">{{ f.horas | number: '1.0-1' }}</td>
+          <td class="cal-tot num">{{ f.horasExtra | number: '1.0-1' }}</td>
+        </tr>
+        <tr *ngIf="!filas.length">
+          <td [attr.colspan]="dias.length + 5" class="cal-vacia">No hay trabajadores ni asistencia en este mes.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="cal-leyenda">
+    <span><i class="cal-marca m-asistio">8</i> Asistió (horas)</span>
+    <span><i class="cal-marca m-asistio con-extra">12</i> Con horas extra</span>
+    <span><i class="cal-marca m-parcial">6</i> Llegó tarde / salió temprano</span>
+    <span><i class="cal-marca m-falta">F</i> No asistió</span>
+    <span><i class="cal-marca m-justificada">P</i> Permiso · I incapacidad · V vacaciones</span>
+    <span><i class="cal-marca m-vacio"></i> Sin registro</span>
+    <span class="cal-ley-dom">Domingo / festivo</span>
+  </div>
+</div>

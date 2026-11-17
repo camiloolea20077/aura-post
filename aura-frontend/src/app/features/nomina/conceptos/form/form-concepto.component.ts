@@ -5,7 +5,7 @@ import { DialogModule } from 'primeng/dialog';
 import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { SelectModule } from 'primeng/select';
-import { CalendarModule } from 'primeng/calendar';
+import { DatePickerModule } from 'primeng/datepicker';
 import { TextareaModule } from 'primeng/textarea';
 import { lastValueFrom } from 'rxjs';
 
@@ -37,7 +37,7 @@ import { aFechaLocal, aDate } from '../../../../shared/utils/fecha.util';
     ButtonModule,
     InputNumberModule,
     SelectModule,
-    CalendarModule,
+    DatePickerModule,
     TextareaModule,
   ],
   templateUrl: './form-concepto.component.html',

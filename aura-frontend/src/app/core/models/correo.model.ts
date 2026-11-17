@@ -25,6 +25,8 @@ export interface EnviarCorreo {
   mensaje: string | null;
   /** null en el cobro de cartera: el servidor adjunta el estado de cuenta. */
   adjunto: PdfAdjunto | null;
+  /** Documentos adicionales (contrato, RUT, orden de compra…); máximo 5. No se guardan. */
+  adicionales?: PdfAdjunto[];
 }
 
 export interface CorreoFila {
@@ -35,6 +37,8 @@ export interface CorreoFila {
   asunto: string;
   estado: EstadoCorreo;
   error: string | null;
+  /** Documentos adicionales enviados, separados por "; ". */
+  adjuntosAdicionales?: string | null;
   createdAt: string;
   enviadoAt: string | null;
   usuarioNombre: string | null;

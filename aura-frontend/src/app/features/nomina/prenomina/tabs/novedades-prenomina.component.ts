@@ -184,12 +184,39 @@ export class NovedadesPrenominaComponent implements OnInit {
       const res = await lastValueFrom(this.service.agregarNovedad(this.documento.id, dto));
       this.novedades = res?.data ?? [];
       this.mostrarForm = false;
-      this.alert.showSuccess('Novedad', 'Agregada. Reliquide al empleado en la pestaña Liquidación.');
+      const nueva = this.novedades.find((x) => x.nominaId === dto.nominaId && x.estado === 'PENDIENTE');
+      if (nueva) this.alert.showWarn('Novedad por autorizar',
+        'Se guardó, pero pasa un tope del cargo o de la vinculación: autorícela antes de reliquidar.');
+      else this.alert.showSuccess('Novedad', 'Agregada. Reliquide al empleado en la pestaña Liquidación.');
       this.cambio.emit();
     } catch (err: any) {
       this.alert.showError('No se pudo agregar', err?.error?.message ?? 'Revise los datos.');
     } finally {
       this.guardando = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  confirmarAutorizar(n: NovedadDocumentoModel): void {
+    this.confirm.confirm({
+      message: `La novedad <b>${this.textoTipo(n.tipo)}</b> de ${n.empleadoNombre} pasa un tope del cargo o de la vinculación.<br>¿Autorizarla para que se pague?`,
+      header: 'Autorizar novedad',
+      icon: 'pi pi-check-circle',
+      acceptLabel: 'Sí, autorizar',
+      rejectLabel: 'Cancelar',
+      accept: () => void this.autorizar(n),
+    });
+  }
+
+  private async autorizar(n: NovedadDocumentoModel): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.service.autorizarNovedad(this.documento.id, n.id));
+      this.novedades = res?.data ?? [];
+      this.alert.showSuccess('Novedad', 'Autorizada. Reliquide al empleado en la pestaña Liquidación.');
+      this.cambio.emit();
+    } catch (err: any) {
+      this.alert.showError('No se pudo autorizar', err?.error?.message ?? 'Intente de nuevo.');
+    } finally {
       this.cdr.markForCheck();
     }
   }

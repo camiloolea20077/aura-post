@@ -383,3 +383,66 @@
   padding-top: 0.35rem;
   font-size: 0.82rem;
 }
+
+/* V241 — proyecto sin frentes: se muestra en vez del selector de frente. */
+.solo-proyecto {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #374151;
+  font-weight: 500;
+}
+
+/* V243 — sin soporte exigido: la tabla de horas ocupa todo el ancho. */
+.split.sin-soporte {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.modo-nota {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0 1.25rem 0.75rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #1e40af;
+  font-size: 0.85rem;
+}
+
+/* V245 — empresa sin revisión de asistencia. */
+.sin-revision {
+  display: inline-flex;
+  gap: 0.4rem;
+  align-items: center;
+  color: #1e40af;
+  font-size: 0.85rem;
+}
+
+/* Vista Día / Mes */
+.vista-sel {
+  display: inline-flex;
+  gap: 0.35rem;
+  margin-left: auto;
+}
+
+.mes-vista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0 1.25rem 1rem;
+  min-width: 0;
+}
+
+.mes-vista__barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.mes-vista__ayuda {
+  color: #64748b;
+  font-size: 0.82rem;
+}

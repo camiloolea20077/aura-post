@@ -61,6 +61,8 @@ export interface FrenteTableModel {
   estado: EstadoFrente;
   observacion: string | null;
   trabajadoresCount: number;
+  /** Frente "General" = el proyecto completo, creado por el sistema (V241). */
+  esGeneral?: boolean;
 }
 
 export interface CreateFrenteDto {

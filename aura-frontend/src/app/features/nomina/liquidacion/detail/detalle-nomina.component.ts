@@ -327,6 +327,17 @@ export class DetalleNominaComponent implements OnChanges {
     }
   }
 
+  async autorizarNovedad(novedadId: number): Promise<void> {
+    if (!this.nomina || !confirm('La novedad pasa un tope del cargo o de la vinculación. ¿Autorizarla para que se pague?')) return;
+    try {
+      const res = await lastValueFrom(this.nominaService.autorizarNovedad(this.nomina.id, novedadId));
+      this.nomina = res?.data ?? this.nomina;
+      this.alertService.showSuccess('Autorizada', 'Novedad autorizada y nómina recalculada');
+    } catch (err: any) {
+      this.alertService.showError('No se pudo autorizar', err?.error?.message ?? 'Intente de nuevo.');
+    }
+  }
+
   async eliminarNovedad(novedadId: number): Promise<void> {
     if (!this.nomina || !confirm('¿Eliminar esta novedad?')) return;
     try {

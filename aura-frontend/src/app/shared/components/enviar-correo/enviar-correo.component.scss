@@ -92,3 +92,75 @@
   gap: 0.5rem;
   margin-top: 1rem;
 }
+
+/* V248 — documentos adicionales */
+.adjuntos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.adjunto {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 100%;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid #dbeafe;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #1e3a8a;
+  font-size: 0.8rem;
+
+  small {
+    color: #64748b;
+  }
+}
+
+.adjunto--fijo {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #475569;
+}
+
+.adjunto__nombre {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
+}
+
+.adjunto__quitar {
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0 0.1rem;
+
+  &:hover {
+    color: #b91c1c;
+  }
+}
+
+.adjuntar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.65rem;
+  border: 1px dashed #93c5fd;
+  border-radius: 6px;
+  color: #2563eb;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: #eff6ff;
+  }
+}
+
+.historial__adjuntos {
+  display: block;
+  color: #64748b;
+}

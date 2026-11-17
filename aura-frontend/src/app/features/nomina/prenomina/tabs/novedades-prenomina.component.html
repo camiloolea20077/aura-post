@@ -31,7 +31,7 @@
       <th style="width: 140px" class="text-right">Valor</th>
       <th style="width: 100px">Origen</th>
       @if (editable) {
-        <th style="width: 70px"></th>
+        <th style="width: 96px"></th>
       }
     </tr>
   </ng-template>
@@ -59,9 +59,20 @@
       </td>
       <td>
         <p-tag [value]="n.origen === 'MANUAL' ? 'Manual' : n.origen" severity="secondary" styleClass="tag-mini" />
+        @if (n.estado === 'PENDIENTE') {
+          <p-tag value="Por autorizar" severity="warn" styleClass="tag-mini"
+            pTooltip="Pasa un tope del cargo o de la vinculación. Autorícela para que se liquide." />
+        } @else if (n.estado === 'APROBADA' && n.requiereAprobacion) {
+          <p-tag value="Autorizada" severity="success" styleClass="tag-mini" />
+        }
       </td>
       @if (editable) {
-        <td>
+        <td class="acciones">
+          @if (n.estado === 'PENDIENTE') {
+            <button *appPuede="'recursos-humanos.prenomina:EDITAR'" pButton icon="pi pi-check-circle"
+              class="p-button-text p-button-success p-button-sm" pTooltip="Autorizar (pasa el tope)"
+              (click)="confirmarAutorizar(n)"></button>
+          }
           <button *appPuede="'recursos-humanos.prenomina:EDITAR'" pButton icon="pi pi-trash"
             class="p-button-text p-button-danger p-button-sm" pTooltip="Quitar" (click)="confirmarEliminar(n)"></button>
         </td>

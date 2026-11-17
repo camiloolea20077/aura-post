@@ -17,8 +17,10 @@ import { TextareaModule } from 'primeng/textarea';
 import { TagModule } from 'primeng/tag';
 import { ToastModule } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
+import { DatePickerModule } from 'primeng/datepicker';
 import { MessageService } from 'primeng/api';
 
+import { NominaService } from '../../core/services/nomina.service';
 import { ProyectoService } from '../../core/services/proyecto.service';
 import { AlertService } from '../../shared/pipes/alert.service';
 import {
@@ -43,6 +45,7 @@ type Sev = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
     TagModule,
     ToastModule,
     TooltipModule,
+    DatePickerModule,
   ],
   providers: [MessageService],
   templateUrl: './revision.component.html',
@@ -54,6 +57,18 @@ export class RevisionFrenteComponent implements OnInit {
   proyectoId: number | null = null;
   fecha: string | null = null;
   proyectoOpts: { label: string; value: number | null }[] = [];
+
+  // Aprobar varios días a la vez (V242)
+  frenteBloqueOpts: { label: string; value: number }[] = [];
+  frenteBloqueId: number | null = null;
+  rangoBloque: (Date | null)[] | null = null;
+  enviarNominaBloque = true;
+  aprobandoBloque = false;
+  erroresBloque: { fecha: string; mensaje: string }[] = [];
+  readonly enviarNominaOpts = [
+    { label: 'Aprobar y enviar a nómina', value: true },
+    { label: 'Solo aprobar', value: false },
+  ];
 
   rows: RevisionTableModel[] = [];
   totalRecords = 0;
@@ -82,6 +97,7 @@ export class RevisionFrenteComponent implements OnInit {
 
   constructor(
     private readonly service: ProyectoService,
+    private readonly nominaService: NominaService,
     private readonly alertService: AlertService,
     private readonly sanitizer: DomSanitizer,
     private readonly cdr: ChangeDetectorRef,
@@ -157,10 +173,78 @@ export class RevisionFrenteComponent implements OnInit {
     }
   }
 
+  /** Frentes del proyecto elegido, para aprobar en bloque. */
+  private async cargarFrentesBloque(): Promise<void> {
+    this.frenteBloqueOpts = [];
+    this.frenteBloqueId = null;
+    if (!this.proyectoId) return;
+    try {
+      const res = await lastValueFrom(this.service.frentes(this.proyectoId));
+      const frentes = (res?.data ?? []).filter((f) => f.estado !== 'ANULADO');
+      this.frenteBloqueOpts = frentes.map((f) => ({
+        label: f.esGeneral ? 'Todo el proyecto (General)' : `${f.codigo} — ${f.nombre}`,
+        value: f.id,
+      }));
+      const general = frentes.find((f) => f.esGeneral);
+      // V243 — sin frentes, todo está en el General (el proyecto completo).
+      if (general && !(await this.usaFrentes())) this.frenteBloqueId = general.id;
+      else if (frentes.length === 1) this.frenteBloqueId = frentes[0].id;
+    } catch {
+      /* no bloqueante */
+    } finally {
+      this.cdr.markForCheck();
+    }
+  }
+
+  /** ¿La empresa divide los proyectos en frentes? (Configuración de nómina, V243). */
+  private async usaFrentes(): Promise<boolean> {
+    try {
+      const res = await lastValueFrom(this.nominaService.getConfig());
+      return res?.data?.asistenciaUsaFrentes !== false;
+    } catch {
+      return true;
+    }
+  }
+
+  async aprobarBloque(): Promise<void> {
+    const [desde, hasta] = this.rangoBloque ?? [];
+    if (!this.frenteBloqueId || !desde || !hasta) return;
+    this.aprobandoBloque = true;
+    this.erroresBloque = [];
+    this.cdr.markForCheck();
+    try {
+      const res = await lastValueFrom(
+        this.service.aprobarRango(this.frenteBloqueId, this.iso(desde), this.iso(hasta), this.enviarNominaBloque),
+      );
+      const r = res?.data;
+      this.erroresBloque = r?.errores ?? [];
+      if (this.erroresBloque.length)
+        this.alertService.showWarn('Aprobación', `${r?.procesados ?? 0} día(s) aprobados; ${this.erroresBloque.length} con problemas.`);
+      else this.alertService.showSuccess('Aprobación', `${r?.procesados ?? 0} día(s) aprobados.`);
+      await this.cargar();
+    } catch (e: any) {
+      this.alertService.showError('No se pudo aprobar', e?.error?.message ?? 'Intente de nuevo.');
+    } finally {
+      this.aprobandoBloque = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  private iso(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
   onFiltro(): void {
     this.page = 0;
+    if (this.proyectoId !== this.proyectoBloque) {
+      this.proyectoBloque = this.proyectoId;
+      void this.cargarFrentesBloque();
+    }
     this.cargar();
   }
+
+  /** Proyecto del que están cargados los frentes del bloque. */
+  private proyectoBloque: number | null = null;
 
   onPage(event: { first: number; rows: number }): void {
     this.page = event.first / event.rows;

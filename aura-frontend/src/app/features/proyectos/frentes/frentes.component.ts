@@ -21,6 +21,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TextareaModule } from 'primeng/textarea';
 import { MessageService } from 'primeng/api';
 
+import { NominaService } from '../../../core/services/nomina.service';
 import { ProyectoService } from '../../../core/services/proyecto.service';
 import { AsistenciaService } from '../../../core/services/asistencia.service';
 import { AlertService } from '../../../shared/pipes/alert.service';
@@ -89,8 +90,17 @@ export class FrentesComponent implements OnInit {
     { label: 'Anulado', value: 'ANULADO' },
   ];
 
+  /** V243 — la empresa trabaja por proyecto sin frentes: solo se ve el frente General. */
+  usaFrentes = true;
+
+  /** Frentes que se muestran: sin frentes, solo el General (el proyecto completo). */
+  get frentesVisibles(): FrenteTableModel[] {
+    return this.usaFrentes ? this.frentes : this.frentes.filter((f) => f.esGeneral);
+  }
+
   constructor(
     private readonly service: ProyectoService,
+    private readonly nominaService: NominaService,
     private readonly asistenciaService: AsistenciaService,
     private readonly alertService: AlertService,
     private readonly route: ActivatedRoute,
@@ -104,6 +114,17 @@ export class FrentesComponent implements OnInit {
     this.cargarEmpleados();
     this.cargarProyecto();
     this.cargarTurnosCatalogo();
+    this.cargarModo();
+  }
+
+  private async cargarModo(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.nominaService.getConfig());
+      this.usaFrentes = res?.data?.asistenciaUsaFrentes !== false;
+      this.cdr.markForCheck();
+    } catch {
+      /* sin configuración: con frentes, como siempre */
+    }
   }
 
   async cargarTurnosCatalogo(): Promise<void> {

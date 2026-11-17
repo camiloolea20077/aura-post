@@ -59,6 +59,18 @@ export class NominaConfigComponent implements OnInit {
     { label: 'Mixta', value: 'MIXTA' },
   ];
 
+  /** Asistencia por obra (V243). Selects, no switches (estándar de formularios). */
+  public siNoOpts = [
+    { label: 'Sí', value: true },
+    { label: 'No', value: false },
+  ];
+
+  public registroOpts = [
+    { label: 'Plantilla de Excel del mes', value: 'EXCEL' },
+    { label: 'Digitación día por día', value: 'MANUAL' },
+    { label: 'Las dos formas', value: 'AMBOS' },
+  ];
+
   constructor(
     private readonly nominaService: NominaService,
     private readonly alertService: AlertService,
