@@ -58,6 +58,8 @@ export class EnviarCorreoComponent {
   @Input() titulo = 'documento';
   /** Genera el PDF del documento (el mismo que se descarga); null = lo adjunta el servidor (cobro). */
   @Input() generarAdjunto: (() => Promise<PdfAdjunto>) | null = null;
+  /** Documentos que ya van adjuntos al abrir (p. ej. las fotos del equipo); se pueden quitar. */
+  @Input() adjuntosIniciales: (() => Promise<ArchivoAdjunto[]>) | null = null;
   @Output() visibleChange = new EventEmitter<boolean>();
 
   para: string[] = [];
@@ -108,6 +110,13 @@ export class EnviarCorreoComponent {
     this.para = [];
     this.cc = [];
     this.adicionales = [];
+    if (this.adjuntosIniciales && this.permiteAdjuntar) {
+      try {
+        this.adicionales = (await this.adjuntosIniciales()).slice(0, 5);
+      } catch {
+        this.adicionales = [];
+      }
+    }
     this.cdr.markForCheck();
     try {
       const [sug, hist] = await Promise.all([

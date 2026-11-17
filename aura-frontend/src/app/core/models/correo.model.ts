@@ -6,7 +6,7 @@ import { PdfAdjunto } from '../../shared/utils/pdf-adjunto';
  * Grupo de documentos: decide la ruta y el permiso (Facturas de venta, Cotizaciones, Cartera).
  * cartera = cobro al cliente: documentoId es el cliente y el estado de cuenta lo adjunta el servidor.
  */
-export type GrupoCorreo = 'facturas' | 'cotizaciones' | 'cartera';
+export type GrupoCorreo = 'facturas' | 'cotizaciones' | 'cartera' | 'servicio-tecnico';
 
 export type EstadoCorreo = 'PENDIENTE' | 'ENVIANDO' | 'ENVIADO' | 'FALLIDO';
 

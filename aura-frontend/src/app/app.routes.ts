@@ -21,6 +21,14 @@ export const routes: Routes = [
         (m) => m.ResetPasswordComponent,
       ),
   },
+  // Consulta de la orden de servicio técnico por el cliente: sin sesión, por enlace.
+  {
+    path: 'consulta-servicio/:token',
+    loadComponent: () =>
+      import('./features/servicio-tecnico/consulta-publica/consulta-servicio.component').then(
+        (m) => m.ConsultaServicioComponent,
+      ),
+  },
   {
     path: 'platform',
     canActivate: [platformGuard],
@@ -56,6 +64,16 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/documentos/documentos.component').then(
             (m) => m.DocumentosComponent,
+          ),
+      },
+
+      // Servicio técnico: módulo opcional, rutas propias cargadas aparte
+      // (docs/PLAN_SERVICIO_TECNICO.md del backend).
+      {
+        path: 'servicio-tecnico',
+        loadChildren: () =>
+          import('./features/servicio-tecnico/servicio-tecnico.routes').then(
+            (m) => m.SERVICIO_TECNICO_ROUTES,
           ),
       },
 

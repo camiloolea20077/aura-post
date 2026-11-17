@@ -1,0 +1,77 @@
+// Servicio técnico — "el banco del taller".
+// Cada equipo es una etiqueta (ticket) que avanza por un recorrido. Una sola tinta
+// (el azul de Aura) para acción y lo que está en el banco; LEDs de estado como los
+// de un equipo: verde listo, ámbar esperando, rojo vencido. Códigos, IMEI y plata
+// en JetBrains Mono con números tabulares. Profundidad: líneas finas y una sombra
+// de papel solo en la etiqueta. Base de espacio 4 px, escala 1,25 sobre 14 px.
+
+@mixin tokens {
+  // Montados sobre los de Aura: heredan el modo oscuro.
+  --st-tinta: var(--aura-blue);
+  --st-tinta-suave: var(--aura-gradient-soft);
+  --st-grafito: var(--aura-text);
+  --st-lapiz: var(--aura-text-muted);
+  --st-junta: var(--aura-border);
+  --st-mesa: var(--aura-bg);
+  --st-papel: var(--aura-surface);
+  --st-led-listo: var(--aura-success);
+  --st-led-espera: var(--aura-warning);
+  --st-led-alerta: var(--aura-danger);
+  --st-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --st-pad: 1.5rem; // igual al card-head de Aura
+  --st-radio: 10px;
+}
+
+// Texto en mono para códigos, IMEI y cifras.
+@mixin mono {
+  font-family: var(--st-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+// Etiqueta corta en mayúscula (rótulos de campo de la etiqueta y del tablero).
+@mixin rotulo {
+  font-size: 0.6875rem; // 11
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--st-lapiz);
+}
+
+// LED de estado: punto con halo suave. El tono sale de [data-tono].
+@mixin led {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--st-grafito);
+  white-space: nowrap;
+
+  &::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--led, var(--st-lapiz));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--led, var(--st-lapiz)) 18%, transparent);
+  }
+
+  &[data-tono='banco'] {
+    --led: var(--st-tinta);
+  }
+  &[data-tono='espera'] {
+    --led: var(--st-led-espera);
+  }
+  &[data-tono='listo'] {
+    --led: var(--st-led-listo);
+  }
+  &[data-tono='alerta'] {
+    --led: var(--st-led-alerta);
+  }
+  &[data-tono='cerrado'] {
+    --led: var(--st-lapiz);
+    color: var(--st-lapiz);
+  }
+}

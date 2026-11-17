@@ -30,6 +30,8 @@ export interface ManualModulo {
   /** Rutas de las pantallas que explica: el botón de ayuda abre este módulo desde ellas. */
   rutas: string[];
   resumen: string;
+  /** Módulo opcional: el tema solo aparece en el índice si el perfil tiene este submódulo. */
+  permiso?: string;
   secciones: ManualSeccion[];
   errores: ManualError[];
 }

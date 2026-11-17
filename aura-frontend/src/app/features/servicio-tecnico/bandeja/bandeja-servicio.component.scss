@@ -1,0 +1,487 @@
+@use '../taller' as taller;
+
+:host {
+  display: block;
+  container-type: inline-size;
+  @include taller.tokens;
+}
+
+.rotulo {
+  @include taller.rotulo;
+}
+
+.mono {
+  @include taller.mono;
+}
+
+.led {
+  @include taller.led;
+}
+
+// ── Tablero del taller ──────────────────────────────────────────────────
+// Foco de la página: cuántos equipos hay en el banco y cómo se reparten.
+.tablero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0 2rem;
+  align-items: stretch;
+  padding: 1.25rem var(--st-pad);
+  border-bottom: 1px solid var(--st-junta);
+
+  @container (max-width: 860px) {
+    grid-template-columns: auto minmax(0, 1fr);
+    row-gap: 1rem;
+  }
+  @container (max-width: 560px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  button {
+    font-family: inherit;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    color: inherit;
+  }
+
+  &__total {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.15rem;
+    padding: 0.25rem 1.75rem 0.25rem 0;
+    border-right: 1px solid var(--st-junta) !important;
+    border-radius: 0;
+
+    @container (max-width: 560px) {
+      border-right: 0 !important;
+      padding-right: 0;
+    }
+
+    &.activo .tablero__cifra {
+      color: var(--st-tinta);
+    }
+  }
+
+  &__cifra {
+    @include taller.mono;
+    font-size: 2.75rem; // 44
+    line-height: 1;
+    font-weight: 600;
+    letter-spacing: -0.04em;
+    color: var(--st-grafito);
+    transition: color 0.15s ease;
+  }
+
+  &__pie {
+    font-size: 0.8125rem;
+    color: var(--st-lapiz);
+  }
+
+  &__reparto {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  &__lado {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 0.5rem;
+
+    @container (max-width: 860px) {
+      grid-column: 1 / -1;
+      flex-direction: row;
+      justify-content: flex-start;
+    }
+  }
+}
+
+// Barra proporcional: una sola pieza, cada tramo con el tono de su LED.
+.barra {
+  display: flex;
+  gap: 3px;
+  height: 6px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--st-mesa);
+
+  &__tramo {
+    height: 100%;
+    background: var(--st-lapiz);
+    opacity: 0.55;
+    transition: width 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+
+    &[data-tono='banco'] {
+      background: var(--st-tinta);
+      opacity: 1;
+    }
+    &[data-tono='espera'] {
+      background: var(--st-led-espera);
+      opacity: 1;
+    }
+    &[data-tono='listo'] {
+      background: var(--st-led-listo);
+      opacity: 1;
+    }
+  }
+}
+
+.tramos {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: start;
+  gap: 0.25rem;
+
+  @container (max-width: 560px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.tramo {
+  display: flex !important;
+  flex-direction: column;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  gap: 0.25rem;
+  min-width: 0;
+  height: auto;
+  margin: 0 !important;
+  padding: 0.4rem 0.6rem 0.45rem !important;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--st-mesa);
+  }
+
+  &.activo {
+    background: var(--st-tinta-suave);
+  }
+
+  &__cifra {
+    @include taller.mono;
+    font-size: 1.375rem; // 22
+    font-weight: 600;
+    line-height: 1.1;
+    color: var(--st-grafito);
+  }
+
+  &.vacio .tramo__cifra {
+    color: var(--st-lapiz);
+    font-weight: 400;
+  }
+
+  .led {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--st-lapiz);
+  }
+}
+
+.aviso-vencidos {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.75rem !important;
+  border-radius: 999px !important;
+  font-size: 0.8125rem;
+  color: var(--st-led-alerta) !important;
+  background: color-mix(in srgb, var(--st-led-alerta) 9%, transparent) !important;
+
+  strong {
+    @include taller.mono;
+  }
+
+  &.sin {
+    color: var(--st-lapiz) !important;
+    background: var(--st-mesa) !important;
+  }
+
+  &.activo {
+    box-shadow: inset 0 0 0 1.5px currentColor;
+  }
+}
+
+.entregados {
+  font-size: 0.8125rem;
+  color: var(--st-lapiz);
+  padding: 0.2rem 0.25rem !important;
+  border-radius: 6px;
+
+  &:hover,
+  &.activo {
+    color: var(--st-tinta);
+  }
+}
+
+// ── Filtros ─────────────────────────────────────────────────────────────
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem var(--st-pad);
+
+  ::ng-deep .filtro {
+    min-width: 180px;
+  }
+
+  &__total {
+    margin-left: auto;
+    font-size: 0.8125rem;
+    color: var(--st-lapiz);
+  }
+
+  @container (max-width: 560px) {
+    ::ng-deep .filtro {
+      width: 100%;
+    }
+  }
+}
+
+// ── Lista: renglones como etiquetas del taller, sin cuadrícula ───────────
+:host ::ng-deep .st-tabla {
+  .p-datatable-thead > tr > th {
+    @include taller.rotulo;
+    background: transparent;
+    border: 0;
+    border-top: 1px solid var(--st-junta);
+    border-bottom: 1px solid var(--st-junta);
+    padding: 0.6rem 0.75rem;
+  }
+
+  .p-datatable-thead > tr > th:first-child,
+  .p-datatable-tbody > tr > td:first-child {
+    padding-left: var(--st-pad);
+  }
+
+  .p-datatable-thead > tr > th:last-child,
+  .p-datatable-tbody > tr > td:last-child {
+    padding-right: var(--st-pad);
+  }
+
+  .p-datatable-tbody > tr > td {
+    border: 0;
+    border-bottom: 1px solid var(--st-junta);
+    padding: 0.8rem 0.75rem;
+    vertical-align: middle;
+    background: transparent;
+  }
+
+  .p-datatable-tbody > tr {
+    background: transparent;
+  }
+
+  .p-datatable-tbody > tr:hover > td {
+    background: var(--st-tinta-suave);
+  }
+
+  .p-datatable-table-container,
+  .p-datatable-wrapper {
+    overflow-x: auto;
+  }
+
+  .p-paginator {
+    border: 0;
+    background: transparent;
+  }
+}
+
+.fila {
+  cursor: pointer;
+
+  &--cerrada {
+    .ticket__codigo,
+    .equipo__nombre,
+    .cliente,
+    .valor {
+      color: var(--st-lapiz);
+    }
+  }
+
+  small {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.75rem;
+    color: var(--st-lapiz);
+  }
+}
+
+.ticket {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+
+  &__codigo {
+    @include taller.mono;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--st-grafito);
+  }
+}
+
+.urgente {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--st-led-espera);
+  background: color-mix(in srgb, var(--st-led-espera) 12%, transparent);
+
+  i {
+    font-size: 0.625rem;
+  }
+}
+
+.dias--alerta {
+  color: var(--st-led-alerta) !important;
+  font-weight: 600;
+}
+
+.equipo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 200px;
+
+  &__icono {
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    background: var(--st-mesa);
+    color: var(--st-tinta);
+  }
+
+  &__texto {
+    min-width: 0;
+  }
+
+  &__nombre {
+    font-weight: 600;
+    color: var(--st-grafito);
+  }
+
+  &__fotos {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--st-lapiz);
+
+    i {
+      font-size: 0.75rem;
+    }
+  }
+}
+
+.cliente {
+  color: var(--st-grafito);
+}
+
+// Cinco marcas del recorrido debajo del estado.
+.mini-recorrido {
+  display: flex;
+  gap: 3px;
+  margin-top: 0.4rem;
+
+  i {
+    width: 14px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--st-junta);
+
+    &.hecho {
+      background: var(--st-tinta);
+    }
+  }
+}
+
+.sin-asignar {
+  color: var(--st-lapiz);
+}
+
+.vencida {
+  color: var(--st-led-alerta);
+  font-weight: 600;
+}
+
+.num {
+  text-align: right !important;
+  white-space: nowrap;
+}
+
+.valor {
+  @include taller.mono;
+  font-weight: 600;
+  color: var(--st-grafito);
+}
+
+.saldo {
+  @include taller.mono;
+
+  &--pagado {
+    color: var(--st-led-listo) !important;
+    font-family: inherit;
+  }
+}
+
+// Columnas que sobran en pantallas angostas.
+@container (max-width: 900px) {
+  .col-tecnico {
+    display: none;
+  }
+}
+@container (max-width: 680px) {
+  .col-entrega,
+  .col-cliente {
+    display: none;
+  }
+}
+
+// ── Vacío ───────────────────────────────────────────────────────────────
+.vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 3rem 1rem;
+  text-align: center;
+
+  &__icono {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: var(--st-mesa);
+    color: var(--st-lapiz);
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
+  }
+
+  strong {
+    color: var(--st-grafito);
+  }
+
+  p {
+    margin: 0 0 0.6rem;
+    font-size: 0.8125rem;
+    color: var(--st-lapiz);
+  }
+}

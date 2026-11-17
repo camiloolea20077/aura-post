@@ -1,0 +1,94 @@
+<main class="consulta">
+  <div class="cargando" *ngIf="cargando"><i class="pi pi-spin pi-spinner"></i> Consultando su orden…</div>
+
+  <div class="error-caja" *ngIf="!cargando && error">
+    <span class="error-caja__icono"><i class="pi pi-search"></i></span>
+    <p>{{ error }}</p>
+  </div>
+
+  <ng-container *ngIf="!cargando && c">
+    <header class="empresa">
+      <img *ngIf="c.empresaLogoUrl" [src]="c.empresaLogoUrl" [alt]="c.empresaNombre" />
+      <div>
+        <strong>{{ c.empresaNombre }}</strong>
+        <a *ngIf="c.empresaTelefono" [href]="'tel:' + c.empresaTelefono"><i class="pi pi-phone"></i> {{ c.empresaTelefono }}</a>
+      </div>
+    </header>
+
+    <!-- La etiqueta del equipo -->
+    <article class="etiqueta">
+      <header class="etiqueta__cabeza">
+        <span class="rotulo">Orden de servicio</span>
+        <span class="etiqueta__codigo">{{ c.codigo }}</span>
+      </header>
+      <div class="etiqueta__equipo">
+        <span class="etiqueta__icono"><i [class]="iconoEquipo(c.equipoTipo)"></i></span>
+        <div>
+          <h1>{{ c.equipoMarca }} {{ c.equipoModelo }}</h1>
+          <p>
+            {{ etiquetaEquipo(c.equipoTipo) }}<ng-container *ngIf="c.equipoColor"> · {{ c.equipoColor }}</ng-container>
+            <ng-container *ngIf="c.imeiFinal"> · IMEI <span class="mono">••••{{ c.imeiFinal }}</span></ng-container>
+          </p>
+        </div>
+      </div>
+
+      <div class="estado" [attr.data-tono]="tono(c.estado)">
+        <span class="led" [attr.data-tono]="tono(c.estado)">{{ estados[c.estado].label }}</span>
+        <p>{{ mensajeEstado }}</p>
+      </div>
+
+      <ol class="pasos" *ngIf="c.estado !== 'CANCELADO'">
+        <li *ngFor="let p of pasos; let i = index" [class.hecho]="i < pasoActual || c.estado === 'ENTREGADO'" [class.actual]="i === pasoActual">
+          <span class="pasos__punto"><i class="pi pi-check" *ngIf="i < pasoActual || (i === pasoActual && c.estado === 'ENTREGADO')"></i></span>
+          <span class="pasos__label">{{ p.label }}</span>
+          <small class="mono" *ngIf="fechaPaso(p.estado) as f">{{ f | date: 'd MMM, h:mm a' }}</small>
+        </li>
+      </ol>
+
+      <dl class="datos">
+        <div><dt class="rotulo">Recibido</dt><dd>{{ c.fechaRecibido | date: 'd MMM y' }}</dd></div>
+        <div *ngIf="c.fechaEstimada && c.estado !== 'ENTREGADO'"><dt class="rotulo">Entrega estimada</dt><dd>{{ c.fechaEstimada | date: 'd MMM y' }}</dd></div>
+        <div *ngIf="c.fechaEntregado"><dt class="rotulo">Entregado</dt><dd>{{ c.fechaEntregado | date: 'd MMM y' }}</dd></div>
+        <div *ngIf="c.garantiaDias > 0"><dt class="rotulo">Garantía</dt><dd>{{ c.garantiaDias }} días</dd></div>
+      </dl>
+    </article>
+
+    <section class="hoja" *ngIf="c.problemasReportados || c.diagnostico || c.trabajoRealizado">
+      <div class="nota" *ngIf="c.problemasReportados"><span class="rotulo">Lo que reportó</span><p>{{ c.problemasReportados }}</p></div>
+      <div class="nota" *ngIf="c.diagnostico"><span class="rotulo">Diagnóstico</span><p>{{ c.diagnostico }}</p></div>
+      <div class="nota" *ngIf="c.trabajoRealizado"><span class="rotulo">Trabajo realizado</span><p>{{ c.trabajoRealizado }}</p></div>
+    </section>
+
+    <section class="hoja" *ngIf="c.items.length || c.total > 0">
+      <span class="rotulo">{{ c.puedeAprobar ? 'Presupuesto' : 'Valor del servicio' }}</span>
+      <div class="total">
+        <span class="total__cifra">{{ c.total | currency: 'COP' : '$' : '1.0-0' }}</span>
+        <span class="total__saldo" *ngIf="c.total > 0 && c.saldo <= 0"><strong class="pagado">Pagado</strong></span>
+        <span class="total__saldo" *ngIf="c.totalAbonado > 0 && c.saldo > 0">Abonado {{ c.totalAbonado | currency: 'COP' : '$' : '1.0-0' }} · Saldo <strong>{{ c.saldo | currency: 'COP' : '$' : '1.0-0' }}</strong></span>
+      </div>
+      <ul class="items">
+        <li *ngFor="let i of c.items">
+          <span>{{ i.descripcion }}<small *ngIf="i.cantidad !== 1"> × {{ i.cantidad }}</small></span>
+          <span class="mono">{{ i.total | currency: 'COP' : '$' : '1.0-0' }}</span>
+        </li>
+      </ul>
+
+      <div class="aprobar" *ngIf="c.puedeAprobar && !respuesta">
+        <textarea pTextarea rows="2" [(ngModel)]="comentario" maxlength="500" placeholder="Comentario para el técnico (opcional)"></textarea>
+        <div class="aprobar__btns">
+          <button pButton type="button" label="No apruebo" class="p-button-text p-button-secondary" [disabled]="respondiendo" (click)="responder(false)"></button>
+          <button pButton type="button" label="Apruebo la reparación" icon="pi pi-check" class="btn-aura" [loading]="respondiendo" (click)="responder(true)"></button>
+        </div>
+      </div>
+      <p class="respuesta" *ngIf="respuesta"><i class="pi pi-check-circle"></i> {{ respuesta }}</p>
+      <p class="respuesta" *ngIf="c.aprobadoClienteAt && !respuesta">
+        <i class="pi pi-check-circle"></i> Usted aprobó el presupuesto el {{ c.aprobadoClienteAt | date: 'd MMM y' }}.
+      </p>
+    </section>
+
+    <details class="condiciones" *ngIf="c.condiciones">
+      <summary>Condiciones del servicio</summary>
+      <p>{{ c.condiciones }}</p>
+    </details>
+  </ng-container>
+</main>

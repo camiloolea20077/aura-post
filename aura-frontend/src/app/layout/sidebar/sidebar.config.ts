@@ -272,6 +272,26 @@ export const SIDEBAR_MENU: SidebarMenuGroup[] = [
     ],
   },
 
+  // ── Servicio técnico (módulo opcional: solo aparece si la empresa lo tiene) ──
+  {
+    label: 'Servicio Técnico',
+    icon: 'pi pi-wrench',
+    items: [
+      {
+        label: 'Órdenes de servicio',
+        codigo: 'servicio-tecnico.ordenes',
+        icon: 'pi pi-mobile',
+        route: '/servicio-tecnico/ordenes',
+      },
+      {
+        label: 'Configuración',
+        codigo: 'servicio-tecnico.configuracion',
+        icon: 'pi pi-cog',
+        route: '/servicio-tecnico/configuracion',
+      },
+    ],
+  },
+
   // ── Cuentas ─────────────────────────────────────────────────────────────────
   {
     label: 'Cuentas',
