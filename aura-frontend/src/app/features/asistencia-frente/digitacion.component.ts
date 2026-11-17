@@ -22,6 +22,12 @@ import pdfFonts from 'pdfmake/build/vfs_fonts';
 (pdfMake as any).vfs = (pdfFonts as any).pdfMake?.vfs || pdfFonts;
 
 import { ProyectoService } from '../../core/services/proyecto.service';
+import { NominaService } from '../../core/services/nomina.service';
+import { RegistroHoras } from '../../core/models/nomina.model';
+import { ImportarMarcajeComponent } from './importar-marcaje/importar-marcaje.component';
+import { CalendarioAsistenciaComponent } from './calendario-asistencia/calendario-asistencia.component';
+import { FilaCalendario, filasDesdeCalendario } from './calendario-asistencia/calendario-asistencia.util';
+import { DatePickerModule } from 'primeng/datepicker';
 import { AlertService } from '../../shared/pipes/alert.service';
 import {
   AsistenciaDetalleModel,
@@ -46,6 +52,9 @@ type Sev = 'success' | 'info' | 'warn' | 'danger' | 'secondary';
     ToastModule,
     TooltipModule,
     ProgressBarModule,
+    ImportarMarcajeComponent,
+    CalendarioAsistenciaComponent,
+    DatePickerModule,
   ],
   providers: [MessageService],
   templateUrl: './digitacion.component.html',
@@ -57,6 +66,100 @@ export class DigitacionComponent implements OnInit {
 
   proyectoId: number | null = null;
   frenteId: number | null = null;
+  /** El proyecto solo tiene su frente General: se trabaja por proyecto, sin elegir frente (V241). */
+  soloProyecto = false;
+  /** Diálogo de marcaje del mes desde Excel (V242). */
+  mostrarImportar = false;
+
+  /** Vista: un día (digitar/consultar) o el mes en calendario. */
+  vista: 'dia' | 'mes' = 'dia';
+  mesVista: Date = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  calendario: { anio: number; mes: number; festivos: string[]; filas: FilaCalendario[] } | null = null;
+  cargandoMes = false;
+
+  /** Cómo trabaja la empresa (Configuración de nómina → Asistencia por obra, V243). */
+  usaFrentes = true;
+  exigeSoporte = true;
+  registro: RegistroHoras = 'AMBOS';
+  /** false = sin revisión: lo registrado pasa directo a la prenómina al liquidar (V245). */
+  requiereAprobacion = true;
+
+  /** Se pueden digitar horas a mano (el día es editable y la empresa no trabaja solo con Excel). */
+  get puedeDigitar(): boolean {
+    return this.editable && this.registro !== 'EXCEL';
+  }
+
+  /**
+   * Tarjeta del soporte PDF (descargar planilla, subir escaneado): solo si la empresa
+   * digita a mano y exige soporte. Con registro por Excel el soporte es el Excel importado.
+   */
+  get muestraSoportePdf(): boolean {
+    return this.requiereAprobacion && this.registro !== 'EXCEL' && (this.exigeSoporte || this.tieneSoporte);
+  }
+
+  /** Falta el soporte para enviar a revisión (con Excel lo pone la importación). */
+  get faltaSoporte(): boolean {
+    return this.exigeSoporte && this.registro !== 'EXCEL' && !this.tieneSoporte;
+  }
+
+  /** El botón de importar Excel se ofrece salvo que la empresa digite solo a mano. */
+  get permiteExcel(): boolean {
+    return this.registro !== 'MANUAL';
+  }
+
+  /** Nombre del proyecto/frente elegido, para el título de la plantilla. */
+  get nombreFrenteActual(): string {
+    const p = this.proyectoOpts.find((o) => o.value === this.proyectoId)?.label ?? '';
+    if (this.soloProyecto) return p;
+    const f = this.frenteOpts.find((o) => o.value === this.frenteId)?.label ?? '';
+    return [p, f].filter(Boolean).join(' · ');
+  }
+
+  /** Tras importar, recarga el día o el mes que se está viendo. */
+  onImportado(): void {
+    if (this.vista === 'mes') void this.cargarMes();
+    else if (this.data) void this.cargar();
+  }
+
+  verMes(): void {
+    this.vista = 'mes';
+    void this.cargarMes();
+  }
+
+  verDia(): void {
+    this.vista = 'dia';
+    this.cdr.markForCheck();
+  }
+
+  /** Asistencia del mes elegido en calendario (trabajadores × días). */
+  async cargarMes(): Promise<void> {
+    if (!this.frenteId) return;
+    const anio = this.mesVista.getFullYear();
+    const mes = this.mesVista.getMonth() + 1;
+    this.cargandoMes = true;
+    this.cdr.markForCheck();
+    try {
+      const res = await lastValueFrom(
+        this.service.calendarioAsistencia(this.frenteId, `${anio}-${String(mes).padStart(2, '0')}`),
+      );
+      const cal = res?.data;
+      this.calendario = cal
+        ? { anio: cal.anio, mes: cal.mes, festivos: cal.festivos, filas: filasDesdeCalendario(cal) }
+        : null;
+    } catch (e: any) {
+      this.alertService.showError('Calendario', e?.error?.message ?? 'No se pudo cargar el mes');
+    } finally {
+      this.cargandoMes = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  /** Clic en un día del calendario: abre ese día en la vista Día. */
+  abrirDia(fecha: string): void {
+    this.fecha = fecha;
+    this.vista = 'dia';
+    void this.cargar();
+  }
   fecha: string = this.hoyISO();
 
   data: AsistenciaFrenteModel | null = null;
@@ -82,12 +185,29 @@ export class DigitacionComponent implements OnInit {
 
   constructor(
     private readonly service: ProyectoService,
+    private readonly nominaService: NominaService,
     private readonly alertService: AlertService,
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
     this.cargarProyectos();
+    this.cargarModo();
+  }
+
+  /** Lee de la configuración de nómina cómo se trabaja la asistencia por obra. */
+  private async cargarModo(): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.nominaService.getConfig());
+      const c = res?.data;
+      this.usaFrentes = c?.asistenciaUsaFrentes !== false;
+      this.exigeSoporte = c?.asistenciaExigeSoporte !== false;
+      this.registro = c?.asistenciaRegistro ?? 'AMBOS';
+      this.requiereAprobacion = c?.asistenciaRequiereAprobacion !== false;
+      this.cdr.markForCheck();
+    } catch {
+      /* sin configuración: como siempre */
+    }
   }
 
   private hoyISO(): string {
@@ -113,14 +233,30 @@ export class DigitacionComponent implements OnInit {
   async onProyectoChange(): Promise<void> {
     this.frenteId = null;
     this.frenteOpts = [];
+    this.soloProyecto = false;
     this.data = null;
     if (!this.proyectoId) return;
     try {
       const res = await lastValueFrom(this.service.frentes(this.proyectoId));
-      this.frenteOpts = (res?.data ?? []).map((f) => ({
-        label: `${f.codigo} — ${f.nombre}`,
+      const frentes = (res?.data ?? []).filter((f) => f.estado !== 'ANULADO');
+      this.frenteOpts = frentes.map((f) => ({
+        label: f.esGeneral ? 'Todo el proyecto (General)' : `${f.codigo} — ${f.nombre}`,
         value: f.id,
       }));
+      // Sin frentes (por configuración o porque el proyecto no tiene propios): se
+      // trabaja sobre el General, que es el proyecto completo, y se elige solo.
+      const general = frentes.find((f) => f.esGeneral);
+      if (general && (!this.usaFrentes || frentes.length === 1)) {
+        this.soloProyecto = true;
+        this.frenteId = general.id;
+      }
+      if (this.vista === 'mes') {
+        this.calendario = null;
+        if (this.frenteId) void this.cargarMes();
+      }
+      if (!general && !this.usaFrentes)
+        this.alertService.showWarn('Proyecto sin frente General',
+          'Vuelva a guardar la Configuración de nómina para preparar el proyecto completo.');
       this.cdr.markForCheck();
     } catch {
       /* no bloqueante */
@@ -320,7 +456,8 @@ export class DigitacionComponent implements OnInit {
       return 0;
     const [eh, em] = row.horaEntrada.split(':').map(Number);
     const [sh, sm] = row.horaSalida.split(':').map(Number);
-    const min = sh * 60 + sm - (eh * 60 + em);
+    const descanso = Number(row.minutosDescanso) > 0 ? Number(row.minutosDescanso) : 0;
+    const min = sh * 60 + sm - (eh * 60 + em) - descanso;
     return min > 0 ? Math.round((min / 60) * 100) / 100 : 0;
   }
 
@@ -332,6 +469,10 @@ export class DigitacionComponent implements OnInit {
         empleadoId: d.empleadoId,
         horaEntrada: d.horaEntrada || null,
         horaSalida: d.horaSalida || null,
+        minutosDescanso:
+          d.minutosDescanso === null || d.minutosDescanso === undefined || (d.minutosDescanso as any) === ''
+            ? null
+            : Number(d.minutosDescanso),
         estadoAsistencia: d.estadoAsistencia,
         observacionLider: d.observacionLider || null,
       })),
@@ -365,8 +506,9 @@ export class DigitacionComponent implements OnInit {
   }
 
   async enviar(): Promise<void> {
-    // Persistir lo digitado y luego enviar a revisión.
-    const ok = await this.guardar();
+    // Persistir lo digitado y luego enviar a revisión. Con registro solo por Excel no
+    // hay nada digitado que guardar (el back rechaza la digitación manual).
+    const ok = this.puedeDigitar ? await this.guardar() : true;
     if (!ok || !this.data?.id) return;
     this.sending = true;
     this.cdr.markForCheck();

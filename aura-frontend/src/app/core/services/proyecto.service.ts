@@ -22,6 +22,10 @@ import {
 import { EmpleadoModel } from '../models/nomina.model';
 import {
   AsistenciaFrenteModel,
+  CalendarioMesModel,
+  FilaMarcajeDto,
+  ResultadoMarcajeModel,
+  ResultadoRangoModel,
   GuardarBorradorDto,
   PreliquidacionFrenteItem,
   RevisarDetalleItem,
@@ -201,6 +205,58 @@ export class ProyectoService {
     return this.http.post<ResponseModel<AsistenciaFrenteModel>>(
       `${this.api}asistencia/frentes/${frenteId}/soporte-pdf?fecha=${fecha}`,
       fd,
+    );
+  }
+
+  /** Asistencia del frente en el mes por trabajador y día. mes = AAAA-MM. */
+  calendarioAsistencia(frenteId: number, mes: string): Observable<ResponseModel<CalendarioMesModel>> {
+    return this.http.get<ResponseModel<CalendarioMesModel>>(
+      `${this.api}asistencia/frentes/${frenteId}/calendario?mes=${mes}`,
+    );
+  }
+
+  // ── Marcaje del mes desde Excel (V242) ─────────────────────
+  /** Valida las filas de la plantilla y clasifica las horas, sin guardar. */
+  validarMarcajeExcel(frenteId: number, filas: FilaMarcajeDto[]): Observable<ResponseModel<ResultadoMarcajeModel>> {
+    return this.http.post<ResponseModel<ResultadoMarcajeModel>>(
+      `${this.api}asistencia/frentes/${frenteId}/excel/validar`,
+      { filas },
+    );
+  }
+
+  /** Importa el marcaje (todo o nada); el archivo queda como soporte de cada día. */
+  confirmarMarcajeExcel(
+    frenteId: number,
+    filas: FilaMarcajeDto[],
+    archivo: File | null,
+  ): Observable<ResponseModel<ResultadoMarcajeModel>> {
+    const fd = new FormData();
+    fd.append('datos', new Blob([JSON.stringify({ filas })], { type: 'application/json' }));
+    if (archivo) fd.append('archivo', archivo);
+    return this.http.post<ResponseModel<ResultadoMarcajeModel>>(
+      `${this.api}asistencia/frentes/${frenteId}/excel/confirmar`,
+      fd,
+    );
+  }
+
+  /** Envía a revisión todos los días en borrador del frente en el rango. */
+  enviarRevisionRango(frenteId: number, desde: string, hasta: string): Observable<ResponseModel<ResultadoRangoModel>> {
+    return this.http.post<ResponseModel<ResultadoRangoModel>>(
+      `${this.api}asistencia/frentes/${frenteId}/enviar-revision-rango`,
+      { desde, hasta },
+    );
+  }
+
+  /** Aprueba (y envía a nómina) todos los días en revisión del frente en el rango. */
+  aprobarRango(
+    frenteId: number,
+    desde: string,
+    hasta: string,
+    enviarNomina = true,
+  ): Observable<ResponseModel<ResultadoRangoModel>> {
+    return this.http.post<ResponseModel<ResultadoRangoModel>>(
+      `${this.api}asistencia/frente-revision/frente/${frenteId}/aprobar-rango`,
+      { desde, hasta, enviarNomina },
     );
   }
 

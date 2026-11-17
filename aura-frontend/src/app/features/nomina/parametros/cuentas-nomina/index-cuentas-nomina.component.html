@@ -40,7 +40,7 @@
       <ng-template pTemplate="body" let-c>
         <tr>
           <td>
-            <div class="nombre"><code class="codigo">{{ c.codigo }}</code> {{ c.nombre }}</div>
+            <div class="nombre"><code class="codigo">{{ c.numero ?? '—' }}</code> {{ c.nombre }}</div>
             <div class="meta">
               {{ textoClase[c.clase] }}
               @if (c.personalizado) {
@@ -94,7 +94,7 @@
   </div>
 </div>
 
-<p-dialog [header]="seleccionado ? 'Contabilización de ' + seleccionado.codigo : ''" [(visible)]="mostrarForm"
+<p-dialog [header]="seleccionado ? 'Contabilización de ' + seleccionado.numero + ' - ' + seleccionado.nombre : ''" [(visible)]="mostrarForm"
   [modal]="true" [style]="{ width: '640px' }" [breakpoints]="{ '680px': '95vw' }" [draggable]="false">
   @if (seleccionado) {
     <div class="form-cambio">

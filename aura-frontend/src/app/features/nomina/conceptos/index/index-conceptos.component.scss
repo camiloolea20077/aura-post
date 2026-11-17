@@ -1,5 +1,10 @@
-/* El patrón (.page, .card, .card-head, .title, .btn-aura) es global y vive en
+/* El patrón (.page, .card, .card-head, .title, .search-wrap) es global y vive en
    styles.scss — no se redefine aquí. */
+
+.tabla {
+  max-width: 100%;
+  overflow-x: auto;
+}
 
 .text-right {
   text-align: right;
@@ -13,28 +18,38 @@
   color: var(--text-color-secondary);
 }
 
-.text-ok {
-  color: var(--green-500, #22c55e);
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 600;
 }
 
-/* Filtro de fecha embebido en el header de la card. */
-.field-inline {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.meta {
+  font-size: 0.75rem;
+  color: var(--text-color-secondary);
+}
 
-  label {
-    color: var(--text-color-secondary);
-    font-size: 0.85rem;
-    white-space: nowrap;
+.acciones {
+  white-space: nowrap;
+}
+
+tr.inactivo td {
+  opacity: 0.6;
+}
+
+:host ::ng-deep {
+  .filtro {
+    width: 11rem;
+    min-width: 0;
+  }
+
+  .ml-tag {
+    margin-left: 0.35rem;
   }
 }
 
-:host ::ng-deep .cal-inline .p-inputtext {
-  width: 9rem;
-}
-
-code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.85rem;
+// En teléfono los filtros ocupan el ancho completo.
+@media (max-width: 640px) {
+  :host ::ng-deep .filtro {
+    width: 100%;
+  }
 }

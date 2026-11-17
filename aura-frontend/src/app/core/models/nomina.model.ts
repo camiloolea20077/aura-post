@@ -37,6 +37,10 @@ export interface NominaConfigModel {
   modoLiquidacion: ModoLiquidacion;
   smmlv: number;
   auxilioTransporte: number;
+  /** Año de la tabla de ley de donde salen smmlv y auxilio (null = valores propios de la empresa). */
+  parametrosAgno?: number | null;
+  /** Norma que fija esos valores. */
+  parametrosNorma?: string | null;
   pctSaludEmpleado: number;
   pctPensionEmpleado: number;
   pctSaludEmpleador: number;
@@ -48,7 +52,18 @@ export interface NominaConfigModel {
   aprendizPctLectiva: number;
   aprendizPctPractica: number;
   permiteVacacionesAnticipadas?: boolean;
+  /** Asistencia por obra (V243): ¿divide los proyectos en frentes? */
+  asistenciaUsaFrentes?: boolean;
+  /** ¿Exige soporte (PDF o Excel) para enviar un día a revisión? */
+  asistenciaExigeSoporte?: boolean;
+  /** Cómo se registran las horas. */
+  asistenciaRegistro?: RegistroHoras;
+  /** ¿Un supervisor aprueba la asistencia antes de la nómina? false = la prenómina la toma al liquidar (V245). */
+  asistenciaRequiereAprobacion?: boolean;
 }
+
+/** MANUAL: digitación día por día · EXCEL: plantilla del mes · AMBOS. */
+export type RegistroHoras = 'MANUAL' | 'EXCEL' | 'AMBOS';
 
 export interface UpdateNominaConfigDto {
   modoNomina?: ModoNomina;
@@ -66,6 +81,14 @@ export interface UpdateNominaConfigDto {
   aprendizPctLectiva?: number;
   aprendizPctPractica?: number;
   permiteVacacionesAnticipadas?: boolean;
+  /** Asistencia por obra (V243): ¿divide los proyectos en frentes? */
+  asistenciaUsaFrentes?: boolean;
+  /** ¿Exige soporte (PDF o Excel) para enviar un día a revisión? */
+  asistenciaExigeSoporte?: boolean;
+  /** Cómo se registran las horas. */
+  asistenciaRegistro?: RegistroHoras;
+  /** ¿Un supervisor aprueba la asistencia antes de la nómina? false = la prenómina la toma al liquidar (V245). */
+  asistenciaRequiereAprobacion?: boolean;
 }
 
 // ─── Empleados ────────────────────────────────────────────────
@@ -184,6 +207,9 @@ export interface NominaNovedadModel {
   subtipo?: string | null;
   fechaInicio?: string | null;
   fechaFin?: string | null;
+  /** APLICADA | PENDIENTE (pasa un tope: por autorizar) | APROBADA. */
+  estado?: string;
+  requiereAprobacion?: boolean;
 }
 
 export interface AddNovedadDto {

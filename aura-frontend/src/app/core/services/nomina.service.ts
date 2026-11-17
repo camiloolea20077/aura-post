@@ -282,6 +282,14 @@ export class NominaService {
     );
   }
 
+  /** Autoriza una novedad que pasa un tope del cargo o de la vinculación y recalcula. */
+  autorizarNovedad(nominaId: number, novedadId: number): Observable<ResponseModel<NominaModel>> {
+    return this.http.post<ResponseModel<NominaModel>>(
+      `${this.base}nomina/${nominaId}/novedades/${novedadId}/autorizar`,
+      {},
+    );
+  }
+
   eliminarNovedad(
     nominaId: number,
     novedadId: number,

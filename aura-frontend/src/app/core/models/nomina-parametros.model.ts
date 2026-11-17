@@ -71,6 +71,10 @@ export interface NominaCargoModel {
   salarioMaximo: number | null;
   mision: string | null;
   funciones: string | null;
+  /** Formación, experiencia y competencias que pide el cargo. */
+  perfil: string | null;
+  /** Cómo se evalúa el desempeño del cargo. */
+  desempeno: string | null;
   activo: boolean;
 }
 
@@ -85,6 +89,8 @@ export interface CreateNominaCargoDto {
   salarioMaximo: number | null;
   mision: string | null;
   funciones: string | null;
+  perfil: string | null;
+  desempeno: string | null;
   activo: boolean;
 }
 
@@ -211,7 +217,10 @@ export const OPCIONES_CLASE_COMPROBANTE: { label: string; value: ClaseComprobant
 export type TerceroCreditoNomina = 'EMPLEADO' | 'EPS' | 'AFP' | 'ARL' | 'CCF' | 'DIAN' | 'NINGUNO' | 'FIJO';
 
 export interface ConceptoContableNominaModel {
+  /** Clave interna: no se muestra. */
   codigo: string;
+  /** Código visible del concepto. */
+  numero: number | null;
   nombre: string;
   clase: 'DEVENGADO' | 'DEDUCCION' | 'APORTE_EMPLEADOR' | 'PROVISION';
   aplicaDebito: boolean;

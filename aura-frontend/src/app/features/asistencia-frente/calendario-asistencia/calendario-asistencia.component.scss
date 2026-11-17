@@ -1,0 +1,204 @@
+.cal {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+/* La tabla se desplaza sola; la página nunca. */
+.cal-scroll {
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  max-width: 100%;
+}
+
+.cal-tabla {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.78rem;
+  width: max-content;
+  min-width: 100%;
+
+  th,
+  td {
+    border-bottom: 1px solid #f1f5f9;
+    padding: 0.25rem 0.15rem;
+    text-align: center;
+  }
+
+  thead th {
+    background: #f8fafc;
+    color: #475569;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+  }
+}
+
+.cal-nombre {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: #fff;
+  text-align: left !important;
+  padding: 0.35rem 0.6rem !important;
+  min-width: 180px;
+  max-width: 220px;
+  border-right: 1px solid #e5e7eb;
+
+  thead & {
+    background: #f8fafc;
+    z-index: 2;
+  }
+}
+
+.cal-n {
+  display: block;
+  font-weight: 600;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cal-doc {
+  display: block;
+  color: #94a3b8;
+  font-size: 0.72rem;
+}
+
+.cal-dia {
+  min-width: 30px;
+  line-height: 1.1;
+
+  span {
+    display: block;
+  }
+}
+
+.cal-letra {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.dom,
+.fes {
+  background: #fff7ed !important;
+}
+
+thead .fes {
+  color: #c2410c;
+}
+
+.clic {
+  cursor: pointer;
+}
+
+td.clic:hover {
+  background: #eff6ff !important;
+}
+
+.cal-marca {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 22px;
+  border-radius: 5px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.m-asistio {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.m-asistio.con-extra,
+.m-aviso.con-extra {
+  box-shadow: inset 0 -3px 0 #2563eb;
+}
+
+.m-aviso {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.m-parcial {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.m-falta {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.m-justificada {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.m-sin-registro,
+.m-vacio {
+  background: transparent;
+  color: #cbd5e1;
+  border: 1px dashed #e2e8f0;
+}
+
+.m-error {
+  background: #b91c1c;
+  color: #fff;
+}
+
+.cal-tot {
+  min-width: 46px;
+  color: #334155;
+  border-left: 1px solid #f1f5f9;
+
+  &.num {
+    font-variant-numeric: tabular-nums;
+  }
+
+  &.rojo {
+    color: #b91c1c;
+    font-weight: 600;
+  }
+}
+
+.cal-vacia {
+  padding: 1rem !important;
+  color: #94a3b8;
+}
+
+.cal-leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  font-size: 0.75rem;
+  color: #64748b;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .cal-marca {
+    width: 22px;
+    height: 18px;
+    font-size: 0.65rem;
+  }
+}
+
+.cal-ley-dom::before {
+  content: '';
+  width: 16px;
+  height: 12px;
+  border-radius: 3px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+}

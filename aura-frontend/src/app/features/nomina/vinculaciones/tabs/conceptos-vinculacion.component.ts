@@ -140,7 +140,7 @@ export class ConceptosVinculacionComponent implements OnChanges {
     try {
       const res = await lastValueFrom(
         this.editando
-          ? this.service.actualizarConcepto(this.vinculacionId, this.editando.id, dto)
+          ? this.service.actualizarConcepto(this.vinculacionId, this.editando.id!, dto)
           : this.service.crearConcepto(this.vinculacionId, dto),
       );
       this.filas = res.data ?? [];
@@ -151,6 +151,46 @@ export class ConceptosVinculacionComponent implements OnChanges {
     } finally {
       this.guardando = false;
     }
+  }
+
+  /** Concepto heredado del cargo: crea la fila propia del empleado con los valores del cargo. */
+  personalizar(c: VinculacionConcepto): void {
+    this.editando = null;
+    this.form.reset({
+      conceptoCodigo: c.conceptoCodigo,
+      cantidad: c.cantidad,
+      valor: c.valor,
+      porcentaje: c.porcentaje,
+      fechaDesde: this.minimo,
+      observacion: '',
+    });
+    this.mostrarForm = true;
+  }
+
+  confirmarExcluir(c: VinculacionConcepto): void {
+    this.confirm.confirm({
+      message: `¿Excluir <b>${c.conceptoNombre ?? c.conceptoCodigo}</b> para este empleado? Lo demás del cargo sigue igual.`,
+      header: 'Excluir del cargo',
+      icon: 'pi pi-ban',
+      acceptLabel: 'Sí, excluir',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => void this.excluir(c),
+    });
+  }
+
+  private async excluir(c: VinculacionConcepto): Promise<void> {
+    try {
+      const res = await lastValueFrom(this.service.excluirConcepto(this.vinculacionId, c.conceptoCodigo));
+      this.filas = res.data ?? [];
+    } catch (err: any) {
+      this.alert.showError('Conceptos', err?.error?.message ?? 'No se pudo excluir.');
+    }
+  }
+
+  /** Quita la exclusión: el empleado vuelve a heredar el concepto del cargo. */
+  restaurar(c: VinculacionConcepto): void {
+    void this.eliminar(c);
   }
 
   confirmarEliminar(c: VinculacionConcepto): void {
@@ -166,6 +206,7 @@ export class ConceptosVinculacionComponent implements OnChanges {
   }
 
   private async eliminar(c: VinculacionConcepto): Promise<void> {
+    if (c.id == null) return;
     try {
       const res = await lastValueFrom(this.service.eliminarConcepto(this.vinculacionId, c.id));
       this.filas = res.data ?? [];

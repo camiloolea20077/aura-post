@@ -40,6 +40,35 @@
       </small>
     </div>
 
+    <!-- Documentos adicionales (V248) -->
+    <div class="campo" *ngIf="permiteAdjuntar">
+      <label>Documentos adjuntos</label>
+      <div class="adjuntos">
+        <span class="adjunto adjunto--fijo">
+          <i class="pi pi-file-pdf"></i> {{ titulo }} (PDF)
+        </span>
+        <span class="adjunto" *ngFor="let a of adicionales">
+          <i class="pi pi-paperclip"></i>
+          <span class="adjunto__nombre">{{ a.nombre }}</span>
+          <small>{{ tamanoTexto(a.tamano) }}</small>
+          <button type="button" class="adjunto__quitar" title="Quitar" (click)="quitarAdjunto(a)">
+            <i class="pi pi-times"></i>
+          </button>
+        </span>
+        <label class="adjuntar" *ngIf="adicionales.length < 5">
+          <i class="pi pi-plus"></i> Adjuntar documentos
+          <input
+            type="file"
+            hidden
+            multiple
+            accept=".pdf,.jpg,.jpeg,.png,.webp,.xlsx,.xls,.docx,.doc,.csv,.txt"
+            (change)="onArchivos($event)"
+          />
+        </label>
+      </div>
+      <small class="ayuda">Contrato, RUT, orden de compra, fotos… Hasta 5 archivos y 15 MB en total.</small>
+    </div>
+
     <div class="historial" *ngIf="historial.length">
       <span class="historial__titulo">Enviado antes</span>
       <div class="historial__fila" *ngFor="let h of historial">
@@ -51,6 +80,9 @@
         <span class="historial__texto">
           {{ h.destinatario }} · {{ (h.enviadoAt ?? h.createdAt) | date: 'dd/MM/yyyy HH:mm' }}
           <ng-container *ngIf="h.usuarioNombre"> · {{ h.usuarioNombre }}</ng-container>
+          <small class="historial__adjuntos" *ngIf="h.adjuntosAdicionales">
+            <i class="pi pi-paperclip"></i> {{ h.adjuntosAdicionales }}
+          </small>
           <small class="historial__error" *ngIf="h.error">{{ h.error }}</small>
         </span>
       </div>

@@ -382,6 +382,22 @@
           <span class="nov-valor" [class.red]="nov.esDeduccion">
             {{ nov.esDeduccion ? "-" : "+" }}{{ formatMonto(nov.valorTotal) }}
           </span>
+          <p-tag
+            *ngIf="nov.estado === 'PENDIENTE'"
+            value="Por autorizar"
+            severity="warn"
+            pTooltip="Pasa un tope del cargo o de la vinculación"
+          />
+          <button
+            *ngIf="puedeEditar && nov.estado === 'PENDIENTE'"
+            pButton
+            type="button"
+            icon="pi pi-check-circle"
+            class="p-button-text p-button-success p-button-sm"
+            pTooltip="Autorizar (pasa el tope)"
+            tooltipPosition="top"
+            (click)="autorizarNovedad(nov.id)"
+          ></button>
           <button
             *ngIf="puedeEditar"
             pButton

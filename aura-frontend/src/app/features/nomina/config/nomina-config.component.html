@@ -100,7 +100,83 @@
             class="field-hint completo"
             *ngIf="config.modoLiquidacion === 'MIXTA'"
           >
-            Solo exige asistencia a los empleados con control de asistencia.
+            Solo exige asistencia a los empleados con control de asistencia; los demás se liquidan normal.
+          </small>
+          <small class="field-hint">
+            Las horas extra y recargos registrados en la asistencia por obra entran a la liquidación en cualquier modo.
+          </small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Asistencia por obra (V243) -->
+    <div class="card sec">
+      <div class="section-title">
+        <i class="pi pi-building"></i> Asistencia por obra (proyectos)
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label>¿Divide los proyectos en frentes?</label>
+          <p-dropdown
+            [options]="siNoOpts"
+            [(ngModel)]="config.asistenciaUsaFrentes"
+            optionLabel="label"
+            optionValue="value"
+            [style]="{ width: '100%' }"
+          />
+          <small class="field-hint" *ngIf="config.asistenciaUsaFrentes === false">
+            Se trabaja por proyecto: los trabajadores y las horas van al proyecto completo, sin frentes.
+          </small>
+          <small class="field-hint" *ngIf="config.asistenciaUsaFrentes !== false">
+            Cada proyecto se divide en frentes (cuadrillas, sedes de obra…) con sus propios trabajadores.
+          </small>
+        </div>
+        <div class="field">
+          <label>¿Cómo se registran las horas?</label>
+          <p-dropdown
+            [options]="registroOpts"
+            [(ngModel)]="config.asistenciaRegistro"
+            optionLabel="label"
+            optionValue="value"
+            [style]="{ width: '100%' }"
+          />
+          <small class="field-hint" *ngIf="config.asistenciaRegistro === 'EXCEL'">
+            Se sube la plantilla del mes; no se digitan horas a mano.
+          </small>
+          <small class="field-hint" *ngIf="config.asistenciaRegistro === 'MANUAL'">
+            Se digita cada día en la pantalla; la importación de Excel queda desactivada.
+          </small>
+        </div>
+        <div class="field">
+          <label>¿Un supervisor aprueba la asistencia antes de la nómina?</label>
+          <p-dropdown
+            [options]="siNoOpts"
+            [(ngModel)]="config.asistenciaRequiereAprobacion"
+            optionLabel="label"
+            optionValue="value"
+            [style]="{ width: '100%' }"
+          />
+          <small class="field-hint" *ngIf="config.asistenciaRequiereAprobacion === false">
+            Sin revisión: lo registrado (digitado o importado) pasa directo a la prenómina al liquidar.
+          </small>
+          <small class="field-hint" *ngIf="config.asistenciaRequiereAprobacion !== false">
+            Cada día se envía a revisión y un supervisor lo aprueba y lo manda a nómina.
+          </small>
+        </div>
+        <div class="field" *ngIf="config.asistenciaRequiereAprobacion !== false">
+          <label>¿Exige soporte para enviar a revisión?</label>
+          <p-dropdown
+            [options]="siNoOpts"
+            [(ngModel)]="config.asistenciaExigeSoporte"
+            optionLabel="label"
+            optionValue="value"
+            [style]="{ width: '100%' }"
+          />
+          <small class="field-hint" *ngIf="config.asistenciaRegistro === 'EXCEL'">
+            Con la plantilla de Excel, el soporte es el mismo Excel importado: no se sube PDF.
+          </small>
+          <small class="field-hint" *ngIf="config.asistenciaRegistro !== 'EXCEL'">
+            Soporte = planilla firmada en PDF (o el Excel importado). Con "No", el día se envía sin adjuntos.
           </small>
         </div>
       </div>
@@ -111,6 +187,23 @@
       <div class="section-title">
         <i class="pi pi-dollar"></i> Valores legales
       </div>
+      <!-- V239: valores de ley por año. Se muestran como texto (no p-inputNumber deshabilitado). -->
+      <div class="form-grid" *ngIf="config.parametrosAgno; else valoresPropios">
+        <div class="field">
+          <label>SMMLV {{ config.parametrosAgno }}</label>
+          <div class="valor-ley">{{ config.smmlv | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</div>
+        </div>
+        <div class="field">
+          <label>Auxilio de transporte {{ config.parametrosAgno }}</label>
+          <div class="valor-ley">{{ config.auxilioTransporte | currency: 'COP' : 'symbol-narrow' : '1.0-0' }}</div>
+          <small class="field-hint">Se aplica si el salario es ≤ 2 SMMLV</small>
+        </div>
+        <small class="field-hint ley-nota">
+          Valores de ley del año ({{ config.parametrosNorma }}). Cada período se liquida con los de su año:
+          reliquidar un mes del año anterior usa los de ese año.
+        </small>
+      </div>
+      <ng-template #valoresPropios>
       <div class="form-grid">
         <div class="field">
           <label>SMMLV (Salario mínimo)</label>
@@ -142,6 +235,7 @@
           <small class="field-hint">Se aplica si el salario es ≤ 2 SMMLV</small>
         </div>
       </div>
+      </ng-template>
     </div>
 
     <!-- Aportes empleado (solo COMPLETO) -->

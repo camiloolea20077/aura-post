@@ -96,7 +96,7 @@ export class IndexCuentasNominaComponent implements OnInit {
     const q = this.busqueda.trim().toLowerCase();
     if (!q) return this.conceptos;
     return this.conceptos.filter(
-      (c) => c.codigo.toLowerCase().includes(q) || c.nombre.toLowerCase().includes(q),
+      (c) => String(c.numero ?? '').includes(q) || c.nombre.toLowerCase().includes(q),
     );
   }
 
@@ -152,7 +152,7 @@ export class IndexCuentasNominaComponent implements OnInit {
       );
       this.reemplazar(res.data);
       this.mostrarForm = false;
-      this.alert.showSuccess('Cuentas de nómina', `${c.codigo} guardado`);
+      this.alert.showSuccess('Cuentas de nómina', `${c.numero} - ${c.nombre} guardado`);
     } catch (err: any) {
       this.alert.showError('No se pudo guardar', err?.error?.message ?? 'Revise los datos.');
     } finally {
@@ -163,7 +163,7 @@ export class IndexCuentasNominaComponent implements OnInit {
 
   confirmarRestablecer(c: ConceptoContableNominaModel): void {
     this.confirm.confirm({
-      message: `¿Volver <b>${c.codigo}</b> a su contabilización por defecto?`,
+      message: `¿Volver <b>${c.numero} - ${c.nombre}</b> a su contabilización por defecto?`,
       header: 'Restablecer concepto',
       icon: 'pi pi-replay',
       acceptLabel: 'Sí, restablecer',
@@ -176,7 +176,7 @@ export class IndexCuentasNominaComponent implements OnInit {
     try {
       const res = await lastValueFrom(this.service.restablecer(c.codigo));
       this.reemplazar(res.data);
-      this.alert.showSuccess('Cuentas de nómina', `${c.codigo} restablecido`);
+      this.alert.showSuccess('Cuentas de nómina', `${c.numero} - ${c.nombre} restablecido`);
     } catch (err: any) {
       this.alert.showError('No se pudo restablecer', err?.error?.message ?? 'Intente de nuevo.');
     } finally {

@@ -1,0 +1,76 @@
+<p-dialog
+  [(visible)]="visible"
+  [header]="header"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '960px', maxWidth: '96vw' }"
+  styleClass="aura-dialog"
+  appendTo="body"
+  (onShow)="onShow()"
+  (onHide)="cerrar()"
+>
+  <div class="filtros">
+    <span class="search-wrap buscar">
+      <i class="pi pi-search"></i>
+      <input type="text" pInputText class="search-input" placeholder="Código, nombre o tipo..."
+        [(ngModel)]="busqueda" (input)="buscarConPausa()" autocomplete="off" />
+    </span>
+    <p-select [(ngModel)]="filtroClase" [options]="claseOpts" optionLabel="label" optionValue="value"
+      placeholder="Clase" [showClear]="true" appendTo="body" styleClass="filtro" (onChange)="filtrar()" />
+    <p-select [(ngModel)]="filtroTipo" [options]="tipoOpts" optionLabel="label" optionValue="value"
+      placeholder="Tipo" [filter]="true" filterBy="label" [showClear]="true" appendTo="body" styleClass="filtro"
+      (onChange)="filtrar()" />
+    <p-select [(ngModel)]="filtroGrupo" [options]="grupoOpts" optionLabel="label" optionValue="value"
+      placeholder="Grupo" [showClear]="true" appendTo="body" styleClass="filtro" (onChange)="filtrar()" />
+    <p-select [(ngModel)]="filtroEntrada" [options]="entradaOpts" optionLabel="label" optionValue="value"
+      placeholder="Entrada" [showClear]="true" appendTo="body" styleClass="filtro" (onChange)="filtrar()" />
+  </div>
+
+  <div class="tabla">
+    <p-table [value]="items" [lazy]="true" (onLazyLoad)="cargar($event)" [paginator]="true" [rows]="rows"
+      [totalRecords]="totalRecords" [loading]="loading" dataKey="id" styleClass="p-datatable-sm"
+      [tableStyle]="{ 'min-width': '44rem' }">
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 3rem"></th>
+          <th style="width: 5.5rem">Código</th>
+          <th>Nombre</th>
+          <th>Clase</th>
+          <th>Tipo</th>
+          <th>Entrada</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-c>
+        <tr class="fila" [class.agregado]="yaEsta(c)" [class.marcada]="marcado(c)" (click)="alternar(c)">
+          <td>
+            <p-checkbox [binary]="true" [ngModel]="marcado(c) || yaEsta(c)" [disabled]="yaEsta(c)"
+              (click)="$event.stopPropagation()" (onChange)="alternar(c)" />
+          </td>
+          <td class="mono">{{ c.numero }}</td>
+          <td>
+            {{ c.nombre }}
+            @if (yaEsta(c)) {
+              <span class="ya">ya agregado</span>
+            }
+          </td>
+          <td>{{ textoClase(c) }}</td>
+          <td class="muted">{{ c.tipoNombre ?? '—' }}</td>
+          <td class="muted">{{ textoEntrada(c) }}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="vacio">No hay conceptos con esos filtros.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <span class="contador">{{ cantidadSeleccionada }} seleccionado{{ cantidadSeleccionada === 1 ? '' : 's' }}</span>
+    <button pButton type="button" label="Cancelar" class="btn-amarillo" (click)="cerrar()"></button>
+    <button pButton type="button" [label]="'Agregar (' + cantidadSeleccionada + ')'" icon="pi pi-plus"
+      class="btn-verde" [disabled]="!cantidadSeleccionada" (click)="confirmar()"></button>
+  </ng-template>
+</p-dialog>

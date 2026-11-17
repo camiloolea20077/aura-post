@@ -160,6 +160,8 @@ export type ClaseConceptoNomina = 'DEVENGADO' | 'DEDUCCION' | 'APORTE_EMPLEADOR'
 export interface DetalleLiquidacionModel {
   id: number;
   conceptoCodigo: string;
+  /** Código visible del concepto. */
+  conceptoNumero: number | null;
   conceptoNombre: string;
   clase: ClaseConceptoNomina;
   cantidad: number | null;
@@ -248,6 +250,10 @@ export interface NovedadDocumentoModel {
   valorTotal: number;
   esDeduccion: boolean;
   origen: string;
+  /** APLICADA | PENDIENTE (pasa un tope: por autorizar) | APROBADA (autorizada). */
+  estado: string;
+  /** Pasó un tope del cargo o la vinculación y necesita autorización. */
+  requiereAprobacion: boolean;
 }
 
 /** Novedad nueva para un empleado de la prenómina (fechas en yyyy-MM-dd). */

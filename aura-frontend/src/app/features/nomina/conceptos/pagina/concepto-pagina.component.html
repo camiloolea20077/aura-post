@@ -1,0 +1,411 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-arrow-left"
+          class="p-button-text p-button-rounded"
+          (click)="volver()"
+        ></button>
+        <div>
+          <h1 class="title">
+            {{
+              concepto
+                ? concepto.numero + " - " + concepto.nombre
+                : "Nuevo concepto"
+            }}
+          </h1>
+          <p class="subtitle">
+            @if (concepto) {
+              {{ concepto.tipoNombre ?? "Sin tipo" }}
+              @if (concepto.vigenteHasta) {
+                · vigente del {{ concepto.vigenteDesde | fechaEs: "corta" }} al
+                {{ concepto.vigenteHasta | fechaEs: "corta" }}
+              } @else {
+                · vigente desde el
+                {{ concepto.vigenteDesde | fechaEs: "corta" }}
+              }
+            } @else {
+              Código numérico, clase, tipo y cómo se calcula
+            }
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          @if (concepto) {
+            @if (concepto.deLey) {
+              <p-tag
+                [value]="concepto.esGlobal ? 'De ley' : 'De ley (ajustado)'"
+                severity="info"
+              />
+            } @else {
+              <p-tag value="Empresa" severity="success" />
+            }
+            <p-tag
+              [value]="concepto.activo ? 'Activo' : 'Inactivo'"
+              [severity]="concepto.activo ? 'success' : 'secondary'"
+            />
+          }
+          <button
+            pButton
+            type="button"
+            [label]="esEdicion ? 'Guardar cambios' : 'Crear concepto'"
+            icon="pi pi-check"
+            class="btn-aura"
+            [loading]="guardando"
+            [disabled]="cargando"
+            (click)="guardar()"
+          ></button>
+        </div>
+      </div>
+    </div>
+
+    @if (cargando) {
+      <div class="page-loading">
+        <i class="pi pi-spin pi-spinner"></i><span>Cargando...</span>
+      </div>
+    } @else {
+      <div [formGroup]="form" class="form-body">
+        @if (esDeLey) {
+          <p class="aviso">
+            <i class="pi pi-lock"></i>
+            Concepto de ley: puedes cambiar el nombre, la entrada, el redondeo,
+            la frecuencia, el grupo y la descripción. La clase, el tipo y el
+            cálculo los fija la ley.
+          </p>
+        }
+
+        <p-tabView
+          [(activeIndex)]="tabActiva"
+          [scrollable]="true"
+          styleClass="aura-tabs"
+        >
+          <!-- ─── Información general ──────────────────────────── -->
+          <p-tabPanel>
+            <ng-template pTemplate="header"
+              ><span class="tab-label"
+                ><i class="pi pi-info-circle"></i> Información general</span
+              ></ng-template
+            >
+
+            <div class="seccion">Identificación</div>
+            <div class="grid">
+              <div class="field">
+                <label class="field-label"
+                  >Código <span class="required">*</span></label
+                >
+                <p-inputNumber
+                  formControlName="numero"
+                  [useGrouping]="false"
+                  [min]="1"
+                  styleClass="w-full"
+                />
+                @if (invalido("numero")) {
+                  <small class="field-error"
+                    >Escribe un número mayor que cero</small
+                  >
+                } @else if (!esEdicion) {
+                  <small class="field-hint"
+                    >Propuesto: el siguiente libre. Solo números.</small
+                  >
+                }
+              </div>
+              <div class="field span-2">
+                <label class="field-label"
+                  >Nombre <span class="required">*</span></label
+                >
+                <input
+                  pInputText
+                  formControlName="nombre"
+                  class="w-full"
+                  placeholder="SALUD PLANTA PERMANENTE"
+                />
+                @if (invalido("nombre")) {
+                  <small class="field-error">El nombre es obligatorio</small>
+                }
+              </div>
+              <div class="field">
+                <label class="field-label">Estado</label>
+                <p-select
+                  formControlName="activo"
+                  [options]="estadoOpts"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="w-full"
+                />
+              </div>
+            </div>
+
+            <div class="seccion">Clasificación</div>
+            <div class="grid">
+              <div class="field">
+                <label class="field-label"
+                  >Clase <span class="required">*</span></label
+                >
+                <p-select
+                  formControlName="clase"
+                  [options]="claseOpts"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="w-full"
+                />
+              </div>
+              <div class="field">
+                <label class="field-label"
+                  >Tipo <span class="required">*</span></label
+                >
+                <p-select
+                  formControlName="tipoId"
+                  [options]="tipoOpts"
+                  optionLabel="label"
+                  optionValue="value"
+                  [filter]="true"
+                  filterBy="label"
+                  placeholder="Seleccione"
+                  styleClass="w-full"
+                />
+                @if (invalido("tipoId")) {
+                  <small class="field-error">Elige qué es el concepto</small>
+                } @else {
+                  <small class="field-hint"
+                    >Qué es: salud, libranza, hora extra… (según la
+                    clase)</small
+                  >
+                }
+              </div>
+              <div class="field">
+                <label class="field-label">Grupo</label>
+                <p-select
+                  formControlName="grupoId"
+                  [options]="grupoOpts"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Sin grupo"
+                  [showClear]="true"
+                  styleClass="w-full"
+                />
+              </div>
+              <div class="field">
+                <label class="field-label">Código DIAN</label>
+                <input
+                  pInputText
+                  formControlName="codigoDian"
+                  class="w-full"
+                  placeholder="Opcional"
+                />
+                <small class="field-hint"
+                  >Etiqueta en la nómina electrónica</small
+                >
+              </div>
+            </div>
+
+            <div class="seccion">Liquidación</div>
+            <div class="grid">
+              <div class="field">
+                <label class="field-label">Entrada</label>
+                <p-select
+                  formControlName="entrada"
+                  [options]="entradaOpts"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="w-full"
+                />
+                <small class="field-hint"
+                  >Qué se digita al reportarlo como novedad</small
+                >
+              </div>
+              <div class="field">
+                <label class="field-label">Frecuencia</label>
+                <p-select
+                  formControlName="frecuencia"
+                  [options]="frecuenciaOpts"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="w-full"
+                />
+              </div>
+              <div class="field">
+                <label class="field-label">Redondeo</label>
+                <p-select
+                  formControlName="redondeoPrecision"
+                  [options]="precisionOpts"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="w-full"
+                />
+              </div>
+              <div class="field">
+                <label class="field-label">Dirección del redondeo</label>
+                <p-select
+                  formControlName="redondeoModo"
+                  [options]="modoOpts"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="w-full"
+                />
+              </div>
+              <div class="field">
+                <label class="field-label"
+                  >¿Aplica art. 383 (proveedores)?</label
+                >
+                <p-select
+                  formControlName="aplicaArt383"
+                  [options]="siNoOpts"
+                  optionLabel="label"
+                  optionValue="value"
+                  styleClass="w-full"
+                />
+              </div>
+              @if (!esEdicion) {
+                <div class="field">
+                  <label class="field-label"
+                    >Vigente desde <span class="required">*</span></label
+                  >
+                  <p-calendar
+                    formControlName="vigenteDesde"
+                    dateFormat="dd/mm/yy"
+                    [showIcon]="true"
+                    styleClass="w-full"
+                  />
+                </div>
+              }
+            </div>
+
+            <div class="field mt">
+              <label class="field-label">Descripción</label>
+              <textarea
+                pTextarea
+                formControlName="descripcion"
+                rows="3"
+                class="w-full"
+              ></textarea>
+            </div>
+          </p-tabPanel>
+
+          <!-- ─── Fórmula ───────────────────────────────────────── -->
+          <p-tabPanel>
+            <ng-template pTemplate="header"><span class="tab-label"><i class="pi pi-calculator"></i> Fórmula</span></ng-template>
+
+            @if (esDeLey) {
+              <p class="nota">Concepto de ley: el cálculo lo fija la ley y lo hace el sistema.</p>
+            } @else if (esEdicion) {
+              <p class="nota">Para cambiar la tarifa conservando la anterior (y poder reliquidar períodos viejos) use
+                <b>Nueva vigencia</b> en el listado. La fórmula se puede ajustar aquí.</p>
+            }
+
+            <div class="grid">
+              <div class="field span-2">
+                <label class="field-label">Cómo se calcula</label>
+                <p-select formControlName="base" [options]="baseOpts" optionLabel="label" optionValue="value"
+                  (onChange)="onBaseChange()" styleClass="w-full" />
+              </div>
+              @if (esPorcentual) {
+                <div class="field">
+                  <label class="field-label">Porcentaje</label>
+                  <p-inputNumber formControlName="porcentaje" suffix=" %" [minFractionDigits]="0"
+                    [maxFractionDigits]="4" styleClass="w-full" />
+                </div>
+              }
+              @if (esFijo) {
+                <div class="field">
+                  <label class="field-label">Valor fijo</label>
+                  <p-inputNumber formControlName="valorFijo" mode="currency" currency="COP" locale="es-CO"
+                    [maxFractionDigits]="0" styleClass="w-full" />
+                </div>
+              }
+              <div class="field">
+                <label class="field-label">Orden de cálculo</label>
+                <p-inputNumber formControlName="orden" [useGrouping]="false" styleClass="w-full" />
+                <small class="field-hint">Con fórmula se ajusta solo: va después de los conceptos que usa</small>
+              </div>
+            </div>
+
+            @if (esFormula) {
+              <div class="seccion">Fórmula</div>
+              <app-editor-formula formControlName="formula" [numero]="concepto?.numero ?? form.getRawValue().numero" />
+            }
+          </p-tabPanel>
+
+          <!-- ─── Afectado por ──────────────────────────────────── -->
+          <p-tabPanel>
+            <ng-template pTemplate="header"><span class="tab-label"><i class="pi pi-sign-in"></i> Afectado por</span></ng-template>
+            @if (!concepto) {
+              <p class="nota">Se calcula al guardar el concepto.</p>
+            } @else if (!afectadoPor.length) {
+              <div class="vacio">
+                <i class="pi pi-sitemap"></i>
+                <p>Nada alimenta su base: el valor es fijo, lo trae la novedad o lo calcula el sistema.</p>
+              </div>
+            } @else {
+              <p class="nota">Lo que entra en la base de este concepto (según cómo se calcula). Si cambia uno de estos,
+                cambia el valor de este concepto.</p>
+              <table class="tabla-simple">
+                <thead>
+                  <tr><th style="width: 6rem">Código</th><th>Concepto o dato</th><th>Por qué</th></tr>
+                </thead>
+                <tbody>
+                  @for (a of afectadoPor; track $index) {
+                    <tr>
+                      <td class="mono">{{ a.numero ?? '—' }}</td>
+                      <td>{{ a.nombre }}</td>
+                      <td class="muted">{{ a.motivo }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          </p-tabPanel>
+
+          <!-- ─── Hace base ─────────────────────────────────────── -->
+          <p-tabPanel>
+            <ng-template pTemplate="header"><span class="tab-label"><i class="pi pi-sign-out"></i> Hace base</span></ng-template>
+            <p class="nota">A qué bases suma este concepto cuando se paga.</p>
+            <div class="grid">
+              <div class="field span-2">
+                <label class="field-label">¿Constituye IBC (seguridad social)?</label>
+                <p-select formControlName="constituyeIbc" [options]="siNoOpts" optionLabel="label" optionValue="value"
+                  styleClass="w-full" />
+                <small class="field-hint">El auxilio de transporte y los bonos no salariales no. Horas extra sí.</small>
+              </div>
+              <div class="field span-2">
+                <label class="field-label">¿Hace base de prima y cesantías?</label>
+                <p-select formControlName="haceBasePrestacional" [options]="siNoOpts" optionLabel="label"
+                  optionValue="value" styleClass="w-full" />
+                <small class="field-hint">Sí: suma a la base de las provisiones de prima y cesantías (salario + auxilio
+                  + lo marcado). Lo salarial (horas extra, comisiones, recargos) normalmente sí.</small>
+              </div>
+            </div>
+          </p-tabPanel>
+
+          <!-- ─── Contable ──────────────────────────────────────── -->
+          <p-tabPanel>
+            <ng-template pTemplate="header"><span class="tab-label"><i class="pi pi-book"></i> Contable</span></ng-template>
+            @if (concepto) {
+              <app-concepto-contable [codigo]="concepto.codigo" />
+            } @else {
+              <p class="nota">La contabilización se configura después de crear el concepto.</p>
+            }
+          </p-tabPanel>
+
+          <!-- ─── Centros de costo ──────────────────────────────── -->
+          <p-tabPanel>
+            <ng-template pTemplate="header"><span class="tab-label"><i class="pi pi-sitemap"></i> Centros de costo</span></ng-template>
+            <div class="grid">
+              <div class="field span-2">
+                <label class="field-label">Centro de costo del concepto</label>
+                <p-select formControlName="centroCostoId" [options]="centroOpts" optionLabel="label" optionValue="value"
+                  placeholder="Se reparte por los centros de costo de cada vinculación" [showClear]="true"
+                  [filter]="true" filterBy="label" styleClass="w-full" />
+                <small class="field-hint">Vacío: el costo se reparte como la vinculación del empleado. Con un centro: todo
+                  el valor de este concepto va a ese centro.</small>
+              </div>
+            </div>
+          </p-tabPanel>
+        </p-tabView>
+      </div>
+    }
+  </div>
+</div>

@@ -74,6 +74,7 @@ export const MODULOS_RRHH: ModuloRrhhConfig[] = [
   { route: '/nomina/parametros/grupos-nomina', grupo: 'catalogos', descripcion: 'Empleados que se liquidan juntos' },
   { route: '/nomina/parametros/niveles-cargo', grupo: 'catalogos', descripcion: 'Jerarquía de los cargos' },
   { route: '/nomina/parametros/tipos-cargo', grupo: 'catalogos', descripcion: 'Planta, temporal, por proyecto' },
+  { route: '/nomina/parametros/grupos-concepto', grupo: 'catalogos', descripcion: 'Agrupan conceptos para filtrarlos y agregarlos juntos a un cargo' },
   { route: '/nomina/parametros/tipos-embargo', grupo: 'catalogos', descripcion: 'Clases de embargo con su prioridad y límite legal' },
   { route: '/nomina/parametros/motivos-retiro', grupo: 'catalogos', descripcion: 'Causas de terminación y si generan indemnización' },
   { route: '/nomina/parametros/motivos-ausentismo', grupo: 'catalogos', descripcion: 'Incapacidades, licencias y permisos: quién paga y novedad PILA' },

@@ -48,6 +48,52 @@
       </div>
     </div>
 
+    <!-- Aprobar varios días a la vez (marcaje del mes, V242) -->
+    <div class="bloque" *ngIf="proyectoId">
+      <div class="bloque__texto">
+        <strong>Aprobar varios días</strong>
+        <span>Aprueba los días enviados a revisión del frente en el rango y los envía a nómina (horas extra y recargos).</span>
+      </div>
+      <div class="bloque__campos">
+        <p-dropdown
+          [options]="frenteBloqueOpts"
+          [(ngModel)]="frenteBloqueId"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Frente"
+          styleClass="w-full"
+        />
+        <p-datepicker
+          [(ngModel)]="rangoBloque"
+          selectionMode="range"
+          dateFormat="dd/mm/yy"
+          [readonlyInput]="true"
+          placeholder="Desde – hasta"
+          styleClass="w-full"
+        />
+        <p-dropdown
+          [options]="enviarNominaOpts"
+          [(ngModel)]="enviarNominaBloque"
+          optionLabel="label"
+          optionValue="value"
+          styleClass="w-full"
+        />
+        <button
+          pButton
+          type="button"
+          label="Aprobar rango"
+          icon="pi pi-check-circle"
+          class="btn-aura"
+          [loading]="aprobandoBloque"
+          [disabled]="!frenteBloqueId || !rangoBloque?.[0] || !rangoBloque?.[1]"
+          (click)="aprobarBloque()"
+        ></button>
+      </div>
+      <div class="bloque__errores" *ngIf="erroresBloque.length">
+        <span *ngFor="let e of erroresBloque">{{ e.fecha | date: 'dd/MM/yyyy' : 'UTC' }}: {{ e.mensaje }}</span>
+      </div>
+    </div>
+
     <p-table
       [value]="rows"
       [loading]="loading"

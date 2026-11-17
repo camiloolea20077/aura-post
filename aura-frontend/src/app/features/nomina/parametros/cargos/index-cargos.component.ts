@@ -6,6 +6,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -19,9 +20,11 @@ import { NominaCargoModel } from '../../../../core/models/nomina-parametros.mode
 import { NominaCargoService } from '../../../../core/services/nomina-cargo.service';
 import { PuedeDirective } from '../../../../shared/directives/puede.directive';
 import { AlertService } from '../../../../shared/pipes/alert.service';
-import { FormCargoComponent } from './form-cargo.component';
 
-/** Cargos de la empresa (módulo aparte): nivel, tipo, plazas y rango salarial. */
+/**
+ * Cargos de la empresa (módulo aparte): nivel, tipo, plazas y rango salarial.
+ * Crear y editar abren la página del cargo con su plantilla de nómina.
+ */
 @Component({
   selector: 'app-index-cargos',
   standalone: true,
@@ -36,7 +39,6 @@ import { FormCargoComponent } from './form-cargo.component';
     TagModule,
     TooltipModule,
     PuedeDirective,
-    FormCargoComponent,
   ],
   providers: [ConfirmationService],
   templateUrl: './index-cargos.component.html',
@@ -50,14 +52,12 @@ export class IndexCargosComponent implements OnInit {
   pagina = 0;
   tamano = 10;
 
-  mostrarForm = false;
-  seleccionado: NominaCargoModel | null = null;
-
   constructor(
     private readonly service: NominaCargoService,
     private readonly alert: AlertService,
     private readonly confirm: ConfirmationService,
     private readonly cdr: ChangeDetectorRef,
+    private readonly router: Router,
   ) {}
 
   ngOnInit(): void {
@@ -103,14 +103,13 @@ export class IndexCargosComponent implements OnInit {
     this.buscar();
   }
 
+  /** El cargo se crea y se edita en su página con pestañas. */
   nuevo(): void {
-    this.seleccionado = null;
-    this.mostrarForm = true;
+    void this.router.navigate(['/nomina/cargos/nuevo']);
   }
 
   editar(c: NominaCargoModel): void {
-    this.seleccionado = c;
-    this.mostrarForm = true;
+    void this.router.navigate(['/nomina/cargos', c.id]);
   }
 
   confirmarEliminar(c: NominaCargoModel): void {

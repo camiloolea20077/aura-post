@@ -93,6 +93,11 @@ export class NominaDocumentoService {
     return this.http.post<ResponseModel<NovedadDocumentoModel[]>>(`${this.base}/${id}/novedades`, dto);
   }
 
+  /** Autoriza una novedad que pasa un tope del cargo o de la vinculación. */
+  autorizarNovedad(id: number, novedadId: number): Observable<ResponseModel<NovedadDocumentoModel[]>> {
+    return this.http.post<ResponseModel<NovedadDocumentoModel[]>>(`${this.base}/${id}/novedades/${novedadId}/autorizar`, {});
+  }
+
   eliminarNovedad(id: number, novedadId: number): Observable<ResponseModel<NovedadDocumentoModel[]>> {
     return this.http.delete<ResponseModel<NovedadDocumentoModel[]>>(`${this.base}/${id}/novedades/${novedadId}`);
   }

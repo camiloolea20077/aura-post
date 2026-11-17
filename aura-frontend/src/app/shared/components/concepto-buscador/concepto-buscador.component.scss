@@ -1,0 +1,74 @@
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+
+  .buscar {
+    flex: 1 1 16rem;
+    min-width: 0;
+
+    .search-input {
+      width: 100%;
+    }
+  }
+}
+
+.tabla {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.fila {
+  cursor: pointer;
+
+  &.marcada td {
+    background: #eff6ff;
+  }
+
+  &.agregado {
+    cursor: default;
+
+    td {
+      color: #94a3b8;
+    }
+  }
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 600;
+}
+
+.muted {
+  color: #64748b;
+}
+
+.ya {
+  margin-left: 0.4rem;
+  font-size: 0.72rem;
+  font-style: italic;
+}
+
+.vacio {
+  text-align: center;
+  padding: 1.5rem;
+  color: #94a3b8;
+}
+
+.contador {
+  margin-right: auto;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+:host ::ng-deep .filtro {
+  width: 10.5rem;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  :host ::ng-deep .filtro {
+    width: 100%;
+  }
+}

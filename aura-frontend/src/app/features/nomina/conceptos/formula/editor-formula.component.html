@@ -1,0 +1,113 @@
+<div class="editor" [class.deshabilitado]="deshabilitado">
+  @if (!deshabilitado) {
+    <div class="barra">
+      <div class="grupo">
+        <span class="grupo-titulo">Variables</span>
+        <div class="chips">
+          @for (v of variables; track v.nombre) {
+            <button type="button" class="chip chip--variable" [pTooltip]="v.descripcion" tooltipPosition="top"
+              (click)="insertar(v.nombre)">{{ v.nombre }}</button>
+          }
+        </div>
+      </div>
+      <div class="grupo">
+        <span class="grupo-titulo">Funciones</span>
+        <div class="chips">
+          @for (f of funciones; track f.nombre) {
+            <button type="button" class="chip chip--funcion" [pTooltip]="f.ayuda" tooltipPosition="top"
+              (click)="insertar(f.plantilla)">{{ f.nombre }}</button>
+          }
+        </div>
+      </div>
+      <div class="grupo grupo--fila">
+        <div class="chips">
+          @for (o of operadores; track o) {
+            <button type="button" class="chip chip--operador" (click)="insertar(o)">{{ o }}</button>
+          }
+        </div>
+        <button pButton type="button" label="Insertar concepto" icon="pi pi-search-plus"
+          class="p-button-sm p-button-outlined" (click)="mostrarBuscador = true"></button>
+      </div>
+    </div>
+  }
+
+  <textarea #area class="codigo" rows="4" spellcheck="false" [value]="texto" [disabled]="deshabilitado"
+    placeholder="Ej.: SI(SALARIO_BASICO <= 2 * SMMLV; AUX_TRANSPORTE / 30 * DIAS_LIQUIDADOS; 0)"
+    (input)="onInput($any($event.target).value)" (blur)="onBlur()"></textarea>
+  <small class="ayuda">Decimales con punto (8.33). Separe los argumentos con punto y coma. [32] = valor del concepto 32
+    en la misma liquidación. 4% = 0.04.</small>
+
+  @if (validando) {
+    <div class="estado"><i class="pi pi-spin pi-spinner"></i> Revisando…</div>
+  } @else if (validacion) {
+    @if (validacion.valida) {
+      <div class="estado estado--ok">
+        <i class="pi pi-check-circle"></i> Fórmula válida
+        @if (validacion.conceptos.length) {
+          · usa
+          @for (c of validacion.conceptos; track c.numero) {
+            <span class="ref">[{{ c.numero }}] {{ c.nombre }}</span>
+          }
+        }
+      </div>
+    } @else {
+      <div class="estado estado--error">
+        <i class="pi pi-times-circle"></i> {{ validacion.error }}
+        @if (validacion.posicion > 0) {
+          <span class="pos">(carácter {{ validacion.posicion }})</span>
+        }
+      </div>
+    }
+  }
+
+  @if (validacion?.valida) {
+    <div class="prueba">
+      <button type="button" class="prueba-head" (click)="mostrarPrueba = !mostrarPrueba">
+        <i class="pi" [class.pi-chevron-down]="!mostrarPrueba" [class.pi-chevron-up]="mostrarPrueba"></i>
+        Probar con valores de ejemplo
+      </button>
+      @if (mostrarPrueba) {
+        <div class="prueba-body">
+          <div class="valores">
+            @for (v of variablesUsadas; track v) {
+              <div class="valor">
+                <label [title]="descripcionVariable(v)">{{ v }}</label>
+                <p-inputNumber [(ngModel)]="valoresVariables[v]" [maxFractionDigits]="2" />
+              </div>
+            }
+            @for (n of conceptosUsados; track n) {
+              <div class="valor">
+                <label>[{{ n }}] {{ nombreConcepto(n) }}</label>
+                <p-inputNumber [(ngModel)]="valoresConceptos[n]" [maxFractionDigits]="2" />
+              </div>
+            }
+          </div>
+          <button pButton type="button" label="Calcular" icon="pi pi-play" class="btn-aura p-button-sm"
+            [loading]="probando" (click)="probar()"></button>
+
+          @if (prueba) {
+            @if (prueba.error) {
+              <div class="estado estado--error"><i class="pi pi-times-circle"></i> {{ prueba.error }}</div>
+            } @else {
+              <table class="pasos">
+                @for (p of prueba.pasos; track p.nombre) {
+                  <tr>
+                    <td>{{ p.nombre }}</td>
+                    <td class="num">{{ p.valor | number: '1.0-2' }}</td>
+                  </tr>
+                }
+                <tr class="total">
+                  <td>Resultado</td>
+                  <td class="num">{{ prueba.valor | currency: 'COP' : 'symbol-narrow' : '1.0-2' }}</td>
+                </tr>
+              </table>
+            }
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<app-concepto-buscador [(visible)]="mostrarBuscador" header="Insertar conceptos en la fórmula"
+  [yaAgregados]="numero != null ? [numero] : []" (agregar)="insertarConceptos($event)" />

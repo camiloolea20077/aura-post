@@ -10,6 +10,18 @@
           <p class="subtitle">Registro de horas por proyecto y frente</p>
         </div>
       </div>
+      <button
+        *ngIf="permiteExcel"
+        pButton
+        type="button"
+        label="Importar mes (Excel)"
+        icon="pi pi-file-excel"
+        class="btn-aura"
+        [disabled]="!frenteId"
+        pTooltip="Elija el proyecto (y el frente si tiene varios) para importar el marcaje del mes"
+        [tooltipDisabled]="!!frenteId"
+        (click)="mostrarImportar = true"
+      ></button>
     </div>
 
     <!-- Filtros -->
@@ -27,7 +39,11 @@
           (onChange)="onProyectoChange()"
         />
       </div>
-      <div class="fld">
+      <div class="fld" *ngIf="soloProyecto">
+        <label>Frente</label>
+        <div class="solo-proyecto">Proyecto completo</div>
+      </div>
+      <div class="fld" *ngIf="!soloProyecto">
         <label>Frente</label>
         <p-dropdown
           [options]="frenteOpts"
@@ -38,6 +54,7 @@
           placeholder="Seleccionar frente..."
           styleClass="w-full"
           [disabled]="!proyectoId"
+          (onChange)="vista === 'mes' && cargarMes()"
         />
       </div>
       <div class="fld fld-fecha">
@@ -45,6 +62,7 @@
         <input type="date" pInputText [(ngModel)]="fecha" />
       </div>
       <button
+        *ngIf="vista === 'dia'"
         pButton
         type="button"
         label="Cargar"
@@ -54,9 +72,54 @@
         [disabled]="!frenteId || !fecha"
         (click)="cargar()"
       ></button>
+      <div class="vista-sel">
+        <button
+          pButton
+          type="button"
+          label="Día"
+          icon="pi pi-calendar"
+          class="p-button-sm"
+          [class.p-button-outlined]="vista !== 'dia'"
+          (click)="verDia()"
+        ></button>
+        <button
+          pButton
+          type="button"
+          label="Mes"
+          icon="pi pi-th-large"
+          class="p-button-sm"
+          [class.p-button-outlined]="vista !== 'mes'"
+          [disabled]="!frenteId"
+          (click)="verMes()"
+        ></button>
+      </div>
     </div>
 
-    <ng-container *ngIf="data">
+    <!-- Vista del mes: qué días asistió cada trabajador -->
+    <div class="mes-vista" *ngIf="vista === 'mes' && frenteId">
+      <div class="mes-vista__barra">
+        <p-datepicker
+          [(ngModel)]="mesVista"
+          view="month"
+          dateFormat="MM yy"
+          [readonlyInput]="true"
+          (onSelect)="cargarMes()"
+        />
+        <span class="mes-vista__ayuda">Haga clic en un día para abrirlo.</span>
+        <i class="pi pi-spin pi-spinner" *ngIf="cargandoMes"></i>
+      </div>
+      <app-calendario-asistencia
+        *ngIf="calendario as c"
+        [anio]="c.anio"
+        [mes]="c.mes"
+        [festivos]="c.festivos"
+        [filas]="c.filas"
+        [clicable]="true"
+        (dia)="abrirDia($event)"
+      />
+    </div>
+
+    <ng-container *ngIf="data && vista === 'dia'">
       <!-- Estado + alertas -->
       <div class="estado-bar">
         <span class="lbl">Estado:</span>
@@ -89,9 +152,19 @@
       </div>
 
       <!-- Layout de dos columnas: PDF (izq) + horas (der) -->
-      <div class="split">
-        <!-- Card izquierda: soporte PDF -->
-        <aside class="pdf-card">
+      <p class="modo-nota" *ngIf="registro === 'EXCEL'">
+        <i class="pi pi-file-excel"></i>
+        <span>
+          La empresa registra las horas con la plantilla de Excel del mes: use <b>Importar mes (Excel)</b>.
+          Aquí se consultan los trabajadores y sus horas{{ requiereAprobacion ? ' y se envía a revisión' : '; al liquidar la prenómina se toman solas' }}.
+          <a *ngIf="tieneSoporte" [href]="data.soportePdfUrl" target="_blank" rel="noopener">
+            Ver Excel importado{{ data.soportePdfNombre ? ' (' + data.soportePdfNombre + ')' : '' }}
+          </a>
+        </span>
+      </p>
+      <div class="split" [class.sin-soporte]="!muestraSoportePdf">
+        <!-- Card izquierda: soporte PDF (solo digitación manual con soporte) -->
+        <aside class="pdf-card" *ngIf="muestraSoportePdf">
           <div class="pdf-card__head">
             <span class="pdf-badge"><i class="pi pi-file-pdf"></i></span>
             <div>
@@ -183,6 +256,7 @@
               <th style="width: 150px">Estado</th>
               <th style="width: 110px">Entrada</th>
               <th style="width: 110px">Salida</th>
+              <th style="width: 100px" pTooltip="Minutos de descanso del día. Vacío: el del turno del frente">Descanso (min)</th>
               <th class="text-right" style="width: 80px">Horas</th>
               <th style="min-width: 160px">Observación</th>
             </tr>
@@ -204,14 +278,14 @@
                   appendTo="body"
                   optionValue="value"
                   styleClass="w-full sm"
-                  [disabled]="!editable"
+                  [disabled]="!puedeDigitar"
                 />
               </td>
               <td>
                 <input
                   type="time"
                   [(ngModel)]="row.horaEntrada"
-                  [disabled]="!editable"
+                  [disabled]="!puedeDigitar"
                   class="time-inp"
                 />
               </td>
@@ -219,8 +293,19 @@
                 <input
                   type="time"
                   [(ngModel)]="row.horaSalida"
-                  [disabled]="!editable"
+                  [disabled]="!puedeDigitar"
                   class="time-inp"
+                />
+              </td>
+              <td>
+                <input
+                  type="number"
+                  min="0"
+                  max="720"
+                  [(ngModel)]="row.minutosDescanso"
+                  [disabled]="!puedeDigitar"
+                  class="time-inp"
+                  placeholder="Turno"
                 />
               </td>
               <td class="text-right horas">
@@ -231,14 +316,14 @@
                   type="text"
                   pInputText
                   [(ngModel)]="row.observacionLider"
-                  [disabled]="!editable"
+                  [disabled]="!puedeDigitar"
                   class="obs-inp"
                   placeholder="—"
                 />
               </td>
             </tr>
             <tr *ngIf="data.detalles.length === 0">
-              <td colspan="7" class="empty-row">
+              <td colspan="8" class="empty-row">
                 No hay trabajadores asignados a este frente
               </td>
             </tr>
@@ -251,6 +336,7 @@
       <!-- Acciones -->
       <div class="acciones" *ngIf="editable">
         <button
+          *ngIf="puedeDigitar"
           pButton
           type="button"
           label="Guardar borrador"
@@ -259,16 +345,21 @@
           [loading]="saving"
           (click)="guardar()"
         ></button>
+        <span class="sin-revision" *ngIf="!requiereAprobacion">
+          <i class="pi pi-info-circle"></i>
+          Lo registrado pasa directo a la prenómina al liquidar: no se envía a revisión.
+        </span>
         <button
+          *ngIf="requiereAprobacion"
           pButton
           type="button"
           label="Enviar a revisión"
           icon="pi pi-send"
           class="btn-aura"
           [loading]="sending"
-          [disabled]="!tieneSoporte"
+          [disabled]="faltaSoporte"
           pTooltip="Debes cargar el PDF soporte antes de enviar"
-          [tooltipDisabled]="tieneSoporte"
+          [tooltipDisabled]="!faltaSoporte"
           (click)="enviar()"
         ></button>
       </div>
@@ -279,3 +370,12 @@
     </ng-container>
   </div>
 </div>
+
+<app-importar-marcaje
+  *ngIf="frenteId"
+  [(visible)]="mostrarImportar"
+  [requiereAprobacion]="requiereAprobacion"
+  [frenteId]="frenteId"
+  [frenteNombre]="nombreFrenteActual"
+  (importado)="onImportado()"
+/>
