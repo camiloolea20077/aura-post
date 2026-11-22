@@ -1,0 +1,1287 @@
+@use '../taller' as taller;
+
+:host {
+  display: block;
+  container-type: inline-size;
+  @include taller.tokens;
+}
+
+.rotulo {
+  @include taller.rotulo;
+}
+
+.mono {
+  @include taller.mono;
+}
+
+.led {
+  @include taller.led;
+}
+
+.cargando {
+  padding: 4rem;
+  text-align: center;
+  color: var(--st-lapiz);
+}
+
+// ── Encabezado ──────────────────────────────────────────────────────────
+.titulo {
+  min-width: 0;
+
+  .title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.85rem;
+  }
+
+  &__codigo {
+    @include taller.mono;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+  }
+
+  .led {
+    font-size: 0.8125rem;
+  }
+}
+
+.urgente {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--st-led-espera);
+  background: color-mix(in srgb, var(--st-led-espera) 12%, transparent);
+
+  i {
+    font-size: 0.625rem;
+  }
+}
+
+// Barra de documentos: botones mudos, el texto aparece en pantallas anchas.
+.herramientas {
+  display: flex;
+  gap: 0.125rem;
+  justify-content: flex-end;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    height: 32px;
+    padding: 0 0.6rem;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    font-family: inherit;
+    font-size: 0.8125rem;
+    color: var(--st-lapiz);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      background: var(--st-mesa);
+      color: var(--st-grafito);
+    }
+
+    &:active {
+      transform: scale(0.97);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--st-tinta);
+      outline-offset: 1px;
+    }
+
+    &.whatsapp:hover {
+      color: #16a34a;
+    }
+  }
+
+  @container (max-width: 640px) {
+    span {
+      display: none;
+    }
+  }
+}
+
+// ── Recorrido ───────────────────────────────────────────────────────────
+.recorrido {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1rem 2.5rem;
+  align-items: center;
+  padding: 1.25rem var(--st-pad);
+  border-bottom: 1px solid var(--st-junta);
+
+  @container (max-width: 760px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  &__meta {
+    display: flex;
+    gap: 2rem;
+    margin: 0;
+
+    div {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    dd {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--st-grafito);
+
+      &.alerta {
+        color: var(--st-led-alerta);
+      }
+    }
+  }
+}
+
+.pasos {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding-top: 1.6rem;
+    min-width: 0;
+
+    // La línea que une los pasos.
+    &::before {
+      content: '';
+      position: absolute;
+      top: 8px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: var(--st-junta);
+    }
+
+    &:first-child::before {
+      left: 9px;
+    }
+
+    &:last-child::before {
+      right: auto;
+      width: 9px;
+    }
+
+    &.hecho::before {
+      background: var(--st-tinta);
+    }
+  }
+
+  &__punto {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 2px solid var(--st-junta);
+    background: var(--st-papel);
+    color: #fff;
+    font-size: 0.5625rem;
+  }
+
+  .hecho .pasos__punto {
+    background: var(--st-tinta);
+    border-color: var(--st-tinta);
+  }
+
+  .actual .pasos__punto {
+    --led: var(--st-tinta);
+    border-color: var(--led);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--led) 18%, transparent);
+  }
+
+  .actual[data-tono='espera'] .pasos__punto {
+    --led: var(--st-led-espera);
+  }
+  .actual[data-tono='listo'] .pasos__punto {
+    --led: var(--st-led-listo);
+  }
+  .actual[data-tono='alerta'] .pasos__punto {
+    --led: var(--st-led-alerta);
+  }
+  .actual[data-tono='cerrado'] .pasos__punto {
+    background: var(--st-tinta);
+    border-color: var(--st-tinta);
+    box-shadow: none;
+  }
+
+  &__label {
+    font-size: 0.8125rem;
+    color: var(--st-lapiz);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .hecho .pasos__label {
+    color: var(--st-grafito);
+  }
+
+  .actual .pasos__label {
+    font-weight: 700;
+    color: var(--st-grafito);
+  }
+
+  &__fecha {
+    @include taller.mono;
+    font-size: 0.6875rem;
+    color: var(--st-lapiz);
+  }
+
+  &__pausa {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--st-led-espera);
+  }
+
+  [data-tono='alerta'] .pasos__pausa {
+    color: var(--st-led-alerta);
+  }
+
+  &--cancelada {
+    opacity: 0.45;
+  }
+
+  @container (max-width: 520px) {
+    &__fecha {
+      display: none;
+    }
+    &__label {
+      font-size: 0.6875rem;
+    }
+  }
+}
+
+.aviso {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  margin: 1rem var(--st-pad) 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--st-radio);
+  background: var(--st-mesa);
+  color: var(--st-lapiz);
+  font-size: 0.8125rem;
+
+  i {
+    margin-top: 0.15rem;
+  }
+}
+
+// ── Mesa: etiqueta a la izquierda, trabajo a la derecha ──────────────────
+.mesa {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  align-items: start;
+
+  @container (max-width: 980px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.lado {
+  position: sticky;
+  top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem 0 1.25rem var(--st-pad);
+
+  @container (max-width: 980px) {
+    position: static;
+    padding: 1.25rem var(--st-pad) 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    align-items: start;
+  }
+}
+
+// La etiqueta del equipo: papel con borde perforado arriba.
+.etiqueta {
+  position: relative;
+  padding: 1.1rem 1.1rem 0.9rem;
+  border-radius: 4px 4px var(--st-radio) var(--st-radio);
+  background: var(--st-papel);
+  box-shadow:
+    0 0 0 1px var(--st-junta),
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 6px 16px -8px rgba(15, 23, 42, 0.12);
+
+  // Perforación: una fila de huecos con el color de la mesa.
+  &::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: 10px;
+    right: 10px;
+    height: 8px;
+    background: radial-gradient(circle at 5px 4px, var(--st-mesa) 3px, transparent 3.5px) 0 0 / 14px 8px repeat-x;
+  }
+
+  &__cabeza {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px dashed var(--st-junta);
+  }
+
+  &__codigo {
+    @include taller.mono;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--st-tinta);
+  }
+
+  &__equipo {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.9rem 0 0.75rem;
+
+    h2 {
+      margin: 0;
+      font-size: 1.125rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      color: var(--st-grafito);
+      text-wrap: balance;
+
+      &.vacio {
+        color: var(--st-junta);
+      }
+    }
+
+    p {
+      margin: 0.1rem 0 0;
+      font-size: 0.8125rem;
+      color: var(--st-lapiz);
+    }
+  }
+
+  &__icono {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: var(--st-tinta);
+    color: #fff;
+    font-size: 1.1rem;
+  }
+
+  &__datos {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem 0.75rem;
+    margin: 0 0 0.75rem;
+
+    div {
+      min-width: 0;
+    }
+
+    div:first-child {
+      grid-column: 1 / -1;
+    }
+
+    dd {
+      margin: 0.15rem 0 0;
+      font-size: 0.875rem;
+      color: var(--st-grafito);
+      overflow-wrap: anywhere;
+
+      &.error {
+        color: var(--st-led-alerta);
+      }
+    }
+  }
+
+  &__marcas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-bottom: 0.75rem;
+  }
+
+  &__problema {
+    margin: 0;
+    padding: 0.6rem 0.75rem;
+    border-left: 2px solid var(--st-tinta);
+    border-radius: 0 6px 6px 0;
+    background: var(--st-mesa);
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: var(--st-grafito);
+    white-space: pre-line;
+
+    &.vacio {
+      color: var(--st-lapiz);
+      border-left-color: var(--st-junta);
+    }
+  }
+
+  &__pie {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-top: 0.85rem;
+    padding-top: 0.6rem;
+    border-top: 1px dashed var(--st-junta);
+    font-size: 0.75rem;
+    color: var(--st-lapiz);
+
+    span:first-child {
+      font-weight: 600;
+      color: var(--st-grafito);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}
+
+.marca {
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--st-tinta);
+  background: var(--st-tinta-suave);
+
+  &--dano {
+    color: var(--st-led-espera);
+    background: color-mix(in srgb, var(--st-led-espera) 12%, transparent);
+  }
+}
+
+// La cuenta: total como foco, filas como renglones.
+.cuenta {
+  padding: 1rem 1.1rem;
+  border-radius: var(--st-radio);
+  box-shadow: 0 0 0 1px var(--st-junta);
+
+  &__total {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding-bottom: 0.75rem;
+  }
+
+  &__cifra {
+    @include taller.mono;
+    font-size: 1.75rem; // 28
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    color: var(--st-grafito);
+  }
+
+  &__filas {
+    margin: 0;
+
+    div {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.3rem 0;
+      font-size: 0.8125rem;
+    }
+
+    dt {
+      color: var(--st-lapiz);
+    }
+
+    dd {
+      @include taller.mono;
+      margin: 0;
+      color: var(--st-grafito);
+    }
+  }
+
+  &__saldo {
+    margin-top: 0.3rem;
+    padding-top: 0.55rem !important;
+    border-top: 1px solid var(--st-junta);
+
+    dt {
+      font-weight: 600;
+      color: var(--st-grafito) !important;
+    }
+
+    dd {
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--st-tinta) !important;
+    }
+  }
+
+  &__factura {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.6rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--st-tinta);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__nota {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+    margin: 0.5rem 0 0;
+    font-size: 0.75rem;
+    color: var(--st-lapiz);
+
+    &.ok {
+      color: var(--st-led-listo);
+    }
+  }
+}
+
+.anteriores {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--st-radio);
+  background: var(--st-tinta-suave);
+
+  .rotulo {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 0.3rem;
+    color: var(--st-tinta);
+  }
+
+  a {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 0.6rem;
+    align-items: center;
+    padding: 0.3rem 0;
+    font-size: 0.8125rem;
+    color: var(--st-grafito);
+    text-decoration: none;
+
+    &:hover .mono {
+      color: var(--st-tinta);
+    }
+  }
+
+  .led {
+    font-size: 0.6875rem;
+    font-weight: 500;
+  }
+}
+
+// ── Trabajo ─────────────────────────────────────────────────────────────
+.trabajo {
+  min-width: 0;
+  // Los formularios de la mesa se acomodan a su columna, no a la página.
+  container-type: inline-size;
+  padding: 0.5rem var(--st-pad) 1.5rem 1.75rem;
+
+  @container (max-width: 980px) {
+    padding-left: var(--st-pad);
+  }
+}
+
+:host ::ng-deep .aura-tabs .p-tabview-panels {
+  padding: 0.25rem 0 0;
+  background: transparent;
+}
+
+.contador {
+  @include taller.mono;
+  margin-left: 0.35rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--st-lapiz);
+  background: var(--st-mesa);
+}
+
+// Cada grupo del formulario es un bloque con su rótulo; aire entre bloques.
+.bloque {
+  margin: 0;
+  padding: 1.25rem 0 0.5rem;
+  border: 0;
+  border-bottom: 1px solid var(--st-junta);
+  min-width: 0;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  legend {
+    @include taller.rotulo;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0;
+    margin-bottom: 0.9rem;
+    float: left; // el legend dentro del flujo (sin hueco en el borde)
+
+    + * {
+      clear: both;
+    }
+  }
+
+  .legend-btn {
+    margin-left: auto;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 0.9rem;
+
+  @container (max-width: 520px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0 0.9rem;
+
+  @container (max-width: 760px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  @container (max-width: 520px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.9rem;
+  min-width: 0;
+
+  label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--st-grafito);
+  }
+
+  input,
+  textarea {
+    width: 100%;
+  }
+
+  ::ng-deep .p-dropdown,
+  ::ng-deep .p-datepicker,
+  ::ng-deep .p-inputnumber,
+  ::ng-deep .p-autocomplete {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+.req {
+  color: var(--st-led-alerta);
+}
+
+.opcional {
+  margin-left: 0.25rem;
+  font-weight: 400;
+  font-size: 0.75rem;
+  color: var(--st-lapiz);
+}
+
+.error {
+  color: var(--st-led-alerta);
+  font-size: 0.75rem;
+}
+
+.ayuda {
+  display: block;
+  margin-bottom: 0.75rem;
+  color: var(--st-lapiz);
+  font-size: 0.75rem;
+}
+
+.vacio-texto {
+  margin: 0.25rem 0 0.9rem;
+  font-size: 0.8125rem;
+  color: var(--st-lapiz);
+}
+
+.cliente-fila {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+
+  &__auto {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+// Chips de alternar (accesorios y daños).
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 30px;
+  padding: 0 0.7rem;
+  border: 1px solid var(--st-junta);
+  border-radius: 999px;
+  background: var(--st-papel);
+  color: var(--st-lapiz);
+  font-size: 0.8125rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  i {
+    font-size: 0.625rem;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: var(--st-tinta);
+    color: var(--st-grafito);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--st-tinta);
+    outline-offset: 1px;
+  }
+
+  &--on {
+    border-color: transparent;
+    background: var(--st-tinta-suave);
+    color: var(--st-tinta);
+    font-weight: 600;
+  }
+
+  &--dano.chip--on {
+    background: color-mix(in srgb, var(--st-led-espera) 13%, transparent);
+    color: color-mix(in srgb, var(--st-led-espera) 75%, var(--st-grafito));
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+}
+
+// ── Fotos ───────────────────────────────────────────────────────────────
+.fotos-barra {
+  margin-bottom: 0.75rem;
+
+  ::ng-deep .momento {
+    min-width: 220px;
+  }
+}
+
+.galeria {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.foto {
+  margin: 0;
+  border-radius: var(--st-radio);
+  overflow: hidden;
+  background: var(--st-papel);
+  box-shadow: 0 0 0 1px var(--st-junta);
+
+  &__img {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    aspect-ratio: 1;
+    padding: 0;
+    border: 0;
+    background: var(--st-mesa);
+    cursor: zoom-in;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      outline: 1px solid rgba(0, 0, 0, 0.08);
+      outline-offset: -1px;
+    }
+  }
+
+  figcaption {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.35rem 0.55rem;
+    font-size: 0.6875rem;
+    color: var(--st-lapiz);
+  }
+
+  &__quitar {
+    border: 0;
+    background: transparent;
+    color: var(--st-lapiz);
+    cursor: pointer;
+    padding: 0.2rem;
+
+    &:hover {
+      color: var(--st-led-alerta);
+    }
+  }
+
+  &--pendiente figcaption {
+    color: var(--st-tinta);
+  }
+
+  // Casilla para agregar: misma forma que una foto, borde punteado.
+  &--agregar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    aspect-ratio: 1 / 1.22;
+    box-shadow: none;
+    border: 1.5px dashed var(--st-junta);
+    color: var(--st-lapiz);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    padding: 0.5rem;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+
+    i {
+      font-size: 1.25rem;
+    }
+
+    small {
+      font-weight: 400;
+      font-size: 0.6875rem;
+    }
+
+    &:hover {
+      border-color: var(--st-tinta);
+      color: var(--st-tinta);
+      background: var(--st-tinta-suave);
+    }
+
+    &.ocupado {
+      cursor: progress;
+      opacity: 0.7;
+    }
+  }
+}
+
+.foto-grande {
+  display: block;
+  max-width: 100%;
+  max-height: 78vh;
+  margin: 0 auto;
+}
+
+// ── Repuestos ───────────────────────────────────────────────────────────
+.item-form {
+  display: grid;
+  grid-template-columns: 148px minmax(0, 1fr) 60px 116px auto;
+  gap: 0 0.75rem;
+  align-items: start;
+  padding: 0.9rem 1rem 0.1rem;
+  margin-bottom: 1rem;
+  border-radius: var(--st-radio);
+  background: var(--st-mesa);
+
+  // Un solo control por columna: todos los campos quedan en la misma línea.
+  &__alterna {
+    align-self: flex-start;
+    padding: 0;
+    font-size: 0.75rem;
+  }
+
+  &__btn {
+    // Alto del rótulo + separación: el botón queda a la altura de los campos.
+    padding-top: calc(0.8125rem * 1.5 + 0.35rem);
+  }
+
+  @container (max-width: 700px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    &__desc {
+      grid-column: 1 / -1;
+    }
+
+    &__btn {
+      padding-top: 0;
+      margin-bottom: 0.9rem;
+    }
+  }
+}
+
+// Repuesto ya elegido: misma caja (alto y borde) que un campo, pero fija.
+.elegido {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  height: 2.625rem;
+  padding: 0 0.35rem 0 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--st-tinta) 35%, var(--st-junta));
+  border-radius: 6px;
+  background: var(--st-tinta-suave);
+  color: var(--st-grafito);
+  font-size: 0.875rem;
+
+  > i {
+    color: var(--st-tinta);
+    font-size: 0.85rem;
+  }
+
+  &__nombre {
+    flex: 1;
+    min-width: 0;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__sku {
+    font-size: 0.75rem;
+    color: var(--st-lapiz);
+  }
+
+  &__quitar {
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--st-lapiz);
+    cursor: pointer;
+
+    &:hover {
+      color: var(--st-led-alerta);
+      background: color-mix(in srgb, var(--st-led-alerta) 8%, transparent);
+    }
+  }
+}
+
+.link {
+  border: 0;
+  background: transparent;
+  color: var(--st-tinta);
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 0.8125rem;
+  font-family: inherit;
+}
+
+.sugerencia {
+  display: flex;
+  flex-direction: column;
+
+  small {
+    color: var(--st-lapiz);
+  }
+}
+
+// Renglones sin cuadrícula: solo líneas de renglón.
+.renglones {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+
+  th {
+    @include taller.rotulo;
+    text-align: left;
+    padding: 0 0.6rem 0.5rem;
+    border-bottom: 1px solid var(--st-junta);
+
+    &:first-child {
+      padding-left: 0;
+    }
+  }
+
+  td {
+    padding: 0.7rem 0.6rem;
+    border-bottom: 1px solid var(--st-junta);
+    color: var(--st-grafito);
+    vertical-align: middle;
+
+    &:first-child {
+      padding-left: 0;
+    }
+
+    small {
+      display: block;
+      margin-top: 0.15rem;
+      font-size: 0.6875rem;
+      color: var(--st-lapiz);
+    }
+  }
+
+  .fuerte {
+    font-weight: 600;
+  }
+
+  .acciones {
+    width: 40px;
+    text-align: right;
+    padding-right: 0;
+  }
+
+  .anulado td {
+    color: var(--st-lapiz);
+
+    &.fuerte {
+      text-decoration: line-through;
+    }
+  }
+}
+
+.renglon__tipo {
+  display: inline-block;
+  margin-right: 0.4rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--st-lapiz);
+  background: var(--st-mesa);
+
+  &[data-tipo='REPUESTO'] {
+    color: var(--st-tinta);
+    background: var(--st-tinta-suave);
+  }
+}
+
+.icono-btn {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--st-lapiz);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--st-led-alerta);
+    background: color-mix(in srgb, var(--st-led-alerta) 8%, transparent);
+  }
+}
+
+.num {
+  text-align: right !important;
+  white-space: nowrap;
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+// ── Historial ───────────────────────────────────────────────────────────
+.nota-form {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  margin: 1.25rem 0;
+
+  textarea {
+    flex: 1;
+    min-width: 0;
+  }
+
+  @container (max-width: 520px) {
+    flex-direction: column;
+
+    textarea {
+      width: 100%;
+    }
+  }
+}
+
+.linea {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    --led: var(--st-lapiz);
+    display: flex;
+    gap: 0.85rem;
+    position: relative;
+    padding-bottom: 1.1rem;
+
+    &:not(:last-child)::before {
+      content: '';
+      position: absolute;
+      left: 13px;
+      top: 30px;
+      bottom: 0;
+      width: 1px;
+      background: var(--st-junta);
+    }
+
+    &[data-tono='banco'] {
+      --led: var(--st-tinta);
+    }
+    &[data-tono='espera'] {
+      --led: var(--st-led-espera);
+    }
+    &[data-tono='listo'] {
+      --led: var(--st-led-listo);
+    }
+    &[data-tono='alerta'] {
+      --led: var(--st-led-alerta);
+    }
+  }
+
+  &__punto {
+    width: 27px;
+    height: 27px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--led) 12%, var(--st-papel));
+    color: var(--led);
+    font-size: 0.75rem;
+  }
+
+  &__cuerpo {
+    flex: 1;
+    min-width: 0;
+    padding-top: 0.2rem;
+
+    small {
+      display: block;
+      margin-top: 0.15rem;
+      font-size: 0.75rem;
+      color: var(--st-lapiz);
+    }
+  }
+
+  &__titulo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem;
+    font-size: 0.875rem;
+    color: var(--st-grafito);
+
+    time {
+      @include taller.mono;
+      margin-left: auto;
+      font-size: 0.6875rem;
+      color: var(--st-lapiz);
+    }
+  }
+
+  &__antes {
+    color: var(--st-lapiz);
+  }
+
+  &__texto {
+    margin: 0.25rem 0 0;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: var(--st-grafito);
+    white-space: pre-line;
+  }
+}
+
+// ── Vacío ───────────────────────────────────────────────────────────────
+.vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 3rem 1rem;
+  text-align: center;
+
+  &__icono {
+    width: 46px;
+    height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: var(--st-mesa);
+    color: var(--st-lapiz);
+    font-size: 1.2rem;
+    margin-bottom: 0.25rem;
+  }
+
+  strong {
+    color: var(--st-grafito);
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--st-lapiz);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip,
+  .herramientas button {
+    transition: none;
+  }
+}

@@ -21,6 +21,7 @@ import {
   ResultadoBusqueda,
 } from './manual/manual';
 import { ManualPdfService } from './services/manual-pdf.service';
+import { StateStore } from '../../core/store/state';
 
 /**
  * Centro de ayuda: el manual de cada módulo con sus errores frecuentes. Se abre
@@ -38,7 +39,7 @@ import { ManualPdfService } from './services/manual-pdf.service';
 export class AyudaComponent implements OnInit {
   @ViewChild('contenido') contenido?: ElementRef<HTMLElement>;
 
-  readonly grupos = MANUAL_POR_GRUPO;
+  grupos = MANUAL_POR_GRUPO;
   modulo: ManualModulo = MANUAL[0];
   consulta = '';
   resultados: ResultadoBusqueda[] = [];
@@ -52,6 +53,7 @@ export class AyudaComponent implements OnInit {
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly pdf: ManualPdfService,
+    private readonly store: StateStore,
     private readonly cdr: ChangeDetectorRef,
   ) {}
 
@@ -59,6 +61,19 @@ export class AyudaComponent implements OnInit {
     const q = this.route.snapshot.queryParamMap;
     const porId = MANUAL.find((m) => m.id === q.get('tema'));
     this.modulo = porId ?? moduloPorRuta(q.get('desde')) ?? MANUAL[0];
+    this.ocultarOpcionales();
+  }
+
+  /** Los temas de módulos opcionales (servicio técnico) solo para quien los tiene. */
+  private async ocultarOpcionales(): Promise<void> {
+    const p = await this.store.asegurarPermisos();
+    if (!p) return;
+    const tiene = (codigo: string) => (p.permisos[codigo] ?? []).includes('VER');
+    this.grupos = MANUAL_POR_GRUPO.map((g) => ({
+      ...g,
+      modulos: g.modulos.filter((m) => !m.permiso || tiene(m.permiso)),
+    })).filter((g) => g.modulos.length > 0);
+    this.cdr.markForCheck();
   }
 
   get posicion(): number {

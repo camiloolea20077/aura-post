@@ -1,0 +1,666 @@
+<div class="page">
+  <div class="card">
+    <!-- ── Encabezado ── -->
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i [class]="iconoEquipo(form.equipo.tipo)"></i></span>
+        <div class="titulo">
+          <h1 class="title">
+            <ng-container *ngIf="esNueva">Recibir equipo</ng-container>
+            <span class="titulo__codigo" *ngIf="orden">{{ orden.codigo }}</span>
+            <span class="led" *ngIf="orden" [attr.data-tono]="tono(orden.estado)">{{ estados[orden.estado].label }}</span>
+            <span class="urgente" *ngIf="form.prioridad === 'URGENTE'"><i class="pi pi-bolt"></i>Urgente</span>
+          </h1>
+          <p class="subtitle" *ngIf="esNueva">Llene la etiqueta del equipo: cliente, equipo y lo que reporta</p>
+          <p class="subtitle" *ngIf="orden">
+            {{ orden.equipo?.marca }} {{ orden.equipo?.modelo }} · {{ orden.clienteNombre }}
+          </p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <div class="card-head__btns">
+          <button pButton type="button" label="Volver" icon="pi pi-arrow-left" class="p-button-text p-button-secondary" (click)="volver()"></button>
+          <button
+            *ngIf="orden && estadoOpts.length"
+            pButton
+            type="button"
+            label="Cambiar estado"
+            icon="pi pi-sync"
+            class="p-button-outlined p-button-secondary"
+            (click)="abrirEstado()"
+          ></button>
+          <button
+            *ngIf="editable && !esNueva"
+            pButton
+            type="button"
+            label="Guardar"
+            icon="pi pi-check"
+            class="p-button-outlined"
+            [loading]="guardando"
+            (click)="guardar()"
+          ></button>
+          <button
+            *ngIf="esNueva"
+            pButton
+            type="button"
+            label="Recibir equipo"
+            icon="pi pi-check"
+            class="btn-aura"
+            [loading]="guardando"
+            (click)="guardar()"
+          ></button>
+          <button *ngIf="puedeEntregar" pButton type="button" label="Entregar" icon="pi pi-sign-out" class="btn-aura" (click)="dlgEntregar = true"></button>
+          <button
+            *ngIf="!puedeEntregar && siguiente && siguiente !== 'ENTREGADO'"
+            pButton
+            type="button"
+            class="btn-aura"
+            [label]="'Pasar a ' + (estados[siguiente].label | lowercase)"
+            [icon]="estados[siguiente].icon"
+            (click)="abrirEstado(siguiente)"
+          ></button>
+        </div>
+        <div class="herramientas" *ngIf="orden">
+          <button type="button" pTooltip="Descargar PDF" tooltipPosition="bottom" (click)="descargarPdf()"><i class="pi pi-file-pdf"></i><span>PDF</span></button>
+          <button type="button" pTooltip="Etiqueta para el equipo" tooltipPosition="bottom" (click)="imprimirEtiqueta()"><i class="pi pi-tag"></i><span>Etiqueta</span></button>
+          <button type="button" pTooltip="Enviar por correo" tooltipPosition="bottom" (click)="dlgCorreo = true"><i class="pi pi-envelope"></i><span>Correo</span></button>
+          <button type="button" pTooltip="Copiar el enlace de consulta" tooltipPosition="bottom" (click)="copiarEnlace()"><i class="pi pi-link"></i><span>Enlace</span></button>
+          <button type="button" class="whatsapp" pTooltip="Enviar el enlace por WhatsApp" tooltipPosition="bottom" (click)="whatsapp()"><i class="pi pi-whatsapp"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cargando" *ngIf="cargando"><i class="pi pi-spin pi-spinner"></i> Cargando orden…</div>
+
+    <ng-container *ngIf="!cargando">
+      <!-- ── Recorrido del equipo ── -->
+      <section class="recorrido" *ngIf="orden">
+        <ol class="pasos" [class.pasos--cancelada]="orden.estado === 'CANCELADO'">
+          <li
+            *ngFor="let p of recorrido; let i = index"
+            [class.hecho]="i < pasoActual"
+            [class.actual]="i === pasoActual"
+            [attr.data-tono]="i === pasoActual ? tono(orden.estado) : null"
+          >
+            <span class="pasos__punto"><i class="pi pi-check" *ngIf="i < pasoActual || (i === pasoActual && orden.estado === 'ENTREGADO')"></i></span>
+            <span class="pasos__label">{{ p.label }}</span>
+            <small class="pasos__fecha" *ngIf="fechaPaso(p.estado) as f">{{ f | date: 'd MMM, h:mm a' }}</small>
+            <small class="pasos__pausa" *ngIf="i === pasoActual && pausa">{{ pausa }}</small>
+          </li>
+        </ol>
+        <dl class="recorrido__meta">
+          <div>
+            <dt class="rotulo">{{ orden.fechaEntregado ? 'Estuvo' : 'En el taller' }}</dt>
+            <dd class="mono" [class.alerta]="orden.vencida">{{ textoDias(diasOrden) }}</dd>
+          </div>
+          <div>
+            <dt class="rotulo">Entrega estimada</dt>
+            <dd [class.alerta]="orden.vencida">
+              {{ orden.fechaEstimada ? (orden.fechaEstimada | date: 'd MMM y') : 'Sin fecha' }}
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <div class="aviso" *ngIf="orden && !orden.editable">
+        <i class="pi pi-lock"></i>
+        <span>
+          La orden está {{ orden.estado === 'ENTREGADO' ? 'entregada' : 'cancelada' }} y ya no se modifica.
+          <ng-container *ngIf="orden.motivoCancelacion"> Motivo: {{ orden.motivoCancelacion }}.</ng-container>
+          Puede agregar notas en el historial.
+        </span>
+      </div>
+
+      <div class="mesa">
+        <!-- ══ La etiqueta del equipo (se llena mientras se recibe) ══ -->
+        <aside class="lado">
+          <article class="etiqueta">
+            <header class="etiqueta__cabeza">
+              <span class="rotulo">Orden de servicio</span>
+              <span class="etiqueta__codigo">{{ orden?.codigo ?? 'OS-····' }}</span>
+            </header>
+            <div class="etiqueta__equipo">
+              <span class="etiqueta__icono"><i [class]="iconoEquipo(form.equipo.tipo)"></i></span>
+              <div>
+                <h2 [class.vacio]="!form.equipo.marca && !form.equipo.modelo">
+                  {{ (form.equipo.marca || form.equipo.modelo) ? (form.equipo.marca + ' ' + form.equipo.modelo) : 'Marca y modelo' }}
+                </h2>
+                <p>{{ etiquetaEquipo(form.equipo.tipo) }}<ng-container *ngIf="form.equipo.color"> · {{ form.equipo.color }}</ng-container></p>
+              </div>
+            </div>
+            <dl class="etiqueta__datos">
+              <div>
+                <dt class="rotulo">IMEI</dt>
+                <dd class="mono" [class.error]="errorImei1">{{ form.equipo.imei || '—' }}</dd>
+              </div>
+              <div *ngIf="form.equipo.imei2">
+                <dt class="rotulo">IMEI 2</dt>
+                <dd class="mono">{{ form.equipo.imei2 }}</dd>
+              </div>
+              <div *ngIf="form.equipo.serial">
+                <dt class="rotulo">Serial</dt>
+                <dd class="mono">{{ form.equipo.serial }}</dd>
+              </div>
+              <div>
+                <dt class="rotulo">Enciende</dt>
+                <dd>{{ form.equipo.enciende == null ? 'No se sabe' : form.equipo.enciende ? 'Sí' : 'No' }}</dd>
+              </div>
+            </dl>
+            <div class="etiqueta__marcas" *ngIf="form.equipo.accesorios.length || form.equipo.estadoFisico.length">
+              <span class="marca" *ngFor="let a of form.equipo.accesorios">{{ a | titlecase }}</span>
+              <span class="marca marca--dano" *ngFor="let a of form.equipo.estadoFisico">{{ a | titlecase }}</span>
+            </div>
+            <blockquote class="etiqueta__problema" [class.vacio]="!form.equipo.problemasReportados">
+              {{ form.equipo.problemasReportados || 'Lo que reporta el cliente…' }}
+            </blockquote>
+            <footer class="etiqueta__pie">
+              <span>{{ clienteLabel || 'Cliente' }}</span>
+              <span class="mono" *ngIf="orden">{{ orden.fechaRecibido | date: 'd MMM y · h:mm a' }}</span>
+            </footer>
+          </article>
+
+          <!-- La cuenta del servicio -->
+          <section class="cuenta" *ngIf="orden">
+            <div class="cuenta__total">
+              <span class="rotulo">Valor del servicio</span>
+              <span class="cuenta__cifra">{{ orden.total | currency: 'COP' : '$' : '1.0-0' }}</span>
+            </div>
+            <dl class="cuenta__filas">
+              <div><dt>Repuestos</dt><dd>{{ orden.totalRepuestos | currency: 'COP' : '$' : '1.0-0' }}</dd></div>
+              <div><dt>Mano de obra</dt><dd>{{ orden.totalManoObra | currency: 'COP' : '$' : '1.0-0' }}</dd></div>
+              <div><dt>Abonado</dt><dd>− {{ orden.totalAbonado | currency: 'COP' : '$' : '1.0-0' }}</dd></div>
+              <div class="cuenta__saldo">
+                <dt>{{ orden.facturaVentaId ? 'En cartera' : 'Saldo' }}</dt>
+                <dd>{{ (orden.facturaVentaId ? orden.saldoCartera : orden.saldo) ?? 0 | currency: 'COP' : '$' : '1.0-0' }}</dd>
+              </div>
+            </dl>
+            <a class="cuenta__factura" *ngIf="orden.facturaVentaId" [routerLink]="['/ventas/facturas', orden.facturaVentaId]">
+              <i class="pi pi-file"></i> Factura {{ orden.facturaNumero || '' }}
+            </a>
+            <p class="cuenta__nota ok" *ngIf="orden.aprobadoClienteAt">
+              <i class="pi pi-check-circle"></i> Presupuesto aprobado por el cliente el {{ orden.aprobadoClienteAt | date: 'd MMM' }}
+            </p>
+            <p class="cuenta__nota" *ngIf="orden.garantiaHasta">
+              <i class="pi pi-shield"></i> Garantía hasta el {{ orden.garantiaHasta | date: 'd MMM y' }}
+            </p>
+          </section>
+
+          <section class="anteriores" *ngIf="orden?.anteriores?.length">
+            <span class="rotulo"><i class="pi pi-history"></i> Este equipo ya vino {{ orden!.anteriores.length }} {{ orden!.anteriores.length === 1 ? 'vez' : 'veces' }}</span>
+            <a *ngFor="let a of orden!.anteriores" [routerLink]="['/servicio-tecnico/ordenes', a.id]" [pTooltip]="a.trabajoRealizado || a.problemasReportados || ''">
+              <span class="mono">{{ a.codigo }}</span>
+              <span>{{ a.fechaRecibido | date: 'd MMM y' }}</span>
+              <span class="led" [attr.data-tono]="tono(a.estado)">{{ estados[a.estado].label }}</span>
+            </a>
+          </section>
+        </aside>
+
+        <!-- ══ Mesa de trabajo ══ -->
+        <div class="trabajo">
+          <p-tabView [(activeIndex)]="tab" styleClass="aura-tabs">
+            <!-- 1. Cliente y equipo -->
+            <p-tabPanel>
+              <ng-template pTemplate="header">
+                <span class="tab-label"><i class="pi pi-mobile"></i> Cliente y equipo</span>
+              </ng-template>
+
+              <fieldset class="bloque">
+                <legend>Cliente</legend>
+                <div class="campo">
+                  <label>Cliente <span class="req">*</span></label>
+                  <div class="cliente-fila">
+                    <app-tercero-autocomplete
+                      class="cliente-fila__auto"
+                      [(ngModel)]="form.clienteId"
+                      [label]="clienteLabel"
+                      rol="CLIENTE"
+                      [disabled]="!editable"
+                      placeholder="Nombre, documento o teléfono…"
+                      (seleccionado)="onCliente($event)"
+                    />
+                    <button *ngIf="editable" pButton type="button" icon="pi pi-user-plus" label="Nuevo" class="p-button-outlined p-button-secondary" (click)="abrirCliente()"></button>
+                  </div>
+                  <small class="error" *ngIf="intentoGuardar && !form.clienteId">Seleccione o cree el cliente.</small>
+                </div>
+                <div class="grid-2">
+                  <div class="campo">
+                    <label>Teléfono de contacto</label>
+                    <input pInputText [(ngModel)]="form.contactoTelefono" [placeholder]="clienteTelefono || 'Teléfono'" [disabled]="!editable" inputmode="tel" />
+                  </div>
+                  <div class="campo">
+                    <label>Correo de contacto</label>
+                    <input pInputText type="email" [(ngModel)]="form.contactoEmail" [placeholder]="clienteEmail || 'correo@ejemplo.com'" [disabled]="!editable" />
+                  </div>
+                </div>
+                <small class="ayuda">Si se dejan vacíos, se usan los del cliente.</small>
+              </fieldset>
+
+              <fieldset class="bloque">
+                <legend>Equipo</legend>
+                <div class="grid-4">
+                  <div class="campo">
+                    <label>Tipo</label>
+                    <p-dropdown [options]="tiposEquipo" [(ngModel)]="form.equipo.tipo" [disabled]="!editable" styleClass="w-full" />
+                  </div>
+                  <div class="campo">
+                    <label>Marca <span class="req">*</span></label>
+                    <input pInputText [(ngModel)]="form.equipo.marca" [disabled]="!editable" placeholder="Samsung, Apple…" maxlength="60" />
+                    <small class="error" *ngIf="intentoGuardar && !form.equipo.marca?.trim()">Obligatoria.</small>
+                  </div>
+                  <div class="campo">
+                    <label>Modelo <span class="req">*</span></label>
+                    <input pInputText [(ngModel)]="form.equipo.modelo" [disabled]="!editable" placeholder="Galaxy A54…" maxlength="80" />
+                    <small class="error" *ngIf="intentoGuardar && !form.equipo.modelo?.trim()">Obligatorio.</small>
+                  </div>
+                  <div class="campo">
+                    <label>Color</label>
+                    <input pInputText [(ngModel)]="form.equipo.color" [disabled]="!editable" placeholder="Negro, azul…" maxlength="40" />
+                  </div>
+                  <div class="campo">
+                    <label>IMEI</label>
+                    <input pInputText class="mono" [(ngModel)]="form.equipo.imei" [disabled]="!editable" inputmode="numeric" maxlength="20" placeholder="*#06#" />
+                    <small class="error" *ngIf="errorImei1">{{ errorImei1 }}</small>
+                  </div>
+                  <div class="campo">
+                    <label>IMEI 2 <span class="opcional">doble SIM</span></label>
+                    <input pInputText class="mono" [(ngModel)]="form.equipo.imei2" [disabled]="!editable" inputmode="numeric" maxlength="20" />
+                    <small class="error" *ngIf="errorImei2">{{ errorImei2 }}</small>
+                  </div>
+                  <div class="campo">
+                    <label>Serial</label>
+                    <input pInputText class="mono" [(ngModel)]="form.equipo.serial" [disabled]="!editable" maxlength="60" />
+                  </div>
+                  <div class="campo">
+                    <label>¿Enciende?</label>
+                    <p-dropdown [options]="enciendeOpts" [(ngModel)]="form.equipo.enciende" [disabled]="!editable" styleClass="w-full" />
+                  </div>
+                </div>
+              </fieldset>
+
+              <fieldset class="bloque">
+                <legend>Cómo llega</legend>
+                <div class="campo">
+                  <label>Accesorios que deja</label>
+                  <div class="chips">
+                    <button
+                      type="button"
+                      class="chip"
+                      *ngFor="let a of accesorios"
+                      [class.chip--on]="form.equipo.accesorios.includes(a)"
+                      [attr.aria-pressed]="form.equipo.accesorios.includes(a)"
+                      [disabled]="!editable"
+                      (click)="alternar(form.equipo.accesorios, a)"
+                    >
+                      <i class="pi" [class.pi-check]="form.equipo.accesorios.includes(a)" [class.pi-plus]="!form.equipo.accesorios.includes(a)"></i>
+                      {{ a | titlecase }}
+                    </button>
+                  </div>
+                </div>
+                <div class="campo">
+                  <label>Daños que ya tiene</label>
+                  <div class="chips">
+                    <button
+                      type="button"
+                      class="chip chip--dano"
+                      *ngFor="let a of estadoFisico"
+                      [class.chip--on]="form.equipo.estadoFisico.includes(a)"
+                      [attr.aria-pressed]="form.equipo.estadoFisico.includes(a)"
+                      [disabled]="!editable"
+                      (click)="alternar(form.equipo.estadoFisico, a)"
+                    >
+                      <i class="pi" [class.pi-check]="form.equipo.estadoFisico.includes(a)" [class.pi-plus]="!form.equipo.estadoFisico.includes(a)"></i>
+                      {{ a | titlecase }}
+                    </button>
+                  </div>
+                </div>
+                <div class="campo">
+                  <label>Problema que reporta el cliente <span class="req">*</span></label>
+                  <textarea pTextarea rows="3" [(ngModel)]="form.equipo.problemasReportados" [disabled]="!editable" placeholder="No carga, pantalla con líneas, se mojó…"></textarea>
+                  <small class="error" *ngIf="intentoGuardar && !form.equipo.problemasReportados?.trim()">Obligatorio.</small>
+                </div>
+              </fieldset>
+
+              <fieldset class="bloque">
+                <legend>
+                  Fotos <span class="contador">{{ totalFotos }}/{{ maxFotos }}</span>
+                </legend>
+                <div class="fotos-barra" *ngIf="orden?.estado !== 'CANCELADO' && totalFotos < maxFotos">
+                  <p-dropdown [options]="momentoOpts" [(ngModel)]="momentoFoto" styleClass="momento" />
+                </div>
+                <div class="galeria">
+                  <figure class="foto" *ngFor="let f of fotos">
+                    <button type="button" class="foto__img" (click)="verFoto(f.url)" [disabled]="!f.url" [attr.aria-label]="'Ver ' + f.foto.nombre">
+                      <img *ngIf="f.url" [src]="f.url" [alt]="f.foto.nombre" />
+                      <i *ngIf="!f.url" class="pi pi-spin pi-spinner"></i>
+                    </button>
+                    <figcaption>
+                      <span>{{ etiquetaMomento(f.foto.momento) }}</span>
+                      <button *ngIf="editable" type="button" class="foto__quitar" aria-label="Eliminar foto" (click)="eliminarFoto(f)">
+                        <i class="pi pi-trash"></i>
+                      </button>
+                    </figcaption>
+                  </figure>
+                  <figure class="foto foto--pendiente" *ngFor="let p of pendientes">
+                    <button type="button" class="foto__img" (click)="verFoto(p.url)">
+                      <img [src]="p.url" [alt]="p.nombre" />
+                    </button>
+                    <figcaption>
+                      <span>Se sube al guardar</span>
+                      <button type="button" class="foto__quitar" aria-label="Quitar foto" (click)="quitarPendiente(p)">
+                        <i class="pi pi-times"></i>
+                      </button>
+                    </figcaption>
+                  </figure>
+                  <label class="foto foto--agregar" *ngIf="orden?.estado !== 'CANCELADO' && totalFotos < maxFotos" [class.ocupado]="subiendoFotos">
+                    <i class="pi" [class.pi-spin]="subiendoFotos" [class.pi-spinner]="subiendoFotos" [class.pi-camera]="!subiendoFotos"></i>
+                    <span>{{ subiendoFotos ? 'Subiendo…' : 'Agregar fotos' }}</span>
+                    <small *ngIf="!subiendoFotos && !totalFotos">Pantalla, tapa y daños</small>
+                    <input type="file" hidden multiple accept="image/*" [disabled]="subiendoFotos" (change)="onFotos($event)" />
+                  </label>
+                </div>
+              </fieldset>
+            </p-tabPanel>
+
+            <!-- 2. Diagnóstico y servicio -->
+            <p-tabPanel>
+              <ng-template pTemplate="header">
+                <span class="tab-label"><i class="pi pi-search"></i> Diagnóstico</span>
+              </ng-template>
+              <fieldset class="bloque">
+                <legend>Asignación</legend>
+                <div class="grid-4">
+                  <div class="campo">
+                    <label>Técnico</label>
+                    <p-dropdown [options]="tecnicoOpts" [(ngModel)]="form.tecnicoId" [filter]="tecnicoOpts.length > 8" [disabled]="!editable" styleClass="w-full" />
+                  </div>
+                  <div class="campo">
+                    <label>Prioridad</label>
+                    <p-dropdown [options]="prioridadOpts" [(ngModel)]="form.prioridad" [disabled]="!editable" styleClass="w-full" />
+                  </div>
+                  <div class="campo">
+                    <label>Entrega estimada</label>
+                    <p-datepicker [(ngModel)]="fechaEstimada" dateFormat="dd/mm/yy" [showIcon]="true" [showClear]="true" [minDate]="hoy" [disabled]="!editable" styleClass="w-full" placeholder="Opcional" />
+                  </div>
+                  <div class="campo">
+                    <label>Garantía (días)</label>
+                    <input pInputText type="number" min="0" max="730" [(ngModel)]="form.garantiaDias" [disabled]="!editable" />
+                  </div>
+                </div>
+              </fieldset>
+              <fieldset class="bloque">
+                <legend>Lo que encontró el técnico</legend>
+                <div class="campo">
+                  <label>Diagnóstico</label>
+                  <textarea pTextarea rows="4" [(ngModel)]="form.diagnostico" [disabled]="!editable" placeholder="Qué se encontró al revisar el equipo"></textarea>
+                </div>
+                <div class="campo">
+                  <label>Trabajo realizado</label>
+                  <textarea pTextarea rows="4" [(ngModel)]="form.trabajoRealizado" [disabled]="!editable" placeholder="Cambio de pantalla, limpieza de placa…"></textarea>
+                </div>
+                <div class="campo">
+                  <label>Observaciones</label>
+                  <textarea pTextarea rows="2" [(ngModel)]="form.observaciones" [disabled]="!editable" placeholder="Notas internas o para el cliente"></textarea>
+                </div>
+                <small class="ayuda" *ngIf="editable">Guarde con «{{ esNueva ? 'Recibir equipo' : 'Guardar' }}» arriba.</small>
+              </fieldset>
+            </p-tabPanel>
+
+            <!-- 3. Repuestos y abonos -->
+            <p-tabPanel>
+              <ng-template pTemplate="header">
+                <span class="tab-label"><i class="pi pi-wallet"></i> Repuestos y abonos</span>
+              </ng-template>
+
+              <div class="vacio" *ngIf="esNueva">
+                <span class="vacio__icono"><i class="pi pi-box"></i></span>
+                <strong>Primero reciba el equipo</strong>
+                <p>Después agregue los repuestos, la mano de obra y los abonos.</p>
+              </div>
+
+              <ng-container *ngIf="orden">
+                <fieldset class="bloque">
+                  <legend>Repuestos y mano de obra</legend>
+
+                  <div class="item-form" *ngIf="editable">
+                    <div class="campo">
+                      <label>Tipo</label>
+                      <p-dropdown [options]="tiposItem" [(ngModel)]="item.tipo" (onChange)="onTipoItem()" styleClass="w-full" />
+                    </div>
+                    <div class="campo item-form__desc">
+                      <label>{{ item.tipo === 'REPUESTO' ? (repuestoLibre ? 'Repuesto comprado afuera' : 'Repuesto del inventario') : 'Descripción' }}</label>
+
+                      <!-- Repuesto ya elegido: caja fija con el producto -->
+                      <div class="elegido" *ngIf="item.tipo === 'REPUESTO' && item.productoId" [title]="item.descripcion + (productoSku ? ' · ' + productoSku : '')">
+                        <i class="pi pi-box"></i>
+                        <span class="elegido__nombre">{{ item.descripcion }}</span>
+                        <button type="button" class="elegido__quitar" aria-label="Cambiar repuesto" (click)="quitarProducto()">
+                          <i class="pi pi-times"></i>
+                        </button>
+                      </div>
+
+                      <!-- Repuesto: buscar en el inventario -->
+                      <p-autoComplete
+                        *ngIf="item.tipo === 'REPUESTO' && !item.productoId && !repuestoLibre"
+                        [(ngModel)]="productoSel"
+                        [suggestions]="productoSugerencias"
+                        (completeMethod)="buscarProducto($event)"
+                        (onSelect)="onProducto($event)"
+                        optionLabel="nombre"
+                        [minLength]="2"
+                        [delay]="300"
+                        placeholder="Nombre o código…"
+                        styleClass="w-full"
+                        inputStyleClass="w-full"
+                      >
+                        <ng-template let-p pTemplate="item">
+                          <div class="sugerencia">
+                            <span>{{ p.nombre }}</span>
+                            <small class="mono">{{ p.sku }} · {{ p.precio | currency: 'COP' : '$' : '1.0-0' }}</small>
+                          </div>
+                        </ng-template>
+                      </p-autoComplete>
+
+                      <!-- Mano de obra, otro o repuesto comprado afuera: texto -->
+                      <input
+                        *ngIf="item.tipo !== 'REPUESTO' || repuestoLibre"
+                        pInputText
+                        [(ngModel)]="item.descripcion"
+                        maxlength="200"
+                        [placeholder]="item.tipo === 'REPUESTO' ? 'Ej.: Pin de carga tipo C' : 'Ej.: Cambio de pantalla'"
+                      />
+
+                      <button type="button" class="link item-form__alterna" *ngIf="item.tipo === 'REPUESTO' && !item.productoId" (click)="alternarLibre()">
+                        {{ repuestoLibre ? 'Buscar en el inventario' : '¿Lo compró afuera? Escríbalo' }}
+                      </button>
+                    </div>
+                    <div class="campo">
+                      <label>Cant.</label>
+                      <p-inputNumber [(ngModel)]="item.cantidad" [min]="0" [maxFractionDigits]="2" styleClass="w-full" inputStyleClass="w-full" />
+                    </div>
+                    <div class="campo">
+                      <label>Valor unitario</label>
+                      <p-inputNumber [(ngModel)]="item.valorUnitario" mode="currency" currency="COP" locale="es-CO" [minFractionDigits]="0" [min]="0" styleClass="w-full" inputStyleClass="w-full" />
+                    </div>
+                    <div class="item-form__btn">
+                      <button pButton type="button" icon="pi pi-plus" label="Agregar" class="btn-aura" [loading]="agregandoItem" (click)="agregarItem()"></button>
+                    </div>
+                  </div>
+
+                  <table class="renglones" *ngIf="orden.items.length; else sinItems">
+                    <thead>
+                      <tr>
+                        <th>Descripción</th>
+                        <th class="num">Cant.</th>
+                        <th class="num">Valor unit.</th>
+                        <th class="num">Total</th>
+                        <th *ngIf="editable"><span class="sr">Acciones</span></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let i of orden.items">
+                        <td>
+                          <span class="renglon__tipo" [attr.data-tipo]="i.tipo">{{ etiquetaItem(i.tipo) }}</span>
+                          {{ i.descripcion }}
+                          <small class="mono" *ngIf="i.productoSku">{{ i.productoSku }}</small>
+                        </td>
+                        <td class="num mono">{{ i.cantidad | number: '1.0-2' }}</td>
+                        <td class="num mono">{{ i.valorUnitario | currency: 'COP' : '$' : '1.0-0' }}</td>
+                        <td class="num mono fuerte">{{ i.total | currency: 'COP' : '$' : '1.0-0' }}</td>
+                        <td *ngIf="editable" class="acciones">
+                          <button type="button" class="icono-btn" aria-label="Quitar línea" (click)="eliminarItem(i.id)"><i class="pi pi-trash"></i></button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <ng-template #sinItems>
+                    <p class="vacio-texto">Sin repuestos ni mano de obra todavía.</p>
+                  </ng-template>
+                  <small class="ayuda">Los valores son el precio final para el cliente (IVA incluido); la factura discrimina el IVA de cada producto.</small>
+                </fieldset>
+
+                <fieldset class="bloque">
+                  <legend>
+                    Abonos
+                    <button *ngIf="editable" pButton type="button" icon="pi pi-plus" label="Registrar abono" class="p-button-outlined p-button-sm legend-btn" (click)="dlgAbono = true"></button>
+                  </legend>
+                  <table class="renglones" *ngIf="orden.abonos.length; else sinAbonos">
+                    <thead>
+                      <tr>
+                        <th>Fecha</th>
+                        <th>Recibo</th>
+                        <th>Medio</th>
+                        <th class="num">Valor</th>
+                        <th *ngIf="editable"><span class="sr">Acciones</span></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let a of orden.abonos" [class.anulado]="a.estado === 'ANULADO'">
+                        <td>{{ a.createdAt | date: 'd MMM y, h:mm a' }}</td>
+                        <td class="mono">{{ a.reciboNumero || '—' }}<small *ngIf="a.estado === 'ANULADO'">Anulado</small></td>
+                        <td>{{ a.metodoPago | titlecase }}</td>
+                        <td class="num mono fuerte">{{ a.monto | currency: 'COP' : '$' : '1.0-0' }}</td>
+                        <td *ngIf="editable" class="acciones">
+                          <button *ngIf="a.estado === 'ACTIVO'" type="button" class="icono-btn" pTooltip="Anular abono" aria-label="Anular abono" (click)="anularAbono(a)"><i class="pi pi-ban"></i></button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <ng-template #sinAbonos>
+                    <p class="vacio-texto">Sin abonos. Son opcionales; al entregar se descuentan de la factura.</p>
+                  </ng-template>
+                </fieldset>
+              </ng-container>
+            </p-tabPanel>
+
+            <!-- 4. Historial -->
+            <p-tabPanel>
+              <ng-template pTemplate="header">
+                <span class="tab-label"><i class="pi pi-history"></i> Historial <span class="contador" *ngIf="orden?.historial?.length">{{ orden!.historial.length }}</span></span>
+              </ng-template>
+              <div class="vacio" *ngIf="esNueva">
+                <span class="vacio__icono"><i class="pi pi-history"></i></span>
+                <strong>El historial empieza al recibir el equipo</strong>
+              </div>
+              <ng-container *ngIf="orden">
+                <div class="nota-form">
+                  <textarea pTextarea rows="2" [(ngModel)]="nota" maxlength="1000" placeholder="Agregar una nota: llamé al cliente, llega el repuesto el viernes…"></textarea>
+                  <button pButton type="button" label="Agregar nota" icon="pi pi-comment" class="p-button-outlined" [loading]="guardandoNota" [disabled]="!nota.trim()" (click)="agregarNota()"></button>
+                </div>
+                <ol class="linea">
+                  <li *ngFor="let h of orden.historial" [attr.data-tono]="h.tipo === 'ESTADO' && h.estadoNuevo ? tono(h.estadoNuevo) : 'nota'">
+                    <span class="linea__punto">
+                      <i [class]="h.tipo === 'NOTA' ? 'pi pi-comment' : (h.estadoNuevo ? estados[h.estadoNuevo].icon : 'pi pi-circle')"></i>
+                    </span>
+                    <div class="linea__cuerpo">
+                      <div class="linea__titulo">
+                        <ng-container *ngIf="h.tipo === 'ESTADO' && h.estadoNuevo">
+                          <span class="linea__antes" *ngIf="h.estadoAnterior">{{ estados[h.estadoAnterior].label }} →</span>
+                          <strong>{{ estados[h.estadoNuevo].label }}</strong>
+                        </ng-container>
+                        <strong *ngIf="h.tipo === 'NOTA'">Nota</strong>
+                        <time>{{ h.createdAt | date: 'd MMM, h:mm a' }}</time>
+                      </div>
+                      <p class="linea__texto" *ngIf="h.nota">{{ h.nota }}</p>
+                      <small *ngIf="h.usuarioNombre">{{ h.usuarioNombre | titlecase }}</small>
+                      <small *ngIf="!h.usuarioNombre && h.tipo === 'ESTADO'">Desde el enlace del cliente</small>
+                    </div>
+                  </li>
+                </ol>
+              </ng-container>
+            </p-tabPanel>
+          </p-tabView>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>
+
+<!-- Cambiar estado -->
+<p-dialog header="Cambiar estado" [(visible)]="dlgEstado" [modal]="true" [style]="{ width: '440px' }" [breakpoints]="{ '520px': '95vw' }">
+  <div class="campo">
+    <label>Nuevo estado</label>
+    <p-dropdown [options]="estadoOpts" [(ngModel)]="nuevoEstado" placeholder="Seleccione" appendTo="body" styleClass="w-full" />
+  </div>
+  <div class="campo">
+    <label>{{ nuevoEstado === 'CANCELADO' ? 'Motivo de la cancelación' : 'Nota (opcional)' }} <span class="req" *ngIf="nuevoEstado === 'CANCELADO'">*</span></label>
+    <textarea pTextarea rows="3" [(ngModel)]="notaEstado" maxlength="1000"
+      [placeholder]="nuevoEstado === 'ESPERANDO_REPUESTO' ? 'Qué repuesto y para cuándo llega' : 'Queda en el historial'"></textarea>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="dlgEstado = false"></button>
+    <button pButton type="button" label="Cambiar" icon="pi pi-check" class="btn-aura" [disabled]="!nuevoEstado" [loading]="cambiandoEstado" (click)="cambiarEstado()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Abono, entrega y correo -->
+<app-abono-dialog [(visible)]="dlgAbono" [orden]="orden" (registrado)="onActualizada($event)" />
+<app-entregar-dialog [(visible)]="dlgEntregar" [orden]="orden" (entregado)="onActualizada($event)" />
+<app-enviar-correo
+  [(visible)]="dlgCorreo"
+  grupo="servicio-tecnico"
+  [documentoId]="orden?.id ?? null"
+  [titulo]="'orden de servicio ' + (orden?.codigo ?? '')"
+  [generarAdjunto]="adjuntoCorreo"
+  [adjuntosIniciales]="fotosCorreo"
+/>
+
+<!-- Cliente nuevo -->
+<p-dialog header="Cliente nuevo" [(visible)]="dlgCliente" [modal]="true" [style]="{ width: '520px' }" [breakpoints]="{ '560px': '95vw' }">
+  <div class="grid-2">
+    <div class="campo">
+      <label>Tipo de documento</label>
+      <p-dropdown [options]="tipoDocOpts" [(ngModel)]="cliente.tipoDocumento" appendTo="body" styleClass="w-full" />
+    </div>
+    <div class="campo">
+      <label>Número <span class="req">*</span></label>
+      <input pInputText [(ngModel)]="cliente.numeroDocumento" maxlength="20" inputmode="numeric" />
+    </div>
+    <div class="campo">
+      <label>Nombres <span class="req">*</span></label>
+      <input pInputText [(ngModel)]="cliente.nombres" maxlength="80" />
+    </div>
+    <div class="campo">
+      <label>Apellidos</label>
+      <input pInputText [(ngModel)]="cliente.apellidos" maxlength="80" />
+    </div>
+    <div class="campo">
+      <label>Teléfono <span class="req">*</span></label>
+      <input pInputText [(ngModel)]="cliente.telefono" maxlength="30" inputmode="tel" />
+    </div>
+    <div class="campo">
+      <label>Correo</label>
+      <input pInputText type="email" [(ngModel)]="cliente.email" maxlength="150" />
+    </div>
+  </div>
+  <small class="ayuda">Queda en Terceros como cliente; allí se completan los demás datos.</small>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancelar" class="p-button-text" (click)="dlgCliente = false"></button>
+    <button pButton type="button" label="Crear cliente" icon="pi pi-check" class="btn-aura" [loading]="creandoCliente" (click)="crearCliente()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Foto grande -->
+<p-dialog [visible]="!!fotoGrande" (visibleChange)="!$event && verFoto(null)" [modal]="true" [dismissableMask]="true"
+  [style]="{ width: 'auto', maxWidth: '92vw' }" header="Foto del equipo">
+  <img *ngIf="fotoGrande" [src]="fotoGrande" class="foto-grande" alt="Foto del equipo" />
+</p-dialog>

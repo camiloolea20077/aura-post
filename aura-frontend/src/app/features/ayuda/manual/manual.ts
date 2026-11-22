@@ -7,6 +7,7 @@ import { COMPRAS_VENTAS } from './contenido/compras-ventas';
 import { FINANZAS } from './contenido/finanzas';
 import { CONTABILIDAD } from './contenido/contabilidad';
 import { REPORTES, TERCEROS_SUCURSALES, VENDEDORES } from './contenido/reportes';
+import { SERVICIO_TECNICO } from './contenido/servicio-tecnico';
 
 /** Mismo orden que el menú lateral. Nómina y recursos humanos tendrán su propio manual. */
 export const GRUPOS_MANUAL = [
@@ -18,6 +19,7 @@ export const GRUPOS_MANUAL = [
   'Inventario',
   'Compras',
   'Ventas',
+  'Servicio Técnico',
   'Cuentas',
   'Cartera',
   'Tesorería',
@@ -33,6 +35,7 @@ const TODOS: ManualModulo[] = [
   ...CATALOGO,
   ...INVENTARIO,
   ...COMPRAS_VENTAS,
+  ...SERVICIO_TECNICO,
   ...FINANZAS,
   ...CONTABILIDAD,
   ...REPORTES,

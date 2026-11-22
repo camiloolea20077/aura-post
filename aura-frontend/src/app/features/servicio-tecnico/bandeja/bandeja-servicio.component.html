@@ -1,0 +1,188 @@
+<div class="page">
+  <div class="card">
+    <div class="card-head">
+      <div class="card-head__title">
+        <span class="header-icon"><i class="pi pi-wrench"></i></span>
+        <div>
+          <h1 class="title">Servicio técnico</h1>
+          <p class="subtitle">Equipos en el taller: de la recepción a la entrega</p>
+        </div>
+      </div>
+      <div class="card-head__actions">
+        <button
+          *appPuede="'servicio-tecnico.ordenes:CREAR'"
+          pButton
+          label="Recibir equipo"
+          icon="pi pi-plus"
+          class="btn-aura"
+          (click)="nueva()"
+        ></button>
+        <div class="card-head__search">
+          <span class="search-wrap">
+            <i class="pi pi-search"></i>
+            <input
+              pInputText
+              class="search-input"
+              [(ngModel)]="search"
+              (ngModelChange)="onBuscar()"
+              placeholder="Orden, cliente, teléfono, IMEI o modelo…"
+            />
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tablero del taller: el total en el banco y su reparto por tramo -->
+    <section class="tablero" *ngIf="indicadores as k">
+      <button type="button" class="tablero__total" [class.activo]="activo === 'ABIERTAS'" (click)="usarTramo('ABIERTAS')">
+        <span class="rotulo">En el taller</span>
+        <span class="tablero__cifra">{{ k.abiertas }}</span>
+        <span class="tablero__pie">{{ k.abiertas === 1 ? 'equipo' : 'equipos' }}</span>
+      </button>
+
+      <div class="tablero__reparto">
+        <div class="barra" aria-hidden="true">
+          <span *ngFor="let t of tramos" class="barra__tramo" [attr.data-tono]="t.tono" [style.width.%]="ancho(t)"></span>
+        </div>
+        <div class="tramos">
+          <button
+            type="button"
+            *ngFor="let t of tramos"
+            class="tramo"
+            [class.activo]="activo === t.clave"
+            [class.vacio]="!t.valor"
+            (click)="usarTramo(t.clave)"
+          >
+            <span class="led" [attr.data-tono]="t.tono">{{ t.label }}</span>
+            <span class="tramo__cifra">{{ t.valor }}</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="tablero__lado">
+        <button
+          type="button"
+          class="aviso-vencidos"
+          [class.activo]="activo === 'VENCIDAS'"
+          [class.sin]="!k.vencidas"
+          (click)="usarTramo('VENCIDAS')"
+        >
+          <i class="pi pi-clock"></i>
+          <span><strong>{{ k.vencidas }}</strong> {{ k.vencidas === 1 ? 'vencido' : 'vencidos' }}</span>
+        </button>
+        <button type="button" class="entregados" [class.activo]="activo === 'ENTREGADAS'" (click)="usarTramo('ENTREGADAS')">
+          {{ k.entregadasMes }} entregados este mes
+        </button>
+      </div>
+    </section>
+
+    <div class="filtros">
+      <p-dropdown [options]="estadoOpts" [(ngModel)]="filtro.estado" (onChange)="onFiltro()" placeholder="Estado" styleClass="filtro" />
+      <p-dropdown
+        [options]="tecnicoOpts"
+        [(ngModel)]="filtro.tecnicoId"
+        (onChange)="onFiltro()"
+        [filter]="tecnicoOpts.length > 8"
+        placeholder="Técnico"
+        styleClass="filtro"
+      />
+      <p-dropdown [options]="verOpts" [(ngModel)]="filtro.soloMias" (onChange)="onFiltro()" styleClass="filtro" />
+      <span class="filtros__total">{{ total }} {{ total === 1 ? 'orden' : 'órdenes' }}</span>
+    </div>
+
+    <p-table
+      [value]="ordenes"
+      [lazy]="true"
+      [loading]="loading"
+      [paginator]="total > rows"
+      [rows]="rows"
+      [first]="primera"
+      [totalRecords]="total"
+      [rowsPerPageOptions]="[15, 30, 50]"
+      (onLazyLoad)="onLazy($event)"
+      styleClass="st-tabla"
+      [rowHover]="true"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Orden</th>
+          <th>Equipo</th>
+          <th class="col-cliente">Cliente</th>
+          <th>Estado</th>
+          <th class="col-tecnico">Técnico</th>
+          <th class="col-entrega">Entrega</th>
+          <th class="num">Valor</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-o>
+        <tr class="fila" [class.fila--cerrada]="cerrada(o.estado)" (click)="abrir(o)">
+          <td>
+            <div class="ticket">
+              <span class="ticket__codigo">{{ o.codigo }}</span>
+              <span class="urgente" *ngIf="o.prioridad === 'URGENTE'"><i class="pi pi-bolt"></i>Urgente</span>
+            </div>
+            <small class="dias" [class.dias--alerta]="o.vencida" *ngIf="!cerrada(o.estado)">{{ textoDias(dias(o)) }} en el taller</small>
+          </td>
+          <td>
+            <div class="equipo">
+              <span class="equipo__icono"><i [class]="iconoEquipo(o.equipoTipo)"></i></span>
+              <div class="equipo__texto">
+                <span class="equipo__nombre">{{ o.equipoMarca }} {{ o.equipoModelo }}</span>
+                <small class="mono" *ngIf="o.equipoImei">{{ o.equipoImei }}</small>
+                <small *ngIf="!o.equipoImei && o.equipoColor">{{ o.equipoColor }}</small>
+              </div>
+              <span class="equipo__fotos" *ngIf="o.fotos > 0" pTooltip="Fotos"><i class="pi pi-camera"></i>{{ o.fotos }}</span>
+            </div>
+          </td>
+          <td class="col-cliente">
+            <span class="cliente">{{ o.clienteNombre }}</span>
+            <small class="mono" *ngIf="o.clienteTelefono">{{ o.clienteTelefono }}</small>
+          </td>
+          <td>
+            <span class="led" [attr.data-tono]="tono(o.estado)">{{ etiqueta(o.estado) }}</span>
+            <span class="mini-recorrido" *ngIf="o.estado !== 'CANCELADO'" aria-hidden="true">
+              <i *ngFor="let p of recorrido; let i = index" [class.hecho]="i <= paso(o.estado)"></i>
+            </span>
+          </td>
+          <td class="col-tecnico">
+            <span [class.sin-asignar]="!o.tecnicoNombre">{{ o.tecnicoNombre || 'Sin asignar' }}</span>
+          </td>
+          <td class="col-entrega" [class.vencida]="o.vencida">
+            <ng-container *ngIf="o.fechaEstimada; else sinFecha">
+              {{ o.fechaEstimada | date: 'd MMM' }}
+              <i class="pi pi-exclamation-circle" *ngIf="o.vencida" pTooltip="Pasó la fecha estimada"></i>
+            </ng-container>
+            <ng-template #sinFecha><span class="sin-asignar">—</span></ng-template>
+          </td>
+          <td class="num">
+            <span class="valor">{{ o.total | currency: 'COP' : '$' : '1.0-0' }}</span>
+            <small class="saldo" *ngIf="o.totalAbonado > 0 && o.saldo > 0">Saldo {{ o.saldo | currency: 'COP' : '$' : '1.0-0' }}</small>
+            <small class="saldo saldo--pagado" *ngIf="o.total > 0 && o.saldo <= 0">Pagado</small>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7">
+            <div class="vacio">
+              <span class="vacio__icono"><i class="pi pi-inbox"></i></span>
+              <strong>{{ search || activo !== 'ABIERTAS' ? 'No hay órdenes con estos filtros' : 'El banco está vacío' }}</strong>
+              <p>{{ search || activo !== 'ABIERTAS' ? 'Pruebe con otro filtro o búsqueda.' : 'Cuando reciba un equipo aparecerá aquí con su recorrido.' }}</p>
+              <button
+                *ngIf="!search && activo === 'ABIERTAS'"
+                pButton
+                type="button"
+                label="Recibir equipo"
+                icon="pi pi-plus"
+                class="btn-aura"
+                (click)="nueva()"
+              ></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
